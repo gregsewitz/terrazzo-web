@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String?
+  tasteProfile String?      // JSON string of TasteProfile
+  nylasGrants  NylasGrant[]
+  trips        Trip[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model NylasGrant {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantId   String   @unique
+  email     String
+  provider  String   @default("google")
+  createdAt DateTime @default(now())
+}
+
+model Trip {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  location  String
+  startDate DateTime?
+  endDate   DateTime?
+  days      String   // JSON string of TripDay[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  places    Place[]
+}
+
+model Place {
+  id             String   @id @default(cuid())
+  tripId         String
+  trip           Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name           String
+  type           String
+  googlePlaceId  String?
+  location       String?  // JSON string
+  googleData     String?  // JSON string
+  source         String   // JSON string
+  matchScore     Int?
+  matchBreakdown String?  // JSON string
+  tasteNote      String?
+  enrichment     String?  // JSON string
+  status         String   @default("available")
+  placedIn       String?  // JSON string
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PlaceCache {
+  id            String   @id @default(cuid())
+  googlePlaceId String   @unique
+  data          String   // JSON string of full Google Places response
+  fetchedAt     DateTime @default(now())
+
+  @@index([googlePlaceId])
+}

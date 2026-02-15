@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+:root {
+  /* Forme Libere Design System */
+  --t-ink: #1c1a17;
+  --t-honey: #c8923a;
+  --t-amber: #a06c28;
+  --t-verde: #2a7a56;
+  --t-panton-violet: #6844a0;
+  --t-panton-orange: #e86830;
+  --t-royere-pink: #e87080;
+  --t-warm-white: #f5f0e6;
+  --t-travertine: #e8dcc8;
+  --t-cream: #f8f3ea;
+  --t-signal-red: #d63020;
+  --t-chrome-yellow: #eeb420;
+  --t-linen: #ede6d8;
+
+  /* Domain Colors */
+  --domain-design: #d63020;
+  --domain-character: #6844a0;
+  --domain-service: #a06c28;
+  --domain-food: #e87080;
+  --domain-location: #2a7a56;
+  --domain-wellness: #eeb420;
+
+  --background: var(--t-cream);
+  --foreground: var(--t-ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--t-ink);
+  --color-honey: var(--t-honey);
+  --color-amber: var(--t-amber);
+  --color-verde: var(--t-verde);
+  --color-panton-violet: var(--t-panton-violet);
+  --color-panton-orange: var(--t-panton-orange);
+  --color-royere-pink: var(--t-royere-pink);
+  --color-warm-white: var(--t-warm-white);
+  --color-travertine: var(--t-travertine);
+  --color-cream: var(--t-cream);
+  --color-signal-red: var(--t-signal-red);
+  --color-chrome-yellow: var(--t-chrome-yellow);
+  --color-linen: var(--t-linen);
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'DM Serif Display', serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--t-travertine);
+  border-radius: 2px;
+}
