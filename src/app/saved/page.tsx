@@ -7,7 +7,8 @@ import SmartCollectionSheet from '@/components/SmartCollectionSheet';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore, HistoryItem } from '@/stores/savedStore';
-import { REACTIONS, PlaceType, ImportedPlace, PlaceRating } from '@/types';
+import { useTripStore } from '@/stores/tripStore';
+import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, GhostSourceType, SOURCE_STYLES } from '@/types';
 
 const PLACE_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
   { id: 'all', label: 'All' },
@@ -15,6 +16,17 @@ const PLACE_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
   { id: 'restaurant', label: 'Restaurants' },
   { id: 'bar', label: 'Bars' },
   { id: 'activity', label: 'Experiences' },
+];
+
+type SourceFilterType = GhostSourceType | 'all';
+
+const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: string }[] = [
+  { value: 'all', label: 'All sources' },
+  { value: 'friend', label: 'Friends', icon: '👤' },
+  { value: 'maps', label: 'Maps', icon: '📍' },
+  { value: 'article', label: 'Articles', icon: '📰' },
+  { value: 'email', label: 'Email', icon: '✉' },
+  { value: 'manual', label: 'Added', icon: '✎' },
 ];
 
 const HISTORY_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
@@ -262,11 +274,16 @@ export default function SavedPage() {
   const archiveToHistory = useSavedStore(s => s.archiveToHistory);
   const addCollection = useSavedStore(s => s.addCollection);
   const ratePlace = useSavedStore(s => s.ratePlace);
+  const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
+
+  const trips = useTripStore(s => s.trips);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [historyTypeFilter, setHistoryTypeFilter] = useState<PlaceType | 'all'>('all');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
+  const [showMapView, setShowMapView] = useState(false);
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
 
@@ -280,20 +297,75 @@ export default function SavedPage() {
     if (ratingItem) {
       ratePlace(ratingItem.id, rating);
       setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
+      // Star → Ghost candidacy: inject into trip planner if rated highly
+      if (rating.reaction === 'myPlace' || rating.reaction === 'enjoyed') {
+        injectGhostCandidates([{ ...ratingItem, rating }]);
+      }
       setRatingItem(null);
     }
   };
 
-  // Filter places
+  // Source counts for filter tab badges
+  const sourceCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    myPlaces.forEach(place => {
+      const src = place.ghostSource || 'manual';
+      counts[src] = (counts[src] || 0) + 1;
+    });
+    return counts;
+  }, [myPlaces]);
+
+  // Filter places (type + search + source)
   const filteredPlaces = useMemo(() => {
     return myPlaces.filter((place) => {
       const matchesType = typeFilter === 'all' || place.type === typeFilter;
       const matchesSearch = searchQuery === ''
         || place.name.toLowerCase().includes(searchQuery.toLowerCase())
         || place.location.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesType && matchesSearch;
+      const matchesSource = sourceFilter === 'all' || place.ghostSource === sourceFilter;
+      return matchesType && matchesSearch && matchesSource;
     });
-  }, [myPlaces, typeFilter, searchQuery]);
+  }, [myPlaces, typeFilter, searchQuery, sourceFilter]);
+
+  // Dynamic trip banners — match myPlaces against each trip's destinations
+  const tripBanners = useMemo(() => {
+    const emojiMap: Record<string, string> = {
+      japan: '🇯🇵', tokyo: '🇯🇵', kyoto: '🇯🇵', osaka: '🇯🇵',
+      france: '🇫🇷', paris: '🇫🇷',
+      italy: '🇮🇹', venice: '🇮🇹', rome: '🇮🇹', puglia: '🇮🇹',
+      uk: '🇬🇧', london: '🇬🇧', england: '🇬🇧',
+      usa: '🇺🇸', 'new york': '🇺🇸', nyc: '🇺🇸',
+      spain: '🇪🇸', mexico: '🇲🇽', greece: '🇬🇷', portugal: '🇵🇹',
+      thailand: '🇹🇭', australia: '🇦🇺', germany: '🇩🇪',
+    };
+    return trips.map(trip => {
+      const destLower = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean))
+        .map(d => d.toLowerCase());
+      const matchingPlaces = myPlaces.filter(p =>
+        destLower.some(dest => p.location.toLowerCase().includes(dest))
+      );
+      const starredCount = matchingPlaces.filter(p =>
+        p.rating?.reaction === 'myPlace' || p.rating?.reaction === 'enjoyed'
+      ).length;
+      // Find emoji
+      const tripNameLower = trip.name.toLowerCase();
+      const allTerms = [...destLower, tripNameLower];
+      let emoji = '✈️';
+      for (const term of allTerms) {
+        for (const [key, flag] of Object.entries(emojiMap)) {
+          if (term.includes(key)) { emoji = flag; break; }
+        }
+        if (emoji !== '✈️') break;
+      }
+      return {
+        id: trip.id,
+        name: trip.name,
+        emoji,
+        matchCount: matchingPlaces.length,
+        starredCount,
+      };
+    }).filter(b => b.matchCount > 0);
+  }, [trips, myPlaces]);
 
   // History items matching search (shown with "from history" label)
   const matchingHistoryPlaces = useMemo(() => {
@@ -489,6 +561,18 @@ export default function SavedPage() {
               + Collection
             </button>
             <button
+              onClick={() => setShowMapView(!showMapView)}
+              className="text-[11px] font-medium px-2 py-1.5 rounded-full"
+              style={{
+                background: showMapView ? 'var(--t-ink)' : 'rgba(28,26,23,0.06)',
+                color: showMapView ? 'white' : 'var(--t-ink)',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {showMapView ? '☰ List' : '🗺 Map'}
+            </button>
+            <button
               onClick={() => setShowSearch(!showSearch)}
               className="text-xl"
               style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -540,82 +624,240 @@ export default function SavedPage() {
           })}
         </div>
 
-        {/* Trip banner — gradient bg with emoji flag — navigates to trip */}
-        <div
-          onClick={() => router.push('/trips/demo-tokyo')}
-          className="flex items-center gap-3 p-3.5 rounded-[14px] mb-4 cursor-pointer transition-all hover:scale-[1.01]"
-          style={{ background: 'linear-gradient(135deg, #e8edf2, #f2ede8)' }}
-        >
-          <div className="text-2xl">🇯🇵</div>
-          <div className="flex-1">
-            <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
-              Japan 2026
-            </div>
-            <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
-              23 places match · 8 starred
-            </div>
-          </div>
-          <div
-            className="text-[12px] font-medium"
-            style={{ color: 'var(--t-honey)' }}
-          >
-            View →
-          </div>
+        {/* Source filter tabs */}
+        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-0.5">
+          {SOURCE_FILTER_TABS.map((tab) => {
+            const isActive = sourceFilter === tab.value;
+            const count = tab.value === 'all' ? myPlaces.length : (sourceCounts[tab.value] || 0);
+            if (tab.value !== 'all' && count === 0) return null;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setSourceFilter(tab.value)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-2xl text-[10px] whitespace-nowrap"
+                style={{
+                  background: isActive
+                    ? (tab.value === 'all' ? 'var(--t-ink)' : (SOURCE_STYLES[tab.value as GhostSourceType]?.bg || 'rgba(28,26,23,0.06)'))
+                    : 'rgba(28,26,23,0.04)',
+                  color: isActive
+                    ? (tab.value === 'all' ? 'white' : (SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'var(--t-ink)'))
+                    : 'rgba(28,26,23,0.5)',
+                  fontWeight: isActive ? 600 : 400,
+                  border: isActive && tab.value !== 'all'
+                    ? `1px solid ${SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'transparent'}`
+                    : '1px solid transparent',
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {tab.icon && <span>{tab.icon}</span>}
+                <span>{tab.label}</span>
+                <span style={{ opacity: 0.6 }}>{count}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* By Location — 2x2 grid */}
-        {locationClusters.length > 0 && (
-          <div className="mb-4">
+        {/* Dynamic trip banners */}
+        {tripBanners.map(banner => (
+          <div
+            key={banner.id}
+            onClick={() => router.push(`/trips/${banner.id}`)}
+            className="flex items-center gap-3 p-3.5 rounded-[14px] mb-4 cursor-pointer transition-all hover:scale-[1.01]"
+            style={{ background: 'linear-gradient(135deg, #e8edf2, #f2ede8)' }}
+          >
+            <div className="text-2xl">{banner.emoji}</div>
+            <div className="flex-1">
+              <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                {banner.name}
+              </div>
+              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                {banner.matchCount} place{banner.matchCount !== 1 ? 's' : ''} match{banner.matchCount === 1 ? 'es' : ''}
+                {banner.starredCount > 0 && ` · ${banner.starredCount} starred`}
+              </div>
+            </div>
+            <div
+              className="text-[12px] font-medium"
+              style={{ color: 'var(--t-honey)' }}
+            >
+              View →
+            </div>
+          </div>
+        ))}
+
+        {/* Map View */}
+        {showMapView ? (
+          <div className="mb-8">
             <div
               className="text-[10px] font-bold uppercase tracking-wider mb-2"
               style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
             >
-              By location
+              {filteredPlaces.length} place{filteredPlaces.length !== 1 ? 's' : ''}
+              {sourceFilter !== 'all' && ` from ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label || sourceFilter}`}
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {locationClusters.map(([city, count]) => (
-                <LocationCluster
-                  key={city}
-                  city={city}
-                  count={count}
-                  onTap={() => {
-                    setSearchInput(city);
-                    setSearchQuery(city);
-                    setShowSearch(true);
-                  }}
-                />
-              ))}
+            <div
+              className="relative w-full rounded-xl overflow-hidden"
+              style={{
+                background: 'var(--t-cream)',
+                border: '1px solid var(--t-linen)',
+                height: 360,
+                backgroundImage:
+                  'linear-gradient(var(--t-linen) 0.5px, transparent 0.5px), linear-gradient(90deg, var(--t-linen) 0.5px, transparent 0.5px)',
+                backgroundSize: '40px 40px',
+              }}
+            >
+              {/* Group by location for cluster dots */}
+              {(() => {
+                const byCity: Record<string, ImportedPlace[]> = {};
+                filteredPlaces.forEach(p => {
+                  if (!byCity[p.location]) byCity[p.location] = [];
+                  byCity[p.location].push(p);
+                });
+                const cities = Object.entries(byCity);
+                return cities.map(([city, places], cityIdx) => {
+                  // Deterministic position from city name
+                  const hash = city.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                  const x = ((hash + cityIdx * 37) % 70) + 15;
+                  const y = ((hash * 7 + cityIdx * 23) % 70) + 15;
+                  const starred = places.filter(p => p.rating?.reaction === 'myPlace' || p.rating?.reaction === 'enjoyed').length;
+                  return (
+                    <div
+                      key={city}
+                      className="absolute flex flex-col items-center cursor-pointer"
+                      style={{
+                        left: `${x}%`,
+                        top: `${y}%`,
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                      onClick={() => {
+                        setSearchInput(city);
+                        setSearchQuery(city);
+                        setShowSearch(true);
+                        setShowMapView(false);
+                      }}
+                    >
+                      {/* Cluster dot — size scales with count */}
+                      <div
+                        className="rounded-full flex items-center justify-center"
+                        style={{
+                          width: Math.min(24 + places.length * 4, 48),
+                          height: Math.min(24 + places.length * 4, 48),
+                          background: starred > 0 ? 'var(--t-verde)' : 'var(--t-ink)',
+                          opacity: 0.85,
+                          boxShadow: '0 2px 8px rgba(28,26,23,0.15)',
+                        }}
+                      >
+                        <span className="text-white text-[10px] font-bold">{places.length}</span>
+                      </div>
+                      {/* City label */}
+                      <div
+                        className="text-[9px] font-semibold mt-1.5 text-center max-w-[80px] leading-tight"
+                        style={{
+                          fontFamily: "'Space Mono', monospace",
+                          color: 'var(--t-ink)',
+                        }}
+                      >
+                        {city}
+                      </div>
+                      {starred > 0 && (
+                        <div className="text-[8px]" style={{ color: 'var(--t-verde)' }}>
+                          {starred} ♡
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+              {filteredPlaces.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'rgba(28,26,23,0.3)' }}>
+                  <div className="text-center">
+                    <span className="text-2xl mb-2 block">◇</span>
+                    <div className="text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>No places match filters</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* By Location — 2x2 grid */}
+            {locationClusters.length > 0 && !searchQuery && (
+              <div className="mb-4">
+                <div
+                  className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                  style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+                >
+                  By location
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {locationClusters.map(([city, count]) => (
+                    <LocationCluster
+                      key={city}
+                      city={city}
+                      count={count}
+                      onTap={() => {
+                        setSearchInput(city);
+                        setSearchQuery(city);
+                        setShowSearch(true);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Recently saved */}
-        <div className="mb-8">
-          <div
-            className="text-[10px] font-bold uppercase tracking-wider mb-2"
-            style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
-          >
-            Recently saved
-          </div>
-          {filteredPlaces.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {filteredPlaces.map((place) => (
-                <SavedPlaceCard
-                  key={place.id}
-                  place={place}
-                  onTap={() => setDetailItem(place)}
-                />
-              ))}
+            {/* Recently saved */}
+            <div className="mb-8">
+              <div
+                className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+              >
+                {searchQuery ? 'Results' : 'Recently saved'}
+              </div>
+              <div className="text-[10px] mb-2" style={{ color: 'rgba(28,26,23,0.35)' }}>
+                Swipe left to archive
+              </div>
+              {filteredPlaces.length > 0 || matchingHistoryPlaces.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {filteredPlaces.map((place) => (
+                    <SavedPlaceCard
+                      key={place.id}
+                      place={place}
+                      onTap={() => setDetailItem(place)}
+                      onArchive={archiveToHistory}
+                    />
+                  ))}
+                  {/* History items matching search */}
+                  {matchingHistoryPlaces.length > 0 && (
+                    <>
+                      <div
+                        className="text-[10px] font-bold uppercase tracking-wider mt-2 mb-1"
+                        style={{ color: 'var(--t-ghost)', fontFamily: "'Space Mono', monospace" }}
+                      >
+                        From history
+                      </div>
+                      {matchingHistoryPlaces.map((place) => (
+                        <SavedPlaceCard
+                          key={place.id}
+                          place={place}
+                          onTap={() => setDetailItem(place)}
+                          fromHistory
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <span className="text-2xl mb-3 block">◇</span>
+                  <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                    No places match your filters
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <span className="text-2xl mb-3 block">◇</span>
-              <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
-                No places match your filters
-              </p>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Place Detail Sheet */}

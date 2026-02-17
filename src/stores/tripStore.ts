@@ -282,6 +282,7 @@ interface TripState {
   confirmGhost: (dayNumber: number, slotId: string, ghostId: string) => void;
   dismissGhost: (dayNumber: number, slotId: string, ghostId: string) => void;
   ratePlace: (itemId: string, rating: PlaceRating) => void;
+  injectGhostCandidates: (candidates: ImportedPlace[]) => void;
 }
 
 export const useTripStore = create<TripState>((set, get) => ({
@@ -432,6 +433,90 @@ export const useTripStore = create<TripState>((set, get) => ({
         })),
       }));
       return { ...trip, pool, days };
+    });
+    return { trips };
+  }),
+
+  // Star → Ghost card candidacy: inject rated/starred places as ghost suggestions
+  injectGhostCandidates: (candidates) => set(state => {
+    const trips = state.trips.map(trip => {
+      if (trip.id !== state.currentTripId) return trip;
+
+      // Get trip destinations for matching
+      const destLower = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean))
+        .map(d => d.toLowerCase());
+
+      // Filter candidates that match trip destinations
+      const matching = candidates.filter(c =>
+        destLower.some(dest => c.location.toLowerCase().includes(dest))
+      );
+      if (matching.length === 0) return trip;
+
+      // Collect existing ghost IDs to avoid dupes
+      const existingGhostIds = new Set<string>();
+      const existingPoolIds = new Set<string>();
+      trip.pool.forEach(p => existingPoolIds.add(p.name.toLowerCase()));
+      trip.days.forEach(d => d.slots.forEach(s => {
+        s.ghostItems?.forEach(g => existingGhostIds.add(g.name.toLowerCase()));
+        if (s.place) existingGhostIds.add(s.place.name.toLowerCase());
+      }));
+
+      // Filter to only truly new candidates
+      const newCandidates = matching.filter(c =>
+        !existingGhostIds.has(c.name.toLowerCase()) &&
+        !existingPoolIds.has(c.name.toLowerCase())
+      );
+      if (newCandidates.length === 0) return trip;
+
+      // Map place types to preferred slot IDs
+      const typeSlotMap: Record<string, string[]> = {
+        restaurant: ['lunch', 'dinner'],
+        bar: ['evening', 'dinner'],
+        cafe: ['breakfast', 'morning'],
+        hotel: ['morning'],
+        museum: ['morning', 'afternoon'],
+        activity: ['afternoon', 'morning'],
+        neighborhood: ['afternoon'],
+        shop: ['afternoon'],
+      };
+
+      // Distribute candidates across empty slots on different days
+      const updatedDays = [...trip.days];
+      let candidateIdx = 0;
+      for (const candidate of newCandidates) {
+        if (candidateIdx >= 6) break; // Max 6 ghost injections
+        const preferredSlots = typeSlotMap[candidate.type] || ['afternoon'];
+
+        // Find a day with an empty preferred slot
+        let placed = false;
+        for (const day of updatedDays) {
+          if (placed) break;
+          for (const slotId of preferredSlots) {
+            const slot = day.slots.find(s => s.id === slotId);
+            if (slot && !slot.place && (!slot.ghostItems || slot.ghostItems.length === 0)) {
+              const ghostItem: ImportedPlace = {
+                ...candidate,
+                id: `ghost-starred-${candidate.id}`,
+                ghostStatus: 'proposed',
+                ghostSource: candidate.rating?.reaction === 'myPlace' ? 'manual' : (candidate.ghostSource || 'manual'),
+                aiReasoning: {
+                  rationale: candidate.rating?.reaction === 'myPlace'
+                    ? `You starred ${candidate.name} — it's in ${trip.destinations?.[0] || trip.location}`
+                    : `Highly rated place matching your ${trip.name} trip`,
+                  confidence: 0.85,
+                },
+              };
+              if (!slot.ghostItems) slot.ghostItems = [];
+              slot.ghostItems.push(ghostItem);
+              placed = true;
+              candidateIdx++;
+              break;
+            }
+          }
+        }
+      }
+
+      return { ...trip, days: updatedDays };
     });
     return { trips };
   }),

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { usePoolStore } from '@/stores/poolStore';
+import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 
 interface PoolTrayProps {
@@ -26,9 +27,26 @@ export default function PoolTray({ onTapDetail, onOpenImport }: PoolTrayProps) {
     const trip = s.trips.find(t => t.id === s.currentTripId);
     return trip?.pool;
   });
+  const tripDestinations = useTripStore(s => {
+    const trip = s.trips.find(t => t.id === s.currentTripId);
+    return trip?.destinations || [trip?.location?.split(',')[0]?.trim()].filter(Boolean);
+  });
+  const addToPool = useTripStore(s => s.addToPool);
   const poolItems = useMemo(() => pool?.filter(p => p.status === 'available') ?? [], [pool]);
   const { isExpanded, setExpanded } = usePoolStore();
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
+
+  // Geo-filtered: My Places that match this trip's destinations but aren't in the pool
+  const myPlaces = useSavedStore(s => s.myPlaces);
+  const geoMatchedPlaces = useMemo(() => {
+    if (!tripDestinations || tripDestinations.length === 0) return [];
+    const poolNames = new Set(poolItems.map(p => p.name.toLowerCase()));
+    const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
+    return myPlaces.filter(place => {
+      if (poolNames.has(place.name.toLowerCase())) return false;
+      return destLower.some(dest => place.location.toLowerCase().includes(dest));
+    });
+  }, [myPlaces, tripDestinations, poolItems]);
 
   const filteredItems = useMemo(() => {
     if (sourceFilter === 'all') {
@@ -299,6 +317,51 @@ export default function PoolTray({ onTapDetail, onOpenImport }: PoolTrayProps) {
               }}
             >
               No items found for this source
+            </div>
+          )}
+
+          {/* Geo-filtered: From My Places */}
+          {geoMatchedPlaces.length > 0 && sourceFilter === 'all' && (
+            <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}>
+                    From My Places
+                  </span>
+                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                    {geoMatchedPlaces.length} match{geoMatchedPlaces.length !== 1 ? 'es' : ''} in {(tripDestinations as string[]).join(', ')}
+                  </span>
+                </div>
+              </div>
+              {geoMatchedPlaces.map(place => (
+                <div
+                  key={place.id}
+                  className="flex justify-between items-center rounded-lg mb-2 p-3 cursor-pointer transition-all"
+                  style={{
+                    background: 'rgba(42,122,86,0.04)',
+                    border: '1.5px solid rgba(42,122,86,0.15)',
+                  }}
+                >
+                  <div className="flex-1 min-w-0 mr-3" onClick={() => onTapDetail(place)}>
+                    <div className="text-[13px] font-medium mb-0.5" style={{ color: 'var(--t-ink)' }}>
+                      {place.name}
+                    </div>
+                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                      {place.location} · {place.type} · saved in My Places
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToPool([{ ...place, id: `from-saved-${place.id}` }]);
+                    }}
+                    className="text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border-none cursor-pointer"
+                    style={{ background: 'var(--t-verde)', color: 'white' }}
+                  >
+                    + Add
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

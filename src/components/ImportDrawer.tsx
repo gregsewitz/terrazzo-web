@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useImportStore, ImportMode } from '@/stores/importStore';
 import { useTripStore } from '@/stores/tripStore';
+import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace } from '@/types';
 
 const IMPORT_MODES: { value: ImportMode; label: string; icon: string }[] = [
@@ -88,6 +89,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     isProcessing, setProcessing, error, setError, emailConnected, setEmailConnected,
   } = useImportStore();
   const addToPool = useTripStore(s => s.addToPool);
+  const addHistoryItems = useSavedStore(s => s.addHistoryItems);
 
   // Check Gmail connection status on mount
   useEffect(() => {
@@ -178,6 +180,10 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
       if (data.places?.length) {
         setImportResults(data.places);
         setSelectedIds(new Set(data.places.map((p: ImportedPlace) => p.id)));
+        // If email scan returned history items, add them to the history store
+        if (data.historyItems?.length && mode === 'email') {
+          addHistoryItems(data.historyItems);
+        }
         setStep('results');
       } else {
         setError('No places found in the content');

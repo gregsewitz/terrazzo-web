@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
+import { useSavedStore } from '@/stores/savedStore';
 import { useImportStore } from '@/stores/importStore';
 import { usePoolStore } from '@/stores/poolStore';
 import { ImportedPlace, PlaceRating } from '@/types';
@@ -18,21 +19,37 @@ export default function TripDetailPage() {
   const params = useParams();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const ratePlace = useTripStore(s => s.ratePlace);
+  const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
+  const myPlaces = useSavedStore(s => s.myPlaces);
   const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
   const { setExpanded } = usePoolStore();
 
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [ghostsInjected, setGhostsInjected] = useState(false);
 
   useEffect(() => {
     if (params.id) {
       setCurrentTrip(params.id as string);
     }
   }, [params.id, setCurrentTrip]);
+
+  // On trip load, inject starred My Places as ghost candidates (once)
+  useEffect(() => {
+    if (trip && !ghostsInjected) {
+      const starredPlaces = myPlaces.filter(p =>
+        p.rating?.reaction === 'myPlace' || p.rating?.reaction === 'enjoyed'
+      );
+      if (starredPlaces.length > 0) {
+        injectGhostCandidates(starredPlaces);
+      }
+      setGhostsInjected(true);
+    }
+  }, [trip, myPlaces, ghostsInjected, injectGhostCandidates]);
 
   if (!trip) {
     return (

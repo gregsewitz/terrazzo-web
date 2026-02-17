@@ -50,23 +50,50 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Convert bookings to ImportedPlace format
+    // Convert bookings to ImportedPlace format for trip pool
     const places = allBookings.map((booking: Record<string, unknown>, i: number) => ({
       id: `email-${Date.now()}-${i}`,
       name: booking.name as string || 'Unknown Place',
       type: (booking.type as string) || 'restaurant',
       location: (booking.address as string) || '',
       source: { type: 'email' as const, name: 'Gmail' },
-      matchScore: 0, // Will be computed by taste engine
+      matchScore: 0,
       matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
       tasteNote: '',
       status: 'available' as const,
-      enrichment: {
-        confidence: 0.8,
-      },
+      enrichment: { confidence: 0.8 },
     }));
 
-    return NextResponse.json({ places, rawBookings: allBookings });
+    // Also create HistoryItem format for the saved store's history tier
+    const detectedSourceMap: Record<string, string> = {
+      'opentable': 'OpenTable',
+      'resy': 'Resy',
+      'booking': 'Hotels.com',
+      'airbnb': 'Hotels.com',
+      'hotels': 'Hotels.com',
+    };
+    const historyItems = allBookings.map((booking: Record<string, unknown>, i: number) => {
+      const senderEmail = (booking.senderEmail as string) || '';
+      let detectedFrom = 'OpenTable';
+      for (const [key, label] of Object.entries(detectedSourceMap)) {
+        if (senderEmail.toLowerCase().includes(key) || ((booking.name as string) || '').toLowerCase().includes(key)) {
+          detectedFrom = label;
+          break;
+        }
+      }
+      const bookingType = (booking.type as string) || 'restaurant';
+      return {
+        id: `hist-email-${Date.now()}-${i}`,
+        name: booking.name as string || 'Unknown Place',
+        type: bookingType,
+        location: (booking.address as string) || (booking.city as string) || '',
+        detectedFrom,
+        detectedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        ghostSource: 'email',
+      };
+    });
+
+    return NextResponse.json({ places, historyItems, rawBookings: allBookings });
   } catch (error) {
     console.error('Email scan error:', error);
     return NextResponse.json({ error: 'Email scan failed' }, { status: 500 });
