@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { useSavedStore } from '@/stores/savedStore';
 import { useIntelligence } from '@/hooks/useIntelligence';
+import { getPlaceImage } from '@/constants/placeImages';
 import PipelineProgress from '@/components/PipelineProgress';
 
 interface PlaceDetailSheetProps {
@@ -66,7 +67,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
           background: 'var(--t-cream)',
         }}
       >
-        {/* Photo header — gradient placeholder like wireframe */}
+        {/* Photo header */}
         <div
           className="relative"
           style={{
@@ -74,6 +75,13 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
             background: getPhotoGradient(item.type),
           }}
         >
+          {getPlaceImage(item.name) && (
+            <img
+              src={getPlaceImage(item.name)}
+              alt={item.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+            />
+          )}
           {/* Back button */}
           <button
             onClick={onClose}

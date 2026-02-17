@@ -16,6 +16,7 @@ import {
   type FriendSave,
   type ContextRec,
 } from '@/constants/discover';
+import { getPlaceImage } from '@/constants/placeImages';
 
 const profile = TASTE_PROFILE;
 
@@ -247,10 +248,11 @@ function WeeklyEditSection() {
 
 function CollectionCard({ place }: { place: CollectionPlace }) {
   const domainColor = DOMAIN_COLORS[place.signalDomain] || '#8b6b4a';
+  const imageUrl = getPlaceImage(place.name);
 
   return (
     <div
-      className="flex-shrink-0 p-4 rounded-xl flex flex-col"
+      className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
       style={{
         background: 'white',
         border: '1px solid var(--t-linen)',
@@ -258,6 +260,12 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
         scrollSnapAlign: 'start',
       }}
     >
+      {imageUrl && (
+        <div style={{ height: 100, overflow: 'hidden' }}>
+          <img src={imageUrl} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      )}
+      <div className="p-4 flex flex-col">
       <div className="flex items-start justify-between mb-2">
         <div>
           <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
@@ -279,6 +287,7 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
       <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
         {place.note}
       </p>
+      </div>
     </div>
   );
 }
@@ -383,9 +392,16 @@ function ContextModeSection() {
 }
 
 function ContextRecCard({ rec }: { rec: ContextRec }) {
+  const imageUrl = getPlaceImage(rec.name);
   return (
     <div className="flex items-center gap-3">
-      <ScoreArc score={rec.score} size={36} color="#6b8b4a" />
+      {imageUrl ? (
+        <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+          <img src={imageUrl} alt={rec.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      ) : (
+        <ScoreArc score={rec.score} size={36} color="#6b8b4a" />
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
           <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{rec.name}</span>
