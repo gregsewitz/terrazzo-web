@@ -120,16 +120,16 @@ export const WEEKLY_COLLECTION = {
 
 // ── Section 5: Stretch Pick ──
 export const STRETCH_PICK = {
-  name: "Noma",
-  location: "Copenhagen, Denmark",
-  score: 76,
+  name: "Asador Etxebarri",
+  location: "Atxondo, Basque Country",
+  score: 74,
   type: "restaurant",
-  strongAxis: "Cultural",
-  strongScore: 95,
-  weakAxis: "Wellness",
-  weakScore: 32,
-  why: "Your Cultural axis is 80% but this could push it to 90+. Noma isn't a restaurant — it's a thesis on Nordic terroir. The fermentation lab alone would rewire your food vocabulary.",
-  tension: "It breaks your 'intimate-under-20' signal (there are 40 seats) but the kitchen-as-theatre format creates an intimacy most 12-seat rooms can't match.",
+  strongAxis: "Sensory",
+  strongScore: 97,
+  weakAxis: "Social",
+  weakScore: 28,
+  why: "Your Sensory axis is 85% but this could crack it wide open. Etxebarri is a single-minded obsession with fire — every course, including dessert, touches the grill. It's the kind of place that permanently recalibrates what you think flavor can be.",
+  tension: "It breaks your 'urban-walkable' signal (it's a 40-minute drive into the Basque hills) but the valley setting and zero pretension create the intimacy your profile craves.",
 };
 
 // ── Section 6: Context Mode recs ──
