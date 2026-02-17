@@ -8,6 +8,7 @@ import type { MapMarker } from '@/components/GoogleMapView';
 interface MapViewProps {
   dayNumber: number;
   destination?: string;
+  destinationCoords?: { lat: number; lng: number }; // geocoded from Places API
   placedItems: Array<{ name: string; type: string; location?: string }>;
   ghostItems: Array<{ name: string; ghostSource?: string; location?: string }>;
 }
@@ -15,6 +16,7 @@ interface MapViewProps {
 export default function MapView({
   dayNumber,
   destination = 'Destination',
+  destinationCoords,
   placedItems,
   ghostItems,
 }: MapViewProps) {
@@ -60,7 +62,7 @@ export default function MapView({
         </button>
       </div>
 
-      <GoogleMapView markers={markers} height={mapHeight} />
+      <GoogleMapView markers={markers} height={mapHeight} fallbackDestination={destination} fallbackCoords={destinationCoords} />
     </div>
   );
 }

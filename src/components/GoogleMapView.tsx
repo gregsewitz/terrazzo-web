@@ -19,7 +19,10 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'paris': { lat: 48.8566, lng: 2.3522 },
   'venice': { lat: 45.4408, lng: 12.3155 },
   'new york': { lat: 40.7128, lng: -74.0060 },
-  'london': { lat: 51.5074, lng: -0.1278 },  'puglia': { lat: 40.7517, lng: 17.2257 },
+  'london': { lat: 51.5074, lng: -0.1278 },
+  'cotswolds': { lat: 51.8330, lng: -1.6833 },
+  'the cotswolds': { lat: 51.8330, lng: -1.6833 },
+  'puglia': { lat: 40.7517, lng: 17.2257 },
   'kyoto': { lat: 35.0116, lng: 135.7681 },
   'osaka': { lat: 34.6937, lng: 135.5023 },
   'rome': { lat: 41.9028, lng: 12.4964 },
@@ -51,6 +54,8 @@ export interface MapMarker {
 interface GoogleMapViewProps {
   markers: MapMarker[];
   height?: number;
+  fallbackDestination?: string; // used to center map when no markers have coordinates
+  fallbackCoords?: { lat: number; lng: number }; // geocoded coords from Places API — highest priority fallback
 }
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -109,7 +114,7 @@ function MarkerDot({ marker }: { marker: MapMarker & { lat: number; lng: number 
     </AdvancedMarker>
   );
 }
-export default function GoogleMapView({ markers, height = 360 }: GoogleMapViewProps) {
+export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords }: GoogleMapViewProps) {
   // Resolve coordinates
   const resolved = useMemo(() => {
     return markers
@@ -121,13 +126,22 @@ export default function GoogleMapView({ markers, height = 360 }: GoogleMapViewPr
       .filter((m): m is MapMarker & { lat: number; lng: number } => m.lat != null && m.lng != null);
   }, [markers]);
 
-  // Calculate center and zoom from markers
+  // Calculate center and zoom from markers, falling back to destination coords
   const defaultCenter = useMemo(() => {
-    if (resolved.length === 0) return { lat: 40, lng: 0 };
-    const avgLat = resolved.reduce((s, m) => s + m.lat, 0) / resolved.length;
-    const avgLng = resolved.reduce((s, m) => s + m.lng, 0) / resolved.length;
-    return { lat: avgLat, lng: avgLng };
-  }, [resolved]);
+    if (resolved.length > 0) {
+      const avgLat = resolved.reduce((s, m) => s + m.lat, 0) / resolved.length;
+      const avgLng = resolved.reduce((s, m) => s + m.lng, 0) / resolved.length;
+      return { lat: avgLat, lng: avgLng };
+    }
+    // Prefer geocoded coords from Places API
+    if (fallbackCoords) return fallbackCoords;
+    // Fall back to destination name lookup
+    if (fallbackDestination) {
+      const coords = getCityCoords(fallbackDestination);
+      if (coords) return coords;
+    }
+    return { lat: 40, lng: 0 };
+  }, [resolved, fallbackCoords, fallbackDestination]);
 
   const defaultZoom = useMemo(() => {
     if (resolved.length <= 1) return 12;

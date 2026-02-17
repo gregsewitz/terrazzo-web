@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
-import { TravelContext, TripStatus } from '@/types';
+import { TravelContext, TripStatus, GeoDestination } from '@/types';
+import DestinationInput, { Destination } from '@/components/DestinationInput';
 
 // ============================================================
 // Companion options — matching the React Native app
@@ -40,18 +41,21 @@ const DEMO_TRIP_SIGNALS = [
 // ============================================================
 // Step 1: Seed Form
 // ============================================================
+interface SeedData {
+  name: string;
+  destinations: string[];
+  geoDestinations: GeoDestination[];
+  startDate: string;
+  endDate: string;
+  companion: TravelContext;
+  groupSize?: number;
+  status: TripStatus;
+}
+
 function TripSeedForm({ onStart }: {
-  onStart: (seed: {
-    name: string;
-    destinations: string[];
-    startDate: string;
-    endDate: string;
-    companion: TravelContext;
-    groupSize?: number;
-    status: TripStatus;
-  }) => void;
+  onStart: (seed: SeedData) => void;
 }) {
-  const [destination, setDestination] = useState('');
+  const [geoDestinations, setGeoDestinations] = useState<Destination[]>([]);
   const [tripName, setTripName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -59,13 +63,11 @@ function TripSeedForm({ onStart }: {
   const [groupSize, setGroupSize] = useState('');
   const [status, setStatus] = useState<TripStatus>('planning');
 
-  const canStart = destination.trim().length > 0;
+  const canStart = geoDestinations.length > 0;
 
-  // Auto-generate trip name from destination if not manually set
-  const effectiveName = tripName.trim() || destination.trim();
-
-  // Parse destinations (comma-separated)
-  const destinations = destination.split(',').map(d => d.trim()).filter(Boolean);
+  // Auto-generate trip name from destinations if not manually set
+  const effectiveName = tripName.trim() || geoDestinations.map(d => d.name).join(' & ');
+  const destinationNames = geoDestinations.map(d => d.name);
 
   return (
     <div
@@ -117,31 +119,11 @@ function TripSeedForm({ onStart }: {
           >
             WHERE
           </label>
-          <input
-            type="text"
-            value={destination}
-            onChange={e => setDestination(e.target.value)}
-            placeholder="Portugal, Tokyo, somewhere warm..."
-            className="w-full text-base pb-2.5 bg-transparent border-0 border-b outline-none"
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              color: 'var(--t-ink)',
-              borderColor: 'var(--t-linen)',
-            }}
+          <DestinationInput
+            destinations={geoDestinations}
+            onChange={setGeoDestinations}
+            isDreaming={status === 'dreaming'}
           />
-          {destinations.length > 1 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {destinations.map((d, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
-                >
-                  {d}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Date Range */}
@@ -281,7 +263,8 @@ function TripSeedForm({ onStart }: {
         <button
           onClick={() => canStart && onStart({
             name: effectiveName,
-            destinations,
+            destinations: destinationNames,
+            geoDestinations: geoDestinations as GeoDestination[],
             startDate: startDate || new Date().toISOString().split('T')[0],
             endDate: endDate || (() => {
               const d = new Date();
@@ -598,18 +581,10 @@ export default function NewTripPage() {
   const router = useRouter();
   const createTrip = useTripStore(s => s.createTrip);
   const [step, setStep] = useState<'seed' | 'conversation' | 'complete'>('seed');
-  const [seed, setSeed] = useState<{
-    name: string;
-    destinations: string[];
-    startDate: string;
-    endDate: string;
-    companion: TravelContext;
-    groupSize?: number;
-    status: TripStatus;
-  } | null>(null);
+  const [seed, setSeed] = useState<SeedData | null>(null);
   const [createdTripId, setCreatedTripId] = useState<string | null>(null);
 
-  const handleSeedComplete = (s: typeof seed & {}) => {
+  const handleSeedComplete = (s: SeedData) => {
     setSeed(s);
     setStep('conversation');
   };
@@ -621,6 +596,7 @@ export default function NewTripPage() {
     const tripId = createTrip({
       name: seed.name,
       destinations: seed.destinations,
+      geoDestinations: seed.geoDestinations,
       startDate: seed.startDate,
       endDate: seed.endDate,
       travelContext: seed.companion,

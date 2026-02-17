@@ -178,6 +178,7 @@ export interface Trip {
   startDate?: string;
   endDate?: string;
   destinations?: string[]; // multi-city support
+  geoDestinations?: GeoDestination[]; // geocoded destination data
   travelContext?: TravelContext;
   groupSize?: number;
   status?: TripStatus;
@@ -215,9 +216,18 @@ export const CONTEXT_TAGS = ['Solo', 'Couple', 'Friends', 'Family', 'Special occ
 export type TripStatus = 'planning' | 'dreaming';
 export type TravelContext = 'solo' | 'partner' | 'friends' | 'family';
 
+export interface GeoDestination {
+  name: string;
+  placeId?: string;
+  lat?: number;
+  lng?: number;
+  formattedAddress?: string;
+}
+
 export interface TripCreationData {
   name: string;
   destinations: string[];
+  geoDestinations?: GeoDestination[]; // geocoded destination data
   startDate: string; // ISO date
   endDate: string;   // ISO date
   travelContext: TravelContext;

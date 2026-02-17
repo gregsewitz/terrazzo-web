@@ -562,6 +562,7 @@ export const useTripStore = create<TripState>((set, get) => ({
       startDate: data.startDate,
       endDate: data.endDate,
       destinations: data.destinations,
+      geoDestinations: data.geoDestinations,
       travelContext: data.travelContext,
       groupSize: data.groupSize,
       status: data.status,

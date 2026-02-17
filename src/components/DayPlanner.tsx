@@ -52,7 +52,7 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
           style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}
         >
           {trip.location}
-          {trip.startDate && trip.endDate && ` · ${trip.startDate} — ${trip.endDate}`}
+          {trip.startDate && trip.endDate && ` · ${formatDateRange(trip.startDate, trip.endDate)}`}
         </p>
 
         {/* View Toggle — Day Planner / Overview */}
@@ -205,6 +205,13 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
           <MapView
             dayNumber={day.dayNumber}
             destination={day.destination}
+            destinationCoords={(() => {
+              // Look up geocoded coords for this day's destination
+              const geo = trip.geoDestinations?.find(
+                g => g.name.toLowerCase() === (day.destination || '').toLowerCase()
+              );
+              return geo?.lat != null && geo?.lng != null ? { lat: geo.lat, lng: geo.lng } : undefined;
+            })()}
             placedItems={day.slots
               .filter(s => s.place)
               .map(s => ({ name: s.place!.name, type: s.place!.type }))}
@@ -282,6 +289,19 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
       <div style={{ height: 20 }} />
     </div>
   );
+}
+
+// Helper to format ISO date range into readable text
+function formatDateRange(startDate: string, endDate: string): string {
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const s = new Date(startDate + 'T00:00:00');
+  const e = new Date(endDate + 'T00:00:00');
+  const sMonth = monthNames[s.getMonth()];
+  const eMonth = monthNames[e.getMonth()];
+  if (sMonth === eMonth) {
+    return `${sMonth} ${s.getDate()}–${e.getDate()}`;
+  }
+  return `${sMonth} ${s.getDate()} – ${eMonth} ${e.getDate()}`;
 }
 
 // Helper to convert hex to rgb values
