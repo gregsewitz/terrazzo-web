@@ -97,10 +97,11 @@ function getSourceTag(place: ImportedPlace): { label: string; bg: string; color:
   return null;
 }
 
-function SavedPlaceCard({ place, onTap, onArchive, fromHistory }: { place: ImportedPlace; onTap: () => void; onArchive?: (id: string) => void; fromHistory?: boolean }) {
+function SavedPlaceCard({ place, onTap, onArchive, fromHistory, onToggleStar }: { place: ImportedPlace; onTap: () => void; onArchive?: (id: string) => void; fromHistory?: boolean; onToggleStar?: (id: string) => void }) {
   const rating = place.rating;
   const reaction = rating ? REACTIONS.find((r) => r.id === rating.reaction) : null;
   const sourceTag = getSourceTag(place);
+  const isStarred = place.rating?.reaction === 'myPlace';
 
   // Swipe state
   const touchStartX = useRef(0);
@@ -165,8 +166,8 @@ function SavedPlaceCard({ place, onTap, onArchive, fromHistory }: { place: Impor
         onTouchEnd={onArchive ? handleTouchEnd : undefined}
         className="flex gap-2.5 p-3 rounded-xl cursor-pointer relative"
         style={{
-          background: 'white',
-          border: '1px solid var(--t-linen)',
+          background: isStarred ? 'rgba(42,122,86,0.03)' : 'white',
+          border: isStarred ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
           transform: `translateX(${swipeOffset}px)`,
           transition: swiping ? 'none' : 'transform 0.2s ease-out',
         }}
@@ -181,17 +182,31 @@ function SavedPlaceCard({ place, onTap, onArchive, fromHistory }: { place: Impor
             <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
               {place.name}
             </div>
-            {fromHistory && (
-              <span
-                className="text-[8px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0"
-                style={{ background: 'rgba(107,139,154,0.1)', color: 'var(--t-ghost)', fontFamily: "'Space Mono', monospace" }}
-              >
-                from history
-              </span>
-            )}
-            {!fromHistory && rating && reaction && (
-              <span style={{ fontSize: '14px', color: reaction.color }}>{reaction.icon}</span>
-            )}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {fromHistory && (
+                <span
+                  className="text-[8px] font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: 'rgba(107,139,154,0.1)', color: 'var(--t-ghost)', fontFamily: "'Space Mono', monospace" }}
+                >
+                  from history
+                </span>
+              )}
+              {!fromHistory && onToggleStar && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleStar(place.id); }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
+                  style={{
+                    background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
+                    color: isStarred ? 'white' : 'rgba(28,26,23,0.3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  {isStarred ? '★' : '☆'}
+                </button>
+              )}
+            </div>
           </div>
           <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
             {place.location} · {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
@@ -278,6 +293,7 @@ export default function SavedPage() {
   const archiveToHistory = useSavedStore(s => s.archiveToHistory);
   const addCollection = useSavedStore(s => s.addCollection);
   const ratePlace = useSavedStore(s => s.ratePlace);
+  const toggleStar = useSavedStore(s => s.toggleStar);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
 
   const trips = useTripStore(s => s.trips);
@@ -560,7 +576,7 @@ export default function SavedPage() {
                 color: 'var(--t-ink)',
               }}
             >
-              My Places
+              Collect
             </h1>
             <div className="text-[11px] mt-0.5" style={{ color: 'rgba(28,26,23,0.5)' }}>
               {myPlaces.length} places ·{' '}
@@ -792,6 +808,7 @@ export default function SavedPage() {
                       place={place}
                       onTap={() => setDetailItem(place)}
                       onArchive={archiveToHistory}
+                      onToggleStar={toggleStar}
                     />
                   ))}
                   {/* History items matching search */}

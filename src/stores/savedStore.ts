@@ -352,6 +352,7 @@ interface SavedState {
   addPlace: (place: ImportedPlace) => void;
   removePlace: (id: string) => void;
   ratePlace: (id: string, rating: PlaceRating) => void;
+  toggleStar: (id: string) => void;
   promoteFromHistory: (id: string) => void;
   archiveToHistory: (id: string) => void;
   addHistoryItems: (items: HistoryItem[]) => void;
@@ -382,6 +383,21 @@ export const useSavedStore = create<SavedState>((set) => ({
     myPlaces: state.myPlaces.map((p) =>
       p.id === id ? { ...p, rating } : p
     ),
+  })),
+
+  toggleStar: (id) => set((state) => ({
+    myPlaces: state.myPlaces.map((p) => {
+      if (p.id !== id) return p;
+      const isStarred = p.rating?.reaction === 'myPlace';
+      if (isStarred) {
+        // Unstar: remove rating
+        const { rating: _removed, ...rest } = p;
+        void _removed;
+        return rest as ImportedPlace;
+      }
+      // Star: set reaction to myPlace
+      return { ...p, rating: { reaction: 'myPlace' as const, ratedAt: new Date().toISOString().split('T')[0] } };
+    }),
   })),
 
   promoteFromHistory: (id) => set((state) => {

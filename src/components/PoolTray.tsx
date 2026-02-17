@@ -18,43 +18,36 @@ const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: strin
   { value: 'all', label: 'All' },
   { value: 'friend', label: 'Friends', icon: '👤' },
   { value: 'maps', label: 'Maps', icon: '📍' },
-  { value: 'ai', label: 'AI', icon: '✦' },
   { value: 'article', label: 'Articles', icon: '📰' },
   { value: 'email', label: 'Email', icon: '✉' },
+  { value: 'manual', label: 'Added', icon: '✎' },
 ];
 
 export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: PoolTrayProps) {
-  const pool = useTripStore(s => {
-    const trip = s.trips.find(t => t.id === s.currentTripId);
-    return trip?.pool;
-  });
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
     return trip?.destinations || [trip?.location?.split(',')[0]?.trim()].filter(Boolean);
   });
-  const addToPool = useTripStore(s => s.addToPool);
-  const poolItems = useMemo(() => pool?.filter(p => p.status === 'available') ?? [], [pool]);
   const { isExpanded, setExpanded } = usePoolStore();
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
 
-  // Geo-filtered: My Places that match this trip's destinations but aren't in the pool
+  // Starred places from savedStore, geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
-  const geoMatchedPlaces = useMemo(() => {
+  const starredPlaces = useMemo(() => {
     if (!tripDestinations || tripDestinations.length === 0) return [];
-    const poolNames = new Set(poolItems.map(p => p.name.toLowerCase()));
     const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
     return myPlaces.filter(place => {
-      if (poolNames.has(place.name.toLowerCase())) return false;
+      // Must be starred
+      if (place.rating?.reaction !== 'myPlace') return false;
+      // Must match trip destinations
       return destLower.some(dest => place.location.toLowerCase().includes(dest));
     });
-  }, [myPlaces, tripDestinations, poolItems]);
+  }, [myPlaces, tripDestinations]);
 
   const filteredItems = useMemo(() => {
-    if (sourceFilter === 'all') {
-      return poolItems;
-    }
-    return poolItems.filter(item => item.ghostSource === sourceFilter);
-  }, [poolItems, sourceFilter]);
+    if (sourceFilter === 'all') return starredPlaces;
+    return starredPlaces.filter(item => (item.ghostSource || 'manual') === sourceFilter);
+  }, [starredPlaces, sourceFilter]);
 
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => b.matchScore - a.matchScore);
@@ -63,15 +56,15 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
   // Count per source for tab labels
   const sourceCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    poolItems.forEach(item => {
+    starredPlaces.forEach(item => {
       const src = item.ghostSource || 'manual';
       counts[src] = (counts[src] || 0) + 1;
     });
     return counts;
-  }, [poolItems]);
+  }, [starredPlaces]);
 
   if (!isExpanded) {
-    // Collapsed state — just a thin bar
+    // Collapsed state — thin bar
     return (
       <div
         className="fixed left-0 right-0 z-40"
@@ -98,12 +91,12 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
             <span
               style={{
                 fontFamily: "'DM Serif Display', serif",
-                fontSize: '16px',
+                fontSize: '14px',
                 fontWeight: 600,
                 color: 'var(--t-ink)',
               }}
             >
-              Unsorted
+              Everywhere you want to go
             </span>
             <span
               className="inline-flex items-center justify-center rounded-full text-[10px] font-bold"
@@ -114,7 +107,7 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
                 fontFamily: "'Space Mono', monospace",
               }}
             >
-              {poolItems.length}
+              {starredPlaces.length}
             </span>
             <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.4)' }}>▲</span>
           </div>
@@ -182,11 +175,11 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
               color: 'var(--t-ink)',
             }}
           >
-            Unsorted Places
+            Everywhere you want to go
             <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.4)' }}>▼</span>
           </button>
           <div className="flex items-center gap-2">
-            {onOpenExport && poolItems.length > 0 && (
+            {onOpenExport && starredPlaces.length > 0 && (
               <button
                 onClick={onOpenExport}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
@@ -220,10 +213,10 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
           className="px-4 pb-3 text-xs"
           style={{ color: 'rgba(28,26,23,0.5)' }}
         >
-          {poolItems.length} places · tap to assign to a day
+          {starredPlaces.length} starred place{starredPlaces.length !== 1 ? 's' : ''} · tap to assign to a day
         </div>
 
-        {/* Filter Tabs — underline style like wireframe */}
+        {/* Filter Tabs */}
         <div
           className="flex overflow-x-auto"
           style={{
@@ -233,7 +226,7 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
         >
           {SOURCE_FILTER_TABS.map(tab => {
             const isActive = sourceFilter === tab.value;
-            const count = tab.value === 'all' ? poolItems.length : (sourceCounts[tab.value] || 0);
+            const count = tab.value === 'all' ? starredPlaces.length : (sourceCounts[tab.value] || 0);
 
             // Skip tabs with 0 count (except 'all')
             if (tab.value !== 'all' && count === 0) return null;
@@ -258,7 +251,7 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
           })}
         </div>
 
-        {/* Items List — card-based like wireframe */}
+        {/* Items List */}
         <div
           className="flex-1 overflow-y-auto px-4 py-3"
           style={{ scrollbarWidth: 'thin' }}
@@ -266,7 +259,6 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
           {sortedItems.map(item => {
             const sourceStyle = SOURCE_STYLES[item.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
             const note = item.ghostSource === 'friend' ? item.friendAttribution?.note
-              : item.ghostSource === 'ai' ? item.aiReasoning?.rationale
               : item.ghostSource === 'maps' ? item.savedDate
               : undefined;
 
@@ -277,6 +269,7 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
                 style={{
                   background: 'var(--t-cream)',
                   border: '1.5px solid var(--t-linen)',
+                  borderLeft: '3px solid var(--t-verde)',
                 }}
                 onClick={() => onTapDetail(item)}
               >
@@ -293,7 +286,6 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
                   >
                     {sourceStyle.icon} {item.ghostSource === 'friend'
                       ? item.friendAttribution?.name
-                      : item.ghostSource === 'ai' ? 'AI suggestion'
                       : item.ghostSource === 'maps' ? 'Google Maps'
                       : item.source?.name || sourceStyle.label}
                   </div>
@@ -307,7 +299,7 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
                   )}
                 </div>
 
-                {/* Match score + assign button */}
+                {/* Match score */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span
                     className="text-[11px] font-bold px-2 py-0.5 rounded-full"
@@ -326,59 +318,24 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: Po
 
           {sortedItems.length === 0 && (
             <div
-              className="flex items-center justify-center py-8 text-center"
-              style={{
-                color: 'rgba(28,26,23,0.5)',
-                fontFamily: "'Space Mono', monospace",
-                fontSize: '12px',
-              }}
+              className="flex flex-col items-center justify-center py-10 text-center"
+              style={{ color: 'rgba(28,26,23,0.5)' }}
             >
-              No items found for this source
-            </div>
-          )}
-
-          {/* Geo-filtered: From My Places */}
-          {geoMatchedPlaces.length > 0 && sourceFilter === 'all' && (
-            <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}>
-                    From My Places
-                  </span>
-                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
-                    {geoMatchedPlaces.length} match{geoMatchedPlaces.length !== 1 ? 'es' : ''} in {(tripDestinations as string[]).join(', ')}
-                  </span>
-                </div>
-              </div>
-              {geoMatchedPlaces.map(place => (
-                <div
-                  key={place.id}
-                  className="flex justify-between items-center rounded-lg mb-2 p-3 cursor-pointer transition-all"
-                  style={{
-                    background: 'rgba(42,122,86,0.04)',
-                    border: '1.5px solid rgba(42,122,86,0.15)',
-                  }}
-                >
-                  <div className="flex-1 min-w-0 mr-3" onClick={() => onTapDetail(place)}>
-                    <div className="text-[13px] font-medium mb-0.5" style={{ color: 'var(--t-ink)' }}>
-                      {place.name}
-                    </div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                      {place.location} · {place.type} · saved in My Places
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToPool([{ ...place, id: `from-saved-${place.id}` }]);
-                    }}
-                    className="text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border-none cursor-pointer"
-                    style={{ background: 'var(--t-verde)', color: 'white' }}
-                  >
-                    + Add
-                  </button>
-                </div>
-              ))}
+              <span className="text-2xl mb-3">★</span>
+              <p
+                className="text-[12px] mb-1"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                {sourceFilter !== 'all'
+                  ? 'No starred places from this source'
+                  : 'No starred places yet'}
+              </p>
+              <p
+                className="text-[11px]"
+                style={{ color: 'rgba(28,26,23,0.35)' }}
+              >
+                Star places in My Places or Collect to add them here
+              </p>
             </div>
           )}
         </div>

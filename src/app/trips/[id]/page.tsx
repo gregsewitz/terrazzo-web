@@ -162,9 +162,9 @@ export default function TripDetailPage() {
       )}
 
       {/* Export to Maps */}
-      {exportOpen && trip?.pool && (
+      {exportOpen && (
         <ExportToMaps
-          places={trip.pool.filter(p => p.status === 'available')}
+          places={myPlaces.filter(p => p.rating?.reaction === 'myPlace')}
           collectionName={trip.name}
           onClose={() => setExportOpen(false)}
         />
