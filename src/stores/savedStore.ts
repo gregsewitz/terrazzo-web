@@ -348,6 +348,8 @@ interface SavedState {
   removePlace: (id: string) => void;
   ratePlace: (id: string, rating: PlaceRating) => void;
   promoteFromHistory: (id: string) => void;
+  archiveToHistory: (id: string) => void;
+  addHistoryItems: (items: HistoryItem[]) => void;
   addCollection: (collection: Omit<Collection, 'id'>) => void;
 }
 
@@ -397,6 +399,35 @@ export const useSavedStore = create<SavedState>((set) => ({
     return {
       myPlaces: [newPlace, ...state.myPlaces],
       history: state.history.filter((h) => h.id !== id),
+    };
+  }),
+
+  archiveToHistory: (id) => set((state) => {
+    const place = state.myPlaces.find((p) => p.id === id);
+    if (!place) return state;
+
+    const historyItem: HistoryItem = {
+      id: `hist-archived-${id}`,
+      name: place.name,
+      type: place.type,
+      location: place.location,
+      detectedFrom: (place.source?.name as HistoryItem['detectedFrom']) || 'OpenTable',
+      detectedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      ghostSource: place.ghostSource || 'manual',
+    };
+
+    return {
+      myPlaces: state.myPlaces.filter((p) => p.id !== id),
+      history: [historyItem, ...state.history],
+    };
+  }),
+
+  addHistoryItems: (items) => set((state) => {
+    // Dedupe by name
+    const existingNames = new Set(state.history.map(h => h.name.toLowerCase()));
+    const newItems = items.filter(item => !existingNames.has(item.name.toLowerCase()));
+    return {
+      history: [...newItems, ...state.history],
     };
   }),
 

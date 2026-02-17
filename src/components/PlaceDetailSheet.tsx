@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { useSavedStore } from '@/stores/savedStore';
 
 interface PlaceDetailSheetProps {
   item: ImportedPlace;
@@ -10,16 +12,40 @@ interface PlaceDetailSheetProps {
 
 const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
+// Generate a warm gradient based on place type
+function getPhotoGradient(type: string): string {
+  const gradients: Record<string, string> = {
+    restaurant: 'linear-gradient(135deg, #d8c0a0, #c0a880, #b89870)',
+    hotel: 'linear-gradient(135deg, #c8c0d0, #b0a8b8, #a098a8)',
+    bar: 'linear-gradient(135deg, #d0c0a0, #b8a888, #a89878)',
+    cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0, #b8b0a0)',
+    museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8, #98a0a8)',
+    activity: 'linear-gradient(135deg, #c0d0c8, #a8b8a8, #98a898)',
+    neighborhood: 'linear-gradient(135deg, #d0d8c8, #b8c0a8, #a8b098)',
+    shop: 'linear-gradient(135deg, #d8c8b8, #c0b0a0, #b0a090)',
+  };
+  return gradients[type] || gradients.restaurant;
+}
+
 export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailSheetProps) {
   const existingRating = item.rating;
   const ratingReaction = existingRating ? REACTIONS.find(r => r.id === existingRating.reaction) : null;
+  const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
+  const addPlace = useSavedStore(s => s.addPlace);
+  const myPlaces = useSavedStore(s => s.myPlaces);
+  const [saved, setSaved] = useState(myPlaces.some(p => p.name === item.name));
+
+  const handleSave = () => {
+    if (!saved) {
+      addPlace({ ...item, id: `saved-${Date.now()}` });
+      setSaved(true);
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-50 bg-black/30"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-50 bg-black/30" onClick={onClose} />
 
       {/* Sheet */}
       <div
@@ -27,44 +53,85 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
         style={{
           maxWidth: 480,
           margin: '0 auto',
-          maxHeight: '85vh',
+          maxHeight: '90vh',
           background: 'var(--t-cream)',
         }}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-8 h-1 rounded-full" style={{ background: 'var(--t-travertine)' }} />
-        </div>
+        {/* Photo header — gradient placeholder like wireframe */}
+        <div
+          className="relative"
+          style={{
+            height: 200,
+            background: getPhotoGradient(item.type),
+          }}
+        >
+          {/* Back button */}
+          <button
+            onClick={onClose}
+            className="absolute top-14 left-4 text-white text-base bg-transparent border-none cursor-pointer"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+          >
+            ←
+          </button>
 
-        <div className="px-4 pb-8">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h2
-                className="text-xl mb-0.5"
-                style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
-              >
-                {item.name}
-              </h2>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                {item.location}
-              </p>
-            </div>
-            <div
-              className="text-lg font-bold px-2.5 py-1 rounded-xl"
+          {/* Action buttons bottom-right */}
+          <div className="absolute bottom-3 right-3 flex gap-1.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleSave(); }}
+              className="px-2.5 py-1 rounded-lg text-[10px] border-none"
               style={{
-                background: 'rgba(200,146,58,0.12)',
-                color: 'var(--t-honey)',
-                fontFamily: "'Space Mono', monospace",
+                background: saved ? 'rgba(42,122,86,0.9)' : 'rgba(0,0,0,0.4)',
+                color: 'white',
+                cursor: saved ? 'default' : 'pointer',
               }}
             >
-              {item.matchScore}%
-            </div>
+              {saved ? '♡ Saved' : '♡ Save'}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRate?.(); }}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold border-none cursor-pointer"
+              style={{ background: 'rgba(200,146,58,0.9)', color: 'white' }}
+            >
+              ★ Rate
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 pb-8">
+          {/* Name + meta */}
+          <h2
+            className="text-[22px] mt-4 mb-1 italic leading-tight"
+            style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+          >
+            {item.name}
+          </h2>
+          <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            {item.location} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+          </p>
+
+          {/* Tags row */}
+          <div className="flex gap-1 mt-2.5 flex-wrap">
+            {sourceStyle && (
+              <span
+                className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
+                style={{ background: sourceStyle.bg, color: sourceStyle.color }}
+              >
+                {sourceStyle.icon} {item.source?.name || sourceStyle.label}
+              </span>
+            )}
+            {item.google?.category && (
+              <span
+                className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
+                style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
+              >
+                {item.google.category}
+              </span>
+            )}
           </div>
 
           {/* Google Places Facts */}
           {item.google && (
-            <div className="flex gap-2 mb-4 flex-wrap">
+            <div className="flex gap-2 mt-3 mb-4 flex-wrap">
               {item.google.rating && (
                 <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg" style={{ background: 'rgba(28,26,23,0.04)' }}>
                   <span style={{ color: 'var(--t-chrome-yellow)' }}>★</span>
@@ -74,11 +141,6 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
                       ({item.google.reviewCount.toLocaleString()})
                     </span>
                   )}
-                </div>
-              )}
-              {item.google.category && (
-                <div className="px-2.5 py-1.5 rounded-lg text-[11px]" style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.6)' }}>
-                  {item.google.category}
                 </div>
               )}
               {item.google.priceLevel && (
@@ -99,36 +161,65 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
               <span className="text-[11px]" style={{ color: 'var(--t-panton-orange)' }}>
                 Closed {item.enrichment.closedDays.join(', ')}s
               </span>
-              {item.enrichment.confidence && (
-                <span className="text-[9px] ml-auto" style={{ color: 'rgba(28,26,23,0.3)' }}>
-                  Confidence: {Math.round(item.enrichment.confidence * 100)}%
-                </span>
-              )}
             </div>
           )}
 
-          {/* Source + Taste note */}
-          <div className="mb-4">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <span
-                className="text-[9px] px-1.5 py-0.5 rounded-full"
-                style={{ background: 'rgba(28,26,23,0.06)', color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+          {/* Author's notes callout — the gold, wireframe style */}
+          {item.tasteNote && (
+            <div
+              className="mb-4"
+              style={{
+                background: sourceStyle ? `${sourceStyle.color}08` : 'rgba(199,82,51,0.04)',
+                borderLeft: `3px solid ${sourceStyle?.color || '#c75233'}`,
+                padding: '12px 14px',
+                borderRadius: '0 12px 12px 0',
+              }}
+            >
+              <div
+                className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                style={{
+                  color: sourceStyle?.color || '#c75233',
+                  fontFamily: "'Space Mono', monospace",
+                }}
               >
-                via {item.source.name}
-              </span>
-            </div>
-            {item.tasteNote && (
-              <p className="text-[12px] italic leading-relaxed" style={{ color: 'rgba(28,26,23,0.6)' }}>
-                "{item.tasteNote}"
+                {item.source?.name ? `From ${item.source.name}` : 'Source note'}
+              </div>
+              <p className="text-[12px] leading-relaxed" style={{ color: 'var(--t-ink)' }}>
+                {item.tasteNote}
               </p>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Friend attribution */}
+          {item.friendAttribution && (
+            <div
+              className="mb-4"
+              style={{
+                background: 'rgba(42,122,86,0.04)',
+                borderLeft: '3px solid var(--t-verde)',
+                padding: '12px 14px',
+                borderRadius: '0 12px 12px 0',
+              }}
+            >
+              <div
+                className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                style={{ color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
+              >
+                👤 {item.friendAttribution.name}
+              </div>
+              {item.friendAttribution.note && (
+                <p className="text-[12px] italic leading-relaxed" style={{ color: 'var(--t-ink)' }}>
+                  &ldquo;{item.friendAttribution.note}&rdquo;
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Taste Axes Breakdown */}
           <div className="mb-4">
             <h3
               className="text-[10px] uppercase tracking-wider mb-2.5 font-bold"
-              style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
             >
               Taste Axes
             </h3>
@@ -161,29 +252,30 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
             </div>
           </div>
 
-          {/* Ghost source badge */}
-          {item.ghostSource && item.ghostSource !== 'manual' && (
-            <div className="mb-4">
-              <div
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-medium"
-                style={{
-                  background: SOURCE_STYLES[item.ghostSource as GhostSourceType]?.bg,
-                  color: SOURCE_STYLES[item.ghostSource as GhostSourceType]?.color,
-                  fontFamily: "'Space Mono', monospace",
-                }}
-              >
-                {SOURCE_STYLES[item.ghostSource as GhostSourceType]?.icon}{' '}
-                {item.friendAttribution
-                  ? `${item.friendAttribution.name} recommended`
-                  : SOURCE_STYLES[item.ghostSource as GhostSourceType]?.label}
-              </div>
-              {item.friendAttribution?.note && (
-                <p className="text-[11px] italic mt-1.5 ml-0.5" style={{ color: 'rgba(28,26,23,0.6)' }}>
-                  &ldquo;{item.friendAttribution.note}&rdquo;
-                </p>
-              )}
+          {/* Match score highlight */}
+          <div
+            className="flex items-center gap-3 p-3 rounded-xl mb-4"
+            style={{ background: 'rgba(200,146,58,0.06)', border: '1px solid rgba(200,146,58,0.15)' }}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-[14px] font-bold"
+              style={{
+                background: 'linear-gradient(135deg, rgba(200,146,58,0.2), rgba(200,146,58,0.1))',
+                color: 'var(--t-honey)',
+                fontFamily: "'Space Mono', monospace",
+              }}
+            >
+              {item.matchScore}%
             </div>
-          )}
+            <div>
+              <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                Taste match
+              </div>
+              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                Based on your profile preferences
+              </div>
+            </div>
+          </div>
 
           {/* Existing rating display */}
           {existingRating && ratingReaction && (
@@ -242,7 +334,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
                   className="text-[10px] uppercase tracking-wider font-bold mb-1.5"
                   style={{ color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
                 >
-                  ✦ Why You'll Love It
+                  ✦ Why You&apos;ll Love It
                 </h4>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'var(--t-ink)' }}>
                   {item.terrazzoInsight.why}

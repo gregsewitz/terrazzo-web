@@ -1,10 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import SmartCollectionSheet from '@/components/SmartCollectionSheet';
+import PlaceDetailSheet from '@/components/PlaceDetailSheet';
+import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore, HistoryItem } from '@/stores/savedStore';
-import { REACTIONS, PlaceType, ImportedPlace } from '@/types';
+import { REACTIONS, PlaceType, ImportedPlace, PlaceRating } from '@/types';
 
 const PLACE_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
   { id: 'all', label: 'All' },
@@ -78,43 +81,116 @@ function getSourceTag(place: ImportedPlace): { label: string; bg: string; color:
   return null;
 }
 
-function SavedPlaceCard({ place }: { place: ImportedPlace }) {
+function SavedPlaceCard({ place, onTap, onArchive, fromHistory }: { place: ImportedPlace; onTap: () => void; onArchive?: (id: string) => void; fromHistory?: boolean }) {
   const rating = place.rating;
   const reaction = rating ? REACTIONS.find((r) => r.id === rating.reaction) : null;
   const sourceTag = getSourceTag(place);
 
-  return (
-    <div
-      className="flex gap-2.5 p-3 rounded-xl"
-      style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-    >
-      {/* Thumbnail gradient */}
+  // Swipe state
+  const touchStartX = useRef(0);
+  const touchCurrentX = useRef(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+  const [archived, setArchived] = useState(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchCurrentX.current = e.touches[0].clientX;
+    setSwiping(true);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!swiping) return;
+    touchCurrentX.current = e.touches[0].clientX;
+    const diff = touchCurrentX.current - touchStartX.current;
+    // Only allow left swipe (negative)
+    if (diff < 0) {
+      setSwipeOffset(Math.max(diff, -120));
+    }
+  }, [swiping]);
+
+  const handleTouchEnd = useCallback(() => {
+    setSwiping(false);
+    if (swipeOffset < -80 && onArchive) {
+      // Animate out
+      setArchived(true);
+      setTimeout(() => onArchive(place.id), 300);
+    } else {
+      setSwipeOffset(0);
+    }
+  }, [swipeOffset, onArchive, place.id]);
+
+  if (archived) {
+    return (
       <div
-        className="w-12 h-12 rounded-[10px] flex-shrink-0"
-        style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
+        className="rounded-xl overflow-hidden transition-all duration-300"
+        style={{ maxHeight: 0, opacity: 0, margin: 0, padding: 0 }}
       />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
-            {place.name}
+    );
+  }
+
+  return (
+    <div className="relative rounded-xl overflow-hidden">
+      {/* Archive reveal behind card */}
+      {swipeOffset < -10 && (
+        <div
+          className="absolute inset-0 flex items-center justify-end pr-4 rounded-xl"
+          style={{ background: 'var(--t-ghost)' }}
+        >
+          <span className="text-white text-[11px] font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Archive →
+          </span>
+        </div>
+      )}
+      <div
+        onClick={swipeOffset === 0 ? onTap : undefined}
+        onTouchStart={onArchive ? handleTouchStart : undefined}
+        onTouchMove={onArchive ? handleTouchMove : undefined}
+        onTouchEnd={onArchive ? handleTouchEnd : undefined}
+        className="flex gap-2.5 p-3 rounded-xl cursor-pointer relative"
+        style={{
+          background: 'white',
+          border: '1px solid var(--t-linen)',
+          transform: `translateX(${swipeOffset}px)`,
+          transition: swiping ? 'none' : 'transform 0.2s ease-out',
+        }}
+      >
+        {/* Thumbnail gradient */}
+        <div
+          className="w-12 h-12 rounded-[10px] flex-shrink-0"
+          style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+              {place.name}
+            </div>
+            {fromHistory && (
+              <span
+                className="text-[8px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0"
+                style={{ background: 'rgba(107,139,154,0.1)', color: 'var(--t-ghost)', fontFamily: "'Space Mono', monospace" }}
+              >
+                from history
+              </span>
+            )}
+            {!fromHistory && rating && reaction && (
+              <span style={{ fontSize: '14px', color: reaction.color }}>{reaction.icon}</span>
+            )}
           </div>
-          {rating && reaction && (
-            <span style={{ fontSize: '14px', color: reaction.color }}>{reaction.icon}</span>
+          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            {place.location} · {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
+          </div>
+          {sourceTag && (
+            <div className="flex gap-1 mt-1">
+              <span
+                className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
+                style={{ background: sourceTag.bg, color: sourceTag.color }}
+              >
+                {sourceTag.label}
+              </span>
+            </div>
           )}
         </div>
-        <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
-          {place.location} · {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
-        </div>
-        {sourceTag && (
-          <div className="flex gap-1 mt-1">
-            <span
-              className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
-              style={{ background: sourceTag.bg, color: sourceTag.color }}
-            >
-              {sourceTag.label}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -155,10 +231,11 @@ function HistoryCard({ item, onPromote }: { item: HistoryItem; onPromote: (id: s
   );
 }
 
-function LocationCluster({ city, count }: { city: string; count: number }) {
+function LocationCluster({ city, count, onTap }: { city: string; count: number; onTap: () => void }) {
   return (
     <div
-      className="p-3 rounded-xl"
+      onClick={onTap}
+      className="p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02]"
       style={{ background: 'white', border: '1px solid var(--t-linen)' }}
     >
       <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
@@ -172,6 +249,7 @@ function LocationCluster({ city, count }: { city: string; count: number }) {
 }
 
 export default function SavedPage() {
+  const router = useRouter();
   const viewMode = useSavedStore(s => s.viewMode);
   const typeFilter = useSavedStore(s => s.typeFilter);
   const searchQuery = useSavedStore(s => s.searchQuery);
@@ -181,17 +259,29 @@ export default function SavedPage() {
   const setTypeFilter = useSavedStore(s => s.setTypeFilter);
   const setSearchQuery = useSavedStore(s => s.setSearchQuery);
   const promoteFromHistory = useSavedStore(s => s.promoteFromHistory);
+  const archiveToHistory = useSavedStore(s => s.archiveToHistory);
   const addCollection = useSavedStore(s => s.addCollection);
+  const ratePlace = useSavedStore(s => s.ratePlace);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [historyTypeFilter, setHistoryTypeFilter] = useState<PlaceType | 'all'>('all');
+  const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
+  const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchInput(value);
     setSearchQuery(value);
+  };
+
+  const handleRate = (rating: PlaceRating) => {
+    if (ratingItem) {
+      ratePlace(ratingItem.id, rating);
+      setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
+      setRatingItem(null);
+    }
   };
 
   // Filter places
@@ -204,6 +294,31 @@ export default function SavedPage() {
       return matchesType && matchesSearch;
     });
   }, [myPlaces, typeFilter, searchQuery]);
+
+  // History items matching search (shown with "from history" label)
+  const matchingHistoryPlaces = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return history
+      .filter(h => {
+        const matchesType = typeFilter === 'all' || h.type === typeFilter;
+        const matchesSearch = h.name.toLowerCase().includes(q) || h.location.toLowerCase().includes(q);
+        return matchesType && matchesSearch;
+      })
+      .map(h => ({
+        id: h.id,
+        name: h.name,
+        type: h.type,
+        location: h.location,
+        source: { type: 'email' as const, name: h.detectedFrom },
+        matchScore: 0,
+        matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+        tasteNote: `Detected ${h.detectedDate} via ${h.detectedFrom}`,
+        status: 'available' as const,
+        ghostSource: h.ghostSource,
+        _fromHistory: true,
+      } as ImportedPlace & { _fromHistory: boolean }));
+  }, [history, searchQuery, typeFilter]);
 
   // Location clusters (top 4 for 2x2 grid)
   const locationClusters = useMemo(() => {
@@ -360,13 +475,27 @@ export default function SavedPage() {
               </button>
             </div>
           </div>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="text-xl"
-            style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            🔍
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowNewCollection(true)}
+              className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full"
+              style={{
+                background: 'var(--t-ink)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              + Collection
+            </button>
+            <button
+              onClick={() => setShowSearch(!showSearch)}
+              className="text-xl"
+              style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              🔍
+            </button>
+          </div>
         </div>
 
         {/* Expandable search */}
@@ -411,9 +540,10 @@ export default function SavedPage() {
           })}
         </div>
 
-        {/* Trip banner — gradient bg with emoji flag */}
+        {/* Trip banner — gradient bg with emoji flag — navigates to trip */}
         <div
-          className="flex items-center gap-3 p-3.5 rounded-[14px] mb-4"
+          onClick={() => router.push('/trips/demo-tokyo')}
+          className="flex items-center gap-3 p-3.5 rounded-[14px] mb-4 cursor-pointer transition-all hover:scale-[1.01]"
           style={{ background: 'linear-gradient(135deg, #e8edf2, #f2ede8)' }}
         >
           <div className="text-2xl">🇯🇵</div>
@@ -427,7 +557,7 @@ export default function SavedPage() {
           </div>
           <div
             className="text-[12px] font-medium"
-            style={{ color: 'var(--t-honey)', cursor: 'pointer' }}
+            style={{ color: 'var(--t-honey)' }}
           >
             View →
           </div>
@@ -444,7 +574,16 @@ export default function SavedPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {locationClusters.map(([city, count]) => (
-                <LocationCluster key={city} city={city} count={count} />
+                <LocationCluster
+                  key={city}
+                  city={city}
+                  count={count}
+                  onTap={() => {
+                    setSearchInput(city);
+                    setSearchQuery(city);
+                    setShowSearch(true);
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -461,7 +600,11 @@ export default function SavedPage() {
           {filteredPlaces.length > 0 ? (
             <div className="flex flex-col gap-2">
               {filteredPlaces.map((place) => (
-                <SavedPlaceCard key={place.id} place={place} />
+                <SavedPlaceCard
+                  key={place.id}
+                  place={place}
+                  onTap={() => setDetailItem(place)}
+                />
               ))}
             </div>
           ) : (
@@ -474,6 +617,24 @@ export default function SavedPage() {
           )}
         </div>
       </div>
+
+      {/* Place Detail Sheet */}
+      {detailItem && (
+        <PlaceDetailSheet
+          item={detailItem}
+          onClose={() => setDetailItem(null)}
+          onRate={() => setRatingItem(detailItem)}
+        />
+      )}
+
+      {/* Rating Sheet */}
+      {ratingItem && (
+        <RatingSheet
+          item={ratingItem}
+          onClose={() => setRatingItem(null)}
+          onSave={handleRate}
+        />
+      )}
 
       {/* Smart Collection Sheet */}
       <SmartCollectionSheet

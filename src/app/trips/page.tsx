@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
@@ -7,6 +8,17 @@ import TabBar from '@/components/TabBar';
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
   const router = useRouter();
+  const [showNewTrip, setShowNewTrip] = useState(false);
+  const [tripName, setTripName] = useState('');
+
+  const handleCreateTrip = () => {
+    if (!tripName.trim()) return;
+    // For now, navigate to the demo trip (in a real app, we'd create a new trip in the store)
+    setShowNewTrip(false);
+    setTripName('');
+    // Navigate to demo for now since we only have one trip
+    router.push('/trips/demo-tokyo');
+  };
 
   return (
     <div
@@ -56,18 +68,64 @@ export default function TripsPage() {
             </button>
           ))}
 
-          {/* Add trip button */}
-          <button
-            className="flex items-center justify-center gap-2 p-4 rounded-xl border-none cursor-pointer"
-            style={{
-              background: 'rgba(28,26,23,0.03)',
-              border: '1.5px dashed var(--t-travertine)',
-              color: 'rgba(28,26,23,0.4)',
-            }}
-          >
-            <span className="text-lg">+</span>
-            <span className="text-[12px]">New Trip</span>
-          </button>
+          {/* New trip — inline form or button */}
+          {showNewTrip ? (
+            <div
+              className="p-4 rounded-xl"
+              style={{ background: 'white', border: '1.5px solid var(--t-honey)' }}
+            >
+              <div className="text-[11px] font-bold uppercase tracking-wider mb-2"
+                style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}>
+                New trip
+              </div>
+              <input
+                type="text"
+                placeholder="Where are you going?"
+                value={tripName}
+                onChange={(e) => setTripName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTrip(); }}
+                autoFocus
+                className="w-full px-3 py-2.5 rounded-lg border mb-3 text-[13px]"
+                style={{
+                  background: 'var(--t-cream)',
+                  borderColor: 'var(--t-linen)',
+                  color: 'var(--t-ink)',
+                  outline: 'none',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowNewTrip(false); setTripName(''); }}
+                  className="flex-1 py-2 rounded-lg text-[12px] font-medium border cursor-pointer"
+                  style={{ background: 'transparent', borderColor: 'var(--t-linen)', color: 'var(--t-ink)' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateTrip}
+                  disabled={!tripName.trim()}
+                  className="flex-1 py-2 rounded-lg text-[12px] font-medium border-none cursor-pointer disabled:opacity-40"
+                  style={{ background: 'var(--t-ink)', color: 'white' }}
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowNewTrip(true)}
+              className="flex items-center justify-center gap-2 p-4 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
+              style={{
+                background: 'rgba(28,26,23,0.03)',
+                border: '1.5px dashed var(--t-travertine)',
+                color: 'rgba(28,26,23,0.4)',
+              }}
+            >
+              <span className="text-lg">+</span>
+              <span className="text-[12px]">New Trip</span>
+            </button>
+          )}
         </div>
       </div>
 

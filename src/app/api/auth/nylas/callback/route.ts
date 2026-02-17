@@ -29,9 +29,8 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     
-    // TODO: Store grant in database
-    // For now, store in a cookie (temporary)
-    const redirectUrl = new URL('/trips', request.url);
+    // Store grant in a cookie (session-based, will upgrade to DB later)
+    const redirectUrl = new URL('/trips?email_connected=1', request.url);
     const res = NextResponse.redirect(redirectUrl);
     res.cookies.set('nylas_grant_id', data.grant_id, {
       httpOnly: true,

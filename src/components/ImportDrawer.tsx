@@ -1,27 +1,27 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useImportStore, ImportMode } from '@/stores/importStore';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { ImportedPlace } from '@/types';
 
-const IMPORT_MODES: { value: ImportMode; label: string; icon: string; description: string }[] = [
-  { value: 'text', label: 'Paste Text', icon: '📝', description: "Paste a friend's list or notes" },
-  { value: 'url', label: 'Paste URL', icon: '🔗', description: 'CN Traveller, YOLO Journal, etc.' },
-  { value: 'google-maps', label: 'Google Maps', icon: '📍', description: 'Import from saved lists' },
-  { value: 'email', label: 'Email Scan', icon: '✉️', description: 'Find booking confirmations' },
+const IMPORT_MODES: { value: ImportMode; label: string; icon: string }[] = [
+  { value: 'text', label: 'Paste text', icon: '📋' },
+  { value: 'url', label: 'Paste link', icon: '🔗' },
+  { value: 'google-maps', label: 'Maps', icon: '📍' },
+  { value: 'email', label: 'Gmail', icon: '✉' },
 ];
 
 // Category config for grouping imported results
-const CATEGORY_CONFIG: Record<string, { icon: string; label: string; color: string }> = {
-  restaurant: { icon: '🍽', label: 'Restaurants', color: '#e87080' },
-  hotel: { icon: '🏨', label: 'Hotels', color: '#6844a0' },
-  bar: { icon: '🍸', label: 'Bars', color: '#c8923a' },
-  cafe: { icon: '☕', label: 'Cafes', color: '#a06c28' },
-  museum: { icon: '🏛', label: 'Museums', color: '#d63020' },
-  activity: { icon: '⚡', label: 'Activities', color: '#2a7a56' },
-  neighborhood: { icon: '🏘', label: 'Neighborhoods', color: '#5a9a6a' },
-  shop: { icon: '🛍', label: 'Shops', color: '#e86830' },
+const CATEGORY_CONFIG: Record<string, { icon: string; label: string }> = {
+  restaurant: { icon: '🍽', label: 'Restaurants & bars' },
+  hotel: { icon: '🏨', label: 'Hotels' },
+  bar: { icon: '🍸', label: 'Bars' },
+  cafe: { icon: '☕', label: 'Coffee & sweet' },
+  museum: { icon: '🏛', label: 'Sights & museums' },
+  activity: { icon: '⚡', label: 'Activities' },
+  neighborhood: { icon: '🏘', label: 'Neighborhoods' },
+  shop: { icon: '🛍', label: 'Shops' },
 };
 
 // Demo imported results for prototype
@@ -72,6 +72,12 @@ const DEMO_IMPORT_RESULTS: ImportedPlace[] = [
 
 type ImportStep = 'input' | 'processing' | 'results';
 
+// Progress items for the processing animation
+interface ProgressItem {
+  label: string;
+  status: 'done' | 'active' | 'pending';
+}
+
 interface ImportDrawerProps {
   onClose: () => void;
 }
@@ -79,14 +85,24 @@ interface ImportDrawerProps {
 export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   const {
     mode, setMode, inputValue, setInputValue,
-    isProcessing, setProcessing, error, setError, emailConnected,
+    isProcessing, setProcessing, error, setError, emailConnected, setEmailConnected,
   } = useImportStore();
   const addToPool = useTripStore(s => s.addToPool);
+
+  // Check Gmail connection status on mount
+  useEffect(() => {
+    fetch('/api/email/status')
+      .then(r => r.json())
+      .then(data => { if (data.connected) setEmailConnected(true); })
+      .catch(() => {});
+  }, [setEmailConnected]);
 
   const [step, setStep] = useState<ImportStep>('input');
   const [importResults, setImportResults] = useState<ImportedPlace[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
+  const [sourceName, setSourceName] = useState('');
 
   // Group results by category
   const groupedResults = useMemo(() => {
@@ -106,13 +122,37 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     });
   };
 
-  const selectAll = () => {
-    setSelectedIds(new Set(importResults.map(r => r.id)));
-  };
+  const selectAll = () => setSelectedIds(new Set(importResults.map(r => r.id)));
+  const deselectAll = () => setSelectedIds(new Set());
 
-  const deselectAll = () => {
-    setSelectedIds(new Set());
-  };
+  // Animated progress during processing step
+  useEffect(() => {
+    if (step !== 'processing') return;
+    const steps: ProgressItem[] = [
+      { label: `Found ${DEMO_IMPORT_RESULTS.length} places`, status: 'pending' },
+      { label: `Detected ${groupedResults.length || 4} categories`, status: 'pending' },
+      { label: 'Extracted notes for places', status: 'pending' },
+      { label: 'Geocoding locations…', status: 'pending' },
+      { label: 'Matching to your taste profile', status: 'pending' },
+    ];
+    setProgressItems(steps);
+
+    const timers: NodeJS.Timeout[] = [];
+    steps.forEach((_, i) => {
+      timers.push(setTimeout(() => {
+        setProgressItems(prev => prev.map((p, j) => ({
+          ...p,
+          status: j < i ? 'done' : j === i ? 'active' : 'pending',
+        })));
+      }, 300 + i * 400));
+    });
+    // Mark last as done
+    timers.push(setTimeout(() => {
+      setProgressItems(prev => prev.map(p => ({ ...p, status: 'done' })));
+    }, 300 + steps.length * 400));
+
+    return () => timers.forEach(clearTimeout);
+  }, [step, groupedResults.length]);
 
   async function handleImport() {
     if (!inputValue.trim() && mode !== 'email') return;
@@ -121,7 +161,10 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     setStep('processing');
 
     try {
-      const endpoint = mode === 'url' ? '/api/import/url' : mode === 'text' ? '/api/import/text' : '/api/email/scan';
+      const endpoint = mode === 'url' ? '/api/import/url'
+        : mode === 'text' ? '/api/import/text'
+        : mode === 'google-maps' ? '/api/import/maps'
+        : '/api/email/scan';
       const body = mode === 'email' ? {} : { content: inputValue };
 
       const res = await fetch(endpoint, {
@@ -131,7 +174,6 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
       });
 
       if (!res.ok) throw new Error('Import failed');
-
       const data = await res.json();
       if (data.places?.length) {
         setImportResults(data.places);
@@ -142,13 +184,13 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
         setStep('input');
       }
     } catch {
-      // For prototype: use demo results after a delay
+      // For prototype: use demo results after animated delay
       setTimeout(() => {
         setImportResults(DEMO_IMPORT_RESULTS);
         setSelectedIds(new Set(DEMO_IMPORT_RESULTS.map(r => r.id)));
         setStep('results');
         setProcessing(false);
-      }, 1500);
+      }, 2200);
       return;
     } finally {
       setProcessing(false);
@@ -159,9 +201,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     try {
       const res = await fetch('/api/auth/nylas/connect');
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.url) window.location.href = data.url;
     } catch {
       setError('Failed to connect email');
     }
@@ -169,9 +209,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
   function handleConfirmImport() {
     const selected = importResults.filter(r => selectedIds.has(r.id));
-    if (selected.length > 0) {
-      addToPool(selected);
-    }
+    if (selected.length > 0) addToPool(selected);
     onClose();
   }
 
@@ -183,41 +221,45 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
         className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl overflow-y-auto"
         style={{ maxWidth: 480, margin: '0 auto', background: 'var(--t-cream)', maxHeight: '90vh' }}
       >
-        <div className="flex justify-center pt-3 pb-1 sticky top-0" style={{ background: 'var(--t-cream)' }}>
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-1 sticky top-0" style={{ background: 'var(--t-cream)', zIndex: 1 }}>
           <div className="w-8 h-1 rounded-full" style={{ background: 'var(--t-travertine)' }} />
         </div>
 
-        <div className="px-4 pb-8">
-          {/* Step 1: Input */}
+        <div className="px-5 pb-8">
+
+          {/* ========== STEP 1: INPUT ========== */}
           {step === 'input' && (
             <>
-              <h2
-                className="text-lg mb-1 italic"
-                style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
-              >
-                Import Places
-              </h2>
-              <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                Bring in recommendations from anywhere
-              </p>
+              <div className="flex items-center gap-2.5 mb-4 mt-1">
+                <button
+                  onClick={onClose}
+                  className="text-base bg-transparent border-none cursor-pointer"
+                  style={{ color: 'rgba(28,26,23,0.5)' }}
+                >
+                  ←
+                </button>
+                <h2
+                  className="text-xl italic"
+                  style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+                >
+                  Add places
+                </h2>
+              </div>
 
-              {/* Mode selector */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              {/* Input method pills — horizontal row like wireframe */}
+              <div className="flex gap-2 mb-4">
                 {IMPORT_MODES.map(m => (
                   <button
                     key={m.value}
                     onClick={() => setMode(m.value)}
-                    className="flex items-start gap-2 p-3 rounded-xl cursor-pointer text-left transition-all"
+                    className="flex-1 py-2.5 rounded-xl text-center text-[12px] font-semibold cursor-pointer transition-all border-none"
                     style={{
-                      background: mode === m.value ? 'rgba(200,146,58,0.1)' : 'white',
-                      border: mode === m.value ? '1.5px solid var(--t-honey)' : '1.5px solid var(--t-linen)',
+                      background: mode === m.value ? 'var(--t-ink)' : 'var(--t-linen)',
+                      color: mode === m.value ? 'white' : 'var(--t-ink)',
                     }}
                   >
-                    <span className="text-lg">{m.icon}</span>
-                    <div>
-                      <div className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{m.label}</div>
-                      <div className="text-[9px] mt-0.5" style={{ color: 'rgba(28,26,23,0.5)' }}>{m.description}</div>
-                    </div>
+                    {m.icon} {m.label}
                   </button>
                 ))}
               </div>
@@ -246,36 +288,85 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                 </div>
               ) : (
                 <>
-                  <textarea
-                    value={inputValue}
-                    onChange={e => setInputValue(e.target.value)}
-                    placeholder={
-                      mode === 'url'
-                        ? 'Paste article URL (e.g. cntraveller.com/gallery/best-restaurants-lanzarote)'
-                        : mode === 'google-maps'
-                        ? 'Paste Google Maps list URL'
-                        : "Paste your friend's recommendations...\n\ne.g. 'You have to go to Casa Caldera in Yaiza — the grilled octopus at sunset is unreal. And don't miss Jameos del Agua...'"
-                    }
-                    className="w-full h-32 p-3 rounded-xl text-[12px] resize-none border outline-none leading-relaxed"
+                  {/* Text area — honey border like wireframe */}
+                  <div
+                    className="rounded-2xl overflow-hidden mb-3 relative"
                     style={{
+                      border: inputValue.trim() ? '2px solid var(--t-honey)' : '2px solid var(--t-linen)',
                       background: 'white',
-                      color: 'var(--t-ink)',
-                      borderColor: 'var(--t-linen)',
-                      fontFamily: "'DM Sans', sans-serif",
                     }}
-                  />
+                  >
+                    <textarea
+                      value={inputValue}
+                      onChange={e => setInputValue(e.target.value)}
+                      placeholder={
+                        mode === 'url'
+                          ? 'Paste article URL (e.g. cntraveller.com/gallery/best-restaurants-lanzarote)'
+                          : mode === 'google-maps'
+                          ? 'Paste a Google Maps list URL, or type place names (one per line)'
+                          : "Paste your friend's recommendations, a newsletter, article text, notes..."
+                      }
+                      className="w-full p-3.5 text-[11px] resize-none border-none outline-none leading-relaxed"
+                      style={{
+                        background: 'transparent',
+                        color: 'var(--t-ink)',
+                        fontFamily: "'DM Sans', sans-serif",
+                        minHeight: 180,
+                      }}
+                    />
+                    {/* Fade overlay at bottom */}
+                    {inputValue.length > 200 && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
+                        style={{ background: 'linear-gradient(transparent, white)' }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Source attribution — optional */}
+                  <div
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl mb-4"
+                    style={{ background: 'var(--t-linen)' }}
+                  >
+                    <span className="text-sm">📰</span>
+                    <div className="flex-1">
+                      <div className="text-[11px] font-medium" style={{ color: 'var(--t-ink)' }}>Source (optional)</div>
+                      <input
+                        type="text"
+                        value={sourceName}
+                        onChange={e => setSourceName(e.target.value)}
+                        placeholder="e.g. Shortlisted newsletter"
+                        className="text-[12px] bg-transparent border-none outline-none w-full mt-0.5"
+                        style={{ color: 'var(--t-honey)', fontFamily: "'DM Sans', sans-serif" }}
+                      />
+                    </div>
+                    {sourceName && (
+                      <button
+                        onClick={() => setSourceName('')}
+                        className="text-[10px] bg-transparent border-none cursor-pointer"
+                        style={{ color: 'rgba(28,26,23,0.4)' }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Process button — dark bg like wireframe */}
                   <button
                     onClick={handleImport}
                     disabled={isProcessing || !inputValue.trim()}
-                    className="w-full mt-3 py-3 rounded-xl border-none cursor-pointer text-[13px] font-semibold transition-opacity"
+                    className="w-full py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-opacity"
                     style={{
                       background: 'var(--t-ink)',
-                      color: 'var(--t-cream)',
+                      color: 'white',
                       opacity: isProcessing || !inputValue.trim() ? 0.4 : 1,
                     }}
                   >
-                    {isProcessing ? 'Parsing...' : 'Extract Places'}
+                    Find places ✦
                   </button>
+                  <p className="text-center text-[10px] mt-2" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                    AI will identify places, notes & categories
+                  </p>
                 </>
               )}
 
@@ -287,187 +378,208 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
             </>
           )}
 
-          {/* Step 2: Processing animation */}
+          {/* ========== STEP 2: PROCESSING ========== */}
           {step === 'processing' && (
-            <div className="flex flex-col items-center py-12 gap-4">
-              <div className="text-4xl ghost-shimmer">✦</div>
+            <div className="flex flex-col items-center py-10">
+              {/* Spinning sparkle */}
+              <div className="text-5xl mb-4 ghost-shimmer">✦</div>
               <h3
-                className="text-sm italic"
+                className="text-xl italic mb-2"
                 style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
               >
-                Reading between the lines...
+                Reading your paste…
               </h3>
-              <p className="text-[11px] text-center" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                Extracting places, matching to your taste profile,<br />
-                and pulling in Google Places data
+              <p className="text-[12px] mb-6" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                Finding places, extracting notes, categorizing
               </p>
-              {/* Shimmer placeholder cards */}
-              <div className="w-full space-y-2 mt-4">
-                {[1, 2, 3].map(i => (
-                  <div
-                    key={i}
-                    className="h-14 rounded-xl ghost-shimmer"
-                    style={{
-                      background: 'rgba(28,26,23,0.04)',
-                      animationDelay: `${i * 0.3}s`,
-                    }}
-                  />
+
+              {/* Progress checklist — like wireframe */}
+              <div className="w-full max-w-[260px]">
+                {progressItems.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 mb-2.5">
+                    <div
+                      className="w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
+                      style={{
+                        background: item.status === 'done' ? 'var(--t-verde)'
+                          : item.status === 'active' ? 'var(--t-honey)'
+                          : 'var(--t-linen)',
+                        color: item.status === 'done' || item.status === 'active' ? 'white' : 'rgba(28,26,23,0.4)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {item.status === 'done' ? '✓' : item.status === 'active' ? '…' : '○'}
+                    </div>
+                    <span
+                      className="text-[12px]"
+                      style={{ color: item.status === 'pending' ? 'rgba(28,26,23,0.4)' : 'var(--t-ink)' }}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
                 ))}
+              </div>
+
+              {/* Detected destination badge */}
+              <div
+                className="mt-6 px-4 py-2.5 rounded-xl inline-flex items-center gap-2"
+                style={{ background: 'var(--t-linen)' }}
+              >
+                <span className="text-base">🌍</span>
+                <div>
+                  <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                    Detected destination
+                  </div>
+                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                    Analyzing content…
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Results with category grouping */}
+          {/* ========== STEP 3: RESULTS ========== */}
           {step === 'results' && (
             <>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2
-                    className="text-lg italic"
-                    style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
-                  >
-                    Found {importResults.length} places
-                  </h2>
-                  <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                    {selectedIds.size} selected to import
-                  </p>
-                </div>
-                <button
-                  onClick={selectedIds.size === importResults.length ? deselectAll : selectAll}
-                  className="text-[11px] font-medium px-3 py-1 rounded-full border cursor-pointer"
-                  style={{
-                    borderColor: 'var(--t-linen)',
-                    color: 'var(--t-ink)',
-                    background: 'white',
-                    fontFamily: "'Space Mono', monospace",
-                  }}
+              {/* Header */}
+              <div className="mt-1 mb-1">
+                <h2
+                  className="text-xl italic"
+                  style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
                 >
-                  {selectedIds.size === importResults.length ? 'Deselect all' : 'Select all'}
-                </button>
+                  Found {importResults.length} places
+                </h2>
+                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                  {sourceName ? `From "${sourceName}"` : 'From pasted content'}
+                </p>
               </div>
 
-              {/* Category groups */}
-              <div className="space-y-3">
+              {/* Source badge */}
+              {sourceName && (
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg mb-4 mt-2"
+                  style={{ background: 'rgba(199,82,51,0.06)' }}
+                >
+                  <span className="text-[10px]">📰</span>
+                  <span className="text-[10px] font-semibold" style={{ color: '#c75233' }}>{sourceName}</span>
+                </div>
+              )}
+
+              {/* Category groups — wireframe style */}
+              <div className="flex flex-col gap-3 mt-3">
                 {groupedResults.map(([type, items]) => {
-                  const config = CATEGORY_CONFIG[type] || { icon: '📍', label: type, color: '#6b8b9a' };
-                  const isExpanded = expandedCategory === type || expandedCategory === null;
+                  const config = CATEGORY_CONFIG[type] || { icon: '📍', label: type };
+                  const isExpanded = expandedCategory === type;
                   const selectedInGroup = items.filter(i => selectedIds.has(i.id)).length;
+                  const MAX_VISIBLE = 4;
 
                   return (
                     <div key={type}>
-                      {/* Category header */}
-                      <button
-                        onClick={() => setExpandedCategory(expandedCategory === type ? null : type)}
-                        className="w-full flex items-center gap-2 py-2 bg-transparent border-none cursor-pointer"
+                      {/* Category header row */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{config.icon}</span>
+                          <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{config.label}</span>
+                          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>{items.length}</span>
+                        </div>
+                        <span className="text-[10px] font-semibold" style={{ color: 'var(--t-verde)' }}>
+                          {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
+                        </span>
+                      </div>
+
+                      {/* Compact card list — white container like wireframe */}
+                      <div
+                        className="rounded-xl overflow-hidden"
+                        style={{ background: 'white', border: '1px solid var(--t-linen)' }}
                       >
-                        <span>{config.icon}</span>
-                        <span
-                          className="text-[11px] font-bold uppercase tracking-wider"
-                          style={{ color: config.color, fontFamily: "'Space Mono', monospace" }}
-                        >
-                          {config.label}
-                        </span>
-                        <span
-                          className="text-[10px] px-1.5 py-0.5 rounded-full"
-                          style={{ background: `${config.color}15`, color: config.color, fontFamily: "'Space Mono', monospace" }}
-                        >
-                          {selectedInGroup}/{items.length}
-                        </span>
-                        <span className="ml-auto text-[10px]" style={{ color: 'rgba(28,26,23,0.3)' }}>
-                          {isExpanded ? '▼' : '▶'}
-                        </span>
-                      </button>
-
-                      {/* Items in category */}
-                      {isExpanded && (
-                        <div className="space-y-2 ml-1">
-                          {items.map(item => {
-                            const isSelected = selectedIds.has(item.id);
-                            const srcStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
-
-                            return (
+                        {items.slice(0, isExpanded ? items.length : MAX_VISIBLE).map((item, idx) => {
+                          const isSelected = selectedIds.has(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => toggleSelect(item.id)}
+                              className="flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-all"
+                              style={{
+                                borderBottom: idx < (isExpanded ? items.length : Math.min(items.length, MAX_VISIBLE)) - 1
+                                  ? '1px solid var(--t-linen)' : 'none',
+                              }}
+                            >
+                              {/* Checkbox */}
                               <div
-                                key={item.id}
-                                onClick={() => toggleSelect(item.id)}
-                                className="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all"
+                                className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0"
                                 style={{
-                                  background: isSelected ? 'white' : 'rgba(28,26,23,0.02)',
-                                  border: isSelected ? '1.5px solid var(--t-verde)' : '1.5px solid var(--t-linen)',
-                                  opacity: isSelected ? 1 : 0.6,
+                                  background: isSelected ? 'var(--t-verde)' : 'white',
+                                  border: isSelected ? 'none' : '1.5px solid var(--t-linen)',
                                 }}
                               >
-                                {/* Checkbox */}
-                                <div
-                                  className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5"
-                                  style={{
-                                    background: isSelected ? 'var(--t-verde)' : 'white',
-                                    border: isSelected ? 'none' : '1.5px solid var(--t-linen)',
-                                  }}
-                                >
-                                  {isSelected && <span className="text-white text-[10px]">✓</span>}
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between gap-2">
-                                    <h4 className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
-                                      {item.name}
-                                    </h4>
-                                    <span
-                                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                      style={{
-                                        background: 'rgba(200,146,58,0.12)',
-                                        color: 'var(--t-honey)',
-                                        fontFamily: "'Space Mono', monospace",
-                                      }}
-                                    >
-                                      {item.matchScore}%
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] mb-1" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                                    {item.location}
-                                  </p>
-                                  {item.tasteNote && (
-                                    <p className="text-[11px] italic leading-snug" style={{ color: 'rgba(28,26,23,0.6)' }}>
-                                      &ldquo;{item.tasteNote}&rdquo;
-                                    </p>
-                                  )}
-                                  {srcStyle && (
-                                    <div
-                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] mt-1.5"
-                                      style={{ background: srcStyle.bg, color: srcStyle.color }}
-                                    >
-                                      {srcStyle.icon} {srcStyle.label}
-                                    </div>
-                                  )}
-                                </div>
+                                {isSelected && <span className="text-white text-[10px]">✓</span>}
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
+
+                              {/* Name + note */}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                                  {item.name}
+                                </div>
+                                {item.tasteNote && (
+                                  <div
+                                    className="text-[10px] truncate"
+                                    style={{ color: 'rgba(28,26,23,0.5)' }}
+                                  >
+                                    &ldquo;{item.tasteNote}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Match score */}
+                              <span
+                                className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex-shrink-0"
+                                style={{
+                                  background: 'rgba(200,146,58,0.1)',
+                                  color: 'var(--t-honey)',
+                                  fontFamily: "'Space Mono', monospace",
+                                }}
+                              >
+                                {item.matchScore}%
+                              </span>
+                            </div>
+                          );
+                        })}
+
+                        {/* "Show more" row */}
+                        {items.length > MAX_VISIBLE && !isExpanded && (
+                          <button
+                            onClick={() => setExpandedCategory(type)}
+                            className="w-full py-2 text-center text-[10px] font-semibold cursor-pointer bg-transparent border-none"
+                            style={{ color: 'var(--t-honey)' }}
+                          >
+                            + {items.length - MAX_VISIBLE} more {config.label.toLowerCase()}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Confirm import button */}
+              {/* Confirm button — dark bg, wireframe style */}
               <button
                 onClick={handleConfirmImport}
                 disabled={selectedIds.size === 0}
-                className="w-full mt-6 py-3.5 rounded-xl border-none cursor-pointer text-[13px] font-semibold transition-all sticky bottom-4"
+                className="w-full mt-6 py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-all"
                 style={{
-                  background: selectedIds.size > 0 ? 'var(--t-verde)' : 'rgba(28,26,23,0.1)',
+                  background: selectedIds.size > 0 ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
                   color: selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.3)',
                 }}
               >
-                Import {selectedIds.size} {selectedIds.size === 1 ? 'place' : 'places'}
+                Save {selectedIds.size} places to My Places
               </button>
+              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                Deselect any you don&apos;t want
+              </p>
 
-              {/* Back to edit */}
+              {/* Back to import more */}
               <button
                 onClick={() => { setStep('input'); setImportResults([]); }}
-                className="w-full mt-2 py-2 bg-transparent border-none cursor-pointer text-[11px]"
+                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]"
                 style={{ color: 'rgba(28,26,23,0.5)' }}
               >
                 ← Import more
