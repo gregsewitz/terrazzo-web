@@ -14,6 +14,7 @@ import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
+import IntelligenceView from '@/components/IntelligenceView';
 
 import ExportToMaps from '@/components/ExportToMaps';
 
@@ -35,6 +36,7 @@ export default function TripDetailPage() {
 
   const [exportOpen, setExportOpen] = useState(false);
   const [ghostsInjected, setGhostsInjected] = useState(false);
+  const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -110,6 +112,22 @@ export default function TripDetailPage() {
           item={detailItem}
           onClose={() => setDetailItem(null)}
           onRate={() => setRatingItem(detailItem)}
+          onViewIntelligence={() => {
+            const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
+            if (placeId) {
+              setIntelligencePlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
+            }
+          }}
+        />
+      )}
+
+      {/* Intelligence View */}
+      {intelligencePlace && (
+        <IntelligenceView
+          googlePlaceId={intelligencePlace.id}
+          placeName={intelligencePlace.name}
+          matchScore={intelligencePlace.matchScore}
+          onClose={() => setIntelligencePlace(null)}
         />
       )}
 

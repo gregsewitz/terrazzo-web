@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { useSavedStore } from '@/stores/savedStore';
+import { useIntelligence } from '@/hooks/useIntelligence';
+import PipelineProgress from '@/components/PipelineProgress';
 
 interface PlaceDetailSheetProps {
   item: ImportedPlace;
   onClose: () => void;
   onRate?: () => void;
+  onViewIntelligence?: () => void;
   siblingPlaces?: ImportedPlace[]; // other places from the same import batch
 }
 
@@ -28,13 +31,18 @@ function getPhotoGradient(type: string): string {
   return gradients[type] || gradients.restaurant;
 }
 
-export default function PlaceDetailSheet({ item, onClose, onRate, siblingPlaces }: PlaceDetailSheetProps) {
+export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntelligence, siblingPlaces }: PlaceDetailSheetProps) {
   const existingRating = item.rating;
   const ratingReaction = existingRating ? REACTIONS.find(r => r.id === existingRating.reaction) : null;
   const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const [saved, setSaved] = useState(myPlaces.some(p => p.name === item.name));
+
+  // Intelligence polling for inline progress
+  const googlePlaceId = (item.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
+  const { data: intelData } = useIntelligence(onViewIntelligence ? googlePlaceId : undefined);
+  const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
   const handleSave = () => {
     if (!saved) {
@@ -317,10 +325,15 @@ export default function PlaceDetailSheet({ item, onClose, onRate, siblingPlaces 
           {/* Match score highlight */}
           <div
             className="flex items-center gap-3 p-3 rounded-xl mb-4"
-            style={{ background: 'rgba(200,146,58,0.06)', border: '1px solid rgba(200,146,58,0.15)' }}
+            style={{
+              background: 'rgba(200,146,58,0.06)',
+              border: '1px solid rgba(200,146,58,0.15)',
+              cursor: onViewIntelligence ? 'pointer' : 'default',
+            }}
+            onClick={onViewIntelligence}
           >
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center text-[14px] font-bold"
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0"
               style={{
                 background: 'linear-gradient(135deg, rgba(200,146,58,0.2), rgba(200,146,58,0.1))',
                 color: 'var(--t-honey)',
@@ -329,13 +342,34 @@ export default function PlaceDetailSheet({ item, onClose, onRate, siblingPlaces 
             >
               {item.matchScore}%
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                 Taste match
               </div>
               <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
                 Based on your profile preferences
               </div>
+              {/* Inline pipeline progress when enriching */}
+              {isEnriching && intelData?.latestRun && (
+                <div className="mt-1.5">
+                  <PipelineProgress
+                    currentStage={intelData.latestRun.currentStage}
+                    stagesCompleted={intelData.latestRun.stagesCompleted}
+                    startedAt={intelData.latestRun.startedAt}
+                    compact
+                  />
+                </div>
+              )}
+              {/* View full analysis link */}
+              {onViewIntelligence && googlePlaceId && (
+                <button
+                  className="text-[10px] mt-1 block border-none bg-transparent p-0 cursor-pointer"
+                  style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
+                  onClick={(e) => { e.stopPropagation(); onViewIntelligence(); }}
+                >
+                  View full briefing →
+                </button>
+              )}
             </div>
           </div>
 

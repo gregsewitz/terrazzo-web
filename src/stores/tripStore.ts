@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { Trip, ImportedPlace, TripDay, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData } from '@/types';
+import { ALL_DEMO_TRIPS } from '@/data/demoTrips';
 
-// Demo data for Tokyo trip — enhanced with multi-source ghost cards
+// Legacy Tokyo demo data kept for reference — new demo data in @/data/demoTrips
 const DEMO_POOL: ImportedPlace[] = [
   {
     id: '1',
@@ -287,8 +288,8 @@ interface TripState {
 }
 
 export const useTripStore = create<TripState>((set, get) => ({
-  trips: [DEMO_TRIP],
-  currentTripId: 'demo-tokyo',
+  trips: [...ALL_DEMO_TRIPS, DEMO_TRIP],
+  currentTripId: 'demo-stockholm-copenhagen',
   currentDay: 1,
 
   currentTrip: () => {

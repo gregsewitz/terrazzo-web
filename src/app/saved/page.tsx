@@ -11,6 +11,7 @@ import type { MapMarker } from '@/components/GoogleMapView';
 import { useSavedStore, HistoryItem } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, GhostSourceType, SOURCE_STYLES } from '@/types';
+import IntelligenceView from '@/components/IntelligenceView';
 import ExportToMaps from '@/components/ExportToMaps';
 
 const PLACE_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
@@ -290,6 +291,7 @@ export default function SavedPage() {
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -831,9 +833,25 @@ export default function SavedPage() {
           item={detailItem}
           onClose={() => setDetailItem(null)}
           onRate={() => setRatingItem(detailItem)}
+          onViewIntelligence={() => {
+            const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
+            if (placeId) {
+              setIntelligencePlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
+            }
+          }}
           siblingPlaces={detailItem.importBatchId
             ? myPlaces.filter(p => p.importBatchId === detailItem.importBatchId && p.id !== detailItem.id)
             : undefined}
+        />
+      )}
+
+      {/* Intelligence View */}
+      {intelligencePlace && (
+        <IntelligenceView
+          googlePlaceId={intelligencePlace.id}
+          placeName={intelligencePlace.name}
+          matchScore={intelligencePlace.matchScore}
+          onClose={() => setIntelligencePlace(null)}
         />
       )}
 

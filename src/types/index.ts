@@ -51,17 +51,31 @@ export const REACTIONS = [
 
 // Destination colors (for multi-city trips)
 export const DEST_COLORS: Record<string, { bg: string; accent: string; text: string }> = {
+  // Japan
   Tokyo: { bg: '#edf1f5', accent: '#5a7a9a', text: '#3a5a7a' },
   Hakone: { bg: '#f0ede8', accent: '#9a7a5a', text: '#7a5a3a' },
   Kyoto: { bg: '#edf5ef', accent: '#5a9a6a', text: '#3a7a4a' },
   Osaka: { bg: '#f5ede8', accent: '#c87a4a', text: '#a85a2a' },
+  // Scandinavia
+  Stockholm: { bg: '#edf1f5', accent: '#4a7a9a', text: '#2a5a7a' },
+  Copenhagen: { bg: '#f5f0e8', accent: '#9a7a4a', text: '#7a5a2a' },
+  // Mexico
+  'Mexico City': { bg: '#f5ede8', accent: '#c8643a', text: '#a84a20' },
+  // France
+  Paris: { bg: '#f0edf5', accent: '#7a5a9a', text: '#5a3a7a' },
+  // Sicily
+  Palermo: { bg: '#f5ede8', accent: '#c87a4a', text: '#a85a2a' },
+  'West Coast': { bg: '#edf5f2', accent: '#4a9a7a', text: '#2a7a5a' },
+  Agrigento: { bg: '#f5f2e8', accent: '#9a8a4a', text: '#7a6a2a' },
+  'Noto / Syracuse': { bg: '#f5ede8', accent: '#c88a4a', text: '#a86a2a' },
+  Taormina: { bg: '#edf1f5', accent: '#5a7a9a', text: '#3a5a7a' },
 };
 
 // Ghost card source types — each source gets its own visual treatment
 export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: string; label: string }> = {
   email: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✉', label: 'Email' },
   friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.06)', icon: '👤', label: 'Friend' },
-  ai: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✦', label: 'AI suggestion' },
+  ai: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✦', label: 'Terrazzo pick' },
   maps: { color: '#e86830', bg: 'rgba(232,104,48,0.06)', icon: '📍', label: 'Google Maps' },
   article: { color: '#c8923a', bg: 'rgba(200,146,58,0.06)', icon: '📰', label: 'Article' },
   manual: { color: '#1c1a17', bg: 'rgba(28,26,23,0.04)', icon: '✎', label: 'Added' },
@@ -263,3 +277,63 @@ export const SLOT_ICONS: Record<string, string> = {
 
 // Terrazzo voice — used across all AI prompts for consistent tone
 export const TERRAZZO_VOICE = `You write like a well-traveled friend who happens to have incredible taste — warm but not gushing, opinionated but never snobby. You use short, vivid descriptions. You notice the details that matter (the way light hits a courtyard, the specific dish to order, the hour when a place transforms). You're honest about trade-offs. You never say "hidden gem" or "must-visit." You speak like someone sharing a personal recommendation over wine, not writing a guidebook.`;
+
+// ─── Pipeline Intelligence Types ───
+
+export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
+  'Design Language': 'Design',
+  'Character & Identity': 'Character',
+  'Service Philosophy': 'Service',
+  'Food & Drink Identity': 'Food',
+  'Location & Context': 'Location',
+  'Wellness & Body': 'Wellness',
+};
+
+export interface IntelligenceSignal {
+  dimension: string;
+  confidence: number;
+  signal: string;
+  source_type?: string;
+  review_corroborated?: boolean;
+}
+
+export interface IntelligenceAntiSignal {
+  dimension: string;
+  confidence: number;
+  signal: string;
+}
+
+export interface IntelligenceData {
+  status: 'pending' | 'enriching' | 'complete' | 'failed';
+  propertyName: string;
+  signals: IntelligenceSignal[];
+  antiSignals: IntelligenceAntiSignal[];
+  reliability: { overall: number; categories: Record<string, unknown>; totalReviews: number } | null;
+  facts: Record<string, unknown> | null;
+  signalCount: number;
+  antiSignalCount: number;
+  reviewCount: number;
+  reliabilityScore: number | null;
+  lastEnrichedAt: string | null;
+  pipelineVersion: string;
+  latestRun: {
+    status: string;
+    currentStage: string | null;
+    stagesCompleted: string[];
+    startedAt: string | null;
+    completedAt: string | null;
+    durationMs: number | null;
+  } | null;
+}
+
+export const PIPELINE_STAGES = [
+  { key: 'google_places', label: 'Places' },
+  { key: 'scrape_reviews', label: 'Reviews' },
+  { key: 'editorial_extraction', label: 'Editorial' },
+  { key: 'instagram_analysis', label: 'Instagram' },
+  { key: 'menu_analysis', label: 'Menu' },
+  { key: 'award_positioning', label: 'Awards' },
+  { key: 'review_intelligence', label: 'Insights' },
+  { key: 'merge', label: 'Compose' },
+  { key: 'save', label: 'Done' },
+] as const;

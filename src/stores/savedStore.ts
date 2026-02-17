@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType } from '@/types';
+import {
+  DEMO_MY_PLACES as IMPORTED_MY_PLACES,
+  DEMO_HISTORY as IMPORTED_HISTORY,
+  DEMO_COLLECTIONS as IMPORTED_COLLECTIONS,
+} from '@/data/demoSaved';
 
 export type ViewMode = 'myPlaces' | 'history';
 
@@ -357,9 +362,9 @@ export const useSavedStore = create<SavedState>((set) => ({
   viewMode: 'myPlaces',
   typeFilter: 'all',
   searchQuery: '',
-  myPlaces: DEMO_MY_PLACES,
-  history: DEMO_HISTORY,
-  collections: DEMO_COLLECTIONS,
+  myPlaces: IMPORTED_MY_PLACES,
+  history: IMPORTED_HISTORY,
+  collections: IMPORTED_COLLECTIONS,
 
   setViewMode: (mode) => set({ viewMode: mode }),
   setTypeFilter: (filter) => set({ typeFilter: filter }),
