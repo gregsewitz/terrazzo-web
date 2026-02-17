@@ -98,7 +98,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
       {unsortedCount > 0 && (
         <button
           onClick={onOpenUnsorted}
-          className="mx-4 mt-3 w-[calc(100%-2rem)] flex items-center justify-between py-3 px-3.5 rounded-lg cursor-pointer transition-all"
+          className="mx-4 mt-3 mb-3 w-[calc(100%-2rem)] flex items-center justify-between py-3 px-3.5 rounded-lg cursor-pointer transition-all"
           style={{
             background: 'linear-gradient(135deg, rgba(200, 146, 58, 0.1) 0%, rgba(200, 146, 58, 0.05) 100%)',
             border: '1.5px solid var(--t-honey)',

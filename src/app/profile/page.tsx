@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
-import TasteAxes from '@/components/TasteAxes';
-import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
+import WrappedExperience from '@/components/wrapped/WrappedExperience';
 
 const SETTINGS_LINKS = [
   { label: 'Connected Accounts', action: 'accounts' },
@@ -15,6 +15,7 @@ const SETTINGS_LINKS = [
 
 export default function ProfilePage() {
   const router = useRouter();
+  const [showWrapped, setShowWrapped] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const handleSettingTap = (action: string) => {
@@ -25,8 +26,14 @@ export default function ProfilePage() {
     setExpandedSection(expandedSection === action ? null : action);
   };
 
+  // Full-screen wrapped overlay
+  if (showWrapped) {
+    return <WrappedExperience onClose={() => setShowWrapped(false)} />;
+  }
+
   return (
     <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
+      {/* User Header */}
       <div className="px-4 pt-6">
         <h1
           className="text-2xl mb-1"
@@ -39,7 +46,7 @@ export default function ProfilePage() {
         </p>
 
         {/* User info */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-5">
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center text-lg"
             style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
@@ -48,25 +55,54 @@ export default function ProfilePage() {
           </div>
           <div>
             <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>Greg</div>
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>Design-forward curious traveler</div>
+            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>The Aesthetic Pilgrim</div>
           </div>
         </div>
 
-        {/* Taste profile */}
-        <div
-          className="p-4 rounded-xl mb-4"
-          style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        {/* Replay Wrapped button */}
+        <button
+          onClick={() => setShowWrapped(true)}
+          className="w-full flex items-center justify-between p-4 rounded-xl mb-5 cursor-pointer border-none transition-all hover:opacity-90"
+          style={{ background: '#2d3a2d' }}
         >
-          <h2
-            className="text-[10px] uppercase tracking-wider font-bold mb-3"
-            style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+          <div className="flex flex-col items-start gap-1">
+            <span
+              className="text-[13px] font-semibold"
+              style={{ color: '#f5f5f0', fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Your Taste Wrapped
+            </span>
+            <span
+              className="text-[10px]"
+              style={{ color: 'rgba(245,245,240,0.5)', fontFamily: "'Space Mono', monospace" }}
+            >
+              238 signals · 3 tensions · 35 taste terms
+            </span>
+          </div>
+          <span
+            className="text-[11px] px-3 py-1.5 rounded-full font-semibold"
+            style={{
+              background: 'rgba(245,245,240,0.12)',
+              color: '#f5f5f0',
+              fontFamily: "'Space Mono', monospace",
+            }}
           >
-            Your Taste Profile
-          </h2>
-          <TasteAxes profile={DEFAULT_USER_PROFILE} size="md" />
-        </div>
+            Replay →
+          </span>
+        </button>
+      </div>
 
-        {/* Settings links */}
+      {/* Deep Dive */}
+      <ProfileDeepDive />
+
+      {/* Settings */}
+      <div className="px-4 py-6">
+        <h3
+          className="text-[10px] uppercase tracking-[0.2em] mb-4"
+          style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace", fontWeight: 700 }}
+        >
+          Settings
+        </h3>
         <div className="flex flex-col gap-2">
           {SETTINGS_LINKS.map(({ label, action }) => (
             <div key={action}>
@@ -78,7 +114,6 @@ export default function ProfilePage() {
                 <span className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{label}</span>
                 <span style={{ color: 'rgba(28,26,23,0.3)', transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
               </div>
-              {/* Inline expanded content */}
               {expandedSection === 'accounts' && action === 'accounts' && (
                 <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
                   <div className="flex items-center justify-between mb-2">
@@ -113,6 +148,7 @@ export default function ProfilePage() {
           ))}
         </div>
       </div>
+
       <TabBar />
     </div>
   );

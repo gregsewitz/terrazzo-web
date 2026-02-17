@@ -201,7 +201,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
         bottom: 52,
         maxWidth: 480,
         margin: '0 auto',
-        maxHeight: '75vh',
+        maxHeight: '88vh',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -212,7 +212,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
           background: 'white',
           borderRadius: '20px 20px 0 0',
           boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.1)',
-          maxHeight: '75vh',
+          maxHeight: '88vh',
         }}
       >
         {/* Handle bar */}
