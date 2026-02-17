@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { useImportStore } from '@/stores/importStore';
@@ -18,7 +18,9 @@ export default function TripDetailPage() {
   const params = useParams();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const ratePlace = useTripStore(s => s.ratePlace);
-  const trip = useTripStore(s => s.currentTrip());
+  const trips = useTripStore(s => s.trips);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
   const { setExpanded } = usePoolStore();
 

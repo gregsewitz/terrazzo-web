@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, TimeSlot, TripDay, SLOT_ICONS, DEST_COLORS } from '@/types';
 import GhostCard from './GhostCard';
@@ -11,8 +12,12 @@ interface DayPlannerProps {
 }
 
 export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerProps) {
-  const { currentDay, setCurrentDay, unsortedCount } = useTripStore();
-  const trip = useTripStore(s => s.currentTrip());
+  const currentDay = useTripStore(s => s.currentDay);
+  const setCurrentDay = useTripStore(s => s.setCurrentDay);
+  const trips = useTripStore(s => s.trips);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
+  const unsortedCount = useMemo(() => trip?.pool.filter(p => p.status === 'available').length ?? 0, [trip]);
 
   if (!trip) return null;
 
@@ -48,7 +53,7 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
       </div>
 
       {/* Unsorted pill - honey-colored with count */}
-      {unsortedCount() > 0 && (
+      {unsortedCount > 0 && (
         <button
           onClick={onOpenUnsorted}
           className="w-full mb-6 py-2.5 px-3 rounded-full border-none cursor-pointer text-sm font-medium transition-all"
@@ -58,7 +63,7 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          {unsortedCount()} unsorted places · View all →
+          {unsortedCount} unsorted places · View all →
         </button>
       )}
 
@@ -201,7 +206,8 @@ interface TimeSlotCardProps {
 }
 
 function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail }: TimeSlotCardProps) {
-  const { confirmGhost, dismissGhost } = useTripStore();
+  const confirmGhost = useTripStore(s => s.confirmGhost);
+  const dismissGhost = useTripStore(s => s.dismissGhost);
   const icon = SLOT_ICONS[slot.id] || '📍';
   const itemCount = (slot.place ? 1 : 0) + (slot.ghostItems?.length || 0);
 

@@ -23,7 +23,11 @@ const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: strin
 ];
 
 export default function PoolTray({ onTapDetail, onOpenImport }: PoolTrayProps) {
-  const poolItems = useTripStore(s => s.poolItems());
+  const pool = useTripStore(s => {
+    const trip = s.trips.find(t => t.id === s.currentTripId);
+    return trip?.pool;
+  });
+  const poolItems = useMemo(() => pool?.filter(p => p.status === 'available') ?? [], [pool]);
   const { isExpanded, setExpanded } = usePoolStore();
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
 
