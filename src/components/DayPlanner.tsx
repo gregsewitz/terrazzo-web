@@ -1,24 +1,27 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, TimeSlot, SLOT_ICONS, DEST_COLORS } from '@/types';
 import GhostCard from './GhostCard';
 import MapView from './MapView';
 
+export type TripViewMode = 'planner' | 'overview' | 'myPlaces';
+
 interface DayPlannerProps {
+  viewMode: TripViewMode;
+  onSetViewMode: (mode: TripViewMode) => void;
   onTapDetail: (item: ImportedPlace) => void;
   onOpenUnsorted: () => void;
 }
 
-export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const unsortedCount = useMemo(() => trip?.pool.filter(p => p.status === 'available').length ?? 0, [trip]);
-  const [viewMode, setViewMode] = useState<'planner' | 'overview'>('planner');
 
   if (!trip) return null;
 
@@ -55,39 +58,32 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
           {trip.startDate && trip.endDate && ` · ${formatDateRange(trip.startDate, trip.endDate)}`}
         </p>
 
-        {/* View Toggle — Day Planner / Overview */}
+        {/* View Toggle — Overview / My Places / Day Planner */}
         <div
-          className="flex gap-2 mt-3 p-1 rounded-lg"
+          className="flex gap-1.5 mt-3 p-1 rounded-lg"
           style={{ background: 'var(--t-linen)' }}
         >
-          <button
-            onClick={() => setViewMode('planner')}
-            className="flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all"
-            style={{
-              background: viewMode === 'planner' ? 'white' : 'transparent',
-              color: viewMode === 'planner' ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            Day Planner
-          </button>
-          <button
-            onClick={() => setViewMode('overview')}
-            className="flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all"
-            style={{
-              background: viewMode === 'overview' ? 'white' : 'transparent',
-              color: viewMode === 'overview' ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            Overview
-          </button>
+          {(['overview', 'myPlaces', 'planner'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => onSetViewMode(mode)}
+              className="flex-1 py-2 px-2 rounded-md text-xs font-medium transition-all"
+              style={{
+                background: viewMode === mode ? 'white' : 'transparent',
+                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'My Places' : 'Day Planner'}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Content for planner/overview modes only */}
+      {viewMode !== 'myPlaces' && <>
 
       {/* Unsorted Pill — honey-bordered with gradient */}
       {unsortedCount > 0 && (
@@ -244,7 +240,7 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
             return (
               <div
                 key={d.dayNumber}
-                onClick={() => { setCurrentDay(d.dayNumber); setViewMode('planner'); }}
+                onClick={() => { setCurrentDay(d.dayNumber); onSetViewMode('planner'); }}
                 className="p-3.5 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
                 style={{
                   background: 'white',
@@ -285,6 +281,8 @@ export default function DayPlanner({ onTapDetail, onOpenUnsorted }: DayPlannerPr
           })}
         </div>
       )}
+
+      </>}
 
       <div style={{ height: 20 }} />
     </div>

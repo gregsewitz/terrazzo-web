@@ -9,6 +9,8 @@ import { usePoolStore } from '@/stores/poolStore';
 import { ImportedPlace, PlaceRating } from '@/types';
 import TabBar from '@/components/TabBar';
 import DayPlanner from '@/components/DayPlanner';
+import type { TripViewMode } from '@/components/DayPlanner';
+import TripMyPlaces from '@/components/TripMyPlaces';
 import PoolTray from '@/components/PoolTray';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
@@ -37,6 +39,7 @@ export default function TripDetailPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
+  const [viewMode, setViewMode] = useState<TripViewMode>('planner');
 
   useEffect(() => {
     if (params.id) {
@@ -89,19 +92,27 @@ export default function TripDetailPage() {
         💬
       </button>
 
-      {/* Day Planner */}
+      {/* Day Planner (includes header + 3-way toggle for all modes) */}
       <DayPlanner
+        viewMode={viewMode}
+        onSetViewMode={setViewMode}
         onTapDetail={setDetailItem}
         onOpenUnsorted={() => setExpanded(true)}
       />
 
-      {/* Pool Tray */}
-      <PoolTray
-        onTapDetail={setDetailItem}
-        onOpenImport={() => setImportOpen(true)}
+      {/* My Places — only in myPlaces mode */}
+      {viewMode === 'myPlaces' && (
+        <TripMyPlaces onTapDetail={setDetailItem} />
+      )}
 
-        onOpenExport={() => setExportOpen(true)}
-      />
+      {/* Pool Tray — only in planner mode */}
+      {viewMode === 'planner' && (
+        <PoolTray
+          onTapDetail={setDetailItem}
+          onOpenImport={() => setImportOpen(true)}
+          onOpenExport={() => setExportOpen(true)}
+        />
+      )}
 
       {/* Tab Bar */}
       <TabBar />
