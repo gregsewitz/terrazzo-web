@@ -67,3 +67,19 @@ body {
   background: var(--t-travertine);
   border-radius: 2px;
 }
+
+/* Ghost card shimmer animation */
+@keyframes ghostShimmer {
+  0%, 100% { opacity: 0.92; }
+  50% { opacity: 0.72; }
+}
+
+.ghost-shimmer {
+  animation: ghostShimmer 2.5s ease-in-out infinite;
+}
+
+/* Smooth expand/collapse for drawers */
+.drawer-transition {
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease;
+}

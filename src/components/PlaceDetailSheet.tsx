@@ -1,15 +1,18 @@
 'use client';
 
-import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain } from '@/types';
+import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType } from '@/types';
 
 interface PlaceDetailSheetProps {
   item: ImportedPlace;
   onClose: () => void;
+  onRate?: () => void;
 }
 
 const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
-export default function PlaceDetailSheet({ item, onClose }: PlaceDetailSheetProps) {
+export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailSheetProps) {
+  const existingRating = item.rating;
+  const ratingReaction = existingRating ? REACTIONS.find(r => r.id === existingRating.reaction) : null;
   return (
     <>
       {/* Backdrop */}
@@ -158,6 +161,75 @@ export default function PlaceDetailSheet({ item, onClose }: PlaceDetailSheetProp
             </div>
           </div>
 
+          {/* Ghost source badge */}
+          {item.ghostSource && item.ghostSource !== 'manual' && (
+            <div className="mb-4">
+              <div
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-medium"
+                style={{
+                  background: SOURCE_STYLES[item.ghostSource as GhostSourceType]?.bg,
+                  color: SOURCE_STYLES[item.ghostSource as GhostSourceType]?.color,
+                  fontFamily: "'Space Mono', monospace",
+                }}
+              >
+                {SOURCE_STYLES[item.ghostSource as GhostSourceType]?.icon}{' '}
+                {item.friendAttribution
+                  ? `${item.friendAttribution.name} recommended`
+                  : SOURCE_STYLES[item.ghostSource as GhostSourceType]?.label}
+              </div>
+              {item.friendAttribution?.note && (
+                <p className="text-[11px] italic mt-1.5 ml-0.5" style={{ color: 'rgba(28,26,23,0.6)' }}>
+                  &ldquo;{item.friendAttribution.note}&rdquo;
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Existing rating display */}
+          {existingRating && ratingReaction && (
+            <div
+              className="mb-4 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+              style={{
+                background: `${ratingReaction.color}08`,
+                border: `1.5px solid ${ratingReaction.color}30`,
+              }}
+              onClick={onRate}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span style={{ fontSize: '18px', color: ratingReaction.color }}>{ratingReaction.icon}</span>
+                <span
+                  className="text-[12px] font-semibold"
+                  style={{ color: ratingReaction.color, fontFamily: "'Space Mono', monospace" }}
+                >
+                  {ratingReaction.label}
+                </span>
+                {existingRating.returnIntent === 'absolutely' && (
+                  <span className="text-[10px] ml-auto" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                    Would return ✓
+                  </span>
+                )}
+              </div>
+              {existingRating.tags && existingRating.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {existingRating.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="text-[9px] px-2 py-0.5 rounded-full"
+                      style={{ background: `${ratingReaction.color}12`, color: ratingReaction.color }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {existingRating.personalNote && (
+                <p className="text-[11px] italic mt-2" style={{ color: 'rgba(28,26,23,0.6)' }}>
+                  &ldquo;{existingRating.personalNote}&rdquo;
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Terrazzo Insights */}
           {item.terrazzoInsight && (
             <div className="flex flex-col gap-3">
@@ -195,6 +267,21 @@ export default function PlaceDetailSheet({ item, onClose }: PlaceDetailSheetProp
                 </div>
               )}
             </div>
+          )}
+
+          {/* Rate this place button */}
+          {onRate && (
+            <button
+              onClick={onRate}
+              className="w-full mt-6 py-3.5 rounded-xl border-none cursor-pointer text-[13px] font-semibold transition-all hover:opacity-90"
+              style={{
+                background: existingRating ? 'rgba(28,26,23,0.06)' : 'var(--t-ink)',
+                color: existingRating ? 'var(--t-ink)' : 'var(--t-cream)',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {existingRating ? 'Update your rating' : 'Rate this place'}
+            </button>
           )}
         </div>
       </div>

@@ -4,21 +4,26 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { useImportStore } from '@/stores/importStore';
-import { ImportedPlace } from '@/types';
+import { usePoolStore } from '@/stores/poolStore';
+import { ImportedPlace, PlaceRating } from '@/types';
 import TabBar from '@/components/TabBar';
 import DayPlanner from '@/components/DayPlanner';
 import PoolTray from '@/components/PoolTray';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
+import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
 
 export default function TripDetailPage() {
   const params = useParams();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
+  const ratePlace = useTripStore(s => s.ratePlace);
   const trip = useTripStore(s => s.currentTrip());
   const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
+  const { setExpanded } = usePoolStore();
 
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
+  const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
@@ -34,6 +39,15 @@ export default function TripDetailPage() {
       </div>
     );
   }
+
+  const handleRate = (rating: PlaceRating) => {
+    if (ratingItem) {
+      ratePlace(ratingItem.id, rating);
+      // Update local state so detail sheet reflects the change
+      setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
+      setRatingItem(null);
+    }
+  };
 
   return (
     <div
@@ -51,7 +65,10 @@ export default function TripDetailPage() {
       </button>
 
       {/* Day Planner */}
-      <DayPlanner onTapDetail={setDetailItem} />
+      <DayPlanner
+        onTapDetail={setDetailItem}
+        onOpenUnsorted={() => setExpanded(true)}
+      />
 
       {/* Pool Tray */}
       <PoolTray
@@ -67,6 +84,16 @@ export default function TripDetailPage() {
         <PlaceDetailSheet
           item={detailItem}
           onClose={() => setDetailItem(null)}
+          onRate={() => setRatingItem(detailItem)}
+        />
+      )}
+
+      {/* Rating Sheet */}
+      {ratingItem && (
+        <RatingSheet
+          item={ratingItem}
+          onClose={() => setRatingItem(null)}
+          onSave={handleRate}
         />
       )}
 
