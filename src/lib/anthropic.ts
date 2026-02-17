@@ -1,17 +1,23 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { TERRAZZO_VOICE } from '@/types';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const MODEL = 'claude-sonnet-4-20250514';
+
+function extractJSON(text: string): string {
+  // Strip markdown code fences if present
+  const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  return cleaned;
+}
+
 export async function parseEmailToBookings(htmlBody: string) {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a travel booking parser. Extract structured booking information from email HTML.
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: `You are a travel booking parser. Extract structured booking information from email HTML.
 
 ${TERRAZZO_VOICE}
 
@@ -26,26 +32,22 @@ Return a JSON array of bookings. Each booking should have:
 - notes: string (any relevant details)
 
 Return ONLY the JSON array, no markdown or explanation.`,
-      },
-      { role: 'user', content: htmlBody },
-    ],
-    temperature: 0.1,
+    messages: [{ role: 'user', content: htmlBody }],
   });
 
   try {
-    return JSON.parse(response.choices[0]?.message?.content || '[]');
+    const textBlock = response.content.find((b) => b.type === 'text');
+    return JSON.parse(extractJSON(textBlock?.type === 'text' ? textBlock.text : '[]'));
   } catch {
     return [];
   }
 }
 
 export async function parseUrlToPlaces(articleText: string) {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a travel recommendation extractor. Extract all place recommendations from this article.
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 2048,
+    system: `You are a travel recommendation extractor. Extract all place recommendations from this article.
 
 ${TERRAZZO_VOICE}
 
@@ -57,26 +59,22 @@ For each place, return:
 - priceHint: string (if mentioned)
 
 Return ONLY a JSON array, no markdown or explanation.`,
-      },
-      { role: 'user', content: articleText },
-    ],
-    temperature: 0.1,
+    messages: [{ role: 'user', content: articleText }],
   });
 
   try {
-    return JSON.parse(response.choices[0]?.message?.content || '[]');
+    const textBlock = response.content.find((b) => b.type === 'text');
+    return JSON.parse(extractJSON(textBlock?.type === 'text' ? textBlock.text : '[]'));
   } catch {
     return [];
   }
 }
 
 export async function parseTextToPlaces(text: string) {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a travel list parser. The user has pasted a text list of place recommendations (from a friend, article, etc).
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 2048,
+    system: `You are a travel list parser. The user has pasted a text list of place recommendations (from a friend, article, etc).
 
 ${TERRAZZO_VOICE}
 
@@ -87,26 +85,26 @@ Extract each place mentioned and return a JSON array with:
 - description: string (any context given about the place, refined to sound like a friend's genuine take)
 
 Return ONLY a JSON array, no markdown or explanation.`,
-      },
-      { role: 'user', content: text },
-    ],
-    temperature: 0.1,
+    messages: [{ role: 'user', content: text }],
   });
 
   try {
-    return JSON.parse(response.choices[0]?.message?.content || '[]');
+    const textBlock = response.content.find((b) => b.type === 'text');
+    return JSON.parse(extractJSON(textBlock?.type === 'text' ? textBlock.text : '[]'));
   } catch {
     return [];
   }
 }
 
-export async function generateTasteMatch(placeName: string, placeType: string, userProfile: Record<string, number>) {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: `You are Terrazzo's taste intelligence engine. Given a place and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate:
+export async function generateTasteMatch(
+  placeName: string,
+  placeType: string,
+  userProfile: Record<string, number>
+) {
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: `You are Terrazzo's taste intelligence engine. Given a place and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate:
 
 ${TERRAZZO_VOICE}
 
@@ -116,20 +114,20 @@ ${TERRAZZO_VOICE}
 - terrazzoInsight: { why: string (2-3 sentences on why this matches the user - sound like a friend making a personal recommendation), caveat: string (honest heads-up without judgment) }
 
 Return ONLY JSON, no markdown.`,
-      },
+    messages: [
       {
         role: 'user',
         content: `Place: ${placeName} (${placeType})\nUser taste profile: ${JSON.stringify(userProfile)}`,
       },
     ],
-    temperature: 0.3,
   });
 
   try {
-    return JSON.parse(response.choices[0]?.message?.content || '{}');
+    const textBlock = response.content.find((b) => b.type === 'text');
+    return JSON.parse(extractJSON(textBlock?.type === 'text' ? textBlock.text : '{}'));
   } catch {
     return null;
   }
 }
 
-export default openai;
+export default anthropic;

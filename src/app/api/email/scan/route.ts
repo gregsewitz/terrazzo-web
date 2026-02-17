@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseEmailToBookings } from '@/lib/openai';
+import { parseEmailToBookings } from '@/lib/anthropic';
 
 export async function POST(request: NextRequest) {
   try {

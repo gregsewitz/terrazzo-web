@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseUrlToPlaces } from '@/lib/openai';
+import { parseUrlToPlaces } from '@/lib/anthropic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 500 });
     }
 
     // Fetch article content
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       articleText = await response.text();
       // Strip HTML tags for simpler parsing
       articleText = articleText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      // Limit to ~10k chars for GPT-4o
+      // Limit to ~10k chars
       articleText = articleText.slice(0, 10000);
     } catch {
       return NextResponse.json({ error: 'Failed to fetch URL' }, { status: 400 });
