@@ -174,7 +174,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             >
               {starredPlaces.length}
             </span>
-            <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.4)' }}>▲</span>
+            <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.65)' }}>▲</span>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onCurateMore(); }}
@@ -233,7 +233,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             }}
           >
             Everywhere you want to go
-            <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.4)' }}>▼</span>
+            <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.65)' }}>▼</span>
           </button>
           <div className="flex items-center gap-2">
             {onOpenExport && starredPlaces.length > 0 && (
@@ -284,13 +284,13 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
               <button
                 onClick={() => usePoolStore.getState().setSlotContext(null)}
                 className="text-[10px] px-2 py-0.5 rounded-full border-none cursor-pointer"
-                style={{ background: 'rgba(28,26,23,0.06)', color: 'rgba(28,26,23,0.5)' }}
+                style={{ background: 'rgba(28,26,23,0.06)', color: 'rgba(28,26,23,0.7)' }}
               >
                 Clear
               </button>
             </div>
             {(slotContext.adjacentPlaces.before || slotContext.adjacentPlaces.after) && (
-              <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 {slotContext.adjacentPlaces.before && (
                   <span>After {slotContext.adjacentPlaces.before.name}</span>
                 )}
@@ -324,7 +324,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
         )}
 
         {/* Subtitle */}
-        <div className="px-4 pb-2 text-xs" style={{ color: 'rgba(28,26,23,0.5)' }}>
+        <div className="px-4 pb-2 text-xs" style={{ color: 'rgba(28,26,23,0.7)' }}>
           {sortedItems.length} place{sortedItems.length !== 1 ? 's' : ''}
           {filterType !== 'all' && ` · ${filterType}`}
           {sourceFilter !== 'all' && ` · ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label}`}
@@ -397,7 +397,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                 className="flex-1 min-w-fit px-4 py-2.5 text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all"
                 style={{
                   background: 'transparent',
-                  color: isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                  color: isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.7)',
                   border: 'none',
                   borderBottom: isActive ? '2px solid var(--t-ink)' : '2px solid transparent',
                   fontFamily: "'DM Sans', sans-serif",
@@ -462,7 +462,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                         className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0"
                         style={{
                           background: isSuggestedType ? 'rgba(42,122,86,0.1)' : 'rgba(28,26,23,0.05)',
-                          color: isSuggestedType ? 'var(--t-verde)' : 'rgba(28,26,23,0.45)',
+                          color: isSuggestedType ? 'var(--t-verde)' : 'rgba(28,26,23,0.7)',
                           fontFamily: "'Space Mono', monospace",
                           fontWeight: 600,
                         }}
@@ -471,14 +471,14 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] mb-1" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                  <div className="text-[11px] mb-1" style={{ color: 'rgba(28,26,23,0.7)' }}>
                     {sourceStyle.icon} {item.ghostSource === 'friend'
                       ? item.friendAttribution?.name
                       : item.ghostSource === 'maps' ? 'Google Maps'
                       : item.source?.name || sourceStyle.label}
                   </div>
                   {note && (
-                    <div className="text-[11px] italic" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                    <div className="text-[11px] italic" style={{ color: 'rgba(28,26,23,0.7)' }}>
                       {item.ghostSource === 'friend' ? `"${note}"` : note}
                     </div>
                   )}
@@ -502,7 +502,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
           })}
 
           {sortedItems.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: 'rgba(28,26,23,0.7)' }}>
               <span className="text-2xl mb-3">★</span>
               <p className="text-[12px] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                 {filterType !== 'all'
@@ -511,7 +511,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                     ? 'No starred places from this source'
                     : 'No starred places yet'}
               </p>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.35)' }}>
+              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.6)' }}>
                 {filterType !== 'all'
                   ? <button onClick={() => setFilterType('all')} className="underline cursor-pointer bg-transparent border-none" style={{ color: 'var(--t-verde)', fontSize: '11px' }}>Show all types</button>
                   : 'Star places in My Places or Collect to add them here'}

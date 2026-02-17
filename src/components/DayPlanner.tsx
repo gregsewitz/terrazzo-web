@@ -61,7 +61,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         </h1>
         <p
           className="text-xs"
-          style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}
+          style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}
         >
           {trip.location}
           {trip.startDate && trip.endDate && ` · ${formatDateRange(trip.startDate, trip.endDate)}`}
@@ -79,7 +79,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               className="flex-1 py-2 px-2 rounded-md text-xs font-medium transition-all"
               style={{
                 background: viewMode === mode ? 'white' : 'transparent',
-                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.7)',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
@@ -189,7 +189,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           </div>
           <span
             className="text-xs"
-            style={{ color: 'rgba(28,26,23,0.5)' }}
+            style={{ color: 'rgba(28,26,23,0.7)' }}
           >
             Day {day.dayNumber} · {day.dayOfWeek}, {day.date}
           </span>
@@ -197,7 +197,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         {day.hotel && (
           <div
             className="text-xs"
-            style={{ color: 'rgba(28,26,23,0.5)' }}
+            style={{ color: 'rgba(28,26,23,0.7)' }}
           >
             🏨 {day.hotel}
           </div>
@@ -270,11 +270,11 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   >
                     Day {d.dayNumber} · {d.destination}
                   </span>
-                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                     {d.dayOfWeek}, {d.date}
                   </span>
                 </div>
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                   {placedCount} confirmed{ghostCount > 0 ? ` · ${ghostCount} suggestion${ghostCount !== 1 ? 's' : ''}` : ''}
                   {d.hotel ? ` · 🏨 ${d.hotel}` : ''}
                 </div>
@@ -400,7 +400,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             >
               {slot.place.name}
             </div>
-            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(28,26,23,0.7)' }}>
               <span
                 className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold"
                 style={{ background: 'var(--t-verde)', color: 'white' }}
@@ -453,7 +453,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                 ? 'rgba(42,122,86,0.08)'
                 : 'rgba(243, 239, 232, 0.5)',
               minHeight: 48,
-              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.5)',
+              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.7)',
               fontSize: '13px',
               fontFamily: "'DM Sans', sans-serif",
               fontWeight: isDropTarget ? 600 : 400,

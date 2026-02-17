@@ -29,7 +29,7 @@ export default function TripsPage() {
             <span className="text-sm">+</span> New Trip
           </button>
         </div>
-        <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.5)' }}>
+        <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.7)' }}>
           Plan and curate with Terrazzo taste intelligence
         </p>
 
@@ -71,11 +71,11 @@ export default function TripsPage() {
                     </span>
                   )}
                 </div>
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                   {trip.location} · {trip.days.length} days{trip.pool.length > 0 ? ` · ${trip.pool.filter(p => p.status === 'available').length} in pool` : ''}
                 </div>
               </div>
-              <span style={{ color: 'rgba(28,26,23,0.3)' }}>→</span>
+              <span style={{ color: 'rgba(28,26,23,0.7)' }}>→</span>
             </button>
           ))}
 
@@ -86,12 +86,12 @@ export default function TripsPage() {
             style={{
               background: 'rgba(28,26,23,0.02)',
               border: '1.5px dashed var(--t-travertine)',
-              color: 'rgba(28,26,23,0.4)',
+              color: 'rgba(28,26,23,0.65)',
             }}
           >
             <span className="text-2xl">+</span>
             <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
-            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
               Tell us where and when — we'll find your perfect places
             </span>
           </button>

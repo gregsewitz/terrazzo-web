@@ -43,7 +43,7 @@ function SavedPlaceCard({ place }: { place: ImportedPlace }) {
               </span>
             )}
           </div>
-          <p className="text-[10px] mb-2" style={{ color: 'rgba(28,26,23,0.5)' }}>
+          <p className="text-[10px] mb-2" style={{ color: 'rgba(28,26,23,0.7)' }}>
             {place.location}
           </p>
 
@@ -78,7 +78,7 @@ export default function CollectionDetailPage() {
     return (
       <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
         <div className="px-4 pt-6 text-center">
-          <p style={{ color: 'rgba(28,26,23,0.5)' }}>Collection not found</p>
+          <p style={{ color: 'rgba(28,26,23,0.7)' }}>Collection not found</p>
         </div>
         <TabBar />
       </div>
@@ -131,7 +131,7 @@ export default function CollectionDetailPage() {
               {collection.query && (
                 <p
                   className="text-[10px]"
-                  style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}
                 >
                   Query: "{collection.query}"
                 </p>
@@ -170,7 +170,7 @@ export default function CollectionDetailPage() {
         ) : (
           <div className="text-center py-12">
             <span className="text-2xl mb-3 block">◇</span>
-            <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+            <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
               No places in this collection
             </p>
           </div>

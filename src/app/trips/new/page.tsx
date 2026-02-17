@@ -84,7 +84,7 @@ function TripSeedForm({ onStart }: {
           >
             New Trip
           </h1>
-          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: 'rgba(28,26,23,0.5)' }}>
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: 'rgba(28,26,23,0.7)' }}>
             Give us the basics, then we'll have a quick conversation to understand what you're really looking for.
           </p>
         </div>
@@ -93,7 +93,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.4)' }}
+            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.65)' }}
           >
             TRIP NAME (optional)
           </label>
@@ -115,7 +115,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.4)' }}
+            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.65)' }}
           >
             WHERE
           </label>
@@ -130,7 +130,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.4)' }}
+            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.65)' }}
           >
             WHEN
           </label>
@@ -143,13 +143,13 @@ function TripSeedForm({ onStart }: {
                 className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  color: startDate ? 'var(--t-ink)' : 'rgba(28,26,23,0.3)',
+                  color: startDate ? 'var(--t-ink)' : 'rgba(28,26,23,0.55)',
                   borderColor: 'var(--t-linen)',
                 }}
               />
-              <span className="text-[9px] mt-1 block" style={{ color: 'rgba(28,26,23,0.3)' }}>Start</span>
+              <span className="text-[9px] mt-1 block" style={{ color: 'rgba(28,26,23,0.7)' }}>Start</span>
             </div>
-            <div className="flex items-center text-xs" style={{ color: 'rgba(28,26,23,0.3)' }}>→</div>
+            <div className="flex items-center text-xs" style={{ color: 'rgba(28,26,23,0.7)' }}>→</div>
             <div className="flex-1">
               <input
                 type="date"
@@ -159,11 +159,11 @@ function TripSeedForm({ onStart }: {
                 className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  color: endDate ? 'var(--t-ink)' : 'rgba(28,26,23,0.3)',
+                  color: endDate ? 'var(--t-ink)' : 'rgba(28,26,23,0.55)',
                   borderColor: 'var(--t-linen)',
                 }}
               />
-              <span className="text-[9px] mt-1 block" style={{ color: 'rgba(28,26,23,0.3)' }}>End</span>
+              <span className="text-[9px] mt-1 block" style={{ color: 'rgba(28,26,23,0.7)' }}>End</span>
             </div>
           </div>
         </div>
@@ -172,7 +172,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.4)' }}
+            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.65)' }}
           >
             WHO'S COMING
           </label>
@@ -219,7 +219,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-8">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.4)' }}
+            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.65)' }}
           >
             TRIP STATUS
           </label>
@@ -240,7 +240,7 @@ function TripSeedForm({ onStart }: {
                 <div className="flex items-center gap-1.5">
                   <span
                     className="text-[10px]"
-                    style={{ color: status === opt.key ? 'var(--t-verde)' : 'rgba(28,26,23,0.3)' }}
+                    style={{ color: status === opt.key ? 'var(--t-verde)' : 'rgba(28,26,23,0.55)' }}
                   >
                     {opt.icon}
                   </span>
@@ -251,7 +251,7 @@ function TripSeedForm({ onStart }: {
                     {opt.label}
                   </span>
                 </div>
-                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
                   {opt.desc}
                 </span>
               </button>
@@ -286,7 +286,7 @@ function TripSeedForm({ onStart }: {
           Start Conversation
         </button>
 
-        <p className="text-center text-[11px] mt-4" style={{ color: 'rgba(28,26,23,0.3)' }}>
+        <p className="text-center text-[11px] mt-4" style={{ color: 'rgba(28,26,23,0.7)' }}>
           ~3 minutes · text or voice · we'll use your taste profile
         </p>
       </div>
@@ -385,7 +385,7 @@ function TripConversation({
             Trip Context
           </span>
         </div>
-        <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+        <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
           {seed.destinations.join(' → ')} · {seed.companion}
         </p>
       </div>
@@ -424,7 +424,7 @@ function TripConversation({
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)', animationDelay: '150ms' }} />
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)', animationDelay: '300ms' }} />
             </div>
-            <span className="text-[12px] italic" style={{ color: 'rgba(28,26,23,0.4)' }}>Thinking...</span>
+            <span className="text-[12px] italic" style={{ color: 'rgba(28,26,23,0.65)' }}>Thinking...</span>
           </div>
         )}
 
@@ -436,7 +436,7 @@ function TripConversation({
           >
             <div
               className="text-[8px] font-bold uppercase tracking-[1.5px] mb-2"
-              style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.4)' }}
+              style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.65)' }}
             >
               {signalsRevealed} trip signal{signalsRevealed !== 1 ? 's' : ''}
             </div>
@@ -494,7 +494,7 @@ function TripConversation({
             <button
               onClick={handleSkip}
               className="text-[12px] bg-transparent border-none cursor-pointer self-center py-1"
-              style={{ color: 'rgba(28,26,23,0.4)' }}
+              style={{ color: 'rgba(28,26,23,0.65)' }}
             >
               Skip to trip →
             </button>
@@ -538,7 +538,7 @@ function TripComplete({ seed, onDone }: {
       >
         Trip Profile Built
       </h2>
-      <p className="text-sm text-center leading-relaxed mb-8 max-w-xs" style={{ color: 'rgba(28,26,23,0.5)' }}>
+      <p className="text-sm text-center leading-relaxed mb-8 max-w-xs" style={{ color: 'rgba(28,26,23,0.7)' }}>
         We've layered your trip context onto your base taste profile. Your {seed.destinations[0]} recommendations will
         reflect the specific energy, companions, and priorities for this journey.
       </p>
@@ -556,7 +556,7 @@ function TripComplete({ seed, onDone }: {
             'Each destination gets its own curated shortlist',
             'Stretch picks that push your boundaries thoughtfully',
           ].map((item, i) => (
-            <div key={i} className="text-[12px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <div key={i} className="text-[12px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
               • {item}
             </div>
           ))}

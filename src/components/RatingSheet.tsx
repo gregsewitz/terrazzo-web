@@ -82,7 +82,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               >
                 {item.name}
               </h2>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 {item.location}
               </p>
             </div>
@@ -281,7 +281,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               >
                 Personal note
               </h3>
-              <p className="text-[11px] -mt-2" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <p className="text-[11px] -mt-2" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 What would you tell a friend about this place?
               </p>
               <textarea

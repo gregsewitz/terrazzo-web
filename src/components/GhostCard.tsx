@@ -87,7 +87,7 @@ export default function GhostCard({
         {note && (
           <div
             className="text-[11px] italic"
-            style={{ color: 'rgba(28,26,23,0.5)' }}
+            style={{ color: 'rgba(28,26,23,0.7)' }}
           >
             {sourceType === 'friend' ? `"${note}"` : note}
           </div>
@@ -113,7 +113,7 @@ export default function GhostCard({
             className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
             style={{
               background: 'var(--t-cream)',
-              color: 'rgba(28,26,23,0.5)',
+              color: 'rgba(28,26,23,0.7)',
               border: '1px solid var(--t-linen)',
               cursor: 'pointer',
               fontFamily: "'DM Sans', sans-serif",

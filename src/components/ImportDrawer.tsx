@@ -279,7 +279,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
           {step === 'input' && (
             <>
               <div className="flex items-center gap-2.5 mb-4 mt-1">
-                <button onClick={onClose} className="text-base bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.5)' }}>←</button>
+                <button onClick={onClose} className="text-base bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.7)' }}>←</button>
                 <h2 className="text-xl italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>Add places</h2>
               </div>
 
@@ -334,7 +334,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         style={{ color: 'var(--t-honey)', fontFamily: "'DM Sans', sans-serif" }} />
                     </div>
                     {sourceName && (
-                      <button onClick={() => setSourceName('')} className="text-[10px] bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.4)' }}>✕</button>
+                      <button onClick={() => setSourceName('')} className="text-[10px] bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.65)' }}>✕</button>
                     )}
                   </div>
                   <button onClick={handleImport} disabled={isProcessing || !inputValue.trim()}
@@ -342,7 +342,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                     style={{ background: 'var(--t-ink)', color: 'white', opacity: isProcessing || !inputValue.trim() ? 0.4 : 1 }}>
                     Find places ✦
                   </button>
-                  <p className="text-center text-[10px] mt-2" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                  <p className="text-center text-[10px] mt-2" style={{ color: 'rgba(28,26,23,0.65)' }}>
                     AI will identify places, notes &amp; categories
                   </p>
                 </>
@@ -362,7 +362,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               <h3 className="text-xl italic mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
                 Reading your paste…
               </h3>
-              <p className="text-[12px] mb-6" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <p className="text-[12px] mb-6" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 Finding places, extracting notes, categorizing
               </p>
 
@@ -372,12 +372,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                     <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
                       style={{
                         background: item.status === 'done' ? 'var(--t-verde)' : item.status === 'active' ? 'var(--t-honey)' : 'var(--t-linen)',
-                        color: item.status === 'done' || item.status === 'active' ? 'white' : 'rgba(28,26,23,0.4)',
+                        color: item.status === 'done' || item.status === 'active' ? 'white' : 'rgba(28,26,23,0.65)',
                         fontWeight: 700,
                       }}>
                       {item.status === 'done' ? '✓' : item.status === 'active' ? '…' : '○'}
                     </div>
-                    <span className="text-[12px]" style={{ color: item.status === 'pending' ? 'rgba(28,26,23,0.4)' : 'var(--t-ink)' }}>
+                    <span className="text-[12px]" style={{ color: item.status === 'pending' ? 'rgba(28,26,23,0.65)' : 'var(--t-ink)' }}>
                       {item.label}
                     </span>
                   </div>
@@ -389,7 +389,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <span className="text-base">🌍</span>
                   <div>
                     <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{detectedDestination}</div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>Detected destination</div>
+                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>Detected destination</div>
                   </div>
                 </div>
               )}
@@ -398,7 +398,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <span className="text-base">🌍</span>
                   <div>
                     <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>Detected destination</div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>Analyzing content…</div>
+                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>Analyzing content…</div>
                   </div>
                 </div>
               )}
@@ -411,7 +411,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                 <h2 className="text-xl italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
                   Found {importResults.length} places
                 </h2>
-                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.7)' }}>
                   {sourceName ? `From "${sourceName}"` : 'From pasted content'}
                   {detectedDestination ? ` · ${detectedDestination}` : ''}
                 </p>
@@ -427,12 +427,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               {/* Bulk select controls */}
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                   {selectedIds.size} of {importResults.length} selected
                 </span>
                 <div className="flex gap-2">
                   <button onClick={selectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'var(--t-verde)' }}>Select all</button>
-                  <button onClick={deselectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.4)' }}>Clear</button>
+                  <button onClick={deselectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.65)' }}>Clear</button>
                 </div>
               </div>
               {/* Category groups */}
@@ -449,7 +449,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm">{config.icon}</span>
                           <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{config.label}</span>
-                          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>{items.length}</span>
+                          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>{items.length}</span>
                         </div>
                         <span className="text-[10px] font-semibold" style={{ color: 'var(--t-verde)' }}>
                           {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
@@ -470,7 +470,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                               <div className="flex-1 min-w-0">
                                 <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.name}</div>
                                 {item.tasteNote && (
-                                  <div className="text-[10px] truncate" style={{ color: 'rgba(28,26,23,0.5)' }}>&ldquo;{item.tasteNote}&rdquo;</div>
+                                  <div className="text-[10px] truncate" style={{ color: 'rgba(28,26,23,0.7)' }}>&ldquo;{item.tasteNote}&rdquo;</div>
                                 )}
                               </div>
                               {item.matchScore > 0 && (
@@ -498,16 +498,16 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Confirm button */}
               <button onClick={handleConfirmImport} disabled={selectedIds.size === 0}
                 className="w-full mt-6 py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-all"
-                style={{ background: selectedIds.size > 0 ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)', color: selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.3)' }}>
+                style={{ background: selectedIds.size > 0 ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)', color: selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.55)' }}>
                 Save {selectedIds.size} places to My Places
               </button>
-              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: 'rgba(28,26,23,0.4)' }}>
+              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: 'rgba(28,26,23,0.65)' }}>
                 Deselect any you don&apos;t want
                 {detectedDestination ? ` · All go to ${detectedDestination}` : ''}
               </p>
 
               <button onClick={() => { setStep('input'); setImportResults([]); }}
-                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 ← Import more
               </button>
             </>
@@ -523,7 +523,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <div className="text-[13px] font-semibold" style={{ color: 'var(--t-verde)' }}>
                     {savedPlaces.length} places saved
                   </div>
-                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                     {sourceName ? `From "${sourceName}"` : 'From pasted content'}
                     {detectedDestination ? ` · ${detectedDestination}` : ''}
                   </div>
@@ -568,7 +568,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{createdCollectionName}</div>
-                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                         {savedPlaces.length} places · auto-created collection
                       </div>
                     </div>
@@ -595,7 +595,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
-                          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                             {place.type.charAt(0).toUpperCase() + place.type.slice(1)} · {place.location}
                           </div>
                           {place.tasteNote && (
@@ -619,7 +619,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               <button onClick={() => { setStep('input'); setImportResults([]); setSavedPlaces([]); }}
                 className="w-full mt-2 py-2 bg-transparent border-none cursor-pointer text-[11px]"
-                style={{ color: 'rgba(28,26,23,0.5)' }}>
+                style={{ color: 'rgba(28,26,23,0.7)' }}>
                 Import more places
               </button>
             </>

@@ -221,7 +221,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
       </div>
 
       {/* Helper text */}
-      <div className="mt-1.5 text-[10px]" style={{ color: 'rgba(28,26,23,0.35)' }}>
+      <div className="mt-1.5 text-[10px]" style={{ color: 'rgba(28,26,23,0.6)' }}>
         {isDreaming
           ? 'Type anything — a city, a vibe, a region. Press Enter to add.'
           : destinations.length === 0
@@ -254,12 +254,12 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               }}
               onMouseEnter={() => setActiveIndex(i)}
             >
-              <span className="text-[13px] mt-0.5" style={{ color: 'rgba(28,26,23,0.3)' }}>📍</span>
+              <span className="text-[13px] mt-0.5" style={{ color: 'rgba(28,26,23,0.7)' }}>📍</span>
               <div>
                 <div className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>
                   {prediction.structured_formatting.main_text}
                 </div>
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
                   {prediction.structured_formatting.secondary_text}
                 </div>
               </div>
@@ -277,9 +277,9 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
                 borderTop: '1px solid var(--t-linen)',
               }}
             >
-              <span className="text-[13px]" style={{ color: 'rgba(28,26,23,0.3)' }}>◯</span>
+              <span className="text-[13px]" style={{ color: 'rgba(28,26,23,0.7)' }}>◯</span>
               <div>
-                <div className="text-[12px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <div className="text-[12px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                   Just add "<span style={{ color: 'var(--t-ink)', fontWeight: 500 }}>{inputValue.trim()}</span>" as-is
                 </div>
               </div>

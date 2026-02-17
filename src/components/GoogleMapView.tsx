@@ -162,7 +162,7 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
     return (
       <div
         className="rounded-xl overflow-hidden flex items-center justify-center"
-        style={{ height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: 'rgba(28,26,23,0.4)' }}
+        style={{ height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: 'rgba(28,26,23,0.65)' }}
       >
         <div className="text-center text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>
           Google Maps API key not configured

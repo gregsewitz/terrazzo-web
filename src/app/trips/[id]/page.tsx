@@ -129,7 +129,7 @@ export default function TripDetailPage() {
   if (!trip) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
-        <p style={{ color: 'rgba(28,26,23,0.4)' }}>Trip not found</p>
+        <p style={{ color: 'rgba(28,26,23,0.65)' }}>Trip not found</p>
       </div>
     );
   }

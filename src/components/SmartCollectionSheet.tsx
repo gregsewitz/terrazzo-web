@@ -283,7 +283,7 @@ export default function SmartCollectionSheet({
                   </div>
                 </div>
               </div>
-              <p className="text-center text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <p className="text-center text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 Terrazzo is thinking...
               </p>
             </div>
@@ -295,7 +295,7 @@ export default function SmartCollectionSheet({
               {parsed.reasoning && (
                 <div
                   className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px]"
-                  style={{ color: 'rgba(28,26,23,0.5)', background: 'rgba(200,146,58,0.06)' }}
+                  style={{ color: 'rgba(28,26,23,0.7)', background: 'rgba(200,146,58,0.06)' }}
                 >
                   ✦ {parsed.reasoning}
                 </div>

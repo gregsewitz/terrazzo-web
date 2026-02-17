@@ -54,7 +54,7 @@ function renderMessageContent(content: string) {
     parts.push(
       <span key={`bold-${match.index}`} style={{ color: 'var(--t-honey)', fontWeight: 600 }}>
         {match[1]}
-        <span className="text-[9px] ml-1" style={{ color: 'rgba(28,26,23,0.4)' }}>
+        <span className="text-[9px] ml-1" style={{ color: 'rgba(28,26,23,0.65)' }}>
           →
         </span>
       </span>

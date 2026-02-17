@@ -58,7 +58,7 @@ function HeroSection() {
           </h1>
           <p
             className="text-[12px] leading-relaxed"
-            style={{ color: 'rgba(28,26,23,0.45)', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}
           >
             Based on 238 signals across 6 dimensions
           </p>
@@ -229,7 +229,7 @@ function WeeklyEditSection() {
         >
           {collection.title}
         </h3>
-        <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.45)', fontFamily: "'Space Mono', monospace" }}>
+        <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}>
           {collection.subtitle}
         </p>
       </div>
@@ -261,7 +261,7 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
       <div className="flex items-start justify-between mb-2">
         <div>
           <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
-          <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.45)' }}>{place.location}</div>
+          <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>{place.location}</div>
         </div>
         <ScoreArc score={place.score} size={38} color="#4a6741" />
       </div>
@@ -276,7 +276,7 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
           </span>
         ))}
       </div>
-      <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.55)' }}>
+      <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
         {place.note}
       </p>
     </div>
@@ -313,7 +313,7 @@ function StretchPickSection() {
           <ScoreArc score={s.score} size={44} color="var(--t-panton-orange)" />
           <div>
             <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>{s.name}</div>
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.45)' }}>{s.location}</div>
+            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>{s.location}</div>
             <div className="flex gap-2 mt-1.5">
               <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,107,139,0.1)', color: '#4a6b8b', fontFamily: "'Space Mono', monospace" }}>
                 {s.strongAxis} {s.strongScore}%
@@ -335,12 +335,12 @@ function StretchPickSection() {
           >
             Why we&apos;re suggesting it
           </div>
-          <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.6)' }}>
+          <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
             {s.why}
           </p>
         </div>
 
-        <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: 'rgba(28,26,23,0.4)' }}>
+        <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: 'rgba(28,26,23,0.65)' }}>
           {s.tension}
         </p>
       </div>
@@ -368,7 +368,7 @@ function ContextModeSection() {
             If you&apos;re traveling this summer...
           </span>
         </div>
-        <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.45)', fontFamily: "'Space Mono', monospace" }}>
+        <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}>
           Indoor-outdoor flow · terrace dining · natural pool
         </p>
 
@@ -389,9 +389,9 @@ function ContextRecCard({ rec }: { rec: ContextRec }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
           <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{rec.name}</span>
-          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>{rec.location}</span>
+          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>{rec.location}</span>
         </div>
-        <p className="text-[10px] leading-snug" style={{ color: 'rgba(28,26,23,0.5)' }}>
+        <p className="text-[10px] leading-snug" style={{ color: 'rgba(28,26,23,0.7)' }}>
           {rec.whyFits}
         </p>
       </div>
@@ -440,7 +440,7 @@ function VocabTeaser() {
           })}
           <span
             className="text-[10px] px-2.5 py-1 rounded-full"
-            style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.35)' }}
+            style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.6)' }}
           >
             +{Object.values(profile.microTasteSignals).flat().length - allTerms.length} more
           </span>
@@ -491,12 +491,12 @@ function FriendSaveCard({ save }: { save: FriendSave }) {
           <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>
             {save.friendName}
           </span>
-          <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.4)' }}>saved</span>
+          <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.65)' }}>saved</span>
           <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>
             {save.place}
           </span>
         </div>
-        <div className="text-[10px] mb-1" style={{ color: 'rgba(28,26,23,0.4)' }}>
+        <div className="text-[10px] mb-1" style={{ color: 'rgba(28,26,23,0.65)' }}>
           {save.location} · {save.type}
         </div>
         <div className="flex items-center gap-2">
@@ -506,7 +506,7 @@ function FriendSaveCard({ save }: { save: FriendSave }) {
           >
             {save.score}% match
           </span>
-          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.45)' }}>
+          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
             {save.whyMatches}
           </span>
         </div>

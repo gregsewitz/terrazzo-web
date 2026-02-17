@@ -101,7 +101,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
       <div className="mb-3">
         <p
           className="text-[11px]"
-          style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}
+          style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}
         >
           {geoFiltered.length} collected place{geoFiltered.length !== 1 ? 's' : ''} in {destLabel}
           {starredCount > 0 && <span style={{ color: 'var(--t-verde)' }}> · {starredCount} starred</span>}
@@ -151,7 +151,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
                   : 'rgba(28,26,23,0.04)',
                 color: isActive
                   ? (tab.value === 'all' ? 'white' : (SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'var(--t-ink)'))
-                  : 'rgba(28,26,23,0.5)',
+                  : 'rgba(28,26,23,0.7)',
                 fontWeight: isActive ? 600 : 400,
                 border: isActive && tab.value !== 'all'
                   ? `1px solid ${SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'transparent'}`
@@ -169,7 +169,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
       </div>
 
       {/* Curate hint */}
-      <div className="text-[10px] mb-3" style={{ color: 'rgba(28,26,23,0.35)' }}>
+      <div className="text-[10px] mb-3" style={{ color: 'rgba(28,26,23,0.6)' }}>
         Star places to add them to your itinerary pool
       </div>
 
@@ -177,7 +177,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
       {sorted.length === 0 ? (
         <div className="text-center py-12">
           <span className="text-2xl mb-3 block">◇</span>
-          <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+          <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
             No collected places match these filters
           </p>
         </div>
@@ -202,7 +202,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
                   className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-all"
                   style={{
                     background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
-                    color: isStarred ? 'white' : 'rgba(28,26,23,0.3)',
+                    color: isStarred ? 'white' : 'rgba(28,26,23,0.55)',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
@@ -232,7 +232,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
                       {place.matchScore}%
                     </span>
                   </div>
-                  <div className="text-[10px] mb-1.5" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                  <div className="text-[10px] mb-1.5" style={{ color: 'rgba(28,26,23,0.7)' }}>
                     {place.type.charAt(0).toUpperCase() + place.type.slice(1)} · {place.location}
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">

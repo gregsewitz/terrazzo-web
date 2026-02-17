@@ -45,14 +45,14 @@ function SignalCard({ signal, domain }: { signal: IntelligenceSignal; domain: Ta
             style={{ width: `${signal.confidence * 100}%`, background: color }}
           />
         </div>
-        <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}>
+        <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.65)', fontFamily: "'Space Mono', monospace" }}>
           {Math.round(signal.confidence * 100)}%
         </span>
         {/* Source type tag */}
         {signal.source_type && (
           <span
             className="text-[8px] px-1.5 py-0.5 rounded"
-            style={{ background: 'var(--t-linen)', color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+            style={{ background: 'var(--t-linen)', color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}
           >
             {signal.source_type}
           </span>
@@ -144,7 +144,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                 >
                   {placeName}
                 </h1>
-                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}>
+                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.65)', fontFamily: "'Space Mono', monospace" }}>
                   Terrazzo Briefing
                 </p>
               </div>
@@ -163,7 +163,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
             {loading && !data && (
               <div className="text-center py-12">
                 <div className="text-2xl mb-3">◇</div>
-                <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.4)' }}>Preparing your briefing...</p>
+                <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.65)' }}>Preparing your briefing...</p>
               </div>
             )}
 
@@ -188,7 +188,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                       >
                         {matchScore}%
                       </div>
-                      <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)' }}>Match</div>
+                      <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.65)' }}>Match</div>
                     </div>
                   )}
                   <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(42,122,86,0.06)' }}>
@@ -201,7 +201,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                     >
                       {data.reliabilityScore != null ? Math.round(data.reliabilityScore * 100) : '—'}
                     </div>
-                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)' }}>Reliability</div>
+                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.65)' }}>Reliability</div>
                   </div>
                   <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(28,26,23,0.03)' }}>
                     <div
@@ -210,7 +210,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                     >
                       {data.reviewCount}
                     </div>
-                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)' }}>Reviews</div>
+                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.65)' }}>Reviews</div>
                   </div>
                 </div>
 
@@ -306,7 +306,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                   <div className="mb-5">
                     <div
                       className="text-[10px] font-bold uppercase tracking-wider mb-2"
-                      style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
+                      style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
                     >
                       Facts
                     </div>
@@ -321,7 +321,7 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                           <div key={key}>
                             <div
                               className="text-[9px] uppercase tracking-wider"
-                              style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}
+                              style={{ color: 'rgba(28,26,23,0.65)', fontFamily: "'Space Mono', monospace" }}
                             >
                               {displayKey}
                             </div>
@@ -338,11 +338,11 @@ export default function IntelligenceView({ googlePlaceId, placeName, matchScore,
                 {/* Footer — enrichment meta */}
                 <div className="flex items-center justify-between pt-3 mt-2" style={{ borderTop: '1px solid var(--t-linen)' }}>
                   {enrichedAgo && (
-                    <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.35)', fontFamily: "'Space Mono', monospace" }}>
+                    <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.6)', fontFamily: "'Space Mono', monospace" }}>
                       Last updated {enrichedAgo}
                     </span>
                   )}
-                  <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.25)', fontFamily: "'Space Mono', monospace" }}>
+                  <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}>
                     {data.pipelineVersion}
                   </span>
                 </div>

@@ -40,7 +40,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           </div>
           <div
             className="text-[10px] truncate"
-            style={{ color: 'rgba(28,26,23,0.5)' }}
+            style={{ color: 'rgba(28,26,23,0.7)' }}
           >
             {sourceStyle.icon} {item.location}
           </div>

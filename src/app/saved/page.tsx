@@ -199,7 +199,7 @@ function SavedPlaceCard({ place, onTap, onArchive, fromHistory, onToggleStar }: 
                   className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
                   style={{
                     background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
-                    color: isStarred ? 'white' : 'rgba(28,26,23,0.3)',
+                    color: isStarred ? 'white' : 'rgba(28,26,23,0.55)',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
@@ -210,7 +210,7 @@ function SavedPlaceCard({ place, onTap, onArchive, fromHistory, onToggleStar }: 
               )}
             </div>
           </div>
-          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
             {place.location} · {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
           </div>
           {sourceTag && (
@@ -248,7 +248,7 @@ function HistoryCard({ item, onPromote }: { item: HistoryItem; onPromote: (id: s
         <div className="text-[12px] font-medium" style={{ color: 'var(--t-ink)' }}>
           {item.name}
         </div>
-        <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+        <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
           {item.location} · {item.detectedDate} · {item.detectedFrom}
         </div>
       </div>
@@ -256,7 +256,7 @@ function HistoryCard({ item, onPromote }: { item: HistoryItem; onPromote: (id: s
       <button
         onClick={() => onPromote(item.id)}
         className="text-sm px-1 flex-shrink-0"
-        style={{ color: 'rgba(28,26,23,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}
+        style={{ color: 'rgba(28,26,23,0.65)', background: 'none', border: 'none', cursor: 'pointer' }}
       >
         ♡
       </button>
@@ -274,7 +274,7 @@ function LocationCluster({ city, count, onTap }: { city: string; count: number; 
       <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
         {city}
       </div>
-      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
         {count} place{count !== 1 ? 's' : ''}
       </div>
     </div>
@@ -484,7 +484,7 @@ export default function SavedPage() {
             <button
               onClick={() => setViewMode('myPlaces')}
               className="text-base"
-              style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ color: 'rgba(28,26,23,0.7)', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               ←
             </button>
@@ -499,7 +499,7 @@ export default function SavedPage() {
               >
                 History
               </h1>
-              <p className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <p className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 {history.length} places detected from email
               </p>
             </div>
@@ -508,7 +508,7 @@ export default function SavedPage() {
           {/* Info box */}
           <div
             className="text-[11px] leading-relaxed mb-3.5 px-3 py-2.5 rounded-[10px]"
-            style={{ color: 'rgba(28,26,23,0.5)', background: 'rgba(107,139,154,0.05)' }}
+            style={{ color: 'rgba(28,26,23,0.7)', background: 'rgba(107,139,154,0.05)' }}
           >
             These are places we found in your email. They feed your taste profile but don&apos;t appear in trip planning unless you promote them.
           </div>
@@ -581,7 +581,7 @@ export default function SavedPage() {
             >
               Collect
             </h1>
-            <div className="text-[11px] mt-0.5" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <div className="text-[11px] mt-0.5" style={{ color: 'rgba(28,26,23,0.7)' }}>
               {myPlaces.length} places ·{' '}
               <button
                 onClick={() => setViewMode('history')}
@@ -639,7 +639,7 @@ export default function SavedPage() {
             <button
               onClick={() => setShowSearch(!showSearch)}
               className="text-xl"
-              style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ color: 'rgba(28,26,23,0.7)', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               🔍
             </button>
@@ -705,7 +705,7 @@ export default function SavedPage() {
                     : 'rgba(28,26,23,0.04)',
                   color: isActive
                     ? (tab.value === 'all' ? 'white' : (SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'var(--t-ink)'))
-                    : 'rgba(28,26,23,0.5)',
+                    : 'rgba(28,26,23,0.7)',
                   fontWeight: isActive ? 600 : 400,
                   border: isActive && tab.value !== 'all'
                     ? `1px solid ${SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'transparent'}`
@@ -735,7 +735,7 @@ export default function SavedPage() {
               <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                 {banner.name}
               </div>
-              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
                 {banner.matchCount} place{banner.matchCount !== 1 ? 's' : ''} match{banner.matchCount === 1 ? 'es' : ''}
                 {banner.starredCount > 0 && ` · ${banner.starredCount} starred`}
               </div>
@@ -754,7 +754,7 @@ export default function SavedPage() {
           <div className="mb-8">
             <div
               className="text-[10px] font-bold uppercase tracking-wider mb-2"
-              style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}
             >
               {filteredPlaces.length} place{filteredPlaces.length !== 1 ? 's' : ''}
               {sourceFilter !== 'all' && ` from ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label || sourceFilter}`}
@@ -771,7 +771,7 @@ export default function SavedPage() {
               <div className="mb-4">
                 <div
                   className="text-[10px] font-bold uppercase tracking-wider mb-2"
-                  style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}
                 >
                   By location
                 </div>
@@ -796,11 +796,11 @@ export default function SavedPage() {
             <div className="mb-8">
               <div
                 className="text-[10px] font-bold uppercase tracking-wider mb-2"
-                style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+                style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}
               >
                 {searchQuery ? 'Results' : 'Recently saved'}
               </div>
-              <div className="text-[10px] mb-2" style={{ color: 'rgba(28,26,23,0.35)' }}>
+              <div className="text-[10px] mb-2" style={{ color: 'rgba(28,26,23,0.6)' }}>
                 Swipe left to archive
               </div>
               {filteredPlaces.length > 0 || matchingHistoryPlaces.length > 0 ? (
@@ -837,7 +837,7 @@ export default function SavedPage() {
               ) : (
                 <div className="text-center py-12">
                   <span className="text-2xl mb-3 block">◇</span>
-                  <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+                  <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
                     No places match your filters
                   </p>
                 </div>

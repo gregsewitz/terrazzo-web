@@ -95,7 +95,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
             {item.google.rating}
           </span>
           {item.google.reviewCount && (
-            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
               ({item.google.reviewCount.toLocaleString()})
             </span>
           )}
@@ -109,7 +109,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
           className="text-[9px] px-1.5 py-0.5 rounded-full"
           style={{
             background: 'rgba(28,26,23,0.06)',
-            color: 'rgba(28,26,23,0.5)',
+            color: 'rgba(28,26,23,0.7)',
             fontFamily: "'Space Mono', monospace",
           }}
         >

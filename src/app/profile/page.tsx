@@ -41,7 +41,7 @@ export default function ProfilePage() {
         >
           Profile
         </h1>
-        <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.5)' }}>
+        <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.7)' }}>
           Your Terrazzo taste identity
         </p>
 
@@ -55,7 +55,7 @@ export default function ProfilePage() {
           </div>
           <div>
             <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>Greg</div>
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>The Aesthetic Pilgrim</div>
+            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>The Aesthetic Pilgrim</div>
           </div>
         </div>
 
@@ -112,7 +112,7 @@ export default function ProfilePage() {
                 style={{ background: expandedSection === action ? 'rgba(200,146,58,0.06)' : 'rgba(28,26,23,0.03)' }}
               >
                 <span className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{label}</span>
-                <span style={{ color: 'rgba(28,26,23,0.3)', transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
+                <span style={{ color: 'rgba(28,26,23,0.7)', transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
               </div>
               {expandedSection === 'accounts' && action === 'accounts' && (
                 <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
@@ -135,12 +135,12 @@ export default function ProfilePage() {
                 </div>
               )}
               {expandedSection === 'notifications' && action === 'notifications' && (
-                <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.5)' }}>
+                <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.7)' }}>
                   Notification preferences will be available in a future update.
                 </div>
               )}
               {expandedSection === 'about' && action === 'about' && (
-                <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.5)' }}>
+                <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.7)' }}>
                   Terrazzo v0.1 — Your taste-driven travel companion. Built with Forme Libere design principles.
                 </div>
               )}

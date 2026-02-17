@@ -291,7 +291,7 @@ async function main() {
   console.log('── Phase 4: Monitoring Progress (20 min timeout) ──\n');
   const pending = new Set(toEnrich.map(p => p.googlePlaceId));
   const startTime = Date.now();
-  const MAX_WAIT = 20 * 60 * 1000;
+  const MAX_WAIT = 90 * 60 * 1000; // 90 min — enough for ~90 places at concurrency 5
   let completed = 0;
   let failed = 0;
 
