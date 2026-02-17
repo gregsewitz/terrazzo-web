@@ -817,6 +817,9 @@ export default function SavedPage() {
           item={detailItem}
           onClose={() => setDetailItem(null)}
           onRate={() => setRatingItem(detailItem)}
+          siblingPlaces={detailItem.importBatchId
+            ? myPlaces.filter(p => p.importBatchId === detailItem.importBatchId && p.id !== detailItem.id)
+            : undefined}
         />
       )}
 

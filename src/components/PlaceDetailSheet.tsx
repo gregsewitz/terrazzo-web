@@ -8,6 +8,7 @@ interface PlaceDetailSheetProps {
   item: ImportedPlace;
   onClose: () => void;
   onRate?: () => void;
+  siblingPlaces?: ImportedPlace[]; // other places from the same import batch
 }
 
 const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
@@ -27,7 +28,7 @@ function getPhotoGradient(type: string): string {
   return gradients[type] || gradients.restaurant;
 }
 
-export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailSheetProps) {
+export default function PlaceDetailSheet({ item, onClose, onRate, siblingPlaces }: PlaceDetailSheetProps) {
   const existingRating = item.rating;
   const ratingReaction = existingRating ? REACTIONS.find(r => r.id === existingRating.reaction) : null;
   const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
@@ -105,6 +106,11 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
           >
             {item.name}
           </h2>
+          {item.alsoKnownAs && (
+            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+              Also known as &ldquo;{item.alsoKnownAs}&rdquo;
+            </div>
+          )}
           <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
             {item.location} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
           </p>
@@ -212,6 +218,62 @@ export default function PlaceDetailSheet({ item, onClose, onRate }: PlaceDetailS
                   &ldquo;{item.friendAttribution.note}&rdquo;
                 </p>
               )}
+            </div>
+          )}
+
+          {/* What to order — extracted tags */}
+          {item.whatToOrder && item.whatToOrder.length > 0 && (
+            <div className="mb-4">
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                What to order
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {item.whatToOrder.map((tag, i) => (
+                  <div key={i} className="px-2.5 py-1 rounded-lg text-[11px]"
+                    style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}>
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tips — extracted from source */}
+          {item.tips && item.tips.length > 0 && (
+            <div className="mb-4">
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                Tips
+              </div>
+              <div className="rounded-xl px-3 py-2.5" style={{ background: 'var(--t-linen)' }}>
+                {item.tips.map((tip, i) => (
+                  <div key={i} className="text-[11px] leading-relaxed" style={{ color: 'var(--t-ink)' }}>
+                    {tip}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Also from this guide — sibling places from same import */}
+          {siblingPlaces && siblingPlaces.length > 0 && (
+            <div className="mb-4">
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                Also from this guide
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {siblingPlaces.slice(0, 5).map(sibling => (
+                  <div key={sibling.id} className="min-w-[120px] rounded-xl p-2.5 flex-shrink-0"
+                    style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+                    <div className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{sibling.name}</div>
+                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                      {sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)} · {sibling.location.split(',')[0]}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

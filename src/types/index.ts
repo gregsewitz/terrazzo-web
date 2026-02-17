@@ -147,6 +147,11 @@ export interface ImportedPlace {
   aiReasoning?: AIReasoning;
   savedDate?: string; // for Maps imports: "Saved Jun 2024"
   rating?: PlaceRating; // user's personal rating
+  // Enriched card fields (from import AI)
+  whatToOrder?: string[];  // e.g. ["Puntillas ★", "Gambas de la santa"]
+  tips?: string[];         // e.g. ["⏰ Go early (can be a wait)", "🍺 Drink at the bar while waiting"]
+  alsoKnownAs?: string;   // e.g. "El Sótano"
+  importBatchId?: string;  // links places from same import for "Also from this guide"
 }
 
 export interface TimeSlot {
