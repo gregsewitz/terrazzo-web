@@ -1,21 +1,30 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, TimeSlot, SLOT_ICONS, DEST_COLORS } from '@/types';
+import { ImportedPlace, PlaceType, TimeSlot, SLOT_ICONS, DEST_COLORS } from '@/types';
+import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import GhostCard from './GhostCard';
 import MapView from './MapView';
 
 export type TripViewMode = 'planner' | 'overview' | 'myPlaces';
+
+export interface DropTarget {
+  dayNumber: number;
+  slotId: string;
+}
 
 interface DayPlannerProps {
   viewMode: TripViewMode;
   onSetViewMode: (mode: TripViewMode) => void;
   onTapDetail: (item: ImportedPlace) => void;
   onOpenUnsorted: () => void;
+  onOpenForSlot?: (ctx: SlotContext) => void;
+  dropTarget?: DropTarget | null;
+  onRegisterSlotRef?: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
@@ -202,7 +211,6 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             dayNumber={day.dayNumber}
             destination={day.destination}
             destinationCoords={(() => {
-              // Look up geocoded coords for this day's destination
               const geo = trip.geoDestinations?.find(
                 g => g.name.toLowerCase() === (day.destination || '').toLowerCase()
               );
@@ -218,7 +226,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
           {/* Six time slots */}
           <div className="flex flex-col">
-            {day.slots.map(slot => (
+            {day.slots.map((slot, idx) => (
               <TimeSlotCard
                 key={slot.id}
                 slot={slot}
@@ -226,6 +234,13 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 destColor={destColor}
                 onTapDetail={onTapDetail}
                 onOpenUnsorted={onOpenUnsorted}
+                onOpenForSlot={onOpenForSlot}
+                allSlots={day.slots}
+                slotIndex={idx}
+                isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
+                onRegisterRef={onRegisterSlotRef
+                  ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
+                  : undefined}
               />
             ))}
           </div>
@@ -316,15 +331,42 @@ interface TimeSlotCardProps {
   destColor: { bg: string; accent: string; text: string };
   onTapDetail: (item: ImportedPlace) => void;
   onOpenUnsorted: () => void;
+  onOpenForSlot?: (ctx: SlotContext) => void;
+  allSlots?: TimeSlot[];
+  slotIndex?: number;
+  isDropTarget?: boolean;
+  onRegisterRef?: (rect: DOMRect | null) => void;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const icon = SLOT_ICONS[slot.id] || '📍';
+  const slotRef = useRef<HTMLDivElement>(null);
+  const isEmpty = !slot.place && (!slot.ghostItems || slot.ghostItems.length === 0);
+
+  // Register bounding rect on mount and resize
+  const updateRect = useCallback(() => {
+    if (onRegisterRef && slotRef.current && isEmpty) {
+      onRegisterRef(slotRef.current.getBoundingClientRect());
+    } else if (onRegisterRef && !isEmpty) {
+      onRegisterRef(null); // Don't accept drops on occupied slots
+    }
+  }, [onRegisterRef, isEmpty]);
+
+  useEffect(() => {
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+    };
+  }, [updateRect]);
 
   return (
     <div
+      ref={slotRef}
       className="px-4 py-4"
       style={{ borderBottom: '1px solid var(--t-linen)' }}
     >
@@ -382,21 +424,44 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted 
           />
         ))}
 
-        {/* Empty state — opens pool tray to assign a place */}
-        {!slot.place && (!slot.ghostItems || slot.ghostItems.length === 0) && (
+        {/* Empty state — drop target or click to assign */}
+        {isEmpty && (
           <div
-            onClick={onOpenUnsorted}
-            className="flex items-center justify-center p-3 rounded-lg cursor-pointer transition-all hover:border-[var(--t-honey)]"
+            onClick={() => {
+              if (onOpenForSlot && allSlots && slotIndex != null) {
+                const prevSlot = slotIndex > 0 ? allSlots[slotIndex - 1] : undefined;
+                const nextSlot = slotIndex < allSlots.length - 1 ? allSlots[slotIndex + 1] : undefined;
+                const before = prevSlot?.place ? { name: prevSlot.place.name, type: prevSlot.place.type, location: prevSlot.place.location } : undefined;
+                const after = nextSlot?.place ? { name: nextSlot.place.name, type: nextSlot.place.type, location: nextSlot.place.location } : undefined;
+                onOpenForSlot({
+                  slotId: slot.id,
+                  slotLabel: slot.label,
+                  dayNumber,
+                  adjacentPlaces: { before, after },
+                  suggestedTypes: SLOT_TYPE_AFFINITY[slot.id] || [],
+                });
+              } else {
+                onOpenUnsorted();
+              }
+            }}
+            className="flex items-center justify-center p-3 rounded-lg cursor-pointer transition-all"
             style={{
-              border: '1.5px dashed var(--t-linen)',
-              background: 'rgba(243, 239, 232, 0.5)',
+              border: isDropTarget
+                ? '2px dashed var(--t-verde)'
+                : '1.5px dashed var(--t-linen)',
+              background: isDropTarget
+                ? 'rgba(42,122,86,0.08)'
+                : 'rgba(243, 239, 232, 0.5)',
               minHeight: 48,
-              color: 'rgba(28,26,23,0.5)',
+              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.5)',
               fontSize: '13px',
               fontFamily: "'DM Sans', sans-serif",
+              fontWeight: isDropTarget ? 600 : 400,
+              transform: isDropTarget ? 'scale(1.02)' : 'none',
+              transition: 'all 0.15s ease-out',
             }}
           >
-            + Add {slot.label.toLowerCase()}
+            {isDropTarget ? 'Drop here' : `+ Add ${slot.label.toLowerCase()}`}
           </div>
         )}
       </div>

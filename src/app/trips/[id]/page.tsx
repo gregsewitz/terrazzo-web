@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { useImportStore } from '@/stores/importStore';
-import { usePoolStore } from '@/stores/poolStore';
+import { usePoolStore, SlotContext } from '@/stores/poolStore';
 import { ImportedPlace, PlaceRating } from '@/types';
 import TabBar from '@/components/TabBar';
 import DayPlanner from '@/components/DayPlanner';
-import type { TripViewMode } from '@/components/DayPlanner';
+import type { TripViewMode, DropTarget } from '@/components/DayPlanner';
 import TripMyPlaces from '@/components/TripMyPlaces';
 import PoolTray from '@/components/PoolTray';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
@@ -17,6 +17,7 @@ import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
 import IntelligenceView from '@/components/IntelligenceView';
+import DragOverlay from '@/components/DragOverlay';
 
 import ExportToMaps from '@/components/ExportToMaps';
 
@@ -24,13 +25,14 @@ export default function TripDetailPage() {
   const params = useParams();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const ratePlace = useTripStore(s => s.ratePlace);
+  const placeFromSaved = useTripStore(s => s.placeFromSaved);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
-  const { setExpanded } = usePoolStore();
+  const { setExpanded, openForSlot } = usePoolStore();
 
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
@@ -40,6 +42,70 @@ export default function TripDetailPage() {
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
+
+  // ─── DRAG & DROP STATE ───
+  const [dragItem, setDragItem] = useState<ImportedPlace | null>(null);
+  const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  const slotRects = useRef<Map<string, { dayNumber: number; slotId: string; rect: DOMRect }>>(new Map());
+
+  const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null) => {
+    const key = `${dayNumber}-${slotId}`;
+    if (rect) {
+      slotRects.current.set(key, { dayNumber, slotId, rect });
+    } else {
+      slotRects.current.delete(key);
+    }
+  }, []);
+
+  const hitTestSlots = useCallback((x: number, y: number): DropTarget | null => {
+    for (const [, entry] of slotRects.current) {
+      const { rect, dayNumber, slotId } = entry;
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        return { dayNumber, slotId };
+      }
+    }
+    return null;
+  }, []);
+
+  const handleDragStart = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
+    setDragItem(item);
+    setDragPos({ x: e.clientX, y: e.clientY });
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(10);
+  }, []);
+
+  // Global pointer move / up while dragging
+  useEffect(() => {
+    if (!dragItem) return;
+
+    const handleMove = (e: PointerEvent) => {
+      e.preventDefault();
+      setDragPos({ x: e.clientX, y: e.clientY });
+      const target = hitTestSlots(e.clientX, e.clientY);
+      setDropTarget(target);
+    };
+
+    const handleUp = () => {
+      if (dropTarget && dragItem) {
+        placeFromSaved(dragItem, dropTarget.dayNumber, dropTarget.slotId);
+        if (navigator.vibrate) navigator.vibrate(15);
+      }
+      setDragItem(null);
+      setDragPos(null);
+      setDropTarget(null);
+    };
+
+    window.addEventListener('pointermove', handleMove, { passive: false });
+    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('pointercancel', handleUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleUp);
+    };
+  }, [dragItem, dropTarget, hitTestSlots, placeFromSaved]);
 
   useEffect(() => {
     if (params.id) {
@@ -71,7 +137,6 @@ export default function TripDetailPage() {
   const handleRate = (rating: PlaceRating) => {
     if (ratingItem) {
       ratePlace(ratingItem.id, rating);
-      // Update local state so detail sheet reflects the change
       setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
       setRatingItem(null);
     }
@@ -80,7 +145,12 @@ export default function TripDetailPage() {
   return (
     <div
       className="min-h-screen relative"
-      style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+      style={{
+        background: 'var(--t-cream)',
+        maxWidth: 480,
+        margin: '0 auto',
+        touchAction: dragItem ? 'none' : 'auto',
+      }}
     >
       {/* Chat toggle */}
       <button
@@ -98,6 +168,9 @@ export default function TripDetailPage() {
         onSetViewMode={setViewMode}
         onTapDetail={setDetailItem}
         onOpenUnsorted={() => setExpanded(true)}
+        onOpenForSlot={(ctx: SlotContext) => openForSlot(ctx)}
+        dropTarget={dropTarget}
+        onRegisterSlotRef={handleRegisterSlotRef}
       />
 
       {/* My Places — only in myPlaces mode */}
@@ -109,8 +182,20 @@ export default function TripDetailPage() {
       {viewMode === 'planner' && (
         <PoolTray
           onTapDetail={setDetailItem}
-          onOpenImport={() => setImportOpen(true)}
+          onCurateMore={() => setViewMode('myPlaces')}
           onOpenExport={() => setExportOpen(true)}
+          onDragStart={handleDragStart}
+          dragItemId={dragItem?.id ?? null}
+        />
+      )}
+
+      {/* Drag Overlay — floating card following pointer */}
+      {dragItem && dragPos && (
+        <DragOverlay
+          item={dragItem}
+          x={dragPos.x}
+          y={dragPos.y}
+          isOverTarget={!!dropTarget}
         />
       )}
 

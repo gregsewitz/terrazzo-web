@@ -284,6 +284,7 @@ interface TripState {
   dismissGhost: (dayNumber: number, slotId: string, ghostId: string) => void;
   ratePlace: (itemId: string, rating: PlaceRating) => void;
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
+  placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   createTrip: (data: TripCreationData) => string; // returns new trip id
 }
 
@@ -354,6 +355,27 @@ export const useTripStore = create<TripState>((set, get) => ({
     const trips = state.trips.map(trip => {
       if (trip.id !== state.currentTripId) return trip;
       return { ...trip, pool: [...trip.pool, ...items] };
+    });
+    return { trips };
+  }),
+
+  placeFromSaved: (place, dayNumber, slotId) => set(state => {
+    const trips = state.trips.map(trip => {
+      if (trip.id !== state.currentTripId) return trip;
+      const placedItem = { ...place, status: 'placed' as const, placedIn: { day: dayNumber, slot: slotId } };
+      // Add to pool (if not already there) and place in slot
+      const alreadyInPool = trip.pool.some(p => p.id === place.id);
+      const updatedPool = alreadyInPool
+        ? trip.pool.map(p => p.id === place.id ? placedItem : p)
+        : [...trip.pool, placedItem];
+      const updatedDays = trip.days.map(d => {
+        if (d.dayNumber !== dayNumber) return d;
+        return {
+          ...d,
+          slots: d.slots.map(s => s.id === slotId ? { ...s, place: placedItem } : s),
+        };
+      });
+      return { ...trip, pool: updatedPool, days: updatedDays };
     });
     return { trips };
   }),

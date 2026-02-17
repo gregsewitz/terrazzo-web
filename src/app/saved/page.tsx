@@ -13,6 +13,8 @@ import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, GhostSourceType, SOURCE_STYLES } from '@/types';
 import IntelligenceView from '@/components/IntelligenceView';
 import ExportToMaps from '@/components/ExportToMaps';
+import ImportDrawer from '@/components/ImportDrawer';
+import { useImportStore } from '@/stores/importStore';
 
 const PLACE_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
   { id: 'all', label: 'All' },
@@ -295,6 +297,7 @@ export default function SavedPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
   const toggleStar = useSavedStore(s => s.toggleStar);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
+  const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
 
   const trips = useTripStore(s => s.trips);
 
@@ -598,28 +601,28 @@ export default function SavedPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowNewCollection(true)}
-              className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full"
+              onClick={() => setImportOpen(true)}
+              className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
               style={{
-                background: 'var(--t-ink)',
-                color: 'white',
+                background: 'transparent',
+                color: 'var(--t-panton-orange)',
+                borderColor: 'var(--t-panton-orange)',
+                fontFamily: "'Space Mono', monospace",
+              }}
+            >
+              + Import
+            </button>
+            <button
+              onClick={() => setShowNewCollection(true)}
+              className="text-[11px] font-medium px-2 py-1.5 rounded-full"
+              style={{
+                background: 'rgba(28,26,23,0.06)',
+                color: 'var(--t-ink)',
                 border: 'none',
                 cursor: 'pointer',
               }}
             >
               + Collection
-            </button>
-            <button
-              onClick={() => setShowExport(true)}
-              className="text-[11px] font-medium px-2 py-1.5 rounded-full"
-              style={{
-                background: 'rgba(200,146,58,0.1)',
-                color: 'var(--t-honey)',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              📍 Export
             </button>
             <button
               onClick={() => setShowMapView(!showMapView)}
@@ -921,6 +924,11 @@ export default function SavedPage() {
           collectionName="My Places"
           onClose={() => setShowExport(false)}
         />
+      )}
+
+      {/* Import Drawer */}
+      {importOpen && (
+        <ImportDrawer onClose={() => { resetImport(); setImportOpen(false); }} />
       )}
 
       <TabBar />
