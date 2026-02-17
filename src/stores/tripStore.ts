@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Trip, ImportedPlace, TripDay, DEFAULT_TIME_SLOTS, PlaceRating } from '@/types';
+import { Trip, ImportedPlace, TripDay, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData } from '@/types';
 
 // Demo data for Tokyo trip — enhanced with multi-source ghost cards
 const DEMO_POOL: ImportedPlace[] = [
@@ -283,6 +283,7 @@ interface TripState {
   dismissGhost: (dayNumber: number, slotId: string, ghostId: string) => void;
   ratePlace: (itemId: string, rating: PlaceRating) => void;
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
+  createTrip: (data: TripCreationData) => string; // returns new trip id
 }
 
 export const useTripStore = create<TripState>((set, get) => ({
@@ -520,4 +521,60 @@ export const useTripStore = create<TripState>((set, get) => ({
     });
     return { trips };
   }),
+
+  createTrip: (data: TripCreationData) => {
+    const id = `trip-${Date.now()}`;
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Calculate number of days from date range
+    const start = new Date(data.startDate + 'T00:00:00');
+    const end = new Date(data.endDate + 'T00:00:00');
+    const numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+    // Generate day structure with empty time slots
+    const days: TripDay[] = Array.from({ length: numDays }, (_, i) => {
+      const date = new Date(start);
+      date.setDate(date.getDate() + i);
+
+      // Distribute destinations across days for multi-city
+      const destIdx = data.destinations.length > 1
+        ? Math.min(Math.floor(i / (numDays / data.destinations.length)), data.destinations.length - 1)
+        : 0;
+
+      return {
+        dayNumber: i + 1,
+        date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
+        dayOfWeek: dayNames[date.getDay()],
+        destination: data.destinations[destIdx] || data.destinations[0],
+        slots: DEFAULT_TIME_SLOTS.map(s => ({
+          ...s,
+          place: undefined,
+          ghostItems: [],
+        })),
+      };
+    });
+
+    const newTrip: Trip = {
+      id,
+      name: data.name,
+      location: data.destinations.join(', '),
+      startDate: data.startDate,
+      endDate: data.endDate,
+      destinations: data.destinations,
+      travelContext: data.travelContext,
+      groupSize: data.groupSize,
+      status: data.status,
+      days,
+      pool: [],
+    };
+
+    set(state => ({
+      trips: [...state.trips, newTrip],
+      currentTripId: id,
+      currentDay: 1,
+    }));
+
+    return id;
+  },
 }));

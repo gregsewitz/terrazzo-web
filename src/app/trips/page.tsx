@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
@@ -8,17 +7,6 @@ import TabBar from '@/components/TabBar';
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
   const router = useRouter();
-  const [showNewTrip, setShowNewTrip] = useState(false);
-  const [tripName, setTripName] = useState('');
-
-  const handleCreateTrip = () => {
-    if (!tripName.trim()) return;
-    // For now, navigate to the demo trip (in a real app, we'd create a new trip in the store)
-    setShowNewTrip(false);
-    setTripName('');
-    // Navigate to demo for now since we only have one trip
-    router.push('/trips/demo-tokyo');
-  };
 
   return (
     <div
@@ -26,12 +14,21 @@ export default function TripsPage() {
       style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
     >
       <div className="px-4 pt-6">
-        <h1
-          className="text-2xl mb-1"
-          style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
-        >
-          Your Trips
-        </h1>
+        <div className="flex items-center justify-between mb-1">
+          <h1
+            className="text-2xl"
+            style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
+          >
+            Your Trips
+          </h1>
+          <button
+            onClick={() => router.push('/trips/new')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-none cursor-pointer text-[12px] font-medium transition-all hover:opacity-80"
+            style={{ background: 'var(--t-ink)', color: 'white', fontFamily: "'DM Sans', sans-serif" }}
+          >
+            <span className="text-sm">+</span> New Trip
+          </button>
+        </div>
         <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.5)' }}>
           Plan and curate with Terrazzo taste intelligence
         </p>
@@ -54,78 +51,50 @@ export default function TripsPage() {
                 △
               </div>
               <div className="flex-1 min-w-0">
-                <div
-                  className="text-sm font-semibold"
-                  style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
-                >
-                  {trip.name}
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
+                  >
+                    {trip.name}
+                  </span>
+                  {trip.status && (
+                    <span
+                      className="text-[9px] px-1.5 py-0.5 rounded-full"
+                      style={{
+                        background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
+                        color: trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)',
+                        fontFamily: "'Space Mono', monospace",
+                      }}
+                    >
+                      {trip.status === 'planning' ? '● Planning' : '◯ Dreaming'}
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
-                  {trip.location} · {trip.days.length} days · {trip.pool.filter(p => p.status === 'available').length} in pool
+                  {trip.location} · {trip.days.length} days{trip.pool.length > 0 ? ` · ${trip.pool.filter(p => p.status === 'available').length} in pool` : ''}
                 </div>
               </div>
               <span style={{ color: 'rgba(28,26,23,0.3)' }}>→</span>
             </button>
           ))}
 
-          {/* New trip — inline form or button */}
-          {showNewTrip ? (
-            <div
-              className="p-4 rounded-xl"
-              style={{ background: 'white', border: '1.5px solid var(--t-honey)' }}
-            >
-              <div className="text-[11px] font-bold uppercase tracking-wider mb-2"
-                style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}>
-                New trip
-              </div>
-              <input
-                type="text"
-                placeholder="Where are you going?"
-                value={tripName}
-                onChange={(e) => setTripName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTrip(); }}
-                autoFocus
-                className="w-full px-3 py-2.5 rounded-lg border mb-3 text-[13px]"
-                style={{
-                  background: 'var(--t-cream)',
-                  borderColor: 'var(--t-linen)',
-                  color: 'var(--t-ink)',
-                  outline: 'none',
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setShowNewTrip(false); setTripName(''); }}
-                  className="flex-1 py-2 rounded-lg text-[12px] font-medium border cursor-pointer"
-                  style={{ background: 'transparent', borderColor: 'var(--t-linen)', color: 'var(--t-ink)' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateTrip}
-                  disabled={!tripName.trim()}
-                  className="flex-1 py-2 rounded-lg text-[12px] font-medium border-none cursor-pointer disabled:opacity-40"
-                  style={{ background: 'var(--t-ink)', color: 'white' }}
-                >
-                  Create
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowNewTrip(true)}
-              className="flex items-center justify-center gap-2 p-4 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
-              style={{
-                background: 'rgba(28,26,23,0.03)',
-                border: '1.5px dashed var(--t-travertine)',
-                color: 'rgba(28,26,23,0.4)',
-              }}
-            >
-              <span className="text-lg">+</span>
-              <span className="text-[12px]">New Trip</span>
-            </button>
-          )}
+          {/* Large dashed CTA card */}
+          <button
+            onClick={() => router.push('/trips/new')}
+            className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
+            style={{
+              background: 'rgba(28,26,23,0.02)',
+              border: '1.5px dashed var(--t-travertine)',
+              color: 'rgba(28,26,23,0.4)',
+            }}
+          >
+            <span className="text-2xl">+</span>
+            <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
+            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+              Tell us where and when — we'll find your perfect places
+            </span>
+          </button>
         </div>
       </div>
 

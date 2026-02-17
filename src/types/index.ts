@@ -178,6 +178,9 @@ export interface Trip {
   startDate?: string;
   endDate?: string;
   destinations?: string[]; // multi-city support
+  travelContext?: TravelContext;
+  groupSize?: number;
+  status?: TripStatus;
   days: TripDay[];
   pool: ImportedPlace[];
 }
@@ -208,6 +211,19 @@ export const STANDOUT_TAGS: Record<string, string[]> = {
 };
 
 export const CONTEXT_TAGS = ['Solo', 'Couple', 'Friends', 'Family', 'Special occasion', 'Work trip'];
+
+export type TripStatus = 'planning' | 'dreaming';
+export type TravelContext = 'solo' | 'partner' | 'friends' | 'family';
+
+export interface TripCreationData {
+  name: string;
+  destinations: string[];
+  startDate: string; // ISO date
+  endDate: string;   // ISO date
+  travelContext: TravelContext;
+  groupSize?: number; // for friends/family
+  status: TripStatus;
+}
 
 export interface AISuggestion {
   item: ImportedPlace;
