@@ -78,6 +78,12 @@ body {
   animation: ghostShimmer 2.5s ease-in-out infinite;
 }
 
+/* Smart collection shimmer */
+@keyframes smartShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Smooth expand/collapse for drawers */
 .drawer-transition {
   transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),

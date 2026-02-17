@@ -178,7 +178,7 @@ export default function SmartCollectionSheet({
                   placeholder="Describe your collection..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSubmit();
                   }}
                   className="w-full px-4 py-3 rounded-lg border text-[14px]"
@@ -254,7 +254,7 @@ export default function SmartCollectionSheet({
                     className="h-6 rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200"
                     style={{
                       backgroundSize: '200% 100%',
-                      animation: 'shimmer 2s infinite',
+                      animation: 'smartShimmer 2s infinite',
                     }}
                   />
                   {/* Details placeholder */}
@@ -262,7 +262,7 @@ export default function SmartCollectionSheet({
                     className="h-4 rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 w-2/3"
                     style={{
                       backgroundSize: '200% 100%',
-                      animation: 'shimmer 2s infinite',
+                      animation: 'smartShimmer 2s infinite',
                       animationDelay: '0.1s',
                     }}
                   />
@@ -274,7 +274,7 @@ export default function SmartCollectionSheet({
                         className="h-5 w-16 rounded-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200"
                         style={{
                           backgroundSize: '200% 100%',
-                          animation: 'shimmer 2s infinite',
+                          animation: 'smartShimmer 2s infinite',
                           animationDelay: `${0.1 * i}s`,
                         }}
                       />
@@ -282,17 +282,6 @@ export default function SmartCollectionSheet({
                   </div>
                 </div>
               </div>
-
-              <style jsx>{`
-                @keyframes shimmer {
-                  0% {
-                    background-position: 200% 0;
-                  }
-                  100% {
-                    background-position: -200% 0;
-                  }
-                }
-              `}</style>
 
               <p
                 className="text-center text-[11px]"
