@@ -135,12 +135,12 @@ export const DOMAIN_COLORS: Record<string, string> = {
 };
 
 export const AXIS_COLORS: Record<string, string> = {
-  Sensory: "#8b6b4a",
-  Authenticity: "#4a6741",
-  Material: "#6b8b4a",
-  Social: "#8b4a4a",
-  Cultural: "#4a6b8b",
-  Spatial: "#6b6b4a",
+  Sensory: "#c8923a",       // Honey — Chapo elmwood
+  Authenticity: "#d63020",  // Signal Red — Perriand panel
+  Material: "#eeb420",      // Chrome Yellow — Perriand panel
+  Social: "#e86830",        // Panton Orange — Panton Chair
+  Cultural: "#6844a0",      // Panton Violet — Panton interior
+  Spatial: "#2a7a56",       // Verde — Barcelona marble
 };
 
 export const CONTEXT_ICONS: Record<string, string> = {

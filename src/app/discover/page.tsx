@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import TabBar from '@/components/TabBar';
-import RadarChart from '@/components/profile/RadarChart';
+import TasteStone from '@/components/profile/TasteStone';
 import ScoreArc from '@/components/profile/ScoreArc';
 import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
 import {
@@ -63,8 +63,8 @@ function HeroSection() {
             Based on 238 signals across 6 dimensions
           </p>
         </div>
-        <Link href="/profile" className="flex-shrink-0 mt-1" style={{ opacity: 0.85 }}>
-          <RadarChart data={profile.radarData} size={64} />
+        <Link href="/profile" className="flex-shrink-0 mt-1" style={{ opacity: 0.9 }}>
+          <TasteStone data={profile.radarData} size={72} />
         </Link>
       </div>
     </div>
