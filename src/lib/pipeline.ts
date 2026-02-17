@@ -84,7 +84,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
     const completedStages: string[] = [];
 
     // ── Create pipeline run record ──
-    const run: any = await step.run('create-run', async () => {
+    const run = await step.run('create-run', async () => {
       const r = await prisma.pipelineRun.create({
         data: {
           placeIntelligenceId,
@@ -100,7 +100,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         data: { status: 'enriching' },
       });
       return { id: r.id, startedAt: r.startedAt!.getTime() };
-    });
+    }) as { id: string; startedAt: number };
 
     // ── STAGE 1: Google Places (~2s) ──
     const placesData = await step.run('stage-google-places', async () => {
