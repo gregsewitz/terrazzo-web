@@ -9,7 +9,6 @@ import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
   onOpenImport: () => void;
-  onOpenTriage?: () => void;
   onOpenExport?: () => void;
 }
 
@@ -24,7 +23,7 @@ const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: strin
   { value: 'email', label: 'Email', icon: '✉' },
 ];
 
-export default function PoolTray({ onTapDetail, onOpenImport, onOpenTriage, onOpenExport }: PoolTrayProps) {
+export default function PoolTray({ onTapDetail, onOpenImport, onOpenExport }: PoolTrayProps) {
   const pool = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
     return trip?.pool;
@@ -187,20 +186,6 @@ export default function PoolTray({ onTapDetail, onOpenImport, onOpenTriage, onOp
             <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.4)' }}>▼</span>
           </button>
           <div className="flex items-center gap-2">
-            {onOpenTriage && poolItems.length > 0 && (
-              <button
-                onClick={onOpenTriage}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
-                style={{
-                  background: 'transparent',
-                  color: 'var(--t-verde)',
-                  borderColor: 'var(--t-verde)',
-                  fontFamily: "'Space Mono', monospace",
-                }}
-              >
-                ✦ Triage
-              </button>
-            )}
             {onOpenExport && poolItems.length > 0 && (
               <button
                 onClick={onOpenExport}

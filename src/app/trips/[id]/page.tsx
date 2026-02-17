@@ -14,7 +14,7 @@ import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
-import TriageDeck from '@/components/TriageDeck';
+
 import ExportToMaps from '@/components/ExportToMaps';
 
 export default function TripDetailPage() {
@@ -32,7 +32,7 @@ export default function TripDetailPage() {
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const [triageOpen, setTriageOpen] = useState(false);
+
   const [exportOpen, setExportOpen] = useState(false);
   const [ghostsInjected, setGhostsInjected] = useState(false);
 
@@ -97,7 +97,7 @@ export default function TripDetailPage() {
       <PoolTray
         onTapDetail={setDetailItem}
         onOpenImport={() => setImportOpen(true)}
-        onOpenTriage={() => setTriageOpen(true)}
+
         onOpenExport={() => setExportOpen(true)}
       />
 
@@ -138,16 +138,6 @@ export default function TripDetailPage() {
           places={trip.pool.filter(p => p.status === 'available')}
           collectionName={trip.name}
           onClose={() => setExportOpen(false)}
-        />
-      )}
-
-      {/* Triage Deck */}
-      {triageOpen && trip?.pool && (
-        <TriageDeck
-          places={trip.pool.filter(p => p.status === 'available')}
-          tripName={trip.name}
-          onClose={() => setTriageOpen(false)}
-          onTapDetail={(item) => { setTriageOpen(false); setDetailItem(item); }}
         />
       )}
 
