@@ -164,7 +164,11 @@ export default function GoogleMapView({ markers, height = 360 }: GoogleMapViewPr
           defaultCenter={defaultCenter}
           defaultZoom={defaultZoom}
           gestureHandling="greedy"
-          disableDefaultUI={true}
+          disableDefaultUI={false}
+          zoomControl={true}
+          mapTypeControl={false}
+          streetViewControl={false}
+          fullscreenControl={false}
           mapId={MAP_ID}
           style={{ width: '100%', height: '100%' }}
         >
