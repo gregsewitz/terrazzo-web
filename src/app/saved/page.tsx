@@ -6,6 +6,8 @@ import TabBar from '@/components/TabBar';
 import SmartCollectionSheet from '@/components/SmartCollectionSheet';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
+import GoogleMapView from '@/components/GoogleMapView';
+import type { MapMarker } from '@/components/GoogleMapView';
 import { useSavedStore, HistoryItem } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, GhostSourceType, SOURCE_STYLES } from '@/types';
@@ -367,6 +369,33 @@ export default function SavedPage() {
     }).filter(b => b.matchCount > 0);
   }, [trips, myPlaces]);
 
+  // Map markers — group filtered places by city for cluster view
+  const mapMarkers: MapMarker[] = useMemo(() => {
+    const byCity: Record<string, ImportedPlace[]> = {};
+    filteredPlaces.forEach(p => {
+      if (!byCity[p.location]) byCity[p.location] = [];
+      byCity[p.location].push(p);
+    });
+    return Object.entries(byCity).map(([city, places]) => {
+      const starred = places.filter(p =>
+        p.rating?.reaction === 'myPlace' || p.rating?.reaction === 'enjoyed'
+      ).length;
+      return {
+        id: `cluster-${city}`,
+        name: city,
+        location: city,
+        count: places.length,
+        starred,
+        onClick: () => {
+          setSearchInput(city);
+          setSearchQuery(city);
+          setShowSearch(true);
+          setShowMapView(false);
+        },
+      };
+    });
+  }, [filteredPlaces, setSearchQuery]);
+
   // History items matching search (shown with "from history" label)
   const matchingHistoryPlaces = useMemo(() => {
     if (!searchQuery || searchQuery.length < 2) return [];
@@ -695,88 +724,10 @@ export default function SavedPage() {
               {filteredPlaces.length} place{filteredPlaces.length !== 1 ? 's' : ''}
               {sourceFilter !== 'all' && ` from ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label || sourceFilter}`}
             </div>
-            <div
-              className="relative w-full rounded-xl overflow-hidden"
-              style={{
-                background: 'var(--t-cream)',
-                border: '1px solid var(--t-linen)',
-                height: 360,
-                backgroundImage:
-                  'linear-gradient(var(--t-linen) 0.5px, transparent 0.5px), linear-gradient(90deg, var(--t-linen) 0.5px, transparent 0.5px)',
-                backgroundSize: '40px 40px',
-              }}
-            >
-              {/* Group by location for cluster dots */}
-              {(() => {
-                const byCity: Record<string, ImportedPlace[]> = {};
-                filteredPlaces.forEach(p => {
-                  if (!byCity[p.location]) byCity[p.location] = [];
-                  byCity[p.location].push(p);
-                });
-                const cities = Object.entries(byCity);
-                return cities.map(([city, places], cityIdx) => {
-                  // Deterministic position from city name
-                  const hash = city.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-                  const x = ((hash + cityIdx * 37) % 70) + 15;
-                  const y = ((hash * 7 + cityIdx * 23) % 70) + 15;
-                  const starred = places.filter(p => p.rating?.reaction === 'myPlace' || p.rating?.reaction === 'enjoyed').length;
-                  return (
-                    <div
-                      key={city}
-                      className="absolute flex flex-col items-center cursor-pointer"
-                      style={{
-                        left: `${x}%`,
-                        top: `${y}%`,
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                      onClick={() => {
-                        setSearchInput(city);
-                        setSearchQuery(city);
-                        setShowSearch(true);
-                        setShowMapView(false);
-                      }}
-                    >
-                      {/* Cluster dot — size scales with count */}
-                      <div
-                        className="rounded-full flex items-center justify-center"
-                        style={{
-                          width: Math.min(24 + places.length * 4, 48),
-                          height: Math.min(24 + places.length * 4, 48),
-                          background: starred > 0 ? 'var(--t-verde)' : 'var(--t-ink)',
-                          opacity: 0.85,
-                          boxShadow: '0 2px 8px rgba(28,26,23,0.15)',
-                        }}
-                      >
-                        <span className="text-white text-[10px] font-bold">{places.length}</span>
-                      </div>
-                      {/* City label */}
-                      <div
-                        className="text-[9px] font-semibold mt-1.5 text-center max-w-[80px] leading-tight"
-                        style={{
-                          fontFamily: "'Space Mono', monospace",
-                          color: 'var(--t-ink)',
-                        }}
-                      >
-                        {city}
-                      </div>
-                      {starred > 0 && (
-                        <div className="text-[8px]" style={{ color: 'var(--t-verde)' }}>
-                          {starred} ♡
-                        </div>
-                      )}
-                    </div>
-                  );
-                });
-              })()}
-              {filteredPlaces.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'rgba(28,26,23,0.3)' }}>
-                  <div className="text-center">
-                    <span className="text-2xl mb-2 block">◇</span>
-                    <div className="text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>No places match filters</div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <GoogleMapView
+              markers={mapMarkers}
+              height={360}
+            />
           </div>
         ) : (
           <>
