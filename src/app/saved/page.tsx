@@ -11,6 +11,7 @@ import type { MapMarker } from '@/components/GoogleMapView';
 import { useSavedStore, HistoryItem } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, GhostSourceType, SOURCE_STYLES } from '@/types';
+import ExportToMaps from '@/components/ExportToMaps';
 
 const PLACE_TYPES: Array<{ id: PlaceType | 'all'; label: string }> = [
   { id: 'all', label: 'All' },
@@ -288,6 +289,7 @@ export default function SavedPage() {
   const [showMapView, setShowMapView] = useState(false);
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
+  const [showExport, setShowExport] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -590,6 +592,18 @@ export default function SavedPage() {
               + Collection
             </button>
             <button
+              onClick={() => setShowExport(true)}
+              className="text-[11px] font-medium px-2 py-1.5 rounded-full"
+              style={{
+                background: 'rgba(200,146,58,0.1)',
+                color: 'var(--t-honey)',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              📍 Export
+            </button>
+            <button
               onClick={() => setShowMapView(!showMapView)}
               className="text-[11px] font-medium px-2 py-1.5 rounded-full"
               style={{
@@ -864,6 +878,15 @@ export default function SavedPage() {
           });
         }}
       />
+
+      {/* Export to Maps */}
+      {showExport && (
+        <ExportToMaps
+          places={filteredPlaces}
+          collectionName="My Places"
+          onClose={() => setShowExport(false)}
+        />
+      )}
 
       <TabBar />
     </div>
