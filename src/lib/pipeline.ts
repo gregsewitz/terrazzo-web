@@ -116,7 +116,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('scrape_reviews', {
           propertyName,
           googlePlaceId,
-          location: placesData.location,
+          placesData,
         });
         completedStages.push('reviews');
         await updateStage(run.id, placeIntelligenceId, 'editorial', completedStages);
