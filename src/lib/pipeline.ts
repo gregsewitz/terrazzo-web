@@ -106,7 +106,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
     const placesData = await step.run('stage-google-places', async () => {
       const result = await callWorker('google_places', { googlePlaceId, propertyName });
       completedStages.push('google_places');
-      await updateStage(run.id, placeIntelligenceId, 'reviews', completedStages);
+      await updateStage(run.id as string, placeIntelligenceId, 'reviews', completedStages);
       return result as Record<string, unknown>;
     });
 
