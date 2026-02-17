@@ -50,6 +50,7 @@ interface PipelineEventData {
   googlePlaceId: string;
   propertyName: string;
   placeIntelligenceId: string;
+  placeType?: string;
   trigger: 'user_import' | 'manual' | 'refresh' | 'backfill';
   triggeredByUserId?: string;
 }
@@ -77,6 +78,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
       googlePlaceId,
       propertyName,
       placeIntelligenceId,
+      placeType,
       trigger,
       triggeredByUserId,
     } = event.data as PipelineEventData;
@@ -104,7 +106,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
 
     // ── STAGE 1: Google Places (~2s) ──
     const placesData = await step.run('stage-google-places', async () => {
-      const result = await callWorker('google_places', { googlePlaceId, propertyName });
+      const result = await callWorker('google_places', { googlePlaceId, propertyName, placeType });
       completedStages.push('google_places');
       await updateStage(run.id as string, placeIntelligenceId, 'reviews', completedStages);
       return result as Record<string, unknown>;
@@ -116,6 +118,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('scrape_reviews', {
           propertyName,
           googlePlaceId,
+          placeType,
           placesData,
         });
         completedStages.push('reviews');
@@ -135,6 +138,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('editorial_extraction', {
           propertyName,
           googlePlaceId,
+          placeType,
           reviews,
           placesData,
         });
@@ -154,6 +158,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('instagram_analysis', {
           propertyName,
           googlePlaceId,
+          placeType,
         });
         completedStages.push('instagram');
         await updateStage(run.id, placeIntelligenceId, 'menu', completedStages);
@@ -171,6 +176,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('menu_analysis', {
           propertyName,
           googlePlaceId,
+          placeType,
           placesData,
         });
         completedStages.push('menu');
@@ -189,6 +195,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('award_positioning', {
           propertyName,
           googlePlaceId,
+          placeType,
         });
         completedStages.push('awards');
         await updateStage(run.id, placeIntelligenceId, 'review_intelligence', completedStages);
@@ -206,6 +213,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         const result = await callWorker('review_intelligence', {
           propertyName,
           googlePlaceId,
+          placeType,
           reviews,
           existingSignals: editorial.signals,
         });
@@ -224,6 +232,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
       const result = await callWorker('merge', {
         propertyName,
         googlePlaceId,
+        placeType,
         editorial,
         instagram,
         menu,
