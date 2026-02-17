@@ -84,7 +84,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
     const completedStages: string[] = [];
 
     // ── Create pipeline run record ──
-    const run = await step.run('create-run', async () => {
+    const run: any = await step.run('create-run', async () => {
       const r = await prisma.pipelineRun.create({
         data: {
           placeIntelligenceId,
