@@ -3,9 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
+
+// ──────────────────────────────────────────────
+// Existing models
+// ──────────────────────────────────────────────
 
 model User {
   id           String       @id @default(cuid())
@@ -60,6 +63,10 @@ model Place {
   placedIn       String?  // JSON string
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  // Link to global intelligence
+  placeIntelligenceId String?
+  intelligence        PlaceIntelligence? @relation(fields: [placeIntelligenceId], references: [id])
 }
 
 model PlaceCache {
@@ -69,4 +76,77 @@ model PlaceCache {
   fetchedAt     DateTime @default(now())
 
   @@index([googlePlaceId])
+}
+
+// ──────────────────────────────────────────────
+// Place Intelligence (global, one per property)
+// ──────────────────────────────────────────────
+
+model PlaceIntelligence {
+  id              String   @id @default(cuid())
+  googlePlaceId   String   @unique
+  propertyName    String
+
+  // Pipeline status
+  status          String   @default("pending") // pending | enriching | complete | failed
+  pipelineVersion String   @default("v3-ri")
+
+  // Core intelligence payload (JSON strings)
+  signals         String   @default("[]") // Signal[]
+  antiSignals     String?  // AntiSignal[]
+  reliability     String?  // { overall, categories, totalReviews }
+  facts           String?  // { location, roomCount, architect, ... }
+  reviewIntel     String?  // { tier2, tier3, corroboration stats }
+
+  // Quick-access counts
+  signalCount      Int     @default(0)
+  antiSignalCount  Int     @default(0)
+  reviewCount      Int     @default(0)
+  reliabilityScore Float?  // 0-1
+
+  // Sources processed
+  sourcesProcessed String? // JSON
+
+  // Freshness
+  lastEnrichedAt  DateTime?
+  enrichmentTTL   Int      @default(90) // days
+
+  // Relations
+  pipelineRuns    PipelineRun[]
+  places          Place[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([googlePlaceId])
+  @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// Pipeline Run (execution tracking)
+// ──────────────────────────────────────────────
+
+model PipelineRun {
+  id                  String   @id @default(cuid())
+  placeIntelligenceId String
+  placeIntelligence   PlaceIntelligence @relation(fields: [placeIntelligenceId], references: [id])
+
+  status              String   @default("queued") // queued | running | complete | failed
+  triggerSource       String   // user_import | manual | refresh | backfill
+  triggeredByUserId   String?
+
+  currentStage        String?
+  stagesCompleted     String?  // JSON: string[]
+
+  startedAt           DateTime?
+  completedAt         DateTime?
+  durationMs          Int?
+
+  error               String?
+  retryCount          Int      @default(0)
+
+  createdAt           DateTime @default(now())
+
+  @@index([placeIntelligenceId])
+  @@index([status])
 }
