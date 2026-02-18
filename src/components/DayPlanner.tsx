@@ -24,9 +24,11 @@ interface DayPlannerProps {
   onOpenForSlot?: (ctx: SlotContext) => void;
   dropTarget?: DropTarget | null;
   onRegisterSlotRef?: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
+  onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
+  dragItemId?: string | null;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
@@ -275,6 +277,8 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             onRegisterRef={onRegisterSlotRef
               ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
               : undefined}
+            onDragStartFromSlot={onDragStartFromSlot}
+            dragItemId={dragItemId}
           />
         ))}
       </div>
@@ -417,6 +421,9 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
   );
 }
 
+const SLOT_HOLD_DELAY = 250;
+const SLOT_DRAG_THRESHOLD = 6;
+
 interface TimeSlotCardProps {
   slot: TimeSlot;
   dayNumber: number;
@@ -428,9 +435,11 @@ interface TimeSlotCardProps {
   slotIndex?: number;
   isDropTarget?: boolean;
   onRegisterRef?: (rect: DOMRect | null) => void;
+  onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
+  dragItemId?: string | null;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
@@ -439,6 +448,65 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   const hasPlaces = slot.places.length > 0;
   const isEmpty = !hasPlaces && (!slot.ghostItems || slot.ghostItems.length === 0);
   const hasGhosts = slot.ghostItems && slot.ghostItems.length > 0;
+
+  // ─── Drag-from-slot gesture handling ───
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdItem = useRef<ImportedPlace | null>(null);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const gestureDecided = useRef(false);
+  const [holdingPlaceId, setHoldingPlaceId] = useState<string | null>(null);
+
+  const clearSlotHold = useCallback(() => {
+    if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+    holdItem.current = null;
+    pointerStart.current = null;
+    gestureDecided.current = false;
+    setHoldingPlaceId(null);
+  }, []);
+
+  const handlePlacePointerDown = useCallback((place: ImportedPlace, e: React.PointerEvent) => {
+    if (!onDragStartFromSlot) return;
+    e.stopPropagation();
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+    holdItem.current = place;
+    gestureDecided.current = false;
+
+    holdTimer.current = setTimeout(() => {
+      if (holdItem.current && !gestureDecided.current) {
+        gestureDecided.current = true;
+        onDragStartFromSlot(holdItem.current, dayNumber, slot.id, e);
+        holdItem.current = null;
+        setHoldingPlaceId(null);
+      }
+    }, SLOT_HOLD_DELAY);
+
+    // Visual hold feedback
+    setTimeout(() => {
+      if (holdItem.current?.id === place.id && !gestureDecided.current) {
+        setHoldingPlaceId(place.id);
+      }
+    }, 120);
+  }, [onDragStartFromSlot, dayNumber, slot.id]);
+
+  const handlePlacePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!pointerStart.current || gestureDecided.current || !onDragStartFromSlot) return;
+    const dy = Math.abs(e.clientY - pointerStart.current.y);
+    const dx = Math.abs(e.clientX - pointerStart.current.x);
+
+    if (dy > SLOT_DRAG_THRESHOLD || dx > SLOT_DRAG_THRESHOLD) {
+      gestureDecided.current = true;
+      if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+      if (holdItem.current) {
+        onDragStartFromSlot(holdItem.current, dayNumber, slot.id, e);
+        holdItem.current = null;
+        setHoldingPlaceId(null);
+      }
+    }
+  }, [onDragStartFromSlot, dayNumber, slot.id]);
+
+  const handlePlacePointerUp = useCallback(() => {
+    clearSlotHold();
+  }, [clearSlotHold]);
 
   // Register bounding rect on mount and resize — all slots are valid drop targets
   const updateRect = useCallback(() => {
@@ -574,10 +642,12 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         </div>
       )}
 
-      {/* Confirmed places — card style with source + insight */}
+      {/* Confirmed places — draggable card style with source + insight */}
       {slot.places.map((p, pIdx) => {
         const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
         const isReservation = p.ghostSource === 'email';
+        const isDragging = dragItemId === p.id;
+        const isHolding = holdingPlaceId === p.id;
         const subtitle = p.friendAttribution?.note
           || p.terrazzoReasoning?.rationale
           || p.tasteNote
@@ -585,11 +655,28 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         return (
           <div
             key={p.id}
-            className="mx-3 mb-1.5 rounded-lg cursor-pointer transition-all overflow-hidden"
-            onClick={() => onTapDetail(p)}
+            className="mx-3 mb-1.5 rounded-lg cursor-pointer overflow-hidden select-none"
+            onClick={() => { if (!isDragging) onTapDetail(p); }}
+            onPointerDown={(e) => handlePlacePointerDown(p, e)}
+            onPointerMove={handlePlacePointerMove}
+            onPointerUp={handlePlacePointerUp}
+            onPointerCancel={handlePlacePointerUp}
             style={{
               background: 'white',
-              border: '1px solid rgba(42,122,86,0.12)',
+              border: isHolding
+                ? '1.5px solid var(--t-verde)'
+                : '1px solid rgba(42,122,86,0.12)',
+              opacity: isDragging ? 0.3 : 1,
+              transform: isDragging
+                ? 'scale(0.95)'
+                : isHolding
+                  ? 'scale(0.97) translateY(-1px)'
+                  : 'none',
+              boxShadow: isHolding
+                ? '0 4px 12px rgba(42,122,86,0.15)'
+                : 'none',
+              transition: 'opacity 0.2s, transform 0.2s ease-out, border 0.15s, box-shadow 0.15s',
+              touchAction: 'none',
             }}
           >
             <div className="flex items-start gap-2 px-2.5 py-2">

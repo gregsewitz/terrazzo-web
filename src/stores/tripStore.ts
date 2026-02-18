@@ -287,6 +287,7 @@ interface TripState {
   ratePlace: (itemId: string, rating: PlaceRating) => void;
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
+  moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
   createTrip: (data: TripCreationData) => string; // returns new trip id
 }
 
@@ -403,6 +404,33 @@ export const useTripStore = create<TripState>((set, get) => ({
         return {
           ...d,
           slots: d.slots.map(s => s.id === slotId ? { ...s, places: [...s.places, placedItem] } : s),
+        };
+      });
+      return { ...trip, days: updatedDays };
+    });
+    return { trips };
+  }),
+
+  moveToSlot: (place, fromDay, fromSlotId, toDay, toSlotId) => set(state => {
+    // Don't move to same slot
+    if (fromDay === toDay && fromSlotId === toSlotId) return state;
+    const trips = state.trips.map(trip => {
+      if (trip.id !== state.currentTripId) return trip;
+      const movedItem = { ...place, status: 'placed' as const, placedIn: { day: toDay, slot: toSlotId } };
+      const updatedDays = trip.days.map(d => {
+        return {
+          ...d,
+          slots: d.slots.map(s => {
+            // Remove from source slot
+            if (d.dayNumber === fromDay && s.id === fromSlotId) {
+              return { ...s, places: s.places.filter(p => p.id !== place.id) };
+            }
+            // Add to target slot
+            if (d.dayNumber === toDay && s.id === toSlotId) {
+              return { ...s, places: [...s.places, movedItem] };
+            }
+            return s;
+          }),
         };
       });
       return { ...trip, days: updatedDays };

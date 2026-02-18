@@ -30,6 +30,7 @@ export default function TripDetailPage() {
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const ratePlace = useTripStore(s => s.ratePlace);
   const placeFromSaved = useTripStore(s => s.placeFromSaved);
+  const moveToSlot = useTripStore(s => s.moveToSlot);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
@@ -55,6 +56,8 @@ export default function TripDetailPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollRaf = useRef<number | null>(null);
   const latestDragY = useRef<number>(0);
+  // Track where the drag originated — null means from pick strip, { day, slotId } means from a slot
+  const dragSource = useRef<{ dayNumber: number; slotId: string } | null>(null);
 
   const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null) => {
     const key = `${dayNumber}-${slotId}`;
@@ -82,10 +85,18 @@ export default function TripDetailPage() {
   }, []);
 
   const handleDragStart = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
+    dragSource.current = null; // from pick strip
     setDragItem(item);
     setDragPos({ x: e.clientX, y: e.clientY });
     latestDragY.current = e.clientY;
-    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(10);
+  }, []);
+
+  const handleDragStartFromSlot = useCallback((item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => {
+    dragSource.current = { dayNumber, slotId }; // from a time slot
+    setDragItem(item);
+    setDragPos({ x: e.clientX, y: e.clientY });
+    latestDragY.current = e.clientY;
     if (navigator.vibrate) navigator.vibrate(10);
   }, []);
 
@@ -138,9 +149,17 @@ export default function TripDetailPage() {
     const handleUp = () => {
       stopAutoScroll();
       if (dropTarget && dragItem) {
-        placeFromSaved(dragItem, dropTarget.dayNumber, dropTarget.slotId);
+        const src = dragSource.current;
+        if (src) {
+          // Dragging from one slot to another
+          moveToSlot(dragItem, src.dayNumber, src.slotId, dropTarget.dayNumber, dropTarget.slotId);
+        } else {
+          // Dragging from pick strip
+          placeFromSaved(dragItem, dropTarget.dayNumber, dropTarget.slotId);
+        }
         if (navigator.vibrate) navigator.vibrate(15);
       }
+      dragSource.current = null;
       setDragItem(null);
       setDragPos(null);
       setDropTarget(null);
@@ -156,7 +175,7 @@ export default function TripDetailPage() {
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
     };
-  }, [dragItem, dropTarget, hitTestSlots, placeFromSaved, startAutoScroll, stopAutoScroll]);
+  }, [dragItem, dropTarget, hitTestSlots, placeFromSaved, moveToSlot, startAutoScroll, stopAutoScroll]);
 
   useEffect(() => {
     if (params.id) {
@@ -231,6 +250,8 @@ export default function TripDetailPage() {
             }}
             dropTarget={dropTarget}
             onRegisterSlotRef={handleRegisterSlotRef}
+            onDragStartFromSlot={handleDragStartFromSlot}
+            dragItemId={dragItem?.id ?? null}
           />
 
           {/* Trip Places — all placed items across itinerary */}
