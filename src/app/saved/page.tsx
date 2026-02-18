@@ -732,32 +732,43 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{
+        background: 'var(--t-cream)',
+        maxWidth: 480,
+        margin: '0 auto',
+      }}
     >
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
+      {/* Header — fixed top bar with close */}
       <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full rounded-t-2xl px-4 pt-4"
-        style={{ maxWidth: 480, background: 'var(--t-cream)', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}
+        className="flex items-center justify-between px-4 flex-shrink-0"
+        style={{
+          height: 52,
+          borderBottom: '1px solid var(--t-linen)',
+          paddingTop: 'env(safe-area-inset-top, 0)',
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <span
-            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
-          >
-            New Shortlist
-          </span>
-          <button
-            onClick={onClose}
-            style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            <PerriandIcon name="close" size={14} color="rgba(28,26,23,0.5)" />
-          </button>
-        </div>
+        <span
+          style={{ fontFamily: "'DM Serif Display', serif", fontSize: 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
+        >
+          New Shortlist
+        </span>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(28,26,23,0.05)', border: 'none', cursor: 'pointer' }}
+        >
+          <PerriandIcon name="close" size={12} color="rgba(28,26,23,0.5)" />
+        </button>
+      </div>
 
+      {/* Scrollable content */}
+      <div
+        className="flex-1 overflow-y-auto px-4 pt-4"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}
+      >
         {/* Mode toggle */}
-        <div className="flex gap-1.5 mb-3">
+        <div className="flex gap-1.5 mb-4">
           <button
             onClick={() => { setIsSmartMode(false); resetSmart(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
@@ -790,7 +801,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
         {!isSmartMode && (
           <>
             {/* Icon picker */}
-            <div className="grid grid-cols-7 gap-1.5 mb-3">
+            <div className="grid grid-cols-7 gap-1.5 mb-4">
               {ICON_OPTIONS.map(icon => (
                 <button
                   key={icon.name}
@@ -810,15 +821,16 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
               ))}
             </div>
 
-            {/* Name input */}
+            {/* Name input — 16px font prevents iOS zoom */}
             <input
               type="text"
               placeholder="Shortlist name..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
-              className="w-full rounded-lg py-2.5 px-3 text-[13px] mb-3"
+              className="w-full rounded-lg py-2.5 px-3 mb-4"
               style={{
+                fontSize: 16,
                 background: 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
@@ -832,7 +844,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             <button
               onClick={() => { if (name.trim()) onCreate(name.trim(), selectedEmoji); }}
               disabled={!name.trim()}
-              className="w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer"
+              className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer"
               style={{
                 background: name.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
                 color: name.trim() ? 'white' : 'rgba(28,26,23,0.3)',
@@ -849,7 +861,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
         {/* ═══ Smart / AI Mode ═══ */}
         {isSmartMode && smartStep === 'input' && (
           <div>
-            {/* Description input */}
+            {/* Description input — 16px font prevents iOS zoom */}
             <input
               type="text"
               placeholder="Describe your shortlist..."
@@ -857,8 +869,9 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
               onChange={(e) => setSmartQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
               autoFocus
-              className="w-full rounded-lg py-2.5 px-3 text-[13px] mb-3"
+              className="w-full rounded-lg py-2.5 px-3 mb-3"
               style={{
+                fontSize: 16,
                 background: 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
@@ -869,7 +882,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             />
 
             {/* Example prompts */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="flex flex-wrap gap-1.5 mb-4">
               {SMART_EXAMPLE_PROMPTS.map(prompt => (
                 <button
                   key={prompt}
@@ -891,7 +904,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             <button
               onClick={handleSmartSubmit}
               disabled={!smartQuery.trim()}
-              className="w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
               style={{
                 background: smartQuery.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
                 color: smartQuery.trim() ? 'white' : 'rgba(28,26,23,0.3)',
