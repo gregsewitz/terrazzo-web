@@ -4,6 +4,8 @@ import { TASTE_PROFILE, WRAPPED, DOMAIN_COLORS, AXIS_COLORS, CONTEXT_ICONS, CONT
 import RadarChart from './RadarChart';
 import ScoreArc from './ScoreArc';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
+import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 
 const profile = TASTE_PROFILE;
 
@@ -75,15 +77,27 @@ function HeroSection() {
 }
 
 // ═══════════════════════════════════════════
-// RADAR — Enhanced chart on dark bg
+// MOSAIC — Terrazzo Mosaic replaces radar chart
 // ═══════════════════════════════════════════
 function RadarSection() {
   return (
     <div
-      className="flex flex-col items-center px-5 pt-2 pb-8"
+      className="flex flex-col items-center px-5 pt-6 pb-8 gap-4"
       style={{ background: '#2d3a2d' }}
     >
-      <RadarChart data={profile.radarData} size={280} />
+      <div
+        style={{
+          fontFamily: "'Space Mono', monospace",
+          fontSize: 9,
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase' as const,
+          color: 'rgba(245,240,230,0.5)',
+        }}
+      >
+        Your Terrazzo Mosaic
+      </div>
+      <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="lg" />
+      <MosaicLegend profile={DEFAULT_USER_PROFILE} dark />
     </div>
   );
 }

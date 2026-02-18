@@ -3,6 +3,8 @@
 import { useMemo } from 'react';
 import { useBriefing } from '@/hooks/useBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
+import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import PipelineProgress from '@/components/PipelineProgress';
 import {
   DOMAIN_COLORS,
@@ -181,8 +183,11 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
 
             {data && (
               <>
-                {/* Summary bar — 3 stats */}
+                {/* Summary bar — mosaic + stats */}
                 <div className="flex gap-2 mb-4">
+                  <div className="flex items-center justify-center p-2.5 rounded-xl" style={{ background: 'rgba(28,26,23,0.03)' }}>
+                    <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
+                  </div>
                   {matchScore != null && (
                     <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(200,146,58,0.06)' }}>
                       <div

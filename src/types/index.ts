@@ -282,6 +282,26 @@ export const SLOT_ICONS: Record<string, PerriandIconName> = {
 // Terrazzo voice — used across all prompts for consistent tone
 export const TERRAZZO_VOICE = `You write like a well-traveled friend who happens to have incredible taste — warm but not gushing, opinionated but never snobby. You use short, vivid descriptions. You notice the details that matter (the way light hits a courtyard, the specific dish to order, the hour when a place transforms). You're honest about trade-offs. You never say "hidden gem" or "must-visit." You speak like someone sharing a personal recommendation over wine, not writing a guidebook.`;
 
+// ─── Shortlist Types ───
+
+export interface Shortlist {
+  id: string;
+  name: string;
+  description?: string;
+  emoji?: string;
+  placeIds: string[];       // references to library places by ID
+  cities: string[];          // derived from member places
+  isDefault?: boolean;       // true for "Favorites" shortlist
+  isSmartCollection?: boolean;
+  query?: string;            // natural language query (smart collections)
+  filterTags?: string[];     // parsed filter tags (smart collections)
+  createdAt: string;
+  updatedAt: string;
+  // Future: sharing
+  isPublic?: boolean;
+  collaborators?: { userId: string; role: 'owner' | 'editor' | 'viewer' }[];
+}
+
 // ─── Pipeline Briefing Types ───
 
 export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {

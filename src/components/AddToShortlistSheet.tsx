@@ -1,0 +1,171 @@
+'use client';
+
+import { useState } from 'react';
+import { useSavedStore } from '@/stores/savedStore';
+import { ImportedPlace } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
+
+export default function AddToShortlistSheet({
+  place,
+  onClose,
+}: {
+  place: ImportedPlace;
+  onClose: () => void;
+}) {
+  const shortlists = useSavedStore(s => s.shortlists);
+  const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
+  const removePlaceFromShortlist = useSavedStore(s => s.removePlaceFromShortlist);
+  const createShortlist = useSavedStore(s => s.createShortlist);
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState('');
+
+  const toggleMembership = (shortlistId: string, isIn: boolean) => {
+    if (isIn) {
+      removePlaceFromShortlist(shortlistId, place.id);
+    } else {
+      addPlaceToShortlist(shortlistId, place.id);
+    }
+  };
+
+  const handleCreate = () => {
+    if (!newName.trim()) return;
+    const newId = createShortlist(newName.trim(), 'pin');
+    addPlaceToShortlist(newId, place.id);
+    setNewName('');
+    setShowCreate(false);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full rounded-t-2xl px-5 pt-5 pb-8"
+        style={{ maxWidth: 480, background: 'var(--t-cream)' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-1">
+          <span
+            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
+          >
+            Add to Shortlist
+          </span>
+          <button
+            onClick={onClose}
+            style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            <PerriandIcon name="close" size={16} color="rgba(28,26,23,0.5)" />
+          </button>
+        </div>
+        <div className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.45)', fontFamily: "'DM Sans', sans-serif" }}>
+          {place.name}
+        </div>
+
+        {/* Shortlist list */}
+        <div className="flex flex-col gap-1.5 mb-4 max-h-[50vh] overflow-y-auto">
+          {shortlists.map(sl => {
+            const isIn = sl.placeIds.includes(place.id);
+            const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
+
+            return (
+              <button
+                key={sl.id}
+                onClick={() => toggleMembership(sl.id, isIn)}
+                className="flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer"
+                style={{
+                  background: isIn ? 'rgba(42,122,86,0.04)' : 'white',
+                  border: isIn ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+                }}
+              >
+                {/* Emoji */}
+                <span style={{ fontSize: isPerriandIcon ? 14 : 16, width: 20, textAlign: 'center' }}>
+                  {isPerriandIcon ? (
+                    <PerriandIcon name={sl.emoji as any} size={14} color="var(--t-ink)" />
+                  ) : (
+                    sl.emoji
+                  )}
+                </span>
+
+                {/* Name + count */}
+                <div className="flex-1 text-left">
+                  <span className="text-[13px]" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
+                    {sl.name}
+                  </span>
+                  <span className="ml-2 text-[10px]" style={{ color: 'rgba(28,26,23,0.35)', fontFamily: "'Space Mono', monospace" }}>
+                    {sl.placeIds.length}
+                  </span>
+                </div>
+
+                {/* Checkmark */}
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{
+                    background: isIn ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
+                  }}
+                >
+                  {isIn && (
+                    <span style={{ color: 'white', fontSize: 11, fontWeight: 700 }}>✓</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Create new shortlist inline */}
+        {showCreate ? (
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              placeholder="New shortlist name..."
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+              className="flex-1 rounded-lg py-2.5 px-3 text-[12px]"
+              style={{
+                background: 'white',
+                border: '1px solid var(--t-linen)',
+                color: 'var(--t-ink)',
+                fontFamily: "'DM Sans', sans-serif",
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!newName.trim()}
+              className="px-3 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer"
+              style={{
+                background: newName.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
+                color: newName.trim() ? 'white' : 'rgba(28,26,23,0.3)',
+                border: 'none',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Add
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer transition-all hover:opacity-80"
+            style={{
+              background: 'none',
+              border: '1.5px dashed rgba(28,26,23,0.12)',
+              color: 'rgba(28,26,23,0.4)',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 12,
+            }}
+          >
+            <span style={{ fontSize: 13 }}>+</span>
+            New Shortlist
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

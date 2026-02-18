@@ -6,6 +6,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { useBriefing } from '@/hooks/useBriefing';
 import { getPlaceImage } from '@/constants/placeImages';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import PipelineProgress from '@/components/PipelineProgress';
 
 interface PlaceDetailSheetProps {
@@ -310,40 +311,17 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
             </div>
           )}
 
-          {/* Taste Axes Breakdown */}
+          {/* Terrazzo Mosaic Breakdown */}
           <div className="mb-4">
             <h3
               className="text-[10px] uppercase tracking-wider mb-2.5 font-bold"
               style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}
             >
-              Taste Axes
+              Taste Mosaic
             </h3>
-            <div className="flex flex-col gap-2">
-              {TASTE_DOMAINS.map(domain => {
-                const value = item.matchBreakdown?.[domain] ?? 0;
-                return (
-                  <div key={domain} className="flex items-center gap-2">
-                    <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                      <PerriandIcon name={DOMAIN_ICONS[domain]} size={14} color={DOMAIN_COLORS[domain]} />
-                    </div>
-                    <span
-                      className="text-[10px] w-16 font-medium"
-                      style={{ color: 'var(--t-ink)', fontFamily: "'Space Mono', monospace" }}
-                    >
-                      {domain}
-                    </span>
-                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(28,26,23,0.06)' }}>
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${value * 100}%`, background: DOMAIN_COLORS[domain] }}
-                      />
-                    </div>
-                    <span className="text-[10px] w-8 text-right" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
-                      {Math.round(value * 100)}
-                    </span>
-                  </div>
-                );
-              })}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <TerrazzoMosaic profile={item.matchBreakdown} size="md" />
+              <MosaicLegend profile={item.matchBreakdown} />
             </div>
           </div>
 

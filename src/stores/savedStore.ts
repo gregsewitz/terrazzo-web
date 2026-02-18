@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData } from '@/types';
+import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData, Shortlist } from '@/types';
 import {
   DEMO_ALL_PLACES,
   DEMO_HISTORY as IMPORTED_HISTORY,
@@ -30,447 +30,186 @@ export interface Collection {
   filterTags?: string[];
 }
 
-// NOTE: All demo data lives in @/data/demoSaved.ts (imported above)
+// ═══════════════════════════════════════════
+// Shortlist helpers
+// ═══════════════════════════════════════════
 
-const _LEGACY_MY_PLACES: ImportedPlace[] = [
-  {
-    id: 'place-1',
-    name: 'Sukiyabashi Jiro',
-    type: 'restaurant',
-    location: 'Tokyo',
-    source: { type: 'url', name: 'CN Traveller' },
-    matchScore: 92,
-    matchBreakdown: { Design: 0.7, Character: 0.95, Service: 0.98, Food: 0.99, Location: 0.6, Wellness: 0.3 },
-    tasteNote: 'Legendary omakase',
-    google: { rating: 4.4, reviewCount: 1247, category: 'Sushi Restaurant', priceLevel: 4 },
-    enrichment: { closedDays: ['Monday'], confidence: 0.94 },
-    terrazzoInsight: { why: 'Peak craftsmanship in every detail', caveat: 'Reservations required months ahead' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-10' },
-  },
-  {
-    id: 'place-2',
-    name: 'TeamLab Borderless',
-    type: 'museum',
-    location: 'Tokyo',
-    source: { type: 'text', name: "Sarah's List" },
-    matchScore: 85,
-    matchBreakdown: { Design: 0.98, Character: 0.8, Service: 0.5, Food: 0.1, Location: 0.7, Wellness: 0.6 },
-    tasteNote: 'Immersive digital art',
-    google: { rating: 4.5, reviewCount: 8932, category: 'Art Museum' },
-    terrazzoInsight: { why: 'Boundary-dissolving immersive spaces', caveat: 'Book timed entry in advance' },
-    status: 'available',
-    ghostSource: 'friend',
-    friendAttribution: { name: 'Sarah L.', note: 'The infinity room will melt your brain' },
-  },
-  {
-    id: 'place-3',
-    name: 'Narisawa',
-    type: 'restaurant',
-    location: 'Tokyo',
-    source: { type: 'url', name: 'CN Traveller' },
-    matchScore: 88,
-    matchBreakdown: { Design: 0.85, Character: 0.9, Service: 0.95, Food: 0.95, Location: 0.5, Wellness: 0.7 },
-    tasteNote: 'Forest-to-table fine dining',
-    google: { rating: 4.6, reviewCount: 2103, category: 'French Restaurant', priceLevel: 4 },
-    terrazzoInsight: { why: 'Two Michelin stars for a reason', caveat: 'Book 2-3 months ahead' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'enjoyed', ratedAt: '2025-02-09' },
-  },
-  {
-    id: 'place-4',
-    name: 'Le Comptoir du Panthéon',
-    type: 'restaurant',
-    location: 'Paris',
-    source: { type: 'email', name: 'Gmail' },
-    matchScore: 79,
-    matchBreakdown: { Design: 0.6, Character: 0.85, Service: 0.8, Food: 0.9, Location: 0.75, Wellness: 0.4 },
-    tasteNote: 'Classic bistro with soul',
-    google: { rating: 4.3, reviewCount: 562, category: 'French Restaurant', priceLevel: 2 },
-    terrazzoInsight: { why: 'Authentic Parisian charm', caveat: 'Can be crowded on weekends' },
-    status: 'available',
-    ghostSource: 'email',
-  },
-  {
-    id: 'place-5',
-    name: 'Musée de l\'Orangerie',
-    type: 'museum',
-    location: 'Paris',
-    source: { type: 'url', name: 'Artsy' },
-    matchScore: 87,
-    matchBreakdown: { Design: 0.95, Character: 0.7, Service: 0.6, Food: 0.2, Location: 0.9, Wellness: 0.5 },
-    tasteNote: 'Monet\'s waterlilies sanctuary',
-    google: { rating: 4.6, reviewCount: 4521, category: 'Art Museum' },
-    terrazzoInsight: { why: 'Pure visual transcendence', caveat: 'Early morning recommended' },
-    status: 'available',
-    ghostSource: 'article',
-  },
-  {
-    id: 'place-6',
-    name: 'Harry\'s Bar',
-    type: 'bar',
-    location: 'Venice',
-    source: { type: 'google-maps', name: 'Google Maps' },
-    matchScore: 81,
-    matchBreakdown: { Design: 0.7, Character: 0.95, Service: 0.9, Food: 0.5, Location: 0.85, Wellness: 0.3 },
-    tasteNote: 'Cocktails and Old World glamour',
-    google: { rating: 4.4, reviewCount: 1823, category: 'Cocktail Bar' },
-    terrazzoInsight: { why: 'Home of the Bellini', caveat: 'Expensive but worth it' },
-    status: 'available',
-    ghostSource: 'maps',
-    savedDate: 'Saved Dec 2024',
-  },
-  {
-    id: 'place-7',
-    name: 'Café Florian',
-    type: 'cafe',
-    location: 'Venice',
-    source: { type: 'text', name: "Marco's Tips" },
-    matchScore: 76,
-    matchBreakdown: { Design: 0.85, Character: 0.88, Service: 0.75, Food: 0.6, Location: 0.95, Wellness: 0.4 },
-    tasteNote: 'Historic coffee in San Marco Square',
-    google: { rating: 4.2, reviewCount: 3456, category: 'Café' },
-    terrazzoInsight: { why: 'Operating since 1720', caveat: 'Tourist prices, but the ambiance is real' },
-    status: 'available',
-    ghostSource: 'friend',
-    friendAttribution: { name: 'Marco', note: 'Best people-watching in Venice' },
-  },
-  {
-    id: 'place-8',
-    name: 'Gramercy Tavern',
-    type: 'bar',
-    location: 'New York',
-    source: { type: 'url', name: 'Eater NY' },
-    matchScore: 84,
-    matchBreakdown: { Design: 0.8, Character: 0.9, Service: 0.95, Food: 0.7, Location: 0.8, Wellness: 0.2 },
-    tasteNote: 'Historic New York tavern',
-    google: { rating: 4.5, reviewCount: 2341, category: 'Tavern' },
-    terrazzoInsight: { why: 'Since 1834 with cocktail mastery', caveat: 'Tavern section is casual, Dining Room is formal' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'enjoyed', ratedAt: '2025-02-05' },
-  },
-  {
-    id: 'place-9',
-    name: 'The Metropolitan Museum of Art',
-    type: 'museum',
-    location: 'New York',
-    source: { type: 'google-maps', name: 'Google Maps' },
-    matchScore: 90,
-    matchBreakdown: { Design: 0.95, Character: 0.85, Service: 0.7, Food: 0.4, Location: 0.9, Wellness: 0.6 },
-    tasteNote: 'The world in one building',
-    google: { rating: 4.7, reviewCount: 12450, category: 'Art Museum' },
-    terrazzoInsight: { why: 'Incomparable breadth and depth', caveat: 'Requires multiple visits' },
-    status: 'available',
-    ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
-  },
-  {
-    id: 'place-10',
-    name: 'The National Gallery',
-    type: 'museum',
-    location: 'London',
-    source: { type: 'email', name: 'Gmail' },
-    matchScore: 86,
-    matchBreakdown: { Design: 0.92, Character: 0.75, Service: 0.65, Food: 0.3, Location: 0.85, Wellness: 0.5 },
-    tasteNote: 'Old Masters in free admission',
-    google: { rating: 4.6, reviewCount: 5634, category: 'Art Museum' },
-    terrazzoInsight: { why: 'Vermeer, Caravaggio, Turner', caveat: 'Can be crowded, go early' },
-    status: 'available',
-    ghostSource: 'email',
-  },
-  {
-    id: 'place-11',
-    name: 'Rules Restaurant',
-    type: 'restaurant',
-    location: 'London',
-    source: { type: 'url', name: 'CN Traveller' },
-    matchScore: 80,
-    matchBreakdown: { Design: 0.75, Character: 0.92, Service: 0.88, Food: 0.85, Location: 0.7, Wellness: 0.3 },
-    tasteNote: 'London\'s oldest restaurant since 1798',
-    google: { rating: 4.4, reviewCount: 1205, category: 'British Restaurant', priceLevel: 3 },
-    terrazzoInsight: { why: 'Proper British dining with history', caveat: 'Jacket recommended' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'mixed', ratedAt: '2025-01-30' },
-  },
-  {
-    id: 'place-12',
-    name: 'Masseria Torre Coccaro',
-    type: 'hotel',
-    location: 'Puglia',
-    source: { type: 'text', name: 'Summer Recs' },
-    matchScore: 93,
-    matchBreakdown: { Design: 0.95, Character: 0.9, Service: 0.92, Food: 0.88, Location: 0.95, Wellness: 0.95 },
-    tasteNote: 'Centuries-old fortified farmstead',
-    google: { rating: 4.7, reviewCount: 876, category: 'Luxury Resort' },
-    terrazzoInsight: { why: 'Puglia captured in one property', caveat: 'Book far in advance' },
-    status: 'available',
-    ghostSource: 'friend',
-    friendAttribution: { name: 'Emma', note: 'The olive grove views at sunset are unreal' },
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-01' },
-  },
-  {
-    id: 'place-13',
-    name: 'Oaxen Krog',
-    type: 'restaurant',
-    location: 'Djurgården, Stockholm',
-    source: { type: 'url', name: 'Eater' },
-    matchScore: 91,
-    matchBreakdown: { Design: 0.95, Character: 0.88, Service: 0.92, Food: 0.97, Location: 0.85, Wellness: 0.6 },
-    tasteNote: 'New Nordic tasting menus on the waterfront',
-    google: { rating: 4.7, reviewCount: 1580, category: 'Fine Dining', priceLevel: 4 },
-    terrazzoInsight: { why: 'Stockholm\'s crown jewel — two Michelin stars with harbor views', caveat: 'Book 3 weeks ahead minimum' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-12' },
-  },
-  {
-    id: 'place-14',
-    name: 'Fotografiska',
-    type: 'museum',
-    location: 'Södermalm, Stockholm',
-    source: { type: 'text', name: "Sarah's List" },
-    matchScore: 87,
-    matchBreakdown: { Design: 0.92, Character: 0.85, Service: 0.7, Food: 0.5, Location: 0.88, Wellness: 0.55 },
-    tasteNote: 'Photography museum with a killer rooftop bar',
-    google: { rating: 4.5, reviewCount: 6230, category: 'Photography Museum' },
-    terrazzoInsight: { why: 'World-class rotating exhibitions in a waterfront art deco building', caveat: 'The restaurant is great too — reserve separately' },
-    status: 'available',
-    ghostSource: 'friend',
-    friendAttribution: { name: 'Sarah L.', note: 'Go for the art, stay for the rooftop views' },
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-11' },
-  },
-  {
-    id: 'place-15',
-    name: 'Woodstockholm',
-    type: 'restaurant',
-    location: 'Mosebacke, Stockholm',
-    source: { type: 'url', name: 'Bon Appétit' },
-    matchScore: 84,
-    matchBreakdown: { Design: 0.88, Character: 0.9, Service: 0.82, Food: 0.9, Location: 0.75, Wellness: 0.65 },
-    tasteNote: 'Farm-to-table in a cozy wooden cabin vibe',
-    google: { rating: 4.4, reviewCount: 890, category: 'Swedish Restaurant', priceLevel: 3 },
-    terrazzoInsight: { why: 'Södermalm\'s best kept secret — seasonal menus with zero pretension', caveat: 'Small space, book ahead' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-10' },
-  },
-  {
-    id: 'place-16',
-    name: 'Noma',
-    type: 'restaurant',
-    location: 'Refshalevej, Copenhagen',
-    source: { type: 'url', name: 'CN Traveller' },
-    matchScore: 96,
-    matchBreakdown: { Design: 0.98, Character: 0.95, Service: 0.97, Food: 0.99, Location: 0.7, Wellness: 0.65 },
-    tasteNote: 'The restaurant that redefined Nordic cuisine',
-    google: { rating: 4.8, reviewCount: 3420, category: 'Fine Dining', priceLevel: 4 },
-    terrazzoInsight: { why: 'A once-in-a-lifetime culinary pilgrimage', caveat: 'Now a food lab — check current format' },
-    status: 'available',
-    ghostSource: 'article',
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-08' },
-  },
-  {
-    id: 'place-17',
-    name: 'Mikkeller Bar',
-    type: 'bar',
-    location: 'Vesterbro, Copenhagen',
-    source: { type: 'google-maps', name: 'Google Maps' },
-    matchScore: 78,
-    matchBreakdown: { Design: 0.75, Character: 0.88, Service: 0.72, Food: 0.4, Location: 0.82, Wellness: 0.25 },
-    tasteNote: 'Craft beer heaven in Vesterbro',
-    google: { rating: 4.3, reviewCount: 2150, category: 'Craft Beer Bar' },
-    terrazzoInsight: { why: 'Rotating 40-tap lineup from one of the world\'s best microbreweries', caveat: 'Gets packed weekends — go early' },
-    status: 'available',
-    ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-07' },
-  },
-  {
-    id: 'place-18',
-    name: 'Louisiana Museum',
-    type: 'museum',
-    location: 'Humlebæk, Copenhagen',
-    source: { type: 'email', name: 'Gmail' },
-    matchScore: 93,
-    matchBreakdown: { Design: 0.98, Character: 0.88, Service: 0.7, Food: 0.45, Location: 0.95, Wellness: 0.8 },
-    tasteNote: 'Modern art meets Nordic landscape',
-    google: { rating: 4.7, reviewCount: 7890, category: 'Art Museum' },
-    terrazzoInsight: { why: 'Architecture, sculpture gardens, and sea views — transcendent', caveat: '35 min train from central Copenhagen' },
-    status: 'available',
-    ghostSource: 'email',
-    rating: { reaction: 'myPlace', ratedAt: '2025-02-06' },
-  },
-];
+const DEFAULT_SHORTLIST_ID = 'shortlist-favorites';
 
-// Demo History Items — matching wireframe style with specific dates
-const DEMO_HISTORY: HistoryItem[] = [
-  {
-    id: 'hist-1',
-    name: 'Via Carota',
-    type: 'restaurant',
-    location: 'New York',
-    detectedFrom: 'OpenTable',
-    detectedDate: 'Feb 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-2',
-    name: 'Attaboy',
-    type: 'bar',
-    location: 'New York',
-    detectedFrom: 'Resy',
-    detectedDate: 'Feb 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-3',
-    name: 'Dhamaka',
-    type: 'restaurant',
-    location: 'New York',
-    detectedFrom: 'Resy',
-    detectedDate: 'Feb 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-4',
-    name: 'Tatiana',
-    type: 'restaurant',
-    location: 'New York',
-    detectedFrom: 'Resy',
-    detectedDate: 'Jan 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-5',
-    name: 'The Ned NoMad',
-    type: 'hotel',
-    location: 'New York',
-    detectedFrom: 'Hotels.com',
-    detectedDate: 'Jan 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-6',
-    name: 'Don Angie',
-    type: 'restaurant',
-    location: 'New York',
-    detectedFrom: 'OpenTable',
-    detectedDate: 'Jan 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-7',
-    name: 'Brooklyn Mirage',
-    type: 'activity',
-    location: 'New York',
-    detectedFrom: 'Resy',
-    detectedDate: 'Jan 2026',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-8',
-    name: 'Eleven Madison Park',
-    type: 'restaurant',
-    location: 'New York',
-    detectedFrom: 'OpenTable',
-    detectedDate: 'Dec 2025',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-9',
-    name: 'Carbone',
-    type: 'restaurant',
-    location: 'New York',
-    detectedFrom: 'Resy',
-    detectedDate: 'Dec 2025',
-    ghostSource: 'email',
-  },
-  {
-    id: 'hist-10',
-    name: 'Mandarin Oriental',
-    type: 'hotel',
-    location: 'Tokyo',
-    detectedFrom: 'Hotels.com',
-    detectedDate: 'Nov 2025',
-    ghostSource: 'email',
-  },
-];
+function deriveCities(placeIds: string[], allPlaces: ImportedPlace[]): string[] {
+  const cities = new Set<string>();
+  placeIds.forEach(id => {
+    const place = allPlaces.find(p => p.id === id);
+    if (place) {
+      // Take first part of location (city name)
+      const city = place.location.split(',')[0].trim();
+      cities.add(city);
+    }
+  });
+  return Array.from(cities);
+}
 
-// Demo Collections
-const DEMO_COLLECTIONS: Collection[] = [
-  {
-    id: 'col-1',
-    name: 'Favorite hotels in Europe',
-    count: 6,
-    emoji: '🏨',
-    isSmartCollection: true,
-    query: 'favorite hotels in Europe',
-    filterTags: ['type: hotel', 'location: Europe', 'reaction: saved'],
-  },
-  {
-    id: 'col-2',
-    name: 'Everything Sarah recommended',
-    count: 9,
-    emoji: 'friend',
-    isSmartCollection: true,
-    query: 'everything Sarah recommended',
-    filterTags: ['source: friend', 'person: Sarah'],
-  },
-  {
-    id: 'col-3',
-    name: 'Tokyo research',
-    count: 14,
-    emoji: '🗼',
+function createDefaultShortlist(placeIds: string[]): Shortlist {
+  const now = new Date().toISOString();
+  return {
+    id: DEFAULT_SHORTLIST_ID,
+    name: 'Favorites',
+    description: 'Your personal picks',
+    emoji: 'star',
+    placeIds,
+    cities: [],
+    isDefault: true,
     isSmartCollection: false,
-    query: 'Tokyo research',
-    filterTags: ['location: Tokyo'],
-  },
-];
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function migrateCollectionsToShortlists(
+  collections: Collection[],
+  allPlaces: ImportedPlace[]
+): Shortlist[] {
+  const now = new Date().toISOString();
+  return collections.map(col => {
+    // For smart collections, resolve matching place IDs
+    let placeIds: string[] = [];
+    if (col.isSmartCollection) {
+      // Basic filter matching for demo
+      placeIds = allPlaces
+        .filter(p => {
+          if (!col.filterTags) return false;
+          return col.filterTags.some(tag => {
+            const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
+            if (key === 'location') return p.location.toLowerCase().includes(val);
+            if (key === 'type') return p.type === val;
+            if (key === 'source' && val === 'friend') return !!p.friendAttribution;
+            if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
+            if (key === 'reaction' && val === 'saved') return p.isShortlisted;
+            return false;
+          });
+        })
+        .map(p => p.id);
+    } else {
+      // Manual collections — use filter matching on tags too
+      placeIds = allPlaces
+        .filter(p => {
+          if (!col.filterTags) return false;
+          return col.filterTags.some(tag => {
+            const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
+            if (key === 'location') return p.location.toLowerCase().includes(val);
+            return false;
+          });
+        })
+        .map(p => p.id);
+    }
+
+    return {
+      id: col.id,
+      name: col.name,
+      emoji: col.emoji,
+      placeIds,
+      cities: deriveCities(placeIds, allPlaces),
+      isSmartCollection: col.isSmartCollection,
+      query: col.query,
+      filterTags: col.filterTags,
+      createdAt: now,
+      updatedAt: now,
+    };
+  });
+}
+
+// ═══════════════════════════════════════════
+// Build initial shortlists
+// ═══════════════════════════════════════════
+
+const allPlaces = [...DEMO_ALL_PLACES];
+const favoritePlaceIds = allPlaces.filter(p => p.isShortlisted).map(p => p.id);
+const defaultShortlist = createDefaultShortlist(favoritePlaceIds);
+defaultShortlist.cities = deriveCities(favoritePlaceIds, allPlaces);
+const migratedShortlists = migrateCollectionsToShortlists(IMPORTED_COLLECTIONS, allPlaces);
+
+const INITIAL_SHORTLISTS: Shortlist[] = [defaultShortlist, ...migratedShortlists];
+
+// ═══════════════════════════════════════════
+// Store
+// ═══════════════════════════════════════════
 
 interface SavedState {
-  viewMode: ViewMode;
-  typeFilter: PlaceType | 'all';
-  searchQuery: string;
-  myPlaces: ImportedPlace[];
+  // Core data
+  myPlaces: ImportedPlace[];  // kept as "myPlaces" for backward compat across consumers
   history: HistoryItem[];
+  shortlists: Shortlist[];
+
+  // Legacy (kept for imports that reference it)
   collections: Collection[];
 
-  // Actions
+  // UI state
+  viewMode: ViewMode;
+  activeView: 'shortlists' | 'library';
+  typeFilter: PlaceType | 'all';
+  searchQuery: string;
+  cityFilter: string | 'all';
+
+  // Library actions
   setViewMode: (mode: ViewMode) => void;
+  setActiveView: (view: 'shortlists' | 'library') => void;
   setTypeFilter: (filter: PlaceType | 'all') => void;
   setSearchQuery: (query: string) => void;
+  setCityFilter: (city: string | 'all') => void;
   addPlace: (place: ImportedPlace) => void;
   removePlace: (id: string) => void;
   ratePlace: (id: string, rating: PlaceRating) => void;
-  toggleStar: (id: string) => void;
+
+  // Shortlist actions
+  toggleStar: (id: string) => void;  // add/remove from Favorites shortlist + sync isShortlisted
+  createShortlist: (name: string, emoji?: string, description?: string) => string;
+  deleteShortlist: (id: string) => void;
+  updateShortlist: (id: string, updates: Partial<Pick<Shortlist, 'name' | 'emoji' | 'description'>>) => void;
+  addPlaceToShortlist: (shortlistId: string, placeId: string) => void;
+  removePlaceFromShortlist: (shortlistId: string, placeId: string) => void;
+  createSmartShortlist: (name: string, emoji: string, query: string, filterTags: string[]) => string;
+
+  // History actions
   promoteFromHistory: (id: string) => void;
   archiveToHistory: (id: string) => void;
   addHistoryItems: (items: HistoryItem[]) => void;
+
+  // Legacy collection action (for imports)
   addCollection: (collection: Omit<Collection, 'id'>) => void;
 }
 
-export const useSavedStore = create<SavedState>((set) => ({
-  viewMode: 'myPlaces',
-  typeFilter: 'all',
-  searchQuery: '',
-  myPlaces: [...DEMO_ALL_PLACES],
+export const useSavedStore = create<SavedState>((set, get) => ({
+  myPlaces: allPlaces,
   history: IMPORTED_HISTORY,
+  shortlists: INITIAL_SHORTLISTS,
   collections: IMPORTED_COLLECTIONS,
 
+  // UI state
+  viewMode: 'myPlaces',
+  activeView: 'shortlists',
+  typeFilter: 'all',
+  searchQuery: '',
+  cityFilter: 'all',
+
+  // ─── UI Actions ───
   setViewMode: (mode) => set({ viewMode: mode }),
+  setActiveView: (view) => set({ activeView: view }),
   setTypeFilter: (filter) => set({ typeFilter: filter }),
   setSearchQuery: (query) => set({ searchQuery: query }),
+  setCityFilter: (city) => set({ cityFilter: city }),
 
+  // ─── Library Actions ───
   addPlace: (place) => set((state) => ({
     myPlaces: [place, ...state.myPlaces],
   })),
 
   removePlace: (id) => set((state) => ({
     myPlaces: state.myPlaces.filter((p) => p.id !== id),
+    // Also remove from all shortlists
+    shortlists: state.shortlists.map(sl => ({
+      ...sl,
+      placeIds: sl.placeIds.filter(pid => pid !== id),
+    })),
   })),
 
   ratePlace: (id, rating) => set((state) => ({
@@ -479,12 +218,152 @@ export const useSavedStore = create<SavedState>((set) => ({
     ),
   })),
 
-  toggleStar: (id) => set((state) => ({
-    myPlaces: state.myPlaces.map((p) =>
-      p.id === id ? { ...p, isShortlisted: !p.isShortlisted } : p
+  // ─── Shortlist Actions ───
+  toggleStar: (id) => set((state) => {
+    const favShortlist = state.shortlists.find(s => s.isDefault);
+    if (!favShortlist) return state;
+
+    const isCurrentlyFavorited = favShortlist.placeIds.includes(id);
+    const newPlaceIds = isCurrentlyFavorited
+      ? favShortlist.placeIds.filter(pid => pid !== id)
+      : [...favShortlist.placeIds, id];
+
+    return {
+      // Sync isShortlisted on the place (backward compat for ghost injection, PicksStrip, etc.)
+      myPlaces: state.myPlaces.map((p) =>
+        p.id === id ? { ...p, isShortlisted: !isCurrentlyFavorited } : p
+      ),
+      // Update Favorites shortlist
+      shortlists: state.shortlists.map(sl =>
+        sl.isDefault
+          ? {
+              ...sl,
+              placeIds: newPlaceIds,
+              cities: deriveCities(newPlaceIds, state.myPlaces),
+              updatedAt: new Date().toISOString(),
+            }
+          : sl
+      ),
+    };
+  }),
+
+  createShortlist: (name, emoji, description) => {
+    const newId = `shortlist-${Date.now()}`;
+    const now = new Date().toISOString();
+    set((state) => ({
+      shortlists: [
+        ...state.shortlists,
+        {
+          id: newId,
+          name,
+          emoji: emoji || 'pin',
+          description,
+          placeIds: [],
+          cities: [],
+          isDefault: false,
+          isSmartCollection: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    }));
+    return newId;
+  },
+
+  deleteShortlist: (id) => set((state) => ({
+    // Prevent deleting the default Favorites shortlist
+    shortlists: state.shortlists.filter(sl => sl.id !== id || sl.isDefault),
+  })),
+
+  updateShortlist: (id, updates) => set((state) => ({
+    shortlists: state.shortlists.map(sl =>
+      sl.id === id
+        ? { ...sl, ...updates, updatedAt: new Date().toISOString() }
+        : sl
     ),
   })),
 
+  addPlaceToShortlist: (shortlistId, placeId) => set((state) => {
+    return {
+      shortlists: state.shortlists.map(sl => {
+        if (sl.id !== shortlistId) return sl;
+        if (sl.placeIds.includes(placeId)) return sl; // already in shortlist
+        const newPlaceIds = [...sl.placeIds, placeId];
+        return {
+          ...sl,
+          placeIds: newPlaceIds,
+          cities: deriveCities(newPlaceIds, state.myPlaces),
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+      // If adding to Favorites, also sync isShortlisted
+      myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
+        ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: true } : p)
+        : state.myPlaces,
+    };
+  }),
+
+  removePlaceFromShortlist: (shortlistId, placeId) => set((state) => {
+    return {
+      shortlists: state.shortlists.map(sl => {
+        if (sl.id !== shortlistId) return sl;
+        const newPlaceIds = sl.placeIds.filter(pid => pid !== placeId);
+        return {
+          ...sl,
+          placeIds: newPlaceIds,
+          cities: deriveCities(newPlaceIds, state.myPlaces),
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+      // If removing from Favorites, also sync isShortlisted
+      myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
+        ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: false } : p)
+        : state.myPlaces,
+    };
+  }),
+
+  createSmartShortlist: (name, emoji, query, filterTags) => {
+    const newId = `shortlist-smart-${Date.now()}`;
+    const now = new Date().toISOString();
+    const state = get();
+
+    // Resolve matching place IDs
+    const matchingIds = state.myPlaces
+      .filter(p => {
+        return filterTags.some(tag => {
+          const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
+          if (key === 'location') return p.location.toLowerCase().includes(val);
+          if (key === 'type') return p.type === val;
+          if (key === 'source' && val === 'friend') return !!p.friendAttribution;
+          if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
+          if (key === 'reaction' && val === 'saved') return p.isShortlisted;
+          return false;
+        });
+      })
+      .map(p => p.id);
+
+    set((state) => ({
+      shortlists: [
+        ...state.shortlists,
+        {
+          id: newId,
+          name,
+          emoji,
+          placeIds: matchingIds,
+          cities: deriveCities(matchingIds, state.myPlaces),
+          isDefault: false,
+          isSmartCollection: true,
+          query,
+          filterTags,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    }));
+    return newId;
+  },
+
+  // ─── History Actions ───
   promoteFromHistory: (id) => set((state) => {
     const histItem = state.history.find((h) => h.id === id);
     if (!histItem) return state;
@@ -529,7 +408,6 @@ export const useSavedStore = create<SavedState>((set) => ({
   }),
 
   addHistoryItems: (items) => set((state) => {
-    // Dedupe by name
     const existingNames = new Set(state.history.map(h => h.name.toLowerCase()));
     const newItems = items.filter(item => !existingNames.has(item.name.toLowerCase()));
     return {
@@ -537,10 +415,28 @@ export const useSavedStore = create<SavedState>((set) => ({
     };
   }),
 
+  // Legacy: still used by ImportDrawer — now also creates a shortlist
   addCollection: (collection) => set((state) => {
     const newId = `col-${Date.now()}`;
+    const now = new Date().toISOString();
+
+    // Create matching shortlist
+    const newShortlist: Shortlist = {
+      id: `shortlist-${newId}`,
+      name: collection.name,
+      emoji: collection.emoji,
+      placeIds: [],
+      cities: [],
+      isSmartCollection: collection.isSmartCollection,
+      query: collection.query,
+      filterTags: collection.filterTags,
+      createdAt: now,
+      updatedAt: now,
+    };
+
     return {
       collections: [{ ...collection, id: newId }, ...state.collections],
+      shortlists: [...state.shortlists, newShortlist],
     };
   }),
 }));

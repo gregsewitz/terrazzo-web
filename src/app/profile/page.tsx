@@ -6,9 +6,11 @@ import Link from 'next/link';
 import TabBar from '@/components/TabBar';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
 import WrappedExperience from '@/components/wrapped/WrappedExperience';
+import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
 import TasteStone from '@/components/profile/TasteStone';
 import ScoreArc from '@/components/profile/ScoreArc';
 import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
+import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import {
   BECAUSE_YOU_CARDS,
@@ -77,7 +79,7 @@ export default function ProfilePage() {
               <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.9)' }}>The Aesthetic Pilgrim</div>
             </div>
           </div>
-          <TasteStone data={profile.radarData} size={56} />
+          <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
         </div>
 
         {/* Inner tab toggle: Discover / My Profile */}
