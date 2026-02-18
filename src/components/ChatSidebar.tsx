@@ -34,7 +34,7 @@ function getSmartResponse(userInput: string): string {
     return "Based on your taste profile... if you loved Narisawa's forest-to-table approach, try Florilège in Aoyama. Same philosophy, slightly more experimental. Your Food and Design axes both peak there. 94% match.";
   }
 
-  return "I'm still getting connected to the full Terrazzo intelligence engine, but I'm already thinking about your trip. Try dragging places from the unsorted tray into your day slots, or tap any ghost card to see why it landed there.";
+  return "I'm still getting everything set up, but I'm already thinking about your trip. Try dragging places from the unsorted tray into your day slots, or tap any ghost card to see why it landed there.";
 }
 
 // Render message content with smart formatting

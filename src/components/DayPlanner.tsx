@@ -143,7 +143,13 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
       {/* Active day context bar — hotel + map toggle */}
       {(() => {
         const placedItems = day.slots.flatMap(s => s.places);
-        const ghostItems = day.slots.flatMap(s => s.ghostItems || []);
+        const dayDest = (day.destination || '').toLowerCase();
+        const ghostItems = day.slots.flatMap(s => s.ghostItems || []).filter(g => {
+          // Only show ghost items whose location matches this day's destination
+          if (!dayDest) return true;
+          const gLoc = (g.location || '').toLowerCase();
+          return !gLoc || gLoc.includes(dayDest) || dayDest.includes(gLoc.split(',')[0].trim());
+        });
         const geo = trip.geoDestinations?.find(
           g => g.name.toLowerCase() === (day.destination || '').toLowerCase()
         );
@@ -152,13 +158,19 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             id: `placed-${i}`,
             name: p.name,
             location: p.location || day.destination || '',
+            type: p.type,
+            matchScore: p.matchScore,
+            tasteNote: p.tasteNote,
             color: SOURCE_STYLES.manual.color,
           })),
           ...ghostItems.map((g, i) => ({
             id: `ghost-${i}`,
             name: g.name,
             location: g.location || day.destination || '',
-            color: SOURCE_STYLES[(g.ghostSource || 'ai') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.ai.color,
+            type: g.type,
+            matchScore: g.matchScore,
+            tasteNote: g.tasteNote,
+            color: SOURCE_STYLES[(g.ghostSource || 'terrazzo') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.terrazzo.color,
             isDashed: true,
           })),
         ];
@@ -213,8 +225,9 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             {dayMapOpen && (
               <div style={{ borderBottom: `1px solid ${destColor.accent}18` }}>
                 <GoogleMapView
+                  key={`map-day-${day.dayNumber}-${day.destination}`}
                   markers={mapMarkers}
-                  height={220}
+                  height={300}
                   fallbackDestination={day.destination}
                   fallbackCoords={geo?.lat != null && geo?.lng != null ? { lat: geo.lat, lng: geo.lng } : undefined}
                 />
@@ -230,7 +243,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   )}
                   {ghostItems.length > 0 && (
                     <div className="flex items-center gap-1">
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.ai.color, opacity: 0.5 }} />
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.terrazzo.color, opacity: 0.5 }} />
                       <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.8)' }}>
                         {ghostItems.length} suggested
                       </span>
@@ -355,7 +368,7 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                   allPlaced.map(({ place, slot }, idx) => {
                     const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
                     const isReservation = place.ghostSource === 'email';
-                    const subtitle = place.friendAttribution?.note || place.terrazzoInsight?.why || place.tasteNote || '';
+                    const subtitle = place.friendAttribution?.note || place.terrazzoReasoning?.rationale || place.tasteNote || '';
                     const truncSub = subtitle.length > 65 ? subtitle.slice(0, 62) + '…' : subtitle;
 
                     return (
@@ -556,7 +569,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
         const isReservation = p.ghostSource === 'email';
         const subtitle = p.friendAttribution?.note
-          || p.terrazzoInsight?.why
+          || p.terrazzoReasoning?.rationale
           || p.tasteNote
           || '';
         return (

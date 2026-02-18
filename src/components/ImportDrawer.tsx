@@ -5,7 +5,7 @@ import { useImportStore, ImportMode } from '@/stores/importStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 
-// Input type detection — AI figures out the rest
+// Input type detection — Terrazzo figures out the rest
 function detectInputType(input: string): ImportMode {
   const trimmed = input.trim();
   if (/^https?:\/\//i.test(trimmed) || /^(www\.)/i.test(trimmed)) {
@@ -156,9 +156,9 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     if (step !== 'processing') return;
     const steps: ProgressItem[] = [
       { label: `Found ${DEMO_IMPORT_RESULTS.length} places`, status: 'pending' },
-      { label: `Detected ${groupedResults.length || 4} categories`, status: 'pending' },
-      { label: 'Extracted notes for places', status: 'pending' },
-      { label: 'Geocoding locations…', status: 'pending' },
+      { label: `Sorted into ${groupedResults.length || 4} categories`, status: 'pending' },
+      { label: 'Compiled notes for each place', status: 'pending' },
+      { label: 'Pinning locations on the map…', status: 'pending' },
       { label: 'Matching to your taste profile', status: 'pending' },
     ];
     setProgressItems(steps);

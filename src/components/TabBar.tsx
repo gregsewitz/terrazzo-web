@@ -16,12 +16,13 @@ export default function TabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-0 py-2.5 border-t"
+      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-0 pt-2.5 border-t"
       style={{
         maxWidth: 480,
         margin: '0 auto',
         background: 'var(--t-cream)',
         borderColor: 'var(--t-linen)',
+        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
       }}
     >
       {TABS.map(tab => {

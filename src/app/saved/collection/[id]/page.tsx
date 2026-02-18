@@ -108,13 +108,13 @@ export default function CollectionDetailPage() {
           </h1>
         </div>
 
-        {/* Smart Collection Badge */}
+        {/* Curated Collection Badge */}
         {collection.isSmartCollection && (
           <div
             className="inline-block text-[10px] mb-4"
             style={{ fontFamily: "'Space Mono', monospace", color: 'var(--t-verde)' }}
           >
-            Auto-updating · Smart Collection
+            Auto-updating · Curated Collection
           </div>
         )}
 

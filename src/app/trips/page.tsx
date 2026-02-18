@@ -30,7 +30,7 @@ export default function TripsPage() {
           </button>
         </div>
         <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.95)' }}>
-          Plan and curate with Terrazzo taste intelligence
+          Plan and curate your bespoke travel itinerary
         </p>
 
         <div className="flex flex-col gap-3">

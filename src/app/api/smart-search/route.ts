@@ -5,7 +5,7 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are the Terrazzo travel app's collection intelligence engine.
+const SYSTEM_PROMPT = `You are the Terrazzo travel app's collection curator.
 The user has a collection of saved places (hotels, restaurants, bars, cafes, museums, activities, neighborhoods, shops).
 Each place has: name, type, location (city), source (how it was saved), matchScore (0-100), friendAttribution (who recommended it), and a rating reaction (myPlace, enjoyed, mixed, notMe).
 
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     // Extract the text content
     const textBlock = message.content.find((block) => block.type === 'text');
     if (!textBlock || textBlock.type !== 'text') {
-      return NextResponse.json({ error: 'No response from AI' }, { status: 500 });
+      return NextResponse.json({ error: 'No response received' }, { status: 500 });
     }
 
     // Parse the JSON response

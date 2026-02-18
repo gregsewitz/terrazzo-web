@@ -25,8 +25,8 @@ export default function GhostCard({
     switch (sourceType) {
       case 'friend':
         return item.friendAttribution?.note;
-      case 'ai':
-        return item.aiReasoning?.rationale;
+      case 'terrazzo':
+        return item.terrazzoReasoning?.rationale;
       case 'maps':
         return item.savedDate;
       default:
@@ -39,8 +39,8 @@ export default function GhostCard({
     switch (sourceType) {
       case 'friend':
         return `${item.friendAttribution?.name || 'Friend'} recommends`;
-      case 'ai':
-        return 'AI suggestion';
+      case 'terrazzo':
+        return 'Terrazzo suggestion';
       case 'maps':
         return 'Google Maps';
       case 'email':

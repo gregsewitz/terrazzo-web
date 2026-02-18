@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { useSavedStore } from '@/stores/savedStore';
-import { useIntelligence } from '@/hooks/useIntelligence';
+import { useBriefing } from '@/hooks/useBriefing';
 import { getPlaceImage } from '@/constants/placeImages';
 import PipelineProgress from '@/components/PipelineProgress';
 
@@ -11,7 +11,7 @@ interface PlaceDetailSheetProps {
   item: ImportedPlace;
   onClose: () => void;
   onRate?: () => void;
-  onViewIntelligence?: () => void;
+  onViewBriefing?: () => void;
   siblingPlaces?: ImportedPlace[]; // other places from the same import batch
 }
 
@@ -32,7 +32,7 @@ function getPhotoGradient(type: string): string {
   return gradients[type] || gradients.restaurant;
 }
 
-export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntelligence, siblingPlaces }: PlaceDetailSheetProps) {
+export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing, siblingPlaces }: PlaceDetailSheetProps) {
   const existingRating = item.rating;
   const ratingReaction = existingRating ? REACTIONS.find(r => r.id === existingRating.reaction) : null;
   const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
@@ -40,9 +40,9 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
   const myPlaces = useSavedStore(s => s.myPlaces);
   const [saved, setSaved] = useState(myPlaces.some(p => p.name === item.name));
 
-  // Intelligence polling for inline progress
+  // Briefing polling for inline progress
   const googlePlaceId = (item.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
-  const { data: intelData } = useIntelligence(onViewIntelligence ? googlePlaceId : undefined);
+  const { data: intelData } = useBriefing(onViewBriefing ? googlePlaceId : undefined);
   const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
   const handleSave = () => {
@@ -114,7 +114,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
           </div>
         </div>
 
-        <div className="px-5 pb-8">
+        <div className="px-5 pb-24">
           {/* Name + rating badge row */}
           <div className="flex items-start justify-between gap-3 mt-4">
             <div className="flex-1 min-w-0">
@@ -371,9 +371,9 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
             style={{
               background: 'rgba(200,146,58,0.06)',
               border: '1px solid rgba(200,146,58,0.15)',
-              cursor: onViewIntelligence ? 'pointer' : 'default',
+              cursor: onViewBriefing ? 'pointer' : 'default',
             }}
-            onClick={onViewIntelligence}
+            onClick={onViewBriefing}
           >
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center text-[14px] font-bold flex-shrink-0"
@@ -404,11 +404,11 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
                 </div>
               )}
               {/* View full analysis link */}
-              {onViewIntelligence && googlePlaceId && (
+              {onViewBriefing && googlePlaceId && (
                 <button
                   className="text-[10px] mt-1 block border-none bg-transparent p-0 cursor-pointer"
                   style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
-                  onClick={(e) => { e.stopPropagation(); onViewIntelligence(); }}
+                  onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}
                 >
                   View full briefing →
                 </button>

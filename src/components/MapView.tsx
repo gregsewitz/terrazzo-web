@@ -33,7 +33,7 @@ export default function MapView({
       id: `ghost-${idx}`,
       name: item.name,
       location: item.location || destination,
-      color: SOURCE_STYLES[(item.ghostSource || 'ai') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.ai.color,
+      color: SOURCE_STYLES[(item.ghostSource || 'terrazzo') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.terrazzo.color,
       isDashed: true,
     }));
     return [...placed, ...ghosts];

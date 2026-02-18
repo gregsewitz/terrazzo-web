@@ -20,7 +20,7 @@ const COMPANION_OPTIONS: { label: string; icon: string; key: TravelContext }[] =
 // Trip conversation phases — scripted demo for web prototype
 // ============================================================
 interface ConversationMessage {
-  role: 'ai' | 'user';
+  role: 'terrazzo' | 'user';
   text: string;
 }
 
@@ -309,7 +309,7 @@ function TripConversation({
   onComplete: () => void;
 }) {
   const [messages, setMessages] = useState<ConversationMessage[]>([
-    { role: 'ai', text: TRIP_CONVERSATION_PROMPTS[0] },
+    { role: 'terrazzo', text: TRIP_CONVERSATION_PROMPTS[0] },
   ]);
   const [promptIndex, setPromptIndex] = useState(0);
   const [input, setInput] = useState('');
@@ -331,7 +331,7 @@ function TripConversation({
     // Add user message
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
 
-    // Simulate AI typing
+    // Simulate Terrazzo typing
     setIsTyping(true);
     await new Promise(r => setTimeout(r, 1200 + Math.random() * 800));
     setIsTyping(false);
@@ -339,13 +339,13 @@ function TripConversation({
     const nextIdx = promptIndex + 1;
 
     if (nextIdx < TRIP_CONVERSATION_PROMPTS.length) {
-      setMessages(prev => [...prev, { role: 'ai', text: TRIP_CONVERSATION_PROMPTS[nextIdx] }]);
+      setMessages(prev => [...prev, { role: 'terrazzo', text: TRIP_CONVERSATION_PROMPTS[nextIdx] }]);
       setPromptIndex(nextIdx);
       setSignalsRevealed(prev => Math.min(prev + 1, DEMO_TRIP_SIGNALS.length));
     } else {
       // Conversation complete
       setMessages(prev => [...prev, {
-        role: 'ai',
+        role: 'terrazzo',
         text: `Got it. I've mapped your trip context onto your taste profile — your ${seed.destinations[0]} recommendations will reflect everything we just discussed. Ready to build your trip.`,
       }]);
       setSignalsRevealed(DEMO_TRIP_SIGNALS.length);
@@ -359,7 +359,7 @@ function TripConversation({
     setSignalsRevealed(DEMO_TRIP_SIGNALS.length);
     setIsDone(true);
     setMessages(prev => [...prev, {
-      role: 'ai',
+      role: 'terrazzo',
       text: `No problem — we'll work with what we know. Your ${seed.destinations[0]} trip is ready to start building.`,
     }]);
   };
@@ -408,8 +408,8 @@ function TripConversation({
                 color: msg.role === 'user' ? 'white' : 'var(--t-ink)',
                 fontFamily: "'DM Sans', sans-serif",
                 borderBottomRightRadius: msg.role === 'user' ? 4 : undefined,
-                borderBottomLeftRadius: msg.role === 'ai' ? 4 : undefined,
-                border: msg.role === 'ai' ? '1px solid var(--t-linen)' : undefined,
+                borderBottomLeftRadius: msg.role === 'terrazzo' ? 4 : undefined,
+                border: msg.role === 'terrazzo' ? '1px solid var(--t-linen)' : undefined,
               }}
             >
               {msg.text}

@@ -1,18 +1,18 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useIntelligence } from '@/hooks/useIntelligence';
+import { useBriefing } from '@/hooks/useBriefing';
 import PipelineProgress from '@/components/PipelineProgress';
 import {
   DOMAIN_COLORS,
   DOMAIN_ICONS,
   DIMENSION_TO_DOMAIN,
   TasteDomain,
-  IntelligenceSignal,
-  IntelligenceAntiSignal,
+  BriefingSignal,
+  BriefingAntiSignal,
 } from '@/types';
 
-interface IntelligenceViewProps {
+interface BriefingViewProps {
   googlePlaceId: string;
   placeName: string;
   matchScore?: number;
@@ -21,13 +21,13 @@ interface IntelligenceViewProps {
 
 const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
-function confidenceLabel(c: number): string {
-  if (c >= 0.8) return 'High';
-  if (c >= 0.5) return 'Medium';
-  return 'Low';
+function strengthLabel(c: number): string {
+  if (c >= 0.8) return 'Strong';
+  if (c >= 0.5) return 'Moderate';
+  return 'Faint';
 }
 
-function SignalCard({ signal, domain }: { signal: IntelligenceSignal; domain: TasteDomain }) {
+function SignalCard({ signal, domain }: { signal: BriefingSignal; domain: TasteDomain }) {
   const color = DOMAIN_COLORS[domain];
   return (
     <div
@@ -68,7 +68,7 @@ function SignalCard({ signal, domain }: { signal: IntelligenceSignal; domain: Ta
   );
 }
 
-function AntiSignalCard({ signal }: { signal: IntelligenceAntiSignal }) {
+function AntiSignalCard({ signal }: { signal: BriefingAntiSignal }) {
   const domain = DIMENSION_TO_DOMAIN[signal.dimension] as TasteDomain | undefined;
   return (
     <div
@@ -83,26 +83,26 @@ function AntiSignalCard({ signal }: { signal: IntelligenceAntiSignal }) {
       </div>
       <div className="flex items-center gap-2">
         <span className="text-[9px]" style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}>
-          {confidenceLabel(signal.confidence)} · {domain || signal.dimension}
+          {strengthLabel(signal.confidence)} · {domain || signal.dimension}
         </span>
       </div>
     </div>
   );
 }
 
-export default function IntelligenceView({ googlePlaceId, placeName, matchScore, onClose }: IntelligenceViewProps) {
-  const { data, loading, error } = useIntelligence(googlePlaceId);
+export default function BriefingView({ googlePlaceId, placeName, matchScore, onClose }: BriefingViewProps) {
+  const { data, loading, error } = useBriefing(googlePlaceId);
 
   // Group signals by domain
   const signalsByDomain = useMemo(() => {
-    if (!data?.signals) return {} as Record<TasteDomain, IntelligenceSignal[]>;
-    const grouped: Record<string, IntelligenceSignal[]> = {};
+    if (!data?.signals) return {} as Record<TasteDomain, BriefingSignal[]>;
+    const grouped: Record<string, BriefingSignal[]> = {};
     data.signals.forEach(sig => {
       const domain = DIMENSION_TO_DOMAIN[sig.dimension] || sig.dimension;
       if (!grouped[domain]) grouped[domain] = [];
       grouped[domain].push(sig);
     });
-    return grouped as Record<TasteDomain, IntelligenceSignal[]>;
+    return grouped as Record<TasteDomain, BriefingSignal[]>;
   }, [data?.signals]);
 
   // How long ago was last enrichment

@@ -104,7 +104,7 @@ export async function generateTasteMatch(
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1024,
-    system: `You are Terrazzo's taste intelligence engine. Given a place and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate:
+    system: `You are Terrazzo's taste concierge. Given a place and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate:
 
 ${TERRAZZO_VOICE}
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Terrazzo — Travel Taste Intelligence",
-  description: "Import, curate, and plan your trips with taste-matched recommendations",
+  title: "Terrazzo — Your Bespoke Travel Concierge",
+  description: "Collect, curate, and plan your trips with places matched to your taste",
 };
 
 export default function RootLayout({

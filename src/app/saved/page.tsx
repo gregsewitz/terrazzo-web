@@ -8,7 +8,7 @@ import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, SOURCE_STYLES } from '@/types';
-import IntelligenceView from '@/components/IntelligenceView';
+import BriefingView from '@/components/BriefingView';
 import ImportDrawer from '@/components/ImportDrawer';
 import { useImportStore } from '@/stores/importStore';
 
@@ -64,7 +64,7 @@ export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<CollectTab>('picks');
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
-  const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
+  const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
 
   // All places now live in savedStore (unified)
@@ -205,10 +205,10 @@ export default function SavedPage() {
           item={detailItem}
           onClose={() => setDetailItem(null)}
           onRate={() => setRatingItem(detailItem)}
-          onViewIntelligence={() => {
+          onViewBriefing={() => {
             const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
             if (placeId) {
-              setIntelligencePlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
+              setBriefingPlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
             }
           }}
           siblingPlaces={detailItem.importBatchId
@@ -217,13 +217,13 @@ export default function SavedPage() {
         />
       )}
 
-      {/* Intelligence View */}
-      {intelligencePlace && (
-        <IntelligenceView
-          googlePlaceId={intelligencePlace.id}
-          placeName={intelligencePlace.name}
-          matchScore={intelligencePlace.matchScore}
-          onClose={() => setIntelligencePlace(null)}
+      {/* Briefing View */}
+      {briefingPlace && (
+        <BriefingView
+          googlePlaceId={briefingPlace.id}
+          placeName={briefingPlace.name}
+          matchScore={briefingPlace.matchScore}
+          onClose={() => setBriefingPlace(null)}
         />
       )}
 

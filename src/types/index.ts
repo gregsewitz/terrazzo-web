@@ -43,7 +43,7 @@ export const RATING_COLORS = {
 } as const;
 
 export const REACTIONS = [
-  { id: 'myPlace', icon: '♡', label: 'My place', color: RATING_COLORS.myPlace },
+  { id: 'myPlace', icon: '♡', label: 'Obsessed', color: RATING_COLORS.myPlace },
   { id: 'enjoyed', icon: '✓', label: 'Enjoyed it', color: RATING_COLORS.enjoyed },
   { id: 'mixed', icon: '↔', label: 'Mixed', color: RATING_COLORS.mixed },
   { id: 'notMe', icon: '✗', label: 'Not me', color: RATING_COLORS.notMe },
@@ -75,7 +75,7 @@ export const DEST_COLORS: Record<string, { bg: string; accent: string; text: str
 export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: string; label: string }> = {
   email: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✉', label: 'Email' },
   friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.06)', icon: '👤', label: 'Friend' },
-  ai: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✦', label: 'Terrazzo pick' },
+  terrazzo: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✦', label: 'Terrazzo pick' },
   maps: { color: '#e86830', bg: 'rgba(232,104,48,0.06)', icon: '📍', label: 'Google Maps' },
   article: { color: '#c8923a', bg: 'rgba(200,146,58,0.06)', icon: '📰', label: 'Article' },
   manual: { color: '#1c1a17', bg: 'rgba(28,26,23,0.04)', icon: '✎', label: 'Added' },
@@ -89,7 +89,7 @@ export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'neighb
 
 export type ImportSourceType = 'url' | 'text' | 'google-maps' | 'email' | 'friend-list';
 
-export type GhostSourceType = 'email' | 'friend' | 'ai' | 'maps' | 'article' | 'manual';
+export type GhostSourceType = 'email' | 'friend' | 'terrazzo' | 'maps' | 'article' | 'manual';
 
 export type PlaceStatus = 'available' | 'placed' | 'rejected';
 
@@ -135,8 +135,8 @@ export interface FriendAttribution {
   avatarUrl?: string;
 }
 
-// AI reasoning for AI-suggested places
-export interface AIReasoning {
+// Terrazzo reasoning for suggested places
+export interface TerrazzoReasoning {
   rationale: string; // "Fits your Food signal"
   confidence: number;
 }
@@ -159,10 +159,10 @@ export interface ImportedPlace {
   ghostSource?: GhostSourceType;
   ghostStatus?: GhostStatus;
   friendAttribution?: FriendAttribution;
-  aiReasoning?: AIReasoning;
+  terrazzoReasoning?: TerrazzoReasoning;
   savedDate?: string; // for Maps imports: "Saved Jun 2024"
   rating?: PlaceRating; // user's personal rating
-  // Enriched card fields (from import AI)
+  // Enriched card fields (from import briefing)
   whatToOrder?: string[];  // e.g. ["Puntillas ★", "Gambas de la santa"]
   tips?: string[];         // e.g. ["⏰ Go early (can be a wait)", "🍺 Drink at the bar while waiting"]
   alsoKnownAs?: string;   // e.g. "El Sótano"
@@ -277,10 +277,10 @@ export const SLOT_ICONS: Record<string, string> = {
   evening: '🍷',
 };
 
-// Terrazzo voice — used across all AI prompts for consistent tone
+// Terrazzo voice — used across all prompts for consistent tone
 export const TERRAZZO_VOICE = `You write like a well-traveled friend who happens to have incredible taste — warm but not gushing, opinionated but never snobby. You use short, vivid descriptions. You notice the details that matter (the way light hits a courtyard, the specific dish to order, the hour when a place transforms). You're honest about trade-offs. You never say "hidden gem" or "must-visit." You speak like someone sharing a personal recommendation over wine, not writing a guidebook.`;
 
-// ─── Pipeline Intelligence Types ───
+// ─── Pipeline Briefing Types ───
 
 export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
   'Design Language': 'Design',
@@ -291,7 +291,7 @@ export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
   'Wellness & Body': 'Wellness',
 };
 
-export interface IntelligenceSignal {
+export interface BriefingSignal {
   dimension: string;
   confidence: number;
   signal: string;
@@ -299,17 +299,17 @@ export interface IntelligenceSignal {
   review_corroborated?: boolean;
 }
 
-export interface IntelligenceAntiSignal {
+export interface BriefingAntiSignal {
   dimension: string;
   confidence: number;
   signal: string;
 }
 
-export interface IntelligenceData {
+export interface BriefingData {
   status: 'pending' | 'enriching' | 'complete' | 'failed';
   propertyName: string;
-  signals: IntelligenceSignal[];
-  antiSignals: IntelligenceAntiSignal[];
+  signals: BriefingSignal[];
+  antiSignals: BriefingAntiSignal[];
   reliability: { overall: number; categories: Record<string, unknown>; totalReviews: number } | null;
   facts: Record<string, unknown> | null;
   signalCount: number;
@@ -335,7 +335,7 @@ export const PIPELINE_STAGES = [
   { key: 'instagram_analysis', label: 'Instagram' },
   { key: 'menu_analysis', label: 'Menu' },
   { key: 'award_positioning', label: 'Awards' },
-  { key: 'review_intelligence', label: 'Insights' },
+  { key: 'review_insights', label: 'Insights' },
   { key: 'merge', label: 'Compose' },
   { key: 'save', label: 'Done' },
 ] as const;

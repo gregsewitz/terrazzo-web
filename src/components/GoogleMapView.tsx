@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
+import { useMemo, useState, useEffect } from 'react';
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 
 // Well-known city coordinates for demo data
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -74,6 +74,11 @@ function getCityCoords(location: string): { lat: number; lng: number } | null {
   return best?.coords ?? null;
 }
 
+const TYPE_ICONS: Record<string, string> = {
+  restaurant: '🍽', hotel: '🏨', bar: '🍸', cafe: '☕',
+  museum: '🎨', activity: '🎫', neighborhood: '📍', shop: '🛍',
+};
+
 export interface MapMarker {
   id: string;
   name: string;
@@ -81,6 +86,9 @@ export interface MapMarker {
   lat?: number;
   lng?: number;
   color?: string;
+  type?: string;
+  matchScore?: number;
+  tasteNote?: string;
   count?: number;
   starred?: number;
   isDashed?: boolean;
@@ -89,8 +97,9 @@ export interface MapMarker {
 interface GoogleMapViewProps {
   markers: MapMarker[];
   height?: number;
-  fallbackDestination?: string; // used to center map when no markers have coordinates
-  fallbackCoords?: { lat: number; lng: number }; // geocoded coords from Places API — highest priority fallback
+  fallbackDestination?: string;
+  fallbackCoords?: { lat: number; lng: number };
+  onMarkerTap?: (markerId: string) => void;
 }
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -98,58 +107,143 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 // Muted map style — matches Terrazzo aesthetic
 const MAP_ID = 'terrazzo-map';
 
-function MarkerDot({ marker }: { marker: MapMarker & { lat: number; lng: number } }) {
-  const size = marker.count ? Math.min(24 + marker.count * 4, 48) : 22;
-  const bgColor = marker.color || (marker.starred && marker.starred > 0 ? '#2a7a56' : '#1c1a17');
+function MarkerPin({ marker, isExpanded, onToggle }: {
+  marker: MapMarker & { lat: number; lng: number };
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const icon = TYPE_ICONS[marker.type || ''] || '📍';
+  const isDashed = marker.isDashed;
 
   return (
     <AdvancedMarker
       position={{ lat: marker.lat, lng: marker.lng }}
-      onClick={marker.onClick}
+      onClick={onToggle}
+      zIndex={isExpanded ? 100 : 1}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: marker.onClick ? 'pointer' : 'default' }}>
-        <div
-          style={{
-            width: size,
-            height: size,
-            borderRadius: '50%',
-            background: marker.isDashed ? 'transparent' : bgColor,
-            border: marker.isDashed ? `2px dashed ${bgColor}` : 'none',
-            opacity: marker.isDashed ? 0.7 : 0.9,            display: 'flex',
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+        {/* Expanded card */}
+        {isExpanded ? (
+          <div style={{
+            background: isDashed ? '#f7f5f0' : 'white',
+            borderRadius: 12,
+            padding: '10px 12px',
+            boxShadow: '0 4px 20px rgba(28,26,23,0.18)',
+            minWidth: 160,
+            maxWidth: 200,
+            border: isDashed ? '1.5px dashed rgba(28,26,23,0.2)' : '1px solid rgba(28,26,23,0.08)',
+          }}>
+            {isDashed && (
+              <div style={{
+                fontSize: 8, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.5px',
+                color: 'rgba(28,26,23,0.45)', fontFamily: "'Space Mono', monospace",
+                marginBottom: 4,
+              }}>Suggestion</div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 16 }}>{icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 12, fontWeight: 600, color: isDashed ? 'rgba(28,26,23,0.85)' : '#1c1a17',
+                  fontFamily: "'DM Sans', sans-serif",
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>{marker.name}</div>
+                <div style={{ fontSize: 9, color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}>
+                  {marker.type ? marker.type.charAt(0).toUpperCase() + marker.type.slice(1) : ''}
+                  {marker.location ? ` · ${marker.location.split(',')[0]}` : ''}
+                </div>
+              </div>
+              {marker.matchScore && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, color: '#c8923a',
+                  fontFamily: "'Space Mono', monospace",
+                  background: 'rgba(200,146,58,0.1)',
+                  padding: '2px 5px', borderRadius: 4,
+                }}>{marker.matchScore}%</span>
+              )}
+            </div>
+            {marker.tasteNote && (
+              <div style={{
+                fontSize: 10, color: 'rgba(28,26,23,0.5)', fontStyle: 'italic',
+                fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{marker.tasteNote}</div>
+            )}
+          </div>
+        ) : (
+          /* Compact mini card — name pill with type icon */
+          <div style={{
+            background: isDashed ? '#f0ebe2' : 'white',
+            borderRadius: 20,
+            padding: '4px 10px 4px 6px',
+            boxShadow: isDashed ? '0 1px 4px rgba(28,26,23,0.1)' : '0 2px 8px rgba(28,26,23,0.15)',
+            display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(28,26,23,0.2)',
-            color: 'white',
-            fontSize: 10,
-            fontWeight: 700,
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          {marker.count || ''}
-        </div>
-        <div
-          style={{
-            fontSize: 9,
-            fontWeight: 600,
-            marginTop: 3,
-            textAlign: 'center',
-            maxWidth: 80,
-            lineHeight: 1.2,
-            fontFamily: "'Space Mono', monospace",
-            color: '#1c1a17',
-            textShadow: '0 0 3px white, 0 0 3px white',
-          }}
-        >
-          {marker.name}
-        </div>
-        {marker.starred != null && marker.starred > 0 && (
-          <div style={{ color: '#2a7a56', fontSize: 8 }}>{marker.starred} ♡</div>
+            gap: 4,
+            border: isDashed ? '1.5px dashed rgba(28,26,23,0.3)' : '1px solid rgba(28,26,23,0.08)',
+            whiteSpace: 'nowrap',
+          }}>
+            <span style={{ fontSize: 12 }}>{icon}</span>
+            <span style={{
+              fontSize: 10, fontWeight: 600, color: isDashed ? 'rgba(28,26,23,0.8)' : '#1c1a17',
+              fontFamily: "'DM Sans', sans-serif",
+              maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>{marker.name}</span>
+          </div>
         )}
+        {/* Pointer triangle */}
+        <div style={{
+          width: 0, height: 0,
+          borderLeft: '6px solid transparent',
+          borderRight: '6px solid transparent',
+          borderTop: isExpanded ? `8px solid ${isDashed ? '#f7f5f0' : 'white'}` : `6px solid ${isDashed ? 'rgba(245,240,230,0.92)' : 'white'}`,
+          marginTop: -1,
+          filter: 'drop-shadow(0 2px 2px rgba(28,26,23,0.1))',
+        }} />
       </div>
     </AdvancedMarker>
   );
 }
-export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords }: GoogleMapViewProps) {
+// Inner component that uses useMap() to auto-fit bounds after mount
+function MapFitter({ coords, fallbackCenter }: {
+  coords: { lat: number; lng: number }[];
+  fallbackCenter: { lat: number; lng: number };
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+
+    if (coords.length === 0) {
+      map.setCenter(fallbackCenter);
+      map.setZoom(14);
+      return;
+    }
+
+    if (coords.length === 1) {
+      map.setCenter(coords[0]);
+      map.setZoom(15);
+      return;
+    }
+
+    // Use Google's fitBounds to perfectly frame all markers
+    const bounds = new google.maps.LatLngBounds();
+    coords.forEach(c => bounds.extend(c));
+    map.fitBounds(bounds, { top: 50, bottom: 50, left: 40, right: 40 });
+
+    // Cap max zoom so we don't zoom in too far on clustered markers
+    const listener = map.addListener('idle', () => {
+      const z = map.getZoom();
+      if (z != null && z > 16) map.setZoom(16);
+      google.maps.event.removeListener(listener);
+    });
+  }, [map, coords, fallbackCenter]);
+
+  return null;
+}
+
+export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords, onMarkerTap }: GoogleMapViewProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   // Resolve coordinates with jitter for overlapping pins
   const resolved = useMemo(() => {
     const withCoords = markers
@@ -168,7 +262,7 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
       seen[key] = count + 1;
       if (count === 0) return m;
       // Spread in a circle around the base point (~100m per step)
-      const angle = (count * 2.39996) ; // golden angle in radians for even spread
+      const angle = (count * 2.39996); // golden angle in radians for even spread
       const offset = 0.0012 * Math.ceil(count / 6); // ~120m radius, grows with density
       return {
         ...m,
@@ -178,38 +272,26 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
     });
   }, [markers]);
 
-  // Calculate center and zoom from markers, falling back to destination coords
-  const defaultCenter = useMemo(() => {
-    if (resolved.length > 0) {
-      const avgLat = resolved.reduce((s, m) => s + m.lat, 0) / resolved.length;
-      const avgLng = resolved.reduce((s, m) => s + m.lng, 0) / resolved.length;
-      return { lat: avgLat, lng: avgLng };
-    }
-    // Prefer geocoded coords from Places API
+  // Pre-jitter coords for fitBounds (avoids jitter inflating the bounds)
+  const originalCoords = useMemo(() =>
+    markers
+      .map(m => ({
+        lat: m.lat ?? getCityCoords(m.location)?.lat,
+        lng: m.lng ?? getCityCoords(m.location)?.lng,
+      }))
+      .filter((m): m is { lat: number; lng: number } => m.lat != null && m.lng != null),
+    [markers]
+  );
+
+  // Fallback center when no markers resolve
+  const fallbackCenter = useMemo(() => {
     if (fallbackCoords) return fallbackCoords;
-    // Fall back to destination name lookup
     if (fallbackDestination) {
       const coords = getCityCoords(fallbackDestination);
       if (coords) return coords;
     }
     return { lat: 40, lng: 0 };
-  }, [resolved, fallbackCoords, fallbackDestination]);
-
-  const defaultZoom = useMemo(() => {
-    if (resolved.length <= 1) return 12;
-    const lats = resolved.map(m => m.lat);
-    const lngs = resolved.map(m => m.lng);
-    const latSpan = Math.max(...lats) - Math.min(...lats);
-    const lngSpan = Math.max(...lngs) - Math.min(...lngs);
-    const maxSpan = Math.max(latSpan, lngSpan);
-    if (maxSpan > 40) return 2;
-    if (maxSpan > 20) return 3;
-    if (maxSpan > 10) return 4;
-    if (maxSpan > 5) return 6;
-    if (maxSpan > 1) return 8;
-    if (maxSpan > 0.1) return 11;
-    return 13;
-  }, [resolved]);
+  }, [fallbackCoords, fallbackDestination]);
   if (!API_KEY) {
     return (
       <div
@@ -227,8 +309,8 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
     <div className="rounded-xl overflow-hidden" style={{ height, border: '1px solid var(--t-linen)' }}>
       <APIProvider apiKey={API_KEY}>
         <Map
-          defaultCenter={defaultCenter}
-          defaultZoom={defaultZoom}
+          defaultCenter={fallbackCenter}
+          defaultZoom={13}
           gestureHandling="greedy"
           disableDefaultUI={false}
           zoomControl={true}
@@ -238,8 +320,14 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
           mapId={MAP_ID}
           style={{ width: '100%', height: '100%' }}
         >
+          <MapFitter coords={originalCoords} fallbackCenter={fallbackCenter} />
           {resolved.map(m => (
-            <MarkerDot key={m.id} marker={m} />
+            <MarkerPin
+              key={m.id}
+              marker={m}
+              isExpanded={expandedId === m.id}
+              onToggle={() => setExpandedId(prev => prev === m.id ? null : m.id)}
+            />
           ))}
         </Map>
       </APIProvider>

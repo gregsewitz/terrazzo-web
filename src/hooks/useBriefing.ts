@@ -1,20 +1,20 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { IntelligenceData } from '@/types';
+import type { BriefingData } from '@/types';
 
-interface UseIntelligenceResult {
-  data: IntelligenceData | null;
+interface UseBriefingResult {
+  data: BriefingData | null;
   loading: boolean;
   error: string | null;
 }
 
 /**
- * Fetches intelligence data for a place and polls while the pipeline is running.
+ * Fetches briefing data for a place and polls while the pipeline is running.
  * Stops polling once status is 'complete' or 'failed'.
  */
-export function useIntelligence(googlePlaceId: string | undefined): UseIntelligenceResult {
-  const [data, setData] = useState<IntelligenceData | null>(null);
+export function useBriefing(googlePlaceId: string | undefined): UseBriefingResult {
+  const [data, setData] = useState<BriefingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -37,7 +37,7 @@ export function useIntelligence(googlePlaceId: string | undefined): UseIntellige
         return;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: IntelligenceData = await res.json();
+      const json: BriefingData = await res.json();
       setData(json);
       setError(null);
 

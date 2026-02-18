@@ -17,7 +17,7 @@ import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
-import IntelligenceView from '@/components/IntelligenceView';
+import BriefingView from '@/components/BriefingView';
 import DragOverlay from '@/components/DragOverlay';
 import ExportToMaps from '@/components/ExportToMaps';
 
@@ -40,7 +40,7 @@ export default function TripDetailPage() {
   const [browseAllOpen, setBrowseAllOpen] = useState(false);
   const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
   const [ghostsInjected, setGhostsInjected] = useState(false);
-  const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
+  const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
 
   // ─── DRAG & DROP STATE ───
@@ -190,7 +190,7 @@ export default function TripDetailPage() {
 
         {/* Picks Strip — pinned at bottom above tab bar */}
         {viewMode === 'planner' && (
-          <div className="flex-shrink-0" style={{ paddingBottom: 60 }}>
+          <div className="flex-shrink-0" style={{ paddingBottom: 90 }}>
             <PicksStrip
               onTapDetail={setDetailItem}
               onBrowseAll={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
@@ -229,22 +229,22 @@ export default function TripDetailPage() {
           item={detailItem}
           onClose={() => setDetailItem(null)}
           onRate={() => setRatingItem(detailItem)}
-          onViewIntelligence={() => {
+          onViewBriefing={() => {
             const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
             if (placeId) {
-              setIntelligencePlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
+              setBriefingPlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
             }
           }}
         />
       )}
 
-      {/* Intelligence View */}
-      {intelligencePlace && (
-        <IntelligenceView
-          googlePlaceId={intelligencePlace.id}
-          placeName={intelligencePlace.name}
-          matchScore={intelligencePlace.matchScore}
-          onClose={() => setIntelligencePlace(null)}
+      {/* Briefing View */}
+      {briefingPlace && (
+        <BriefingView
+          googlePlaceId={briefingPlace.id}
+          placeName={briefingPlace.name}
+          matchScore={briefingPlace.matchScore}
+          onClose={() => setBriefingPlace(null)}
         />
       )}
 

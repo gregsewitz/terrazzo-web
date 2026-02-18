@@ -159,8 +159,8 @@ const DAY_1_GHOSTS: Record<string, ImportedPlace[]> = {
     ...DEMO_POOL[9], // Tsukiji
     id: 'ghost-tsukiji',
     ghostStatus: 'proposed',
-    ghostSource: 'ai',
-    aiReasoning: { rationale: 'Your Food axis + early morning = perfect Tsukiji window', confidence: 0.88 },
+    ghostSource: 'terrazzo',
+    terrazzoReasoning: { rationale: 'Your Food axis + early morning = perfect Tsukiji window', confidence: 0.88 },
   }],
   morning: [],
   lunch: [{
@@ -493,17 +493,21 @@ export const useTripStore = create<TripState>((set, get) => ({
         shop: ['afternoon'],
       };
 
-      // Distribute candidates across empty slots on different days
+      // Distribute candidates across empty slots on MATCHING days only
       const updatedDays = [...trip.days];
       let candidateIdx = 0;
       for (const candidate of newCandidates) {
         if (candidateIdx >= 6) break; // Max 6 ghost injections
         const preferredSlots = typeSlotMap[candidate.type] || ['afternoon'];
+        const candLoc = candidate.location.toLowerCase();
 
-        // Find a day with an empty preferred slot
+        // Find a day whose destination matches this candidate's location
         let placed = false;
         for (const day of updatedDays) {
           if (placed) break;
+          // Only place candidates on days where the destination matches
+          const dayDest = (day.destination || '').toLowerCase();
+          if (dayDest && !candLoc.includes(dayDest) && !dayDest.includes(candLoc.split(',')[0].trim())) continue;
           for (const slotId of preferredSlots) {
             const slot = day.slots.find(s => s.id === slotId);
             if (slot && slot.places.length === 0 && (!slot.ghostItems || slot.ghostItems.length === 0)) {
@@ -512,7 +516,7 @@ export const useTripStore = create<TripState>((set, get) => ({
                 id: `ghost-starred-${candidate.id}`,
                 ghostStatus: 'proposed',
                 ghostSource: candidate.rating?.reaction === 'myPlace' ? 'manual' : (candidate.ghostSource || 'manual'),
-                aiReasoning: {
+                terrazzoReasoning: {
                   rationale: candidate.rating?.reaction === 'myPlace'
                     ? `You starred ${candidate.name} — it's in ${trip.destinations?.[0] || trip.location}`
                     : `Highly rated place matching your ${trip.name} trip`,

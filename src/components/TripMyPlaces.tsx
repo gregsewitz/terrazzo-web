@@ -201,7 +201,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         </div>
       </div>
 
-      {/* Body — intelligence section */}
+      {/* Body — briefing section */}
       <div className="px-3.5 py-2.5">
         {/* When/where on this trip */}
         <div className="flex items-center gap-1.5 mb-2">

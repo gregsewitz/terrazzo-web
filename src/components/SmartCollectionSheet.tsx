@@ -77,7 +77,7 @@ export default function SmartCollectionSheet({
     }).length;
   };
 
-  // Call the Claude-powered API
+  // Call the search API
   const handleSubmit = async () => {
     if (!input.trim()) return;
 
@@ -189,7 +189,7 @@ export default function SmartCollectionSheet({
             className="text-lg italic mb-6"
             style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
           >
-            New Smart Collection
+            New Curated Collection
           </h2>
 
           {step === 'input' && (
@@ -241,7 +241,7 @@ export default function SmartCollectionSheet({
                 className="w-full py-3 rounded-xl text-[14px] font-medium cursor-pointer transition-opacity disabled:opacity-50"
                 style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)', fontFamily: "'DM Sans', sans-serif" }}
               >
-                Create with AI ✦
+                Create Collection ✦
               </button>
             </div>
           )}
@@ -291,7 +291,7 @@ export default function SmartCollectionSheet({
 
           {step === 'result' && parsed && (
             <div className="space-y-6">
-              {/* AI reasoning */}
+              {/* Terrazzo reasoning */}
               {parsed.reasoning && (
                 <div
                   className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px]"
