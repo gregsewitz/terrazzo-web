@@ -23,7 +23,7 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
 const SOURCE_ICONS: Record<string, PerriandIconName> = {
   'CN Traveller': 'article',
   'YOLO Journal': 'manual',
-  "Sarah's List": 'friend',
+  "Lizzie's List": 'friend',
   'Google Maps': 'location',
   'Gmail': 'email',
 };

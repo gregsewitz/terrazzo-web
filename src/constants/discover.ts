@@ -167,7 +167,7 @@ export const FRIEND_SAVES: FriendSave[] = [
     color: "#4a6741",
   },
   {
-    friendName: "Sarah L.",
+    friendName: "Lizzie N.",
     friendInitial: "S",
     place: "Septime",
     location: "11th, Paris",

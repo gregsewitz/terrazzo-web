@@ -24,7 +24,7 @@ const DEMO_POOL: ImportedPlace[] = [
     name: 'TeamLab Borderless',
     type: 'museum',
     location: 'Azabudai Hills, Tokyo',
-    source: { type: 'text', name: "Sarah's List" },
+    source: { type: 'text', name: "Lizzie's List" },
     matchScore: 85,
     matchBreakdown: { Design: 0.98, Character: 0.8, Service: 0.5, Food: 0.1, Location: 0.7, Wellness: 0.6 },
     tasteNote: 'Immersive digital art — boundary-dissolving spaces',
@@ -32,7 +32,7 @@ const DEMO_POOL: ImportedPlace[] = [
     terrazzoInsight: { why: 'Your Design axis peaks here — the most ambitious immersive art installation in the world.', caveat: 'Can get very crowded. Book timed entry. Wear comfortable shoes.' },
     status: 'available',
     ghostSource: 'friend',
-    friendAttribution: { name: 'Sarah L.', note: 'The infinity room will melt your brain — allow 3 hours minimum' },
+    friendAttribution: { name: 'Lizzie N.', note: 'The infinity room will melt your brain — allow 3 hours minimum' },
   },
   {
     id: '3',
@@ -53,7 +53,7 @@ const DEMO_POOL: ImportedPlace[] = [
     name: 'Shimokitazawa',
     type: 'neighborhood',
     location: 'Setagaya, Tokyo',
-    source: { type: 'text', name: "Sarah's List" },
+    source: { type: 'text', name: "Lizzie's List" },
     matchScore: 78,
     matchBreakdown: { Design: 0.6, Character: 0.95, Service: 0.3, Food: 0.7, Location: 0.9, Wellness: 0.5 },
     tasteNote: 'Bohemian vintage quarter — indie shops & tiny theatres',
@@ -61,7 +61,7 @@ const DEMO_POOL: ImportedPlace[] = [
     terrazzoInsight: { why: 'Your Character axis will love the vintage stores, tiny theatres, and independent coffee scene.', caveat: 'No single anchor — best for aimless wandering. Half-day minimum.' },
     status: 'available',
     ghostSource: 'friend',
-    friendAttribution: { name: 'Sarah L.', note: 'Get lost here on purpose — the best thrift stores in all of Tokyo' },
+    friendAttribution: { name: 'Lizzie N.', note: 'Get lost here on purpose — the best thrift stores in all of Tokyo' },
   },
   {
     id: '5',
@@ -174,7 +174,7 @@ const DAY_1_GHOSTS: Record<string, ImportedPlace[]> = {
     id: 'ghost-teamlab',
     ghostStatus: 'proposed',
     ghostSource: 'friend',
-    friendAttribution: { name: 'Sarah L.', note: 'The infinity room will melt your brain — go afternoon, fewer crowds' },
+    friendAttribution: { name: 'Lizzie N.', note: 'The infinity room will melt your brain — go afternoon, fewer crowds' },
   }],
   dinner: [{
     ...DEMO_POOL[6], // Den
@@ -200,7 +200,7 @@ const DAY_2_GHOSTS: Record<string, ImportedPlace[]> = {
     id: 'ghost-shimokita',
     ghostStatus: 'proposed',
     ghostSource: 'friend',
-    friendAttribution: { name: 'Sarah L.', note: 'Get lost here on purpose — best thrift stores in Tokyo' },
+    friendAttribution: { name: 'Lizzie N.', note: 'Get lost here on purpose — best thrift stores in Tokyo' },
   }],
   dinner: [{
     ...DEMO_POOL[2], // Narisawa

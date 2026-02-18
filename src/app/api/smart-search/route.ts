@@ -17,19 +17,19 @@ Given a natural language query, extract structured filters to search the collect
   "filters": {
     "types": ["restaurant", "hotel", "bar", "cafe", "museum", "activity"] | null,
     "locations": ["Tokyo", "Paris"] | null,
-    "friends": ["Sarah", "Marco"] | null,
+    "friends": ["Lizzie", "Marco"] | null,
     "sources": ["friend", "maps", "article", "email", "ai", "manual", "instagram"] | null,
     "minMatchScore": 80 | null,
     "reactions": ["myPlace", "enjoyed"] | null,
     "keywords": ["sushi", "cocktails"] | null
   },
-  "filterTags": ["type: restaurant", "location: Tokyo", "person: Sarah"],
+  "filterTags": ["type: restaurant", "location: Tokyo", "person: Lizzie"],
   "reasoning": "Brief explanation of how you interpreted the query"
 }
 
 Rules:
 - Only include filter fields that are relevant to the query. Use null for irrelevant fields.
-- filterTags should be human-readable summaries like "type: hotel", "location: Europe", "person: Sarah", "reaction: ♡", "match: 80+"
+- filterTags should be human-readable summaries like "type: hotel", "location: Europe", "person: Lizzie", "reaction: ♡", "match: 80+"
 - For vague queries, be generous with interpretation but explain your reasoning
 - The emoji should be the single most representative emoji for the collection
 - The name should be concise (2-5 words) and descriptive

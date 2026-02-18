@@ -40,7 +40,7 @@ export default function SmartCollectionSheet({
 
   const examplePrompts = [
     'Favorite hotels in Europe',
-    'Everything Sarah recommended',
+    'Everything Lizzie recommended',
     'Restaurants I loved in Tokyo',
     'High-match places I haven\'t tried',
     'Bars with great cocktails',
@@ -146,7 +146,7 @@ export default function SmartCollectionSheet({
     if (lq.includes('london')) { filters.locations = ['London']; filterTags.push('location: London'); }
     if (lq.includes('europe')) { filters.locations = ['Venice', 'Paris', 'London', 'Puglia']; filterTags.push('location: Europe'); }
 
-    if (lq.includes('sarah')) { filters.friends = ['Sarah']; filterTags.push('person: Sarah'); emoji = 'friend'; name = 'Sarah\'s picks'; }
+    if (lq.includes('lizzie')) { filters.friends = ['Lizzie']; filterTags.push('person: Lizzie'); emoji = 'friend'; name = 'Lizzie\'s picks'; }
     if (lq.includes('favorite') || lq.includes('loved')) { filters.reactions = ['myPlace']; filterTags.push('reaction: saved'); }
     if (lq.includes('high-match') || lq.includes('high match')) { filters.minMatchScore = 85; filterTags.push('match: 85+'); }
 
