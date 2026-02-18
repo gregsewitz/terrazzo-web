@@ -92,13 +92,15 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   }, [trip]);
 
   const allStripPlaces = useMemo(() => {
-    if (!tripDestinations || tripDestinations.length === 0) return [];
-    const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
-    return myPlaces.filter(place => {
-      if (place.rating?.reaction !== 'myPlace') return false;
-      if (placedIds.has(place.id)) return false;
-      return destLower.some(dest => place.location.toLowerCase().includes(dest));
-    });
+    // Shortlisted places matching trip destinations, excluding already-placed items
+    const destLower = (tripDestinations as string[] || []).map(d => d.toLowerCase());
+    if (destLower.length === 0) return [];
+
+    return myPlaces.filter(place =>
+      place.isShortlisted &&
+      !placedIds.has(place.id) &&
+      destLower.some(dest => place.location.toLowerCase().includes(dest))
+    );
   }, [myPlaces, tripDestinations, placedIds]);
 
   const filteredPlaces = useMemo(() => {

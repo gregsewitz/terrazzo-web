@@ -64,15 +64,15 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
   // Sort: starred first, then by match score
   const sortedPlaces = useMemo(() => {
     return [...filteredPlaces].sort((a, b) => {
-      const aStarred = a.rating?.reaction === 'myPlace' ? 1 : 0;
-      const bStarred = b.rating?.reaction === 'myPlace' ? 1 : 0;
+      const aStarred = a.isShortlisted ? 1 : 0;
+      const bStarred = b.isShortlisted ? 1 : 0;
       if (bStarred !== aStarred) return bStarred - aStarred;
       return b.matchScore - a.matchScore;
     });
   }, [filteredPlaces]);
 
   const starredCount = useMemo(() =>
-    destinationPlaces.filter(p => p.rating?.reaction === 'myPlace').length,
+    destinationPlaces.filter(p => p.isShortlisted).length,
     [destinationPlaces]
   );
 
@@ -149,7 +149,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
         {/* List */}
         <div className="flex-1 overflow-y-auto px-4 pb-20" style={{ scrollbarWidth: 'thin' }}>
           {sortedPlaces.map(place => {
-            const isStarred = place.rating?.reaction === 'myPlace';
+            const isStarred = place.isShortlisted;
             const typeIcon = TYPE_ICONS[place.type] || '📍';
             const sourceStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
 

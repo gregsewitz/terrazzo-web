@@ -72,7 +72,7 @@ export default function TripsPage() {
                   )}
                 </div>
                 <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
-                  {trip.location} · {trip.days.length} days{trip.pool.length > 0 ? ` · ${trip.pool.filter(p => p.status === 'available').length} in pool` : ''}
+                  {trip.location} · {trip.days.length} days
                 </div>
               </div>
               <span style={{ color: 'rgba(28,26,23,0.95)' }}>→</span>

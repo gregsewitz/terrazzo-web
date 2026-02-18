@@ -167,6 +167,7 @@ export interface ImportedPlace {
   tips?: string[];         // e.g. ["⏰ Go early (can be a wait)", "🍺 Drink at the bar while waiting"]
   alsoKnownAs?: string;   // e.g. "El Sótano"
   importBatchId?: string;  // links places from same import for "Also from this guide"
+  isShortlisted?: boolean; // true = show in PicksStrip for day planner drag-drop
 }
 
 export interface TimeSlot {

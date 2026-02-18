@@ -410,7 +410,7 @@ export const TRIP_STOCKHOLM_COPENHAGEN: Trip = {
   groupSize: 2,
   status: 'planning',
   days: createStockholmCopenhagenDays(),
-  pool: STOCKHOLM_COPENHAGEN_POOL,
+  pool: [], // Places now live in savedStore as DEMO_ALL_PLACES
 };
 
 // Helper to push a place into a slot
@@ -836,7 +836,7 @@ export const TRIP_MEXICO_CITY: Trip = {
   groupSize: 4,
   status: 'planning',
   days: createMexicoCityDays(),
-  pool: MEXICO_CITY_POOL,
+  pool: [], // Places now live in savedStore as DEMO_ALL_PLACES
 };
 
 // Place pre-placed items
@@ -1229,7 +1229,7 @@ export const TRIP_PARIS: Trip = {
   travelContext: 'solo',
   status: 'planning',
   days: createParisDays(),
-  pool: PARIS_POOL,
+  pool: [], // Places now live in savedStore as DEMO_ALL_PLACES
 };
 
 // Place pre-placed items (solo = more decisive, more pre-placed)
@@ -1577,7 +1577,7 @@ export const TRIP_SICILY: Trip = {
   groupSize: 4,
   status: 'dreaming',
   days: createSicilyDays(),
-  pool: SICILY_POOL,
+  pool: [], // Places now live in savedStore as DEMO_ALL_PLACES
 };
 
 // Sicily is "dreaming" — very few pre-placed, mostly a big pool to sort through

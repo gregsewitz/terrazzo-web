@@ -336,18 +336,11 @@ export const useTripStore = create<TripState>((set, get) => ({
   removeFromSlot: (day, slotId) => set(state => {
     const trips = state.trips.map(trip => {
       if (trip.id !== state.currentTripId) return trip;
-      const dayObj = trip.days.find(d => d.dayNumber === day);
-      const slot = dayObj?.slots.find(s => s.id === slotId);
-      const placeIds = slot?.places.map(p => p.id) || [];
-
-      const updatedPool = placeIds.length > 0
-        ? trip.pool.map(p => placeIds.includes(p.id) ? { ...p, status: 'available' as const, placedIn: undefined } : p)
-        : trip.pool;
       const updatedDays = trip.days.map(d => {
         if (d.dayNumber !== day) return d;
         return { ...d, slots: d.slots.map(s => s.id === slotId ? { ...s, places: [] } : s) };
       });
-      return { ...trip, pool: updatedPool, days: updatedDays };
+      return { ...trip, days: updatedDays };
     });
     return { trips };
   }),
@@ -364,11 +357,6 @@ export const useTripStore = create<TripState>((set, get) => ({
     const trips = state.trips.map(trip => {
       if (trip.id !== state.currentTripId) return trip;
       const placedItem = { ...place, status: 'placed' as const, placedIn: { day: dayNumber, slot: slotId } };
-      // Add to pool (if not already there) and place in slot
-      const alreadyInPool = trip.pool.some(p => p.id === place.id);
-      const updatedPool = alreadyInPool
-        ? trip.pool.map(p => p.id === place.id ? placedItem : p)
-        : [...trip.pool, placedItem];
       const updatedDays = trip.days.map(d => {
         if (d.dayNumber !== dayNumber) return d;
         return {
@@ -376,7 +364,7 @@ export const useTripStore = create<TripState>((set, get) => ({
           slots: d.slots.map(s => s.id === slotId ? { ...s, places: [...s.places, placedItem] } : s),
         };
       });
-      return { ...trip, pool: updatedPool, days: updatedDays };
+      return { ...trip, days: updatedDays };
     });
     return { trips };
   }),

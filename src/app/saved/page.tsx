@@ -67,16 +67,12 @@ export default function SavedPage() {
   const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
 
-  // All places = saved places + all trip pool places (deduplicated)
-  const allPlaces = useMemo(() => {
-    const savedIds = new Set(myPlaces.map(p => p.id));
-    const tripPlaces = trips.flatMap(t => t.pool).filter(p => !savedIds.has(p.id));
-    return [...myPlaces, ...tripPlaces];
-  }, [myPlaces, trips]);
+  // All places now live in savedStore (unified)
+  const allPlaces = myPlaces;
 
-  // My Picks = starred places
+  // My Picks = shortlisted places
   const myPicks = useMemo(() =>
-    allPlaces.filter(p => p.rating?.reaction === 'myPlace'),
+    allPlaces.filter(p => p.isShortlisted),
     [allPlaces]
   );
 
@@ -194,8 +190,8 @@ export default function SavedPage() {
           trips={trips}
           onClose={() => setAddToTripItem(null)}
           onAdd={(tripId) => {
-            // Star if not already starred
-            if (addToTripItem.rating?.reaction !== 'myPlace') {
+            // Shortlist if not already shortlisted
+            if (!addToTripItem.isShortlisted) {
               toggleStar(addToTripItem.id);
             }
             setAddToTripItem(null);
@@ -262,7 +258,7 @@ function PlaceCard({ place, variant, onTap, onToggleStar, onLongPress }: {
   onToggleStar: (id: string) => void;
   onLongPress: () => void;
 }) {
-  const isStarred = place.rating?.reaction === 'myPlace';
+  const isStarred = !!place.isShortlisted;
   const typeIcon = TYPE_ICONS[place.type] || '📍';
   const google = place.google;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;

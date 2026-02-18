@@ -53,7 +53,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
     if (!tripDestinations || tripDestinations.length === 0) return [];
     const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
     return myPlaces.filter(place => {
-      if (place.rating?.reaction !== 'myPlace') return false;
+      if (!place.isShortlisted) return false;
       return destLower.some(dest => place.location.toLowerCase().includes(dest));
     });
   }, [myPlaces, tripDestinations]);

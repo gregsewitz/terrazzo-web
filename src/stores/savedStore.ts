@@ -1,10 +1,9 @@
 import { create } from 'zustand';
 import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData } from '@/types';
 import {
-  DEMO_MY_PLACES as IMPORTED_MY_PLACES,
+  DEMO_ALL_PLACES,
   DEMO_HISTORY as IMPORTED_HISTORY,
   DEMO_COLLECTIONS as IMPORTED_COLLECTIONS,
-  DEMO_FRIEND_RECS as IMPORTED_FRIEND_RECS,
 } from '@/data/demoSaved';
 
 export type ViewMode = 'myPlaces' | 'history';
@@ -458,7 +457,7 @@ export const useSavedStore = create<SavedState>((set) => ({
   viewMode: 'myPlaces',
   typeFilter: 'all',
   searchQuery: '',
-  myPlaces: [...IMPORTED_MY_PLACES, ...IMPORTED_FRIEND_RECS],
+  myPlaces: [...DEMO_ALL_PLACES],
   history: IMPORTED_HISTORY,
   collections: IMPORTED_COLLECTIONS,
 
@@ -481,18 +480,9 @@ export const useSavedStore = create<SavedState>((set) => ({
   })),
 
   toggleStar: (id) => set((state) => ({
-    myPlaces: state.myPlaces.map((p) => {
-      if (p.id !== id) return p;
-      const isStarred = p.rating?.reaction === 'myPlace';
-      if (isStarred) {
-        // Unstar: remove rating
-        const { rating: _removed, ...rest } = p;
-        void _removed;
-        return rest as ImportedPlace;
-      }
-      // Star: set reaction to myPlace
-      return { ...p, rating: { reaction: 'myPlace' as const, ratedAt: new Date().toISOString().split('T')[0] } };
-    }),
+    myPlaces: state.myPlaces.map((p) =>
+      p.id === id ? { ...p, isShortlisted: !p.isShortlisted } : p
+    ),
   })),
 
   promoteFromHistory: (id) => set((state) => {
