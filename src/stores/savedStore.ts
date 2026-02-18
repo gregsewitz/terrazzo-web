@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType } from '@/types';
+import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData } from '@/types';
 import {
   DEMO_MY_PLACES as IMPORTED_MY_PLACES,
   DEMO_HISTORY as IMPORTED_HISTORY,
   DEMO_COLLECTIONS as IMPORTED_COLLECTIONS,
+  DEMO_FRIEND_RECS as IMPORTED_FRIEND_RECS,
 } from '@/data/demoSaved';
 
 export type ViewMode = 'myPlaces' | 'history';
@@ -17,6 +18,7 @@ export interface HistoryItem {
   detectedDate: string;
   ghostSource: GhostSourceType;
   rating?: PlaceRating;
+  google?: GooglePlaceData;
 }
 
 export interface Collection {
@@ -455,7 +457,7 @@ export const useSavedStore = create<SavedState>((set) => ({
   viewMode: 'myPlaces',
   typeFilter: 'all',
   searchQuery: '',
-  myPlaces: IMPORTED_MY_PLACES,
+  myPlaces: [...IMPORTED_MY_PLACES, ...IMPORTED_FRIEND_RECS],
   history: IMPORTED_HISTORY,
   collections: IMPORTED_COLLECTIONS,
 

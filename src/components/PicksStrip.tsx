@@ -162,7 +162,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
         <div className="flex items-center justify-between">
           <span
             className="text-[11px]"
-            style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ color: 'rgba(28,26,23,0.85)', fontFamily: "'DM Sans', sans-serif" }}
           >
             No picks for this destination yet
           </span>
@@ -199,7 +199,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
             height: 26,
             borderRadius: '50%',
             background: hasActiveFilters ? 'var(--t-ink)' : 'rgba(28,26,23,0.04)',
-            color: hasActiveFilters ? 'white' : 'rgba(28,26,23,0.5)',
+            color: hasActiveFilters ? 'white' : 'rgba(28,26,23,0.85)',
             border: hasActiveFilters ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
           }}
         >
@@ -219,7 +219,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
               style={{
                 height: 22,
                 background: isActive ? 'var(--t-ink)' : 'white',
-                color: isActive ? 'white' : 'rgba(28,26,23,0.55)',
+                color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
                 border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
                 fontFamily: "'DM Sans', sans-serif",
               }}
@@ -273,7 +273,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
           <div className="mb-2.5">
             <span
               className="text-[9px] font-semibold uppercase tracking-wider block mb-1"
-              style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}
             >
               Sort by
             </span>
@@ -285,7 +285,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                   className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer transition-all"
                   style={{
                     background: sortBy === opt.value ? 'var(--t-ink)' : 'rgba(28,26,23,0.03)',
-                    color: sortBy === opt.value ? 'white' : 'rgba(28,26,23,0.6)',
+                    color: sortBy === opt.value ? 'white' : 'rgba(28,26,23,0.9)',
                     border: sortBy === opt.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
                     fontFamily: "'DM Sans', sans-serif",
                   }}
@@ -299,7 +299,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
           <div className="mb-1.5">
             <span
               className="text-[9px] font-semibold uppercase tracking-wider block mb-1"
-              style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}
             >
               Source
             </span>
@@ -311,7 +311,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                   className="px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer transition-all"
                   style={{
                     background: sourceFilter === opt.value ? 'var(--t-ink)' : 'rgba(28,26,23,0.03)',
-                    color: sourceFilter === opt.value ? 'white' : 'rgba(28,26,23,0.6)',
+                    color: sourceFilter === opt.value ? 'white' : 'rgba(28,26,23,0.9)',
                     border: sourceFilter === opt.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
                     fontFamily: "'DM Sans', sans-serif",
                   }}
@@ -340,7 +340,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
       >
         {stripPlaces.length === 0 ? (
           <div className="flex items-center justify-center w-full py-1">
-            <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+            <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.8)' }}>
               No picks match this filter
             </span>
           </div>

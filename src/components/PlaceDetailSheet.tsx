@@ -102,7 +102,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
                 cursor: saved ? 'default' : 'pointer',
               }}
             >
-              {saved ? '♡ Saved' : '♡ Save'}
+              {saved ? '✦ Shortlisted' : '✦ Shortlist'}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onRate?.(); }}
@@ -115,21 +115,56 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
         </div>
 
         <div className="px-5 pb-8">
-          {/* Name + meta */}
-          <h2
-            className="text-[22px] mt-4 mb-1 italic leading-tight"
-            style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
-          >
-            {item.name}
-          </h2>
-          {item.alsoKnownAs && (
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
-              Also known as &ldquo;{item.alsoKnownAs}&rdquo;
+          {/* Name + rating badge row */}
+          <div className="flex items-start justify-between gap-3 mt-4">
+            <div className="flex-1 min-w-0">
+              <h2
+                className="text-[22px] mb-1 italic leading-tight"
+                style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+              >
+                {item.name}
+              </h2>
+              {item.alsoKnownAs && (
+                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                  Also known as &ldquo;{item.alsoKnownAs}&rdquo;
+                </div>
+              )}
+              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                {item.location} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+              </p>
             </div>
-          )}
-          <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
-            {item.location} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-          </p>
+
+            {/* Rating badge — right of name */}
+            {existingRating && ratingReaction ? (
+              <button
+                onClick={onRate}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] mt-1"
+                style={{
+                  background: `${ratingReaction.color}10`,
+                  border: `1.5px solid ${ratingReaction.color}25`,
+                }}
+              >
+                <span style={{ fontSize: 16 }}>{ratingReaction.icon}</span>
+                <span className="text-[10px] font-semibold" style={{ color: ratingReaction.color, fontFamily: "'Space Mono', monospace" }}>
+                  {ratingReaction.label}
+                </span>
+              </button>
+            ) : onRate ? (
+              <button
+                onClick={onRate}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] mt-1"
+                style={{
+                  background: 'rgba(28,26,23,0.04)',
+                  border: '1.5px solid rgba(28,26,23,0.08)',
+                }}
+              >
+                <span style={{ fontSize: 14, color: 'rgba(28,26,23,0.8)' }}>☆</span>
+                <span className="text-[10px] font-medium" style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}>
+                  Rate
+                </span>
+              </button>
+            ) : null}
+          </div>
 
           {/* Tags row */}
           <div className="flex gap-1 mt-2.5 flex-wrap">
@@ -159,7 +194,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
                   <span style={{ color: 'var(--t-chrome-yellow)' }}>★</span>
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.google.rating}</span>
                   {item.google.reviewCount && (
-                    <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
+                    <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
                       ({item.google.reviewCount.toLocaleString()})
                     </span>
                   )}
@@ -241,7 +276,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
           {item.whatToOrder && item.whatToOrder.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
                 What to order
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -259,7 +294,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
           {item.tips && item.tips.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
                 Tips
               </div>
               <div className="rounded-xl px-3 py-2.5" style={{ background: 'var(--t-linen)' }}>
@@ -276,7 +311,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
           {siblingPlaces && siblingPlaces.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
                 Also from this guide
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
@@ -284,7 +319,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
                   <div key={sibling.id} className="min-w-[120px] rounded-xl p-2.5 flex-shrink-0"
                     style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                     <div className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{sibling.name}</div>
-                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                       {sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)} · {sibling.location.split(',')[0]}
                     </div>
                   </div>
@@ -297,7 +332,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
           <div className="mb-4">
             <h3
               className="text-[10px] uppercase tracking-wider mb-2.5 font-bold"
-              style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}
             >
               Taste Axes
             </h3>
@@ -321,7 +356,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
                         style={{ width: `${value * 100}%`, background: DOMAIN_COLORS[domain] }}
                       />
                     </div>
-                    <span className="text-[10px] w-8 text-right" style={{ color: 'rgba(28,26,23,0.65)', fontFamily: "'Space Mono', monospace" }}>
+                    <span className="text-[10px] w-8 text-right" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
                       {Math.round(value * 100)}
                     </span>
                   </div>
@@ -354,7 +389,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
               <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                 Taste match
               </div>
-              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 Based on your profile preferences
               </div>
               {/* Inline pipeline progress when enriching */}
@@ -381,32 +416,15 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
             </div>
           </div>
 
-          {/* Existing rating display */}
-          {existingRating && ratingReaction && (
+          {/* Rating detail — tags & note (shown inline if rated) */}
+          {existingRating && ratingReaction && (existingRating.tags?.length || existingRating.personalNote) && (
             <div
-              className="mb-4 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
-              style={{
-                background: `${ratingReaction.color}08`,
-                border: `1.5px solid ${ratingReaction.color}30`,
-              }}
+              className="mb-4 px-3 py-2.5 rounded-xl cursor-pointer"
+              style={{ background: `${ratingReaction.color}06`, border: `1px solid ${ratingReaction.color}15` }}
               onClick={onRate}
             >
-              <div className="flex items-center gap-2 mb-1.5">
-                <span style={{ fontSize: '18px', color: ratingReaction.color }}>{ratingReaction.icon}</span>
-                <span
-                  className="text-[12px] font-semibold"
-                  style={{ color: ratingReaction.color, fontFamily: "'Space Mono', monospace" }}
-                >
-                  {ratingReaction.label}
-                </span>
-                {existingRating.returnIntent === 'absolutely' && (
-                  <span className="text-[10px] ml-auto" style={{ color: 'rgba(28,26,23,0.7)' }}>
-                    Would return ✓
-                  </span>
-                )}
-              </div>
               {existingRating.tags && existingRating.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex flex-wrap gap-1">
                   {existingRating.tags.map(tag => (
                     <span
                       key={tag}
@@ -416,10 +434,15 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewIntellig
                       {tag}
                     </span>
                   ))}
+                  {existingRating.returnIntent === 'absolutely' && (
+                    <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.9)' }}>
+                      Would return ✓
+                    </span>
+                  )}
                 </div>
               )}
               {existingRating.personalNote && (
-                <p className="text-[11px] italic mt-2" style={{ color: 'rgba(28,26,23,0.6)' }}>
+                <p className="text-[11px] italic mt-1.5" style={{ color: 'rgba(28,26,23,0.9)' }}>
                   &ldquo;{existingRating.personalNote}&rdquo;
                 </p>
               )}

@@ -283,7 +283,7 @@ export default function SmartCollectionSheet({
                   </div>
                 </div>
               </div>
-              <p className="text-center text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <p className="text-center text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 Terrazzo is thinking...
               </p>
             </div>
@@ -295,7 +295,7 @@ export default function SmartCollectionSheet({
               {parsed.reasoning && (
                 <div
                   className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px]"
-                  style={{ color: 'rgba(28,26,23,0.7)', background: 'rgba(200,146,58,0.06)' }}
+                  style={{ color: 'rgba(28,26,23,0.95)', background: 'rgba(200,146,58,0.06)' }}
                 >
                   ✦ {parsed.reasoning}
                 </div>
@@ -324,7 +324,7 @@ export default function SmartCollectionSheet({
                 </div>
                 <p
                   className="text-[12px] mb-4"
-                  style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.6)' }}
+                  style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
                 >
                   {parsed.matchCount ?? 0} places found
                 </p>

@@ -107,14 +107,14 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
             >
               Browse all
             </h2>
-            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.85)' }}>
               {starredCount} picked · {destinationPlaces.length} saved for this destination
             </span>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-            style={{ background: 'rgba(28,26,23,0.06)', border: 'none', cursor: 'pointer', color: 'rgba(28,26,23,0.6)' }}
+            style={{ background: 'rgba(28,26,23,0.06)', border: 'none', cursor: 'pointer', color: 'rgba(28,26,23,0.9)' }}
           >
             ✕
           </button>
@@ -134,7 +134,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
                 style={{
                   background: isActive ? 'var(--t-ink)' : 'white',
-                  color: isActive ? 'white' : 'rgba(28,26,23,0.6)',
+                  color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
                   border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
                   fontFamily: "'DM Sans', sans-serif",
                 }}
@@ -177,7 +177,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                       <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--t-ink)' }}>
                         {place.name}
                       </div>
-                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
+                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
                         {place.location}
                       </div>
                     </div>
@@ -188,7 +188,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                       className="w-7 h-7 rounded-full flex items-center justify-center transition-all flex-shrink-0"
                       style={{
                         background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
-                        color: isStarred ? 'white' : 'rgba(28,26,23,0.45)',
+                        color: isStarred ? 'white' : 'rgba(28,26,23,0.85)',
                         border: 'none',
                         cursor: 'pointer',
                         fontSize: '13px',
@@ -227,10 +227,10 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
           {sortedPlaces.length === 0 && (
             <div className="text-center py-16">
               <span className="text-3xl mb-3 block">◇</span>
-              <p className="text-[13px] mb-1" style={{ color: 'rgba(28,26,23,0.65)' }}>
+              <p className="text-[13px] mb-1" style={{ color: 'rgba(28,26,23,0.9)' }}>
                 No saved places for this destination
               </p>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.45)' }}>
+              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.85)' }}>
                 Import places in Collect to see them here
               </p>
             </div>

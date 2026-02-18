@@ -84,11 +84,11 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
             <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
               Export to Google Maps
             </h2>
-            <button onClick={onClose} className="text-lg bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.65)' }}>
+            <button onClick={onClose} className="text-lg bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.9)' }}>
               ✕
             </button>
           </div>
-          <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+          <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
             Download as KML to import into Google Maps, or open places individually.
           </p>
         </div>
@@ -134,14 +134,14 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
           >
             {exported ? '✓ KML Downloaded' : `📍 Download KML (${exportPlaces.length} places)`}
           </button>
-          <p className="text-[10px] text-center mt-2" style={{ color: 'rgba(28,26,23,0.65)' }}>
+          <p className="text-[10px] text-center mt-2" style={{ color: 'rgba(28,26,23,0.9)' }}>
             Open Google Maps → Your places → Maps → Import → select the .kml file
           </p>
         </div>
 
         {/* Individual place links */}
         <div className="px-5 pb-6 overflow-y-auto" style={{ maxHeight: '35vh' }}>
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(28,26,23,0.65)', fontFamily: "'Space Mono', monospace" }}>
+          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
             Or open individually
           </p>
           <div className="flex flex-col gap-1.5">
@@ -158,7 +158,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
                   <div className="text-[12px] font-medium" style={{ color: 'var(--t-ink)' }}>
                     {place.name}
                   </div>
-                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                     {place.location} · {place.type}
                   </div>
                 </div>

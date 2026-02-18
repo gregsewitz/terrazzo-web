@@ -167,7 +167,7 @@ function DimensionsSection() {
                 {signals.length > 5 && (
                   <span
                     className="text-[10px] px-2 py-1 rounded-full"
-                    style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.65)' }}
+                    style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.9)' }}
                   >
                     +{signals.length - 5}
                   </span>
@@ -204,7 +204,7 @@ function ContradictionsSection() {
               <div className="flex-1">
                 <div
                   className="text-[9px] uppercase tracking-wider mb-1"
-                  style={{ color: 'rgba(28,26,23,0.6)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
                 >
                   You said
                 </div>
@@ -221,7 +221,7 @@ function ContradictionsSection() {
               <div className="flex-1">
                 <div
                   className="text-[9px] uppercase tracking-wider mb-1"
-                  style={{ color: 'rgba(28,26,23,0.6)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
                 >
                   We found
                 </div>
@@ -240,7 +240,7 @@ function ContradictionsSection() {
               >
                 Resolution
               </div>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 {c.resolution}
               </p>
             </div>
@@ -283,7 +283,7 @@ function ContextSection() {
                   {mod.context}
                 </span>
               </div>
-              <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 {mod.shifts}
               </p>
             </div>
@@ -328,7 +328,7 @@ function VocabularySection() {
                 </span>
                 <span
                   className="text-[9px]"
-                  style={{ color: 'rgba(28,26,23,0.6)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
                 >
                   {terms.length}
                 </span>
@@ -381,7 +381,7 @@ function MatchesSection() {
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                   {prop.name}
                 </div>
-                <div className="text-[11px] mb-2" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                <div className="text-[11px] mb-2" style={{ color: 'rgba(28,26,23,0.95)' }}>
                   {prop.location}
                 </div>
                 <div className="flex flex-wrap gap-1 mb-2">
@@ -397,7 +397,7 @@ function MatchesSection() {
                 </div>
                 <p
                   className="text-[10px] italic leading-snug"
-                  style={{ color: 'rgba(28,26,23,0.7)' }}
+                  style={{ color: 'rgba(28,26,23,0.95)' }}
                 >
                   {prop.tensionResolved}
                 </p>

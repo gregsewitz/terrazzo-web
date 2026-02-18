@@ -73,7 +73,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>Greg</div>
-              <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.6)' }}>The Aesthetic Pilgrim</div>
+              <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.9)' }}>The Aesthetic Pilgrim</div>
             </div>
           </div>
           <TasteStone data={profile.radarData} size={56} />
@@ -91,7 +91,7 @@ export default function ProfilePage() {
               className="flex-1 py-1.5 px-2 rounded-md text-[11px] font-medium transition-all"
               style={{
                 background: activeTab === tab ? 'white' : 'transparent',
-                color: activeTab === tab ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                color: activeTab === tab ? 'var(--t-ink)' : 'rgba(28,26,23,0.85)',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
@@ -173,7 +173,7 @@ export default function ProfilePage() {
                     style={{ background: expandedSection === action ? 'rgba(200,146,58,0.06)' : 'rgba(28,26,23,0.03)' }}
                   >
                     <span className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{label}</span>
-                    <span style={{ color: 'rgba(28,26,23,0.7)', transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
+                    <span style={{ color: 'rgba(28,26,23,0.95)', transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
                   </div>
                   {expandedSection === 'accounts' && action === 'accounts' && (
                     <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
@@ -196,12 +196,12 @@ export default function ProfilePage() {
                     </div>
                   )}
                   {expandedSection === 'notifications' && action === 'notifications' && (
-                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.7)' }}>
+                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.95)' }}>
                       Notification preferences will be available in a future update.
                     </div>
                   )}
                   {expandedSection === 'about' && action === 'about' && (
-                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.7)' }}>
+                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: 'rgba(28,26,23,0.95)' }}>
                       Terrazzo v0.1 — Your taste-driven travel companion. Built with Forme Libere design principles.
                     </div>
                   )}
@@ -245,7 +245,7 @@ function HeroSection() {
       </h2>
       <p
         className="text-[11px]"
-        style={{ color: 'rgba(28,26,23,0.6)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
       >
         Based on 238 signals across 6 dimensions
       </p>
@@ -405,7 +405,7 @@ function WeeklyEditSection() {
         >
           {collection.title}
         </h3>
-        <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}>
+        <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}>
           {collection.subtitle}
         </p>
       </div>
@@ -444,7 +444,7 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
         <div className="flex items-start justify-between mb-2">
           <div>
             <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>{place.location}</div>
+            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>{place.location}</div>
           </div>
           <ScoreArc score={place.score} size={38} color="#4a6741" />
         </div>
@@ -459,7 +459,7 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
             </span>
           ))}
         </div>
-        <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
+        <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.95)' }}>
           {place.note}
         </p>
       </div>
@@ -495,7 +495,7 @@ function StretchPickSection() {
           <ScoreArc score={s.score} size={44} color="var(--t-panton-orange)" />
           <div>
             <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>{s.name}</div>
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>{s.location}</div>
+            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>{s.location}</div>
             <div className="flex gap-2 mt-1.5">
               <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,107,139,0.1)', color: '#4a6b8b', fontFamily: "'Space Mono', monospace" }}>
                 {s.strongAxis} {s.strongScore}%
@@ -517,12 +517,12 @@ function StretchPickSection() {
           >
             Why we&apos;re suggesting it
           </div>
-          <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.7)' }}>
+          <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.95)' }}>
             {s.why}
           </p>
         </div>
 
-        <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: 'rgba(28,26,23,0.65)' }}>
+        <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: 'rgba(28,26,23,0.9)' }}>
           {s.tension}
         </p>
       </div>
@@ -548,7 +548,7 @@ function ContextModeSection() {
             If you&apos;re traveling this summer...
           </span>
         </div>
-        <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}>
+        <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}>
           Indoor-outdoor flow · terrace dining · natural pool
         </p>
 
@@ -576,9 +576,9 @@ function ContextRecCard({ rec }: { rec: ContextRec }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
           <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{rec.name}</span>
-          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>{rec.location}</span>
+          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>{rec.location}</span>
         </div>
-        <p className="text-[10px] leading-snug" style={{ color: 'rgba(28,26,23,0.7)' }}>
+        <p className="text-[10px] leading-snug" style={{ color: 'rgba(28,26,23,0.95)' }}>
           {rec.whyFits}
         </p>
       </div>
@@ -623,7 +623,7 @@ function VocabTeaser() {
           })}
           <span
             className="text-[10px] px-2.5 py-1 rounded-full"
-            style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.6)' }}
+            style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.9)' }}
           >
             +{Object.values(profile.microTasteSignals).flat().length - allTerms.length} more
           </span>
@@ -671,12 +671,12 @@ function FriendSaveCard({ save }: { save: FriendSave }) {
           <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>
             {save.friendName}
           </span>
-          <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.65)' }}>saved</span>
+          <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.9)' }}>saved</span>
           <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>
             {save.place}
           </span>
         </div>
-        <div className="text-[10px] mb-1" style={{ color: 'rgba(28,26,23,0.65)' }}>
+        <div className="text-[10px] mb-1" style={{ color: 'rgba(28,26,23,0.9)' }}>
           {save.location} · {save.type}
         </div>
         <div className="flex items-center gap-2">
@@ -686,7 +686,7 @@ function FriendSaveCard({ save }: { save: FriendSave }) {
           >
             {save.score}% match
           </span>
-          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
             {save.whyMatches}
           </span>
         </div>

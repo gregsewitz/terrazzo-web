@@ -82,7 +82,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               >
                 {item.name}
               </h2>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 {item.location}
               </p>
             </div>
@@ -131,7 +131,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                       <span
                         className="text-[10px] font-medium whitespace-nowrap"
                         style={{
-                          color: isSelected ? r.color : 'rgba(28,26,23,0.6)',
+                          color: isSelected ? r.color : 'rgba(28,26,23,0.9)',
                           fontFamily: "'Space Mono', monospace",
                         }}
                       >
@@ -166,7 +166,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         style={{
                           background: isActive ? `${selectedReaction.color}12` : 'white',
                           borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
-                          color: isActive ? selectedReaction.color : 'rgba(28,26,23,0.6)',
+                          color: isActive ? selectedReaction.color : 'rgba(28,26,23,0.9)',
                           fontFamily: "'DM Sans', sans-serif",
                           fontWeight: isActive ? 600 : 400,
                         }}
@@ -197,7 +197,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         style={{
                           background: isActive ? 'var(--t-ink)' : 'white',
                           borderColor: isActive ? 'var(--t-ink)' : 'var(--t-linen)',
-                          color: isActive ? 'var(--t-cream)' : 'rgba(28,26,23,0.6)',
+                          color: isActive ? 'var(--t-cream)' : 'rgba(28,26,23,0.9)',
                           fontFamily: "'DM Sans', sans-serif",
                           fontWeight: isActive ? 600 : 400,
                         }}
@@ -232,7 +232,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         style={{
                           background: isActive ? selectedReaction.color : 'white',
                           borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
-                          color: isActive ? 'white' : 'rgba(28,26,23,0.6)',
+                          color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
                           fontFamily: "'DM Sans', sans-serif",
                         }}
                       >
@@ -251,7 +251,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   style={{
                     background: 'white',
                     borderColor: 'var(--t-linen)',
-                    color: 'rgba(28,26,23,0.6)',
+                    color: 'rgba(28,26,23,0.9)',
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
@@ -281,7 +281,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               >
                 Personal note
               </h3>
-              <p className="text-[11px] -mt-2" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <p className="text-[11px] -mt-2" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 What would you tell a friend about this place?
               </p>
               <textarea
@@ -307,7 +307,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   style={{
                     background: 'white',
                     borderColor: 'var(--t-linen)',
-                    color: 'rgba(28,26,23,0.6)',
+                    color: 'rgba(28,26,23,0.9)',
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >

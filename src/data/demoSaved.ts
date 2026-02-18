@@ -1,4 +1,4 @@
-import { ImportedPlace } from '@/types';
+import { ImportedPlace, GooglePlaceData } from '@/types';
 import { HistoryItem, Collection } from '@/stores/savedStore';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -15,7 +15,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     matchScore: 91,
     matchBreakdown: { Design: 0.8, Character: 0.95, Service: 0.88, Food: 0.95, Location: 0.85, Wellness: 0.3 },
     tasteNote: 'The West Village Italian — insalata verde, cacio e pepe, and a wait that\'s worth it',
-    google: { rating: 4.6, reviewCount: 4567, category: 'Italian Restaurant', priceLevel: 3 },
+    google: { placeId: 'ChIJr7FOf5NZwokRu3CDYtzVmuQ', rating: 4.6, reviewCount: 4567, category: 'Italian Restaurant', priceLevel: 3 },
     terrazzoInsight: { why: 'Food and Character — Jody Williams and Rita Sodi\'s neighborhood perfection.', caveat: 'No reservations. The wait is part of the ritual.' },
     status: 'available',
     ghostSource: 'maps',
@@ -39,7 +39,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     matchScore: 86,
     matchBreakdown: { Design: 0.6, Character: 0.92, Service: 0.75, Food: 0.95, Location: 0.7, Wellness: 0.2 },
     tasteNote: 'Indian food you can\'t find anywhere else in NYC — rabbit keema, goat leg, bold and fearless',
-    google: { rating: 4.5, reviewCount: 2345, category: 'Indian Restaurant', priceLevel: 3 },
+    google: { placeId: 'ChIJJyPbJe1ZwokRu8dDEOqAYDc', rating: 4.5, reviewCount: 2345, category: 'Indian Restaurant', priceLevel: 3 },
     terrazzoInsight: { why: 'Food and Character — Chintan Pandya cooks from regional traditions that never get restaurant treatment in the US.', caveat: 'The heat level is real. The goat leg feeds 3-4 and needs advance order.' },
     status: 'available',
     ghostSource: 'maps',
@@ -63,7 +63,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     matchScore: 88,
     matchBreakdown: { Design: 0.7, Character: 0.95, Service: 0.92, Food: 0.5, Location: 0.8, Wellness: 0.2 },
     tasteNote: 'No-menu cocktail bar — tell them what you like and they\'ll make something perfect',
-    google: { rating: 4.6, reviewCount: 1234, category: 'Cocktail Bar' },
+    google: { placeId: 'ChIJDbQMBIdZwokRVS4L8B8V5SA', rating: 4.6, reviewCount: 1234, category: 'Cocktail Bar' },
     terrazzoInsight: { why: 'Service and Character — the bartenders are genuinely world-class. The no-menu format means every drink is personal.', caveat: 'Cash only. No sign outside. Small, so expect a wait on weekends.' },
     status: 'available',
     ghostSource: 'maps',
@@ -86,7 +86,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     matchScore: 85,
     matchBreakdown: { Design: 0.92, Character: 0.7, Service: 0.95, Food: 0.82, Location: 0.85, Wellness: 0.5 },
     tasteNote: 'Grand dining room, plant-based tasting menu — technically flawless but missing something',
-    google: { rating: 4.5, reviewCount: 8765, category: 'Fine Dining', priceLevel: 4 },
+    google: { placeId: 'ChIJEWbXz6ZZwokRLKmKrtPfVFY', rating: 4.5, reviewCount: 8765, category: 'Fine Dining', priceLevel: 4 },
     terrazzoInsight: { why: 'Design and Service — the room is one of the most beautiful in New York. The service is impeccable.', caveat: 'The plant-based pivot divided people. Technically perfect but can feel like a performance.' },
     status: 'available',
     ghostSource: 'maps',
@@ -109,7 +109,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     matchScore: 82,
     matchBreakdown: { Design: 0.85, Character: 0.8, Service: 0.75, Food: 0.85, Location: 0.7, Wellness: 0.3 },
     tasteNote: 'Vietnamese in a beautiful greenhouse-like space — pho, bánh mì, and cocktails',
-    google: { rating: 4.4, reviewCount: 2345, category: 'Vietnamese Restaurant', priceLevel: 2 },
+    google: { placeId: 'ChIJ2fdTNEBZwokRcAtK9PyqDAs', rating: 4.4, reviewCount: 2345, category: 'Vietnamese Restaurant', priceLevel: 2 },
     terrazzoInsight: { why: 'Design and Food — the glass-walled space is gorgeous and the cooking is thoughtful without being fussy.', caveat: 'Greenpoint is a bit of a trek but the neighborhood is great for a walk after.' },
     status: 'available',
     ghostSource: 'maps',
@@ -178,7 +178,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     matchScore: 96,
     matchBreakdown: { Design: 0.98, Character: 0.95, Service: 0.97, Food: 0.99, Location: 0.7, Wellness: 0.65 },
     tasteNote: 'The restaurant that redefined Nordic cuisine',
-    google: { rating: 4.8, reviewCount: 3420, category: 'Fine Dining', priceLevel: 4 },
+    google: { placeId: 'ChIJpYCQZztTUkYRFOE368Xs6kI', rating: 4.8, reviewCount: 3420, category: 'Fine Dining', priceLevel: 4 },
     terrazzoInsight: { why: 'A once-in-a-lifetime culinary pilgrimage', caveat: 'Now a food lab — check current format' },
     status: 'available',
     ghostSource: 'article',
@@ -215,6 +215,108 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ghostSource: 'email',
     rating: { reaction: 'myPlace', ratedAt: '2025-02-06' },
   },
+  {
+    id: 'saved-12',
+    name: 'Bar Pisellino',
+    type: 'bar',
+    location: 'West Village, New York',
+    source: { type: 'google-maps', name: 'Google Maps' },
+    matchScore: 89,
+    matchBreakdown: { Design: 0.92, Character: 0.9, Service: 0.85, Food: 0.7, Location: 0.88, Wellness: 0.2 },
+    tasteNote: 'Italian aperitivo bar — spritz, cicchetti, and effortless West Village charm',
+    google: { placeId: 'ChIJHUufNvVZwokRaO5ke5RQ46c', rating: 4.5, reviewCount: 1432, category: 'Cocktail Bar', priceLevel: 2 },
+    terrazzoInsight: { why: 'Design and Character — the team behind Via Carota created this standing-room aperitivo bar. It\'s Italy at 5pm.', caveat: 'Tiny. Standing room mostly. Go for early evening spritz, not a full night out.' },
+    status: 'available',
+    ghostSource: 'maps',
+    savedDate: 'Saved Dec 2024',
+    rating: {
+      reaction: 'myPlace',
+      tags: ['Perfect atmosphere', 'Standout cocktails'],
+      contextTags: ['Couple', 'Friends'],
+      returnIntent: 'absolutely',
+      personalNote: 'Best spritz in the city. The cicchetti are perfect.',
+      ratedAt: '2025-12-15',
+    },
+  },
+  {
+    id: 'saved-13',
+    name: 'L\'Abeille',
+    type: 'restaurant',
+    location: '16th arrondissement, Paris',
+    source: { type: 'url', name: 'Condé Nast Traveller' },
+    matchScore: 93,
+    matchBreakdown: { Design: 0.95, Character: 0.85, Service: 0.97, Food: 0.96, Location: 0.8, Wellness: 0.5 },
+    tasteNote: 'Two-star Michelin at Shangri-La — hushed elegance, impeccable French technique',
+    google: { placeId: 'ChIJB7rdOORv5kcR-wErkFxC9nw', rating: 4.6, reviewCount: 876, category: 'Fine Dining', priceLevel: 4 },
+    terrazzoInsight: { why: 'Service and Food at their peak — the kind of formal dining where the technique justifies the ceremony.', caveat: 'Jacket required. This is serious dining, not a casual night out.' },
+    status: 'available',
+    ghostSource: 'article',
+    savedDate: 'Saved Feb 2025',
+    rating: {
+      reaction: 'enjoyed',
+      tags: ['Perfect service', 'Beautiful space'],
+      contextTags: ['Special occasion'],
+      returnIntent: 'maybe',
+      personalNote: 'Technically flawless. Felt like stepping back in time. The tasting menu is long — clear your evening.',
+      ratedAt: '2025-04-22',
+    },
+  },
+];
+
+
+// ═══════════════════════════════════════════════════════════════════
+// FRIEND RECS — Saved from friend recommendations for "someday"
+// ═══════════════════════════════════════════════════════════════════
+
+export const DEMO_FRIEND_RECS: ImportedPlace[] = [
+  {
+    id: 'friend-1',
+    name: 'Chiltern Firehouse',
+    type: 'restaurant',
+    location: 'Marylebone, London',
+    source: { type: 'text', name: 'Sarah\'s List' },
+    matchScore: 87,
+    matchBreakdown: { Design: 0.92, Character: 0.88, Service: 0.85, Food: 0.82, Location: 0.9, Wellness: 0.3 },
+    tasteNote: 'Nuno Mendes in a converted Victorian fire station — buzzy, beautiful, scene-y',
+    google: { placeId: 'ChIJMywZv36FdUgRABdFDwGzVms', rating: 4.3, reviewCount: 3456, category: 'Restaurant', priceLevel: 4 },
+    terrazzoInsight: { why: 'Design and Location — André Balazs turned a Grade II fire station into London\'s most photogenic restaurant.', caveat: 'More about the scene than the food. Book the garden terrace in summer.' },
+    status: 'available',
+    ghostSource: 'friend',
+    friendAttribution: { name: 'Sarah L.', note: 'The terrace is incredible. Go for lunch on a weekday.' },
+    savedDate: 'Saved Jan 2026',
+  },
+  {
+    id: 'friend-2',
+    name: 'Aman Venice',
+    type: 'hotel',
+    location: 'San Polo, Venice',
+    source: { type: 'text', name: 'James\'s List' },
+    matchScore: 95,
+    matchBreakdown: { Design: 0.98, Character: 0.92, Service: 0.97, Food: 0.8, Location: 0.95, Wellness: 0.85 },
+    tasteNote: 'A 16th-century palazzo on the Grand Canal — Aman\'s signature minimalism meets Venetian grandeur',
+    google: { placeId: 'ChIJO5qTOL0pxkcRnF-GPvSpAAQ', rating: 4.7, reviewCount: 654, category: 'Luxury Hotel', priceLevel: 4 },
+    terrazzoInsight: { why: 'Design, Service, and Wellness — the gardens, the Tiepolo ceilings, the silence in the middle of Venice. This is the antidote.', caveat: 'Starts at €1,800/night. Worth it if you\'re doing Venice once.' },
+    status: 'available',
+    ghostSource: 'friend',
+    friendAttribution: { name: 'James K.', note: 'Best hotel I\'ve ever stayed at. The garden is unreal.' },
+    savedDate: 'Saved Nov 2025',
+  },
+  {
+    id: 'friend-3',
+    name: 'Bar Brutus',
+    type: 'bar',
+    location: 'East Village, New York',
+    source: { type: 'text', name: 'Sarah\'s List' },
+    matchScore: 80,
+    matchBreakdown: { Design: 0.65, Character: 0.88, Service: 0.72, Food: 0.75, Location: 0.8, Wellness: 0.15 },
+    tasteNote: 'Natural wine bar with killer snacks — all-Texas meat counter meets funky bottles',
+    google: { placeId: 'ChIJF2p7bUpZwokRPE_FYw6iL4M', rating: 4.5, reviewCount: 456, category: 'Wine Bar', priceLevel: 2 },
+    terrazzoInsight: { why: 'Character axis — unfiltered, unscripted, no reservations. The kind of place where you end up staying four hours.', caveat: 'Cash only. Tiny. The meat counter in back is the secret weapon.' },
+    status: 'available',
+    ghostSource: 'friend',
+    friendAttribution: { name: 'Sarah L.', note: 'Best natural wine bar in NY. The charcuterie board is insane.' },
+    savedDate: 'Saved Dec 2025',
+  },
 ];
 
 
@@ -231,6 +333,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Resy',
     detectedDate: 'Feb 2026',
     ghostSource: 'email',
+    google: { placeId: 'ChIJyw5j84lZwokRnUI_UknPSNA', rating: 4.6, reviewCount: 3421, category: 'French Restaurant', priceLevel: 4 },
   },
   {
     id: 'hist-2',
@@ -240,6 +343,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Resy',
     detectedDate: 'Feb 2026',
     ghostSource: 'email',
+    google: { placeId: 'ChIJfxC19JVZwokRX2uKgQAL17c', rating: 4.5, reviewCount: 1876, category: 'Italian Restaurant', priceLevel: 3 },
   },
   {
     id: 'hist-3',
@@ -249,6 +353,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'OpenTable',
     detectedDate: 'Jan 2026',
     ghostSource: 'email',
+    google: { placeId: 'ChIJ-7AOKpRZwokRMq0XnG_eehU', rating: 4.7, reviewCount: 2134, category: 'Steakhouse', priceLevel: 4 },
   },
   {
     id: 'hist-4',
@@ -258,6 +363,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Resy',
     detectedDate: 'Jan 2026',
     ghostSource: 'email',
+    google: { placeId: 'ChIJxy0SM0xZwokR5vC0f4wVlP0', rating: 4.5, reviewCount: 1543, category: 'Caribbean Restaurant', priceLevel: 3 },
   },
   {
     id: 'hist-5',
@@ -267,6 +373,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Hotels.com',
     detectedDate: 'Jan 2026',
     ghostSource: 'email',
+    google: { placeId: 'ChIJWxHBP2JZwokRAAym2RpX-OQ', rating: 4.3, reviewCount: 1876, category: 'Boutique Hotel', priceLevel: 4 },
   },
   {
     id: 'hist-6',
@@ -276,6 +383,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Resy',
     detectedDate: 'Dec 2025',
     ghostSource: 'email',
+    google: { placeId: 'ChIJmSvG_ZFZwokRTOFeiLXzkmA', rating: 4.5, reviewCount: 5432, category: 'Italian Restaurant', priceLevel: 4 },
   },
   {
     id: 'hist-7',
@@ -285,6 +393,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'OpenTable',
     detectedDate: 'Dec 2025',
     ghostSource: 'email',
+    google: { placeId: 'ChIJKUrdFZRZwokRZVtxUGr1A3A', rating: 4.5, reviewCount: 3210, category: 'Italian Restaurant', priceLevel: 3 },
   },
   {
     id: 'hist-8',
@@ -294,6 +403,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Resy',
     detectedDate: 'Nov 2025',
     ghostSource: 'email',
+    google: { placeId: 'ChIJI25hF09ZwokRnmmiXXONRf4', rating: 4.6, reviewCount: 987, category: 'Cocktail Bar' },
   },
   {
     id: 'hist-9',
@@ -303,6 +413,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Resy',
     detectedDate: 'Nov 2025',
     ghostSource: 'email',
+    google: { placeId: 'ChIJ3bmAHghZwokRRXYO57yLuss', rating: 4.8, reviewCount: 654, category: 'Korean Fine Dining', priceLevel: 4 },
   },
   {
     id: 'hist-10',
@@ -312,6 +423,7 @@ export const DEMO_HISTORY: HistoryItem[] = [
     detectedFrom: 'Hotels.com',
     detectedDate: 'Oct 2025',
     ghostSource: 'email',
+    google: { placeId: 'ChIJq6r-exhawokRKgBzzPkn57U', rating: 4.4, reviewCount: 2345, category: 'Luxury Hotel', priceLevel: 4 },
   },
 ];
 

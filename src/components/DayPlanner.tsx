@@ -59,7 +59,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           </h1>
           <span
             className="text-[10px]"
-            style={{ color: 'rgba(28,26,23,0.55)', fontFamily: "'Space Mono', monospace" }}
+            style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
           >
             {trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate)}
           </span>
@@ -77,7 +77,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               className="flex-1 py-1.5 px-2 rounded-md text-[11px] font-medium transition-all"
               style={{
                 background: viewMode === mode ? 'white' : 'transparent',
-                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.55)',
+                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.9)',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
@@ -122,7 +122,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
-                color: isDayActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                color: isDayActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.85)',
                 lineHeight: 1.2,
               }}>
                 {shortDay} {dateNum}
@@ -131,7 +131,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: 9,
                 fontWeight: 500,
-                color: isDayActive ? dayDestColor.accent : 'rgba(28,26,23,0.35)',
+                color: isDayActive ? dayDestColor.accent : 'rgba(28,26,23,0.8)',
               }}>
                 {d.destination || 'TBD'}
               </span>
@@ -223,7 +223,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   {placedItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.manual.color }} />
-                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.45)' }}>
+                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.85)' }}>
                         {placedItems.length} planned
                       </span>
                     </div>
@@ -231,7 +231,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   {ghostItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.ai.color, opacity: 0.5 }} />
-                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.35)' }}>
+                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.8)' }}>
                         {ghostItems.length} suggested
                       </span>
                     </div>
@@ -297,10 +297,10 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
     <div className="px-3 py-3 pb-48" style={{ background: 'var(--t-cream)' }}>
       {/* Summary */}
       <div className="flex items-baseline justify-between mb-2.5 px-1">
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.85)' }}>
           {totalPlaces} place{totalPlaces !== 1 ? 's' : ''} planned
         </span>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.3)' }}>
+        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.75)' }}>
           {totalSlots - totalPlaces} slot{(totalSlots - totalPlaces) !== 1 ? 's' : ''} open
         </span>
       </div>
@@ -347,7 +347,7 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                     style={{ background: 'white' }}
                     onClick={() => onTapDay(d.dayNumber)}
                   >
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.35)' }}>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.8)' }}>
                       No places yet — tap to plan
                     </span>
                   </div>
@@ -377,11 +377,11 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.35)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {slot.time}
                             </span>
                             {truncSub && (
-                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontStyle: 'italic', color: 'rgba(28,26,23,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontStyle: 'italic', color: 'rgba(28,26,23,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {truncSub}
                               </span>
                             )}
@@ -480,7 +480,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             className="text-[11px]"
             style={{
               fontFamily: "'Space Mono', monospace",
-              color: 'rgba(28,26,23,0.45)',
+              color: 'rgba(28,26,23,0.85)',
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
             }}
@@ -488,7 +488,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             {slot.label}
           </span>
           {slot.ghostItems!.length > 1 && (
-            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.8)' }}>
               {slot.ghostItems!.length} suggestions
             </span>
           )}
@@ -533,7 +533,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             className="text-[10px] flex-shrink-0"
             style={{
               fontFamily: "'Space Mono', monospace",
-              color: 'rgba(28,26,23,0.45)',
+              color: 'rgba(28,26,23,0.85)',
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
             }}
@@ -543,7 +543,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           {slot.time && (
             <span
               className="text-[10px]"
-              style={{ color: 'rgba(28,26,23,0.35)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}
             >
               {slot.time}
             </span>
@@ -600,7 +600,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                   <div
                     className="text-[10px] truncate mt-px"
                     style={{
-                      color: 'rgba(28,26,23,0.45)',
+                      color: 'rgba(28,26,23,0.85)',
                       fontStyle: 'italic',
                       fontFamily: "'DM Sans', sans-serif",
                     }}
@@ -634,7 +634,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             style={{
               width: 62,
               fontFamily: "'Space Mono', monospace",
-              color: 'rgba(28,26,23,0.45)',
+              color: 'rgba(28,26,23,0.85)',
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
             }}
@@ -644,7 +644,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           <span
             className="text-[11px]"
             style={{
-              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.3)',
+              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.75)',
               fontWeight: isDropTarget ? 600 : 400,
             }}
           >

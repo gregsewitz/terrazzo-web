@@ -87,7 +87,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
       {/* Header + filter chips */}
       <div className="px-4 pt-3 pb-2" style={{ background: 'white', borderBottom: '1px solid var(--t-linen)' }}>
         <div className="flex items-baseline justify-between mb-2">
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.85)' }}>
             {allPlaced.length} place{allPlaced.length !== 1 ? 's' : ''} on this trip
           </span>
         </div>
@@ -103,7 +103,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
                 className="px-2.5 py-1 rounded-2xl text-[10px] whitespace-nowrap flex-shrink-0"
                 style={{
                   background: isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.04)',
-                  color: isActive ? 'white' : 'rgba(28,26,23,0.6)',
+                  color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
                   fontWeight: isActive ? 600 : 500,
                   border: 'none',
                   cursor: 'pointer',
@@ -124,7 +124,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
           <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
             No places added yet
           </p>
-          <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}>
+          <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.85)', fontFamily: "'DM Sans', sans-serif" }}>
             Drag places from your picks into the Day Planner to build your itinerary
           </p>
         </div>
@@ -174,16 +174,16 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
               {place.name}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.85)' }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
               {google?.category && google.category !== place.type && (
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.35)' }}>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.8)' }}>
                   · {google.category}
                 </span>
               )}
               {place.location && (
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.35)' }}>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.8)' }}>
                   · {place.location.split(',')[0]}
                 </span>
               )}
@@ -206,7 +206,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* When/where on this trip */}
         <div className="flex items-center gap-1.5 mb-2">
           <span style={{ fontSize: 11 }}>{SLOT_ICONS[item.slotId] || '📍'}</span>
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: 'rgba(28,26,23,0.55)' }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: 'rgba(28,26,23,0.9)' }}>
             {item.dayOfWeek?.slice(0, 3)} {item.date} · {item.slotTime}
           </span>
           {item.destination && (
@@ -233,12 +233,12 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.5)' }}>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.85)' }}>
               ★ {google.rating}{google.reviewCount ? ` (${google.reviewCount.toLocaleString()})` : ''}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)' }}>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)' }}>
               {priceStr}
             </span>
           )}
@@ -249,14 +249,14 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
           <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(200,146,58,0.04)', border: '1px solid rgba(200,146,58,0.1)' }}>
             <div className="flex items-start gap-1.5">
               <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>✦</span>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.7)', lineHeight: 1.4 }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.95)', lineHeight: 1.4 }}>
                 {place.terrazzoInsight.why}
               </span>
             </div>
             {place.terrazzoInsight.caveat && (
               <div className="flex items-start gap-1.5 mt-1">
                 <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>⚠</span>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.45)', fontStyle: 'italic', lineHeight: 1.4 }}>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.85)', fontStyle: 'italic', lineHeight: 1.4 }}>
                   {place.terrazzoInsight.caveat}
                 </span>
               </div>
@@ -274,7 +274,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
                   {place.friendAttribution.name}
                 </span>
                 {place.friendAttribution.note && (
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.65)', fontStyle: 'italic', marginLeft: 6 }}>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.9)', fontStyle: 'italic', marginLeft: 6 }}>
                     "{place.friendAttribution.note}"
                   </span>
                 )}
@@ -286,7 +286,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* What to order */}
         {place.whatToOrder && place.whatToOrder.length > 0 && (
           <div className="mb-2">
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
               What to order
             </span>
             <div className="flex flex-wrap gap-1 mt-1">
@@ -294,7 +294,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
                 <span
                   key={i}
                   className="px-2 py-0.5 rounded-full"
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.65)' }}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.9)' }}
                 >
                   {item}
                 </span>
@@ -306,14 +306,14 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* Tips */}
         {place.tips && place.tips.length > 0 && (
           <div className="mb-1">
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
               Tips
             </span>
             <div className="flex flex-col gap-0.5 mt-1">
               {place.tips.map((tip, i) => (
                 <span
                   key={i}
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.55)', lineHeight: 1.4 }}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.9)', lineHeight: 1.4 }}
                 >
                   {tip}
                 </span>
@@ -325,7 +325,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* Taste note fallback — if no insight or friend note */}
         {!place.terrazzoInsight?.why && !place.friendAttribution?.note && place.tasteNote && (
           <div className="mb-1">
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.55)', fontStyle: 'italic', lineHeight: 1.4 }}>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.9)', fontStyle: 'italic', lineHeight: 1.4 }}>
               {place.tasteNote}
             </span>
           </div>

@@ -48,7 +48,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
             />
           ))}
         </div>
-        <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'Space Mono', monospace" }}>
+        <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}>
           {completedCount}/{total}{currentLabel ? ` · ${currentLabel}` : ''}
           {elapsed > 0 ? ` · ${elapsed}s` : ''}
         </span>
@@ -66,7 +66,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
           Researching this place
         </div>
         {elapsed > 0 && (
-          <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.65)', fontFamily: "'Space Mono', monospace" }}>
+          <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
             {elapsed}s
           </span>
         )}
@@ -90,7 +90,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               <span
                 className="text-[9px]"
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.55)',
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.9)',
                   ...(isCurrent ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
                 }}
               >
@@ -99,7 +99,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               <span
                 className="text-[9px] font-medium"
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.6)',
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.9)',
                   fontFamily: "'Space Mono', monospace",
                 }}
               >

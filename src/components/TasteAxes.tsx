@@ -48,7 +48,7 @@ export default function TasteAxes({ profile, size = 'md' }: TasteAxesProps) {
               fontSize: fontSize - 1,
               width: 24,
               textAlign: 'right',
-              color: 'rgba(28,26,23,0.65)',
+              color: 'rgba(28,26,23,0.9)',
               fontFamily: "'Space Mono', monospace",
             }}
           >

@@ -5,12 +5,15 @@ import { useImportStore, ImportMode } from '@/stores/importStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 
-const IMPORT_MODES: { value: ImportMode; label: string; icon: string }[] = [
-  { value: 'text', label: 'Paste text', icon: '📋' },
-  { value: 'url', label: 'Paste link', icon: '🔗' },
-  { value: 'google-maps', label: 'Maps', icon: '📍' },
-  { value: 'email', label: 'Gmail', icon: '✉' },
-];
+// Input type detection — AI figures out the rest
+function detectInputType(input: string): ImportMode {
+  const trimmed = input.trim();
+  if (/^https?:\/\//i.test(trimmed) || /^(www\.)/i.test(trimmed)) {
+    if (/google\.com\/maps/i.test(trimmed) || /maps\.app\.goo/i.test(trimmed)) return 'google-maps';
+    return 'url';
+  }
+  return 'text';
+}
 
 // Category config for grouping imported results
 const CATEGORY_CONFIG: Record<string, { icon: string; label: string }> = {
@@ -95,12 +98,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   const addCollection = useSavedStore(s => s.addCollection);
   const addHistoryItems = useSavedStore(s => s.addHistoryItems);
 
-  useEffect(() => {
-    fetch('/api/email/status')
-      .then(r => r.json())
-      .then(data => { if (data.connected) setEmailConnected(true); })
-      .catch(() => {});
-  }, [setEmailConnected]);
+  // Gmail is connected during onboarding and runs in background — no manual connect needed
 
   const [step, setStep] = useState<ImportStep>('input');
   const [importResults, setImportResults] = useState<ImportedPlace[]>([]);
@@ -180,17 +178,18 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     return () => timers.forEach(clearTimeout);
   }, [step, groupedResults.length]);
   async function handleImport() {
-    if (!inputValue.trim() && mode !== 'email') return;
+    if (!inputValue.trim()) return;
+    const detectedMode = detectInputType(inputValue);
+    setMode(detectedMode);
     setProcessing(true);
     setError(null);
     setStep('processing');
 
     try {
-      const endpoint = mode === 'url' ? '/api/import/url'
-        : mode === 'text' ? '/api/import/text'
-        : mode === 'google-maps' ? '/api/import/maps'
-        : '/api/email/scan';
-      const body = mode === 'email' ? {} : { content: inputValue };
+      const endpoint = detectedMode === 'url' ? '/api/import/url'
+        : detectedMode === 'google-maps' ? '/api/import/maps'
+        : '/api/import/text';
+      const body = { content: inputValue };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -225,15 +224,6 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     }
   }
 
-  async function handleConnectEmail() {
-    try {
-      const res = await fetch('/api/auth/nylas/connect');
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {
-      setError('Failed to connect email');
-    }
-  }
 
   function handleConfirmImport() {
     const selected = importResults.filter(r => selectedIds.has(r.id));
@@ -273,80 +263,59 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
           <div className="w-8 h-1 rounded-full" style={{ background: 'var(--t-travertine)' }} />
         </div>
 
-        <div className="px-5 pb-8">
+        <div className="px-5 pb-20">
 
           {/* ========== STEP 1: INPUT ========== */}
           {step === 'input' && (
             <>
-              <div className="flex items-center gap-2.5 mb-4 mt-1">
-                <button onClick={onClose} className="text-base bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.7)' }}>←</button>
-                <h2 className="text-xl italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>Add places</h2>
+              <div className="flex items-center justify-between mb-1 mt-1">
+                <h2 className="text-[20px] italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
+                  Add places
+                </h2>
+                <button onClick={onClose} className="text-[11px] bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.8)' }}>✕</button>
+              </div>
+              <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.85)', lineHeight: 1.5 }}>
+                Paste anything — an article, a Google Maps list, a Substack, a text from a friend. We&apos;ll figure out the rest.
+              </p>
+
+              {/* Single magic text box */}
+              <div className="rounded-2xl overflow-hidden mb-3 relative"
+                style={{ border: inputValue.trim() ? '2px solid var(--t-honey)' : '2px solid var(--t-linen)', background: 'white', transition: 'border-color 0.2s ease' }}>
+                <textarea value={inputValue} onChange={e => { setInputValue(e.target.value); setMode(detectInputType(e.target.value)); }}
+                  placeholder={`Paste a link, a message, or a list of places…\n\ne.g. a Condé Nast article, a Google Maps list,\na Substack post, or a text from a friend`}
+                  className="w-full p-4 text-[12px] resize-none border-none outline-none leading-relaxed"
+                  style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif", minHeight: 200 }} />
+                {inputValue.length > 300 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+                    style={{ background: 'linear-gradient(transparent, white)' }} />
+                )}
               </div>
 
-              <div className="flex gap-2 mb-4">
-                {IMPORT_MODES.map(m => (
-                  <button key={m.value} onClick={() => setMode(m.value)}
-                    className="flex-1 py-2.5 rounded-xl text-center text-[12px] font-semibold cursor-pointer transition-all border-none"
-                    style={{ background: mode === m.value ? 'var(--t-ink)' : 'var(--t-linen)', color: mode === m.value ? 'white' : 'var(--t-ink)' }}>
-                    {m.icon} {m.label}
-                  </button>
-                ))}
-              </div>
-              {mode === 'email' ? (
-                <div className="text-center py-4">
-                  {emailConnected ? (
-                    <button onClick={handleImport} disabled={isProcessing}
-                      className="px-6 py-2.5 rounded-full border-none cursor-pointer text-[12px] font-semibold"
-                      style={{ background: 'var(--t-verde)', color: 'white', opacity: isProcessing ? 0.6 : 1 }}>
-                      {isProcessing ? 'Scanning...' : '✉️ Scan Gmail for Bookings'}
-                    </button>
-                  ) : (
-                    <button onClick={handleConnectEmail}
-                      className="px-6 py-2.5 rounded-full border-none cursor-pointer text-[12px] font-semibold"
-                      style={{ background: 'var(--t-panton-orange)', color: 'white' }}>
-                      Connect Gmail
-                    </button>
-                  )}
+              {/* Detected type indicator — subtle, appears when typing */}
+              {inputValue.trim() && (
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}>
+                    {mode === 'url' ? '🔗 Link detected' : mode === 'google-maps' ? '📍 Google Maps link detected' : '📋 Text'}
+                  </span>
+                  {/* Optional source label */}
+                  <span style={{ color: 'rgba(28,26,23,0.15)' }}>·</span>
+                  <input
+                    type="text"
+                    value={sourceName}
+                    onChange={e => setSourceName(e.target.value)}
+                    placeholder="Source name (optional)"
+                    className="text-[10px] bg-transparent border-none outline-none flex-1"
+                    style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
+                    onClick={e => e.stopPropagation()}
+                  />
                 </div>
-              ) : (
-                <>
-                  <div className="rounded-2xl overflow-hidden mb-3 relative"
-                    style={{ border: inputValue.trim() ? '2px solid var(--t-honey)' : '2px solid var(--t-linen)', background: 'white' }}>
-                    <textarea value={inputValue} onChange={e => setInputValue(e.target.value)}
-                      placeholder={mode === 'url' ? 'Paste article URL (e.g. cntraveller.com/gallery/best-restaurants-lanzarote)'
-                        : mode === 'google-maps' ? 'Paste a Google Maps list URL, or type place names (one per line)'
-                        : "Paste your friend's recommendations, a newsletter, article text, notes..."}
-                      className="w-full p-3.5 text-[11px] resize-none border-none outline-none leading-relaxed"
-                      style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif", minHeight: 180 }} />
-                    {inputValue.length > 200 && (
-                      <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
-                        style={{ background: 'linear-gradient(transparent, white)' }} />
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl mb-4" style={{ background: 'var(--t-linen)' }}>
-                    <span className="text-sm">📰</span>
-                    <div className="flex-1">
-                      <div className="text-[11px] font-medium" style={{ color: 'var(--t-ink)' }}>Source (optional)</div>
-                      <input type="text" value={sourceName} onChange={e => setSourceName(e.target.value)}
-                        placeholder="e.g. Shortlisted newsletter"
-                        className="text-[12px] bg-transparent border-none outline-none w-full mt-0.5"
-                        style={{ color: 'var(--t-honey)', fontFamily: "'DM Sans', sans-serif" }} />
-                    </div>
-                    {sourceName && (
-                      <button onClick={() => setSourceName('')} className="text-[10px] bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.65)' }}>✕</button>
-                    )}
-                  </div>
-                  <button onClick={handleImport} disabled={isProcessing || !inputValue.trim()}
-                    className="w-full py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-opacity"
-                    style={{ background: 'var(--t-ink)', color: 'white', opacity: isProcessing || !inputValue.trim() ? 0.4 : 1 }}>
-                    Find places ✦
-                  </button>
-                  <p className="text-center text-[10px] mt-2" style={{ color: 'rgba(28,26,23,0.65)' }}>
-                    AI will identify places, notes &amp; categories
-                  </p>
-                </>
               )}
+
+              <button onClick={handleImport} disabled={isProcessing || !inputValue.trim()}
+                className="w-full py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-all"
+                style={{ background: 'var(--t-ink)', color: 'white', opacity: isProcessing || !inputValue.trim() ? 0.35 : 1 }}>
+                Find places ✦
+              </button>
 
               {error && (
                 <div className="mt-3 p-3 rounded-xl text-center" style={{ background: 'rgba(214,48,32,0.08)' }}>
@@ -362,7 +331,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               <h3 className="text-xl italic mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
                 Reading your paste…
               </h3>
-              <p className="text-[12px] mb-6" style={{ color: 'rgba(28,26,23,0.7)' }}>
+              <p className="text-[12px] mb-6" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 Finding places, extracting notes, categorizing
               </p>
 
@@ -372,12 +341,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                     <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
                       style={{
                         background: item.status === 'done' ? 'var(--t-verde)' : item.status === 'active' ? 'var(--t-honey)' : 'var(--t-linen)',
-                        color: item.status === 'done' || item.status === 'active' ? 'white' : 'rgba(28,26,23,0.65)',
+                        color: item.status === 'done' || item.status === 'active' ? 'white' : 'rgba(28,26,23,0.9)',
                         fontWeight: 700,
                       }}>
                       {item.status === 'done' ? '✓' : item.status === 'active' ? '…' : '○'}
                     </div>
-                    <span className="text-[12px]" style={{ color: item.status === 'pending' ? 'rgba(28,26,23,0.65)' : 'var(--t-ink)' }}>
+                    <span className="text-[12px]" style={{ color: item.status === 'pending' ? 'rgba(28,26,23,0.9)' : 'var(--t-ink)' }}>
                       {item.label}
                     </span>
                   </div>
@@ -389,7 +358,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <span className="text-base">🌍</span>
                   <div>
                     <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{detectedDestination}</div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>Detected destination</div>
+                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>Detected destination</div>
                   </div>
                 </div>
               )}
@@ -398,7 +367,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <span className="text-base">🌍</span>
                   <div>
                     <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>Detected destination</div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>Analyzing content…</div>
+                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>Analyzing content…</div>
                   </div>
                 </div>
               )}
@@ -411,7 +380,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                 <h2 className="text-xl italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
                   Found {importResults.length} places
                 </h2>
-                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.95)' }}>
                   {sourceName ? `From "${sourceName}"` : 'From pasted content'}
                   {detectedDestination ? ` · ${detectedDestination}` : ''}
                 </p>
@@ -427,12 +396,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               {/* Bulk select controls */}
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                   {selectedIds.size} of {importResults.length} selected
                 </span>
                 <div className="flex gap-2">
                   <button onClick={selectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'var(--t-verde)' }}>Select all</button>
-                  <button onClick={deselectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.65)' }}>Clear</button>
+                  <button onClick={deselectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.9)' }}>Clear</button>
                 </div>
               </div>
               {/* Category groups */}
@@ -449,7 +418,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm">{config.icon}</span>
                           <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{config.label}</span>
-                          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.65)' }}>{items.length}</span>
+                          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>{items.length}</span>
                         </div>
                         <span className="text-[10px] font-semibold" style={{ color: 'var(--t-verde)' }}>
                           {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
@@ -470,7 +439,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                               <div className="flex-1 min-w-0">
                                 <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.name}</div>
                                 {item.tasteNote && (
-                                  <div className="text-[10px] truncate" style={{ color: 'rgba(28,26,23,0.7)' }}>&ldquo;{item.tasteNote}&rdquo;</div>
+                                  <div className="text-[10px] truncate" style={{ color: 'rgba(28,26,23,0.95)' }}>&ldquo;{item.tasteNote}&rdquo;</div>
                                 )}
                               </div>
                               {item.matchScore > 0 && (
@@ -498,16 +467,16 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Confirm button */}
               <button onClick={handleConfirmImport} disabled={selectedIds.size === 0}
                 className="w-full mt-6 py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-all"
-                style={{ background: selectedIds.size > 0 ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)', color: selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.55)' }}>
-                Save {selectedIds.size} places to My Places
+                style={{ background: selectedIds.size > 0 ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)', color: selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.9)' }}>
+                Save {selectedIds.size} places ✦
               </button>
-              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: 'rgba(28,26,23,0.65)' }}>
+              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: 'rgba(28,26,23,0.9)' }}>
                 Deselect any you don&apos;t want
                 {detectedDestination ? ` · All go to ${detectedDestination}` : ''}
               </p>
 
               <button onClick={() => { setStep('input'); setImportResults([]); }}
-                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                 ← Import more
               </button>
             </>
@@ -523,7 +492,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <div className="text-[13px] font-semibold" style={{ color: 'var(--t-verde)' }}>
                     {savedPlaces.length} places saved
                   </div>
-                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                     {sourceName ? `From "${sourceName}"` : 'From pasted content'}
                     {detectedDestination ? ` · ${detectedDestination}` : ''}
                   </div>
@@ -568,7 +537,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{createdCollectionName}</div>
-                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                         {savedPlaces.length} places · auto-created collection
                       </div>
                     </div>
@@ -595,7 +564,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
-                          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
+                          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                             {place.type.charAt(0).toUpperCase() + place.type.slice(1)} · {place.location}
                           </div>
                           {place.tasteNote && (
@@ -619,7 +588,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               <button onClick={() => { setStep('input'); setImportResults([]); setSavedPlaces([]); }}
                 className="w-full mt-2 py-2 bg-transparent border-none cursor-pointer text-[11px]"
-                style={{ color: 'rgba(28,26,23,0.7)' }}>
+                style={{ color: 'rgba(28,26,23,0.95)' }}>
                 Import more places
               </button>
             </>

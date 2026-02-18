@@ -93,7 +93,7 @@ export default function GhostCard({
           {note && (
             <div
               className="text-[10px] italic truncate mt-0.5"
-              style={{ color: 'rgba(28,26,23,0.55)' }}
+              style={{ color: 'rgba(28,26,23,0.9)' }}
             >
               {sourceType === 'friend' ? `"${note}"` : note}
             </div>
@@ -120,7 +120,7 @@ export default function GhostCard({
             className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all"
             style={{
               background: 'rgba(28,26,23,0.06)',
-              color: 'rgba(28,26,23,0.5)',
+              color: 'rgba(28,26,23,0.85)',
               border: 'none',
               cursor: 'pointer',
             }}
@@ -184,7 +184,7 @@ export default function GhostCard({
         {note && (
           <div
             className="text-[10px] ml-0.5 italic mt-1"
-            style={{ color: 'rgba(28,26,23,0.6)' }}
+            style={{ color: 'rgba(28,26,23,0.9)' }}
           >
             {sourceType === 'friend' ? `"${note}"` : note}
           </div>
