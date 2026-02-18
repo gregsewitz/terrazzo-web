@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Day Selector Options</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --t-ink: #1c1a17;
+    --t-cream: #f5f0e8;
+    --t-linen: #ece6da;
+    --t-honey: #c8923a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #e8e2d8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 40px 20px 80px;
+  }
+  h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(28,26,23,0.5);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .phone {
+    width: 375px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  }
+  /* Trip header — same across all 3 */
+  .trip-header {
+    padding: 16px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .trip-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--t-ink);
+  }
+  .trip-header .dates {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.5);
+  }
+  /* View toggle — same across all 3 */
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    margin: 0 16px 14px;
+    padding: 3px;
+    background: var(--t-linen);
+    border-radius: 8px;
+  }
+  .view-toggle button {
+    flex: 1;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(28,26,23,0.5);
+  }
+  .view-toggle button.active {
+    background: white;
+    color: var(--t-ink);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  /* Placeholder content below */
+  .map-placeholder {
+    height: 120px;
+    background: linear-gradient(135deg, #e8e2d8 0%, #d5cfc3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.35);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .slot-placeholder {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--t-linen);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slot-placeholder .time {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.4);
+    width: 56px;
+    flex-shrink: 0;
+  }
+  .slot-placeholder .card {
+    flex: 1;
+    background: var(--t-cream);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--t-ink);
+  }
+  .slot-placeholder .empty-card {
+    flex: 1;
+    border: 1.5px dashed var(--t-linen);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: rgba(28,26,23,0.3);
+    text-align: center;
+  }
+
+  /* ============ OPTION A: Scrollable tab pills ============ */
+  .option-a .day-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--t-linen);
+    background: white;
+  }
+  .option-a .day-tab {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--t-linen);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 130px;
+  }
+  .option-a .day-tab .tab-primary {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(28,26,23,0.6);
+  }
+  .option-a .day-tab .tab-secondary {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.4);
+    white-space: nowrap;
+  }
+  .option-a .day-tab.active {
+    background: #3a6b8a;
+    border-color: #3a6b8a;
+  }
+  .option-a .day-tab.active .tab-primary { color: white; }
+  .option-a .day-tab.active .tab-secondary { color: rgba(255,255,255,0.7); }
+
+  /* ============ OPTION B: Compact numbered dots + expanded detail ============ */
+  .option-b .day-nav {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 8px;
+    background: white;
+    border-bottom: 1px solid var(--t-linen);
+  }
+  .option-b .day-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--t-linen);
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(28,26,23,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .option-b .day-dot.active {
+    background: #3a6b8a;
+    border-color: #3a6b8a;
+    color: white;
+  }
+  .option-b .day-detail {
+    flex: 1;
+    margin-left: 6px;
+  }
+  .option-b .day-detail .detail-primary {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--t-ink);
+  }
+  .option-b .day-detail .detail-secondary {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.45);
+    margin-top: 1px;
+  }
+  .option-b .unsorted-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--t-honey);
+    background: rgba(200,146,58,0.1);
+    border: 1px solid rgba(200,146,58,0.3);
+    border-radius: 20px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  /* ============ OPTION C: Segmented bar — date on top, destination + hotel below ============ */
+  .option-c .day-segments {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--t-linen);
+  }
+  .option-c .day-seg {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    transition: all 0.15s;
+  }
+  .option-c .day-seg .seg-day {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.4);
+    text-transform: uppercase;
+  }
+  .option-c .day-seg .seg-date {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(28,26,23,0.55);
+  }
+  .option-c .day-seg .seg-city {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: rgba(28,26,23,0.35);
+    margin-top: 1px;
+  }
+  .option-c .day-seg.active {
+    border-bottom-color: #3a6b8a;
+    background: rgba(58,107,138,0.04);
+  }
+  .option-c .day-seg.active .seg-day { color: #3a6b8a; }
+  .option-c .day-seg.active .seg-date { color: var(--t-ink); }
+  .option-c .day-seg.active .seg-city { color: rgba(28,26,23,0.6); }
+  /* Expanded detail for active day */
+  .option-c .active-detail {
+    padding: 8px 16px;
+    background: rgba(58,107,138,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--t-linen);
+  }
+  .option-c .active-detail .hotel-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: rgba(28,26,23,0.6);
+  }
+  .option-c .active-detail .hotel-name span {
+    color: rgba(28,26,23,0.35);
+    font-size: 10px;
+    margin-right: 4px;
+  }
+  .option-c .unsorted-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--t-honey);
+    background: rgba(200,146,58,0.1);
+    border: 1px solid rgba(200,146,58,0.3);
+    border-radius: 20px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== OPTION A ===================== -->
+<div>
+  <h2>Option A — Rich Tab Pills</h2>
+  <p style="max-width: 375px; font-size: 12px; color: rgba(28,26,23,0.5); margin-bottom: 16px; text-align: center; line-height: 1.5;">
+    Each day is a pill showing date + destination + hotel. Horizontally scrollable. One tap to switch. All info visible at a glance.
+  </p>
+  <div class="phone option-a">
+    <div class="trip-header">
+      <h1>Stockholm Trip</h1>
+      <span class="dates">Jun 12 – 15, 2025</span>
+    </div>
+    <div class="view-toggle">
+      <button>Overview</button>
+      <button>My Places</button>
+      <button class="active">Day Planner</button>
+    </div>
+
+    <div class="day-tabs">
+      <button class="day-tab active">
+        <span class="tab-primary">Fri Jun 12 · Stockholm</span>
+        <span class="tab-secondary">Hotel Nobis</span>
+      </button>
+      <button class="day-tab">
+        <span class="tab-primary">Sat Jun 13 · Stockholm</span>
+        <span class="tab-secondary">Hotel Nobis</span>
+      </button>
+      <button class="day-tab">
+        <span class="tab-primary">Sun Jun 14 · Uppsala</span>
+        <span class="tab-secondary">Grand Hôtel</span>
+      </button>
+      <button class="day-tab">
+        <span class="tab-primary">Mon Jun 15 · Stockholm</span>
+        <span class="tab-secondary">Hotel Nobis</span>
+      </button>
+    </div>
+
+    <div class="map-placeholder">MAP</div>
+    <div class="slot-placeholder">
+      <span class="time">Morning</span>
+      <div class="card">Fotografiska</div>
+    </div>
+    <div class="slot-placeholder">
+      <span class="time">Midday</span>
+      <div class="empty-card">+ Add activity</div>
+    </div>
+    <div class="slot-placeholder">
+      <span class="time">Afternoon</span>
+      <div class="card">Vasa Museum</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== OPTION B ===================== -->
+<div>
+  <h2>Option B — Numbered Dots + Detail Row</h2>
+  <p style="max-width: 375px; font-size: 12px; color: rgba(28,26,23,0.5); margin-bottom: 16px; text-align: center; line-height: 1.5;">
+    Small numbered circles for each day. The selected day expands its full info (date, city, hotel) to the right. Minimal footprint.
+  </p>
+  <div class="phone option-b">
+    <div class="trip-header">
+      <h1>Stockholm Trip</h1>
+      <span class="dates">Jun 12 – 15, 2025</span>
+    </div>
+    <div class="view-toggle">
+      <button>Overview</button>
+      <button>My Places</button>
+      <button class="active">Day Planner</button>
+    </div>
+
+    <div class="day-nav">
+      <button class="day-dot active">1</button>
+      <button class="day-dot">2</button>
+      <button class="day-dot">3</button>
+      <button class="day-dot">4</button>
+      <div class="day-detail">
+        <div class="detail-primary">Fri Jun 12 · Stockholm</div>
+        <div class="detail-secondary">Hotel Nobis</div>
+      </div>
+      <button class="unsorted-pill">3 unsorted</button>
+    </div>
+
+    <div class="map-placeholder">MAP</div>
+    <div class="slot-placeholder">
+      <span class="time">Morning</span>
+      <div class="card">Fotografiska</div>
+    </div>
+    <div class="slot-placeholder">
+      <span class="time">Midday</span>
+      <div class="empty-card">+ Add activity</div>
+    </div>
+    <div class="slot-placeholder">
+      <span class="time">Afternoon</span>
+      <div class="card">Vasa Museum</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== OPTION C ===================== -->
+<div>
+  <h2>Option C — Calendar-style Segments</h2>
+  <p style="max-width: 375px; font-size: 12px; color: rgba(28,26,23,0.5); margin-bottom: 16px; text-align: center; line-height: 1.5;">
+    Each day gets an equal column showing day-of-week, date number, and city. Active day has an underline accent and an expanded detail row below with hotel info.
+  </p>
+  <div class="phone option-c">
+    <div class="trip-header">
+      <h1>Stockholm Trip</h1>
+      <span class="dates">Jun 12 – 15, 2025</span>
+    </div>
+    <div class="view-toggle">
+      <button>Overview</button>
+      <button>My Places</button>
+      <button class="active">Day Planner</button>
+    </div>
+
+    <div class="day-segments">
+      <button class="day-seg active">
+        <span class="seg-day">Fri</span>
+        <span class="seg-date">12</span>
+        <span class="seg-city">Stockholm</span>
+      </button>
+      <button class="day-seg">
+        <span class="seg-day">Sat</span>
+        <span class="seg-date">13</span>
+        <span class="seg-city">Stockholm</span>
+      </button>
+      <button class="day-seg">
+        <span class="seg-day">Sun</span>
+        <span class="seg-date">14</span>
+        <span class="seg-city">Uppsala</span>
+      </button>
+      <button class="day-seg">
+        <span class="seg-day">Mon</span>
+        <span class="seg-date">15</span>
+        <span class="seg-city">Stockholm</span>
+      </button>
+    </div>
+    <div class="active-detail">
+      <div class="hotel-name"><span>Staying at</span> Hotel Nobis</div>
+      <button class="unsorted-pill">3 unsorted</button>
+    </div>
+
+    <div class="map-placeholder">MAP</div>
+    <div class="slot-placeholder">
+      <span class="time">Morning</span>
+      <div class="card">Fotografiska</div>
+    </div>
+    <div class="slot-placeholder">
+      <span class="time">Midday</span>
+      <div class="empty-card">+ Add activity</div>
+    </div>
+    <div class="slot-placeholder">
+      <span class="time">Afternoon</span>
+      <div class="card">Vasa Museum</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

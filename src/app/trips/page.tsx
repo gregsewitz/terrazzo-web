@@ -51,16 +51,16 @@ export default function TripsPage() {
                 △
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="text-sm font-semibold"
+                    className="text-sm font-semibold truncate"
                     style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
                   >
                     {trip.name}
                   </span>
                   {trip.status && (
                     <span
-                      className="text-[9px] px-1.5 py-0.5 rounded-full"
+                      className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap"
                       style={{
                         background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
                         color: trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)',

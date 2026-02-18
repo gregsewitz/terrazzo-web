@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 
 const TABS = [
-  { id: 'discover', label: 'Discover', icon: '◇', path: '/discover' },
   { id: 'saved', label: 'Collect', icon: '♡', path: '/saved' },
   { id: 'trips', label: 'Plan', icon: '△', path: '/trips' },
   { id: 'profile', label: 'Profile', icon: '◯', path: '/profile' },

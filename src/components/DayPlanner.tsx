@@ -41,48 +41,47 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
   return (
     <div className="pb-64" style={{ background: 'var(--t-cream)' }}>
-      {/* Trip Header — white card with border */}
+      {/* Compact Trip Header */}
       <div
-        className="px-4 py-4"
-        style={{
-          background: 'white',
-          borderBottom: '1px solid var(--t-linen)',
-        }}
+        className="px-4 pt-4 pb-3"
+        style={{ background: 'white' }}
       >
-        <h1
-          className="text-xl mb-1"
-          style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontWeight: 600,
-            color: 'var(--t-ink)',
-          }}
-        >
-          {trip.name}
-        </h1>
-        <p
-          className="text-xs"
-          style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}
-        >
-          {trip.location}
-          {trip.startDate && trip.endDate && ` · ${formatDateRange(trip.startDate, trip.endDate)}`}
-        </p>
+        <div className="flex items-center justify-between mb-0.5">
+          <h1
+            className="text-lg"
+            style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontWeight: 600,
+              color: 'var(--t-ink)',
+            }}
+          >
+            {trip.name}
+          </h1>
+          <span
+            className="text-[10px]"
+            style={{ color: 'rgba(28,26,23,0.55)', fontFamily: "'Space Mono', monospace" }}
+          >
+            {trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate)}
+          </span>
+        </div>
 
-        {/* View Toggle — Overview / My Places / Day Planner */}
+        {/* View Toggle */}
         <div
-          className="flex gap-1.5 mt-3 p-1 rounded-lg"
+          className="flex gap-1 mt-2.5 p-0.5 rounded-lg"
           style={{ background: 'var(--t-linen)' }}
         >
           {(['overview', 'myPlaces', 'planner'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => onSetViewMode(mode)}
-              className="flex-1 py-2 px-2 rounded-md text-xs font-medium transition-all"
+              className="flex-1 py-1.5 px-2 rounded-md text-[11px] font-medium transition-all"
               style={{
                 background: viewMode === mode ? 'white' : 'transparent',
-                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.7)',
+                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.55)',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
+                boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
               {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'My Places' : 'Day Planner'}
@@ -94,114 +93,91 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
       {/* Content for planner/overview modes only */}
       {viewMode !== 'myPlaces' && <>
 
-      {/* Unsorted Pill — honey-bordered with gradient */}
-      {unsortedCount > 0 && (
-        <button
-          onClick={onOpenUnsorted}
-          className="mx-4 mt-3 mb-3 w-[calc(100%-2rem)] flex items-center justify-between py-3 px-3.5 rounded-lg cursor-pointer transition-all"
-          style={{
-            background: 'linear-gradient(135deg, rgba(200, 146, 58, 0.1) 0%, rgba(200, 146, 58, 0.05) 100%)',
-            border: '1.5px solid var(--t-honey)',
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          <span
-            className="text-[13px] font-medium"
-            style={{ color: 'var(--t-ink)' }}
-          >
-            {unsortedCount} unsorted places · View all →
-          </span>
-          <span
-            className="text-sm font-semibold"
-            style={{ color: 'var(--t-honey)' }}
-          >
-            →
-          </span>
-        </button>
-      )}
-
-      {/* Day Strip — white bg with border, horizontal scroll */}
+      {/* Calendar-style day segments */}
       <div
-        className="flex gap-2 py-3 px-4 overflow-x-auto"
+        className="flex"
         style={{
           background: 'white',
-          borderBottom: '1px solid var(--t-linen)',
-          scrollbarWidth: 'none',
-          marginTop: unsortedCount > 0 ? 0 : 0,
+          borderTop: '1px solid var(--t-linen)',
         }}
       >
         {trip.days.map((d) => {
           const isDayActive = d.dayNumber === currentDay;
           const dayDestColor = DEST_COLORS[d.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
-          const destAbbrv = d.destination ? d.destination.substring(0, 3).toUpperCase() : 'DST';
+          const shortDay = d.dayOfWeek?.slice(0, 3) || '';
+          const dateNum = d.date?.replace(/\D/g, ' ').trim().split(' ').pop() || d.dayNumber;
 
           return (
             <button
               key={d.dayNumber}
               onClick={() => setCurrentDay(d.dayNumber)}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg flex-shrink-0 cursor-pointer transition-all"
+              className="flex-1 flex flex-col items-center gap-0.5 py-2.5 px-1 cursor-pointer transition-all"
               style={{
-                background: isDayActive ? `rgba(${hexToRgb(dayDestColor.accent)}, 0.08)` : 'var(--t-cream)',
-                border: isDayActive ? `1.5px solid ${dayDestColor.accent}` : '1.5px solid var(--t-linen)',
-                color: isDayActive ? dayDestColor.accent : 'var(--t-ink)',
-                fontFamily: "'DM Sans', sans-serif",
-                minWidth: 48,
+                border: 'none',
+                borderBottom: isDayActive ? `2px solid ${dayDestColor.accent}` : '2px solid transparent',
+                background: isDayActive ? `${dayDestColor.accent}08` : 'transparent',
               }}
             >
-              <div
-                className="text-xs font-bold"
-                style={{ fontFamily: "'Space Mono', monospace" }}
-              >
-                {d.dayNumber}
-              </div>
-              <div
-                className="text-[10px] font-normal"
-                style={{
-                  opacity: 0.7,
-                  fontFamily: "'Space Mono', monospace",
-                }}
-              >
-                {destAbbrv}
-              </div>
+              <span style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 10,
+                textTransform: 'uppercase' as const,
+                color: isDayActive ? dayDestColor.accent : 'rgba(28,26,23,0.4)',
+              }}>
+                {shortDay}
+              </span>
+              <span style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 15,
+                fontWeight: 600,
+                color: isDayActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+              }}>
+                {dateNum}
+              </span>
+              <span style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 10,
+                fontWeight: 500,
+                color: isDayActive ? 'rgba(28,26,23,0.65)' : 'rgba(28,26,23,0.35)',
+                marginTop: 1,
+              }}>
+                {d.destination || 'TBD'}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {/* Day Header — destination-colored gradient */}
+      {/* Active day detail row — hotel + unsorted */}
       <div
-        className="px-4 py-4"
+        className="flex items-center justify-between px-4 py-2"
         style={{
-          background: `linear-gradient(135deg, ${destColor.bg} 0%, rgba(${hexToRgb(destColor.accent)}, 0.08) 100%)`,
-          borderBottom: `2px solid rgba(${hexToRgb(destColor.accent)}, 0.15)`,
+          background: `${destColor.accent}08`,
+          borderBottom: '1px solid var(--t-linen)',
         }}
       >
-        <div className="flex items-baseline gap-2 mb-2">
-          <div
-            className="text-[22px]"
-            style={{
-              fontFamily: "'DM Serif Display', serif",
+        <div className="flex items-center gap-1.5">
+          {day.hotel && (
+            <span style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
               fontWeight: 600,
-              color: destColor.accent,
-            }}
-          >
-            {day.destination || 'Destination'}
-          </div>
-          <span
-            className="text-xs"
-            style={{ color: 'rgba(28,26,23,0.7)' }}
-          >
-            Day {day.dayNumber} · {day.dayOfWeek}, {day.date}
-          </span>
+              color: 'rgba(28,26,23,0.7)',
+            }}>
+              {day.hotel}
+            </span>
+          )}
+          {day.destination && (
+            <span style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'rgba(28,26,23,0.45)',
+            }}>
+              · {day.destination}
+            </span>
+          )}
         </div>
-        {day.hotel && (
-          <div
-            className="text-xs"
-            style={{ color: 'rgba(28,26,23,0.7)' }}
-          >
-            🏨 {day.hotel}
-          </div>
-        )}
       </div>
 
       {viewMode === 'planner' ? (
