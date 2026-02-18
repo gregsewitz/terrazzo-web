@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { TravelContext, TripStatus, GeoDestination } from '@/types';
 import DestinationInput, { Destination } from '@/components/DestinationInput';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 
 // ============================================================
 // Companion options — matching the React Native app
 // ============================================================
-const COMPANION_OPTIONS: { label: string; iconName: string; key: TravelContext }[] = [
-  { label: 'Just me', iconName: 'solo', key: 'solo' },
-  { label: 'With partner', iconName: 'partner', key: 'partner' },
-  { label: 'With friends', iconName: 'friends', key: 'friends' },
-  { label: 'With family', iconName: 'family', key: 'family' },
+const COMPANION_OPTIONS: { label: string; iconName: PerriandIconName; key: TravelContext }[] = [
+  { label: 'Just me', iconName: 'profile', key: 'solo' },
+  { label: 'With partner', iconName: 'heart', key: 'partner' },
+  { label: 'With friends', iconName: 'friend', key: 'friends' },
+  { label: 'With family', iconName: 'star', key: 'family' },
 ];
 
 // ============================================================
@@ -226,8 +226,8 @@ function TripSeedForm({ onStart }: {
           </label>
           <div className="flex gap-2">
             {([
-              { key: 'planning' as TripStatus, label: 'Planning', iconName: 'pin', desc: 'Dates committed, ready to build' },
-              { key: 'dreaming' as TripStatus, label: 'Dreaming', iconName: 'star', desc: 'Still taking shape' },
+              { key: 'planning' as TripStatus, label: 'Planning', iconName: 'pin' as PerriandIconName, desc: 'Dates committed, ready to build' },
+              { key: 'dreaming' as TripStatus, label: 'Dreaming', iconName: 'star' as PerriandIconName, desc: 'Still taking shape' },
             ]).map(opt => (
               <button
                 key={opt.key}

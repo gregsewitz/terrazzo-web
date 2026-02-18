@@ -40,7 +40,8 @@ export type PerriandIconName =
   // Navigation
   | 'discover' | 'trips' | 'plan' | 'saved' | 'profile'
   // Misc
-  | 'star' | 'edit' | 'check' | 'close' | 'heart' | 'pin';
+  | 'star' | 'edit' | 'check' | 'close' | 'heart' | 'pin'
+  | 'sparkle' | 'summer' | 'lightning';
 
 interface PerriandIconProps {
   name: PerriandIconName;
@@ -94,6 +95,9 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   // Misc
   star:       '#eeb420',
   pin:        '#2a7a56',
+  sparkle:    '#eeb420',
+  summer:     '#e86830',
+  lightning:  '#e86830',
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────
@@ -430,6 +434,32 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M16,6 C16,6 24,14 24,19 C24,24 20,26 16,26 C12,26 8,24 8,19 C8,14 16,6 16,6Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
       <circle cx="16" cy="18" r="1.5" fill={a} />
+    </>
+  ),
+
+  sparkle: (s, a) => (
+    <>
+      <path d="M16,4 L18,12 L26,14 L18,16 L16,24 L14,16 L6,14 L14,12Z" stroke={s} strokeWidth="1.3" strokeLinejoin="round" fill="none" />
+      <circle cx="22" cy="8" r="1.2" fill={a} />
+      <circle cx="10" cy="22" r="1" fill={a} opacity="0.5" />
+    </>
+  ),
+
+  summer: (s, a) => (
+    <>
+      <circle cx="16" cy="16" r="5" stroke={s} strokeWidth="1.5" fill="none" />
+      <line x1="16" y1="5" x2="16" y2="8" stroke={s} strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="16" y1="24" x2="16" y2="27" stroke={s} strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="5" y1="16" x2="8" y2="16" stroke={s} strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="24" y1="16" x2="27" y2="16" stroke={s} strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="16" cy="16" r="1.5" fill={a} />
+    </>
+  ),
+
+  lightning: (s, a) => (
+    <>
+      <path d="M18,4 L10,17 L15,17 L13,28 L23,14 L17,14Z" stroke={s} strokeWidth="1.3" strokeLinejoin="round" fill="none" />
+      <circle cx="16" cy="16" r="1.2" fill={a} />
     </>
   ),
 };

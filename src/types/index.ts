@@ -1,4 +1,5 @@
 import type { PerriandIconName } from '../components/icons/PerriandIcons';
+export type { PerriandIconName };
 
 // Forme Libere Design Tokens
 export const T = {

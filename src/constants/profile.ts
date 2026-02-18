@@ -146,11 +146,11 @@ export const AXIS_COLORS: Record<string, string> = {
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
-  "With partner": "partner",
-  "With friends": "friends",
-  "Solo": "solo",
-  "Recharge": "family",
-  "Winter": "winter",
+  "With partner": "heart",
+  "With friends": "friend",
+  "Solo": "profile",
+  "Recharge": "wellness",
+  "Winter": "evening",
   "Summer": "summer",
 };
 
