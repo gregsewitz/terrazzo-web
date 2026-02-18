@@ -4,16 +4,17 @@ import { useMemo, useRef, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
+import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 
-const TYPE_ICONS: Record<string, string> = {
-  restaurant: '🍽',
-  hotel: '🏨',
-  bar: '🍸',
-  cafe: '☕',
-  museum: '🎨',
-  activity: '🎫',
-  neighborhood: '📍',
-  shop: '🛍',
+const TYPE_ICONS: Record<string, PerriandIconName> = {
+  restaurant: 'restaurant',
+  hotel: 'hotel',
+  bar: 'bar',
+  cafe: 'cafe',
+  museum: 'museum',
+  activity: 'activity',
+  neighborhood: 'location',
+  shop: 'shop',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -31,21 +32,21 @@ const HOLD_DELAY = 180;
 
 type FilterType = 'all' | PlaceType;
 
-const TYPE_CHIPS: { value: FilterType; label: string; icon: string }[] = [
-  { value: 'restaurant', label: 'Eat', icon: '🍽' },
-  { value: 'cafe', label: 'Cafe', icon: '☕' },
-  { value: 'bar', label: 'Drink', icon: '🍸' },
-  { value: 'museum', label: 'See', icon: '🎨' },
-  { value: 'activity', label: 'Do', icon: '🎫' },
-  { value: 'hotel', label: 'Stay', icon: '🏨' },
-  { value: 'shop', label: 'Shop', icon: '🛍' },
-  { value: 'neighborhood', label: 'Walk', icon: '📍' },
+const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
+  { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
+  { value: 'cafe', label: 'Cafe', icon: 'cafe' },
+  { value: 'bar', label: 'Drink', icon: 'bar' },
+  { value: 'museum', label: 'See', icon: 'museum' },
+  { value: 'activity', label: 'Do', icon: 'activity' },
+  { value: 'hotel', label: 'Stay', icon: 'hotel' },
+  { value: 'shop', label: 'Shop', icon: 'shop' },
+  { value: 'neighborhood', label: 'Walk', icon: 'location' },
 ];
 
 const SORT_OPTIONS = [
-  { value: 'match', label: 'Match score', icon: '◎' },
-  { value: 'name', label: 'Name A–Z', icon: 'Aa' },
-  { value: 'source', label: 'Source', icon: '⊕' },
+  { value: 'match', label: 'Match score', icon: 'discover' as PerriandIconName },
+  { value: 'name', label: 'Name A–Z', icon: 'manual' as PerriandIconName },
+  { value: 'source', label: 'Source', icon: 'location' as PerriandIconName },
 ] as const;
 
 const SOURCE_FILTERS = [
@@ -226,7 +227,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              <span style={{ fontSize: 10 }}>{chip.icon}</span>
+              <PerriandIcon name={chip.icon} size={10} />
               {chip.label}
             </button>
           );
@@ -292,7 +293,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
-                  <span style={{ fontSize: 10 }}>{opt.icon}</span>
+                  <PerriandIcon name={opt.icon} size={10} />
                   {opt.label}
                 </button>
               ))}
@@ -348,7 +349,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
           </div>
         ) : (
           stripPlaces.map(place => {
-            const typeIcon = TYPE_ICONS[place.type] || '📍';
+            const typeIcon = TYPE_ICONS[place.type] || 'location';
             const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
             const isDragging = dragItemId === place.id;
 
@@ -377,7 +378,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                     fontSize: 15,
                   }}
                 >
-                  {typeIcon}
+                  <PerriandIcon name={typeIcon} size={15} />
                 </div>
                 {/* Name only — score hidden */}
                 <span

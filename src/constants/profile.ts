@@ -2,6 +2,8 @@
 // Taste Profile — Static demo data (ported from terrazzo-app)
 // ═══════════════════════════════════════════════════════════════════
 
+import { PerriandIconName } from '@/types';
+
 export interface TasteProfile {
   overallArchetype: string;
   archetypeDescription: string;
@@ -143,13 +145,13 @@ export const AXIS_COLORS: Record<string, string> = {
   Spatial: "#2a7a56",       // Verde — Barcelona marble
 };
 
-export const CONTEXT_ICONS: Record<string, string> = {
-  "With partner": "♥",
-  "With friends": "★",
-  "Solo": "◇",
-  "Recharge": "◎",
-  "Winter": "❄",
-  "Summer": "☀",
+export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
+  "With partner": "partner",
+  "With friends": "friends",
+  "Solo": "solo",
+  "Recharge": "family",
+  "Winter": "winter",
+  "Summer": "summer",
 };
 
 export const CONTEXT_COLORS = ["#8b6b4a", "#4a6741", "#4a6b8b", "#6b6b4a", "#6b8b4a", "#8b4a4a"];

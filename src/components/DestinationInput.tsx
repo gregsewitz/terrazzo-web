@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -190,13 +191,14 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               fontWeight: 500,
             }}
           >
-            {dest.lat ? '📍' : '◯'} {dest.name}
+            <PerriandIcon name={dest.lat ? 'location' : 'profile'} size={11} />
+            {dest.name}
             <button
               onClick={() => removeDestination(i)}
-              className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-transparent border-none cursor-pointer text-[10px] hover:opacity-70"
+              className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-transparent border-none cursor-pointer hover:opacity-70"
               style={{ color: 'inherit' }}
             >
-              ×
+              <PerriandIcon name="close" size={10} />
             </button>
           </span>
         ))}
@@ -254,7 +256,9 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               }}
               onMouseEnter={() => setActiveIndex(i)}
             >
-              <span className="text-[13px] mt-0.5" style={{ color: 'rgba(28,26,23,0.95)' }}>📍</span>
+              <div style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <PerriandIcon name="location" size={13} />
+              </div>
               <div>
                 <div className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>
                   {prediction.structured_formatting.main_text}
@@ -277,7 +281,9 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
                 borderTop: '1px solid var(--t-linen)',
               }}
             >
-              <span className="text-[13px]" style={{ color: 'rgba(28,26,23,0.95)' }}>◯</span>
+              <div style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <PerriandIcon name="profile" size={13} />
+              </div>
               <div>
                 <div className="text-[12px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
                   Just add "<span style={{ color: 'var(--t-ink)', fontWeight: 500 }}>{inputValue.trim()}</span>" as-is

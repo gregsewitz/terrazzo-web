@@ -3,6 +3,7 @@
 import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
@@ -48,7 +49,7 @@ export default function TripsPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-lg"
                 style={{ background: 'rgba(200,146,58,0.1)' }}
               >
-                △
+                <PerriandIcon name="plan" size={20} color="var(--t-honey)" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 min-w-0">
@@ -60,14 +61,19 @@ export default function TripsPage() {
                   </span>
                   {trip.status && (
                     <span
-                      className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap"
+                      className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1"
                       style={{
                         background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
                         color: trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)',
                         fontFamily: "'Space Mono', monospace",
                       }}
                     >
-                      {trip.status === 'planning' ? '● Planning' : '◯ Dreaming'}
+                      <PerriandIcon
+                        name={trip.status === 'planning' ? 'pin' : 'star'}
+                        size={10}
+                        color={trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)'}
+                      />
+                      {trip.status === 'planning' ? 'Planning' : 'Dreaming'}
                     </span>
                   )}
                 </div>

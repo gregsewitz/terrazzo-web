@@ -1,6 +1,7 @@
 'use client';
 
 import { ImportedPlace, T, DOMAIN_COLORS } from '@/types';
+import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 
 interface PoolItemCardProps {
   item: ImportedPlace;
@@ -8,23 +9,23 @@ interface PoolItemCardProps {
   compact?: boolean;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  restaurant: '🍽',
-  museum: '🏛',
-  activity: '⚡',
-  hotel: '🏨',
-  neighborhood: '🏘',
-  bar: '🍸',
-  cafe: '☕',
-  shop: '🛍',
+const TYPE_ICONS: Record<string, PerriandIconName> = {
+  restaurant: 'restaurant',
+  museum: 'museum',
+  activity: 'activity',
+  hotel: 'hotel',
+  neighborhood: 'neighborhood',
+  bar: 'bar',
+  cafe: 'cafe',
+  shop: 'shop',
 };
 
-const SOURCE_ICONS: Record<string, string> = {
-  'CN Traveller': '📰',
-  'YOLO Journal': '📝',
-  "Sarah's List": '👤',
-  'Google Maps': '📍',
-  'Gmail': '✉️',
+const SOURCE_ICONS: Record<string, PerriandIconName> = {
+  'CN Traveller': 'article',
+  'YOLO Journal': 'manual',
+  "Sarah's List": 'friend',
+  'Google Maps': 'location',
+  'Gmail': 'email',
 };
 
 export default function PoolItemCard({ item, onTapDetail, compact = false }: PoolItemCardProps) {
@@ -60,7 +61,9 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
 
       {/* Type icon + Name */}
       <div className="flex items-start gap-1.5 pr-8">
-        <span className="text-xs mt-0.5">{TYPE_ICONS[item.type] || '📍'}</span>
+        <div className="text-xs mt-0.5">
+          <PerriandIcon name={TYPE_ICONS[item.type] || 'location'} size={12} />
+        </div>
         <div className="min-w-0">
           <div
             className="text-[11px] font-semibold leading-tight truncate"
@@ -90,7 +93,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
       {/* Google rating */}
       {item.google?.rating && (
         <div className="flex items-center gap-1 mt-1.5">
-          <span className="text-[10px]" style={{ color: 'var(--t-chrome-yellow)' }}>★</span>
+          <PerriandIcon name="star" size={10} color="var(--t-chrome-yellow)" />
           <span className="text-[10px] font-medium" style={{ color: 'var(--t-ink)' }}>
             {item.google.rating}
           </span>
@@ -106,14 +109,15 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
         {/* Source badge */}
         <span
-          className="text-[9px] px-1.5 py-0.5 rounded-full"
+          className="text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1"
           style={{
             background: 'rgba(28,26,23,0.06)',
             color: 'rgba(28,26,23,0.95)',
             fontFamily: "'Space Mono', monospace",
           }}
         >
-          {SOURCE_ICONS[item.source.name] || '📎'} {item.source.name}
+          <PerriandIcon name={SOURCE_ICONS[item.source.name] || 'location'} size={10} />
+          {item.source.name}
         </span>
 
         {/* Warning badge */}

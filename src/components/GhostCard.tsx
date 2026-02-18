@@ -1,6 +1,7 @@
 'use client';
 
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface GhostCardProps {
   item: ImportedPlace;
@@ -68,10 +69,10 @@ export default function GhostCard({
       >
         {/* Left: source icon */}
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
-          style={{ background: sourceStyle.bg, color: sourceStyle.color }}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: sourceStyle.bg }}
         >
-          {sourceStyle.icon}
+          <PerriandIcon name={sourceStyle.icon} size={16} color={sourceStyle.color} />
         </div>
 
         {/* Middle: name + source/note on two lines */}
@@ -84,9 +85,10 @@ export default function GhostCard({
               {item.name}
             </span>
             <span
-              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-0.5"
               style={{ background: sourceStyle.bg, color: sourceStyle.color }}
             >
+              <PerriandIcon name={sourceStyle.icon} size={11} color={sourceStyle.color} />
               {getSourceLabel()}
             </span>
           </div>
@@ -104,7 +106,7 @@ export default function GhostCard({
         <div className="flex gap-1 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); onConfirm(); }}
-            className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+            className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all flex items-center gap-1"
             style={{
               background: 'var(--t-verde)',
               color: 'white',
@@ -113,11 +115,11 @@ export default function GhostCard({
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            ✓ Add
+            <PerriandIcon name="check" size={12} color="white" /> Add
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all"
+            className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
             style={{
               background: 'rgba(28,26,23,0.06)',
               color: 'rgba(28,26,23,0.85)',
@@ -125,7 +127,7 @@ export default function GhostCard({
               cursor: 'pointer',
             }}
           >
-            ✕
+            <PerriandIcon name="close" size={12} color="rgba(28,26,23,0.85)" />
           </button>
         </div>
       </div>
@@ -149,13 +151,12 @@ export default function GhostCard({
     >
       {/* Source icon badge - top right */}
       <div
-        className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm"
+        className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center"
         style={{
           background: sourceStyle.bg,
-          color: sourceStyle.color,
         }}
       >
-        {sourceStyle.icon}
+        <PerriandIcon name={sourceStyle.icon} size={14} color={sourceStyle.color} />
       </div>
 
       {/* Place name */}
@@ -179,7 +180,8 @@ export default function GhostCard({
             fontFamily: "'Space Mono', monospace",
           }}
         >
-          {sourceStyle.icon} {getSourceLabel()}
+          <PerriandIcon name={sourceStyle.icon} size={12} color={sourceStyle.color} />
+          {getSourceLabel()}
         </div>
         {note && (
           <div
@@ -204,7 +206,7 @@ export default function GhostCard({
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          ✓
+          <PerriandIcon name="check" size={12} color="white" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDismiss(); }}
@@ -217,7 +219,7 @@ export default function GhostCard({
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          ✕
+          <PerriandIcon name="close" size={12} color="var(--t-ink)" />
         </button>
       </div>
     </div>

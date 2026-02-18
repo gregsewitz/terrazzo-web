@@ -1,6 +1,7 @@
 'use client';
 
 import { TasteDomain, TasteProfile, DOMAIN_COLORS, DOMAIN_ICONS } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 const DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
@@ -17,9 +18,9 @@ export default function TasteAxes({ profile, size = 'md' }: TasteAxesProps) {
     <div className="flex flex-col gap-1.5">
       {DOMAINS.map(domain => (
         <div key={domain} className="flex items-center gap-2">
-          <span style={{ fontSize: fontSize + 2, color: DOMAIN_COLORS[domain], width: 16, textAlign: 'center' }}>
-            {DOMAIN_ICONS[domain]}
-          </span>
+          <div style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <PerriandIcon name={DOMAIN_ICONS[domain]} size={fontSize + 2} color={DOMAIN_COLORS[domain]} />
+          </div>
           <span
             style={{
               fontSize,

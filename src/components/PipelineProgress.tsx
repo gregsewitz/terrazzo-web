@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PIPELINE_STAGES } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface PipelineProgressProps {
   currentStage: string | null;
@@ -87,15 +88,17 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
                     : 'rgba(28,26,23,0.04)',
               }}
             >
-              <span
-                className="text-[9px]"
+              <div
                 style={{
                   color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.9)',
                   ...(isCurrent ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
                 }}
               >
-                {isCompleted ? '✓' : isCurrent ? '◉' : '○'}
-              </span>
+                <PerriandIcon
+                  name={isCompleted ? 'check' : isCurrent ? 'lightning' : 'pin'}
+                  size={10}
+                />
+              </div>
               <span
                 className="text-[9px] font-medium"
                 style={{

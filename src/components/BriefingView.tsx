@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useBriefing } from '@/hooks/useBriefing';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PipelineProgress from '@/components/PipelineProgress';
 import {
   DOMAIN_COLORS,
@@ -59,9 +60,9 @@ function SignalCard({ signal, domain }: { signal: BriefingSignal; domain: TasteD
         )}
         {/* Review corroborated badge */}
         {signal.review_corroborated && (
-          <span className="text-[9px]" style={{ color: 'var(--t-verde)' }} title="Review corroborated">
-            ✓
-          </span>
+          <div title="Review corroborated">
+            <PerriandIcon name="check" size={12} color="var(--t-verde)" />
+          </div>
         )}
       </div>
     </div>
@@ -162,7 +163,9 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
             {/* Loading state */}
             {loading && !data && (
               <div className="text-center py-12">
-                <div className="text-2xl mb-3">◇</div>
+                <div className="text-2xl mb-3 flex justify-center">
+                  <PerriandIcon name="discover" size={36} color="var(--t-honey)" />
+                </div>
                 <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.9)' }}>Preparing your briefing...</p>
               </div>
             )}
@@ -252,7 +255,9 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                   return (
                     <div key={domain} className="mb-5">
                       <div className="flex items-center gap-1.5 mb-2">
-                        <span className="text-sm" style={{ color }}>{icon}</span>
+                        <div style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <PerriandIcon name={icon} size={16} color={color} />
+                        </div>
                         <span
                           className="text-[10px] font-bold uppercase tracking-wider"
                           style={{ color, fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
@@ -279,7 +284,6 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                 {data.antiSignals && data.antiSignals.length > 0 && (
                   <div className="mb-5">
                     <div className="flex items-center gap-1.5 mb-2">
-                      <span className="text-sm" style={{ color: 'var(--t-amber)' }}>◈</span>
                       <span
                         className="text-[10px] font-bold uppercase tracking-wider"
                         style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}

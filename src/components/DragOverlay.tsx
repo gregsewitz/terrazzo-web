@@ -1,6 +1,7 @@
 'use client';
 
 import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface DragOverlayProps {
   item: ImportedPlace;
@@ -39,10 +40,11 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
             {item.name}
           </div>
           <div
-            className="text-[10px] truncate"
+            className="text-[10px] truncate flex items-center gap-1"
             style={{ color: 'rgba(28,26,23,0.95)' }}
           >
-            {sourceStyle.icon} {item.location}
+            <PerriandIcon name={sourceStyle.icon} size={11} color="rgba(28,26,23,0.95)" />
+            {item.location}
           </div>
         </div>
         <span

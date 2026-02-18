@@ -4,7 +4,8 @@ import { useState, useMemo, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { usePoolStore, FilterType, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES } from '@/types';
+import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconName } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -16,25 +17,25 @@ interface PoolTrayProps {
 
 type SourceFilterType = GhostSourceType | 'all';
 
-const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: string }[] = [
+const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: PerriandIconName }[] = [
   { value: 'all', label: 'All' },
-  { value: 'friend', label: 'Friends', icon: '👤' },
-  { value: 'maps', label: 'Maps', icon: '📍' },
-  { value: 'article', label: 'Articles', icon: '📰' },
-  { value: 'email', label: 'Email', icon: '✉' },
-  { value: 'manual', label: 'Added', icon: '✎' },
+  { value: 'friend', label: 'Friends', icon: 'friend' },
+  { value: 'maps', label: 'Maps', icon: 'maps' },
+  { value: 'article', label: 'Articles', icon: 'article' },
+  { value: 'email', label: 'Email', icon: 'email' },
+  { value: 'manual', label: 'Added', icon: 'manual' },
 ];
 
-const TYPE_FILTER_CHIPS: { value: FilterType; label: string; icon: string }[] = [
-  { value: 'all', label: 'All types', icon: '◎' },
-  { value: 'restaurant', label: 'Restaurant', icon: '🍽' },
-  { value: 'cafe', label: 'Cafe', icon: '☕' },
-  { value: 'bar', label: 'Bar', icon: '🍷' },
-  { value: 'museum', label: 'Museum', icon: '🏛' },
-  { value: 'activity', label: 'Activity', icon: '✦' },
-  { value: 'hotel', label: 'Hotel', icon: '🏨' },
-  { value: 'neighborhood', label: 'Area', icon: '🏘' },
-  { value: 'shop', label: 'Shop', icon: '🛍' },
+const TYPE_FILTER_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
+  { value: 'all', label: 'All types', icon: 'discover' },
+  { value: 'restaurant', label: 'Restaurant', icon: 'restaurant' },
+  { value: 'cafe', label: 'Cafe', icon: 'cafe' },
+  { value: 'bar', label: 'Bar', icon: 'bar' },
+  { value: 'museum', label: 'Museum', icon: 'museum' },
+  { value: 'activity', label: 'Activity', icon: 'activity' },
+  { value: 'hotel', label: 'Hotel', icon: 'hotel' },
+  { value: 'neighborhood', label: 'Area', icon: 'neighborhood' },
+  { value: 'shop', label: 'Shop', icon: 'shop' },
 ];
 
 const HOLD_DELAY = 180; // ms before drag activates
@@ -239,7 +240,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             {onOpenExport && starredPlaces.length > 0 && (
               <button
                 onClick={onOpenExport}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80 flex items-center gap-1"
                 style={{
                   background: 'transparent',
                   color: 'var(--t-honey)',
@@ -247,7 +248,8 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                   fontFamily: "'Space Mono', monospace",
                 }}
               >
-                📍 Export
+                <PerriandIcon name="pin" size={12} color="var(--t-honey)" />
+                Export
               </button>
             )}
             <button
@@ -302,22 +304,26 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             )}
             {slotContext.suggestedTypes.length > 0 && (
               <div className="flex gap-1.5 mt-1.5">
-                {slotContext.suggestedTypes.map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setFilterType(filterType === t ? 'all' : t as FilterType)}
-                    className="text-[10px] px-2 py-0.5 rounded-full cursor-pointer transition-all"
-                    style={{
-                      background: filterType === t ? 'var(--t-verde)' : 'rgba(42,122,86,0.08)',
-                      color: filterType === t ? 'white' : 'var(--t-verde)',
-                      border: 'none',
-                      fontFamily: "'Space Mono', monospace",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {TYPE_FILTER_CHIPS.find(c => c.value === t)?.icon} {t}
-                  </button>
-                ))}
+                {slotContext.suggestedTypes.map(t => {
+                  const chip = TYPE_FILTER_CHIPS.find(c => c.value === t);
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setFilterType(filterType === t ? 'all' : t as FilterType)}
+                      className="text-[10px] px-2 py-0.5 rounded-full cursor-pointer transition-all flex items-center gap-1"
+                      style={{
+                        background: filterType === t ? 'var(--t-verde)' : 'rgba(42,122,86,0.08)',
+                        color: filterType === t ? 'white' : 'var(--t-verde)',
+                        border: 'none',
+                        fontFamily: "'Space Mono', monospace",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {chip && <PerriandIcon name={chip.icon} size={11} color={filterType === t ? 'white' : 'var(--t-verde)'} />}
+                      {t}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -365,7 +371,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                <span>{chip.icon}</span>
+                <PerriandIcon name={chip.icon} size={12} color={isActive ? 'white' : isSuggested ? 'var(--t-verde)' : 'rgba(28,26,23,0.9)'} />
                 {chip.label}
                 <span
                   className="text-[9px] font-bold"
@@ -403,7 +409,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                {tab.icon && <span className="mr-1">{tab.icon}</span>}
+                {tab.icon && <PerriandIcon name={tab.icon} size={13} color={isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.95)'} />}
                 {tab.label} · {count}
               </button>
             );
@@ -459,7 +465,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                     </div>
                     {typeChip && (
                       <span
-                        className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1"
                         style={{
                           background: isSuggestedType ? 'rgba(42,122,86,0.1)' : 'rgba(28,26,23,0.05)',
                           color: isSuggestedType ? 'var(--t-verde)' : 'rgba(28,26,23,0.95)',
@@ -467,12 +473,14 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                           fontWeight: 600,
                         }}
                       >
-                        {typeChip.icon} {item.type}
+                        <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-verde)' : 'rgba(28,26,23,0.95)'} />
+                        {item.type}
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] mb-1" style={{ color: 'rgba(28,26,23,0.95)' }}>
-                    {sourceStyle.icon} {item.ghostSource === 'friend'
+                  <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                    <PerriandIcon name={sourceStyle.icon} size={12} color="rgba(28,26,23,0.95)" />
+                    {item.ghostSource === 'friend'
                       ? item.friendAttribution?.name
                       : item.ghostSource === 'maps' ? 'Google Maps'
                       : item.source?.name || sourceStyle.label}
@@ -503,7 +511,9 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
 
           {sortedItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: 'rgba(28,26,23,0.95)' }}>
-              <span className="text-2xl mb-3">★</span>
+              <div className="text-2xl mb-3 flex justify-center">
+                <PerriandIcon name="star" size={28} color="rgba(28,26,23,0.95)" />
+              </div>
               <p className="text-[12px] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                 {filterType !== 'all'
                   ? `No ${filterType} places starred`

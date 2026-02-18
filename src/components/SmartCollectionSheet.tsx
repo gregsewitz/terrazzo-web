@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
+import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 
 interface SmartCollectionSheetProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface SmartCollectionSheetProps {
 
 interface ParsedCollection {
   name: string;
-  emoji: string;
+  emoji: PerriandIconName;
   filters: {
     types: string[] | null;
     locations: string[] | null;
@@ -131,22 +132,22 @@ export default function SmartCollectionSheet({
       sources: null, minMatchScore: null, reactions: null, keywords: null,
     };
     const filterTags: string[] = [];
-    let emoji = '✨';
+    let emoji: PerriandIconName = 'sparkle';
     let name = query;
 
-    if (lq.includes('hotel')) { filters.types = ['hotel']; filterTags.push('type: hotel'); emoji = '🏨'; }
-    else if (lq.includes('restaurant')) { filters.types = ['restaurant']; filterTags.push('type: restaurant'); emoji = '🍽'; }
-    else if (lq.includes('bar')) { filters.types = ['bar']; filterTags.push('type: bar'); emoji = '🍷'; }
-    else if (lq.includes('museum')) { filters.types = ['museum']; filterTags.push('type: museum'); emoji = '🎨'; }
-    else if (lq.includes('cafe')) { filters.types = ['cafe']; filterTags.push('type: cafe'); emoji = '☕'; }
+    if (lq.includes('hotel')) { filters.types = ['hotel']; filterTags.push('type: hotel'); emoji = 'hotel'; }
+    else if (lq.includes('restaurant')) { filters.types = ['restaurant']; filterTags.push('type: restaurant'); emoji = 'restaurant'; }
+    else if (lq.includes('bar')) { filters.types = ['bar']; filterTags.push('type: bar'); emoji = 'bar'; }
+    else if (lq.includes('museum')) { filters.types = ['museum']; filterTags.push('type: museum'); emoji = 'museum'; }
+    else if (lq.includes('cafe')) { filters.types = ['cafe']; filterTags.push('type: cafe'); emoji = 'cafe'; }
 
     if (lq.includes('tokyo')) { filters.locations = ['Tokyo']; filterTags.push('location: Tokyo'); }
     if (lq.includes('paris')) { filters.locations = ['Paris']; filterTags.push('location: Paris'); }
     if (lq.includes('london')) { filters.locations = ['London']; filterTags.push('location: London'); }
     if (lq.includes('europe')) { filters.locations = ['Venice', 'Paris', 'London', 'Puglia']; filterTags.push('location: Europe'); }
 
-    if (lq.includes('sarah')) { filters.friends = ['Sarah']; filterTags.push('person: Sarah'); emoji = '👤'; name = 'Sarah\'s picks'; }
-    if (lq.includes('favorite') || lq.includes('loved')) { filters.reactions = ['myPlace']; filterTags.push('reaction: ♡'); }
+    if (lq.includes('sarah')) { filters.friends = ['Sarah']; filterTags.push('person: Sarah'); emoji = 'friend'; name = 'Sarah\'s picks'; }
+    if (lq.includes('favorite') || lq.includes('loved')) { filters.reactions = ['myPlace']; filterTags.push('reaction: saved'); }
     if (lq.includes('high-match') || lq.includes('high match')) { filters.minMatchScore = 85; filterTags.push('match: 85+'); }
 
     return { name, emoji, filters, filterTags, reasoning: 'Parsed from keywords (offline fallback)' };
@@ -238,10 +239,10 @@ export default function SmartCollectionSheet({
               <button
                 onClick={handleSubmit}
                 disabled={!input.trim()}
-                className="w-full py-3 rounded-xl text-[14px] font-medium cursor-pointer transition-opacity disabled:opacity-50"
+                className="w-full py-3 rounded-xl text-[14px] font-medium cursor-pointer transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)', fontFamily: "'DM Sans', sans-serif" }}
               >
-                Create Collection ✦
+                Create Collection <PerriandIcon name="star" size={12} color="var(--t-cream)" />
               </button>
             </div>
           )}
@@ -294,10 +295,13 @@ export default function SmartCollectionSheet({
               {/* Terrazzo reasoning */}
               {parsed.reasoning && (
                 <div
-                  className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px]"
+                  className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px] flex gap-2 items-start"
                   style={{ color: 'rgba(28,26,23,0.95)', background: 'rgba(200,146,58,0.06)' }}
                 >
-                  ✦ {parsed.reasoning}
+                  <div style={{ flexShrink: 0 }}>
+                    <PerriandIcon name="sparkle" size={11} />
+                  </div>
+                  <span>{parsed.reasoning}</span>
                 </div>
               )}
 
@@ -314,7 +318,9 @@ export default function SmartCollectionSheet({
               {/* Result Card */}
               <div className="p-4 rounded-xl border" style={{ backgroundColor: 'white', borderColor: 'var(--t-linen)' }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{parsed.emoji}</span>
+                  <div>
+                    <PerriandIcon name={parsed.emoji} size={20} />
+                  </div>
                   <h3
                     className="text-[15px] italic"
                     style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}

@@ -1,11 +1,12 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 
 const TABS = [
-  { id: 'saved', label: 'Collect', icon: '♡', path: '/saved' },
-  { id: 'trips', label: 'Plan', icon: '△', path: '/trips' },
-  { id: 'profile', label: 'Profile', icon: '◯', path: '/profile' },
+  { id: 'saved', label: 'Collect', icon: 'saved' as PerriandIconName, path: '/saved' },
+  { id: 'trips', label: 'Plan', icon: 'trips' as PerriandIconName, path: '/trips' },
+  { id: 'profile', label: 'Profile', icon: 'profile' as PerriandIconName, path: '/profile' },
 ];
 
 export default function TabBar() {
@@ -34,12 +35,11 @@ export default function TabBar() {
             className="flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
             style={{ opacity: isActive ? 1 : 0.4 }}
           >
-            <span
-              className="text-base"
+            <div
               style={{ color: isActive ? 'var(--t-signal-red)' : 'var(--t-ink)' }}
             >
-              {tab.icon}
-            </span>
+              <PerriandIcon name={tab.icon} size={20} />
+            </div>
             <span
               className="text-[9px] uppercase tracking-wider"
               style={{

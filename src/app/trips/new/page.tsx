@@ -5,15 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { TravelContext, TripStatus, GeoDestination } from '@/types';
 import DestinationInput, { Destination } from '@/components/DestinationInput';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 // ============================================================
 // Companion options — matching the React Native app
 // ============================================================
-const COMPANION_OPTIONS: { label: string; icon: string; key: TravelContext }[] = [
-  { label: 'Just me', icon: '◇', key: 'solo' },
-  { label: 'With partner', icon: '♥', key: 'partner' },
-  { label: 'With friends', icon: '★', key: 'friends' },
-  { label: 'With family', icon: '⌂', key: 'family' },
+const COMPANION_OPTIONS: { label: string; iconName: string; key: TravelContext }[] = [
+  { label: 'Just me', iconName: 'solo', key: 'solo' },
+  { label: 'With partner', iconName: 'partner', key: 'partner' },
+  { label: 'With friends', iconName: 'friends', key: 'friends' },
+  { label: 'With family', iconName: 'family', key: 'family' },
 ];
 
 // ============================================================
@@ -190,7 +191,7 @@ function TripSeedForm({ onStart }: {
                   fontWeight: 500,
                 }}
               >
-                <span className="text-sm">{opt.icon}</span>
+                <PerriandIcon name={opt.iconName} size={16} color={companion === opt.key ? 'white' : 'var(--t-ink)'} />
                 {opt.label}
               </button>
             ))}
@@ -225,8 +226,8 @@ function TripSeedForm({ onStart }: {
           </label>
           <div className="flex gap-2">
             {([
-              { key: 'planning' as TripStatus, label: 'Planning', icon: '●', desc: 'Dates committed, ready to build' },
-              { key: 'dreaming' as TripStatus, label: 'Dreaming', icon: '◯', desc: 'Still taking shape' },
+              { key: 'planning' as TripStatus, label: 'Planning', iconName: 'pin', desc: 'Dates committed, ready to build' },
+              { key: 'dreaming' as TripStatus, label: 'Dreaming', iconName: 'star', desc: 'Still taking shape' },
             ]).map(opt => (
               <button
                 key={opt.key}
@@ -238,12 +239,11 @@ function TripSeedForm({ onStart }: {
                 }}
               >
                 <div className="flex items-center gap-1.5">
-                  <span
-                    className="text-[10px]"
-                    style={{ color: status === opt.key ? 'var(--t-verde)' : 'rgba(28,26,23,0.9)' }}
-                  >
-                    {opt.icon}
-                  </span>
+                  <PerriandIcon
+                    name={opt.iconName}
+                    size={14}
+                    color={status === opt.key ? 'var(--t-verde)' : 'rgba(28,26,23,0.9)'}
+                  />
                   <span
                     className="text-[12px] font-medium"
                     style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
@@ -531,7 +531,9 @@ function TripComplete({ seed, onDone }: {
       className="flex-1 flex flex-col items-center justify-center px-8 transition-all duration-500"
       style={{ opacity: showContent ? 1 : 0, transform: showContent ? 'translateY(0)' : 'translateY(20px)' }}
     >
-      <div className="text-5xl mb-4" style={{ color: 'var(--t-verde)' }}>✓</div>
+      <div className="text-5xl mb-4 flex justify-center">
+        <PerriandIcon name="check" size={48} color="var(--t-verde)" />
+      </div>
       <h2
         className="text-3xl mb-3"
         style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
@@ -625,10 +627,10 @@ export default function NewTripPage() {
       <div className="flex items-center px-5 pt-3 pb-1">
         <button
           onClick={() => router.push('/trips')}
-          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer text-xl"
+          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer"
           style={{ color: 'var(--t-ink)' }}
         >
-          ←
+          <PerriandIcon name="edit" size={20} color="var(--t-ink)" />
         </button>
         {step === 'conversation' && (
           <span

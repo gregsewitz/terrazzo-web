@@ -11,16 +11,17 @@ import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, SOURCE_STYLES } from 
 import BriefingView from '@/components/BriefingView';
 import ImportDrawer from '@/components/ImportDrawer';
 import { useImportStore } from '@/stores/importStore';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 const TYPE_ICONS: Record<string, string> = {
-  restaurant: '🍽',
-  hotel: '🏨',
-  bar: '🍸',
-  cafe: '☕',
-  museum: '🎨',
-  activity: '🎫',
-  neighborhood: '📍',
-  shop: '🛍',
+  restaurant: 'restaurant',
+  hotel: 'hotel',
+  bar: 'bar',
+  cafe: 'cafe',
+  museum: 'museum',
+  activity: 'activity',
+  neighborhood: 'location',
+  shop: 'shop',
 };
 
 const THUMB_GRADIENTS: Record<string, string> = {
@@ -36,16 +37,16 @@ const THUMB_GRADIENTS: Record<string, string> = {
 
 function getSourceTag(place: ImportedPlace): { label: string; bg: string; color: string } | null {
   if (place.friendAttribution) {
-    return { label: `👤 ${place.friendAttribution.name}`, bg: 'rgba(42,122,86,0.1)', color: 'var(--t-verde)' };
+    return { label: `friend: ${place.friendAttribution.name}`, bg: 'rgba(42,122,86,0.1)', color: 'var(--t-verde)' };
   }
   if (place.matchScore && place.matchScore >= 80) {
     return { label: `${place.matchScore}% match`, bg: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' };
   }
   if (place.ghostSource === 'maps') {
-    return { label: '📍 Maps', bg: 'rgba(232,115,58,0.08)', color: 'var(--t-panton-orange)' };
+    return { label: 'Maps', bg: 'rgba(232,115,58,0.08)', color: 'var(--t-panton-orange)' };
   }
   if (place.ghostSource === 'article') {
-    return { label: `📄 ${place.source?.name || 'Article'}`, bg: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' };
+    return { label: `${place.source?.name || 'Article'}`, bg: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' };
   }
   return null;
 }
@@ -107,7 +108,7 @@ export default function SavedPage() {
                 lineHeight: 1.2,
               }}
             >
-              ✦ Shortlist
+              <PerriandIcon name="star" size={16} style={{ display: 'inline-block', marginRight: '4px' }} /> Shortlist
             </span>
             <span style={{ color: 'rgba(28,26,23,0.12)', fontSize: 16, fontWeight: 300 }}>|</span>
             <span
@@ -145,10 +146,11 @@ export default function SavedPage() {
         {/* Helpful hint for All Places tab */}
         {activeTab === 'all' && (
           <div
-            className="text-[10px] leading-relaxed mb-3 px-3 py-2 rounded-lg"
+            className="text-[10px] leading-relaxed mb-3 px-3 py-2 rounded-lg flex items-start gap-2"
             style={{ color: 'rgba(28,26,23,0.85)', background: 'rgba(28,26,23,0.03)' }}
           >
-            This is everything you've saved — tap ✦ to shortlist places.
+            <PerriandIcon name="star" size={12} style={{ marginTop: '2px', flexShrink: 0 }} />
+            <span>This is everything you've saved — tap to shortlist places.</span>
           </div>
         )}
 
@@ -168,9 +170,9 @@ export default function SavedPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <span className="text-3xl mb-3 block">
-              {activeTab === 'picks' ? '♡' : '◇'}
-            </span>
+            <div className="text-3xl mb-3 flex justify-center">
+              <PerriandIcon name={activeTab === 'picks' ? 'saved' : 'discover'} size={36} />
+            </div>
             <p className="text-[13px] mb-1" style={{ color: 'rgba(28,26,23,0.9)' }}>
               {activeTab === 'picks' ? 'No shortlisted places yet' : 'No saved places'}
             </p>
@@ -259,7 +261,7 @@ function PlaceCard({ place, variant, onTap, onToggleStar, onLongPress }: {
   onLongPress: () => void;
 }) {
   const isStarred = !!place.isShortlisted;
-  const typeIcon = TYPE_ICONS[place.type] || '📍';
+  const typeIcon = TYPE_ICONS[place.type] || 'location';
   const google = place.google;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
   const srcStyle = SOURCE_STYLES[place.ghostSource as keyof typeof SOURCE_STYLES] || SOURCE_STYLES.manual;
@@ -310,7 +312,7 @@ function PlaceCard({ place, variant, onTap, onToggleStar, onLongPress }: {
             fontSize: 20,
           }}
         >
-          {typeIcon}
+          <PerriandIcon name={typeIcon as any} size={20} color="rgba(28,26,23,0.7)" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -343,7 +345,7 @@ function PlaceCard({ place, variant, onTap, onToggleStar, onLongPress }: {
                   fontSize: '12px',
                 }}
               >
-                ✦
+                <PerriandIcon name="star" size={12} color={isStarred ? 'white' : 'rgba(28,26,23,0.85)'} />
               </button>
             ) : (
               /* Match score in picks view */
@@ -370,15 +372,15 @@ function PlaceCard({ place, variant, onTap, onToggleStar, onLongPress }: {
           </span>
           {place.friendAttribution && (
             <span
-              className="px-1.5 py-0.5 rounded"
+              className="px-1.5 py-0.5 rounded flex items-center gap-1"
               style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.06)', color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
             >
-              👤 {place.friendAttribution.name}
+              <PerriandIcon name="friend" size={10} color="var(--t-verde)" /> {place.friendAttribution.name}
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.85)' }}>
-              ★ {google.rating}
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.85)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <PerriandIcon name="star" size={10} color="rgba(28,26,23,0.85)" /> {google.rating}
             </span>
           )}
           {priceStr && (
@@ -477,10 +479,10 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
           </div>
           <button
             onClick={onClose}
-            className="text-lg"
-            style={{ color: 'rgba(28,26,23,0.85)', background: 'none', border: 'none', cursor: 'pointer' }}
+            className="flex items-center justify-center"
+            style={{ color: 'rgba(28,26,23,0.85)', background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
           >
-            ✕
+            <PerriandIcon name="close" size={16} color="rgba(28,26,23,0.85)" />
           </button>
         </div>
 

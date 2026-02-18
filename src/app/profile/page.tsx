@@ -9,6 +9,7 @@ import WrappedExperience from '@/components/wrapped/WrappedExperience';
 import TasteStone from '@/components/profile/TasteStone';
 import ScoreArc from '@/components/profile/ScoreArc';
 import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import {
   BECAUSE_YOU_CARDS,
   WEEKLY_COLLECTION,
@@ -66,10 +67,10 @@ export default function ProfilePage() {
         <div className="flex items-start justify-between mb-5">
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center text-lg"
-              style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(200,146,58,0.1)' }}
             >
-              ◯
+              <PerriandIcon name="profile" size={24} color="var(--t-honey)" />
             </div>
             <div>
               <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>Greg</div>
@@ -178,7 +179,10 @@ export default function ProfilePage() {
                   {expandedSection === 'accounts' && action === 'accounts' && (
                     <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>✉ Gmail</span>
+                        <div className="flex items-center gap-2">
+                          <PerriandIcon name="email" size={12} color="var(--t-ink)" />
+                          <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>Gmail</span>
+                        </div>
                         <a
                           href="/api/auth/nylas/connect"
                           className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
@@ -188,7 +192,10 @@ export default function ProfilePage() {
                         </a>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>📍 Google Maps</span>
+                        <div className="flex items-center gap-2">
+                          <PerriandIcon name="location" size={12} color="var(--t-ink)" />
+                          <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>Google Maps</span>
+                        </div>
                         <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
                           Via import
                         </span>
@@ -287,6 +294,7 @@ function BecauseYouCardComponent({ card }: { card: BecauseYouCard }) {
     >
       <div>
         <div className="flex items-center gap-2 mb-4">
+          <PerriandIcon name="sparkle" size={12} color={domainColor} />
           <span
             className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full"
             style={{ background: `${domainColor}40`, color: domainColor, fontFamily: "'Space Mono', monospace" }}
@@ -482,7 +490,7 @@ function StretchPickSection() {
         }}
       >
         <div className="flex items-center gap-1.5 mb-3">
-          <span className="text-[10px]" style={{ color: 'var(--t-panton-orange)', fontFamily: "'Space Mono', monospace" }}>◇</span>
+          <PerriandIcon name="discover" size={10} color="var(--t-panton-orange)" />
           <span
             className="text-[10px] uppercase tracking-wider font-bold"
             style={{ color: 'var(--t-panton-orange)', fontFamily: "'Space Mono', monospace" }}
@@ -540,7 +548,7 @@ function ContextModeSection() {
         style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <span style={{ fontSize: 16 }}>☀</span>
+          <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
           <span
             className="text-[14px] font-semibold"
             style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}

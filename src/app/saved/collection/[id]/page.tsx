@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import { useSavedStore } from '@/stores/savedStore';
 import { SOURCE_STYLES, REACTIONS, PlaceType, GhostSourceType, ImportedPlace } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 const TYPE_COLORS: Record<PlaceType, string> = {
   restaurant: '#e87080',
@@ -169,7 +170,9 @@ export default function CollectionDetailPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <span className="text-2xl mb-3 block">◇</span>
+            <div className="text-2xl mb-3 flex justify-center">
+              <PerriandIcon name="discover" size={32} />
+            </div>
             <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
               No places in this collection
             </p>

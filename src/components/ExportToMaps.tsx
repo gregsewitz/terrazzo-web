@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { ImportedPlace } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface ExportToMapsProps {
   places: ImportedPlace[];
@@ -84,8 +85,8 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
             <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
               Export to Google Maps
             </h2>
-            <button onClick={onClose} className="text-lg bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.9)' }}>
-              ✕
+            <button onClick={onClose} className="bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.9)' }}>
+              <PerriandIcon name="close" size={16} />
             </button>
           </div>
           <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
@@ -109,14 +110,14 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
             </button>
             <button
               onClick={() => setScope('starred')}
-              className="flex-1 py-2.5 rounded-xl text-[12px] font-medium border-none cursor-pointer transition-all"
+              className="flex-1 py-2.5 rounded-xl text-[12px] font-medium border-none cursor-pointer transition-all flex items-center justify-center gap-1"
               style={{
                 background: scope === 'starred' ? 'var(--t-verde)' : 'var(--t-cream)',
                 color: scope === 'starred' ? 'white' : 'var(--t-ink)',
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              ★ Starred ({starredPlaces.length})
+              <PerriandIcon name="star" size={12} color={scope === 'starred' ? 'white' : 'var(--t-ink)'} /> Starred ({starredPlaces.length})
             </button>
           </div>
         </div>
@@ -132,7 +133,15 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            {exported ? '✓ KML Downloaded' : `📍 Download KML (${exportPlaces.length} places)`}
+            {exported ? (
+              <>
+                <PerriandIcon name="check" size={14} /> KML Downloaded
+              </>
+            ) : (
+              <>
+                <PerriandIcon name="location" size={14} /> Download KML ({exportPlaces.length} places)
+              </>
+            )}
           </button>
           <p className="text-[10px] text-center mt-2" style={{ color: 'rgba(28,26,23,0.9)' }}>
             Open Google Maps → Your places → Maps → Import → select the .kml file

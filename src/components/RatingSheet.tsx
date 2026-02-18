@@ -10,6 +10,7 @@ import {
   STANDOUT_TAGS,
   CONTEXT_TAGS,
 } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface RatingSheetProps {
   item: ImportedPlace;
@@ -97,7 +98,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   fontSize: '12px',
                 }}
               >
-                {selectedReaction.icon} {selectedReaction.label}
+                <PerriandIcon name={selectedReaction.icon} size={16} color={selectedReaction.color} />
+                {selectedReaction.label}
               </button>
             )}
           </div>
@@ -127,7 +129,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         transform: isSelected ? 'scale(1.05)' : 'scale(1)',
                       }}
                     >
-                      <span style={{ fontSize: '28px', color: r.color }}>{r.icon}</span>
+                      <PerriandIcon name={r.icon} size={28} color={r.color} />
                       <span
                         className="text-[10px] font-medium whitespace-nowrap"
                         style={{

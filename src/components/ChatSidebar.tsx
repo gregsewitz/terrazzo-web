@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface Message {
   id: string;
@@ -166,9 +167,9 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-full border-none cursor-pointer"
-            style={{ background: 'rgba(28,26,23,0.06)', color: 'var(--t-ink)' }}
+            style={{ background: 'rgba(28,26,23,0.06)' }}
           >
-            ×
+            <PerriandIcon name="close" size={16} color="var(--t-ink)" />
           </button>
         </div>
 

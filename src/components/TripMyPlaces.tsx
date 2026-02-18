@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS } from '@/types';
+import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS, PerriandIconName } from '@/types';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -10,9 +11,9 @@ interface TripMyPlacesProps {
 
 type FilterType = PlaceType | 'all';
 
-const TYPE_ICONS: Record<PlaceType, string> = {
-  restaurant: '🍽', bar: '🍸', cafe: '☕', museum: '🏛', activity: '🎯',
-  hotel: '🏨', neighborhood: '🏘', shop: '🛍',
+const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
+  restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', museum: 'museum', activity: 'activity',
+  hotel: 'hotel', neighborhood: 'neighborhood', shop: 'shop',
 };
 
 const TYPE_CHIPS: { value: FilterType; label: string }[] = [
@@ -120,7 +121,9 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
       {/* Place cards */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 px-4">
-          <span className="text-3xl mb-3 block">📋</span>
+          <div className="text-3xl mb-3 block flex justify-center">
+            <PerriandIcon name="trips" size={32} color="var(--t-ink)" />
+          </div>
           <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
             No places added yet
           </p>
@@ -145,7 +148,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
   const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
   const isReservation = place.ghostSource === 'email';
   const destColor = DEST_COLORS[item.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
-  const typeIcon = TYPE_ICONS[place.type] || '📍';
+  const typeIcon = TYPE_ICONS[place.type] || 'pin';
 
   // Google data
   const google = place.google;
@@ -165,9 +168,9 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         <div className="flex items-center gap-2.5">
           <div
             className="flex items-center justify-center rounded-lg"
-            style={{ width: 44, height: 44, background: 'white', fontSize: 22, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            style={{ width: 44, height: 44, background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
           >
-            {typeIcon}
+            <PerriandIcon name={typeIcon} size={24} color="var(--t-ink)" />
           </div>
           <div>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 15, fontWeight: 600, color: 'var(--t-ink)', lineHeight: 1.2 }}>
@@ -205,7 +208,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
       <div className="px-3.5 py-2.5">
         {/* When/where on this trip */}
         <div className="flex items-center gap-1.5 mb-2">
-          <span style={{ fontSize: 11 }}>{SLOT_ICONS[item.slotId] || '📍'}</span>
+          <PerriandIcon name={SLOT_ICONS[item.slotId] as any || 'pin'} size={13} color="var(--t-ink)" />
           <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: 'rgba(28,26,23,0.9)' }}>
             {item.dayOfWeek?.slice(0, 3)} {item.date} · {item.slotTime}
           </span>
@@ -219,22 +222,25 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* Source + Google info row */}
         <div className="flex items-center gap-1.5 flex-wrap mb-2">
           <span
-            className="px-2 py-0.5 rounded-md"
+            className="px-2 py-0.5 rounded-md flex items-center gap-0.5"
             style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}
           >
-            {srcStyle.icon} {place.source?.name || srcStyle.label}
+            <PerriandIcon name={srcStyle.icon} size={10} color={srcStyle.color} />
+            {place.source?.name || srcStyle.label}
           </span>
           {isReservation && (
             <span
-              className="px-2 py-0.5 rounded-md"
+              className="px-2 py-0.5 rounded-md flex items-center gap-0.5"
               style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
             >
-              ✓ Reservation
+              <PerriandIcon name="check" size={10} color="var(--t-verde)" />
+              Reservation
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.85)' }}>
-              ★ {google.rating}{google.reviewCount ? ` (${google.reviewCount.toLocaleString()})` : ''}
+            <span className="flex items-center gap-0.5" style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.85)' }}>
+              <PerriandIcon name="star" size={10} color="rgba(28,26,23,0.85)" />
+              {google.rating}{google.reviewCount ? ` (${google.reviewCount.toLocaleString()})` : ''}
             </span>
           )}
           {priceStr && (
@@ -248,14 +254,19 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {place.terrazzoInsight?.why && (
           <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(200,146,58,0.04)', border: '1px solid rgba(200,146,58,0.1)' }}>
             <div className="flex items-start gap-1.5">
-              <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>✦</span>
+              <div style={{ flexShrink: 0, marginTop: 1 }}>
+                <PerriandIcon name="terrazzo" size={11} color="var(--t-honey)" />
+              </div>
               <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.95)', lineHeight: 1.4 }}>
                 {place.terrazzoInsight.why}
               </span>
             </div>
             {place.terrazzoInsight.caveat && (
               <div className="flex items-start gap-1.5 mt-1">
-                <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>⚠</span>
+                <div style={{ flexShrink: 0, marginTop: 1 }}>
+                  {/* Using terrazzo for warning since there's no specific warning icon */}
+                  <span style={{ fontSize: 12 }}>⚠️</span>
+                </div>
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.85)', fontStyle: 'italic', lineHeight: 1.4 }}>
                   {place.terrazzoInsight.caveat}
                 </span>
@@ -268,7 +279,9 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {place.friendAttribution && (
           <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(42,122,86,0.03)', border: '1px solid rgba(42,122,86,0.08)' }}>
             <div className="flex items-start gap-1.5">
-              <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>👤</span>
+              <div style={{ flexShrink: 0, marginTop: 1 }}>
+                <PerriandIcon name="friend" size={11} color="var(--t-verde)" />
+              </div>
               <div>
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 600, color: 'var(--t-verde)' }}>
                   {place.friendAttribution.name}

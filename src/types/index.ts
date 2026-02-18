@@ -1,3 +1,5 @@
+import type { PerriandIconName } from '../components/icons/PerriandIcons';
+
 // Forme Libere Design Tokens
 export const T = {
   ink: '#1c1a17',
@@ -25,13 +27,13 @@ export const DOMAIN_COLORS: Record<TasteDomain, string> = {
   Wellness: '#eeb420',
 };
 
-export const DOMAIN_ICONS: Record<TasteDomain, string> = {
-  Design: '✦',
-  Character: '◈',
-  Food: '◉',
-  Location: '◎',
-  Service: '◆',
-  Wellness: '○',
+export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
+  Design: 'design',
+  Character: 'character',
+  Food: 'food',
+  Location: 'location',
+  Service: 'service',
+  Wellness: 'wellness',
 };
 
 // Rating system
@@ -43,10 +45,10 @@ export const RATING_COLORS = {
 } as const;
 
 export const REACTIONS = [
-  { id: 'myPlace', icon: '♡', label: 'Obsessed', color: RATING_COLORS.myPlace },
-  { id: 'enjoyed', icon: '✓', label: 'Enjoyed it', color: RATING_COLORS.enjoyed },
-  { id: 'mixed', icon: '↔', label: 'Mixed', color: RATING_COLORS.mixed },
-  { id: 'notMe', icon: '✗', label: 'Not me', color: RATING_COLORS.notMe },
+  { id: 'myPlace', icon: 'myPlace' as PerriandIconName, label: 'Obsessed', color: RATING_COLORS.myPlace },
+  { id: 'enjoyed', icon: 'enjoyed' as PerriandIconName, label: 'Enjoyed it', color: RATING_COLORS.enjoyed },
+  { id: 'mixed', icon: 'mixed' as PerriandIconName, label: 'Mixed', color: RATING_COLORS.mixed },
+  { id: 'notMe', icon: 'notMe' as PerriandIconName, label: 'Not me', color: RATING_COLORS.notMe },
 ] as const;
 
 // Destination colors (for multi-city trips)
@@ -72,13 +74,13 @@ export const DEST_COLORS: Record<string, { bg: string; accent: string; text: str
 };
 
 // Ghost card source types — each source gets its own visual treatment
-export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: string; label: string }> = {
-  email: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✉', label: 'Email' },
-  friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.06)', icon: '👤', label: 'Friend' },
-  terrazzo: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: '✦', label: 'Terrazzo pick' },
-  maps: { color: '#e86830', bg: 'rgba(232,104,48,0.06)', icon: '📍', label: 'Google Maps' },
-  article: { color: '#c8923a', bg: 'rgba(200,146,58,0.06)', icon: '📰', label: 'Article' },
-  manual: { color: '#1c1a17', bg: 'rgba(28,26,23,0.04)', icon: '✎', label: 'Added' },
+export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: PerriandIconName; label: string }> = {
+  email: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: 'email', label: 'Email' },
+  friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.06)', icon: 'friend', label: 'Friend' },
+  terrazzo: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: 'terrazzo', label: 'Terrazzo pick' },
+  maps: { color: '#e86830', bg: 'rgba(232,104,48,0.06)', icon: 'maps', label: 'Google Maps' },
+  article: { color: '#c8923a', bg: 'rgba(200,146,58,0.06)', icon: 'article', label: 'Article' },
+  manual: { color: '#1c1a17', bg: 'rgba(28,26,23,0.04)', icon: 'manual', label: 'Added' },
 };
 
 export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness';
@@ -268,13 +270,13 @@ export const DEFAULT_TIME_SLOTS: Omit<TimeSlot, 'ghostItems'>[] = [
   { id: 'evening', label: 'Evening', time: '9:30 PM', places: [] },
 ];
 
-export const SLOT_ICONS: Record<string, string> = {
-  breakfast: '☕',
-  morning: '☀',
-  lunch: '🍽',
-  afternoon: '◑',
-  dinner: '🌙',
-  evening: '🍷',
+export const SLOT_ICONS: Record<string, PerriandIconName> = {
+  breakfast: 'breakfast',
+  morning: 'morning',
+  lunch: 'lunch',
+  afternoon: 'afternoon',
+  dinner: 'dinner',
+  evening: 'evening',
 };
 
 // Terrazzo voice — used across all prompts for consistent tone

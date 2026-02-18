@@ -3,6 +3,7 @@
 import { TASTE_PROFILE, WRAPPED, DOMAIN_COLORS, AXIS_COLORS, CONTEXT_ICONS, CONTEXT_COLORS } from '@/constants/profile';
 import RadarChart from './RadarChart';
 import ScoreArc from './ScoreArc';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 const profile = TASTE_PROFILE;
 
@@ -266,7 +267,7 @@ function ContextSection() {
       <div className="grid grid-cols-2 gap-3">
         {profile.contextModifiers.map((mod, i) => {
           const color = CONTEXT_COLORS[i % CONTEXT_COLORS.length];
-          const icon = CONTEXT_ICONS[mod.context] || '◆';
+          const icon = CONTEXT_ICONS[mod.context] || 'discover';
 
           return (
             <div
@@ -278,7 +279,7 @@ function ContextSection() {
               }}
             >
               <div className="flex items-center gap-1.5 mb-2">
-                <span style={{ fontSize: 14 }}>{icon}</span>
+                <PerriandIcon name={icon} size={16} color={color} />
                 <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                   {mod.context}
                 </span>

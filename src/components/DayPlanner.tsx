@@ -4,6 +4,7 @@ import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from './GhostCard';
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
@@ -186,14 +187,15 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             >
               <div className="flex items-center gap-2 min-w-0">
                 {day.hotel && (
-                  <span style={{
+                  <span className="flex items-center gap-1" style={{
                     fontFamily: "'DM Sans', sans-serif",
                     fontSize: 11,
                     fontWeight: 600,
                     color: destColor.text,
                     whiteSpace: 'nowrap',
                   }}>
-                    🏨 {day.hotel}
+                    <PerriandIcon name="hotel" size={12} color={destColor.text} />
+                    {day.hotel}
                   </span>
                 )}
               </div>
@@ -211,7 +213,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   transition: 'all 0.2s ease',
                 }}
               >
-                <span style={{ fontSize: 11 }}>🗺</span>
+                <PerriandIcon name="pin" size={12} color={dayMapOpen ? 'white' : destColor.accent} />
                 {dayMapOpen ? 'Hide Map' : 'View Map'}
                 {!dayMapOpen && placedItems.length > 0 && (
                   <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, opacity: 0.7 }}>
@@ -342,8 +344,9 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                 </div>
                 <div className="flex items-center gap-2">
                   {d.hotel && (
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
-                      🏨 {d.hotel}
+                    <span className="flex items-center gap-1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
+                      <PerriandIcon name="hotel" size={11} color={dColor.accent} />
+                      {d.hotel}
                     </span>
                   )}
                   <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: dColor.accent, opacity: 0.6 }}>
@@ -381,12 +384,13 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                         <div style={{ width: isReservation ? 3 : 2, height: 30, borderRadius: 2, background: isReservation ? srcStyle.color : 'var(--t-verde)', flexShrink: 0, marginTop: 2 }} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span style={{ fontSize: 11 }}>{SLOT_ICONS[slot.id] || '📍'}</span>
+                            <PerriandIcon name={SLOT_ICONS[slot.id] as any || 'pin'} size={12} color="var(--t-ink)" />
                             <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
                             </span>
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded" style={{ fontSize: 8, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}>
-                              {srcStyle.icon} {place.source?.name || srcStyle.label}
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 8, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}>
+                              <PerriandIcon name={srcStyle.icon} size={10} color={srcStyle.color} />
+                              {place.source?.name || srcStyle.label}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -429,7 +433,7 @@ interface TimeSlotCardProps {
 function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
-  const icon = SLOT_ICONS[slot.id] || '📍';
+  const icon = SLOT_ICONS[slot.id] || 'pin';
   const slotRef = useRef<HTMLDivElement>(null);
   const hasPlaces = slot.places.length > 0;
   const isEmpty = !hasPlaces && (!slot.ghostItems || slot.ghostItems.length === 0);
@@ -488,7 +492,9 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           className="flex items-center gap-2 px-4"
           style={{ height: 32 }}
         >
-          <span className="text-sm flex-shrink-0 w-6 text-center">{icon}</span>
+          <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
+          </div>
           <span
             className="text-[11px]"
             style={{
@@ -541,7 +547,9 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
       {/* Slot label row */}
       {hasPlaces && (
         <div className="flex items-center gap-2 px-4" style={{ height: 28 }}>
-          <span className="text-sm flex-shrink-0 w-6 text-center">{icon}</span>
+          <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
+          </div>
           <span
             className="text-[10px] flex-shrink-0"
             style={{
@@ -641,7 +649,9 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             transition: 'all 0.15s ease-out',
           }}
         >
-          <span className="text-sm flex-shrink-0 w-6 text-center">{icon}</span>
+          <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
+          </div>
           <span
             className="text-[11px] flex-shrink-0"
             style={{
