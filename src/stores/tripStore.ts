@@ -238,7 +238,7 @@ function createEnhancedDays(numDays: number, ghosts: Record<string, Record<strin
     hotel: i < 3 ? 'Aman Tokyo' : i === 3 ? 'Hakone Retreat' : 'Aman Tokyo',
     slots: DEFAULT_TIME_SLOTS.map(s => ({
       ...s,
-      place: undefined,
+      places: [],
       ghostItems: ghosts[String(i + 1)]?.[s.id] || [],
     })),
   }));
@@ -260,7 +260,8 @@ const DEMO_TRIP: Trip = {
 };
 
 // Place the Aman into day 1 morning
-DEMO_TRIP.days[0].slots[1].place = DEMO_POOL.find(p => p.id === '5');
+const amanItem = DEMO_POOL.find(p => p.id === '5');
+if (amanItem) DEMO_TRIP.days[0].slots[1].places.push(amanItem);
 
 interface TripState {
   trips: Trip[];
@@ -324,7 +325,7 @@ export const useTripStore = create<TripState>((set, get) => ({
         if (d.dayNumber !== day) return d;
         return {
           ...d,
-          slots: d.slots.map(s => s.id === slotId ? { ...s, place: { ...item, status: 'placed' as const } } : s),
+          slots: d.slots.map(s => s.id === slotId ? { ...s, places: [...s.places, { ...item, status: 'placed' as const }] } : s),
         };
       });
       return { ...trip, pool: updatedPool, days: updatedDays };
@@ -337,14 +338,14 @@ export const useTripStore = create<TripState>((set, get) => ({
       if (trip.id !== state.currentTripId) return trip;
       const dayObj = trip.days.find(d => d.dayNumber === day);
       const slot = dayObj?.slots.find(s => s.id === slotId);
-      const placeId = slot?.place?.id;
+      const placeIds = slot?.places.map(p => p.id) || [];
 
-      const updatedPool = placeId
-        ? trip.pool.map(p => p.id === placeId ? { ...p, status: 'available' as const, placedIn: undefined } : p)
+      const updatedPool = placeIds.length > 0
+        ? trip.pool.map(p => placeIds.includes(p.id) ? { ...p, status: 'available' as const, placedIn: undefined } : p)
         : trip.pool;
       const updatedDays = trip.days.map(d => {
         if (d.dayNumber !== day) return d;
-        return { ...d, slots: d.slots.map(s => s.id === slotId ? { ...s, place: undefined } : s) };
+        return { ...d, slots: d.slots.map(s => s.id === slotId ? { ...s, places: [] } : s) };
       });
       return { ...trip, pool: updatedPool, days: updatedDays };
     });
@@ -372,7 +373,7 @@ export const useTripStore = create<TripState>((set, get) => ({
         if (d.dayNumber !== dayNumber) return d;
         return {
           ...d,
-          slots: d.slots.map(s => s.id === slotId ? { ...s, place: placedItem } : s),
+          slots: d.slots.map(s => s.id === slotId ? { ...s, places: [...s.places, placedItem] } : s),
         };
       });
       return { ...trip, pool: updatedPool, days: updatedDays };
@@ -407,10 +408,10 @@ export const useTripStore = create<TripState>((set, get) => ({
             if (s.id !== slotId) return s;
             const ghost = s.ghostItems?.find(g => g.id === ghostId);
             if (!ghost) return s;
-            // Move ghost to confirmed place, remove from ghosts
+            // Move ghost to confirmed places, remove from ghosts
             return {
               ...s,
-              place: s.place || { ...ghost, ghostStatus: 'confirmed' as const, status: 'placed' as const },
+              places: [...s.places, { ...ghost, ghostStatus: 'confirmed' as const, status: 'placed' as const }],
               ghostItems: s.ghostItems?.filter(g => g.id !== ghostId),
             };
           }),
@@ -452,7 +453,7 @@ export const useTripStore = create<TripState>((set, get) => ({
         ...d,
         slots: d.slots.map(s => ({
           ...s,
-          place: s.place?.id === itemId ? { ...s.place, rating } : s.place,
+          places: s.places.map(p => p.id === itemId ? { ...p, rating } : p),
           ghostItems: s.ghostItems?.map(g => g.id === itemId ? { ...g, rating } : g),
         })),
       }));
@@ -482,7 +483,7 @@ export const useTripStore = create<TripState>((set, get) => ({
       trip.pool.forEach(p => existingPoolIds.add(p.name.toLowerCase()));
       trip.days.forEach(d => d.slots.forEach(s => {
         s.ghostItems?.forEach(g => existingGhostIds.add(g.name.toLowerCase()));
-        if (s.place) existingGhostIds.add(s.place.name.toLowerCase());
+        s.places.forEach(p => existingGhostIds.add(p.name.toLowerCase()));
       }));
 
       // Filter to only truly new candidates
@@ -517,7 +518,7 @@ export const useTripStore = create<TripState>((set, get) => ({
           if (placed) break;
           for (const slotId of preferredSlots) {
             const slot = day.slots.find(s => s.id === slotId);
-            if (slot && !slot.place && (!slot.ghostItems || slot.ghostItems.length === 0)) {
+            if (slot && slot.places.length === 0 && (!slot.ghostItems || slot.ghostItems.length === 0)) {
               const ghostItem: ImportedPlace = {
                 ...candidate,
                 id: `ghost-starred-${candidate.id}`,
@@ -572,7 +573,7 @@ export const useTripStore = create<TripState>((set, get) => ({
         destination: data.destinations[destIdx] || data.destinations[0],
         slots: DEFAULT_TIME_SLOTS.map(s => ({
           ...s,
-          place: undefined,
+          places: [],
           ghostItems: [],
         })),
       };

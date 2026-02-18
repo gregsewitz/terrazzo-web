@@ -103,6 +103,7 @@ export interface ImportSource {
 }
 
 export interface GooglePlaceData {
+  placeId?: string;
   rating?: number;
   reviewCount?: number;
   category?: string;
@@ -172,7 +173,7 @@ export interface TimeSlot {
   id: string;
   label: string;
   time: string;
-  place?: ImportedPlace;
+  places: ImportedPlace[];      // confirmed places (supports multiple per slot)
   ghostItems?: ImportedPlace[]; // proposed items (ghost cards) for this slot
 }
 
@@ -257,13 +258,13 @@ export interface AISuggestion {
 }
 
 // Default time slots for a day — updated to match Enhanced Slot Grid
-export const DEFAULT_TIME_SLOTS: Omit<TimeSlot, 'place' | 'ghostItems'>[] = [
-  { id: 'breakfast', label: 'Breakfast', time: '8:00 AM' },
-  { id: 'morning', label: 'Morning', time: '10:00 AM' },
-  { id: 'lunch', label: 'Lunch', time: '12:30 PM' },
-  { id: 'afternoon', label: 'Afternoon', time: '2:30 PM' },
-  { id: 'dinner', label: 'Dinner', time: '7:00 PM' },
-  { id: 'evening', label: 'Evening', time: '9:30 PM' },
+export const DEFAULT_TIME_SLOTS: Omit<TimeSlot, 'ghostItems'>[] = [
+  { id: 'breakfast', label: 'Breakfast', time: '8:00 AM', places: [] },
+  { id: 'morning', label: 'Morning', time: '10:00 AM', places: [] },
+  { id: 'lunch', label: 'Lunch', time: '12:30 PM', places: [] },
+  { id: 'afternoon', label: 'Afternoon', time: '2:30 PM', places: [] },
+  { id: 'dinner', label: 'Dinner', time: '7:00 PM', places: [] },
+  { id: 'evening', label: 'Evening', time: '9:30 PM', places: [] },
 ];
 
 export const SLOT_ICONS: Record<string, string> = {

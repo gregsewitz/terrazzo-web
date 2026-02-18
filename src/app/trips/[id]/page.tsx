@@ -5,20 +5,20 @@ import { useParams } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { useImportStore } from '@/stores/importStore';
-import { usePoolStore, SlotContext } from '@/stores/poolStore';
-import { ImportedPlace, PlaceRating } from '@/types';
+import type { SlotContext } from '@/stores/poolStore';
+import { ImportedPlace, PlaceRating, PlaceType } from '@/types';
 import TabBar from '@/components/TabBar';
 import DayPlanner from '@/components/DayPlanner';
 import type { TripViewMode, DropTarget } from '@/components/DayPlanner';
 import TripMyPlaces from '@/components/TripMyPlaces';
-import PoolTray from '@/components/PoolTray';
+import PicksStrip from '@/components/PicksStrip';
+import BrowseAllOverlay from '@/components/BrowseAllOverlay';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
 import IntelligenceView from '@/components/IntelligenceView';
 import DragOverlay from '@/components/DragOverlay';
-
 import ExportToMaps from '@/components/ExportToMaps';
 
 export default function TripDetailPage() {
@@ -32,13 +32,13 @@ export default function TripDetailPage() {
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
-  const { setExpanded, openForSlot } = usePoolStore();
-
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
   const [exportOpen, setExportOpen] = useState(false);
+  const [browseAllOpen, setBrowseAllOpen] = useState(false);
+  const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
@@ -144,48 +144,69 @@ export default function TripDetailPage() {
 
   return (
     <div
-      className="min-h-screen relative"
+      className="h-screen relative flex flex-col"
       style={{
         background: 'var(--t-cream)',
         maxWidth: 480,
         margin: '0 auto',
         touchAction: dragItem ? 'none' : 'auto',
+        overflow: 'hidden',
       }}
     >
-      {/* Chat toggle */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed top-4 right-4 z-30 w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center text-sm shadow-md"
-        style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
-        title="Ask Terrazzo"
-      >
-        💬
-      </button>
+      {/* Top-right action pill */}
+      <div className="fixed top-4 right-4 z-30">
+        <button
+          onClick={() => setChatOpen(true)}
+          className="w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center text-sm shadow-md"
+          style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
+          title="Ask Terrazzo"
+        >
+          💬
+        </button>
+      </div>
 
-      {/* Day Planner (includes header + 3-way toggle for all modes) */}
-      <DayPlanner
-        viewMode={viewMode}
-        onSetViewMode={setViewMode}
-        onTapDetail={setDetailItem}
-        onOpenUnsorted={() => setExpanded(true)}
-        onOpenForSlot={(ctx: SlotContext) => openForSlot(ctx)}
-        dropTarget={dropTarget}
-        onRegisterSlotRef={handleRegisterSlotRef}
-      />
+      {/* Main content — fills available space between top and tab bar */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Day Planner (includes header + 3-way toggle for all modes) */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <DayPlanner
+            viewMode={viewMode}
+            onSetViewMode={setViewMode}
+            onTapDetail={setDetailItem}
+            onOpenUnsorted={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
+            onOpenForSlot={(ctx: SlotContext) => {
+              setBrowseAllFilter(ctx.suggestedTypes?.[0] as PlaceType | undefined);
+              setBrowseAllOpen(true);
+            }}
+            dropTarget={dropTarget}
+            onRegisterSlotRef={handleRegisterSlotRef}
+          />
 
-      {/* My Places — only in myPlaces mode */}
-      {viewMode === 'myPlaces' && (
-        <TripMyPlaces onTapDetail={setDetailItem} />
-      )}
+          {/* Trip Places — all placed items across itinerary */}
+          {viewMode === 'myPlaces' && (
+            <TripMyPlaces onTapDetail={setDetailItem} />
+          )}
+        </div>
 
-      {/* Pool Tray — only in planner mode */}
-      {viewMode === 'planner' && (
-        <PoolTray
-          onTapDetail={setDetailItem}
-          onCurateMore={() => setViewMode('myPlaces')}
-          onOpenExport={() => setExportOpen(true)}
-          onDragStart={handleDragStart}
-          dragItemId={dragItem?.id ?? null}
+        {/* Picks Strip — pinned at bottom above tab bar */}
+        {viewMode === 'planner' && (
+          <div className="flex-shrink-0" style={{ paddingBottom: 60 }}>
+            <PicksStrip
+              onTapDetail={setDetailItem}
+              onBrowseAll={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
+              onDragStart={handleDragStart}
+              dragItemId={dragItem?.id ?? null}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Browse All Overlay — full list access from picks strip */}
+      {browseAllOpen && (
+        <BrowseAllOverlay
+          onClose={() => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); }}
+          onTapDetail={(item) => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); setDetailItem(item); }}
+          initialFilter={browseAllFilter}
         />
       )}
 

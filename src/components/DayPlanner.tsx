@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, PlaceType, TimeSlot, SLOT_ICONS, DEST_COLORS } from '@/types';
+import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import GhostCard from './GhostCard';
-import MapView from './MapView';
+import GoogleMapView from '@/components/GoogleMapView';
+import type { MapMarker } from '@/components/GoogleMapView';
 
 export type TripViewMode = 'planner' | 'overview' | 'myPlaces';
 
@@ -30,8 +31,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
-  const unsortedCount = useMemo(() => trip?.pool.filter(p => p.status === 'available').length ?? 0, [trip]);
-
+  const [dayMapOpen, setDayMapOpen] = useState(false);
   if (!trip) return null;
 
   const day = trip.days.find(d => d.dayNumber === currentDay) || trip.days[0];
@@ -40,7 +40,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const destColor = DEST_COLORS[day.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
 
   return (
-    <div className="pb-64" style={{ background: 'var(--t-cream)' }}>
+    <div style={{ background: 'var(--t-cream)' }}>
       {/* Compact Trip Header */}
       <div
         className="px-4 pt-4 pb-3"
@@ -70,7 +70,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           className="flex gap-1 mt-2.5 p-0.5 rounded-lg"
           style={{ background: 'var(--t-linen)' }}
         >
-          {(['overview', 'myPlaces', 'planner'] as const).map(mode => (
+          {(['overview', 'planner', 'myPlaces'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => onSetViewMode(mode)}
@@ -84,14 +84,14 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'My Places' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : 'Day Planner'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Content for planner/overview modes only */}
-      {viewMode !== 'myPlaces' && <>
+      {/* Planner mode: calendar tabs + context bar + time slots */}
+      {viewMode === 'planner' && <>
 
       {/* Calendar-style day segments */}
       <div
@@ -111,7 +111,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             <button
               key={d.dayNumber}
               onClick={() => setCurrentDay(d.dayNumber)}
-              className="flex-1 flex flex-col items-center gap-0.5 py-2.5 px-1 cursor-pointer transition-all"
+              className="flex-1 flex flex-col items-center py-1.5 px-1 cursor-pointer transition-all"
               style={{
                 border: 'none',
                 borderBottom: isDayActive ? `2px solid ${dayDestColor.accent}` : '2px solid transparent',
@@ -119,27 +119,19 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               }}
             >
               <span style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 10,
-                textTransform: 'uppercase' as const,
-                color: isDayActive ? dayDestColor.accent : 'rgba(28,26,23,0.4)',
-              }}>
-                {shortDay}
-              </span>
-              <span style={{
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: 15,
+                fontSize: 12,
                 fontWeight: 600,
                 color: isDayActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                lineHeight: 1.2,
               }}>
-                {dateNum}
+                {shortDay} {dateNum}
               </span>
               <span style={{
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: 500,
-                color: isDayActive ? 'rgba(28,26,23,0.65)' : 'rgba(28,26,23,0.35)',
-                marginTop: 1,
+                color: isDayActive ? dayDestColor.accent : 'rgba(28,26,23,0.35)',
               }}>
                 {d.destination || 'TBD'}
               </span>
@@ -148,134 +140,136 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         })}
       </div>
 
-      {/* Active day detail row — hotel + unsorted */}
-      <div
-        className="flex items-center justify-between px-4 py-2"
-        style={{
-          background: `${destColor.accent}08`,
-          borderBottom: '1px solid var(--t-linen)',
-        }}
-      >
-        <div className="flex items-center gap-1.5">
-          {day.hotel && (
-            <span style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13,
-              fontWeight: 600,
-              color: 'rgba(28,26,23,0.7)',
-            }}>
-              {day.hotel}
-            </span>
-          )}
-          {day.destination && (
-            <span style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 12,
-              fontWeight: 500,
-              color: 'rgba(28,26,23,0.45)',
-            }}>
-              · {day.destination}
-            </span>
-          )}
-        </div>
-      </div>
+      {/* Active day context bar — hotel + map toggle */}
+      {(() => {
+        const placedItems = day.slots.flatMap(s => s.places);
+        const ghostItems = day.slots.flatMap(s => s.ghostItems || []);
+        const geo = trip.geoDestinations?.find(
+          g => g.name.toLowerCase() === (day.destination || '').toLowerCase()
+        );
+        const mapMarkers: MapMarker[] = [
+          ...placedItems.map((p, i) => ({
+            id: `placed-${i}`,
+            name: p.name,
+            location: p.location || day.destination || '',
+            color: SOURCE_STYLES.manual.color,
+          })),
+          ...ghostItems.map((g, i) => ({
+            id: `ghost-${i}`,
+            name: g.name,
+            location: g.location || day.destination || '',
+            color: SOURCE_STYLES[(g.ghostSource || 'ai') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.ai.color,
+            isDashed: true,
+          })),
+        ];
 
-      {viewMode === 'planner' ? (
-        <>
-          {/* Map view */}
-          <MapView
-            dayNumber={day.dayNumber}
-            destination={day.destination}
-            destinationCoords={(() => {
-              const geo = trip.geoDestinations?.find(
-                g => g.name.toLowerCase() === (day.destination || '').toLowerCase()
-              );
-              return geo?.lat != null && geo?.lng != null ? { lat: geo.lat, lng: geo.lng } : undefined;
-            })()}
-            placedItems={day.slots
-              .filter(s => s.place)
-              .map(s => ({ name: s.place!.name, type: s.place!.type }))}
-            ghostItems={day.slots
-              .flatMap(s => s.ghostItems || [])
-              .map(item => ({ name: item.name, ghostSource: item.ghostSource }))}
-          />
-
-          {/* Six time slots */}
-          <div className="flex flex-col">
-            {day.slots.map((slot, idx) => (
-              <TimeSlotCard
-                key={slot.id}
-                slot={slot}
-                dayNumber={day.dayNumber}
-                destColor={destColor}
-                onTapDetail={onTapDetail}
-                onOpenUnsorted={onOpenUnsorted}
-                onOpenForSlot={onOpenForSlot}
-                allSlots={day.slots}
-                slotIndex={idx}
-                isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
-                onRegisterRef={onRegisterSlotRef
-                  ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
-                  : undefined}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
-        /* Overview — all days at a glance */
-        <div className="px-4 py-4 flex flex-col gap-3">
-          {trip.days.map(d => {
-            const dColor = DEST_COLORS[d.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
-            const placedCount = d.slots.filter(s => s.place).length;
-            const ghostCount = d.slots.reduce((acc, s) => acc + (s.ghostItems?.length || 0), 0);
-            return (
-              <div
-                key={d.dayNumber}
-                onClick={() => { setCurrentDay(d.dayNumber); onSetViewMode('planner'); }}
-                className="p-3.5 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
-                style={{
-                  background: 'white',
-                  border: `1.5px solid var(--t-linen)`,
-                  borderLeft: `4px solid ${dColor.accent}`,
-                }}
-              >
-                <div className="flex items-baseline justify-between mb-1">
-                  <span
-                    className="text-[14px] font-semibold"
-                    style={{ color: dColor.accent, fontFamily: "'DM Serif Display', serif" }}
-                  >
-                    Day {d.dayNumber} · {d.destination}
+        return (
+          <>
+            <div
+              className="flex items-center justify-between px-3.5 py-1.5"
+              style={{
+                background: destColor.bg,
+                borderBottom: dayMapOpen ? 'none' : `1px solid ${destColor.accent}18`,
+              }}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                {day.hotel && (
+                  <span style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: destColor.text,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    🏨 {day.hotel}
                   </span>
-                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
-                    {d.dayOfWeek}, {d.date}
-                  </span>
-                </div>
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)' }}>
-                  {placedCount} confirmed{ghostCount > 0 ? ` · ${ghostCount} suggestion${ghostCount !== 1 ? 's' : ''}` : ''}
-                  {d.hotel ? ` · 🏨 ${d.hotel}` : ''}
-                </div>
-                {placedCount > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {d.slots.filter(s => s.place).map(s => (
-                      <span
-                        key={s.id}
-                        className="text-[10px] px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
-                      >
-                        {s.place!.name}
-                      </span>
-                    ))}
-                  </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      )}
+              <button
+                onClick={() => setDayMapOpen(!dayMapOpen)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                style={{
+                  background: dayMapOpen ? destColor.accent : `${destColor.accent}15`,
+                  color: dayMapOpen ? 'white' : destColor.accent,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span style={{ fontSize: 11 }}>🗺</span>
+                {dayMapOpen ? 'Hide Map' : 'View Map'}
+                {!dayMapOpen && placedItems.length > 0 && (
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, opacity: 0.7 }}>
+                    · {placedItems.length} place{placedItems.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Inline map panel */}
+            {dayMapOpen && (
+              <div style={{ borderBottom: `1px solid ${destColor.accent}18` }}>
+                <GoogleMapView
+                  markers={mapMarkers}
+                  height={220}
+                  fallbackDestination={day.destination}
+                  fallbackCoords={geo?.lat != null && geo?.lng != null ? { lat: geo.lat, lng: geo.lng } : undefined}
+                />
+                {/* Map legend */}
+                <div className="flex items-center gap-3 px-3.5 py-1.5" style={{ background: 'rgba(28,26,23,0.02)' }}>
+                  {placedItems.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.manual.color }} />
+                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.45)' }}>
+                        {placedItems.length} planned
+                      </span>
+                    </div>
+                  )}
+                  {ghostItems.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.ai.color, opacity: 0.5 }} />
+                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.35)' }}>
+                        {ghostItems.length} suggested
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Compact time slots */}
+      <div className="flex flex-col">
+        {day.slots.map((slot, idx) => (
+          <TimeSlotCard
+            key={slot.id}
+            slot={slot}
+            dayNumber={day.dayNumber}
+            destColor={destColor}
+            onTapDetail={onTapDetail}
+            onOpenUnsorted={onOpenUnsorted}
+            onOpenForSlot={onOpenForSlot}
+            allSlots={day.slots}
+            slotIndex={idx}
+            isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
+            onRegisterRef={onRegisterSlotRef
+              ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
+              : undefined}
+          />
+        ))}
+      </div>
 
       </>}
 
-      <div style={{ height: 20 }} />
+      {/* Overview mode: itinerary list grouped by day */}
+      {viewMode === 'overview' && (
+        <OverviewItinerary trip={trip} onTapDay={(dayNum) => { setCurrentDay(dayNum); onSetViewMode('planner'); }} onTapDetail={onTapDetail} />
+      )}
     </div>
   );
 }
@@ -293,12 +287,117 @@ function formatDateRange(startDate: string, endDate: string): string {
   return `${sMonth} ${s.getDate()} – ${eMonth} ${e.getDate()}`;
 }
 
-// Helper to convert hex to rgb values
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-    : '0, 0, 0';
+
+// Overview Itinerary — grouped-by-day list of all placed items
+function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapDay: (dayNum: number) => void; onTapDetail: (item: ImportedPlace) => void }) {
+  const totalPlaces = trip.days.reduce((acc, d) => acc + d.slots.reduce((a, s) => a + s.places.length, 0), 0);
+  const totalSlots = trip.days.reduce((acc, d) => acc + d.slots.length, 0);
+
+  return (
+    <div className="px-3 py-3 pb-48" style={{ background: 'var(--t-cream)' }}>
+      {/* Summary */}
+      <div className="flex items-baseline justify-between mb-2.5 px-1">
+        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+          {totalPlaces} place{totalPlaces !== 1 ? 's' : ''} planned
+        </span>
+        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.3)' }}>
+          {totalSlots - totalPlaces} slot{(totalSlots - totalPlaces) !== 1 ? 's' : ''} open
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        {trip.days.map(d => {
+          const dColor = DEST_COLORS[d.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+          const shortDay = d.dayOfWeek?.slice(0, 3) || '';
+          const allPlaced = d.slots.flatMap(s => s.places.map(p => ({ place: p, slot: s })));
+
+          return (
+            <div key={d.dayNumber}>
+              {/* Day header — tappable to jump to planner */}
+              <div
+                className="flex items-center justify-between px-3 py-1.5 rounded-t-lg cursor-pointer"
+                style={{ background: dColor.bg }}
+                onClick={() => onTapDay(d.dayNumber)}
+              >
+                <div className="flex items-center gap-2">
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 700, color: dColor.text }}>
+                    {shortDay} {d.date}
+                  </span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: dColor.accent }}>
+                    {d.destination}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {d.hotel && (
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
+                      🏨 {d.hotel}
+                    </span>
+                  )}
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: dColor.accent, opacity: 0.6 }}>
+                    {allPlaced.length}/{d.slots.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Place rows */}
+              <div className="rounded-b-lg overflow-hidden" style={{ border: `1px solid ${dColor.accent}15`, borderTop: 'none' }}>
+                {allPlaced.length === 0 ? (
+                  <div
+                    className="px-3 py-3 text-center cursor-pointer"
+                    style={{ background: 'white' }}
+                    onClick={() => onTapDay(d.dayNumber)}
+                  >
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.35)' }}>
+                      No places yet — tap to plan
+                    </span>
+                  </div>
+                ) : (
+                  allPlaced.map(({ place, slot }, idx) => {
+                    const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
+                    const isReservation = place.ghostSource === 'email';
+                    const subtitle = place.friendAttribution?.note || place.terrazzoInsight?.why || place.tasteNote || '';
+                    const truncSub = subtitle.length > 65 ? subtitle.slice(0, 62) + '…' : subtitle;
+
+                    return (
+                      <div
+                        key={place.id}
+                        onClick={() => onTapDetail(place)}
+                        className="flex items-start gap-2.5 px-3 py-2 cursor-pointer"
+                        style={{ background: 'white', borderTop: idx > 0 ? '1px solid var(--t-linen)' : undefined }}
+                      >
+                        <div style={{ width: isReservation ? 3 : 2, height: 30, borderRadius: 2, background: isReservation ? srcStyle.color : 'var(--t-verde)', flexShrink: 0, marginTop: 2 }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span style={{ fontSize: 11 }}>{SLOT_ICONS[slot.id] || '📍'}</span>
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                              {place.name}
+                            </span>
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded" style={{ fontSize: 8, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}>
+                              {srcStyle.icon} {place.source?.name || srcStyle.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.35)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {slot.time}
+                            </span>
+                            {truncSub && (
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontStyle: 'italic', color: 'rgba(28,26,23,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {truncSub}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface TimeSlotCardProps {
@@ -319,16 +418,16 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const icon = SLOT_ICONS[slot.id] || '📍';
   const slotRef = useRef<HTMLDivElement>(null);
-  const isEmpty = !slot.place && (!slot.ghostItems || slot.ghostItems.length === 0);
+  const hasPlaces = slot.places.length > 0;
+  const isEmpty = !hasPlaces && (!slot.ghostItems || slot.ghostItems.length === 0);
+  const hasGhosts = slot.ghostItems && slot.ghostItems.length > 0;
 
-  // Register bounding rect on mount and resize
+  // Register bounding rect on mount and resize — all slots are valid drop targets
   const updateRect = useCallback(() => {
-    if (onRegisterRef && slotRef.current && isEmpty) {
+    if (onRegisterRef && slotRef.current) {
       onRegisterRef(slotRef.current.getBoundingClientRect());
-    } else if (onRegisterRef && !isEmpty) {
-      onRegisterRef(null); // Don't accept drops on occupied slots
     }
-  }, [onRegisterRef, isEmpty]);
+  }, [onRegisterRef]);
 
   useEffect(() => {
     updateRect();
@@ -340,107 +439,219 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     };
   }, [updateRect]);
 
+  const handleEmptyClick = () => {
+    if (onOpenForSlot && allSlots && slotIndex != null) {
+      const prevSlot = slotIndex > 0 ? allSlots[slotIndex - 1] : undefined;
+      const nextSlot = slotIndex < allSlots.length - 1 ? allSlots[slotIndex + 1] : undefined;
+      const prevPlace = prevSlot?.places[prevSlot.places.length - 1];
+      const nextPlace = nextSlot?.places[0];
+      const before = prevPlace ? { name: prevPlace.name, type: prevPlace.type, location: prevPlace.location } : undefined;
+      const after = nextPlace ? { name: nextPlace.name, type: nextPlace.type, location: nextPlace.location } : undefined;
+      onOpenForSlot({
+        slotId: slot.id,
+        slotLabel: slot.label,
+        dayNumber,
+        adjacentPlaces: { before, after },
+        suggestedTypes: SLOT_TYPE_AFFINITY[slot.id] || [],
+      });
+    } else {
+      onOpenUnsorted();
+    }
+  };
+
+  // ─── Ghost slots get expanded GhostCard; confirmed/empty stay compact ───
+  if (hasGhosts && !hasPlaces) {
+    return (
+      <div
+        ref={slotRef}
+        style={{
+          borderBottom: '1px solid var(--t-linen)',
+          background: isDropTarget ? 'rgba(42,122,86,0.04)' : undefined,
+          transition: 'background 0.15s ease-out',
+        }}
+      >
+        {/* Compact header row for the slot */}
+        <div
+          className="flex items-center gap-2 px-4"
+          style={{ height: 32 }}
+        >
+          <span className="text-sm flex-shrink-0 w-6 text-center">{icon}</span>
+          <span
+            className="text-[11px]"
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              color: 'rgba(28,26,23,0.45)',
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.5px',
+            }}
+          >
+            {slot.label}
+          </span>
+          {slot.ghostItems!.length > 1 && (
+            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.4)' }}>
+              {slot.ghostItems!.length} suggestions
+            </span>
+          )}
+        </div>
+
+        {/* Ghost cards */}
+        <div className="px-4 pb-2.5 flex flex-col gap-2">
+          {slot.ghostItems!.map(ghost => (
+            <GhostCard
+              key={ghost.id}
+              item={ghost}
+              variant="slot"
+              onConfirm={() => confirmGhost(dayNumber, slot.id, ghost.id)}
+              onDismiss={() => dismissGhost(dayNumber, slot.id, ghost.id)}
+              onTapDetail={() => onTapDetail(ghost)}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Compact layout: one row per confirmed place + empty drop target ───
   return (
     <div
       ref={slotRef}
-      className="px-4 py-4"
-      style={{ borderBottom: '1px solid var(--t-linen)' }}
+      style={{
+        borderBottom: '1px solid var(--t-linen)',
+        background: isDropTarget
+          ? 'rgba(42,122,86,0.08)'
+          : hasPlaces
+            ? 'rgba(42,122,86,0.055)'
+            : undefined,
+        transition: 'background 0.15s ease-out',
+      }}
     >
-      {/* Slot header */}
-      <div className="flex items-center gap-2.5 mb-3">
-        <span className="text-lg">{icon}</span>
-        <span
-          className="text-[13px] font-medium"
-          style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
-        >
-          {slot.label}
-        </span>
-      </div>
+      {/* Slot label row */}
+      {hasPlaces && (
+        <div className="flex items-center gap-2 px-4" style={{ height: 28 }}>
+          <span className="text-sm flex-shrink-0 w-6 text-center">{icon}</span>
+          <span
+            className="text-[10px] flex-shrink-0"
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              color: 'rgba(28,26,23,0.45)',
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.5px',
+            }}
+          >
+            {slot.label}
+          </span>
+          {slot.time && (
+            <span
+              className="text-[10px]"
+              style={{ color: 'rgba(28,26,23,0.35)', fontFamily: "'Space Mono', monospace" }}
+            >
+              {slot.time}
+            </span>
+          )}
+        </div>
+      )}
 
-      {/* Slot content */}
-      <div className="flex flex-col gap-2.5">
-        {/* Confirmed place */}
-        {slot.place && (
+      {/* Confirmed places — card style with source + insight */}
+      {slot.places.map((p, pIdx) => {
+        const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+        const isReservation = p.ghostSource === 'email';
+        const subtitle = p.friendAttribution?.note
+          || p.terrazzoInsight?.why
+          || p.tasteNote
+          || '';
+        return (
           <div
-            onClick={() => onTapDetail(slot.place!)}
-            className="cursor-pointer transition-all p-3 rounded-lg"
+            key={p.id}
+            className="mx-3 mb-1.5 rounded-lg cursor-pointer transition-all overflow-hidden"
+            onClick={() => onTapDetail(p)}
             style={{
               background: 'white',
-              border: '1.5px solid var(--t-linen)',
-              borderLeft: '4px solid var(--t-verde)',
+              border: '1px solid rgba(42,122,86,0.12)',
             }}
           >
-            <div
-              className="text-[13px] font-medium mb-1"
-              style={{ color: 'var(--t-ink)' }}
-            >
-              {slot.place.name}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(28,26,23,0.7)' }}>
-              <span
-                className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold"
-                style={{ background: 'var(--t-verde)', color: 'white' }}
-              >
-                ⏰
-              </span>
-              {slot.time}
+            <div className="flex items-start gap-2 px-2.5 py-2">
+              {/* Source bar — solid for reservations, regular for others */}
+              <div
+                className="flex-shrink-0 rounded-full mt-0.5"
+                style={{
+                  width: isReservation ? 3 : 2,
+                  height: 30,
+                  background: isReservation ? srcStyle.color : 'var(--t-verde)',
+                  opacity: isReservation ? 1 : 0.5,
+                }}
+              />
+              {/* Content — name + source on line 1, insight on line 2 */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="text-[12px] font-medium truncate"
+                    style={{ color: 'var(--t-ink)' }}
+                  >
+                    {p.name}
+                  </span>
+                  <span
+                    className="text-[8px] font-semibold px-1.5 py-px rounded flex-shrink-0"
+                    style={{ background: srcStyle.bg, color: srcStyle.color }}
+                  >
+                    {srcStyle.icon} {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
+                  </span>
+                </div>
+                {subtitle && (
+                  <div
+                    className="text-[10px] truncate mt-px"
+                    style={{
+                      color: 'rgba(28,26,23,0.45)',
+                      fontStyle: 'italic',
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    {subtitle}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        )}
+        );
+      })}
 
-        {/* Ghost items — full-width */}
-        {slot.ghostItems && slot.ghostItems.map(ghost => (
-          <GhostCard
-            key={ghost.id}
-            item={ghost}
-            variant="slot"
-            onConfirm={() => confirmGhost(dayNumber, slot.id, ghost.id)}
-            onDismiss={() => dismissGhost(dayNumber, slot.id, ghost.id)}
-            onTapDetail={() => onTapDetail(ghost)}
-          />
-        ))}
+      {/* Add padding at bottom of filled slots */}
+      {hasPlaces && <div style={{ height: 4 }} />}
 
-        {/* Empty state — drop target or click to assign */}
-        {isEmpty && (
-          <div
-            onClick={() => {
-              if (onOpenForSlot && allSlots && slotIndex != null) {
-                const prevSlot = slotIndex > 0 ? allSlots[slotIndex - 1] : undefined;
-                const nextSlot = slotIndex < allSlots.length - 1 ? allSlots[slotIndex + 1] : undefined;
-                const before = prevSlot?.place ? { name: prevSlot.place.name, type: prevSlot.place.type, location: prevSlot.place.location } : undefined;
-                const after = nextSlot?.place ? { name: nextSlot.place.name, type: nextSlot.place.type, location: nextSlot.place.location } : undefined;
-                onOpenForSlot({
-                  slotId: slot.id,
-                  slotLabel: slot.label,
-                  dayNumber,
-                  adjacentPlaces: { before, after },
-                  suggestedTypes: SLOT_TYPE_AFFINITY[slot.id] || [],
-                });
-              } else {
-                onOpenUnsorted();
-              }
-            }}
-            className="flex items-center justify-center p-3 rounded-lg cursor-pointer transition-all"
+      {/* Empty slot — drop target / add row */}
+      {!hasPlaces && (
+        <div
+          className="flex items-center gap-2 px-4 cursor-pointer transition-all"
+          onClick={handleEmptyClick}
+          style={{
+            height: 48,
+            background: isDropTarget ? 'rgba(42,122,86,0.03)' : 'transparent',
+            transition: 'all 0.15s ease-out',
+          }}
+        >
+          <span className="text-sm flex-shrink-0 w-6 text-center">{icon}</span>
+          <span
+            className="text-[11px] flex-shrink-0"
             style={{
-              border: isDropTarget
-                ? '2px dashed var(--t-verde)'
-                : '1.5px dashed var(--t-linen)',
-              background: isDropTarget
-                ? 'rgba(42,122,86,0.08)'
-                : 'rgba(243, 239, 232, 0.5)',
-              minHeight: 48,
-              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.7)',
-              fontSize: '13px',
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: isDropTarget ? 600 : 400,
-              transform: isDropTarget ? 'scale(1.02)' : 'none',
-              transition: 'all 0.15s ease-out',
+              width: 62,
+              fontFamily: "'Space Mono', monospace",
+              color: 'rgba(28,26,23,0.45)',
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.5px',
             }}
           >
-            {isDropTarget ? 'Drop here' : `+ Add ${slot.label.toLowerCase()}`}
-          </div>
-        )}
-      </div>
+            {slot.label}
+          </span>
+          <span
+            className="text-[11px]"
+            style={{
+              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.3)',
+              fontWeight: isDropTarget ? 600 : 400,
+            }}
+          >
+            {isDropTarget ? 'Drop here' : '+ add'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

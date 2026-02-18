@@ -54,50 +54,57 @@ export default function GhostCard({
 
   const note = getSourceNote();
 
-  // === SLOT VARIANT — full-width, matches wireframe ghost card style ===
+  // === SLOT VARIANT — compact two-line card ===
   if (variant === 'slot') {
     return (
       <div
-        className="relative cursor-pointer transition-all ghost-shimmer rounded-lg"
+        className="relative cursor-pointer transition-all ghost-shimmer rounded-lg flex items-center gap-2"
         style={{
           background: 'var(--t-cream)',
-          border: `2px dashed ${sourceStyle.color}`,
-          padding: '12px',
+          border: `1.5px dashed ${sourceStyle.color}`,
+          padding: '8px 10px',
         }}
         onClick={onTapDetail}
       >
-        {/* Source badge */}
+        {/* Left: source icon */}
         <div
-          className="flex items-center gap-1 text-[11px] font-medium mb-1.5"
-          style={{ color: sourceStyle.color }}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+          style={{ background: sourceStyle.bg, color: sourceStyle.color }}
         >
-          <span className="text-xs">{sourceStyle.icon}</span>
-          <span>{getSourceLabel()}</span>
+          {sourceStyle.icon}
         </div>
 
-        {/* Place name */}
-        <div
-          className="text-[13px] font-medium mb-1"
-          style={{ color: 'var(--t-ink)' }}
-        >
-          {item.name}
-        </div>
-
-        {/* Note / quote */}
-        {note && (
-          <div
-            className="text-[11px] italic"
-            style={{ color: 'rgba(28,26,23,0.7)' }}
-          >
-            {sourceType === 'friend' ? `"${note}"` : note}
+        {/* Middle: name + source/note on two lines */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="text-[12px] font-medium truncate"
+              style={{ color: 'var(--t-ink)' }}
+            >
+              {item.name}
+            </span>
+            <span
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: sourceStyle.bg, color: sourceStyle.color }}
+            >
+              {getSourceLabel()}
+            </span>
           </div>
-        )}
+          {note && (
+            <div
+              className="text-[10px] italic truncate mt-0.5"
+              style={{ color: 'rgba(28,26,23,0.55)' }}
+            >
+              {sourceType === 'friend' ? `"${note}"` : note}
+            </div>
+          )}
+        </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-1.5 mt-2.5">
+        {/* Right: action buttons */}
+        <div className="flex gap-1 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); onConfirm(); }}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+            className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
             style={{
               background: 'var(--t-verde)',
               color: 'white',
@@ -106,20 +113,19 @@ export default function GhostCard({
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            ✓ Add to plan
+            ✓ Add
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all"
             style={{
-              background: 'var(--t-cream)',
-              color: 'rgba(28,26,23,0.7)',
-              border: '1px solid var(--t-linen)',
+              background: 'rgba(28,26,23,0.06)',
+              color: 'rgba(28,26,23,0.5)',
+              border: 'none',
               cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            Not this trip
+            ✕
           </button>
         </div>
       </div>

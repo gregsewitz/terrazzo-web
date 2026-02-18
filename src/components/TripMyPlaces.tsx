@@ -2,263 +2,335 @@
 
 import { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES } from '@/types';
+import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS } from '@/types';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
 }
 
-type PlaceTypeFilter = PlaceType | 'all';
-type SourceFilterType = GhostSourceType | 'all';
+type FilterType = PlaceType | 'all';
 
-const TYPE_FILTERS: { value: PlaceTypeFilter; label: string }[] = [
+const TYPE_ICONS: Record<PlaceType, string> = {
+  restaurant: '🍽', bar: '🍸', cafe: '☕', museum: '🏛', activity: '🎯',
+  hotel: '🏨', neighborhood: '🏘', shop: '🛍',
+};
+
+const TYPE_CHIPS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'hotel', label: 'Hotels' },
   { value: 'restaurant', label: 'Restaurants' },
   { value: 'bar', label: 'Bars' },
+  { value: 'cafe', label: 'Cafés' },
+  { value: 'museum', label: 'Museums' },
   { value: 'activity', label: 'Experiences' },
-  { value: 'cafe', label: 'Cafes' },
+  { value: 'hotel', label: 'Hotels' },
   { value: 'shop', label: 'Shops' },
 ];
 
-const SOURCE_TABS: { value: SourceFilterType; label: string; icon?: string }[] = [
-  { value: 'all', label: 'All sources' },
-  { value: 'friend', label: 'Friends', icon: '👤' },
-  { value: 'maps', label: 'Maps', icon: '📍' },
-  { value: 'article', label: 'Articles', icon: '📰' },
-  { value: 'email', label: 'Email', icon: '✉' },
-  { value: 'manual', label: 'Added', icon: '✎' },
-];
+interface PlacedItem {
+  place: ImportedPlace;
+  slotLabel: string;
+  slotTime: string;
+  slotId: string;
+  dayNumber: number;
+  dayOfWeek?: string;
+  date?: string;
+  destination?: string;
+}
 
 export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
-  const myPlaces = useSavedStore(s => s.myPlaces);
-  const toggleStar = useSavedStore(s => s.toggleStar);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
 
-  const [typeFilter, setTypeFilter] = useState<PlaceTypeFilter>('all');
-  const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
+  const [filter, setFilter] = useState<FilterType>('all');
 
-  // Geo-filter: only places matching trip destinations
-  const geoFiltered = useMemo(() => {
+  // Collect all placed items across all days
+  const allPlaced = useMemo(() => {
     if (!trip) return [];
-    const dests = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean))
-      .map(d => d.toLowerCase());
-    if (dests.length === 0) return [];
-    return myPlaces.filter(place =>
-      dests.some(dest => place.location.toLowerCase().includes(dest))
-    );
-  }, [myPlaces, trip]);
+    const items: PlacedItem[] = [];
+    trip.days.forEach(day => {
+      day.slots.forEach(slot => {
+        slot.places.forEach(place => {
+          items.push({
+            place,
+            slotLabel: slot.label,
+            slotTime: slot.time,
+            slotId: slot.id,
+            dayNumber: day.dayNumber,
+            dayOfWeek: day.dayOfWeek,
+            date: day.date,
+            destination: day.destination,
+          });
+        });
+      });
+    });
+    return items;
+  }, [trip]);
 
-  // Type filter
-  const typeFiltered = useMemo(() => {
-    if (typeFilter === 'all') return geoFiltered;
-    return geoFiltered.filter(p => p.type === typeFilter);
-  }, [geoFiltered, typeFilter]);
-
-  // Source filter
-  const filtered = useMemo(() => {
-    if (sourceFilter === 'all') return typeFiltered;
-    return typeFiltered.filter(p => p.ghostSource === sourceFilter);
-  }, [typeFiltered, sourceFilter]);
-
-  // Sort: starred first, then by matchScore descending
-  const sorted = useMemo(() =>
-    [...filtered].sort((a, b) => {
-      const aStarred = a.rating?.reaction === 'myPlace' ? 1 : 0;
-      const bStarred = b.rating?.reaction === 'myPlace' ? 1 : 0;
-      if (aStarred !== bStarred) return bStarred - aStarred;
-      return b.matchScore - a.matchScore;
-    }),
-  [filtered]);
-
-  // Counts
-  const starredCount = useMemo(() =>
-    geoFiltered.filter(p => p.rating?.reaction === 'myPlace').length,
-  [geoFiltered]);
-
+  // Type counts for chips
   const typeCounts = useMemo(() => {
     const c: Record<string, number> = {};
-    geoFiltered.forEach(p => { c[p.type] = (c[p.type] || 0) + 1; });
+    allPlaced.forEach(item => { c[item.place.type] = (c[item.place.type] || 0) + 1; });
     return c;
-  }, [geoFiltered]);
+  }, [allPlaced]);
 
-  const sourceCounts = useMemo(() => {
-    const c: Record<string, number> = {};
-    geoFiltered.forEach(p => { c[p.ghostSource || 'manual'] = (c[p.ghostSource || 'manual'] || 0) + 1; });
-    return c;
-  }, [geoFiltered]);
+  // Filter
+  const filtered = useMemo(() => {
+    if (filter === 'all') return allPlaced;
+    return allPlaced.filter(item => item.place.type === filter);
+  }, [allPlaced, filter]);
 
   if (!trip) return null;
 
-  const destLabel = trip.destinations?.join(', ') || trip.location?.split(',')[0]?.trim() || '';
-
   return (
-    <div className="px-4 py-4 pb-48">
-      {/* Header */}
-      <div className="mb-3">
-        <p
-          className="text-[11px]"
-          style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}
-        >
-          {geoFiltered.length} collected place{geoFiltered.length !== 1 ? 's' : ''} in {destLabel}
-          {starredCount > 0 && <span style={{ color: 'var(--t-verde)' }}> · {starredCount} starred</span>}
-        </p>
-      </div>
-
-      {/* Type filter chips */}
-      <div className="flex gap-1.5 mb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        {TYPE_FILTERS.map(f => {
-          const count = f.value === 'all' ? geoFiltered.length : (typeCounts[f.value] || 0);
-          if (f.value !== 'all' && count === 0) return null;
-          const isActive = typeFilter === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setTypeFilter(f.value)}
-              className="px-3 py-1.5 rounded-2xl text-[11px] whitespace-nowrap flex-shrink-0"
-              style={{
-                background: isActive ? 'var(--t-ink)' : 'var(--t-linen)',
-                color: isActive ? 'white' : 'var(--t-ink)',
-                fontWeight: isActive ? 600 : 500,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              {f.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Source filter tabs */}
-      <div className="flex gap-1.5 mb-4 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
-        {SOURCE_TABS.map(tab => {
-          const count = tab.value === 'all' ? geoFiltered.length : (sourceCounts[tab.value] || 0);
-          if (tab.value !== 'all' && count === 0) return null;
-          const isActive = sourceFilter === tab.value;
-          return (
-            <button
-              key={tab.value}
-              onClick={() => setSourceFilter(tab.value)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-2xl text-[10px] whitespace-nowrap flex-shrink-0"
-              style={{
-                background: isActive
-                  ? (tab.value === 'all' ? 'var(--t-ink)' : (SOURCE_STYLES[tab.value as GhostSourceType]?.bg || 'rgba(28,26,23,0.06)'))
-                  : 'rgba(28,26,23,0.04)',
-                color: isActive
-                  ? (tab.value === 'all' ? 'white' : (SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'var(--t-ink)'))
-                  : 'rgba(28,26,23,0.7)',
-                fontWeight: isActive ? 600 : 400,
-                border: isActive && tab.value !== 'all'
-                  ? `1px solid ${SOURCE_STYLES[tab.value as GhostSourceType]?.color || 'transparent'}`
-                  : '1px solid transparent',
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              {tab.icon && <span>{tab.icon}</span>}
-              <span>{tab.label}</span>
-              <span style={{ opacity: 0.6 }}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Curate hint */}
-      <div className="text-[10px] mb-3" style={{ color: 'rgba(28,26,23,0.6)' }}>
-        Star places to add them to your itinerary pool
-      </div>
-
-      {/* Place list */}
-      {sorted.length === 0 ? (
-        <div className="text-center py-12">
-          <span className="text-2xl mb-3 block">◇</span>
-          <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.65)' }}>
-            No collected places match these filters
-          </p>
+    <div className="pb-48" style={{ background: 'var(--t-cream)' }}>
+      {/* Header + filter chips */}
+      <div className="px-4 pt-3 pb-2" style={{ background: 'white', borderBottom: '1px solid var(--t-linen)' }}>
+        <div className="flex items-baseline justify-between mb-2">
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+            {allPlaced.length} place{allPlaced.length !== 1 ? 's' : ''} on this trip
+          </span>
         </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {sorted.map(place => {
-            const isStarred = place.rating?.reaction === 'myPlace';
-            const sourceStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
-
+        <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {TYPE_CHIPS.map(chip => {
+            const count = chip.value === 'all' ? allPlaced.length : (typeCounts[chip.value] || 0);
+            if (chip.value !== 'all' && count === 0) return null;
+            const isActive = filter === chip.value;
             return (
-              <div
-                key={place.id}
-                className="flex gap-2.5 p-3 rounded-xl transition-all"
+              <button
+                key={chip.value}
+                onClick={() => setFilter(chip.value)}
+                className="px-2.5 py-1 rounded-2xl text-[10px] whitespace-nowrap flex-shrink-0"
                 style={{
-                  background: isStarred ? 'rgba(42,122,86,0.03)' : 'white',
-                  border: isStarred ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+                  background: isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.04)',
+                  color: isActive ? 'white' : 'rgba(28,26,23,0.6)',
+                  fontWeight: isActive ? 600 : 500,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                {/* Star toggle */}
-                <button
-                  onClick={() => toggleStar(place.id)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-all"
-                  style={{
-                    background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
-                    color: isStarred ? 'white' : 'rgba(28,26,23,0.55)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                  }}
-                >
-                  {isStarred ? '★' : '☆'}
-                </button>
-
-                {/* Card body — tappable for detail */}
-                <div
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => onTapDetail(place)}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
-                      {place.name}
-                    </div>
-                    {/* Match score */}
-                    <span
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0"
-                      style={{
-                        background: 'rgba(200,146,58,0.08)',
-                        color: 'var(--t-honey)',
-                        fontFamily: "'Space Mono', monospace",
-                      }}
-                    >
-                      {place.matchScore}%
-                    </span>
-                  </div>
-                  <div className="text-[10px] mb-1.5" style={{ color: 'rgba(28,26,23,0.7)' }}>
-                    {place.type.charAt(0).toUpperCase() + place.type.slice(1)} · {place.location}
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* Source badge */}
-                    <span
-                      className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
-                      style={{ background: sourceStyle.bg, color: sourceStyle.color }}
-                    >
-                      {sourceStyle.icon} {place.source?.name || sourceStyle.label}
-                    </span>
-                    {/* Friend attribution */}
-                    {place.friendAttribution && (
-                      <span
-                        className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
-                        style={{ background: 'rgba(42,122,86,0.06)', color: 'var(--t-verde)' }}
-                      >
-                        👤 {place.friendAttribution.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+                {chip.label} {count > 0 ? count : ''}
+              </button>
             );
           })}
         </div>
+      </div>
+
+      {/* Place cards */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 px-4">
+          <span className="text-3xl mb-3 block">📋</span>
+          <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
+            No places added yet
+          </p>
+          <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}>
+            Drag places from your picks into the Day Planner to build your itinerary
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 px-3 pt-3">
+          {filtered.map(item => (
+            <PlaceCard key={`${item.dayNumber}-${item.slotId}-${item.place.id}`} item={item} onTap={() => onTapDetail(item.place)} />
+          ))}
+        </div>
       )}
+    </div>
+  );
+}
+
+// Rich place card component
+function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
+  const { place } = item;
+  const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
+  const isReservation = place.ghostSource === 'email';
+  const destColor = DEST_COLORS[item.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+  const typeIcon = TYPE_ICONS[place.type] || '📍';
+
+  // Google data
+  const google = place.google;
+  const priceStr = google?.priceLevel ? '€'.repeat(google.priceLevel) : null;
+
+  return (
+    <div
+      onClick={onTap}
+      className="rounded-xl overflow-hidden cursor-pointer transition-all"
+      style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+    >
+      {/* Thumbnail header — type icon on colored bg */}
+      <div
+        className="flex items-center justify-between px-3.5 py-2.5"
+        style={{ background: destColor.bg, borderBottom: `1px solid ${destColor.accent}12` }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex items-center justify-center rounded-lg"
+            style={{ width: 44, height: 44, background: 'white', fontSize: 22, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+          >
+            {typeIcon}
+          </div>
+          <div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 15, fontWeight: 600, color: 'var(--t-ink)', lineHeight: 1.2 }}>
+              {place.name}
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+                {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
+              </span>
+              {google?.category && google.category !== place.type && (
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.35)' }}>
+                  · {google.category}
+                </span>
+              )}
+              {place.location && (
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.35)' }}>
+                  · {place.location.split(',')[0]}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Match score */}
+        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+          <span
+            className="px-2 py-0.5 rounded-md"
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
+          >
+            {place.matchScore}%
+          </span>
+        </div>
+      </div>
+
+      {/* Body — intelligence section */}
+      <div className="px-3.5 py-2.5">
+        {/* When/where on this trip */}
+        <div className="flex items-center gap-1.5 mb-2">
+          <span style={{ fontSize: 11 }}>{SLOT_ICONS[item.slotId] || '📍'}</span>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: 'rgba(28,26,23,0.55)' }}>
+            {item.dayOfWeek?.slice(0, 3)} {item.date} · {item.slotTime}
+          </span>
+          {item.destination && (
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: destColor.accent }}>
+              {item.destination}
+            </span>
+          )}
+        </div>
+
+        {/* Source + Google info row */}
+        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+          <span
+            className="px-2 py-0.5 rounded-md"
+            style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}
+          >
+            {srcStyle.icon} {place.source?.name || srcStyle.label}
+          </span>
+          {isReservation && (
+            <span
+              className="px-2 py-0.5 rounded-md"
+              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
+            >
+              ✓ Reservation
+            </span>
+          )}
+          {google?.rating && (
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.5)' }}>
+              ★ {google.rating}{google.reviewCount ? ` (${google.reviewCount.toLocaleString()})` : ''}
+            </span>
+          )}
+          {priceStr && (
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)' }}>
+              {priceStr}
+            </span>
+          )}
+        </div>
+
+        {/* Terrazzo insight */}
+        {place.terrazzoInsight?.why && (
+          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(200,146,58,0.04)', border: '1px solid rgba(200,146,58,0.1)' }}>
+            <div className="flex items-start gap-1.5">
+              <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>✦</span>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.7)', lineHeight: 1.4 }}>
+                {place.terrazzoInsight.why}
+              </span>
+            </div>
+            {place.terrazzoInsight.caveat && (
+              <div className="flex items-start gap-1.5 mt-1">
+                <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>⚠</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.45)', fontStyle: 'italic', lineHeight: 1.4 }}>
+                  {place.terrazzoInsight.caveat}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Friend note */}
+        {place.friendAttribution && (
+          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(42,122,86,0.03)', border: '1px solid rgba(42,122,86,0.08)' }}>
+            <div className="flex items-start gap-1.5">
+              <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>👤</span>
+              <div>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 600, color: 'var(--t-verde)' }}>
+                  {place.friendAttribution.name}
+                </span>
+                {place.friendAttribution.note && (
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.65)', fontStyle: 'italic', marginLeft: 6 }}>
+                    "{place.friendAttribution.note}"
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* What to order */}
+        {place.whatToOrder && place.whatToOrder.length > 0 && (
+          <div className="mb-2">
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+              What to order
+            </span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {place.whatToOrder.map((item, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-0.5 rounded-full"
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.65)' }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tips */}
+        {place.tips && place.tips.length > 0 && (
+          <div className="mb-1">
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+              Tips
+            </span>
+            <div className="flex flex-col gap-0.5 mt-1">
+              {place.tips.map((tip, i) => (
+                <span
+                  key={i}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.55)', lineHeight: 1.4 }}
+                >
+                  {tip}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Taste note fallback — if no insight or friend note */}
+        {!place.terrazzoInsight?.why && !place.friendAttribution?.note && place.tasteNote && (
+          <div className="mb-1">
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.55)', fontStyle: 'italic', lineHeight: 1.4 }}>
+              {place.tasteNote}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
