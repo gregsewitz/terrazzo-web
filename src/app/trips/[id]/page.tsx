@@ -21,6 +21,10 @@ import BriefingView from '@/components/BriefingView';
 import DragOverlay from '@/components/DragOverlay';
 import ExportToMaps from '@/components/ExportToMaps';
 
+// ─── Auto-scroll config for drag near edges ───
+const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
+const AUTO_SCROLL_SPEED = 6;   // px per frame at max proximity
+
 export default function TripDetailPage() {
   const params = useParams();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
@@ -48,6 +52,9 @@ export default function TripDetailPage() {
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const slotRects = useRef<Map<string, { dayNumber: number; slotId: string; rect: DOMRect }>>(new Map());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const autoScrollRaf = useRef<number | null>(null);
+  const latestDragY = useRef<number>(0);
 
   const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null) => {
     const key = `${dayNumber}-${slotId}`;
@@ -56,6 +63,12 @@ export default function TripDetailPage() {
     } else {
       slotRects.current.delete(key);
     }
+  }, []);
+
+  // Refresh all slot rects from DOM — needed during auto-scroll
+  const refreshSlotRects = useCallback(() => {
+    // The slot rects auto-refresh via scroll listeners in TimeSlotCard
+    // but we can force a sync re-read here
   }, []);
 
   const hitTestSlots = useCallback((x: number, y: number): DropTarget | null => {
@@ -71,22 +84,59 @@ export default function TripDetailPage() {
   const handleDragStart = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
     setDragItem(item);
     setDragPos({ x: e.clientX, y: e.clientY });
+    latestDragY.current = e.clientY;
     // Haptic feedback
     if (navigator.vibrate) navigator.vibrate(10);
+  }, []);
+
+  // ─── Auto-scroll loop during drag ───
+  const startAutoScroll = useCallback(() => {
+    const scroll = () => {
+      const container = scrollContainerRef.current;
+      if (!container) { autoScrollRaf.current = null; return; }
+
+      const rect = container.getBoundingClientRect();
+      const y = latestDragY.current;
+
+      // Near top edge — scroll up
+      if (y < rect.top + AUTO_SCROLL_ZONE && y > rect.top - 20) {
+        const proximity = 1 - Math.max(0, y - rect.top) / AUTO_SCROLL_ZONE;
+        container.scrollTop -= AUTO_SCROLL_SPEED * proximity;
+      }
+      // Near bottom edge — scroll down
+      else if (y > rect.bottom - AUTO_SCROLL_ZONE && y < rect.bottom + 20) {
+        const proximity = 1 - Math.max(0, rect.bottom - y) / AUTO_SCROLL_ZONE;
+        container.scrollTop += AUTO_SCROLL_SPEED * proximity;
+      }
+
+      autoScrollRaf.current = requestAnimationFrame(scroll);
+    };
+    autoScrollRaf.current = requestAnimationFrame(scroll);
+  }, []);
+
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollRaf.current != null) {
+      cancelAnimationFrame(autoScrollRaf.current);
+      autoScrollRaf.current = null;
+    }
   }, []);
 
   // Global pointer move / up while dragging
   useEffect(() => {
     if (!dragItem) return;
 
+    startAutoScroll();
+
     const handleMove = (e: PointerEvent) => {
       e.preventDefault();
       setDragPos({ x: e.clientX, y: e.clientY });
+      latestDragY.current = e.clientY;
       const target = hitTestSlots(e.clientX, e.clientY);
       setDropTarget(target);
     };
 
     const handleUp = () => {
+      stopAutoScroll();
       if (dropTarget && dragItem) {
         placeFromSaved(dragItem, dropTarget.dayNumber, dropTarget.slotId);
         if (navigator.vibrate) navigator.vibrate(15);
@@ -101,11 +151,12 @@ export default function TripDetailPage() {
     window.addEventListener('pointercancel', handleUp);
 
     return () => {
+      stopAutoScroll();
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
     };
-  }, [dragItem, dropTarget, hitTestSlots, placeFromSaved]);
+  }, [dragItem, dropTarget, hitTestSlots, placeFromSaved, startAutoScroll, stopAutoScroll]);
 
   useEffect(() => {
     if (params.id) {
@@ -168,7 +219,7 @@ export default function TripDetailPage() {
       {/* Main content — fills available space between top and tab bar */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Day Planner (includes header + 3-way toggle for all modes) */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto">
           <DayPlanner
             viewMode={viewMode}
             onSetViewMode={setViewMode}

@@ -82,6 +82,7 @@ export default function ShortlistDetailPage() {
   const handleRate = (rating: PlaceRating) => {
     if (ratingItem) {
       ratePlace(ratingItem.id, rating);
+      setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
       setRatingItem(null);
     }
   };

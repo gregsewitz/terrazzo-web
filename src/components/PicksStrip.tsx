@@ -28,7 +28,10 @@ const TYPE_COLORS: Record<string, string> = {
   shop: '#c0b0a0',
 };
 
-const HOLD_DELAY = 180;
+// ─── Gesture thresholds ───
+const HOLD_DELAY = 300;            // ms before drag activates (longer = more forgiving for scrollers)
+const SCROLL_THRESHOLD = 8;        // px horizontal movement to cancel drag & allow scroll
+const DRAG_ACTIVATE_THRESHOLD = 4; // px total movement to ignore (jitter tolerance)
 
 type FilterType = 'all' | PlaceType;
 
@@ -72,6 +75,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [holdingId, setHoldingId] = useState<string | null>(null); // visual "about to drag" feedback
 
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
@@ -93,7 +97,6 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   }, [trip]);
 
   const allStripPlaces = useMemo(() => {
-    // Shortlisted places matching trip destinations, excluding already-placed items
     const destLower = (tripDestinations as string[] || []).map(d => d.toLowerCase());
     if (destLower.length === 0) return [];
 
@@ -131,24 +134,75 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
     return counts;
   }, [allStripPlaces]);
 
+  // ─── Gesture detection refs ───
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdItem = useRef<ImportedPlace | null>(null);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const gestureDecided = useRef(false);
+  const stripScrollRef = useRef<HTMLDivElement>(null);
+
+  const clearHold = useCallback(() => {
+    if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+    holdItem.current = null;
+    pointerStart.current = null;
+    gestureDecided.current = false;
+    setHoldingId(null);
+  }, []);
 
   const handlePointerDown = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
+    // Record starting position for movement tracking
+    pointerStart.current = { x: e.clientX, y: e.clientY };
     holdItem.current = item;
+    gestureDecided.current = false;
+
+    // Start hold timer — only fires if pointer hasn't moved horizontally
     const pointerEvent = e;
     holdTimer.current = setTimeout(() => {
-      if (holdItem.current) {
+      if (holdItem.current && !gestureDecided.current) {
+        gestureDecided.current = true;
         onDragStart(holdItem.current, pointerEvent);
         holdItem.current = null;
+        setHoldingId(null);
       }
     }, HOLD_DELAY);
+
+    // Show visual hold feedback after a short delay (150ms)
+    setTimeout(() => {
+      if (holdItem.current?.id === item.id && !gestureDecided.current) {
+        setHoldingId(item.id);
+      }
+    }, 150);
+  }, [onDragStart]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!pointerStart.current || gestureDecided.current) return;
+
+    const dx = e.clientX - pointerStart.current.x;
+    const dy = e.clientY - pointerStart.current.y;
+
+    // If horizontal movement exceeds threshold → this is a scroll, cancel drag
+    if (Math.abs(dx) > SCROLL_THRESHOLD) {
+      gestureDecided.current = true;
+      if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+      holdItem.current = null;
+      setHoldingId(null);
+      return;
+    }
+
+    // If vertical movement is significant while held → activate drag immediately
+    if (Math.abs(dy) > SCROLL_THRESHOLD && holdItem.current) {
+      gestureDecided.current = true;
+      if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+      // Synthesize drag start with current position
+      onDragStart(holdItem.current, e);
+      holdItem.current = null;
+      setHoldingId(null);
+    }
   }, [onDragStart]);
 
   const handlePointerUp = useCallback(() => {
-    if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
-    holdItem.current = null;
-  }, []);
+    clearHold();
+  }, [clearHold]);
 
   const handleTap = useCallback((item: ImportedPlace) => {
     if (!dragItemId) onTapDetail(item);
@@ -188,9 +242,9 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
 
   return (
     <div style={{ background: 'white', borderTop: '1px solid var(--t-linen)', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
-      {/* Single header row: filter icon + type chips + count + browse all */}
+      {/* Header row: filter icon + type chips + count + browse all */}
       <div
-        className="flex items-center gap-1.5 px-3 pt-2 pb-1.5 overflow-x-auto"
+        className="flex items-center gap-1.5 px-3 pt-2 pb-1 overflow-x-auto"
         style={{ scrollbarWidth: 'none', minWidth: 0 }}
       >
         {/* Filter icon */}
@@ -263,7 +317,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
         </button>
       </div>
 
-      {/* Detailed filter menu (Beli-style) — only when open */}
+      {/* Detailed filter menu — only when open */}
       {filterMenuOpen && (
         <div
           className="mx-3 mb-1.5 p-2.5 rounded-xl"
@@ -336,10 +390,29 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
         </div>
       )}
 
-      {/* Horizontal scroll strip — compact cards */}
+      {/* Hint label */}
+      <div className="px-3 pb-1">
+        <span style={{
+          fontFamily: "'Space Mono', monospace",
+          fontSize: 8,
+          color: 'rgba(28,26,23,0.35)',
+          letterSpacing: '0.3px',
+        }}>
+          HOLD + DRAG UP TO PLAN · TAP FOR DETAILS
+        </span>
+      </div>
+
+      {/* Horizontal scroll strip — taller cards with better touch targets */}
       <div
-        className="flex gap-1.5 px-3 pb-2 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', minWidth: 0 }}
+        ref={stripScrollRef}
+        className="flex gap-2.5 px-3 pb-3 pt-0.5 overflow-x-auto"
+        style={{
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+          minWidth: 0,
+          // Allow horizontal pan on the strip container itself
+          touchAction: 'pan-x',
+        }}
       >
         {stripPlaces.length === 0 ? (
           <div className="flex items-center justify-center w-full py-1">
@@ -352,37 +425,80 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
             const typeIcon = TYPE_ICONS[place.type] || 'location';
             const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
             const isDragging = dragItemId === place.id;
+            const isHolding = holdingId === place.id;
 
             return (
               <div
                 key={place.id}
                 className="flex flex-col items-center flex-shrink-0 cursor-pointer select-none"
                 style={{
-                  width: 62,
-                  opacity: isDragging ? 0.3 : 1,
-                  transform: isDragging ? 'scale(0.9)' : 'none',
-                  transition: 'opacity 0.15s, transform 0.15s',
-                  touchAction: 'none',
+                  width: 68,
+                  opacity: isDragging ? 0.25 : 1,
+                  transform: isDragging
+                    ? 'scale(0.85)'
+                    : isHolding
+                      ? 'scale(0.92) translateY(-2px)'
+                      : 'none',
+                  transition: 'opacity 0.2s, transform 0.2s ease-out',
+                  // Don't set touchAction:none — let browser handle scroll detection.
+                  // Our pointerMove handler decides scroll vs drag.
+                  touchAction: 'pan-x',
                 }}
                 onPointerDown={(e) => handlePointerDown(place, e)}
+                onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
                 onClick={() => handleTap(place)}
               >
-                {/* Icon thumbnail */}
+                {/* Drag grip dots — subtle affordance */}
                 <div
-                  className="w-[42px] h-[42px] rounded-lg flex items-center justify-center mb-0.5"
+                  className="flex gap-px mb-0.5"
+                  style={{ opacity: 0.2 }}
+                >
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{ width: 2, height: 2, borderRadius: '50%', background: 'var(--t-ink)' }} />
+                  ))}
+                </div>
+
+                {/* Icon thumbnail — larger for better touch */}
+                <div
+                  className="rounded-xl flex items-center justify-center relative"
                   style={{
+                    width: 50,
+                    height: 50,
                     background: `linear-gradient(135deg, ${typeColor}40, ${typeColor}25)`,
-                    border: `1px solid ${typeColor}50`,
-                    fontSize: 15,
+                    border: isHolding
+                      ? `2px solid var(--t-verde)`
+                      : `1px solid ${typeColor}50`,
+                    boxShadow: isHolding
+                      ? '0 4px 12px rgba(42,122,86,0.2)'
+                      : '0 1px 3px rgba(0,0,0,0.04)',
+                    transition: 'border 0.15s, box-shadow 0.15s',
                   }}
                 >
-                  <PerriandIcon name={typeIcon} size={15} />
+                  <PerriandIcon name={typeIcon} size={18} />
+                  {/* Match score pip */}
+                  <div
+                    className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
+                    style={{
+                      width: 18,
+                      height: 18,
+                      background: 'white',
+                      border: '1px solid var(--t-linen)',
+                      fontSize: 8,
+                      fontWeight: 700,
+                      color: 'var(--t-verde)',
+                      fontFamily: "'Space Mono', monospace",
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                    }}
+                  >
+                    {place.matchScore}
+                  </div>
                 </div>
-                {/* Name only — score hidden */}
+
+                {/* Name */}
                 <span
-                  className="text-[9px] font-medium text-center leading-tight"
+                  className="text-[9px] font-medium text-center leading-tight mt-1"
                   style={{
                     color: 'var(--t-ink)',
                     display: '-webkit-box',

@@ -418,6 +418,7 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
   const google = place.google;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
   const srcStyle = SOURCE_STYLES[place.ghostSource as keyof typeof SOURCE_STYLES] || SOURCE_STYLES.manual;
+  const ratingReaction = place.rating ? REACTIONS.find(r => r.id === place.rating!.reaction) : null;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const subtitle = place.friendAttribution?.note
@@ -498,6 +499,14 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
 
       <div className="px-3 pt-2 pb-3">
         <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+          {ratingReaction && (
+            <span
+              className="px-1.5 py-0.5 rounded flex items-center gap-1"
+              style={{ fontSize: 9, fontWeight: 600, background: `${ratingReaction.color}10`, color: ratingReaction.color, fontFamily: "'Space Mono', monospace" }}
+            >
+              <PerriandIcon name={ratingReaction.icon} size={10} color={ratingReaction.color} /> {ratingReaction.label}
+            </span>
+          )}
           {place.friendAttribution && (
             <span
               className="px-1.5 py-0.5 rounded flex items-center gap-1"

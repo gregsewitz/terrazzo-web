@@ -278,6 +278,7 @@ interface TripState {
   setCurrentDay: (day: number) => void;
   placeItem: (itemId: string, day: number, slotId: string) => void;
   removeFromSlot: (day: number, slotId: string) => void;
+  unplaceFromSlot: (day: number, slotId: string, placeId: string) => void;
   addToPool: (items: ImportedPlace[]) => void;
   rejectItem: (itemId: string) => void;
   updateItemStatus: (itemId: string, status: ImportedPlace['status']) => void;
@@ -341,6 +342,46 @@ export const useTripStore = create<TripState>((set, get) => ({
         return { ...d, slots: d.slots.map(s => s.id === slotId ? { ...s, places: [] } : s) };
       });
       return { ...trip, days: updatedDays };
+    });
+    return { trips };
+  }),
+
+  // Remove a specific place from a slot and return it to the pool
+  unplaceFromSlot: (day, slotId, placeId) => set(state => {
+    const trips = state.trips.map(trip => {
+      if (trip.id !== state.currentTripId) return trip;
+
+      // Find the place being removed from the slot
+      let removedPlace: ImportedPlace | null = null;
+      const updatedDays = trip.days.map(d => {
+        if (d.dayNumber !== day) return d;
+        return {
+          ...d,
+          slots: d.slots.map(s => {
+            if (s.id !== slotId) return s;
+            const place = s.places.find(p => p.id === placeId);
+            if (place) removedPlace = place;
+            return { ...s, places: s.places.filter(p => p.id !== placeId) };
+          }),
+        };
+      });
+
+      // Return the place to pool as 'available'
+      let updatedPool = trip.pool;
+      if (removedPlace) {
+        const existsInPool = trip.pool.some(p => p.id === placeId);
+        if (existsInPool) {
+          // Already in pool — just reset its status
+          updatedPool = trip.pool.map(p =>
+            p.id === placeId ? { ...p, status: 'available' as const, placedIn: undefined } : p
+          );
+        } else {
+          // Not in pool (e.g. placed via placeFromSaved) — add it
+          updatedPool = [...trip.pool, { ...(removedPlace as ImportedPlace), status: 'available' as const, placedIn: undefined }];
+        }
+      }
+
+      return { ...trip, pool: updatedPool, days: updatedDays };
     });
     return { trips };
   }),

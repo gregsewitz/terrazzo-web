@@ -433,6 +433,7 @@ interface TimeSlotCardProps {
 function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
+  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const icon = SLOT_ICONS[slot.id] || 'pin';
   const slotRef = useRef<HTMLDivElement>(null);
   const hasPlaces = slot.places.length > 0;
@@ -536,12 +537,13 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
       ref={slotRef}
       style={{
         borderBottom: '1px solid var(--t-linen)',
+        borderLeft: isDropTarget ? '3px solid var(--t-verde)' : '3px solid transparent',
         background: isDropTarget
-          ? 'rgba(42,122,86,0.08)'
+          ? 'rgba(42,122,86,0.06)'
           : hasPlaces
             ? 'rgba(42,122,86,0.055)'
             : undefined,
-        transition: 'background 0.15s ease-out',
+        transition: 'background 0.2s ease-out, border-left 0.15s ease-out',
       }}
     >
       {/* Slot label row */}
@@ -630,6 +632,18 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                   </div>
                 )}
               </div>
+              {/* Remove button — returns place to picks strip */}
+              <button
+                onClick={(e) => { e.stopPropagation(); unplaceFromSlot(dayNumber, slot.id, p.id); }}
+                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                style={{
+                  background: 'rgba(28,26,23,0.05)',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <PerriandIcon name="close" size={8} color="rgba(28,26,23,0.35)" />
+              </button>
             </div>
           </div>
         );
@@ -641,25 +655,34 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
       {/* Empty slot — drop target / add row */}
       {!hasPlaces && (
         <div
-          className="flex items-center gap-2 px-4 cursor-pointer transition-all"
+          className="flex items-center gap-2 px-4 cursor-pointer"
           onClick={handleEmptyClick}
           style={{
-            height: 48,
-            background: isDropTarget ? 'rgba(42,122,86,0.03)' : 'transparent',
-            transition: 'all 0.15s ease-out',
+            height: isDropTarget ? 56 : 48,
+            background: isDropTarget ? 'rgba(42,122,86,0.06)' : 'transparent',
+            borderLeft: isDropTarget ? '3px solid var(--t-verde)' : '3px solid transparent',
+            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-            <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
+          <div
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md"
+            style={{
+              background: isDropTarget ? 'rgba(42,122,86,0.1)' : 'transparent',
+              transition: 'background 0.15s',
+            }}
+          >
+            <PerriandIcon name={icon as any} size={14} color={isDropTarget ? 'var(--t-verde)' : 'var(--t-ink)'} />
           </div>
           <span
             className="text-[11px] flex-shrink-0"
             style={{
               width: 62,
               fontFamily: "'Space Mono', monospace",
-              color: 'rgba(28,26,23,0.85)',
+              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.85)',
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
+              fontWeight: isDropTarget ? 600 : 400,
+              transition: 'color 0.15s, font-weight 0.15s',
             }}
           >
             {slot.label}
@@ -669,9 +692,10 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             style={{
               color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.75)',
               fontWeight: isDropTarget ? 600 : 400,
+              transition: 'color 0.15s',
             }}
           >
-            {isDropTarget ? 'Drop here' : '+ add'}
+            {isDropTarget ? 'Drop here ↓' : '+ add'}
           </span>
         </div>
       )}
