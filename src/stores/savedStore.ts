@@ -3,7 +3,6 @@ import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData
 import {
   DEMO_ALL_PLACES,
   DEMO_HISTORY as IMPORTED_HISTORY,
-  DEMO_COLLECTIONS as IMPORTED_COLLECTIONS,
 } from '@/data/demoSaved';
 
 export type ViewMode = 'myPlaces' | 'history';
@@ -65,70 +64,136 @@ function createDefaultShortlist(placeIds: string[]): Shortlist {
   };
 }
 
-function migrateCollectionsToShortlists(
-  collections: Collection[],
-  allPlaces: ImportedPlace[]
-): Shortlist[] {
-  const now = new Date().toISOString();
-  return collections.map(col => {
-    // For smart collections, resolve matching place IDs
-    let placeIds: string[] = [];
-    if (col.isSmartCollection) {
-      // Basic filter matching for demo
-      placeIds = allPlaces
-        .filter(p => {
-          if (!col.filterTags) return false;
-          return col.filterTags.some(tag => {
-            const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
-            if (key === 'location') return p.location.toLowerCase().includes(val);
-            if (key === 'type') return p.type === val;
-            if (key === 'source' && val === 'friend') return !!p.friendAttribution;
-            if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
-            if (key === 'reaction' && val === 'saved') return p.isShortlisted;
-            return false;
-          });
-        })
-        .map(p => p.id);
-    } else {
-      // Manual collections — use filter matching on tags too
-      placeIds = allPlaces
-        .filter(p => {
-          if (!col.filterTags) return false;
-          return col.filterTags.some(tag => {
-            const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
-            if (key === 'location') return p.location.toLowerCase().includes(val);
-            return false;
-          });
-        })
-        .map(p => p.id);
-    }
-
-    return {
-      id: col.id,
-      name: col.name,
-      emoji: col.emoji,
-      placeIds,
-      cities: deriveCities(placeIds, allPlaces),
-      isSmartCollection: col.isSmartCollection,
-      query: col.query,
-      filterTags: col.filterTags,
-      createdAt: now,
-      updatedAt: now,
-    };
-  });
-}
-
 // ═══════════════════════════════════════════
-// Build initial shortlists
+// Build initial shortlists — curated from actual places
 // ═══════════════════════════════════════════
 
 const allPlaces = [...DEMO_ALL_PLACES];
 const favoritePlaceIds = allPlaces.filter(p => p.isShortlisted).map(p => p.id);
 const defaultShortlist = createDefaultShortlist(favoritePlaceIds);
 defaultShortlist.cities = deriveCities(favoritePlaceIds, allPlaces);
-const migratedShortlists = migrateCollectionsToShortlists(IMPORTED_COLLECTIONS, allPlaces);
 
-const INITIAL_SHORTLISTS: Shortlist[] = [defaultShortlist, ...migratedShortlists];
+const now = new Date().toISOString();
+
+const CURATED_SHORTLISTS: Shortlist[] = [
+  {
+    id: 'sl-scandi-design-hotels',
+    name: 'Scandi design hotels',
+    description: 'The best design-forward stays in Scandinavia',
+    emoji: 'hotel',
+    placeIds: ['sc-1', 'sc-8', 'sc-19'],
+    cities: deriveCities(['sc-1', 'sc-8', 'sc-19'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-mexico-city-musts',
+    name: 'Mexico City musts',
+    description: 'The definitive CDMX hit list',
+    emoji: 'restaurant',
+    placeIds: ['mx-3', 'mx-2', 'mx-11', 'mx-14', 'mx-17', 'mx-9', 'mx-4', 'mx-8', 'mx-1'],
+    cities: deriveCities(['mx-3'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-paris-neo-bistro',
+    name: 'Paris neo-bistro crawl',
+    description: 'The new wave of Paris dining',
+    emoji: 'food',
+    placeIds: ['pa-8', 'pa-3', 'pa-13', 'pa-16', 'pa-14', 'pa-11'],
+    cities: deriveCities(['pa-8'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-cocktail-bars',
+    name: 'Best cocktail bars',
+    description: 'No-menu, speakeasy, mezcal — the good stuff',
+    emoji: 'bar',
+    placeIds: ['saved-3', 'saved-12', 'sc-7', 'sc-14', 'pa-7', 'pa-19', 'mx-9', 'mx-12'],
+    cities: deriveCities(['saved-3', 'sc-7', 'pa-7', 'mx-9'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-lizzie-recs',
+    name: "Everything Lizzie recommended",
+    description: "Lizzie N. has impeccable taste",
+    emoji: 'friend',
+    placeIds: allPlaces.filter(p => p.friendAttribution?.name === 'Lizzie N.').map(p => p.id),
+    cities: deriveCities(
+      allPlaces.filter(p => p.friendAttribution?.name === 'Lizzie N.').map(p => p.id),
+      allPlaces,
+    ),
+    isSmartCollection: true,
+    query: 'everything Lizzie recommended',
+    filterTags: ['person: Lizzie'],
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-sicily-road-trip',
+    name: 'Sicily road trip',
+    description: 'Island hopping from Palermo to Taormina',
+    emoji: 'discover',
+    placeIds: ['si-1', 'si-2', 'si-3', 'si-5', 'si-4', 'si-9', 'si-14', 'si-17', 'si-11', 'si-12', 'si-6'],
+    cities: deriveCities(['si-1', 'si-2', 'si-3', 'si-5', 'si-9'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-museums-worth-it',
+    name: 'Museums worth the trip',
+    description: 'Art, history, and architecture that deliver',
+    emoji: 'museum',
+    placeIds: ['saved-7', 'saved-11', 'pa-5', 'pa-17', 'mx-4', 'mx-18', 'si-4'],
+    cities: deriveCities(['saved-7', 'saved-11', 'pa-5', 'mx-4', 'si-4'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-coffee-ritual',
+    name: 'Coffee ritual',
+    description: 'Specialty roasters and neighborhood cafés',
+    emoji: 'cafe',
+    placeIds: ['sc-4', 'sc-13', 'pa-4', 'pa-10', 'pa-15', 'pa-18', 'mx-5', 'mx-20', 'si-9'],
+    cities: deriveCities(['sc-4', 'pa-4', 'mx-5', 'si-9'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-neighborhoods-to-wander',
+    name: 'Neighborhoods to wander',
+    description: 'Drop a pin and just walk',
+    emoji: 'location',
+    placeIds: ['sc-5', 'sc-11', 'pa-6', 'mx-8', 'si-5', 'si-12'],
+    cities: deriveCities(['sc-5', 'pa-6', 'mx-8', 'si-5'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'sl-splurge-nights',
+    name: 'Splurge nights',
+    description: 'When you want the full experience',
+    emoji: 'star',
+    placeIds: ['saved-9', 'sc-2', 'saved-6', 'pa-8', 'mx-3', 'si-3', 'si-1', 'sc-1'],
+    cities: deriveCities(['saved-9', 'sc-2', 'pa-8', 'mx-3', 'si-3'], allPlaces),
+    isSmartCollection: false,
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
+const INITIAL_SHORTLISTS: Shortlist[] = [defaultShortlist, ...CURATED_SHORTLISTS];
 
 // ═══════════════════════════════════════════
 // Store
@@ -167,7 +232,7 @@ interface SavedState {
   updateShortlist: (id: string, updates: Partial<Pick<Shortlist, 'name' | 'emoji' | 'description'>>) => void;
   addPlaceToShortlist: (shortlistId: string, placeId: string) => void;
   removePlaceFromShortlist: (shortlistId: string, placeId: string) => void;
-  createSmartShortlist: (name: string, emoji: string, query: string, filterTags: string[]) => string;
+  createSmartShortlist: (name: string, emoji: string, query: string, filterTags: string[], placeIds?: string[]) => string;
 
   // History actions
   promoteFromHistory: (id: string) => void;
@@ -182,7 +247,7 @@ export const useSavedStore = create<SavedState>((set, get) => ({
   myPlaces: allPlaces,
   history: IMPORTED_HISTORY,
   shortlists: INITIAL_SHORTLISTS,
-  collections: IMPORTED_COLLECTIONS,
+  collections: [] as Collection[],
 
   // UI state
   viewMode: 'myPlaces',
@@ -322,25 +387,27 @@ export const useSavedStore = create<SavedState>((set, get) => ({
     };
   }),
 
-  createSmartShortlist: (name, emoji, query, filterTags) => {
+  createSmartShortlist: (name, emoji, query, filterTags, placeIds) => {
     const newId = `shortlist-smart-${Date.now()}`;
     const now = new Date().toISOString();
     const state = get();
 
-    // Resolve matching place IDs
-    const matchingIds = state.myPlaces
-      .filter(p => {
-        return filterTags.some(tag => {
-          const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
-          if (key === 'location') return p.location.toLowerCase().includes(val);
-          if (key === 'type') return p.type === val;
-          if (key === 'source' && val === 'friend') return !!p.friendAttribution;
-          if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
-          if (key === 'reaction' && val === 'saved') return p.isShortlisted;
-          return false;
-        });
-      })
-      .map(p => p.id);
+    // Use pre-resolved placeIds if provided, otherwise fall back to tag-based resolution
+    const resolvedIds = placeIds && placeIds.length > 0
+      ? placeIds
+      : state.myPlaces
+          .filter(p => {
+            return filterTags.some(tag => {
+              const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
+              if (key === 'location') return p.location.toLowerCase().includes(val);
+              if (key === 'type') return p.type === val;
+              if (key === 'source' && val === 'friend') return !!p.friendAttribution;
+              if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
+              if (key === 'reaction' && val === 'saved') return p.isShortlisted;
+              return false;
+            });
+          })
+          .map(p => p.id);
 
     set((state) => ({
       shortlists: [
@@ -349,8 +416,8 @@ export const useSavedStore = create<SavedState>((set, get) => ({
           id: newId,
           name,
           emoji,
-          placeIds: matchingIds,
-          cities: deriveCities(matchingIds, state.myPlaces),
+          placeIds: resolvedIds,
+          cities: deriveCities(resolvedIds, state.myPlaces),
           isDefault: false,
           isSmartCollection: true,
           query,

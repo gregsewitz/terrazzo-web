@@ -194,21 +194,22 @@ export function MosaicLegend({ profile, className, dark = false }: MosaicLegendP
     <div
       className={className}
       style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '10px 18px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, auto)',
+        gap: '6px 16px',
         justifyContent: 'center',
       }}
     >
       {sorted.map(d => (
         <div key={d.domain} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, background: d.color, flexShrink: 0 }} />
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
           <span
             style={{
               fontFamily: "'Space Mono', monospace",
               fontSize: 9,
-              letterSpacing: '0.05em',
+              letterSpacing: '0.03em',
               color: dark ? 'rgba(245,240,230,0.6)' : 'rgba(28,26,23,0.55)',
+              whiteSpace: 'nowrap',
             }}
           >
             {d.domain}

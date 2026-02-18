@@ -52,6 +52,7 @@ export default function SavedPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
   const toggleStar = useSavedStore(s => s.toggleStar);
   const createShortlist = useSavedStore(s => s.createShortlist);
+  const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
   const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
@@ -105,8 +106,8 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
-      <div className="px-5 pt-6">
+    <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
+      <div className="px-4 pt-5">
         {/* ═══ Header ═══ */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -322,6 +323,10 @@ export default function SavedPage() {
           onClose={() => setShowCreateShortlist(false)}
           onCreate={(name, emoji) => {
             createShortlist(name, emoji);
+            setShowCreateShortlist(false);
+          }}
+          onCreateSmart={(name, emoji, query, filterTags, placeIds) => {
+            createSmartShortlist(name, emoji, query, filterTags, placeIds);
             setShowCreateShortlist(false);
           }}
         />
@@ -554,12 +559,167 @@ const ICON_OPTIONS: { name: PerriandIconName; label: string }[] = [
   { name: 'wellness', label: 'Wellness' },
 ];
 
-function CreateShortlistModal({ onClose, onCreate }: {
+interface SmartParsedResult {
+  name: string;
+  emoji: PerriandIconName;
+  filters: {
+    types: string[] | null;
+    locations: string[] | null;
+    friends: string[] | null;
+    sources: string[] | null;
+    minMatchScore: number | null;
+    reactions: string[] | null;
+    keywords: string[] | null;
+  };
+  filterTags: string[];
+  reasoning: string;
+  matchCount?: number;
+  matchingIds?: string[];
+}
+
+const SMART_EXAMPLE_PROMPTS = [
+  'Everything Lizzie recommended',
+  'Best restaurants in Paris',
+  'Hotels I loved',
+  'Cocktail bars across cities',
+  'High-match cafés',
+];
+
+function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
   onClose: () => void;
   onCreate: (name: string, emoji: string) => void;
+  onCreateSmart: (name: string, emoji: string, query: string, filterTags: string[], placeIds: string[]) => void;
 }) {
   const [name, setName] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState('pin');
+  const [isSmartMode, setIsSmartMode] = useState(false);
+  const [smartQuery, setSmartQuery] = useState('');
+  const [smartStep, setSmartStep] = useState<'input' | 'thinking' | 'result'>('input');
+  const [smartResult, setSmartResult] = useState<SmartParsedResult | null>(null);
+  const [smartError, setSmartError] = useState<string | null>(null);
+  const myPlaces = useSavedStore(s => s.myPlaces);
+
+  // Count and collect matching place IDs from parsed filters
+  const resolveMatches = (result: SmartParsedResult): { count: number; ids: string[] } => {
+    const matching = myPlaces.filter((place) => {
+      if (result.filters.types && !result.filters.types.includes(place.type)) return false;
+      if (result.filters.locations) {
+        const matchesLocation = result.filters.locations.some(loc =>
+          place.location.toLowerCase().includes(loc.toLowerCase())
+        );
+        if (!matchesLocation) return false;
+      }
+      if (result.filters.friends) {
+        if (!place.friendAttribution) return false;
+        const matchesFriend = result.filters.friends.some(f =>
+          place.friendAttribution!.name.toLowerCase().includes(f.toLowerCase())
+        );
+        if (!matchesFriend) return false;
+      }
+      if (result.filters.sources && !result.filters.sources.includes(place.ghostSource || '')) return false;
+      if (result.filters.minMatchScore && (place.matchScore || 0) < result.filters.minMatchScore) return false;
+      if (result.filters.reactions) {
+        if (!place.rating) return false;
+        if (!result.filters.reactions.includes(place.rating.reaction)) return false;
+      }
+      if (result.filters.keywords) {
+        const placeText = `${place.name} ${place.tasteNote || ''} ${place.location}`.toLowerCase();
+        const matchesKeyword = result.filters.keywords.some(kw => placeText.includes(kw.toLowerCase()));
+        if (!matchesKeyword) return false;
+      }
+      return true;
+    });
+    return { count: matching.length, ids: matching.map(p => p.id) };
+  };
+
+  // Basic keyword fallback
+  const fallbackParse = (query: string): SmartParsedResult => {
+    const lq = query.toLowerCase();
+    const filters: SmartParsedResult['filters'] = {
+      types: null, locations: null, friends: null,
+      sources: null, minMatchScore: null, reactions: null, keywords: null,
+    };
+    const filterTags: string[] = [];
+    let emoji: PerriandIconName = 'sparkle';
+    let parsedName = query;
+
+    if (lq.includes('hotel')) { filters.types = ['hotel']; filterTags.push('type: hotel'); emoji = 'hotel'; }
+    else if (lq.includes('restaurant')) { filters.types = ['restaurant']; filterTags.push('type: restaurant'); emoji = 'restaurant'; }
+    else if (lq.includes('bar')) { filters.types = ['bar']; filterTags.push('type: bar'); emoji = 'bar'; }
+    else if (lq.includes('museum')) { filters.types = ['museum']; filterTags.push('type: museum'); emoji = 'museum'; }
+    else if (lq.includes('cafe') || lq.includes('café') || lq.includes('coffee')) { filters.types = ['cafe']; filterTags.push('type: cafe'); emoji = 'cafe'; }
+
+    if (lq.includes('paris')) { filters.locations = ['Paris']; filterTags.push('location: Paris'); }
+    if (lq.includes('stockholm') || lq.includes('scandi')) { filters.locations = ['Stockholm']; filterTags.push('location: Stockholm'); }
+    if (lq.includes('mexico')) { filters.locations = ['Mexico City']; filterTags.push('location: Mexico City'); }
+    if (lq.includes('sicily')) { filters.locations = ['Sicily', 'Palermo', 'Taormina', 'Catania']; filterTags.push('location: Sicily'); }
+    if (lq.includes('copenhagen')) { filters.locations = ['Copenhagen']; filterTags.push('location: Copenhagen'); }
+
+    if (lq.includes('lizzie')) { filters.friends = ['Lizzie']; filterTags.push('person: Lizzie'); emoji = 'friend'; parsedName = "Lizzie's picks"; }
+    if (lq.includes('favorite') || lq.includes('loved')) { filters.reactions = ['myPlace']; filterTags.push('reaction: saved'); }
+    if (lq.includes('high-match') || lq.includes('high match') || lq.includes('best')) { filters.minMatchScore = 80; filterTags.push('match: 80+'); }
+
+    return { name: parsedName, emoji, filters, filterTags, reasoning: 'Parsed from keywords (offline)' };
+  };
+
+  const handleSmartSubmit = async () => {
+    if (!smartQuery.trim()) return;
+    setSmartStep('thinking');
+    setSmartError(null);
+
+    try {
+      const placeSummaries = myPlaces.map(p => ({
+        name: p.name, type: p.type, location: p.location,
+        ghostSource: p.ghostSource, matchScore: p.matchScore,
+        friendAttribution: p.friendAttribution, rating: p.rating,
+      }));
+
+      const res = await fetch('/api/smart-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: smartQuery, places: placeSummaries }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to parse query');
+      }
+
+      const result: SmartParsedResult = await res.json();
+      const { count, ids } = resolveMatches(result);
+      result.matchCount = count;
+      result.matchingIds = ids;
+      setSmartResult(result);
+      setSmartStep('result');
+    } catch (err: any) {
+      console.error('Smart search failed:', err);
+      setSmartError(err.message || 'Something went wrong');
+      const fallback = fallbackParse(smartQuery);
+      const { count, ids } = resolveMatches(fallback);
+      fallback.matchCount = count;
+      fallback.matchingIds = ids;
+      setSmartResult(fallback);
+      setSmartStep('result');
+    }
+  };
+
+  const handleSmartCreate = () => {
+    if (!smartResult) return;
+    onCreateSmart(
+      smartResult.name,
+      smartResult.emoji,
+      smartQuery,
+      smartResult.filterTags,
+      smartResult.matchingIds || [],
+    );
+  };
+
+  const resetSmart = () => {
+    setSmartStep('input');
+    setSmartQuery('');
+    setSmartResult(null);
+    setSmartError(null);
+  };
 
   return (
     <div
@@ -569,12 +729,13 @@ function CreateShortlistModal({ onClose, onCreate }: {
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full rounded-t-2xl px-5 pt-5 pb-8"
-        style={{ maxWidth: 480, background: 'var(--t-cream)' }}
+        className="relative w-full rounded-t-2xl px-4 pt-4"
+        style={{ maxWidth: 480, background: 'var(--t-cream)', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}
       >
-        <div className="flex items-center justify-between mb-5">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
           <span
-            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, fontStyle: 'italic', color: 'var(--t-ink)' }}
+            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
           >
             New Shortlist
           </span>
@@ -582,67 +743,291 @@ function CreateShortlistModal({ onClose, onCreate }: {
             onClick={onClose}
             style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            <PerriandIcon name="close" size={16} color="rgba(28,26,23,0.5)" />
+            <PerriandIcon name="close" size={14} color="rgba(28,26,23,0.5)" />
           </button>
         </div>
 
-        {/* Icon picker */}
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {ICON_OPTIONS.map(icon => (
-            <button
-              key={icon.name}
-              onClick={() => setSelectedEmoji(icon.name)}
-              className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all"
-              style={{
-                background: selectedEmoji === icon.name ? 'var(--t-ink)' : 'white',
-                border: selectedEmoji === icon.name ? 'none' : '1px solid var(--t-linen)',
-              }}
-            >
-              <PerriandIcon
-                name={icon.name}
-                size={16}
-                color={selectedEmoji === icon.name ? 'white' : 'rgba(28,26,23,0.5)'}
-              />
-            </button>
-          ))}
+        {/* Mode toggle */}
+        <div className="flex gap-1.5 mb-3">
+          <button
+            onClick={() => { setIsSmartMode(false); resetSmart(); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
+            style={{
+              background: !isSmartMode ? 'var(--t-ink)' : 'white',
+              color: !isSmartMode ? 'white' : 'rgba(28,26,23,0.6)',
+              border: !isSmartMode ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+              fontFamily: "'Space Mono', monospace",
+            }}
+          >
+            <PerriandIcon name="edit" size={10} color={!isSmartMode ? 'white' : 'rgba(28,26,23,0.5)'} />
+            Manual
+          </button>
+          <button
+            onClick={() => setIsSmartMode(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
+            style={{
+              background: isSmartMode ? 'var(--t-ink)' : 'white',
+              color: isSmartMode ? 'white' : 'rgba(28,26,23,0.6)',
+              border: isSmartMode ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+              fontFamily: "'Space Mono', monospace",
+            }}
+          >
+            <PerriandIcon name="sparkle" size={10} color={isSmartMode ? 'white' : 'rgba(28,26,23,0.5)'} />
+            AI curate
+          </button>
         </div>
 
-        {/* Name input */}
-        <input
-          type="text"
-          placeholder="Shortlist name..."
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoFocus
-          className="w-full rounded-lg py-3 px-4 text-[14px] mb-4"
-          style={{
-            background: 'white',
-            border: '1px solid var(--t-linen)',
-            color: 'var(--t-ink)',
-            fontFamily: "'DM Sans', sans-serif",
-            outline: 'none',
-          }}
-        />
+        {/* ═══ Manual Mode ═══ */}
+        {!isSmartMode && (
+          <>
+            {/* Icon picker */}
+            <div className="grid grid-cols-7 gap-1.5 mb-3">
+              {ICON_OPTIONS.map(icon => (
+                <button
+                  key={icon.name}
+                  onClick={() => setSelectedEmoji(icon.name)}
+                  className="aspect-square rounded-lg flex items-center justify-center cursor-pointer transition-all"
+                  style={{
+                    background: selectedEmoji === icon.name ? 'var(--t-ink)' : 'white',
+                    border: selectedEmoji === icon.name ? 'none' : '1px solid var(--t-linen)',
+                  }}
+                >
+                  <PerriandIcon
+                    name={icon.name}
+                    size={14}
+                    color={selectedEmoji === icon.name ? 'white' : 'rgba(28,26,23,0.5)'}
+                  />
+                </button>
+              ))}
+            </div>
 
-        {/* Create button */}
-        <button
-          onClick={() => {
-            if (name.trim()) {
-              onCreate(name.trim(), selectedEmoji);
-            }
-          }}
-          disabled={!name.trim()}
-          className="w-full py-3 rounded-xl text-[13px] font-semibold transition-all cursor-pointer"
-          style={{
-            background: name.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
-            color: name.trim() ? 'white' : 'rgba(28,26,23,0.3)',
-            border: 'none',
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          Create Shortlist
-        </button>
+            {/* Name input */}
+            <input
+              type="text"
+              placeholder="Shortlist name..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              className="w-full rounded-lg py-2.5 px-3 text-[13px] mb-3"
+              style={{
+                background: 'white',
+                border: '1px solid var(--t-linen)',
+                color: 'var(--t-ink)',
+                fontFamily: "'DM Sans', sans-serif",
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            {/* Create button */}
+            <button
+              onClick={() => { if (name.trim()) onCreate(name.trim(), selectedEmoji); }}
+              disabled={!name.trim()}
+              className="w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer"
+              style={{
+                background: name.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
+                color: name.trim() ? 'white' : 'rgba(28,26,23,0.3)',
+                border: 'none',
+                fontFamily: "'DM Sans', sans-serif",
+                boxSizing: 'border-box',
+              }}
+            >
+              Create Shortlist
+            </button>
+          </>
+        )}
+
+        {/* ═══ Smart / AI Mode ═══ */}
+        {isSmartMode && smartStep === 'input' && (
+          <div>
+            {/* Description input */}
+            <input
+              type="text"
+              placeholder="Describe your shortlist..."
+              value={smartQuery}
+              onChange={(e) => setSmartQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
+              autoFocus
+              className="w-full rounded-lg py-2.5 px-3 text-[13px] mb-3"
+              style={{
+                background: 'white',
+                border: '1px solid var(--t-linen)',
+                color: 'var(--t-ink)',
+                fontFamily: "'DM Sans', sans-serif",
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            {/* Example prompts */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {SMART_EXAMPLE_PROMPTS.map(prompt => (
+                <button
+                  key={prompt}
+                  onClick={() => setSmartQuery(prompt)}
+                  className="px-2.5 py-1 rounded-full text-[10px] cursor-pointer transition-colors"
+                  style={{
+                    background: 'white',
+                    border: '1px solid var(--t-linen)',
+                    color: 'rgba(28,26,23,0.7)',
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            {/* Submit button */}
+            <button
+              onClick={handleSmartSubmit}
+              disabled={!smartQuery.trim()}
+              className="w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              style={{
+                background: smartQuery.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
+                color: smartQuery.trim() ? 'white' : 'rgba(28,26,23,0.3)',
+                border: 'none',
+                fontFamily: "'DM Sans', sans-serif",
+                boxSizing: 'border-box',
+              }}
+            >
+              <PerriandIcon name="sparkle" size={11} color={smartQuery.trim() ? 'white' : 'rgba(28,26,23,0.3)'} />
+              Find places
+            </button>
+          </div>
+        )}
+
+        {/* ═══ AI Thinking ═══ */}
+        {isSmartMode && smartStep === 'thinking' && (
+          <div className="py-4">
+            <div className="p-3 rounded-xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <div
+                    key={i}
+                    className="rounded-lg"
+                    style={{
+                      height: i === 3 ? 16 : 20,
+                      width: i === 2 ? '65%' : '100%',
+                      background: 'linear-gradient(90deg, var(--t-linen), var(--t-cream), var(--t-linen))',
+                      backgroundSize: '200% 100%',
+                      animation: 'smartShimmer 2s infinite',
+                      animationDelay: `${0.1 * i}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <p
+              className="text-center text-[10px] mt-2"
+              style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+            >
+              Terrazzo is curating...
+            </p>
+          </div>
+        )}
+
+        {/* ═══ AI Result ═══ */}
+        {isSmartMode && smartStep === 'result' && smartResult && (
+          <div>
+            {/* AI reasoning */}
+            {smartResult.reasoning && (
+              <div
+                className="text-[10px] leading-relaxed px-3 py-2 rounded-lg flex gap-2 items-start mb-3"
+                style={{ color: 'rgba(28,26,23,0.8)', background: 'rgba(200,146,58,0.06)' }}
+              >
+                <PerriandIcon name="sparkle" size={10} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span style={{ fontFamily: "'DM Sans', sans-serif" }}>{smartResult.reasoning}</span>
+              </div>
+            )}
+
+            {/* Error fallback notice */}
+            {smartError && (
+              <div
+                className="text-[9px] px-2.5 py-1.5 rounded-lg mb-2"
+                style={{ color: 'rgba(28,26,23,0.5)', background: 'rgba(107,139,154,0.06)', fontFamily: "'Space Mono', monospace" }}
+              >
+                Offline mode — {smartError}
+              </div>
+            )}
+
+            {/* Result preview */}
+            <div className="p-3 rounded-xl mb-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <PerriandIcon name={smartResult.emoji} size={16} />
+                <span
+                  className="text-[14px] font-semibold"
+                  style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', color: 'var(--t-ink)' }}
+                >
+                  {smartResult.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className="text-[11px] font-bold"
+                  style={{ fontFamily: "'Space Mono', monospace", color: 'var(--t-verde)' }}
+                >
+                  {smartResult.matchCount ?? 0} places
+                </span>
+              </div>
+              {smartResult.filterTags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {smartResult.filterTags.map(tag => (
+                    <span
+                      key={tag}
+                      className="px-2 py-0.5 rounded-full text-[9px]"
+                      style={{
+                        background: 'rgba(42,122,86,0.08)',
+                        color: 'var(--t-verde)',
+                        fontFamily: "'Space Mono', monospace",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={resetSmart}
+                className="flex-1 py-2.5 rounded-xl text-[12px] font-medium cursor-pointer"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--t-linen)',
+                  color: 'var(--t-ink)',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Try again
+              </button>
+              <button
+                onClick={handleSmartCreate}
+                className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer flex items-center justify-center gap-1.5"
+                style={{
+                  background: 'var(--t-ink)',
+                  color: 'white',
+                  border: 'none',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Create
+                <PerriandIcon name="sparkle" size={10} color="white" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Shimmer animation for AI thinking */}
+      <style>{`
+        @keyframes smartShimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   );
 }

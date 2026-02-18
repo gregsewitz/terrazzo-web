@@ -61,8 +61,8 @@ export default function ShortlistDetailPage() {
 
   if (!shortlist) {
     return (
-      <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
-        <div className="px-5 pt-6 text-center">
+      <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden' }}>
+        <div className="px-4 pt-5 text-center">
           <p style={{ color: 'rgba(28,26,23,0.5)' }}>Shortlist not found</p>
           <button
             onClick={() => router.back()}
@@ -101,8 +101,8 @@ export default function ShortlistDetailPage() {
   };
 
   return (
-    <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
-      <div className="px-5 pt-6">
+    <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
+      <div className="px-4 pt-5">
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
           <button
@@ -161,7 +161,7 @@ export default function ShortlistDetailPage() {
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     autoFocus
-                    className="text-[18px] rounded-lg px-2 py-1"
+                    className="w-full text-[16px] rounded-lg px-2 py-1"
                     style={{
                       fontFamily: "'DM Serif Display', serif",
                       fontStyle: 'italic',
@@ -169,6 +169,7 @@ export default function ShortlistDetailPage() {
                       background: 'white',
                       border: '1px solid var(--t-linen)',
                       outline: 'none',
+                      boxSizing: 'border-box',
                     }}
                   />
                   <input
@@ -176,13 +177,14 @@ export default function ShortlistDetailPage() {
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     placeholder="Add a description..."
-                    className="text-[11px] rounded-lg px-2 py-1"
+                    className="w-full text-[11px] rounded-lg px-2 py-1"
                     style={{
                       fontFamily: "'DM Sans', sans-serif",
                       color: 'rgba(28,26,23,0.7)',
                       background: 'white',
                       border: '1px solid var(--t-linen)',
                       outline: 'none',
+                      boxSizing: 'border-box',
                     }}
                   />
                   <div className="flex gap-2">

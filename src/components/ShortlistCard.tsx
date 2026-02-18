@@ -53,20 +53,40 @@ export default function ShortlistCard({
       style={{
         background: 'white',
         border: shortlist.isDefault ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+        boxSizing: 'border-box',
       }}
     >
-      {/* Thumbnail grid */}
+      {/* Thumbnail grid — terrazzo tile + grout motif */}
       <div
-        className="grid gap-0.5 overflow-hidden"
+        className="grid overflow-hidden"
         style={{
           gridTemplateColumns: previewPlaces.length > 1 ? '1fr 1fr' : '1fr',
-          height: previewPlaces.length > 0 ? 120 : 60,
-          background: 'var(--t-linen)',
+          height: previewPlaces.length > 0 ? 100 : 48,
+          background: '#ddd5c5', // travertine grout — matches Terrazzo Mosaic
+          gap: 2,
+          padding: 2,
+          borderRadius: '11px 11px 0 0', // match outer card rounding minus border
+          boxShadow: 'inset 0 0 0 1px rgba(28,26,23,0.04)', // subtle depth like Mosaic grout
         }}
       >
         {previewPlaces.length > 0 ? (
           previewPlaces.map((place, i) => {
             const imgUrl = getPlaceImage(place);
+            // Tile corner radii: outer corners get more rounding, inner corners stay tight
+            const isTop = i < 2 || previewPlaces.length === 1;
+            const isLeft = i % 2 === 0;
+            const isRight = i % 2 === 1 || previewPlaces.length === 1;
+            const outerR = 9; // subtle rounding on outer corners
+            const innerR = 2; // tight grout corners like real tile
+            const borderRadius = previewPlaces.length === 1
+              ? `${outerR}px`
+              : [
+                  isTop && isLeft ? outerR : innerR,
+                  isTop && isRight ? outerR : innerR,
+                  !isTop && isRight ? innerR : innerR,
+                  !isTop && isLeft ? innerR : innerR,
+                ].map(r => `${r}px`).join(' ');
+
             return (
               <div
                 key={place.id}
@@ -75,6 +95,7 @@ export default function ShortlistCard({
                     ? `url(${imgUrl}) center/cover`
                     : THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
                   minHeight: 0,
+                  borderRadius,
                 }}
               />
             );
@@ -82,7 +103,7 @@ export default function ShortlistCard({
         ) : (
           <div
             className="flex items-center justify-center"
-            style={{ background: 'var(--t-linen)' }}
+            style={{ background: 'var(--t-linen)', borderRadius: 9 }}
           >
             <PerriandIcon name="saved" size={24} color="rgba(28,26,23,0.2)" />
           </div>
@@ -90,7 +111,7 @@ export default function ShortlistCard({
       </div>
 
       {/* Info */}
-      <div className="px-3.5 py-3">
+      <div className="px-3 py-2.5">
         <div className="flex items-center gap-2 mb-1">
           {shortlist.emoji && (
             <span style={{ fontSize: isPerriandIcon ? 14 : 16 }}>

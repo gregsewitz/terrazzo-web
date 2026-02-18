@@ -44,8 +44,8 @@ export default function AddToShortlistSheet({
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full rounded-t-2xl px-5 pt-5 pb-8"
-        style={{ maxWidth: 480, background: 'var(--t-cream)' }}
+        className="relative w-full rounded-t-2xl px-4 pt-4"
+        style={{ maxWidth: 480, background: 'var(--t-cream)', paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))', boxSizing: 'border-box' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
@@ -75,7 +75,7 @@ export default function AddToShortlistSheet({
               <button
                 key={sl.id}
                 onClick={() => toggleMembership(sl.id, isIn)}
-                className="flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer w-full text-left"
                 style={{
                   background: isIn ? 'rgba(42,122,86,0.04)' : 'white',
                   border: isIn ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
@@ -126,13 +126,14 @@ export default function AddToShortlistSheet({
               onChange={(e) => setNewName(e.target.value)}
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              className="flex-1 rounded-lg py-2.5 px-3 text-[12px]"
+              className="flex-1 min-w-0 rounded-lg py-2.5 px-3 text-[12px]"
               style={{
                 background: 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
                 fontFamily: "'DM Sans', sans-serif",
                 outline: 'none',
+                boxSizing: 'border-box',
               }}
             />
             <button

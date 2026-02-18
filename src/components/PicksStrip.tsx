@@ -187,11 +187,11 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   }
 
   return (
-    <div style={{ background: 'white', borderTop: '1px solid var(--t-linen)' }}>
+    <div style={{ background: 'white', borderTop: '1px solid var(--t-linen)', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
       {/* Single header row: filter icon + type chips + count + browse all */}
       <div
         className="flex items-center gap-1.5 px-3 pt-2 pb-1.5 overflow-x-auto"
-        style={{ scrollbarWidth: 'none' }}
+        style={{ scrollbarWidth: 'none', minWidth: 0 }}
       >
         {/* Filter icon */}
         <button
@@ -339,7 +339,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
       {/* Horizontal scroll strip — compact cards */}
       <div
         className="flex gap-1.5 px-3 pb-2 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', minWidth: 0 }}
       >
         {stripPlaces.length === 0 ? (
           <div className="flex items-center justify-center w-full py-1">
