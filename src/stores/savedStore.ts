@@ -31,8 +31,9 @@ export interface Collection {
   filterTags?: string[];
 }
 
-// Demo My Places data
-const DEMO_MY_PLACES: ImportedPlace[] = [
+// NOTE: All demo data lives in @/data/demoSaved.ts (imported above)
+
+const _LEGACY_MY_PLACES: ImportedPlace[] = [
   {
     id: 'place-1',
     name: 'Sukiyabashi Jiro',

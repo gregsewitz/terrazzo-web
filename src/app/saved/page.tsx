@@ -67,10 +67,17 @@ export default function SavedPage() {
   const [intelligencePlace, setIntelligencePlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
 
+  // All places = saved places + all trip pool places (deduplicated)
+  const allPlaces = useMemo(() => {
+    const savedIds = new Set(myPlaces.map(p => p.id));
+    const tripPlaces = trips.flatMap(t => t.pool).filter(p => !savedIds.has(p.id));
+    return [...myPlaces, ...tripPlaces];
+  }, [myPlaces, trips]);
+
   // My Picks = starred places
   const myPicks = useMemo(() =>
-    myPlaces.filter(p => p.rating?.reaction === 'myPlace'),
-    [myPlaces]
+    allPlaces.filter(p => p.rating?.reaction === 'myPlace'),
+    [allPlaces]
   );
 
   const handleRate = (rating: PlaceRating) => {
@@ -84,7 +91,7 @@ export default function SavedPage() {
     }
   };
 
-  const displayPlaces = activeTab === 'picks' ? myPicks : myPlaces;
+  const displayPlaces = activeTab === 'picks' ? myPicks : allPlaces;
 
   return (
     <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
@@ -122,7 +129,7 @@ export default function SavedPage() {
               All Places
             </span>
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.75)', marginLeft: 2 }}>
-              {activeTab === 'picks' ? myPicks.length : myPlaces.length}
+              {activeTab === 'picks' ? myPicks.length : allPlaces.length}
             </span>
           </div>
           <button
@@ -209,7 +216,7 @@ export default function SavedPage() {
             }
           }}
           siblingPlaces={detailItem.importBatchId
-            ? myPlaces.filter(p => p.importBatchId === detailItem.importBatchId && p.id !== detailItem.id)
+            ? allPlaces.filter(p => p.importBatchId === detailItem.importBatchId && p.id !== detailItem.id)
             : undefined}
         />
       )}
