@@ -80,6 +80,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               src={getPlaceImage(item.name)}
               alt={item.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           )}
           {/* Back button */}
@@ -90,28 +91,6 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
           >
             ←
           </button>
-
-          {/* Action buttons bottom-right */}
-          <div className="absolute bottom-3 right-3 flex gap-1.5">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleSave(); }}
-              className="px-2.5 py-1 rounded-lg text-[10px] border-none"
-              style={{
-                background: saved ? 'rgba(42,122,86,0.9)' : 'rgba(0,0,0,0.4)',
-                color: 'white',
-                cursor: saved ? 'default' : 'pointer',
-              }}
-            >
-              {saved ? '✦ Shortlisted' : '✦ Shortlist'}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onRate?.(); }}
-              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold border-none cursor-pointer"
-              style={{ background: 'rgba(200,146,58,0.9)', color: 'white' }}
-            >
-              ★ Rate
-            </button>
-          </div>
         </div>
 
         <div className="px-5 pb-24">
