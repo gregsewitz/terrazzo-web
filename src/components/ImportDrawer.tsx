@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useImportStore, ImportMode } from '@/stores/importStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType, PerriandIconName } from '@/types';
@@ -81,11 +81,6 @@ const DEMO_IMPORT_RESULTS: ImportedPlace[] = [
 ];
 type ImportStep = 'input' | 'processing' | 'results' | 'success';
 
-interface ProgressItem {
-  label: string;
-  status: 'done' | 'active' | 'pending';
-}
-
 interface ImportDrawerProps {
   onClose: () => void;
 }
@@ -105,10 +100,16 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   const [importResults, setImportResults] = useState<ImportedPlace[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
   const [sourceName, setSourceName] = useState('');
   const [savedPlaces, setSavedPlaces] = useState<ImportedPlace[]>([]);
   const [createdCollectionName, setCreatedCollectionName] = useState('');
+  const [showMapsInput, setShowMapsInput] = useState(false);
+  const [mapsUrl, setMapsUrl] = useState('');
+
+  // Live progress from SSE stream
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [progressLabel, setProgressLabel] = useState('');
+  const [discoveredNames, setDiscoveredNames] = useState<string[]>([]);
 
   // Group results by category
   const groupedResults = useMemo(() => {
@@ -125,21 +126,32 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     return [...savedPlaces].sort((a, b) => b.matchScore - a.matchScore).slice(0, 4);
   }, [savedPlaces]);
 
-  // Detect destination from results
+  // Detect destination(s) from results — handles multi-city lists intelligently
   const detectedDestination = useMemo(() => {
     if (importResults.length === 0) return '';
     const locations = importResults.map(r => r.location).filter(Boolean);
     if (locations.length === 0) return '';
-    // Find most common location word
-    const words: Record<string, number> = {};
+
+    // Extract country/region (last meaningful part of address) for grouping
+    const regions: Record<string, number> = {};
     locations.forEach(loc => {
-      loc.split(/[,·]/).forEach(part => {
-        const w = part.trim();
-        if (w && w.length > 2) words[w] = (words[w] || 0) + 1;
-      });
+      const parts = loc.split(',').map(p => p.trim()).filter(p => p.length > 1);
+      // Use last 1-2 parts as region key (country, or state+country)
+      const region = parts.length >= 2 ? parts.slice(-2).join(', ') : parts[parts.length - 1];
+      if (region) regions[region] = (regions[region] || 0) + 1;
     });
-    const sorted = Object.entries(words).sort(([, a], [, b]) => b - a);
-    return sorted[0]?.[0] || '';
+
+    const sorted = Object.entries(regions).sort(([, a], [, b]) => b - a);
+    if (sorted.length === 0) return '';
+
+    // If one region dominates (>60% of places), show it
+    const topCount = sorted[0][1];
+    if (topCount > locations.length * 0.6) return sorted[0][0];
+
+    // Otherwise show top 2-3 regions
+    const topRegions = sorted.slice(0, 3).map(([name]) => name);
+    if (sorted.length > 3) return `${topRegions.join(', ')} + ${sorted.length - 3} more`;
+    return topRegions.join(', ');
   }, [importResults]);
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
@@ -152,32 +164,6 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   const selectAll = () => setSelectedIds(new Set(importResults.map(r => r.id)));
   const deselectAll = () => setSelectedIds(new Set());
 
-  // Animated progress during processing step
-  useEffect(() => {
-    if (step !== 'processing') return;
-    const steps: ProgressItem[] = [
-      { label: `Found ${DEMO_IMPORT_RESULTS.length} places`, status: 'pending' },
-      { label: `Sorted into ${groupedResults.length || 4} categories`, status: 'pending' },
-      { label: 'Compiled notes for each place', status: 'pending' },
-      { label: 'Pinning locations on the map…', status: 'pending' },
-      { label: 'Matching to your taste profile', status: 'pending' },
-    ];
-    setProgressItems(steps);
-
-    const timers: NodeJS.Timeout[] = [];
-    steps.forEach((_, i) => {
-      timers.push(setTimeout(() => {
-        setProgressItems(prev => prev.map((p, j) => ({
-          ...p, status: j < i ? 'done' : j === i ? 'active' : 'pending',
-        })));
-      }, 300 + i * 400));
-    });
-    timers.push(setTimeout(() => {
-      setProgressItems(prev => prev.map(p => ({ ...p, status: 'done' as const })));
-    }, 300 + steps.length * 400));
-
-    return () => timers.forEach(clearTimeout);
-  }, [step, groupedResults.length]);
   async function handleImport() {
     if (!inputValue.trim()) return;
     const detectedMode = detectInputType(inputValue);
@@ -185,46 +171,163 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     setProcessing(true);
     setError(null);
     setStep('processing');
+    setProgressPercent(0);
+    setProgressLabel('Starting…');
+    setDiscoveredNames([]);
 
-    try {
-      const endpoint = detectedMode === 'url' ? '/api/import/url'
-        : detectedMode === 'google-maps' ? '/api/import/maps'
-        : '/api/import/text';
-      const body = { content: inputValue };
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error('Import failed');
-      const data = await res.json();
-      if (data.places?.length) {
-        setImportResults(data.places);
-        setSelectedIds(new Set(data.places.map((p: ImportedPlace) => p.id)));
-        if (data.historyItems?.length && mode === 'email') {
-          addHistoryItems(data.historyItems);
-        }
-        setStep('results');
-      } else {
-        setError('No places found in the content');
-        setStep('input');
-      }
-    } catch {
-      // Prototype fallback: use demo results after animated delay
+    // Helper to show demo results as fallback
+    const showDemoFallback = () => {
+      setProgressLabel('Loading preview…');
+      setProgressPercent(90);
       setTimeout(() => {
         setImportResults(DEMO_IMPORT_RESULTS);
         setSelectedIds(new Set(DEMO_IMPORT_RESULTS.map(r => r.id)));
         setStep('results');
         setProcessing(false);
-      }, 2200);
+      }, 1200);
+    };
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000);
+
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: inputValue }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok || !res.body) throw new Error('Import failed');
+
+      // Read SSE stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+
+            if (event.type === 'progress') {
+              setProgressPercent(event.percent || 0);
+              setProgressLabel(event.label || '');
+              if (event.placeNames) setDiscoveredNames(event.placeNames);
+            } else if (event.type === 'result') {
+              setProgressPercent(100);
+              setProgressLabel('Done!');
+              if (event.places?.length) {
+                setImportResults(event.places);
+                setSelectedIds(new Set(event.places.map((p: ImportedPlace) => p.id)));
+                // Short pause at 100% so the user sees completion
+                await new Promise(r => setTimeout(r, 600));
+                setStep('results');
+              } else {
+                setError('No places found');
+                setStep('input');
+              }
+            } else if (event.type === 'error') {
+              throw new Error(event.error || 'Import failed');
+            }
+          } catch (parseErr) {
+            // Skip malformed SSE lines
+            if (parseErr instanceof SyntaxError) continue;
+            throw parseErr;
+          }
+        }
+      }
+    } catch {
+      showDemoFallback();
       return;
     } finally {
       setProcessing(false);
     }
   }
 
+
+  async function handleMapsImport() {
+    if (!mapsUrl.trim()) return;
+    setProcessing(true);
+    setError(null);
+    setStep('processing');
+    setProgressPercent(0);
+    setProgressLabel('Starting…');
+    setDiscoveredNames([]);
+    setSourceName('Google Maps');
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 240000); // 4 min for Apify
+
+      const res = await fetch('/api/import/maps-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: mapsUrl }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok || !res.body) throw new Error('Maps import failed');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+
+            if (event.type === 'progress') {
+              setProgressPercent(event.percent || 0);
+              setProgressLabel(event.label || '');
+              if (event.placeNames) setDiscoveredNames(event.placeNames);
+            } else if (event.type === 'result') {
+              setProgressPercent(100);
+              setProgressLabel('Done!');
+              if (event.places?.length) {
+                setImportResults(event.places);
+                setSelectedIds(new Set(event.places.map((p: ImportedPlace) => p.id)));
+                await new Promise(r => setTimeout(r, 600));
+                setStep('results');
+              } else {
+                setError('No places found in the list');
+                setStep('input');
+              }
+            } else if (event.type === 'error') {
+              throw new Error(event.error || 'Maps import failed');
+            }
+          } catch (parseErr) {
+            if (parseErr instanceof SyntaxError) continue;
+            throw parseErr;
+          }
+        }
+      }
+    } catch (err) {
+      setError((err as Error).message || 'Failed to import Google Maps list');
+      setStep('input');
+    } finally {
+      setProcessing(false);
+    }
+  }
 
   function handleConfirmImport() {
     const selected = importResults.filter(r => selectedIds.has(r.id));
@@ -321,6 +424,51 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                 <PerriandIcon name="terrazzo" size={16} color="white" />
               </button>
 
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
+                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}>or</span>
+                <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
+              </div>
+
+              {/* Google Maps import */}
+              {!showMapsInput ? (
+                <button onClick={() => setShowMapsInput(true)}
+                  className="w-full py-3 rounded-2xl border-none cursor-pointer text-[13px] font-semibold transition-all flex items-center justify-center gap-2"
+                  style={{ background: 'white', color: 'var(--t-ink)', border: '1.5px solid var(--t-linen)' }}>
+                  <span style={{ fontSize: 16 }}>📍</span>
+                  Import from Google Maps
+                </button>
+              ) : (
+                <div className="rounded-2xl overflow-hidden" style={{ border: '2px solid var(--t-honey)', background: 'white' }}>
+                  <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+                    <span style={{ fontSize: 14 }}>📍</span>
+                    <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>Google Maps saved list</span>
+                  </div>
+                  <input
+                    type="url"
+                    value={mapsUrl}
+                    onChange={e => setMapsUrl(e.target.value)}
+                    placeholder="Paste your maps.app.goo.gl link…"
+                    className="w-full px-3 py-2 text-[12px] border-none outline-none"
+                    style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
+                    autoFocus
+                  />
+                  <div className="flex gap-2 px-3 pb-3">
+                    <button onClick={() => { setShowMapsInput(false); setMapsUrl(''); }}
+                      className="flex-1 py-2 rounded-xl border-none cursor-pointer text-[11px]"
+                      style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}>
+                      Cancel
+                    </button>
+                    <button onClick={handleMapsImport} disabled={isProcessing || !mapsUrl.trim()}
+                      className="flex-1 py-2 rounded-xl border-none cursor-pointer text-[11px] font-semibold"
+                      style={{ background: 'var(--t-ink)', color: 'white', opacity: isProcessing || !mapsUrl.trim() ? 0.35 : 1 }}>
+                      Import list
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {error && (
                 <div className="mt-3 p-3 rounded-xl text-center" style={{ background: 'rgba(214,48,32,0.08)' }}>
                   <span className="text-[12px]" style={{ color: 'var(--t-signal-red)' }}>{error}</span>
@@ -335,51 +483,45 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                 <PerriandIcon name="terrazzo" size={48} color="var(--t-honey)" />
               </div>
               <h3 className="text-xl italic mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
-                Reading your paste…
+                {progressPercent < 35 ? 'Reading your paste…' : progressPercent < 75 ? 'Looking up places…' : 'Almost there…'}
               </h3>
-              <p className="text-[12px] mb-6" style={{ color: 'rgba(28,26,23,0.95)' }}>
-                Finding places, extracting notes, categorizing
-              </p>
 
-              <div className="w-full max-w-[260px]">
-                {progressItems.map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 mb-2.5">
-                    <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: item.status === 'done' ? 'var(--t-verde)' : item.status === 'active' ? 'var(--t-honey)' : 'var(--t-linen)',
-                        color: item.status === 'done' || item.status === 'active' ? 'white' : 'rgba(28,26,23,0.9)',
-                        fontWeight: 700,
-                      }}>
-                      {item.status === 'done' ? (
-                        <PerriandIcon name="check" size={12} color="white" />
-                      ) : item.status === 'active' ? (
-                        <span style={{ fontSize: 10, fontWeight: 700 }}>…</span>
-                      ) : (
-                        <span style={{ fontSize: 10 }}>○</span>
-                      )}
-                    </div>
-                    <span className="text-[12px]" style={{ color: item.status === 'pending' ? 'rgba(28,26,23,0.9)' : 'var(--t-ink)' }}>
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
+              {/* Live progress bar */}
+              <div className="w-full max-w-[280px] mb-4">
+                <div className="w-full h-[6px] rounded-full overflow-hidden" style={{ background: 'var(--t-linen)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${progressPercent}%`,
+                      background: 'linear-gradient(90deg, var(--t-honey), var(--t-verde))',
+                      transition: 'width 0.5s ease-out',
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}>
+                    {progressLabel}
+                  </span>
+                  <span className="text-[10px] font-semibold" style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}>
+                    {progressPercent}%
+                  </span>
+                </div>
               </div>
 
-              {detectedDestination && (
-                <div className="mt-6 px-4 py-2.5 rounded-xl inline-flex items-center gap-2" style={{ background: 'var(--t-linen)' }}>
-                  <PerriandIcon name="location" size={20} color="var(--t-ink)" />
-                  <div>
-                    <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{detectedDestination}</div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>Detected destination</div>
+              {/* Place names that have been discovered so far */}
+              {discoveredNames.length > 0 && (
+                <div className="w-full max-w-[280px] mt-2 rounded-xl p-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+                  <div className="text-[9px] uppercase font-bold tracking-wider mb-2"
+                    style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace", letterSpacing: '0.8px' }}>
+                    Places found
                   </div>
-                </div>
-              )}
-              {!detectedDestination && (
-                <div className="mt-6 px-4 py-2.5 rounded-xl inline-flex items-center gap-2" style={{ background: 'var(--t-linen)' }}>
-                  <PerriandIcon name="location" size={20} color="var(--t-ink)" />
-                  <div>
-                    <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>Detected destination</div>
-                    <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>Analyzing content…</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {discoveredNames.map((name, i) => (
+                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-md"
+                        style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}>
+                        {name}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}

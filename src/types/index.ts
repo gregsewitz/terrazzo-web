@@ -174,6 +174,11 @@ export interface ImportedPlace {
   alsoKnownAs?: string;   // e.g. "El Sótano"
   importBatchId?: string;  // links places from same import for "Also from this guide"
   isShortlisted?: boolean; // true = show in PicksStrip for day planner drag-drop
+  // Personal context extracted from user's notes
+  userContext?: string;     // e.g. "going in May", "planned for my 40th", "with my daughter (5)"
+  travelWith?: string;      // e.g. "bestie", "daughter", "friends"
+  timing?: string;          // e.g. "this fall", "May 2025", "when daughter graduates"
+  intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching'; // how concrete this is
 }
 
 export interface TimeSlot {
@@ -365,3 +370,142 @@ export const PIPELINE_STAGES = [
   { key: 'merge', label: 'Compose' },
   { key: 'save', label: 'Done' },
 ] as const;
+
+// ─── Onboarding Types ───
+
+export interface TasteSignal {
+  tag: string;
+  cat: string; // TasteDomain or 'Rejection' | 'Context' | 'Emotion' | 'Core'
+  confidence: number; // 0.0–1.0
+}
+
+export interface TasteContradiction {
+  stated: string;
+  revealed: string;
+  resolution: string;
+  matchRule: string;
+}
+
+export interface ContextModifier {
+  context: string;
+  shifts: string;
+}
+
+export interface MatchedProperty {
+  name: string;
+  location: string;
+  score: number;
+  matchReasons: string[];
+  tensionResolved: string;
+}
+
+export interface GeneratedTasteProfile {
+  overallArchetype: string;
+  archetypeDescription: string;
+  emotionalDriver: {
+    primary: string;
+    description: string;
+    secondary: string;
+  };
+  contradictions: TasteContradiction[];
+  contextModifiers: ContextModifier[];
+  microTasteSignals: Record<string, string[]>;
+  radarData: { axis: string; value: number }[];
+  matchedProperties: MatchedProperty[];
+}
+
+export interface ConversationMessage {
+  role: 'ai' | 'user' | 'system';
+  text: string;
+  phaseId?: string;
+}
+
+export interface DiagnosticQuestion {
+  q: string;
+  a: string;
+  b: string;
+  aSignals: string[];
+  bSignals: string[];
+}
+
+export interface ImagePair {
+  id: number;
+  prompt: string;
+  a: { label: string; imageUrl?: string };
+  b: { label: string; imageUrl?: string };
+  aSignals: string[];
+  bSignals: string[];
+}
+
+export type OnboardingPhaseModality = 'voice' | 'cards' | 'visual' | 'voice+cards' | 'trip-seed';
+
+export interface OnboardingPhase {
+  id: string;
+  phaseNumber: number;
+  title: string;
+  subtitle: string;
+  modality: OnboardingPhaseModality;
+  act: 1 | 2;
+  aiPrompt: string;
+  followUps: string[];
+  sampleUserResponses: string[];
+  extractedSignals: TasteSignal[];
+  certaintyAfter: Record<string, number>;
+  diagnosticQuestions?: DiagnosticQuestion[];
+  imagePairs?: ImagePair[];
+}
+
+export interface TrustedSource {
+  type: 'friend' | 'publication' | 'instagram' | 'newsletter';
+  name: string;
+  context?: string;
+  relationship?: string;
+}
+
+export interface GoBackPlace {
+  placeName: string;
+  location?: string;
+  reason?: string;
+  matchScore?: number;
+  calibrationStatus?: 'confirmed' | 'flagged';
+}
+
+export interface SeedTripInput {
+  destination: string;
+  dates?: string;
+  travelContext?: TravelContext;
+  status: TripStatus;
+  seedSource: 'onboarding_planning' | 'onboarding_dream';
+  rawUserInput: string;
+}
+
+export interface OnboardingLifeContext {
+  firstName?: string;
+  homeCity?: string;
+  homeCityGeo?: { lat: number; lng: number; placeId?: string };
+  partnerName?: string;
+  relationshipStatus?: 'married' | 'partnered' | 'single' | 'not_specified';
+  hasKids?: boolean;
+  kidAges?: ('baby' | 'toddler' | 'school_age' | 'teen')[];
+  primaryCompanions: TravelContext[];
+  travelFrequency?: 'frequent' | 'occasional' | 'rare';
+  // Phase 3: Companion context
+  partnerTravelDynamic?: string;
+  soloTravelIdentity?: string;
+  contextModifiers?: { companion: string; preferences: string[] }[];
+  // Phase 10: Emotional drivers
+  emotionalDriverPrimary?: string;
+  emotionalDriverSecondary?: string | null;
+  // Allow dynamic fields from AI extraction
+  [key: string]: unknown;
+}
+
+export type OnboardingDepth = 'act_1_only' | 'full_flow';
+
+export interface AnalysisResult {
+  signals: TasteSignal[];
+  certainties: Record<string, number>;
+  followUp: string;
+  contradictions: TasteContradiction[];
+  phaseComplete: boolean;
+}

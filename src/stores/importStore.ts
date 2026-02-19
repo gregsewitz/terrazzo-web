@@ -31,7 +31,7 @@ export const useImportStore = create<ImportState>((set) => ({
   emailConnected: false,
 
   setOpen: (open) => set({ isOpen: open }),
-  setMode: (mode) => set({ mode, inputValue: '', error: null }),
+  setMode: (mode) => set({ mode, error: null }),
   setInputValue: (value) => set({ inputValue: value }),
   setProcessing: (processing) => set({ isProcessing: processing }),
   setDetectedCount: (count) => set({ detectedCount: count }),
