@@ -1,0 +1,138 @@
+'use client';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+
+interface UseSpeechRecognitionOptions {
+  silenceTimeout?: number; // ms of silence before auto-sending (0 = disabled)
+  onSilenceDetected?: (transcript: string) => void; // called when user stops speaking
+}
+
+interface UseSpeechRecognitionReturn {
+  isListening: boolean;
+  transcript: string;
+  isSupported: boolean;
+  startListening: () => void;
+  stopListening: () => void;
+  resetTranscript: () => void;
+}
+
+export function useSpeechRecognition({
+  silenceTimeout = 0,
+  onSilenceDetected,
+}: UseSpeechRecognitionOptions = {}): UseSpeechRecognitionReturn {
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasFinalResultRef = useRef(false);
+  const latestTranscriptRef = useRef('');
+  const onSilenceRef = useRef(onSilenceDetected);
+  onSilenceRef.current = onSilenceDetected;
+  const silenceTimeoutRef = useRef(silenceTimeout);
+  silenceTimeoutRef.current = silenceTimeout;
+
+  const isSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  const clearSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+  }, []);
+
+  const startSilenceTimer = useCallback(() => {
+    clearSilenceTimer();
+    if (silenceTimeoutRef.current <= 0) return;
+
+    silenceTimerRef.current = setTimeout(() => {
+      const text = latestTranscriptRef.current.trim();
+      if (text && hasFinalResultRef.current) {
+        onSilenceRef.current?.(text);
+      }
+    }, silenceTimeoutRef.current);
+  }, [clearSilenceTimer]);
+
+  useEffect(() => {
+    if (!isSupported) return;
+    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) return;
+    const recognition = new SpeechRecognitionCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = '';
+      let hasNewFinal = false;
+      for (let i = 0; i < event.results.length; i++) {
+        finalTranscript += event.results[i][0].transcript;
+        if (event.results[i].isFinal) hasNewFinal = true;
+      }
+      setTranscript(finalTranscript);
+      latestTranscriptRef.current = finalTranscript;
+
+      // Reset silence timer on any new speech
+      clearSilenceTimer();
+
+      if (hasNewFinal) {
+        hasFinalResultRef.current = true;
+        // Start silence timer — if user stays quiet, we auto-send
+        startSilenceTimer();
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      clearSilenceTimer();
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      // When recognition naturally ends (browser decided user is done),
+      // if we have content, trigger auto-send immediately
+      const text = latestTranscriptRef.current.trim();
+      if (text && silenceTimeoutRef.current > 0) {
+        clearSilenceTimer();
+        onSilenceRef.current?.(text);
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.abort();
+      clearSilenceTimer();
+    };
+  }, [isSupported, clearSilenceTimer, startSilenceTimer]);
+
+  const startListening = useCallback(() => {
+    if (recognitionRef.current && !isListening) {
+      setTranscript('');
+      latestTranscriptRef.current = '';
+      hasFinalResultRef.current = false;
+      clearSilenceTimer();
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch {
+        // May throw if already started
+      }
+    }
+  }, [isListening, clearSilenceTimer]);
+
+  const stopListening = useCallback(() => {
+    clearSilenceTimer();
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  }, [isListening, clearSilenceTimer]);
+
+  const resetTranscript = useCallback(() => {
+    setTranscript('');
+    latestTranscriptRef.current = '';
+    hasFinalResultRef.current = false;
+  }, []);
+
+  return { isListening, transcript, isSupported, startListening, stopListening, resetTranscript };
+}
