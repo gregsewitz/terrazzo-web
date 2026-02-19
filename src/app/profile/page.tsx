@@ -12,6 +12,7 @@ import ScoreArc from '@/components/profile/ScoreArc';
 import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 import {
   BECAUSE_YOU_CARDS,
   WEEKLY_COLLECTION,
@@ -49,12 +50,19 @@ export default function ProfilePage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('discover');
 
+  const resetOnboarding = useOnboardingStore(s => s.reset);
+
   const handleSettingTap = (action: string) => {
     if (action === 'history') {
       router.push('/saved');
       return;
     }
     setExpandedSection(expandedSection === action ? null : action);
+  };
+
+  const handleRedoOnboarding = () => {
+    resetOnboarding();
+    router.push('/onboarding');
   };
 
   // Full-screen wrapped overlay
@@ -217,6 +225,24 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
+
+            {/* Redo Onboarding */}
+            <button
+              onClick={handleRedoOnboarding}
+              className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-4"
+              style={{
+                background: 'rgba(232,115,58,0.06)',
+                border: '1px dashed rgba(232,115,58,0.2)',
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <PerriandIcon name="discover" size={12} color="var(--t-panton-orange)" />
+                <span className="text-[12px] font-medium" style={{ color: 'var(--t-panton-orange)' }}>
+                  Redo Onboarding
+                </span>
+              </div>
+              <span style={{ color: 'var(--t-panton-orange)', fontSize: 12 }}>→</span>
+            </button>
           </div>
         </>
       )}

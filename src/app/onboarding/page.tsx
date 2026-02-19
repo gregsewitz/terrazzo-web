@@ -138,17 +138,20 @@ export default function OnboardingIntro() {
           You can always refine your profile later
         </p>
 
-        {/* Dev bypass — only visible in development */}
-        {isDev && (
-          <button
-            onClick={handleDevSkip}
-            className="mt-6 px-4 py-2 rounded-lg text-[12px] font-mono text-[var(--t-signal-red)]/60
-              border border-dashed border-[var(--t-signal-red)]/20 hover:border-[var(--t-signal-red)]/40
-              transition-colors"
-          >
-            DEV: Skip onboarding →
-          </button>
-        )}
+        {/* Skip to app */}
+        <button
+          onClick={handleDevSkip}
+          className="mt-6 text-[12px] font-medium transition-colors hover:opacity-70"
+          style={{
+            color: 'rgba(28,26,23,0.35)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Skip to app →
+        </button>
       </div>
     </div>
   );
