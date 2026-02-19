@@ -219,6 +219,109 @@ Return ONLY the JSON object. No markdown, no explanation, no truncation. Every p
   }
 }
 
+// ─── Combined extraction + taste matching (one Claude call instead of two) ────
+
+export interface ExtractAndMatchResult {
+  region: string | null;
+  places: Array<{
+    name: string;
+    type: string;
+    city?: string;
+    description?: string;
+    userContext?: string;
+    travelWith?: string;
+    timing?: string;
+    intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching';
+    matchScore?: number;
+    matchBreakdown?: Record<string, number>;
+    tasteNote?: string;
+    terrazzoInsight?: { why: string; caveat: string };
+  }>;
+}
+
+export async function extractAndMatchPlaces(
+  content: string,
+  isArticleFromUrl: boolean,
+  userProfile: Record<string, number>
+): Promise<ExtractAndMatchResult> {
+  const maxPlaces = isArticleFromUrl ? 50 : 30;
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 16384,
+    system: `You are Terrazzo's smart place extractor AND taste concierge in one. You will:
+1. Extract every distinct place from the user's text (up to ${maxPlaces})
+2. Score each against the user's taste profile
+3. Return everything in a single JSON response
+
+EXTRACTION RULES:
+- Be exhaustive: extract up to ${maxPlaces} places. Go through the ENTIRE text.
+- Cover all sections proportionally. Don't exhaust budget on early sections.
+- Every named venue counts: restaurants, hotels, bars, cafes, museums, shops, activities, neighborhoods.
+- Two names together ("La Huella and Ferona") = TWO places. Slashes too.
+- People's names are NOT places. Section headers are NOT places.
+- Hotel sub-venues (spa, restaurant inside a hotel) are part of the hotel, not separate places.
+- Geographic context words ("Norway" in "Swim with Orcas in Norway") are locations, not places.
+
+TYPE CLASSIFICATION:
+hotel | restaurant | bar | cafe | shop | museum | activity | neighborhood
+
+PERSONAL CONTEXT — preserve the user's exact voice and personality in userContext.
+
+TASTE MATCHING:
+User profile (0-1 per axis): ${JSON.stringify(userProfile)}
+For each place, score:
+- matchScore: 0-100 overall match
+- matchBreakdown: { Design: 0-1, Character: 0-1, Service: 0-1, Food: 0-1, Location: 0-1, Wellness: 0-1 } — how the PLACE scores
+- tasteNote: one-line description in a warm, friend-like voice
+- terrazzoInsight: { why: "1-2 sentences on match", caveat: "honest heads-up" }
+
+${TERRAZZO_VOICE}
+
+Return a JSON object:
+{
+  "region": string | null,
+  "places": [{
+    "name": string,
+    "type": string,
+    "city": string,
+    "description": string (${isArticleFromUrl ? 'max 15 words' : '1-2 sentences'}),
+    "userContext": string | null,
+    "travelWith": string | null,
+    "timing": string | null,
+    "intentStatus": "booked" | "planning" | "dreaming" | "researching",
+    "matchScore": number,
+    "matchBreakdown": { Design, Character, Service, Food, Location, Wellness },
+    "tasteNote": string,
+    "terrazzoInsight": { "why": string, "caveat": string }
+  }]
+}
+
+Return ONLY JSON. No markdown. No truncation.`,
+    messages: [{ role: 'user', content: content.slice(0, 25000) }],
+  });
+
+  try {
+    const textBlock = response.content.find((b) => b.type === 'text');
+    const rawText = textBlock?.type === 'text' ? textBlock.text : '{}';
+    const jsonStr = extractJSON(rawText);
+    const parsed = JSON.parse(jsonStr);
+    if (Array.isArray(parsed)) {
+      return { region: null, places: parsed };
+    }
+    return {
+      region: parsed.region || null,
+      places: Array.isArray(parsed.places) ? parsed.places : [],
+    };
+  } catch (e) {
+    const textBlock = response.content.find((b) => b.type === 'text');
+    const rawText = textBlock?.type === 'text' ? textBlock.text : '';
+    console.error('[extractAndMatch] JSON parse failed:', (e as Error).message);
+    console.error('[extractAndMatch] raw response tail:', rawText.slice(-200));
+    return { region: null, places: [] };
+  }
+}
+
 // ─── Batch taste matching (scores multiple places in one Claude call) ─────────
 
 export async function generateTasteMatchBatch(

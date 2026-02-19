@@ -197,8 +197,8 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
             </p>
           )}
 
-          {/* Place details — address, website, phone */}
-          {item.google && (item.google.address || item.google.website || item.google.phone) && (
+          {/* Place details — address, website, phone, Google Maps link */}
+          {item.google && (item.google.address || item.google.website || item.google.phone || item.google.placeId || item.google.lat) && (
             <div className="mb-4 rounded-xl px-3.5 py-3" style={{ background: 'rgba(28,26,23,0.03)', border: '1px solid rgba(28,26,23,0.06)' }}>
               {item.google.address && (
                 <div className="flex items-start gap-2 mb-2 last:mb-0">
@@ -224,7 +224,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                 </div>
               )}
               {item.google.phone && (
-                <div className="flex items-center gap-2 last:mb-0">
+                <div className="flex items-center gap-2 mb-2 last:mb-0">
                   <PerriandIcon name="sparkle" size={13} color="rgba(28,26,23,0.5)" />
                   <a
                     href={`tel:${item.google.phone}`}
@@ -236,6 +236,30 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                   </a>
                 </div>
               )}
+              {/* Open in Google Maps */}
+              {(() => {
+                const g = item.google as Record<string, unknown> & { placeId?: string; lat?: number; lng?: number };
+                const mapsUrl = g.placeId
+                  ? `https://www.google.com/maps/place/?q=place_id:${g.placeId}`
+                  : g.lat && g.lng
+                    ? `https://www.google.com/maps/search/?api=1&query=${g.lat},${g.lng}`
+                    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.name} ${item.location}`)}`;
+                return (
+                  <div className="flex items-center gap-2 last:mb-0">
+                    <PerriandIcon name="location" size={13} color="rgba(28,26,23,0.5)" />
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] no-underline"
+                      style={{ color: 'var(--t-honey)' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View on Google Maps ↗
+                    </a>
+                  </div>
+                );
+              })()}
             </div>
           )}
 

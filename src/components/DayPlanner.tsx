@@ -201,28 +201,58 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   </span>
                 )}
               </div>
-              <button
-                onClick={() => setDayMapOpen(!dayMapOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                style={{
-                  background: dayMapOpen ? destColor.accent : `${destColor.accent}15`,
-                  color: dayMapOpen ? 'white' : destColor.accent,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <PerriandIcon name="pin" size={12} color={dayMapOpen ? 'white' : destColor.accent} />
-                {dayMapOpen ? 'Hide Map' : 'View Map'}
-                {!dayMapOpen && placedItems.length > 0 && (
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, opacity: 0.7 }}>
-                    · {placedItems.length} place{placedItems.length !== 1 ? 's' : ''}
-                  </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setDayMapOpen(!dayMapOpen)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                  style={{
+                    background: dayMapOpen ? destColor.accent : `${destColor.accent}15`,
+                    color: dayMapOpen ? 'white' : destColor.accent,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <PerriandIcon name="pin" size={12} color={dayMapOpen ? 'white' : destColor.accent} />
+                  {dayMapOpen ? 'Hide Map' : 'View Map'}
+                  {!dayMapOpen && placedItems.length > 0 && (
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, opacity: 0.7 }}>
+                      · {placedItems.length} place{placedItems.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </button>
+                {placedItems.length >= 2 && (
+                  <button
+                    onClick={() => {
+                      // Build multi-stop Google Maps directions URL from placed items in slot order
+                      const waypoints = placedItems.map(p => {
+                        const g = p.google as Record<string, unknown> & { lat?: number; lng?: number } | undefined;
+                        if (g?.lat && g?.lng) return `${g.lat},${g.lng}`;
+                        return encodeURIComponent(`${p.name} ${p.location}`);
+                      });
+                      const url = `https://www.google.com/maps/dir/${waypoints.join('/')}`;
+                      window.open(url, '_blank');
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                    style={{
+                      background: `${destColor.accent}15`,
+                      color: destColor.accent,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <PerriandIcon name="discover" size={12} color={destColor.accent} />
+                    Directions
+                  </button>
                 )}
-              </button>
+              </div>
             </div>
 
             {/* Inline map panel */}

@@ -8,6 +8,7 @@ import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore } from '@/stores/savedStore';
 import { REACTIONS, ImportedPlace, PlaceRating, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { generateShareableMapHTML } from '@/lib/mapShare';
 
 const TYPE_COLORS: Record<PlaceType, string> = {
   restaurant: '#e87080',
@@ -114,34 +115,57 @@ export default function ShortlistDetailPage() {
             ←
           </button>
           <div className="flex-1" />
-          {!shortlist.isDefault && (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {placesInShortlist.length > 0 && (
               <button
-                onClick={startEditing}
-                className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
+                onClick={() => {
+                  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+                  const html = generateShareableMapHTML(placesInShortlist, shortlist.name, apiKey);
+                  const blob = new Blob([html], { type: 'text/html' });
+                  const url = URL.createObjectURL(blob);
+                  window.open(url, '_blank');
+                }}
+                className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
                 style={{
-                  background: 'rgba(28,26,23,0.04)',
-                  color: 'rgba(28,26,23,0.5)',
+                  background: 'rgba(200,146,58,0.08)',
+                  color: 'var(--t-honey)',
                   border: 'none',
                   fontFamily: "'Space Mono', monospace",
                 }}
               >
-                Edit
+                <PerriandIcon name="pin" size={10} color="var(--t-honey)" />
+                Map
               </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
-                style={{
-                  background: 'rgba(214,48,32,0.06)',
-                  color: 'var(--t-signal-red)',
-                  border: 'none',
-                  fontFamily: "'Space Mono', monospace",
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          )}
+            )}
+            {!shortlist.isDefault && (
+              <>
+                <button
+                  onClick={startEditing}
+                  className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
+                  style={{
+                    background: 'rgba(28,26,23,0.04)',
+                    color: 'rgba(28,26,23,0.5)',
+                    border: 'none',
+                    fontFamily: "'Space Mono', monospace",
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
+                  style={{
+                    background: 'rgba(214,48,32,0.06)',
+                    color: 'var(--t-signal-red)',
+                    border: 'none',
+                    fontFamily: "'Space Mono', monospace",
+                  }}
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Shortlist info */}

@@ -1,7 +1,28 @@
 import { NextRequest } from 'next/server';
-import { extractPlaces, generateTasteMatchBatch } from '@/lib/anthropic';
+import { extractAndMatchPlaces } from '@/lib/anthropic';
 import { searchPlace, priceLevelToString } from '@/lib/places';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+
+// ─── Concurrency helper ──────────────────────────────────────────────────────
+
+async function parallelMap<T, R>(
+  items: T[],
+  fn: (item: T, index: number) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const i = nextIndex++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
 
 /**
  * Unified smart import endpoint — streams progress via SSE.
@@ -39,29 +60,47 @@ export async function POST(request: NextRequest) {
           percent: 5,
         });
 
-        // ── 2. Extract place names ──────────────────────────────────────────
+        // ── 2. Extract places + taste match (single Claude call) ──────────
         let extracted: ExtractedPlace[] = [];
         let inferredRegion: string | null = null;
 
         if (detectedType === 'google-maps') {
+          // Google Maps URLs don't go through Claude — just scrape place names
           extracted = await extractFromGoogleMaps(trimmed);
-        } else if (detectedType === 'url') {
-          send({ type: 'progress', stage: 'fetching', label: 'Fetching article content…', percent: 10 });
-          const articleText = await fetchAndClean(trimmed);
-          if (!articleText) {
-            send({ type: 'error', error: 'Could not fetch URL content' });
+        } else {
+          // For URLs, fetch the article text first
+          let textContent = trimmed;
+          const isUrl = detectedType === 'url';
+
+          if (isUrl) {
+            send({ type: 'progress', stage: 'fetching', label: 'Fetching article content…', percent: 10 });
+            const articleText = await fetchAndClean(trimmed);
+            if (!articleText) {
+              send({ type: 'error', error: 'Could not fetch URL content' });
+              controller.close();
+              return;
+            }
+            textContent = articleText;
+          }
+
+          // Single Claude call: extract places AND generate taste scores together
+          send({
+            type: 'progress',
+            stage: 'extracting',
+            label: isUrl ? 'AI is reading & matching the article…' : 'AI is finding & matching places…',
+            percent: isUrl ? 20 : 15,
+          });
+
+          try {
+            const result = await extractAndMatchPlaces(textContent, isUrl, DEFAULT_USER_PROFILE);
+            extracted = result.places;
+            inferredRegion = result.region;
+          } catch (e) {
+            console.error('Combined extraction failed:', e);
+            send({ type: 'error', error: 'AI extraction failed' });
             controller.close();
             return;
           }
-          send({ type: 'progress', stage: 'extracting', label: 'AI is reading the article…', percent: 20 });
-          const extraction = await extractPlaces(articleText, true);
-          extracted = extraction.places;
-          inferredRegion = extraction.region;
-        } else {
-          send({ type: 'progress', stage: 'extracting', label: 'AI is finding places in your text…', percent: 15 });
-          const extraction = await extractPlaces(trimmed, false);
-          extracted = extraction.places;
-          inferredRegion = extraction.region;
         }
 
         if (!extracted || extracted.length === 0) {
@@ -71,7 +110,6 @@ export async function POST(request: NextRequest) {
         }
 
         // ── 2b. Deduplicate ───────────────────────────────────────────────
-        // Merge duplicates: keep the entry with richer data (longer description/context)
         const deduped = deduplicatePlaces(extracted);
         if (deduped.length < extracted.length) {
           send({
@@ -91,10 +129,10 @@ export async function POST(request: NextRequest) {
           placeNames: limited.map((p: { name: string }) => p.name),
         });
 
-        // ── 3. Enrich with Google Places ────────────────────────────────────
+        // ── 3. Enrich with Google Places (8 concurrent) ───────────────────
         send({ type: 'progress', stage: 'enriching', label: 'Looking up details on Google…', percent: 40 });
         const enrichedPlaces = await enrichWithGooglePlaces(limited, detectedType, inferredRegion, (done, total) => {
-          const enrichPercent = 40 + Math.round((done / total) * 30);
+          const enrichPercent = 40 + Math.round((done / total) * 50);
           send({
             type: 'progress',
             stage: 'enriching',
@@ -103,42 +141,19 @@ export async function POST(request: NextRequest) {
           });
         });
 
-        send({ type: 'progress', stage: 'enriched', label: 'Google details added', percent: 72 });
+        send({ type: 'progress', stage: 'finalizing', label: 'Compiling your results…', percent: 95 });
 
-        // ── 4. Batch taste matching ─────────────────────────────────────────
-        send({ type: 'progress', stage: 'matching', label: 'Matching to your taste profile…', percent: 75 });
-
-        const placesForMatching = enrichedPlaces.map(p => ({
-          name: p.name,
-          type: p.type,
-          city: p.location,
-        }));
-
-        let tasteResults: Array<{
-          matchScore?: number;
-          matchBreakdown?: Record<string, number>;
-          tasteNote?: string;
-          terrazzoInsight?: { why: string; caveat: string };
-        }> = [];
-
-        try {
-          tasteResults = await generateTasteMatchBatch(placesForMatching, DEFAULT_USER_PROFILE);
-        } catch (e) {
-          console.warn('Taste matching failed, continuing without scores:', e);
-        }
-
-        send({ type: 'progress', stage: 'finalizing', label: 'Compiling your results…', percent: 92 });
-
-        // ── 5. Merge taste data ─────────────────────────────────────────────
+        // ── 4. Merge taste data from combined call onto enriched places ────
         const finalPlaces = enrichedPlaces.map((place, i) => {
-          const taste = tasteResults[i];
-          if (taste && taste.matchScore) {
+          // Find the matching extracted place by name to get taste data
+          const source = limited[i];
+          if (source && source.matchScore) {
             return {
               ...place,
-              matchScore: taste.matchScore || 0,
-              matchBreakdown: taste.matchBreakdown || place.matchBreakdown,
-              tasteNote: taste.tasteNote || place.tasteNote,
-              terrazzoInsight: taste.terrazzoInsight || undefined,
+              matchScore: source.matchScore || 0,
+              matchBreakdown: source.matchBreakdown || place.matchBreakdown,
+              tasteNote: source.tasteNote || place.tasteNote,
+              terrazzoInsight: source.terrazzoInsight || undefined,
             };
           }
           return place;
@@ -297,6 +312,11 @@ interface ExtractedPlace {
   travelWith?: string;
   timing?: string;
   intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching';
+  // Taste match data from combined Claude call
+  matchScore?: number;
+  matchBreakdown?: Record<string, number>;
+  tasteNote?: string;
+  terrazzoInsight?: { why: string; caveat: string };
 }
 
 async function enrichWithGooglePlaces(
@@ -312,72 +332,88 @@ async function enrichWithGooglePlaces(
   let done = 0;
   const total = extracted.length;
 
-  // Enrich in parallel (up to 30 places)
-  const results = await Promise.allSettled(
-    extracted.map(async (place, i) => {
-      // Build search query with location context for Google Places accuracy
-      // Use the place's city first, then fall back to the inferred region
-      const locationHint = place.city || inferredRegion || '';
-      const query = locationHint ? `${place.name} ${locationHint}` : place.name;
-      const googleResult = await searchPlace(query);
+  // Enrich in parallel with concurrency limit of 8
+  const results = await parallelMap(
+    extracted,
+    async (place, i) => {
+      try {
+        // Build search query with location context for Google Places accuracy
+        const locationHint = place.city || inferredRegion || '';
+        const query = locationHint ? `${place.name} ${locationHint}` : place.name;
+        const googleResult = await searchPlace(query);
 
-      done++;
-      onProgress?.(done, total);
+        done++;
+        onProgress?.(done, total);
 
-      // Prefer Claude's type classification over Google's (Claude understands context better)
-      const claudeType = place.type;
-      const googleType = googleResult
-        ? mapGoogleTypeToPlaceType(googleResult.primaryType || googleResult.types?.[0])
-        : null;
-      // Use Claude's type unless it said "activity" and Google has a more specific category
-      const finalType = (claudeType === 'activity' && googleType && googleType !== 'activity')
-        ? googleType : claudeType;
+        // Prefer Claude's type classification over Google's
+        const claudeType = place.type;
+        const googleType = googleResult
+          ? mapGoogleTypeToPlaceType(googleResult.primaryType || googleResult.types?.[0])
+          : null;
+        const finalType = (claudeType === 'activity' && googleType && googleType !== 'activity')
+          ? googleType : claudeType;
 
-      const enriched: EnrichedPlace = {
-        id: `${sourceType}-${batchId}-${i}`,
-        name: googleResult?.displayName?.text || place.name,
-        type: finalType,
-        location: googleResult?.formattedAddress || place.city || '',
-        source: { type: sourceType, name: sourceName },
-        matchScore: 0,
-        matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
-        tasteNote: place.description || '',
-        status: 'available',
-        ghostSource: sourceType === 'google-maps' ? 'maps' : 'article',
-        // Pass through personal context from Claude extraction
-        userContext: place.userContext || undefined,
-        travelWith: place.travelWith || undefined,
-        timing: place.timing || undefined,
-        intentStatus: place.intentStatus || undefined,
-      };
-
-      if (googleResult) {
-        enriched.google = {
-          placeId: googleResult.id,
-          rating: googleResult.rating,
-          reviewCount: googleResult.userRatingCount,
-          category: googleResult.primaryTypeDisplayName?.text || googleResult.primaryType,
-          priceLevel: priceLevelToString(googleResult.priceLevel)
-            ? priceLevelToString(googleResult.priceLevel).length
-            : undefined,
-          hours: googleResult.regularOpeningHours?.weekdayDescriptions,
-          address: googleResult.formattedAddress,
-          lat: googleResult.location?.latitude,
-          lng: googleResult.location?.longitude,
+        const enriched: EnrichedPlace = {
+          id: `${sourceType}-${batchId}-${i}`,
+          name: googleResult?.displayName?.text || place.name,
+          type: finalType,
+          location: googleResult?.formattedAddress || place.city || '',
+          source: { type: sourceType, name: sourceName },
+          matchScore: 0,
+          matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+          tasteNote: place.description || '',
+          status: 'available',
+          ghostSource: sourceType === 'google-maps' ? 'maps' : 'article',
+          userContext: place.userContext || undefined,
+          travelWith: place.travelWith || undefined,
+          timing: place.timing || undefined,
+          intentStatus: place.intentStatus || undefined,
         };
-      }
 
-      if (place.description) {
-        enriched.enrichment = { description: place.description, confidence: 0.8 };
-      }
+        if (googleResult) {
+          enriched.google = {
+            placeId: googleResult.id,
+            rating: googleResult.rating,
+            reviewCount: googleResult.userRatingCount,
+            category: googleResult.primaryTypeDisplayName?.text || googleResult.primaryType,
+            priceLevel: priceLevelToString(googleResult.priceLevel)
+              ? priceLevelToString(googleResult.priceLevel).length
+              : undefined,
+            hours: googleResult.regularOpeningHours?.weekdayDescriptions,
+            address: googleResult.formattedAddress,
+            lat: googleResult.location?.latitude,
+            lng: googleResult.location?.longitude,
+          };
+        }
 
-      return enriched;
-    }),
+        if (place.description) {
+          enriched.enrichment = { description: place.description, confidence: 0.8 };
+        }
+
+        return enriched;
+      } catch (err) {
+        console.warn(`Failed to enrich: ${place.name}`, err);
+        done++;
+        onProgress?.(done, total);
+        // Fallback: return un-enriched place
+        return {
+          id: `${sourceType}-${batchId}-${i}`,
+          name: place.name,
+          type: place.type,
+          location: place.city || '',
+          source: { type: sourceType, name: sourceName },
+          matchScore: 0,
+          matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+          tasteNote: place.description || '',
+          status: 'available',
+          ghostSource: sourceType === 'google-maps' ? 'maps' : 'article',
+        } as EnrichedPlace;
+      }
+    },
+    8 // concurrency limit
   );
 
-  return results
-    .filter((r): r is PromiseFulfilledResult<EnrichedPlace> => r.status === 'fulfilled')
-    .map(r => r.value);
+  return results;
 }
 
 // ─── Deduplication ──────────────────────────────────────────────────────────────

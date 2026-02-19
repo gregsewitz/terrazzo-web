@@ -24,14 +24,27 @@ interface PlaceSearchResult {
   primaryTypeDisplayName?: { text: string };
 }
 
-export async function searchPlace(query: string, locationBias?: string): Promise<PlaceSearchResult | null> {
+export async function searchPlace(
+  query: string,
+  locationBias?: string | { lat: number; lng: number; radiusMeters?: number }
+): Promise<PlaceSearchResult | null> {
   const url = 'https://places.googleapis.com/v1/places:searchText';
-  
+
   const body: Record<string, unknown> = {
-    textQuery: query + (locationBias ? ` ${locationBias}` : ''),
+    textQuery: typeof locationBias === 'string' ? `${query} ${locationBias}` : query,
     maxResultCount: 1,
     languageCode: 'en',
   };
+
+  // Use proper locationBias with lat/lng circle for precise matching
+  if (typeof locationBias === 'object' && locationBias.lat && locationBias.lng) {
+    body.locationBias = {
+      circle: {
+        center: { latitude: locationBias.lat, longitude: locationBias.lng },
+        radius: locationBias.radiusMeters || 5000.0,
+      },
+    };
+  }
 
   const response = await fetch(url, {
     method: 'POST',

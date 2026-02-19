@@ -267,7 +267,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 240000); // 4 min for Apify
+      const timeout = setTimeout(() => controller.abort(), 120000); // 2 min (much faster now)
 
       const res = await fetch('/api/import/maps-list', {
         method: 'POST',
@@ -300,13 +300,20 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               setProgressPercent(event.percent || 0);
               setProgressLabel(event.label || '');
               if (event.placeNames) setDiscoveredNames(event.placeNames);
+            } else if (event.type === 'preview') {
+              // Lazy enrichment: show basic results immediately while enrichment continues
+              if (event.places?.length) {
+                setImportResults(event.places);
+                setSelectedIds(new Set(event.places.map((p: ImportedPlace) => p.id)));
+                setStep('results');
+              }
             } else if (event.type === 'result') {
+              // Final enriched results replace the preview with full data
               setProgressPercent(100);
               setProgressLabel('Done!');
               if (event.places?.length) {
                 setImportResults(event.places);
                 setSelectedIds(new Set(event.places.map((p: ImportedPlace) => p.id)));
-                await new Promise(r => setTimeout(r, 600));
                 setStep('results');
               } else {
                 setError('No places found in the list');

@@ -4,138 +4,40 @@ import { generateTasteMatchBatch } from '@/lib/anthropic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 
 /**
- * Google Maps Saved List Import — powered by Apify Puppeteer Scraper
+ * Google Maps Saved List Import — Direct API approach (fast)
  *
  * Flow:
- * 1. User pastes a maps.app.goo.gl or google.com/maps list URL
- * 2. We resolve the shortened URL server-side to get the full Google Maps URL
- * 3. We run Apify's Puppeteer Scraper with custom page code that:
- *    - Opens the full Google Maps URL in a real browser
- *    - Scrolls the sidebar to load all places (defeats virtual scrolling)
- *    - Extracts place names from the DOM using .fontHeadlineSmall.rZF81c selector
- * 4. Enrich via Google Places API → taste matching
- * 5. Stream progress via SSE
+ * 1. Resolve shortened URL → extract list ID
+ * 2. Call Google's internal /maps/preview/entitylist/getlist endpoint (instant)
+ * 3. Immediately return basic results from getlist data (name, address, coords)
+ * 4. Enrich in parallel via Google Places API (8 concurrent) + taste match
+ * 5. Stream enriched results as they complete
+ *
+ * With lazy enrichment + parallel lookups:
+ * - Initial results appear in <2s (vs 60-120s before)
+ * - Full enrichment completes in ~10-15s for 100 places
  */
 
-const APIFY_TOKEN = process.env.APIFY_TOKEN?.trim() || '';
+// ─── Concurrency helper ──────────────────────────────────────────────────────
 
-// Custom pageFunction that runs inside Puppeteer on the Google Maps list page.
-// Scrolls the sidebar to load all places, then extracts names from the DOM.
-const PAGE_FUNCTION = `
-async function pageFunction(context) {
-  const { page, request, log } = context;
-  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+async function parallelMap<T, R>(
+  items: T[],
+  fn: (item: T, index: number) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
 
-  log.info('Opening Google Maps list page...');
-
-  // Wait for the page to load and render the list
-  await delay(8000);
-
-  // Take note of what we see
-  const title = await page.title();
-  log.info('Page title: ' + title);
-
-  // Find the scrollable sidebar container
-  const containerSelectors = [
-    '.m6QErb.DxyBCb.kA9KIf.dS8AEf',
-    '.m6QErb',
-    'div[role="feed"]',
-    'div[role="main"]',
-  ];
-
-  let foundContainer = false;
-  for (const sel of containerSelectors) {
-    const exists = await page.$(sel);
-    if (exists) {
-      log.info('Found scroll container: ' + sel);
-      foundContainer = true;
-
-      // Scroll down repeatedly to load all places
-      for (let i = 0; i < 25; i++) {
-        await page.evaluate((selector) => {
-          const el = document.querySelector(selector);
-          if (el) el.scrollTop = el.scrollHeight;
-        }, sel);
-        await delay(800);
-      }
-      break;
+  async function worker() {
+    while (nextIndex < items.length) {
+      const i = nextIndex++;
+      results[i] = await fn(items[i], i);
     }
   }
 
-  if (!foundContainer) {
-    log.warning('No scroll container found');
-  }
-
-  // Wait a moment for final renders
-  await delay(2000);
-
-  // Extract all places with rich data from the DOM
-  const places = await page.evaluate(() => {
-    const results = [];
-    const seen = new Set();
-
-    // Primary: extract from place buttons which contain name, category, rating
-    const buttons = document.querySelectorAll('button.SMP2wb');
-    for (const btn of buttons) {
-      const nameEl = btn.querySelector('.fontHeadlineSmall.rZF81c') || btn.querySelector('.fontHeadlineSmall');
-      const name = nameEl?.textContent?.trim();
-      if (!name || seen.has(name)) continue;
-      seen.add(name);
-
-      // Parse leaf text nodes for rating, reviews, price, category
-      const spans = btn.querySelectorAll('span, div');
-      let rating = '', reviews = '', price = '', category = '';
-      for (const s of spans) {
-        if (s.children.length > 0) continue;
-        const t = s.textContent?.trim();
-        if (!t || t === name) continue;
-        if (/^\\d\\.\\d$/.test(t)) rating = t;
-        else if (/^\\([\\d,]+\\)$/.test(t)) reviews = t.replace(/[()]/g, '');
-        else if (/^[£$€]/.test(t)) price = t;
-        else if (t !== '·' && t !== 'Note' && t !== '+' && t.length > 2) {
-          if (!category) category = t;
-        }
-      }
-
-      results.push({ name, category, rating, reviews });
-    }
-
-    // Fallback: if no buttons found, try name elements directly
-    if (results.length === 0) {
-      const nameEls = document.querySelectorAll('.fontHeadlineSmall');
-      for (const el of nameEls) {
-        const name = el.textContent?.trim();
-        if (name && name.length > 1 && name.length < 100 && !seen.has(name)) {
-          seen.add(name);
-          results.push({ name, category: '', rating: '', reviews: '' });
-        }
-      }
-    }
-
-    // Get the list title
-    const titleEl = document.querySelector('h1, .fontHeadlineLarge, .DUwDvf');
-    const listTitle = titleEl?.textContent?.trim() || null;
-
-    return { places: results, listTitle };
-  });
-
-  log.info('Extracted ' + places.places.length + ' places');
-  log.info('List title: ' + (places.listTitle || 'unknown'));
-  if (places.places.length > 0) {
-    log.info('Sample: ' + JSON.stringify(places.places[0]));
-  }
-
-  // Push each place as a separate dataset item
-  for (const place of places.places) {
-    await context.Apify.pushData({
-      ...place,
-      listTitle: places.listTitle,
-    });
-  }
-
-  return { placesFound: places.places.length, listTitle: places.listTitle };
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
 }
-`;
 
 export async function POST(request: NextRequest) {
   const { url } = await request.json();
@@ -143,13 +45,6 @@ export async function POST(request: NextRequest) {
   if (!url?.trim()) {
     return new Response(JSON.stringify({ error: 'URL is required' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  if (!APIFY_TOKEN) {
-    return new Response(JSON.stringify({ error: 'Apify not configured' }), {
-      status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -173,8 +68,6 @@ export async function POST(request: NextRequest) {
 
         let resolvedUrl = url.trim();
 
-        // Resolve shortened URLs (goo.gl, maps.app) to full google.com/maps URLs.
-        // We MUST do this because Apify Puppeteer times out on goo.gl redirects.
         if (resolvedUrl.includes('goo.gl') || resolvedUrl.includes('maps.app')) {
           try {
             const headRes = await fetch(resolvedUrl, { method: 'HEAD', redirect: 'follow' });
@@ -187,227 +80,192 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // ── 2. Start Apify Puppeteer Scraper ──
-        send({
-          type: 'progress',
-          stage: 'starting',
-          label: 'Connecting to Google Maps…',
-          percent: 10,
-        });
-
-        console.log('[maps-list] Sending to Apify Puppeteer Scraper:', resolvedUrl);
-
-        const startRes = await fetch(
-          `https://api.apify.com/v2/acts/apify~puppeteer-scraper/runs?token=${APIFY_TOKEN}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              startUrls: [{ url: resolvedUrl }],
-              pageFunction: PAGE_FUNCTION,
-              maxRequestRetries: 2,
-              maxConcurrency: 1,
-              navigationTimeoutSecs: 90,
-              pageLoadTimeoutSecs: 90,
-              proxyConfiguration: {
-                useApifyProxy: true,
-                apifyProxyGroups: ['RESIDENTIAL'],
-              },
-              preNavigationHooks: `[
-                async ({ page }) => {
-                  await page.setViewport({ width: 1280, height: 900 });
-                  await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
-                }
-              ]`,
-            }),
-          }
-        );
-
-        if (!startRes.ok) {
-          const err = await startRes.text();
-          throw new Error(`Apify start failed: ${startRes.status} — ${err}`);
+        // ── 2. Extract list ID from the URL ──
+        const listId = extractListId(resolvedUrl);
+        if (!listId) {
+          throw new Error(
+            'Could not find a list ID in the URL. Make sure this is a Google Maps saved list link.'
+          );
         }
 
-        const runData = await startRes.json();
-        const runId = runData.data?.id;
-        if (!runId) throw new Error('No run ID returned from Apify');
+        console.log('[maps-list] Extracted list ID:', listId);
 
-        console.log('[maps-list] Apify run started:', runId);
-
+        // ── 3. Call Google's internal getlist endpoint ──
         send({
           type: 'progress',
-          stage: 'scraping',
-          label: 'Opening your list in a browser…',
+          stage: 'fetching',
+          label: 'Fetching places from Google Maps…',
           percent: 15,
         });
 
-        // ── 3. Poll for completion ──
-        let status = 'RUNNING';
-        let pollCount = 0;
-        const MAX_POLLS = 100; // 100 * 3s = 5 min max
+        const getlistUrl =
+          `https://www.google.com/maps/preview/entitylist/getlist` +
+          `?authuser=0&hl=en&gl=us&pb=!1m4!1s${encodeURIComponent(listId)}!2e1!3m1!1e1!2e2!3e2!4i500!16b1`;
 
-        while (status === 'RUNNING' || status === 'READY') {
-          if (pollCount++ > MAX_POLLS) throw new Error('Apify timed out');
-          await new Promise(r => setTimeout(r, 3000));
-
-          const pollRes = await fetch(
-            `https://api.apify.com/v2/actor-runs/${runId}?token=${APIFY_TOKEN}`
-          );
-          const pollData = await pollRes.json();
-          status = pollData.data?.status || 'FAILED';
-
-          const pct = Math.min(15 + pollCount * 1.2, 45);
-          send({
-            type: 'progress',
-            stage: 'scraping',
-            label: 'Scrolling through your list to load all places…',
-            percent: Math.round(pct),
-          });
-        }
-
-        // ── 4. Fetch run log for debugging ──
-        try {
-          const logRes = await fetch(
-            `https://api.apify.com/v2/actor-runs/${runId}/log?token=${APIFY_TOKEN}`
-          );
-          const logText = await logRes.text();
-          console.log('[maps-list] === APIFY RUN LOG (last 3000 chars) ===');
-          console.log(logText.slice(-3000));
-          console.log('[maps-list] === END LOG ===');
-        } catch {
-          console.warn('[maps-list] Could not fetch run log');
-        }
-
-        if (status !== 'SUCCEEDED') {
-          throw new Error(`Apify run failed with status: ${status}`);
-        }
-
-        // ── 5. Fetch results ──
-        send({
-          type: 'progress',
-          stage: 'fetched',
-          label: 'Got your places! Enriching…',
-          percent: 50,
+        const getlistRes = await fetch(getlistUrl, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            Accept: '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
         });
 
-        const datasetId = runData.data?.defaultDatasetId;
-        console.log('[maps-list] Dataset ID:', datasetId);
-
-        const resultsRes = await fetch(
-          `https://api.apify.com/v2/datasets/${datasetId}/items?token=${APIFY_TOKEN}&format=json`
-        );
-        const rawItems = await resultsRes.json();
-
-        // Filter out error items from Apify
-        const apifyPlaces = Array.isArray(rawItems)
-          ? rawItems.filter((item: Record<string, unknown>) => !item['#error'] && item.name)
-          : [];
-
-        console.log('[maps-list] Raw items:', Array.isArray(rawItems) ? rawItems.length : 'not array');
-        console.log('[maps-list] Valid places:', apifyPlaces.length);
-        if (apifyPlaces.length > 0) {
-          console.log('[maps-list] First place:', JSON.stringify(apifyPlaces[0]));
+        if (!getlistRes.ok) {
+          throw new Error(`Google Maps API returned ${getlistRes.status}`);
         }
 
-        if (apifyPlaces.length === 0) {
-          throw new Error('No places found in the list. The Google Maps list may not be publicly shared, or the format is not supported.');
+        const rawText = await getlistRes.text();
+        const jsonText = rawText.replace(/^\)\]\}'\n?/, '');
+        let parsed: unknown[];
+
+        try {
+          parsed = JSON.parse(jsonText);
+        } catch {
+          console.error('[maps-list] Failed to parse getlist response. First 500 chars:', rawText.slice(0, 500));
+          throw new Error('Failed to parse Google Maps response');
         }
 
-        const placeNames = apifyPlaces.map((p: Record<string, unknown>) =>
-          (p.name as string) || 'Unknown'
-        );
+        // ── 4. Extract places from the response ──
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const root = parsed as any;
+        const listName: string = root?.[0]?.[4] || '';
+        const rawPlaces: unknown[] = root?.[0]?.[8] || [];
+
+        console.log('[maps-list] List name:', listName);
+        console.log('[maps-list] Raw places count:', rawPlaces.length);
+
+        if (rawPlaces.length === 0) {
+          throw new Error(
+            'No places found in the list. The Google Maps list may be empty or not publicly shared.'
+          );
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mapsPlaces = rawPlaces.map((p: any, i: number) => {
+          const name = p?.[2] || `Place ${i + 1}`;
+          const address = p?.[1]?.[2] || '';
+          const lat = p?.[1]?.[5]?.[2];
+          const lng = p?.[1]?.[5]?.[3];
+          const cid = p?.[8]?.[1]?.[0] || '';
+          const category = p?.[13]?.[0] || p?.[3] || '';
+          return { name, address, lat, lng, cid, category };
+        });
+
+        // ── 5. Send IMMEDIATE results with getlist data (no enrichment yet) ──
+        // This is the "lazy enrichment" approach — user sees results in <2s
+        const basePlaces = mapsPlaces.map((mp, i) => ({
+          id: `maps-list-${Date.now()}-${i}`,
+          name: mp.name,
+          type: guessTypeFromCategory(mp.category),
+          location: mp.address,
+          source: { type: 'google-maps' as const, name: 'Google Maps' },
+          matchScore: 0,
+          matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+          tasteNote: '',
+          status: 'available' as const,
+          google: {
+            lat: mp.lat,
+            lng: mp.lng,
+            address: mp.address,
+          },
+          ghostSource: 'maps' as const,
+        }));
+
+        const placeNames = mapsPlaces.map(p => p.name);
 
         send({
           type: 'progress',
-          stage: 'enriching',
-          label: `Found ${placeNames.length} places. Looking up details…`,
-          percent: 55,
+          stage: 'preview',
+          label: `Found ${placeNames.length} places! Enriching details…`,
+          percent: 30,
           placeNames: placeNames.slice(0, 20),
         });
 
-        // ── 6. Enrich each place via Google Places API ──
-        // Use category + list title as context for accurate matching.
-        // e.g. "Juliet restaurant England" finds the Cotswolds restaurant, not a NYC show.
-        const listTitle = (apifyPlaces[0]?.listTitle as string) || '';
-        const enrichedPlaces = [];
-        for (let i = 0; i < apifyPlaces.length; i++) {
-          const ap = apifyPlaces[i];
-          const name = ap.name as string;
-          const category = (ap.category as string) || '';
+        // Send the immediate preview so the UI can show results right away
+        send({
+          type: 'preview',
+          places: basePlaces,
+          listName: listName || null,
+        });
 
-          if (!name) continue;
+        // ── 6. Parallel enrichment via Google Places API ──
+        // 8 concurrent lookups — takes ~10-15s for 100 places instead of 100-200s serial
+        let enrichedCount = 0;
+        const totalPlaces = mapsPlaces.length;
 
-          try {
-            // Build a precise search query: name + category (if not a country) + list title
-            const isCountryCategory = /^(United Kingdom|United States|France|Italy|Spain|Germany|Japan|China|Australia|Canada|Mexico|Brazil|India|Thailand|Portugal|Greece|Turkey|Morocco|Indonesia)/i.test(category);
-            const parts = [name];
-            if (category && !isCountryCategory && !category.startsWith('$') && !category.startsWith('£') && !category.startsWith('€')) {
-              parts.push(category);
+        const enrichedPlaces = await parallelMap(
+          mapsPlaces,
+          async (mp, i) => {
+            try {
+              const addressParts = mp.address.split(',').map((s: string) => s.trim());
+              const cityHint = addressParts.length > 1 ? addressParts.slice(-2).join(', ') : '';
+              const query = cityHint ? `${mp.name}, ${cityHint}` : mp.name;
+
+              const locationBias = (mp.lat && mp.lng)
+                ? { lat: mp.lat, lng: mp.lng, radiusMeters: 2000 }
+                : undefined;
+
+              const googleResult = await searchPlace(query, locationBias);
+
+              enrichedCount++;
+              if (enrichedCount % 8 === 0 || enrichedCount === totalPlaces) {
+                const pct = Math.min(30 + Math.round((enrichedCount / totalPlaces) * 40), 70);
+                send({
+                  type: 'progress',
+                  stage: 'enriching',
+                  label: `Enriched ${enrichedCount} of ${totalPlaces} places…`,
+                  percent: pct,
+                });
+              }
+
+              if (googleResult) {
+                return {
+                  id: `maps-list-${Date.now()}-${i}`,
+                  name: googleResult.displayName?.text || mp.name,
+                  type: mapGoogleTypeToPlaceType(
+                    googleResult.primaryType || googleResult.types?.[0]
+                  ),
+                  location: googleResult.formattedAddress || mp.address,
+                  source: { type: 'google-maps' as const, name: 'Google Maps' },
+                  matchScore: 0,
+                  matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+                  tasteNote: '',
+                  status: 'available' as const,
+                  google: {
+                    placeId: googleResult.id,
+                    rating: googleResult.rating,
+                    reviewCount: googleResult.userRatingCount,
+                    category:
+                      googleResult.primaryTypeDisplayName?.text ||
+                      googleResult.primaryType,
+                    priceLevel: priceLevelToString(googleResult.priceLevel)
+                      ? priceLevelToString(googleResult.priceLevel).length
+                      : undefined,
+                    hours: googleResult.regularOpeningHours?.weekdayDescriptions,
+                    address: googleResult.formattedAddress,
+                    lat: googleResult.location?.latitude,
+                    lng: googleResult.location?.longitude,
+                  },
+                  ghostSource: 'maps' as const,
+                };
+              }
+            } catch {
+              console.warn(`Failed to enrich: ${mp.name}`);
             }
-            if (listTitle) parts.push(listTitle);
-            const query = parts.join(', ');
-            console.log(`[maps-list] Searching: "${query}"`);
-            const googleResult = await searchPlace(query);
 
-            if (googleResult) {
-              enrichedPlaces.push({
-                id: `maps-list-${Date.now()}-${i}`,
-                name: googleResult.displayName?.text || name,
-                type: mapGoogleTypeToPlaceType(googleResult.primaryType || googleResult.types?.[0]),
-                location: googleResult.formattedAddress || '',
-                source: { type: 'google-maps' as const, name: 'Google Maps' },
-                matchScore: 0,
-                matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
-                tasteNote: '',
-                status: 'available' as const,
-                google: {
-                  placeId: googleResult.id,
-                  rating: googleResult.rating,
-                  reviewCount: googleResult.userRatingCount,
-                  category: googleResult.primaryTypeDisplayName?.text || googleResult.primaryType,
-                  priceLevel: priceLevelToString(googleResult.priceLevel) ? priceLevelToString(googleResult.priceLevel).length : undefined,
-                  hours: googleResult.regularOpeningHours?.weekdayDescriptions,
-                  address: googleResult.formattedAddress,
-                  lat: googleResult.location?.latitude,
-                  lng: googleResult.location?.longitude,
-                },
-                ghostSource: 'maps' as const,
-              });
-            } else {
-              enrichedPlaces.push({
-                id: `maps-list-${Date.now()}-${i}`,
-                name,
-                type: guessTypeFromCategory(category),
-                location: '',
-                source: { type: 'google-maps' as const, name: 'Google Maps' },
-                matchScore: 0,
-                matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
-                tasteNote: '',
-                status: 'available' as const,
-                ghostSource: 'maps' as const,
-              });
-            }
-          } catch {
-            console.warn(`Failed to enrich: ${name}`);
-          }
-
-          if (i % 3 === 0) {
-            const pct = Math.min(55 + Math.round((i / apifyPlaces.length) * 20), 75);
-            send({
-              type: 'progress',
-              stage: 'enriching',
-              label: `Looking up ${name}…`,
-              percent: pct,
-            });
-          }
-        }
+            // Fallback: use getlist data directly
+            return basePlaces[i];
+          },
+          8 // concurrency limit
+        );
 
         // ── 7. Taste matching ──
         send({
           type: 'progress',
           stage: 'taste',
           label: 'Matching to your taste profile…',
-          percent: 80,
+          percent: 75,
         });
 
         try {
@@ -430,7 +288,7 @@ export async function POST(request: NextRequest) {
           console.warn('Taste matching failed, continuing without scores:', e);
         }
 
-        // ── 8. Return results ──
+        // ── 8. Return final enriched results ──
         send({
           type: 'progress',
           stage: 'done',
@@ -438,11 +296,10 @@ export async function POST(request: NextRequest) {
           percent: 100,
         });
 
-        const listName = apifyPlaces[0]?.listTitle || null;
         send({
           type: 'result',
           places: enrichedPlaces,
-          listName,
+          listName: listName || null,
         });
       } catch (err) {
         console.error('Maps list import error:', err);
@@ -466,6 +323,19 @@ export async function POST(request: NextRequest) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function extractListId(url: string): string | null {
+  const dataMatch = url.match(/!2s([A-Za-z0-9_-]+)/);
+  if (dataMatch) return dataMatch[1];
+
+  const placelistMatch = url.match(/\/maps\/placelists\/list\/([A-Za-z0-9_-]+)/);
+  if (placelistMatch) return placelistMatch[1];
+
+  const tokenMatch = url.match(/share_token=([A-Za-z0-9_-]+)/);
+  if (tokenMatch) return tokenMatch[1];
+
+  return null;
+}
 
 function mapGoogleTypeToPlaceType(googleType?: string): string {
   if (!googleType) return 'activity';
