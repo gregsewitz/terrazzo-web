@@ -36,7 +36,9 @@ export default function TripDetailPage() {
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const myPlaces = useSavedStore(s => s.myPlaces);
-  const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
+  const importOpen = useImportStore(s => s.isOpen);
+  const importPatch = useImportStore(s => s.patch);
+  const resetImport = useImportStore(s => s.reset);
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -333,7 +335,7 @@ export default function TripDetailPage() {
       {importOpen && (
         <ImportDrawer
           onClose={() => {
-            setImportOpen(false);
+            importPatch({ isOpen: false });
             resetImport();
           }}
         />

@@ -14,7 +14,7 @@ model User {
   id           String       @id @default(cuid())
   email        String       @unique
   name         String?
-  tasteProfile String?      // JSON string of TasteProfile
+  tasteProfile Json?        // TasteProfile
   nylasGrants  NylasGrant[]
   trips        Trip[]
   createdAt    DateTime     @default(now())
@@ -39,7 +39,7 @@ model Trip {
   location  String
   startDate DateTime?
   endDate   DateTime?
-  days      String   // JSON string of TripDay[]
+  days      Json     // TripDay[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   places    Place[]
@@ -52,15 +52,15 @@ model Place {
   name           String
   type           String
   googlePlaceId  String?
-  location       String?  // JSON string
-  googleData     String?  // JSON string
-  source         String   // JSON string
+  location       String?
+  googleData     Json?    // GooglePlaceData
+  source         Json     // ImportSource
   matchScore     Int?
-  matchBreakdown String?  // JSON string
+  matchBreakdown Json?    // TasteProfile
   tasteNote      String?
-  enrichment     String?  // JSON string
+  enrichment     Json?    // PlaceEnrichment
   status         String   @default("available")
-  placedIn       String?  // JSON string
+  placedIn       Json?    // { day: number; slot: string }
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -72,7 +72,7 @@ model Place {
 model PlaceCache {
   id            String   @id @default(cuid())
   googlePlaceId String   @unique
-  data          String   // JSON string of full Google Places response
+  data          Json     // Full Google Places response
   fetchedAt     DateTime @default(now())
 
   @@index([googlePlaceId])
@@ -91,12 +91,12 @@ model PlaceIntelligence {
   status          String   @default("pending") // pending | enriching | complete | failed
   pipelineVersion String   @default("v3-ri")
 
-  // Core intelligence payload (JSON strings)
-  signals         String   @default("[]") // Signal[]
-  antiSignals     String?  // AntiSignal[]
-  reliability     String?  // { overall, categories, totalReviews }
-  facts           String?  // { location, roomCount, architect, ... }
-  reviewIntel     String?  // { tier2, tier3, corroboration stats }
+  // Core intelligence payload
+  signals         Json     @default("[]") // Signal[]
+  antiSignals     Json?    // AntiSignal[]
+  reliability     Json?    // { overall, categories, totalReviews }
+  facts           Json?    // { location, roomCount, architect, ... }
+  reviewIntel     Json?    // { tier2, tier3, corroboration stats }
 
   // Quick-access counts
   signalCount      Int     @default(0)
@@ -105,7 +105,7 @@ model PlaceIntelligence {
   reliabilityScore Float?  // 0-1
 
   // Sources processed
-  sourcesProcessed String? // JSON
+  sourcesProcessed Json?
 
   // Freshness
   lastEnrichedAt  DateTime?
@@ -136,7 +136,7 @@ model PipelineRun {
   triggeredByUserId   String?
 
   currentStage        String?
-  stagesCompleted     String?  // JSON: string[]
+  stagesCompleted     Json?    // string[]
 
   startedAt           DateTime?
   completedAt         DateTime?

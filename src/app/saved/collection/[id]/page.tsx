@@ -72,10 +72,10 @@ export default function CollectionDetailPage() {
   const router = useRouter();
   const collectionId = params.id as string;
 
-  const { collections, myPlaces } = useSavedStore();
-  const collection = collections.find((c) => c.id === collectionId);
+  const { shortlists, myPlaces } = useSavedStore();
+  const shortlist = shortlists.find((s) => s.id === collectionId);
 
-  if (!collection) {
+  if (!shortlist) {
     return (
       <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
         <div className="px-4 pt-6 text-center">
@@ -86,8 +86,9 @@ export default function CollectionDetailPage() {
     );
   }
 
-  // Filter places - for demo, show first `count` places
-  const placesInCollection = myPlaces.slice(0, collection.count);
+  // Resolve places from shortlist placeIds
+  const placeIdSet = new Set(shortlist.placeIds);
+  const placesInCollection = myPlaces.filter(p => placeIdSet.has(p.id));
 
   return (
     <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
@@ -105,17 +106,17 @@ export default function CollectionDetailPage() {
             className="text-2xl italic flex-1"
             style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
           >
-            {collection.name}
+            {shortlist.name}
           </h1>
         </div>
 
-        {/* Curated Collection Badge */}
-        {collection.isSmartCollection && (
+        {/* Smart Collection Badge */}
+        {shortlist.isSmartCollection && (
           <div
             className="inline-block text-[10px] mb-4"
             style={{ fontFamily: "'Space Mono', monospace", color: 'var(--t-verde)' }}
           >
-            Auto-updating · Curated Collection
+            Auto-updating · Smart Collection
           </div>
         )}
 
@@ -127,24 +128,31 @@ export default function CollectionDetailPage() {
                 className="text-[13px] font-bold mb-1"
                 style={{ color: 'var(--t-ink)' }}
               >
-                {collection.count} places
+                {placesInCollection.length} places
               </p>
-              {collection.query && (
+              {shortlist.query && (
                 <p
                   className="text-[10px]"
                   style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}
                 >
-                  Query: "{collection.query}"
+                  Query: "{shortlist.query}"
+                </p>
+              )}
+              {shortlist.description && (
+                <p
+                  className="text-[11px] mt-1"
+                  style={{ color: 'rgba(28,26,23,0.7)' }}
+                >
+                  {shortlist.description}
                 </p>
               )}
             </div>
-            <div className="text-4xl">{collection.emoji}</div>
           </div>
 
           {/* Filter Tags */}
-          {collection.filterTags && collection.filterTags.length > 0 && (
+          {shortlist.filterTags && shortlist.filterTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
-              {collection.filterTags.map((tag) => (
+              {shortlist.filterTags.map((tag) => (
                 <div
                   key={tag}
                   className="px-2.5 py-1 rounded-full text-[10px]"

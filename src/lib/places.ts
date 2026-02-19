@@ -1,6 +1,6 @@
 const PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || '';
 
-interface PlaceSearchResult {
+export interface PlaceSearchResult {
   id: string;
   displayName: { text: string };
   formattedAddress?: string;
@@ -67,6 +67,57 @@ export async function searchPlace(
 
 export function getPhotoUrl(photoName: string, maxWidth: number = 400): string {
   return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=${maxWidth}&key=${PLACES_API_KEY}`;
+}
+
+/**
+ * Search for multiple places (up to 5) — used for autocomplete-style search.
+ */
+export async function searchPlaces(
+  query: string,
+  maxResults: number = 5
+): Promise<PlaceSearchResult[]> {
+  const url = 'https://places.googleapis.com/v1/places:searchText';
+
+  const body: Record<string, unknown> = {
+    textQuery: query,
+    maxResultCount: maxResults,
+    languageCode: 'en',
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': PLACES_API_KEY,
+      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.priceLevel,places.types,places.location,places.photos,places.primaryType,places.primaryTypeDisplayName',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    console.error('Places API error:', response.status, await response.text());
+    return [];
+  }
+
+  const data = await response.json();
+  return data.places || [];
+}
+
+/**
+ * Map Google Places type to our internal PlaceType.
+ * Shared between import route and quick-add search.
+ */
+export function mapGoogleTypeToPlaceType(googleType?: string): string {
+  if (!googleType) return 'activity';
+  const type = googleType.toLowerCase();
+  if (type.includes('restaurant') || type.includes('food')) return 'restaurant';
+  if (type.includes('bar') || type.includes('night_club') || type.includes('pub')) return 'bar';
+  if (type.includes('cafe') || type.includes('coffee') || type.includes('bakery')) return 'cafe';
+  if (type.includes('hotel') || type.includes('lodging') || type.includes('resort')) return 'hotel';
+  if (type.includes('museum') || type.includes('art_gallery') || type.includes('church') || type.includes('landmark')) return 'museum';
+  if (type.includes('store') || type.includes('shop') || type.includes('market')) return 'shop';
+  if (type.includes('park') || type.includes('neighborhood') || type.includes('locality')) return 'neighborhood';
+  return 'activity';
 }
 
 export function priceLevelToString(priceLevel?: string): string {

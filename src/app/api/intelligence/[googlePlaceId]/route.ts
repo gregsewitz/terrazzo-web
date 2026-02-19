@@ -42,10 +42,10 @@ export async function GET(
     return NextResponse.json({
       status: intel.status,
       propertyName: intel.propertyName,
-      signals: JSON.parse(intel.signals),
-      antiSignals: intel.antiSignals ? JSON.parse(intel.antiSignals) : [],
-      reliability: intel.reliability ? JSON.parse(intel.reliability) : null,
-      facts: intel.facts ? JSON.parse(intel.facts) : null,
+      signals: intel.signals,
+      antiSignals: intel.antiSignals ?? [],
+      reliability: intel.reliability ?? null,
+      facts: intel.facts ?? null,
       signalCount: intel.signalCount,
       antiSignalCount: intel.antiSignalCount,
       reviewCount: intel.reviewCount,
@@ -56,9 +56,7 @@ export async function GET(
         ? {
             status: latestRun.status,
             currentStage: latestRun.currentStage,
-            stagesCompleted: latestRun.stagesCompleted
-              ? JSON.parse(latestRun.stagesCompleted)
-              : [],
+            stagesCompleted: latestRun.stagesCompleted ?? [],
             startedAt: latestRun.startedAt,
             completedAt: latestRun.completedAt,
             durationMs: latestRun.durationMs,

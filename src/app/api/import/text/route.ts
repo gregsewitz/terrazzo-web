@@ -1,35 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { parseTextToPlaces } from '@/lib/anthropic';
+// DEPRECATED: This legacy route is no longer used by the client.
+// All imports now go through the unified /api/import route with SSE streaming.
+// This file is kept only to avoid broken route references during cleanup.
 
-export async function POST(request: NextRequest) {
-  try {
-    const { content } = await request.json();
+import { NextResponse } from 'next/server';
 
-    if (!content) {
-      return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
-    }
-
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 500 });
-    }
-
-    const extracted = await parseTextToPlaces(content);
-
-    const places = extracted.map((place: Record<string, unknown>, i: number) => ({
-      id: `text-${Date.now()}-${i}`,
-      name: place.name as string,
-      type: place.type as string || 'activity',
-      location: place.city as string || '',
-      source: { type: 'text' as const, name: 'Pasted List' },
-      matchScore: 0,
-      matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
-      tasteNote: place.description as string || '',
-      status: 'available' as const,
-    }));
-
-    return NextResponse.json({ places });
-  } catch (error) {
-    console.error('Text import error:', error);
-    return NextResponse.json({ error: 'Import failed' }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    { error: 'This endpoint is deprecated. Use /api/import instead.' },
+    { status: 410 }
+  );
 }

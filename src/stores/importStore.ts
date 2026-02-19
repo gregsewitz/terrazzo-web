@@ -3,8 +3,10 @@ import { ImportedPlace } from '@/types';
 
 export type ImportMode = 'text' | 'url' | 'google-maps' | 'email';
 
+// ─── State shape ────────────────────────────────────────────────────────────
+
 interface ImportState {
-  // ── Drawer state (existing) ─────────────────────────────────────────────
+  // Drawer state
   isOpen: boolean;
   mode: ImportMode;
   inputValue: string;
@@ -13,36 +15,36 @@ interface ImportState {
   error: string | null;
   emailConnected: boolean;
 
-  // ── Background task state (new) ─────────────────────────────────────────
-  isMinimized: boolean;              // true = show floating bar, false = show full drawer
-  progressPercent: number;           // 0-100
-  progressLabel: string;             // "Looking up places…", "Done!", etc.
-  discoveredNames: string[];         // place names discovered during extraction
-  importResults: ImportedPlace[];    // final imported places
-  selectedIds: string[];             // IDs selected for saving (array for Zustand compat)
-  sourceName: string;                // "CN Traveller", "Google Maps", etc.
-  backgroundError: string | null;    // error during background processing
+  // Background task state
+  isMinimized: boolean;
+  progressPercent: number;
+  progressLabel: string;
+  discoveredNames: string[];
+  importResults: ImportedPlace[];
+  selectedIds: string[];
+  sourceName: string;
+  backgroundError: string | null;
 
-  // ── Drawer actions (existing) ───────────────────────────────────────────
-  setOpen: (open: boolean) => void;
-  setMode: (mode: ImportMode) => void;
-  setInputValue: (value: string) => void;
-  setProcessing: (processing: boolean) => void;
-  setDetectedCount: (count: number) => void;
-  setError: (error: string | null) => void;
-  setEmailConnected: (connected: boolean) => void;
-  reset: () => void;
+  // Unified patch setter — update any subset of state in one call
+  patch: (partial: Partial<Omit<ImportState, 'patch' | 'reset' | 'resetBackgroundTask'>>) => void;
 
-  // ── Background task actions (new) ───────────────────────────────────────
-  setMinimized: (minimized: boolean) => void;
+  // Convenience compound actions
   setProgress: (percent: number, label: string) => void;
-  setDiscoveredNames: (names: string[]) => void;
-  setImportResults: (places: ImportedPlace[]) => void;
-  setSelectedIds: (ids: string[]) => void;
-  setSourceName: (name: string) => void;
-  setBackgroundError: (error: string | null) => void;
+  reset: () => void;
   resetBackgroundTask: () => void;
 }
+
+// ─── Defaults ───────────────────────────────────────────────────────────────
+
+const DRAWER_DEFAULTS = {
+  isOpen: false,
+  mode: 'text' as ImportMode,
+  inputValue: '',
+  isProcessing: false,
+  detectedCount: 0,
+  error: null as string | null,
+  emailConnected: false,
+};
 
 const BACKGROUND_DEFAULTS = {
   isMinimized: false,
@@ -55,39 +57,17 @@ const BACKGROUND_DEFAULTS = {
   backgroundError: null as string | null,
 };
 
-export const useImportStore = create<ImportState>((set) => ({
-  // Existing defaults
-  isOpen: false,
-  mode: 'text',
-  inputValue: '',
-  isProcessing: false,
-  detectedCount: 0,
-  error: null,
-  emailConnected: false,
+// ─── Store ──────────────────────────────────────────────────────────────────
 
-  // Background defaults
+export const useImportStore = create<ImportState>((set) => ({
+  ...DRAWER_DEFAULTS,
   ...BACKGROUND_DEFAULTS,
 
-  // Existing actions
-  setOpen: (open) => set({ isOpen: open }),
-  setMode: (mode) => set({ mode, error: null }),
-  setInputValue: (value) => set({ inputValue: value }),
-  setProcessing: (processing) => set({ isProcessing: processing }),
-  setDetectedCount: (count) => set({ detectedCount: count }),
-  setError: (error) => set({ error }),
-  setEmailConnected: (connected) => set({ emailConnected: connected }),
-  reset: () => set({
-    isOpen: false, inputValue: '', isProcessing: false, detectedCount: 0, error: null,
-    ...BACKGROUND_DEFAULTS,
-  }),
+  patch: (partial) => set(partial),
 
-  // Background actions
-  setMinimized: (minimized) => set({ isMinimized: minimized }),
   setProgress: (percent, label) => set({ progressPercent: percent, progressLabel: label }),
-  setDiscoveredNames: (names) => set({ discoveredNames: names }),
-  setImportResults: (places) => set({ importResults: places }),
-  setSelectedIds: (ids) => set({ selectedIds: ids }),
-  setSourceName: (name) => set({ sourceName: name }),
-  setBackgroundError: (error) => set({ backgroundError: error }),
+
+  reset: () => set({ ...DRAWER_DEFAULTS, ...BACKGROUND_DEFAULTS }),
+
   resetBackgroundTask: () => set(BACKGROUND_DEFAULTS),
 }));

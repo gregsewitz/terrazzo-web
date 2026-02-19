@@ -15,10 +15,8 @@ export default function FloatingImportBar() {
   const discoveredNames = useImportStore(s => s.discoveredNames);
   const importResults = useImportStore(s => s.importResults);
   const backgroundError = useImportStore(s => s.backgroundError);
-  const setMinimized = useImportStore(s => s.setMinimized);
-  const setOpen = useImportStore(s => s.setOpen);
+  const patch = useImportStore(s => s.patch);
   const resetBackgroundTask = useImportStore(s => s.resetBackgroundTask);
-  const setProcessing = useImportStore(s => s.setProcessing);
 
   // Only show when minimized AND either processing or has results/error to show
   const isActive = isMinimized && (isProcessing || importResults.length > 0 || backgroundError);
@@ -29,13 +27,12 @@ export default function FloatingImportBar() {
   const placeCount = importResults.length || discoveredNames.length;
 
   function handleTap() {
-    setMinimized(false);
-    setOpen(true);
+    patch({ isMinimized: false, isOpen: true });
   }
 
   function handleDismissError() {
     resetBackgroundTask();
-    setProcessing(false);
+    patch({ isProcessing: false });
   }
 
   return (

@@ -6,7 +6,7 @@ const anthropic = new Anthropic();
 
 export async function POST(req: NextRequest) {
   try {
-    const { userText, conversationHistory, phaseId, certainties, userMessageCount } = await req.json();
+    const { userText, conversationHistory, phaseId, certainties, userMessageCount, crossPhaseContext } = await req.json();
 
     // Look up the phase definition so Claude knows the purpose and scripted follow-ups
     const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);
@@ -24,6 +24,13 @@ ${phase?.followUps?.map((f, i) => `${i + 1}. ${f}`).join('\n') || 'None'}
 
 Current certainties: ${JSON.stringify(certainties)}
 USER MESSAGE COUNT SO FAR: ${userMessageCount || 0} (phaseComplete MUST be false if < 3, and you SHOULD wrap up by 4-5 — the system will force-complete at 6)
+${crossPhaseContext?.completedPhases?.length > 0 ? `
+WHAT YOU ALREADY KNOW ABOUT THIS USER (from previous phases — reference this naturally when relevant):
+${crossPhaseContext.lifeContext ? `- Life context: ${JSON.stringify(crossPhaseContext.lifeContext)}` : ''}
+${crossPhaseContext.keySignals?.length ? `- Key taste signals so far: ${crossPhaseContext.keySignals.join(', ')}` : ''}
+${crossPhaseContext.trustedSources?.length ? `- Their trusted sources: ${crossPhaseContext.trustedSources.join(', ')}` : ''}
+${crossPhaseContext.goBackPlace ? `- Their go-back place: ${crossPhaseContext.goBackPlace}` : ''}
+Use this context to make the conversation feel CONNECTED — e.g., "You mentioned Masseria Moroseta earlier..." or "Given how much you value [signal], I'm curious..." But don't force it — only reference previous answers when it naturally adds to the conversation.` : ''}
 Conversation so far: ${JSON.stringify(conversationHistory.slice(-6))}
 
 User's latest response: "${userText}"

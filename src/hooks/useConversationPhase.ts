@@ -35,6 +35,10 @@ export function useConversationPhase({
     setCurrentPhaseProgress,
     allMessages: storedMessages,
     completedPhaseIds,
+    allSignals,
+    lifeContext,
+    goBackPlace,
+    trustedSources,
   } = useOnboardingStore();
 
   // Restore previous messages for this phase from persisted store (for resume)
@@ -63,6 +67,20 @@ export function useConversationPhase({
       const allMessages = [...messages, userMsg];
       const userMessageCount = allMessages.filter((m) => m.role === 'user').length;
 
+      // Build condensed cross-phase context so Claude knows what the user has already shared
+      const crossPhaseContext = {
+        completedPhases: completedPhaseIds,
+        lifeContext: Object.keys(lifeContext).length > 1 ? lifeContext : undefined, // skip if only default
+        keySignals: allSignals.length > 0
+          ? allSignals
+              .filter((s) => s.confidence >= 0.8)
+              .slice(-20) // most recent high-confidence signals
+              .map((s) => `${s.tag} (${s.cat})`)
+          : undefined,
+        trustedSources: trustedSources.length > 0 ? trustedSources.map((s) => s.name) : undefined,
+        goBackPlace: goBackPlace?.placeName || undefined,
+      };
+
       const res = await fetch('/api/onboarding/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,6 +90,7 @@ export function useConversationPhase({
           phaseId,
           certainties,
           userMessageCount,
+          crossPhaseContext,
         }),
       });
 
@@ -193,7 +212,7 @@ export function useConversationPhase({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, setCurrentPhaseProgress]);
+  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace]);
 
   return {
     messages,

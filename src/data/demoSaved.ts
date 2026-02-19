@@ -1,5 +1,5 @@
 import { ImportedPlace, GooglePlaceData } from '@/types';
-import { HistoryItem, Collection } from '@/stores/savedStore';
+import { HistoryItem } from '@/stores/savedStore';
 import { PLACE_DIRECTORY } from './placeDirectory';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -819,54 +819,3 @@ export const DEMO_HISTORY: HistoryItem[] = [
 ];
 
 
-// ═══════════════════════════════════════════════════════════════════
-// COLLECTIONS — Smart and manual groupings
-// ═══════════════════════════════════════════════════════════════════
-
-export const DEMO_COLLECTIONS: Collection[] = [
-  {
-    id: 'col-1',
-    name: 'Favorite NYC spots',
-    count: 5,
-    emoji: 'pin',
-    isSmartCollection: true,
-    query: 'favorite places in New York',
-    filterTags: ['location: New York', 'reaction: saved'],
-  },
-  {
-    id: 'col-2',
-    name: 'Everything Lizzie recommended',
-    count: 9,
-    emoji: 'friend',
-    isSmartCollection: true,
-    query: 'everything Lizzie recommended',
-    filterTags: ['source: friend', 'person: Lizzie'],
-  },
-  {
-    id: 'col-3',
-    name: 'Mexico City research',
-    count: 20,
-    emoji: 'location',
-    isSmartCollection: false,
-    query: 'Mexico City research',
-    filterTags: ['location: Mexico City'],
-  },
-  {
-    id: 'col-4',
-    name: 'Scandinavian design hotels',
-    count: 4,
-    emoji: 'hotel',
-    isSmartCollection: true,
-    query: 'design hotels in Scandinavia',
-    filterTags: ['type: hotel', 'location: Scandinavia', 'tag: Design'],
-  },
-  {
-    id: 'col-5',
-    name: 'Someday trips',
-    count: 3,
-    emoji: 'plan',
-    isSmartCollection: false,
-    query: 'places saved for future trips',
-    filterTags: ['status: unassigned'],
-  },
-];

@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
-import { extractAndMatchPlaces } from '@/lib/anthropic';
-import { searchPlace, priceLevelToString } from '@/lib/places';
+import { extractAndMatchPlaces, ExtractedPlace } from '@/lib/anthropic';
+import { searchPlace, priceLevelToString, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import type { ImportedPlace } from '@/types';
 
 // ─── Concurrency helper ──────────────────────────────────────────────────────
 
@@ -258,79 +259,38 @@ async function fetchAndClean(url: string): Promise<string | null> {
 
 // ─── Google Places enrichment ───────────────────────────────────────────────────
 
-function mapGoogleTypeToPlaceType(googleType?: string): string {
-  if (!googleType) return 'activity';
-  const type = googleType.toLowerCase();
-  if (type.includes('restaurant') || type.includes('food')) return 'restaurant';
-  if (type.includes('bar') || type.includes('night_club') || type.includes('pub')) return 'bar';
-  if (type.includes('cafe') || type.includes('coffee') || type.includes('bakery')) return 'cafe';
-  if (type.includes('hotel') || type.includes('lodging') || type.includes('resort')) return 'hotel';
-  if (type.includes('museum') || type.includes('art_gallery') || type.includes('church') || type.includes('landmark')) return 'museum';
-  if (type.includes('store') || type.includes('shop') || type.includes('market')) return 'shop';
-  if (type.includes('park') || type.includes('neighborhood') || type.includes('locality')) return 'neighborhood';
-  return 'activity';
-}
+// mapGoogleTypeToPlaceType imported from @/lib/places
 
-interface EnrichedPlace {
-  id: string;
-  name: string;
-  type: string;
-  location: string;
-  source: { type: string; name: string };
-  matchScore: number;
-  matchBreakdown: Record<string, number>;
-  tasteNote: string;
-  status: string;
-  google?: {
-    placeId?: string;
-    rating?: number;
-    reviewCount?: number;
-    category?: string;
-    priceLevel?: number;
-    hours?: string[];
-    address?: string;
-    website?: string;
-    phone?: string;
-    lat?: number;
-    lng?: number;
-  };
-  enrichment?: { description?: string; confidence: number };
-  ghostSource?: string;
-  // Personal context from user's notes
-  userContext?: string;
-  travelWith?: string;
-  timing?: string;
-  intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching';
-}
-
-interface ExtractedPlace {
-  name: string;
-  type: string;
-  city?: string;
-  description?: string;
-  userContext?: string;
-  travelWith?: string;
-  timing?: string;
-  intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching';
-  // Taste match data from combined Claude call
-  matchScore?: number;
-  matchBreakdown?: Record<string, number>;
-  tasteNote?: string;
-  terrazzoInsight?: { why: string; caveat: string };
-}
+// EnrichedPlace and ExtractedPlace now use canonical types from @/types and @/lib/anthropic
 
 async function enrichWithGooglePlaces(
   extracted: ExtractedPlace[],
   inputType: string,
   inferredRegion: string | null,
   onProgress?: (done: number, total: number) => void,
-): Promise<EnrichedPlace[]> {
+): Promise<ImportedPlace[]> {
   const batchId = `import-${Date.now()}`;
   const sourceType = inputType === 'google-maps' ? 'google-maps' : inputType === 'url' ? 'url' : 'text';
   const sourceName = inputType === 'google-maps' ? 'Google Maps' : inputType === 'url' ? 'Article' : 'Pasted List';
 
   let done = 0;
   const total = extracted.length;
+
+  // Google Places API dedup: cache results by query to avoid redundant API calls
+  // when two extracted names resolve to the same search query
+  const googleCache = new Map<string, Awaited<ReturnType<typeof searchPlace>>>();
+
+  async function cachedSearchPlace(query: string) {
+    const key = query.toLowerCase().trim();
+    if (googleCache.has(key)) return googleCache.get(key)!;
+    const result = await searchPlace(query);
+    googleCache.set(key, result);
+    // Also cache by placeId to catch different queries resolving to same place
+    if (result?.id) {
+      googleCache.set(`pid:${result.id}`, result);
+    }
+    return result;
+  }
 
   // Enrich in parallel with concurrency limit of 8
   const results = await parallelMap(
@@ -340,7 +300,7 @@ async function enrichWithGooglePlaces(
         // Build search query with location context for Google Places accuracy
         const locationHint = place.city || inferredRegion || '';
         const query = locationHint ? `${place.name} ${locationHint}` : place.name;
-        const googleResult = await searchPlace(query);
+        const googleResult = await cachedSearchPlace(query);
 
         done++;
         onProgress?.(done, total);
@@ -353,17 +313,17 @@ async function enrichWithGooglePlaces(
         const finalType = (claudeType === 'activity' && googleType && googleType !== 'activity')
           ? googleType : claudeType;
 
-        const enriched: EnrichedPlace = {
+        const enriched: ImportedPlace = {
           id: `${sourceType}-${batchId}-${i}`,
           name: googleResult?.displayName?.text || place.name,
-          type: finalType,
+          type: finalType as ImportedPlace['type'],
           location: googleResult?.formattedAddress || place.city || '',
-          source: { type: sourceType, name: sourceName },
+          source: { type: sourceType as ImportedPlace['source']['type'], name: sourceName },
           matchScore: 0,
           matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
           tasteNote: place.description || '',
           status: 'available',
-          ghostSource: sourceType === 'google-maps' ? 'maps' : 'article',
+          ghostSource: (sourceType === 'google-maps' ? 'maps' : 'article') as ImportedPlace['ghostSource'],
           userContext: place.userContext || undefined,
           travelWith: place.travelWith || undefined,
           timing: place.timing || undefined,
@@ -399,21 +359,39 @@ async function enrichWithGooglePlaces(
         return {
           id: `${sourceType}-${batchId}-${i}`,
           name: place.name,
-          type: place.type,
+          type: place.type as ImportedPlace['type'],
           location: place.city || '',
-          source: { type: sourceType, name: sourceName },
+          source: { type: sourceType as ImportedPlace['source']['type'], name: sourceName },
           matchScore: 0,
           matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
           tasteNote: place.description || '',
-          status: 'available',
-          ghostSource: sourceType === 'google-maps' ? 'maps' : 'article',
-        } as EnrichedPlace;
+          status: 'available' as const,
+          ghostSource: (sourceType === 'google-maps' ? 'maps' : 'article') as ImportedPlace['ghostSource'],
+        } as ImportedPlace;
       }
     },
     8 // concurrency limit
   );
 
-  return results;
+  // Post-enrichment dedup: merge places that resolved to the same Google Place ID
+  const seenPlaceIds = new Map<string, number>();
+  const deduped: ImportedPlace[] = [];
+  for (const place of results) {
+    const gid = place.google?.placeId;
+    if (gid && seenPlaceIds.has(gid)) {
+      // Merge userContext onto the first occurrence
+      const firstIdx = seenPlaceIds.get(gid)!;
+      const first = deduped[firstIdx];
+      if (place.userContext && !first.userContext) {
+        first.userContext = place.userContext;
+      }
+      continue; // skip duplicate
+    }
+    if (gid) seenPlaceIds.set(gid, deduped.length);
+    deduped.push(place);
+  }
+
+  return deduped;
 }
 
 // ─── Deduplication ──────────────────────────────────────────────────────────────

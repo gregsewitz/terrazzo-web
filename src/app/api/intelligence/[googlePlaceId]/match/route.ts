@@ -38,8 +38,9 @@ export async function POST(
       );
     }
 
-    const signals = JSON.parse(intel.signals);
-    const antiSignals = intel.antiSignals ? JSON.parse(intel.antiSignals) : [];
+    // Prisma Json columns return JsonValue; cast to the shapes computeMatchFromSignals expects
+    const signals = intel.signals as any[];
+    const antiSignals = (intel.antiSignals ?? []) as any[];
     const match = computeMatchFromSignals(signals, antiSignals, tasteProfile);
 
     return NextResponse.json({

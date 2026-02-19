@@ -87,6 +87,11 @@ export default function PhasePage() {
             <h1 className="font-serif text-[22px] text-[var(--t-ink)] leading-tight">
               {phase.title}
             </h1>
+            {phase.subtitle && (
+              <p className="text-[12px] text-[var(--t-ink)]/40 mt-0.5">
+                {phase.subtitle}
+              </p>
+            )}
           </div>
           <div className="text-right">
             <span className="font-mono text-[10px] text-[var(--t-ink)]/30">

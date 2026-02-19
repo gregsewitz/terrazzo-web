@@ -14,6 +14,7 @@ import BriefingView from '@/components/BriefingView';
 import ImportDrawer from '@/components/ImportDrawer';
 import { useImportStore } from '@/stores/importStore';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
+import PlaceSearchBar from '@/components/PlaceSearchBar';
 
 const TYPE_ICONS: Record<string, string> = {
   restaurant: 'restaurant',
@@ -55,7 +56,9 @@ export default function SavedPage() {
   const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
-  const { isOpen: importOpen, setOpen: setImportOpen, reset: resetImport } = useImportStore();
+  const importOpen = useImportStore(s => s.isOpen);
+  const importPatch = useImportStore(s => s.patch);
+  const resetImport = useImportStore(s => s.reset);
 
   const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
@@ -109,7 +112,7 @@ export default function SavedPage() {
     <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
       <div className="px-4 pt-5">
         {/* ═══ Header ═══ */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <span
               onClick={() => setActiveView('shortlists')}
@@ -142,18 +145,6 @@ export default function SavedPage() {
               {activeView === 'library' ? filteredPlaces.length : shortlists.length}
             </span>
           </div>
-          <button
-            onClick={() => setImportOpen(true)}
-            className="text-[10px] font-semibold px-2.5 py-1.5 rounded-full cursor-pointer transition-colors hover:opacity-80"
-            style={{
-              background: 'rgba(232,115,58,0.08)',
-              color: 'var(--t-panton-orange)',
-              border: 'none',
-              fontFamily: "'Space Mono', monospace",
-            }}
-          >
-            + Import
-          </button>
         </div>
 
         {/* ═══════════════════════════════════ */}
@@ -208,28 +199,33 @@ export default function SavedPage() {
         {/* ═══════════════════════════════════ */}
         {activeView === 'library' && (
           <div>
-            {/* Search bar */}
-            <div className="relative mb-3">
-              <PerriandIcon
-                name="discover"
-                size={14}
-                color="rgba(28,26,23,0.35)"
-                style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
-              />
-              <input
-                type="text"
-                placeholder="Search places..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg py-2.5 pl-9 pr-3 text-[12px]"
+            {/* Search bar + Batch import */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <PlaceSearchBar />
+              <button
+                onClick={() => importPatch({ isOpen: true })}
                 style={{
-                  background: 'white',
-                  border: '1px solid var(--t-linen)',
-                  color: 'var(--t-ink)',
-                  fontFamily: "'DM Sans', sans-serif",
-                  outline: 'none',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '9px 12px',
+                  borderRadius: 10,
+                  background: 'rgba(232,115,58,0.08)',
+                  border: '1px solid rgba(232,115,58,0.15)',
+                  color: 'var(--t-panton-orange)',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  fontFamily: "'Space Mono', monospace",
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  transition: 'opacity 0.15s',
                 }}
-              />
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Import
+              </button>
             </div>
 
             {/* Filter chips */}
@@ -394,7 +390,7 @@ export default function SavedPage() {
 
       {/* Import Drawer */}
       {importOpen && (
-        <ImportDrawer onClose={() => { resetImport(); setImportOpen(false); }} />
+        <ImportDrawer onClose={() => { resetImport(); importPatch({ isOpen: false }); }} />
       )}
 
       <TabBar />

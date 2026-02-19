@@ -314,12 +314,20 @@ export interface Shortlist {
 // ─── Pipeline Briefing Types ───
 
 export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
+  // Current pipeline dimension names
   'Design Language': 'Design',
   'Character & Identity': 'Character',
   'Service Philosophy': 'Service',
   'Food & Drink Identity': 'Food',
   'Location & Context': 'Location',
   'Wellness & Body': 'Wellness',
+  // Legacy dimension names (from older pipeline runs)
+  'Design & Aesthetic': 'Design',
+  'Scale & Intimacy': 'Character',
+  'Culture & Character': 'Character',
+  'Food & Drink': 'Food',
+  'Location & Setting': 'Location',
+  'Rhythm & Pace': 'Character',
 };
 
 export interface BriefingSignal {

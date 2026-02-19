@@ -1,8 +1,10 @@
 /**
  * Place Intelligence Pipeline — Inngest durable function
  *
- * Orchestrates the 8-stage pipeline as background steps.
+ * Orchestrates the multi-stage pipeline as background steps.
  * Each step is independently retryable and observable in the Inngest dashboard.
+ *
+ * Stages are config-driven: add/reorder/remove stages by editing STAGES[].
  */
 
 import { inngest } from './inngest';
@@ -29,18 +31,10 @@ async function callWorker(stage: string, payload: Record<string, unknown>): Prom
 
 // ─── Helper: update stage progress ───
 
-async function updateStage(
-  runId: string,
-  placeIntelligenceId: string,
-  stage: string,
-  completedStages: string[]
-) {
+async function updateStage(runId: string, stage: string, completedStages: string[]) {
   await prisma.pipelineRun.update({
     where: { id: runId },
-    data: {
-      currentStage: stage,
-      stagesCompleted: JSON.stringify(completedStages),
-    },
+    data: { currentStage: stage, stagesCompleted: completedStages },
   });
 }
 
@@ -64,26 +58,119 @@ interface PipelineResult {
   sourceSummary: Record<string, unknown>;
 }
 
+/** Accumulated results from previous pipeline stages. */
+type StageResults = Record<string, unknown>;
+
+interface StageConfig {
+  /** Worker endpoint name (e.g. 'google_places'). */
+  id: string;
+  /** Inngest step name — must be unique. */
+  stepName: string;
+  /** The stage name shown in progress while THIS stage runs (next stage after completion). */
+  nextStage: string;
+  /** When true, failures are logged and skipped instead of aborting the pipeline. */
+  optional: boolean;
+  /** Fallback value returned when an optional stage fails. */
+  fallback?: unknown;
+  /** Build the worker payload from base context + accumulated results. */
+  buildPayload: (base: Record<string, unknown>, results: StageResults) => Record<string, unknown>;
+}
+
+// ─── Stage Configuration ───────────────────────────────────────────────────────
+
+const STAGES: StageConfig[] = [
+  {
+    id: 'google_places',
+    stepName: 'stage-google-places',
+    nextStage: 'reviews',
+    optional: false,
+    buildPayload: (base) => ({ googlePlaceId: base.googlePlaceId, propertyName: base.propertyName, placeType: base.placeType }),
+  },
+  {
+    id: 'scrape_reviews',
+    stepName: 'stage-scrape-reviews',
+    nextStage: 'editorial',
+    optional: true,
+    fallback: { reviews: [], totalCount: 0 },
+    buildPayload: (base, r) => ({ propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType, placesData: r.google_places }),
+  },
+  {
+    id: 'editorial_extraction',
+    stepName: 'stage-editorial-extraction',
+    nextStage: 'instagram',
+    optional: true,
+    fallback: { signals: [], antiSignals: [] },
+    buildPayload: (base, r) => ({ propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType, reviews: r.scrape_reviews, placesData: r.google_places }),
+  },
+  {
+    id: 'instagram_analysis',
+    stepName: 'stage-instagram-analysis',
+    nextStage: 'menu',
+    optional: true,
+    fallback: { signals: [] },
+    buildPayload: (base) => ({ propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType }),
+  },
+  {
+    id: 'menu_analysis',
+    stepName: 'stage-menu-analysis',
+    nextStage: 'awards',
+    optional: true,
+    fallback: { signals: [] },
+    buildPayload: (base, r) => ({ propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType, placesData: r.google_places }),
+  },
+  {
+    id: 'award_positioning',
+    stepName: 'stage-award-positioning',
+    nextStage: 'review_intelligence',
+    optional: true,
+    fallback: { signals: [], cluster: '' },
+    buildPayload: (base) => ({ propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType }),
+  },
+  {
+    id: 'review_intelligence',
+    stepName: 'stage-review-intelligence',
+    nextStage: 'merge',
+    optional: true,
+    fallback: {},
+    buildPayload: (base, r) => ({
+      propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType,
+      reviews: r.scrape_reviews,
+      existingSignals: (r.editorial_extraction as { signals?: unknown[] })?.signals ?? [],
+    }),
+  },
+  {
+    id: 'merge',
+    stepName: 'stage-merge',
+    nextStage: 'save',
+    optional: false,
+    buildPayload: (base, r) => ({
+      propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType,
+      editorial: r.editorial_extraction,
+      instagram: r.instagram_analysis,
+      menu: r.menu_analysis,
+      awards: r.award_positioning,
+      reviewIntel: r.review_intelligence,
+      placesData: r.google_places,
+    }),
+  },
+];
+
 // ─── The Pipeline Function ───
 
 export const placeIntelligencePipeline = inngest.createFunction(
   {
     id: 'place-intelligence-pipeline',
     retries: 2,
-    concurrency: { limit: 5 }, // max 5 properties enriching simultaneously
+    concurrency: { limit: 5 },
   },
   { event: 'pipeline/run' },
   async ({ event, step }) => {
     const {
-      googlePlaceId,
-      propertyName,
-      placeIntelligenceId,
-      placeType,
-      trigger,
-      triggeredByUserId,
+      googlePlaceId, propertyName, placeIntelligenceId, placeType, trigger, triggeredByUserId,
     } = event.data as PipelineEventData;
 
     const completedStages: string[] = [];
+    const base = { googlePlaceId, propertyName, placeType };
 
     // ── Create pipeline run record ──
     const run = await step.run('create-run', async () => {
@@ -94,7 +181,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
           triggerSource: trigger,
           triggeredByUserId: triggeredByUserId || null,
           startedAt: new Date(),
-          currentStage: 'google_places',
+          currentStage: STAGES[0].id,
         },
       });
       await prisma.placeIntelligence.update({
@@ -104,162 +191,45 @@ export const placeIntelligencePipeline = inngest.createFunction(
       return { id: r.id, startedAt: r.startedAt!.getTime() };
     }) as { id: string; startedAt: number };
 
-    // ── STAGE 1: Google Places (~2s) ──
-    const placesData = await step.run('stage-google-places', async () => {
-      const result = await callWorker('google_places', { googlePlaceId, propertyName, placeType });
-      completedStages.push('google_places');
-      await updateStage(run.id as string, placeIntelligenceId, 'reviews', completedStages);
-      return result as Record<string, unknown>;
-    });
+    // ── Run all stages via config-driven loop ──
+    const results: StageResults = {};
 
-    // ── STAGE 2: Review Scraping (~60s) ──
-    const reviews = await step.run('stage-scrape-reviews', async () => {
-      try {
-        const result = await callWorker('scrape_reviews', {
-          propertyName,
-          googlePlaceId,
-          placeType,
-          placesData,
-        });
-        completedStages.push('reviews');
-        await updateStage(run.id, placeIntelligenceId, 'editorial', completedStages);
-        return result as Record<string, unknown>;
-      } catch (e) {
-        // Graceful failure — continue without reviews
-        console.error('Review scraping failed, continuing:', e);
-        completedStages.push('reviews_skipped');
-        return { reviews: [], totalCount: 0 };
-      }
-    });
-
-    // ── STAGE 3: Editorial Extraction (~15s) ──
-    const editorial = await step.run('stage-editorial-extraction', async () => {
-      try {
-        const result = await callWorker('editorial_extraction', {
-          propertyName,
-          googlePlaceId,
-          placeType,
-          reviews,
-          placesData,
-        });
-        completedStages.push('editorial');
-        await updateStage(run.id, placeIntelligenceId, 'instagram', completedStages);
-        return result as { signals: unknown[]; antiSignals: unknown[] };
-      } catch (e) {
-        console.error('Editorial extraction failed, continuing:', e);
-        completedStages.push('editorial_skipped');
-        return { signals: [], antiSignals: [] };
-      }
-    });
-
-    // ── STAGE 4: Instagram Scrape + Vision (~90s) ──
-    const instagram = await step.run('stage-instagram-analysis', async () => {
-      try {
-        const result = await callWorker('instagram_analysis', {
-          propertyName,
-          googlePlaceId,
-          placeType,
-        });
-        completedStages.push('instagram');
-        await updateStage(run.id, placeIntelligenceId, 'menu', completedStages);
-        return result as { signals: unknown[] };
-      } catch (e) {
-        console.error('Instagram analysis failed, continuing:', e);
-        completedStages.push('instagram_skipped');
-        return { signals: [] };
-      }
-    });
-
-    // ── STAGE 5: Menu Analysis (~10s) ──
-    const menu = await step.run('stage-menu-analysis', async () => {
-      try {
-        const result = await callWorker('menu_analysis', {
-          propertyName,
-          googlePlaceId,
-          placeType,
-          placesData,
-        });
-        completedStages.push('menu');
-        await updateStage(run.id, placeIntelligenceId, 'awards', completedStages);
-        return result as { signals: unknown[] };
-      } catch (e) {
-        console.error('Menu analysis failed, continuing:', e);
-        completedStages.push('menu_skipped');
-        return { signals: [] };
-      }
-    });
-
-    // ── STAGE 6: Award Positioning (~5s) ──
-    const awards = await step.run('stage-award-positioning', async () => {
-      try {
-        const result = await callWorker('award_positioning', {
-          propertyName,
-          googlePlaceId,
-          placeType,
-        });
-        completedStages.push('awards');
-        await updateStage(run.id, placeIntelligenceId, 'review_intelligence', completedStages);
-        return result as { signals: unknown[]; cluster: string };
-      } catch (e) {
-        console.error('Award positioning failed, continuing:', e);
-        completedStages.push('awards_skipped');
-        return { signals: [], cluster: '' };
-      }
-    });
-
-    // ── STAGE 7: Review Intelligence 3-Tier (~60s) ──
-    const reviewIntel = await step.run('stage-review-intelligence', async () => {
-      try {
-        const result = await callWorker('review_intelligence', {
-          propertyName,
-          googlePlaceId,
-          placeType,
-          reviews,
-          existingSignals: editorial.signals,
-        });
-        completedStages.push('review_intelligence');
-        await updateStage(run.id, placeIntelligenceId, 'merge', completedStages);
-        return result as Record<string, unknown>;
-      } catch (e) {
-        console.error('Review intelligence failed, continuing:', e);
-        completedStages.push('review_intelligence_skipped');
-        return {};
-      }
-    });
-
-    // ── STAGE 8: Merge All Signals ──
-    const merged = await step.run('stage-merge', async () => {
-      const result = await callWorker('merge', {
-        propertyName,
-        googlePlaceId,
-        placeType,
-        editorial,
-        instagram,
-        menu,
-        awards,
-        reviewIntel,
-        placesData,
+    for (const stage of STAGES) {
+      const result = await step.run(stage.stepName, async () => {
+        try {
+          const payload = stage.buildPayload(base, results);
+          const res = await callWorker(stage.id, payload);
+          completedStages.push(stage.id);
+          await updateStage(run.id, stage.nextStage, completedStages);
+          return res;
+        } catch (e) {
+          if (!stage.optional) throw e;
+          console.error(`${stage.id} failed, continuing:`, e);
+          completedStages.push(`${stage.id}_skipped`);
+          return stage.fallback;
+        }
       });
-      completedStages.push('merge');
-      return result as PipelineResult;
-    });
+      results[stage.id] = result;
+    }
 
-    // ── STAGE 9: Save to Database ──
+    const merged = results.merge as PipelineResult;
+
+    // ── Save to Database ──
     await step.run('save-to-database', async () => {
       await prisma.placeIntelligence.update({
         where: { id: placeIntelligenceId },
         data: {
           status: 'complete',
-          signals: JSON.stringify(merged.signals),
-          antiSignals: JSON.stringify(merged.antiSignals),
-          reliability: JSON.stringify(merged.reliability),
-          facts: JSON.stringify(merged.facts),
-          reviewIntel: JSON.stringify(merged.reviewIntelSummary),
+          signals: merged.signals,
+          antiSignals: merged.antiSignals,
+          reliability: merged.reliability,
+          facts: merged.facts,
+          reviewIntel: merged.reviewIntelSummary,
           signalCount: merged.signals.length,
           antiSignalCount: merged.antiSignals.length,
           reviewCount: merged.reliability?.totalReviews || 0,
           reliabilityScore: merged.reliability?.overall || null,
-          sourcesProcessed: JSON.stringify(merged.sourceSummary),
+          sourcesProcessed: merged.sourceSummary,
           lastEnrichedAt: new Date(),
         },
       });
@@ -269,7 +239,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         data: {
           status: 'complete',
           currentStage: null,
-          stagesCompleted: JSON.stringify(completedStages),
+          stagesCompleted: completedStages,
           completedAt: new Date(),
           durationMs: Date.now() - run.startedAt,
         },

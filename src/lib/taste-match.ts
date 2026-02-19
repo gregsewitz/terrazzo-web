@@ -1,29 +1,16 @@
 /**
  * Taste Match — compute how well a property's intelligence matches a user's taste profile.
  *
- * Maps pipeline dimensions (e.g. "Design Language") to app domains (e.g. "Design")
- * and produces per-domain scores + overall match score.
+ * Provides two scoring modes:
+ * 1. Signal-based: from pipeline enrichment data (signals + anti-signals)
+ * 2. Profile-based: from flat numeric profiles (0–1 per domain)
  */
 
-import { TasteDomain, TasteProfile } from '@/types';
+import { TasteDomain, TasteProfile, DIMENSION_TO_DOMAIN } from '@/types';
 
-// ─── Pipeline dimension → App domain mapping ───
+const ALL_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
-const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
-  'Design Language': 'Design',
-  'Character & Identity': 'Character',
-  'Service Philosophy': 'Service',
-  'Food & Drink Identity': 'Food',
-  'Location & Context': 'Location',
-  'Wellness & Body': 'Wellness',
-  // Legacy dimension names (from older pipeline runs)
-  'Design & Aesthetic': 'Design',
-  'Scale & Intimacy': 'Character',
-  'Culture & Character': 'Character',
-  'Food & Drink': 'Food',
-  'Location & Setting': 'Location',
-  'Rhythm & Pace': 'Character',
-};
+// ─── Signal-based scoring (pipeline-enriched places) ─────────────────────────
 
 interface Signal {
   dimension: string;
@@ -44,8 +31,6 @@ interface MatchResult {
   breakdown: Record<TasteDomain, number>; // per-domain 0-100
   topDimension: TasteDomain;
 }
-
-const ALL_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
 /**
  * Compute taste match from raw signals + user profile.
@@ -82,38 +67,29 @@ export function computeMatchFromSignals(
     const domainSignals = byDomain[domain];
 
     if (domainSignals.length === 0) {
-      // No data for this domain — neutral score
-      breakdown[domain] = 50;
+      breakdown[domain] = 50; // No data — neutral score
       continue;
     }
 
-    // Average confidence, with boost for corroborated signals
     const totalConf = domainSignals.reduce((sum, s) => {
       const boost = s.review_corroborated ? 0.05 : 0;
       return sum + Math.min(s.confidence + boost, 1.0);
     }, 0);
     const avgConfidence = totalConf / domainSignals.length;
-
-    // Density: how well-documented is this domain? (20+ signals = full density)
     const density = Math.min(domainSignals.length / 20, 1.0);
-
-    // Combine: high confidence + good density = strong property identity for this domain
     const propertyStrength = avgConfidence * 0.6 + density * 0.4;
-
-    // Scale to 0-100
     breakdown[domain] = Math.round(propertyStrength * 100);
   }
 
-  // Apply anti-signal penalties (small — they're contextual, not primary)
+  // Apply anti-signal penalties
   for (const anti of antiSignals) {
     const domain = DIMENSION_TO_DOMAIN[anti.dimension];
     if (domain && breakdown[domain] !== undefined) {
-      // Small penalty scaled by anti-signal confidence
       breakdown[domain] = Math.max(0, breakdown[domain] - Math.round(anti.confidence * 5));
     }
   }
 
-  // Compute overall score: weighted by user's taste profile
+  // Overall score: weighted by user's taste profile
   let weightedSum = 0;
   let totalWeight = 0;
   for (const domain of ALL_DOMAINS) {
@@ -123,7 +99,6 @@ export function computeMatchFromSignals(
   }
   const overallScore = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 50;
 
-  // Find top dimension
   const topDimension = ALL_DOMAINS.reduce((best, d) =>
     breakdown[d] > breakdown[best] ? d : best
   );
@@ -134,3 +109,49 @@ export function computeMatchFromSignals(
     topDimension,
   };
 }
+
+// ─── Profile-based scoring (flat numeric profiles from AI extraction) ────────
+
+/**
+ * Compute match score from flat 0–1 profiles (used by import route for initial scoring).
+ */
+export function computeMatchScore(userProfile: TasteProfile, placeProfile: TasteProfile): number {
+  let weightedSum = 0;
+  let totalWeight = 0;
+
+  for (const domain of ALL_DOMAINS) {
+    const userWeight = userProfile[domain];
+    const placeScore = placeProfile[domain];
+    weightedSum += userWeight * placeScore;
+    totalWeight += userWeight;
+  }
+
+  return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) : 50;
+}
+
+/**
+ * Get the top N taste domains from a profile, sorted by strength.
+ */
+export function getTopAxes(profile: TasteProfile, count: number = 3): TasteDomain[] {
+  return [...ALL_DOMAINS]
+    .sort((a, b) => profile[b] - profile[a])
+    .slice(0, count);
+}
+
+/**
+ * A stretch pick is one where the place's top axes don't overlap with the user's top axes.
+ */
+export function isStretchPick(userProfile: TasteProfile, placeProfile: TasteProfile): boolean {
+  const userTop = new Set(getTopAxes(userProfile, 2));
+  const placeTop = getTopAxes(placeProfile, 2);
+  return placeTop.filter(d => userTop.has(d)).length === 0;
+}
+
+export const DEFAULT_USER_PROFILE: TasteProfile = {
+  Design: 0.85,
+  Character: 0.8,
+  Service: 0.6,
+  Food: 0.75,
+  Location: 0.7,
+  Wellness: 0.4,
+};

@@ -14,10 +14,12 @@ interface ConversationViewProps {
 export default function ConversationView({ phase, onComplete }: ConversationViewProps) {
   const [inputText, setInputText] = useState('');
   const [voiceMode, setVoiceMode] = useState(true); // voice-first by default
+  const [autoAdvancing, setAutoAdvancing] = useState(false); // true once we start the auto-advance countdown
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const spokenCountRef = useRef(0);
   const sendingRef = useRef(false); // guard against double-send from silence detection
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     messages,
@@ -30,15 +32,36 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     followUps: phase.followUps,
   });
 
-  // Auto-start mic after TTS finishes speaking
+  // Auto-advance after phase completion — triggered when TTS finishes speaking the transition message
+  const triggerAutoAdvance = useCallback(() => {
+    if (autoAdvanceTimerRef.current) return; // already scheduled
+    setAutoAdvancing(true);
+    autoAdvanceTimerRef.current = setTimeout(() => {
+      onComplete();
+    }, 1800); // 1.8s pause after TTS ends (or after read-time) before auto-advancing
+  }, [onComplete]);
+
+  // Clean up auto-advance timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+    };
+  }, []);
+
+  // Auto-start mic after TTS finishes speaking, OR auto-advance if phase is done
   const handleTTSDone = useCallback(() => {
-    if (voiceMode && !isPhaseComplete && !isAnalyzing) {
+    if (isPhaseComplete) {
+      // Phase is done and TTS just finished speaking the transition — auto-advance
+      triggerAutoAdvance();
+      return;
+    }
+    if (voiceMode && !isAnalyzing) {
       // Small delay so the audio system settles before mic activates
       setTimeout(() => {
         startListeningRef.current?.();
       }, 300);
     }
-  }, [voiceMode, isPhaseComplete, isAnalyzing]);
+  }, [voiceMode, isPhaseComplete, isAnalyzing, triggerAutoAdvance]);
 
   // Handle silence detection — auto-send the transcript
   const handleSilenceDetected = useCallback(async (text: string) => {
@@ -86,12 +109,18 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   // Speak new AI messages automatically
   useEffect(() => {
     if (!ttsEnabled) {
-      // If TTS is off but voice mode is on, auto-start mic after AI responds
+      // If TTS is off, handle auto-start mic or auto-advance with read-time delay
       const newMessages = messages.slice(spokenCountRef.current);
       const latestAI = [...newMessages].reverse().find((m) => m.role === 'ai');
       spokenCountRef.current = messages.length;
-      if (latestAI && voiceMode && !isPhaseComplete && !isAnalyzing) {
-        setTimeout(() => startListeningRef.current?.(), 300);
+      if (latestAI) {
+        if (isPhaseComplete) {
+          // No TTS — use a read-time delay before auto-advancing (roughly 40ms per word)
+          const readTime = Math.max(2000, latestAI.text.split(/\s+/).length * 40);
+          setTimeout(() => triggerAutoAdvance(), readTime);
+        } else if (voiceMode && !isAnalyzing) {
+          setTimeout(() => startListeningRef.current?.(), 300);
+        }
       }
       return;
     }
@@ -101,7 +130,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (latestAI) {
       speak(latestAI.text);
     }
-  }, [messages, ttsEnabled, speak, voiceMode, isPhaseComplete, isAnalyzing]);
+  }, [messages, ttsEnabled, speak, voiceMode, isPhaseComplete, isAnalyzing, triggerAutoAdvance]);
 
   // Stop TTS when user starts talking
   useEffect(() => {
@@ -175,10 +204,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           <div
             key={i}
             className={`
-              max-w-[85%] transition-all duration-300
+              max-w-[85%] message-enter
               ${msg.role === 'ai' ? 'mr-auto' : 'ml-auto'}
             `}
-            style={{ animationDelay: `${i * 0.08}s` }}
+            style={{ animationDelay: `${i * 0.06}s` }}
           >
             {msg.role === 'ai' ? (
               <div className="space-y-1">
@@ -235,12 +264,22 @@ export default function ConversationView({ phase, onComplete }: ConversationView
       <div className="border-t border-[var(--t-travertine)] px-4 py-3">
         {isPhaseComplete ? (
           <button
-            onClick={onComplete}
+            onClick={() => {
+              if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+              onComplete();
+            }}
             className="w-full py-3 rounded-xl text-[14px] font-medium text-white transition-all
-              hover:opacity-90 active:scale-[0.98]"
+              hover:opacity-90 active:scale-[0.98] relative overflow-hidden"
             style={{ backgroundColor: 'var(--t-ink)' }}
           >
-            Continue
+            {autoAdvancing ? (
+              <>
+                <span className="relative z-10">Continuing...</span>
+                <div
+                  className="absolute inset-0 bg-[var(--t-honey)]/20 origin-left animate-[fillBar_2s_ease-out_forwards]"
+                />
+              </>
+            ) : 'Continue'}
           </button>
         ) : voiceMode && speechSupported ? (
           /* Voice-first mode — clean, centered UI */

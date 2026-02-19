@@ -1,22 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { parseEmailToBookings } from '@/lib/anthropic';
+// DEPRECATED: Legacy email parse route. No longer called by any client code.
+// Email parsing now uses /api/import with unified extraction.
 
-export async function POST(request: NextRequest) {
-  try {
-    const { htmlBody } = await request.json();
+import { NextResponse } from 'next/server';
 
-    if (!htmlBody) {
-      return NextResponse.json({ error: 'Email body is required' }, { status: 400 });
-    }
-
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 500 });
-    }
-
-    const bookings = await parseEmailToBookings(htmlBody);
-    return NextResponse.json({ bookings });
-  } catch (error) {
-    console.error('Email parse error:', error);
-    return NextResponse.json({ error: 'Parse failed' }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    { error: 'This endpoint is deprecated. Use /api/import instead.' },
+    { status: 410 }
+  );
 }

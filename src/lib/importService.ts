@@ -23,13 +23,13 @@ export function cancelActiveImport() {
   }
 }
 
-/**
- * Stream import from /api/import (text + URL imports).
- * Handles SSE parsing, timeouts, and callbacks.
- */
-export async function streamImport(
-  input: string,
-  callbacks: ImportCallbacks
+// ─── Unified SSE stream helper ──────────────────────────────────────────────
+
+async function streamFromEndpoint(
+  url: string,
+  body: Record<string, unknown>,
+  callbacks: ImportCallbacks,
+  errorLabel = 'Import failed',
 ): Promise<void> {
   cancelActiveImport();
   const controller = new AbortController();
@@ -37,22 +37,22 @@ export async function streamImport(
   const timeout = setTimeout(() => controller.abort(), 120000); // 2 min
 
   try {
-    const res = await fetch('/api/import', {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: input }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
 
     clearTimeout(timeout);
-    if (!res.ok || !res.body) throw new Error('Import failed');
+    if (!res.ok || !res.body) throw new Error(errorLabel);
 
     await parseSSEStream(res.body, callbacks);
   } catch (err) {
     if ((err as Error).name === 'AbortError') {
       callbacks.onError('Import timed out');
     } else {
-      callbacks.onError((err as Error).message || 'Import failed');
+      callbacks.onError((err as Error).message || errorLabel);
     }
   } finally {
     clearTimeout(timeout);
@@ -60,46 +60,20 @@ export async function streamImport(
   }
 }
 
-/**
- * Stream import from /api/import/maps-list (Google Maps saved list imports).
- * Handles preview + result events for lazy enrichment.
- */
-export async function streamMapsImport(
-  mapsUrl: string,
-  callbacks: ImportCallbacks
-): Promise<void> {
-  cancelActiveImport();
-  const controller = new AbortController();
-  activeController = controller;
-  const timeout = setTimeout(() => controller.abort(), 120000); // 2 min
+// ─── Public API ─────────────────────────────────────────────────────────────
 
-  try {
-    const res = await fetch('/api/import/maps-list', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: mapsUrl }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-    if (!res.ok || !res.body) throw new Error('Maps import failed');
-
-    await parseSSEStream(res.body, callbacks);
-  } catch (err) {
-    if ((err as Error).name === 'AbortError') {
-      callbacks.onError('Import timed out');
-    } else {
-      callbacks.onError((err as Error).message || 'Maps import failed');
-    }
-  } finally {
-    clearTimeout(timeout);
-    activeController = null;
-  }
+/** Stream import from /api/import (text + URL imports). */
+export function streamImport(input: string, callbacks: ImportCallbacks): Promise<void> {
+  return streamFromEndpoint('/api/import', { content: input }, callbacks, 'Import failed');
 }
 
-/**
- * Generic SSE stream parser — reads ReadableStream and dispatches events.
- */
+/** Stream import from /api/import/maps-list (Google Maps saved list imports). */
+export function streamMapsImport(mapsUrl: string, callbacks: ImportCallbacks): Promise<void> {
+  return streamFromEndpoint('/api/import/maps-list', { url: mapsUrl }, callbacks, 'Maps import failed');
+}
+
+// ─── SSE stream parser ─────────────────────────────────────────────────────
+
 async function parseSSEStream(
   body: ReadableStream<Uint8Array>,
   callbacks: ImportCallbacks

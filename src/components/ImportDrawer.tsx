@@ -90,19 +90,18 @@ interface ImportDrawerProps {
 
 export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   const {
-    mode, setMode, inputValue, setInputValue,
-    isProcessing, setProcessing, error, setError,
+    mode, inputValue,
+    isProcessing, error,
     // Background task state from store
-    isMinimized, setMinimized,
+    isMinimized,
     progressPercent, progressLabel, discoveredNames,
     importResults, selectedIds: selectedIdsArray,
-    sourceName, setSourceName,
-    setProgress, setDiscoveredNames, setImportResults, setSelectedIds,
-    setBackgroundError, resetBackgroundTask,
+    sourceName,
+    setProgress, resetBackgroundTask, patch,
   } = useImportStore();
 
   const addPlace = useSavedStore(s => s.addPlace);
-  const addCollection = useSavedStore(s => s.addCollection);
+  const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
 
   // Local-only UI state (not needed across pages)
   const [step, setStep] = useState<ImportStep>('input');
@@ -162,97 +161,79 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   const toggleSelect = (id: string) => {
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id); else next.add(id);
-    setSelectedIds(Array.from(next));
+    patch({ selectedIds: Array.from(next) });
   };
 
-  const selectAll = () => setSelectedIds(importResults.map(r => r.id));
-  const deselectAll = () => setSelectedIds([]);
+  const selectAll = () => patch({ selectedIds: importResults.map(r => r.id) });
+  const deselectAll = () => patch({ selectedIds: [] });
 
   // ── Import handler: starts background stream + minimizes ──────────────
   async function handleImport() {
     if (!inputValue.trim()) return;
     const detectedMode = detectInputType(inputValue);
-    setMode(detectedMode);
-    setProcessing(true);
-    setError(null);
-    setBackgroundError(null);
+    patch({ mode: detectedMode, error: null });
+    patch({ isProcessing: true });
+    patch({ error: null });
+    patch({ backgroundError: null });
     setProgress(0, 'Starting…');
-    setDiscoveredNames([]);
-    setImportResults([]);
+    patch({ discoveredNames: [] });
+    patch({ importResults: [] });
 
     // Minimize and close drawer — import runs in background
-    setMinimized(true);
+    patch({ isMinimized: true });
     onClose();
 
     try {
       await streamImport(inputValue, {
         onProgress: (percent, label, placeNames) => {
           setProgress(percent, label);
-          if (placeNames) setDiscoveredNames(placeNames);
+          if (placeNames) patch({ discoveredNames: placeNames });
         },
         onResult: (places) => {
-          setImportResults(places);
-          setSelectedIds(places.map(p => p.id));
+          patch({ importResults: places, selectedIds: places.map(p => p.id), isProcessing: false });
           setProgress(100, 'Ready to review');
-          setProcessing(false);
         },
-        onError: (error) => {
-          // Fallback to demo results on error
-          setImportResults(DEMO_IMPORT_RESULTS);
-          setSelectedIds(DEMO_IMPORT_RESULTS.map(r => r.id));
+        onError: () => {
+          patch({ importResults: DEMO_IMPORT_RESULTS, selectedIds: DEMO_IMPORT_RESULTS.map(r => r.id), isProcessing: false });
           setProgress(100, 'Ready to review');
-          setProcessing(false);
         },
       });
     } catch {
-      setImportResults(DEMO_IMPORT_RESULTS);
-      setSelectedIds(DEMO_IMPORT_RESULTS.map(r => r.id));
+      patch({ importResults: DEMO_IMPORT_RESULTS, selectedIds: DEMO_IMPORT_RESULTS.map(r => r.id), isProcessing: false });
       setProgress(100, 'Ready to review');
-      setProcessing(false);
     }
   }
 
   // ── Maps import handler: same minimize pattern ────────────────────────
   async function handleMapsImport() {
     if (!mapsUrl.trim()) return;
-    setProcessing(true);
-    setError(null);
-    setBackgroundError(null);
+    patch({ isProcessing: true, error: null, backgroundError: null, discoveredNames: [], importResults: [], sourceName: 'Google Maps' });
     setProgress(0, 'Starting…');
-    setDiscoveredNames([]);
-    setImportResults([]);
-    setSourceName('Google Maps');
 
     // Minimize and close drawer
-    setMinimized(true);
+    patch({ isMinimized: true });
     onClose();
 
     try {
       await streamMapsImport(mapsUrl, {
         onProgress: (percent, label, placeNames) => {
           setProgress(percent, label);
-          if (placeNames) setDiscoveredNames(placeNames);
+          if (placeNames) patch({ discoveredNames: placeNames });
         },
         onPreview: (places) => {
-          // Lazy enrichment: show basic results while enrichment continues
-          setImportResults(places);
-          setSelectedIds(places.map(p => p.id));
+          patch({ importResults: places, selectedIds: places.map(p => p.id) });
           setProgress(50, 'Enriching with Google details…');
         },
         onResult: (places) => {
-          setImportResults(places);
-          setSelectedIds(places.map(p => p.id));
+          patch({ importResults: places, selectedIds: places.map(p => p.id), isProcessing: false });
           setProgress(100, 'Ready to review');
-          setProcessing(false);
         },
         onError: (errorMsg) => {
-          setBackgroundError(errorMsg);
-          setProcessing(false);
+          patch({ backgroundError: errorMsg, isProcessing: false });
         },
       });
     } catch (err) {
-      setBackgroundError((err as Error).message || 'Maps import failed');
-      setProcessing(false);
+      patch({ backgroundError: (err as Error).message || 'Maps import failed', isProcessing: false });
     }
   }
 
@@ -264,20 +245,19 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     selected.forEach(place => addPlace(place));
     setSavedPlaces(selected);
 
-    // Auto-create a collection
+    // Auto-create a shortlist for the import
     const dest = detectedDestination || 'Import';
     const collectionName = sourceName
       ? `${sourceName}: ${dest}`
       : `Imported: ${dest}`;
     setCreatedCollectionName(collectionName);
-    addCollection({
-      name: collectionName,
-      count: selected.length,
-      emoji: 'discover',
-      isSmartCollection: true,
-      query: collectionName,
-      filterTags: [`source: ${sourceName || 'import'}`, `location: ${dest}`],
-    });
+    createSmartShortlist(
+      collectionName,
+      'discover',
+      collectionName,
+      [`source: ${sourceName || 'import'}`, `location: ${dest}`],
+      selected.map(p => p.id),
+    );
 
     setStep('success');
   }
@@ -285,7 +265,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   function handleClose() {
     // If we have results but haven't confirmed, keep them in store (user can come back via floating bar)
     if (step === 'results' && importResults.length > 0) {
-      setMinimized(true);
+      patch({ isMinimized: true });
     } else if (step === 'success') {
       resetBackgroundTask();
     }
@@ -324,7 +304,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Single magic text box */}
               <div className="rounded-2xl overflow-hidden mb-3 relative"
                 style={{ border: inputValue.trim() ? '2px solid var(--t-honey)' : '2px solid var(--t-linen)', background: 'white', transition: 'border-color 0.2s ease' }}>
-                <textarea value={inputValue} onChange={e => { setInputValue(e.target.value); setMode(detectInputType(e.target.value)); }}
+                <textarea value={inputValue} onChange={e => { patch({ inputValue: e.target.value, mode: detectInputType(e.target.value) }); }}
                   placeholder={`Paste a link, a message, or a list of places…\n\ne.g. a Condé Nast article, a Google Maps list,\na Substack post, or a text from a friend`}
                   className="w-full p-4 text-[12px] resize-none border-none outline-none leading-relaxed"
                   style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif", minHeight: 200 }} />
@@ -344,7 +324,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <input
                     type="text"
                     value={sourceName}
-                    onChange={e => setSourceName(e.target.value)}
+                    onChange={e => patch({ sourceName: e.target.value })}
                     placeholder="Source name (optional)"
                     className="text-[10px] bg-transparent border-none outline-none flex-1"
                     style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
@@ -465,7 +445,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               {/* Minimize button */}
               <button
-                onClick={() => { setMinimized(true); onClose(); }}
+                onClick={() => { patch({ isMinimized: true }); onClose(); }}
                 className="mt-6 px-4 py-2 rounded-xl border-none cursor-pointer text-[11px] font-semibold"
                 style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}>
                 Continue in background

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
+import StoreHydration from "@/components/StoreHydration";
 
 export const metadata: Metadata = {
   title: "Terrazzo — Your Bespoke Travel Concierge",
@@ -29,6 +30,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        <StoreHydration />
         {children}
         <GlobalImportUI />
       </body>
