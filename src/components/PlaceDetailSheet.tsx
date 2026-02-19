@@ -89,6 +89,8 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onSave, onEdit
             <img
               src={getPlaceImage(item.name)}
               alt={item.name}
+              width={480}
+              height={200}
               style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />

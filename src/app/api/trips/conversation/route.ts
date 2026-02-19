@@ -71,7 +71,7 @@ Return valid JSON only.`;
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 512,
-      system: TRIP_CONVERSATION_SYSTEM,
+      system: [{ type: 'text', text: TRIP_CONVERSATION_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],
     });
 

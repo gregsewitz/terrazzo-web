@@ -1,9 +1,9 @@
 // ─── Font families ───
 
 export const FONT = {
-  serif: "'DM Serif Display', serif",
-  mono: "'Space Mono', monospace",
-  sans: "'DM Sans', sans-serif",
+  serif: "var(--font-dm-serif), 'DM Serif Display', serif",
+  mono: "var(--font-space-mono), 'Space Mono', monospace",
+  sans: "var(--font-dm-sans), 'DM Sans', sans-serif",
 } as const;
 
 // ─── Ink color at various opacities ───

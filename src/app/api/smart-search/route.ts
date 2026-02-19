@@ -24,15 +24,16 @@ Given a natural language query, extract structured filters to search the collect
     "keywords": ["sushi", "cocktails"] | null
   },
   "filterTags": ["type: restaurant", "location: Tokyo", "person: Lizzie"],
-  "reasoning": "Brief explanation of how you interpreted the query"
+  "reasoning": "A warm, friendly one-liner about what Terrazzo picked and why — like a friend explaining their curation"
 }
 
 Rules:
 - Only include filter fields that are relevant to the query. Use null for irrelevant fields.
 - filterTags should be human-readable summaries like "type: hotel", "location: Europe", "person: Lizzie", "reaction: ♡", "match: 80+"
-- For vague queries, be generous with interpretation but explain your reasoning
+- For vague queries, be generous with interpretation but explain your reasoning in the reasoning field
 - The emoji should be the single most representative emoji for the collection
 - The name should be concise (2-5 words) and descriptive
+- The reasoning should sound like a knowledgeable friend, NOT like a search engine. Write it conversationally — e.g. "Pulled together your top-rated spots that Lizzie recommended" not "Query specifically targets friend-attributed places with positive reactions"
 - Return ONLY the JSON object, no markdown formatting or extra text`;
 
 export async function POST(req: NextRequest) {
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 512,
-      system: SYSTEM_PROMPT,
+      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [
         {
           role: 'user',

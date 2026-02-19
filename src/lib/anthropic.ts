@@ -73,10 +73,7 @@ For each place, also score:
     "tasteNote": string,
     "terrazzoInsight": { "why": string, "caveat": string }` : '';
 
-  const response = await getClient().messages.create({
-    model: MODEL,
-    max_tokens: includeTasteMatch ? 16384 : 8192,
-    system: `You are Terrazzo's smart place extractor${includeTasteMatch ? ' AND taste concierge' : ''}. The user will paste content that contains travel places — a bucket list, article, newsletter, messy notes, Google Maps export, or a mix.
+  const extractSystemPrompt = `You are Terrazzo's smart place extractor${includeTasteMatch ? ' AND taste concierge' : ''}. The user will paste content that contains travel places — a bucket list, article, newsletter, messy notes, Google Maps export, or a mix.
 
 Your job: identify EVERY distinct place mentioned, up to ${maxPlaces} places max.
 
@@ -125,7 +122,12 @@ Return a JSON object:
   }]
 }
 
-Return ONLY JSON. No markdown. No truncation. Every place must appear.`,
+Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: includeTasteMatch ? 16384 : 8192,
+    system: [{ type: 'text', text: extractSystemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: content.slice(0, 25000) }],
   });
 
@@ -169,10 +171,7 @@ export async function generateTasteMatchBatch(
 
   const placeList = places.map((p, i) => `${i + 1}. ${p.name} (${p.type}${p.city ? `, ${p.city}` : ''})`).join('\n');
 
-  const response = await getClient().messages.create({
-    model: MODEL,
-    max_tokens: 4096,
-    system: `You are Terrazzo's taste concierge. Given a list of places and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate taste match data for EACH place.
+  const tasteMatchSystemPrompt = `You are Terrazzo's taste concierge. Given a list of places and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate taste match data for EACH place.
 
 ${TERRAZZO_VOICE}
 
@@ -183,7 +182,12 @@ For each place, return an object with:
 - terrazzoInsight: { why: string (1-2 sentences on why this matches the user), caveat: string (honest heads-up) }
 
 Return a JSON array in the SAME ORDER as the input list. Each element corresponds to the place at that index.
-Return ONLY the JSON array, no markdown.`,
+Return ONLY the JSON array, no markdown.`;
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 4096,
+    system: [{ type: 'text', text: tasteMatchSystemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: [
       {
         role: 'user',

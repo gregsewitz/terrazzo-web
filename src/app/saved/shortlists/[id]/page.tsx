@@ -7,7 +7,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { REACTIONS, ImportedPlace, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { generateShareableMapHTML } from '@/lib/mapShare';
+import GoogleMapView from '@/components/GoogleMapView';
 import { FONT, INK } from '@/constants/theme';
 
 const TYPE_COLORS: Record<PlaceType, string> = {
@@ -60,6 +60,7 @@ function ShortlistDetailContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [mapOpen, setMapOpen] = useState(false);
 
   const shortlist = shortlists.find(s => s.id === shortlistId);
 
@@ -121,13 +122,7 @@ function ShortlistDetailContent() {
           <div className="flex items-center gap-2">
             {placesInShortlist.length > 0 && (
               <button
-                onClick={() => {
-                  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-                  const html = generateShareableMapHTML(placesInShortlist, shortlist.name, apiKey);
-                  const blob = new Blob([html], { type: 'text/html' });
-                  const url = URL.createObjectURL(blob);
-                  window.open(url, '_blank');
-                }}
+                onClick={() => setMapOpen(true)}
                 className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
                 style={{
                   background: 'rgba(200,146,58,0.08)',
@@ -366,6 +361,96 @@ function ShortlistDetailContent() {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-screen Map Overlay */}
+      {mapOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+        >
+          {/* Map header bar */}
+          <div
+            className="flex items-center gap-3 px-4 flex-shrink-0"
+            style={{
+              height: 56,
+              background: 'rgba(245,240,230,0.92)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderBottom: '1px solid var(--t-linen)',
+            }}
+          >
+            <button
+              onClick={() => setMapOpen(false)}
+              className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer flex-shrink-0"
+              style={{
+                background: 'rgba(255,255,255,0.7)',
+                border: '1px solid var(--t-linen)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8L10 13" stroke="var(--t-ink)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-semibold truncate" style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}>
+                {shortlist.name}
+              </div>
+              <div className="text-[10px]" style={{ fontFamily: FONT.mono, color: INK['70'] }}>
+                {placesInShortlist.length} {placesInShortlist.length === 1 ? 'place' : 'places'}
+                {shortlist.cities.length > 0 && ` · ${shortlist.cities.slice(0, 3).join(', ')}`}
+              </div>
+            </div>
+          </div>
+
+          {/* Map fills remaining space */}
+          <div className="relative" style={{ height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+            <GoogleMapView
+              markers={placesInShortlist.map(p => ({
+                id: p.id,
+                name: p.name,
+                location: p.location,
+                type: p.type,
+                matchScore: p.matchScore,
+                tasteNote: p.tasteNote,
+                lat: p.google?.lat,
+                lng: p.google?.lng,
+              }))}
+              height={typeof window !== 'undefined' ? window.innerHeight - 56 : 600}
+              fallbackDestination={shortlist.cities[0]}
+            />
+
+            {/* Floating legend */}
+            <div
+              className="absolute bottom-5 left-4 right-4 flex items-center justify-between px-3.5 py-2.5 rounded-xl"
+              style={{
+                background: 'rgba(245,240,230,0.92)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid var(--t-linen)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              }}
+            >
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const types = new Set(placesInShortlist.map(p => p.type));
+                  return Array.from(types).slice(0, 4).map(type => (
+                    <div key={type} className="flex items-center gap-1">
+                      <PerriandIcon name={type as any} size={11} color={TYPE_COLORS[type as PlaceType] || INK['60']} />
+                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
+                        {placesInShortlist.filter(p => p.type === type).length}
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['50'] }}>
+                Tap pins for details
+              </span>
             </div>
           </div>
         </div>

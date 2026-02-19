@@ -108,7 +108,7 @@ Generate the discover feed. Return valid JSON only.`;
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
-      system: DISCOVER_SYSTEM_PROMPT,
+      system: [{ type: 'text', text: DISCOVER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],
     });
 

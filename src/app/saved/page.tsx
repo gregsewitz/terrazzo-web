@@ -864,7 +864,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             }}
           >
             <PerriandIcon name="sparkle" size={10} color={isSmartMode ? 'white' : INK['50']} />
-            AI curate
+            Terrazzo curate
           </button>
         </div>
 

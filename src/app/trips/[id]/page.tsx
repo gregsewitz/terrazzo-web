@@ -298,7 +298,7 @@ function TripDetailContent() {
 
         {/* Picks Strip — pinned at bottom above tab bar */}
         {viewMode === 'planner' && (
-          <div className="flex-shrink-0" style={{ paddingBottom: 90, minWidth: 0, width: '100%' }}>
+          <div className="flex-shrink-0" style={{ paddingBottom: 60, minWidth: 0, width: '100%' }}>
             <PicksStrip
               onTapDetail={openDetail}
               onBrowseAll={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}

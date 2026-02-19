@@ -533,7 +533,7 @@ function CollectionCard({ place }: { place: CollectionPlace }) {
     >
       {imageUrl && (
         <div style={{ height: 100, overflow: 'hidden' }}>
-          <img src={imageUrl} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={imageUrl} alt={place.name} width={280} height={100} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       )}
       <div className="p-4 flex flex-col">
@@ -666,7 +666,7 @@ function ContextRecCard({ rec }: { rec: ContextRec }) {
     <div className="flex items-center gap-3">
       {imageUrl ? (
         <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
-          <img src={imageUrl} alt={rec.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={imageUrl} alt={rec.name} width={36} height={36} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       ) : (
         <ScoreArc score={rec.score} size={36} color="#6b8b4a" />

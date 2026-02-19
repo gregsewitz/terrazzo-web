@@ -98,7 +98,7 @@ export interface MapMarker {
 }
 interface GoogleMapViewProps {
   markers: MapMarker[];
-  height?: number;
+  height?: number | string;
   fallbackDestination?: string;
   fallbackCoords?: { lat: number; lng: number };
   onMarkerTap?: (markerId: string) => void;
@@ -220,29 +220,36 @@ function MapFitter({ coords, fallbackCenter }: {
   useEffect(() => {
     if (!map) return;
 
-    if (coords.length === 0) {
-      map.setCenter(fallbackCenter);
-      map.setZoom(14);
-      return;
-    }
+    const fit = () => {
+      if (coords.length === 0) {
+        map.setCenter(fallbackCenter);
+        map.setZoom(14);
+        return;
+      }
 
-    if (coords.length === 1) {
-      map.setCenter(coords[0]);
-      map.setZoom(15);
-      return;
-    }
+      if (coords.length === 1) {
+        map.setCenter(coords[0]);
+        map.setZoom(15);
+        return;
+      }
 
-    // Use Google's fitBounds to perfectly frame all markers
-    const bounds = new google.maps.LatLngBounds();
-    coords.forEach(c => bounds.extend(c));
-    map.fitBounds(bounds, { top: 50, bottom: 50, left: 40, right: 40 });
+      // Use Google's fitBounds to perfectly frame all markers
+      const bounds = new google.maps.LatLngBounds();
+      coords.forEach(c => bounds.extend(c));
+      map.fitBounds(bounds, { top: 50, bottom: 80, left: 40, right: 40 });
 
-    // Cap max zoom so we don't zoom in too far on clustered markers
-    const listener = map.addListener('idle', () => {
-      const z = map.getZoom();
-      if (z != null && z > 16) map.setZoom(16);
-      google.maps.event.removeListener(listener);
-    });
+      // Cap max zoom so we don't zoom in too far on clustered markers
+      const listener = map.addListener('idle', () => {
+        const z = map.getZoom();
+        if (z != null && z > 16) map.setZoom(16);
+        google.maps.event.removeListener(listener);
+      });
+    };
+
+    // Fit immediately, then again after layout settles (handles overlay/flex timing)
+    fit();
+    const timer = setTimeout(fit, 150);
+    return () => clearTimeout(timer);
   }, [map, coords, fallbackCenter]);
 
   return null;

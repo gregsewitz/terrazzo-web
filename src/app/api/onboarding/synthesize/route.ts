@@ -28,7 +28,7 @@ Return valid JSON only matching the specified schema.`;
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
-      system: PROFILE_SYNTHESIS_PROMPT,
+      system: [{ type: 'text', text: PROFILE_SYNTHESIS_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],
     });
 
