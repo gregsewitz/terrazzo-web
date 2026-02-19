@@ -8,6 +8,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from './GhostCard';
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
+import { FONT, INK } from '@/constants/theme';
 
 export type TripViewMode = 'planner' | 'overview' | 'myPlaces';
 
@@ -53,7 +54,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           <h1
             className="text-lg"
             style={{
-              fontFamily: "'DM Serif Display', serif",
+              fontFamily: FONT.serif,
               fontWeight: 600,
               color: 'var(--t-ink)',
             }}
@@ -62,7 +63,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           </h1>
           <span
             className="text-[10px]"
-            style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
+            style={{ color: INK['90'], fontFamily: FONT.mono }}
           >
             {trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate)}
           </span>
@@ -80,10 +81,10 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               className="flex-1 py-1.5 px-2 rounded-md text-[11px] font-medium transition-all"
               style={{
                 background: viewMode === mode ? 'white' : 'transparent',
-                color: viewMode === mode ? 'var(--t-ink)' : 'rgba(28,26,23,0.9)',
+                color: viewMode === mode ? 'var(--t-ink)' : INK['90'],
                 border: 'none',
                 cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
@@ -122,19 +123,19 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               }}
             >
               <span style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 fontSize: 12,
                 fontWeight: 600,
-                color: isDayActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.85)',
+                color: isDayActive ? 'var(--t-ink)' : INK['85'],
                 lineHeight: 1.2,
               }}>
                 {shortDay} {dateNum}
               </span>
               <span style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 fontSize: 9,
                 fontWeight: 500,
-                color: isDayActive ? dayDestColor.accent : 'rgba(28,26,23,0.8)',
+                color: isDayActive ? dayDestColor.accent : INK['80'],
               }}>
                 {d.destination || 'TBD'}
               </span>
@@ -190,7 +191,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               <div className="flex items-center gap-2 min-w-0">
                 {day.hotel && (
                   <span className="flex items-center gap-1" style={{
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: FONT.sans,
                     fontSize: 11,
                     fontWeight: 600,
                     color: destColor.text,
@@ -210,7 +211,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                     color: dayMapOpen ? 'white' : destColor.accent,
                     border: 'none',
                     cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: FONT.sans,
                     fontSize: 10,
                     fontWeight: 600,
                     transition: 'all 0.2s ease',
@@ -219,7 +220,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   <PerriandIcon name="pin" size={12} color={dayMapOpen ? 'white' : destColor.accent} />
                   {dayMapOpen ? 'Hide Map' : 'View Map'}
                   {!dayMapOpen && placedItems.length > 0 && (
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, opacity: 0.7 }}>
+                    <span style={{ fontFamily: FONT.mono, fontSize: 9, opacity: 0.7 }}>
                       · {placedItems.length} place{placedItems.length !== 1 ? 's' : ''}
                     </span>
                   )}
@@ -242,7 +243,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       color: destColor.accent,
                       border: 'none',
                       cursor: 'pointer',
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: FONT.sans,
                       fontSize: 10,
                       fontWeight: 600,
                       transition: 'all 0.2s ease',
@@ -266,11 +267,11 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   fallbackCoords={geo?.lat != null && geo?.lng != null ? { lat: geo.lat, lng: geo.lng } : undefined}
                 />
                 {/* Map legend */}
-                <div className="flex items-center gap-3 px-3.5 py-1.5" style={{ background: 'rgba(28,26,23,0.02)' }}>
+                <div className="flex items-center gap-3 px-3.5 py-1.5" style={{ background: INK['02'] }}>
                   {placedItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.manual.color }} />
-                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.85)' }}>
+                      <span style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['85'] }}>
                         {placedItems.length} planned
                       </span>
                     </div>
@@ -278,7 +279,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   {ghostItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.terrazzo.color, opacity: 0.5 }} />
-                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(28,26,23,0.8)' }}>
+                      <span style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['80'] }}>
                         {ghostItems.length} suggested
                       </span>
                     </div>
@@ -346,10 +347,10 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
     <div className="px-3 py-3 pb-48" style={{ background: 'var(--t-cream)' }}>
       {/* Summary */}
       <div className="flex items-baseline justify-between mb-2.5 px-1">
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.85)' }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['85'] }}>
           {totalPlaces} place{totalPlaces !== 1 ? 's' : ''} planned
         </span>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.75)' }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['75'] }}>
           {totalSlots - totalPlaces} slot{(totalSlots - totalPlaces) !== 1 ? 's' : ''} open
         </span>
       </div>
@@ -369,21 +370,21 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                 onClick={() => onTapDay(d.dayNumber)}
               >
                 <div className="flex items-center gap-2">
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 700, color: dColor.text }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: dColor.text }}>
                     {shortDay} {d.date}
                   </span>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: dColor.accent }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: dColor.accent }}>
                     {d.destination}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   {d.hotel && (
-                    <span className="flex items-center gap-1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
+                    <span className="flex items-center gap-1" style={{ fontFamily: FONT.sans, fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
                       <PerriandIcon name="hotel" size={11} color={dColor.accent} />
                       {d.hotel}
                     </span>
                   )}
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: dColor.accent, opacity: 0.6 }}>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 9, color: dColor.accent, opacity: 0.6 }}>
                     {allPlaced.length}/{d.slots.length}
                   </span>
                 </div>
@@ -397,7 +398,7 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                     style={{ background: 'white' }}
                     onClick={() => onTapDay(d.dayNumber)}
                   >
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.8)' }}>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['80'] }}>
                       No places yet — tap to plan
                     </span>
                   </div>
@@ -419,20 +420,20 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <PerriandIcon name={SLOT_ICONS[slot.id] as any || 'pin'} size={12} color="var(--t-ink)" />
-                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                            <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
                             </span>
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 8, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}>
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 8, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}>
                               <PerriandIcon name={srcStyle.icon} size={10} color={srcStyle.color} />
                               {place.source?.name || srcStyle.label}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'], whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {slot.time}
                             </span>
                             {truncSub && (
-                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontStyle: 'italic', color: 'rgba(28,26,23,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontStyle: 'italic', color: INK['85'], overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {truncSub}
                               </span>
                             )}
@@ -597,8 +598,8 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           <span
             className="text-[11px]"
             style={{
-              fontFamily: "'Space Mono', monospace",
-              color: 'rgba(28,26,23,0.85)',
+              fontFamily: FONT.mono,
+              color: INK['85'],
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
             }}
@@ -606,7 +607,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             {slot.label}
           </span>
           {slot.ghostItems!.length > 1 && (
-            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.8)' }}>
+            <span className="text-[9px]" style={{ color: INK['80'] }}>
               {slot.ghostItems!.length} suggestions
             </span>
           )}
@@ -653,8 +654,8 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           <span
             className="text-[10px] flex-shrink-0"
             style={{
-              fontFamily: "'Space Mono', monospace",
-              color: 'rgba(28,26,23,0.85)',
+              fontFamily: FONT.mono,
+              color: INK['85'],
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
             }}
@@ -664,7 +665,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           {slot.time && (
             <span
               className="text-[10px]"
-              style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: INK['80'], fontFamily: FONT.mono }}
             >
               {slot.time}
             </span>
@@ -740,9 +741,9 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                   <div
                     className="text-[10px] truncate mt-px"
                     style={{
-                      color: 'rgba(28,26,23,0.85)',
+                      color: INK['85'],
                       fontStyle: 'italic',
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: FONT.sans,
                     }}
                   >
                     {subtitle}
@@ -754,12 +755,12 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                 onClick={(e) => { e.stopPropagation(); unplaceFromSlot(dayNumber, slot.id, p.id); }}
                 className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
                 style={{
-                  background: 'rgba(28,26,23,0.05)',
+                  background: INK['05'],
                   border: 'none',
                   cursor: 'pointer',
                 }}
               >
-                <PerriandIcon name="close" size={8} color="rgba(28,26,23,0.35)" />
+                <PerriandIcon name="close" size={8} color={INK['35']} />
               </button>
             </div>
           </div>
@@ -794,8 +795,8 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             className="text-[11px] flex-shrink-0"
             style={{
               width: 62,
-              fontFamily: "'Space Mono', monospace",
-              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.85)',
+              fontFamily: FONT.mono,
+              color: isDropTarget ? 'var(--t-verde)' : INK['85'],
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
               fontWeight: isDropTarget ? 600 : 400,
@@ -807,7 +808,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           <span
             className="text-[11px]"
             style={{
-              color: isDropTarget ? 'var(--t-verde)' : 'rgba(28,26,23,0.75)',
+              color: isDropTarget ? 'var(--t-verde)' : INK['75'],
               fontWeight: isDropTarget ? 600 : 400,
               transition: 'color 0.15s',
             }}

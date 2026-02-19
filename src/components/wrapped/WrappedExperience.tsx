@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TASTE_PROFILE, WRAPPED, AXIS_COLORS } from '@/constants/profile';
 import RadarChart from '@/components/profile/RadarChart';
+import { FONT } from '@/constants/theme';
 
 interface WrappedExperienceProps {
   onClose: () => void;
@@ -50,7 +51,7 @@ export default function WrappedExperience({ onClose }: WrappedExperienceProps) {
         <button
           onClick={goBack}
           className="text-sm bg-transparent border-none cursor-pointer"
-          style={{ color: 'rgba(245,245,240,0.6)', fontFamily: "'DM Sans', sans-serif" }}
+          style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}
         >
           ← {currentCard === 0 ? 'Close' : 'Back'}
         </button>
@@ -91,7 +92,7 @@ export default function WrappedExperience({ onClose }: WrappedExperienceProps) {
         <div className="pb-10 text-center">
           <span
             className="text-[10px] uppercase tracking-widest"
-            style={{ color: 'rgba(245,245,240,0.25)', fontFamily: "'Space Mono', monospace" }}
+            style={{ color: 'rgba(245,245,240,0.25)', fontFamily: FONT.mono }}
           >
             Tap to continue
           </span>
@@ -107,19 +108,19 @@ function CardIntro() {
     <div className="text-center">
       <div
         className="text-[10px] uppercase tracking-[0.25em] mb-6"
-        style={{ color: 'rgba(245,245,240,0.5)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.5)', fontFamily: FONT.mono }}
       >
         Terrazzo
       </div>
       <h1
         className="text-5xl mb-4 leading-tight"
-        style={{ fontFamily: "'DM Serif Display', serif", color: '#f5f5f0' }}
+        style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}
       >
         Your Taste<br />Profile
       </h1>
       <p
         className="text-sm leading-relaxed"
-        style={{ color: 'rgba(245,245,240,0.6)', fontFamily: "'DM Sans', sans-serif" }}
+        style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}
       >
         We analyzed your signals — here&apos;s what<br />your choices say about how you travel.
       </p>
@@ -133,19 +134,19 @@ function CardArchetype({ archetype, description }: { archetype: string; descript
     <div className="text-center">
       <div
         className="text-[10px] uppercase tracking-[0.2em] mb-4"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         You are
       </div>
       <h1
         className="text-4xl mb-6 leading-tight"
-        style={{ fontFamily: "'DM Serif Display', serif", color: '#f5f5f0' }}
+        style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}
       >
         {archetype}
       </h1>
       <p
         className="text-[14px] leading-relaxed"
-        style={{ color: 'rgba(245,245,240,0.7)', fontFamily: "'DM Sans', sans-serif" }}
+        style={{ color: 'rgba(245,245,240,0.7)', fontFamily: FONT.sans }}
       >
         {description}
       </p>
@@ -159,7 +160,7 @@ function CardRadar({ data }: { data: Array<{ axis: string; value: number }> }) {
     <div className="flex flex-col items-center">
       <div
         className="text-[10px] uppercase tracking-[0.2em] mb-6"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         Your taste shape
       </div>
@@ -181,7 +182,7 @@ function CardStats({ stats }: { stats: typeof WRAPPED }) {
     <div>
       <div
         className="text-[10px] uppercase tracking-[0.2em] mb-8 text-center"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         By the numbers
       </div>
@@ -190,13 +191,13 @@ function CardStats({ stats }: { stats: typeof WRAPPED }) {
           <div key={label} className="text-center">
             <div
               className="text-4xl mb-1"
-              style={{ fontFamily: "'DM Serif Display', serif", color: '#f5f5f0' }}
+              style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}
             >
               {value}
             </div>
             <div
               className="text-[10px] uppercase tracking-wider"
-              style={{ color: 'rgba(245,245,240,0.5)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(245,245,240,0.5)', fontFamily: FONT.mono }}
             >
               {label}
             </div>
@@ -213,25 +214,25 @@ function CardRarestSignal({ signal, percent }: { signal: string; percent: number
     <div className="text-center">
       <div
         className="text-[10px] uppercase tracking-[0.2em] mb-6"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         Your rarest signal
       </div>
       <div
         className="text-6xl mb-4"
-        style={{ fontFamily: "'DM Serif Display', serif", color: '#f5f5f0' }}
+        style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}
       >
         {percent}%
       </div>
       <p
         className="text-[10px] uppercase tracking-wider mb-6"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         of travelers share this
       </p>
       <p
         className="text-[15px] leading-relaxed italic"
-        style={{ color: 'rgba(245,245,240,0.8)', fontFamily: "'DM Sans', sans-serif" }}
+        style={{ color: 'rgba(245,245,240,0.8)', fontFamily: FONT.sans }}
       >
         &ldquo;{signal}&rdquo;
       </p>
@@ -245,29 +246,29 @@ function CardTension({ contradiction }: { contradiction: typeof TASTE_PROFILE.co
     <div className="text-center">
       <div
         className="text-[10px] uppercase tracking-[0.2em] mb-8"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         Your biggest tension
       </div>
       <div className="mb-3">
-        <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(245,245,240,0.35)', fontFamily: "'Space Mono', monospace" }}>
+        <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(245,245,240,0.35)', fontFamily: FONT.mono }}>
           You said
         </div>
-        <p className="text-[16px] italic" style={{ color: '#f5f5f0', fontFamily: "'DM Sans', sans-serif" }}>
+        <p className="text-[16px] italic" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
           &ldquo;{contradiction.stated}&rdquo;
         </p>
       </div>
       <div
         className="text-2xl my-4"
-        style={{ color: 'rgba(245,245,240,0.2)', fontFamily: "'DM Serif Display', serif" }}
+        style={{ color: 'rgba(245,245,240,0.2)', fontFamily: FONT.serif }}
       >
         vs
       </div>
       <div className="mb-6">
-        <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(245,245,240,0.35)', fontFamily: "'Space Mono', monospace" }}>
+        <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(245,245,240,0.35)', fontFamily: FONT.mono }}>
           But we found
         </div>
-        <p className="text-[16px] italic" style={{ color: '#f5f5f0', fontFamily: "'DM Sans', sans-serif" }}>
+        <p className="text-[16px] italic" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
           &ldquo;{contradiction.revealed}&rdquo;
         </p>
       </div>
@@ -275,10 +276,10 @@ function CardTension({ contradiction }: { contradiction: typeof TASTE_PROFILE.co
         className="p-4 rounded-xl mt-4"
         style={{ background: 'rgba(245,245,240,0.06)' }}
       >
-        <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(245,245,240,0.35)', fontFamily: "'Space Mono', monospace" }}>
+        <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(245,245,240,0.35)', fontFamily: FONT.mono }}>
           Resolution
         </div>
-        <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.7)', fontFamily: "'DM Sans', sans-serif" }}>
+        <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.7)', fontFamily: FONT.sans }}>
           {contradiction.resolution}
         </p>
       </div>
@@ -295,19 +296,19 @@ function CardAura({ driver }: { driver: typeof TASTE_PROFILE.emotionalDriver }) 
     <div className="text-center">
       <div
         className="text-[10px] uppercase tracking-[0.2em] mb-8"
-        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: "'Space Mono', monospace" }}
+        style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}
       >
         Your emotional driver
       </div>
       <h2
         className="text-3xl mb-3"
-        style={{ fontFamily: "'DM Serif Display', serif", color: '#f5f5f0' }}
+        style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}
       >
         {driver.primary}
       </h2>
       <p
         className="text-[13px] leading-relaxed mb-10"
-        style={{ color: 'rgba(245,245,240,0.6)', fontFamily: "'DM Sans', sans-serif" }}
+        style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}
       >
         {driver.description}
       </p>
@@ -339,7 +340,7 @@ function CardAura({ driver }: { driver: typeof TASTE_PROFILE.emotionalDriver }) 
             />
             <span
               className="text-[9px] uppercase tracking-wider"
-              style={{ color: 'rgba(245,245,240,0.5)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: 'rgba(245,245,240,0.5)', fontFamily: FONT.mono }}
             >
               {label}
             </span>
@@ -356,13 +357,13 @@ function CardCTA({ onViewProfile }: { onViewProfile: () => void }) {
     <div className="text-center">
       <h2
         className="text-3xl mb-4"
-        style={{ fontFamily: "'DM Serif Display', serif", color: '#f5f5f0' }}
+        style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}
       >
         Ready to see your<br />full profile?
       </h2>
       <p
         className="text-[13px] leading-relaxed mb-10"
-        style={{ color: 'rgba(245,245,240,0.5)', fontFamily: "'DM Sans', sans-serif" }}
+        style={{ color: 'rgba(245,245,240,0.5)', fontFamily: FONT.sans }}
       >
         Dimensions, contradictions, vocabulary,<br />and your top matches — all in one place.
       </p>
@@ -372,7 +373,7 @@ function CardCTA({ onViewProfile }: { onViewProfile: () => void }) {
         style={{
           background: '#f5f5f0',
           color: '#2d3a2d',
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: FONT.sans,
         }}
       >
         See Full Profile

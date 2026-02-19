@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 import { TravelContext, TripStatus, GeoDestination } from '@/types';
 import DestinationInput, { Destination } from '@/components/DestinationInput';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 // ============================================================
 // Companion options — matching the React Native app
@@ -18,21 +20,21 @@ const COMPANION_OPTIONS: { label: string; iconName: PerriandIconName; key: Trave
 ];
 
 // ============================================================
-// Trip conversation phases — scripted demo for web prototype
+// Trip conversation — live Claude AI with scripted fallback
 // ============================================================
 interface ConversationMessage {
   role: 'terrazzo' | 'user';
   text: string;
 }
 
-const TRIP_CONVERSATION_PROMPTS = [
+const FALLBACK_PROMPTS = [
   "Tell me about this trip — what's the story? Even if it's still just a feeling, I'd love to hear what's pulling you.",
   "And who's coming along? What does the group dynamic look like — is this a 'plan everything together' crew or more of a 'meet at dinner' situation?",
   "You tend to care about the feel of a place — the light, the materials, the way it's run. Does that hold for this trip, or is the vibe different?",
   "Last one: if I could only get one thing right about this trip — the one thing that would make or break it — what would it be?",
 ];
 
-const DEMO_TRIP_SIGNALS = [
+const FALLBACK_SIGNALS = [
   'Trip context mapped',
   'Companion dynamics captured',
   'Profile shifts identified',
@@ -85,7 +87,7 @@ function TripSeedForm({ onStart }: {
           >
             New Trip
           </h1>
-          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: 'rgba(28,26,23,0.95)' }}>
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: INK['95'] }}>
             Give us the basics, then we'll have a quick conversation to understand what you're really looking for.
           </p>
         </div>
@@ -94,7 +96,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+            style={{ fontFamily: FONT.mono, color: INK['90'] }}
           >
             TRIP NAME (optional)
           </label>
@@ -105,7 +107,7 @@ function TripSeedForm({ onStart }: {
             placeholder="e.g. Japan 2026, Anniversary Trip..."
             className="w-full text-base pb-2.5 bg-transparent border-0 border-b outline-none"
             style={{
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: FONT.sans,
               color: 'var(--t-ink)',
               borderColor: 'var(--t-linen)',
             }}
@@ -116,7 +118,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+            style={{ fontFamily: FONT.mono, color: INK['90'] }}
           >
             WHERE
           </label>
@@ -131,7 +133,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+            style={{ fontFamily: FONT.mono, color: INK['90'] }}
           >
             WHEN
           </label>
@@ -143,14 +145,14 @@ function TripSeedForm({ onStart }: {
                 onChange={e => setStartDate(e.target.value)}
                 className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  color: startDate ? 'var(--t-ink)' : 'rgba(28,26,23,0.9)',
+                  fontFamily: FONT.sans,
+                  color: startDate ? 'var(--t-ink)' : INK['90'],
                   borderColor: 'var(--t-linen)',
                 }}
               />
-              <span className="text-[9px] mt-1 block" style={{ color: 'rgba(28,26,23,0.95)' }}>Start</span>
+              <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
             </div>
-            <div className="flex items-center text-xs" style={{ color: 'rgba(28,26,23,0.95)' }}>→</div>
+            <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
             <div className="flex-1">
               <input
                 type="date"
@@ -159,12 +161,12 @@ function TripSeedForm({ onStart }: {
                 min={startDate || undefined}
                 className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  color: endDate ? 'var(--t-ink)' : 'rgba(28,26,23,0.9)',
+                  fontFamily: FONT.sans,
+                  color: endDate ? 'var(--t-ink)' : INK['90'],
                   borderColor: 'var(--t-linen)',
                 }}
               />
-              <span className="text-[9px] mt-1 block" style={{ color: 'rgba(28,26,23,0.95)' }}>End</span>
+              <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
             </div>
           </div>
         </div>
@@ -173,7 +175,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+            style={{ fontFamily: FONT.mono, color: INK['90'] }}
           >
             WHO'S COMING
           </label>
@@ -187,7 +189,7 @@ function TripSeedForm({ onStart }: {
                   background: companion === opt.key ? 'var(--t-ink)' : 'white',
                   color: companion === opt.key ? 'white' : 'var(--t-ink)',
                   borderColor: companion === opt.key ? 'var(--t-ink)' : 'var(--t-linen)',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                   fontWeight: 500,
                 }}
               >
@@ -207,7 +209,7 @@ function TripSeedForm({ onStart }: {
                 placeholder="How many people?"
                 className="w-40 text-sm pb-2 bg-transparent border-0 border-b outline-none"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                   color: 'var(--t-ink)',
                   borderColor: 'var(--t-linen)',
                 }}
@@ -220,7 +222,7 @@ function TripSeedForm({ onStart }: {
         <div className="mb-8">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+            style={{ fontFamily: FONT.mono, color: INK['90'] }}
           >
             TRIP STATUS
           </label>
@@ -234,7 +236,7 @@ function TripSeedForm({ onStart }: {
                 onClick={() => setStatus(opt.key)}
                 className="flex-1 flex flex-col items-start gap-1 p-3 rounded-xl border cursor-pointer transition-all"
                 style={{
-                  background: status === opt.key ? 'rgba(28,26,23,0.03)' : 'white',
+                  background: status === opt.key ? INK['03'] : 'white',
                   borderColor: status === opt.key ? 'var(--t-ink)' : 'var(--t-linen)',
                 }}
               >
@@ -242,16 +244,16 @@ function TripSeedForm({ onStart }: {
                   <PerriandIcon
                     name={opt.iconName}
                     size={14}
-                    color={status === opt.key ? 'var(--t-verde)' : 'rgba(28,26,23,0.9)'}
+                    color={status === opt.key ? 'var(--t-verde)' : INK['90']}
                   />
                   <span
                     className="text-[12px] font-medium"
-                    style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
                   >
                     {opt.label}
                   </span>
                 </div>
-                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+                <span className="text-[10px]" style={{ color: INK['90'] }}>
                   {opt.desc}
                 </span>
               </button>
@@ -280,13 +282,13 @@ function TripSeedForm({ onStart }: {
           style={{
             background: 'var(--t-ink)',
             color: 'white',
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
           }}
         >
           Start Conversation
         </button>
 
-        <p className="text-center text-[11px] mt-4" style={{ color: 'rgba(28,26,23,0.95)' }}>
+        <p className="text-center text-[11px] mt-4" style={{ color: INK['95'] }}>
           ~3 minutes · text or voice · we'll use your taste profile
         </p>
       </div>
@@ -301,21 +303,19 @@ function TripConversation({
   seed,
   onComplete,
 }: {
-  seed: {
-    name: string;
-    destinations: string[];
-    companion: TravelContext;
-  };
+  seed: SeedData;
   onComplete: () => void;
 }) {
+  const generatedProfile = useOnboardingStore(s => s.generatedProfile);
   const [messages, setMessages] = useState<ConversationMessage[]>([
-    { role: 'terrazzo', text: TRIP_CONVERSATION_PROMPTS[0] },
+    { role: 'terrazzo', text: FALLBACK_PROMPTS[0] },
   ]);
-  const [promptIndex, setPromptIndex] = useState(0);
+  const [userMessageCount, setUserMessageCount] = useState(0);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  const [signalsRevealed, setSignalsRevealed] = useState(0);
+  const [signals, setSignals] = useState<string[]>([]);
+  const fallbackIndex = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -327,36 +327,71 @@ function TripConversation({
     if (!input.trim() || isTyping) return;
     const userText = input;
     setInput('');
+    const nextCount = userMessageCount + 1;
+    setUserMessageCount(nextCount);
 
     // Add user message
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
-
-    // Simulate Terrazzo typing
     setIsTyping(true);
-    await new Promise(r => setTimeout(r, 1200 + Math.random() * 800));
-    setIsTyping(false);
 
-    const nextIdx = promptIndex + 1;
+    try {
+      const res = await fetch('/api/trips/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userText,
+          conversationHistory: [...messages, { role: 'user', text: userText }],
+          messageCount: nextCount,
+          tripContext: {
+            name: seed.name,
+            destinations: seed.destinations,
+            startDate: seed.startDate,
+            endDate: seed.endDate,
+            companion: seed.companion,
+            groupSize: seed.groupSize,
+            status: seed.status,
+          },
+          userProfile: generatedProfile || undefined,
+        }),
+      });
 
-    if (nextIdx < TRIP_CONVERSATION_PROMPTS.length) {
-      setMessages(prev => [...prev, { role: 'terrazzo', text: TRIP_CONVERSATION_PROMPTS[nextIdx] }]);
-      setPromptIndex(nextIdx);
-      setSignalsRevealed(prev => Math.min(prev + 1, DEMO_TRIP_SIGNALS.length));
-    } else {
-      // Conversation complete
-      setMessages(prev => [...prev, {
-        role: 'terrazzo',
-        text: `Got it. I've mapped your trip context onto your taste profile — your ${seed.destinations[0]} recommendations will reflect everything we just discussed. Ready to build your trip.`,
-      }]);
-      setSignalsRevealed(DEMO_TRIP_SIGNALS.length);
-      setIsDone(true);
+      const data = await res.json();
+      setIsTyping(false);
+
+      if (data.response) {
+        setMessages(prev => [...prev, { role: 'terrazzo', text: data.response }]);
+      }
+      if (data.signals?.length) {
+        setSignals(data.signals);
+      }
+      if (data.isComplete) {
+        setSignals(prev => prev.length >= 4 ? prev : FALLBACK_SIGNALS);
+        setIsDone(true);
+      }
+    } catch {
+      // Fallback to scripted prompts on API failure
+      setIsTyping(false);
+      fallbackIndex.current += 1;
+      const idx = fallbackIndex.current;
+
+      if (idx < FALLBACK_PROMPTS.length) {
+        setMessages(prev => [...prev, { role: 'terrazzo', text: FALLBACK_PROMPTS[idx] }]);
+        setSignals(FALLBACK_SIGNALS.slice(0, idx));
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'terrazzo',
+          text: `Got it. I've mapped your trip context — your ${seed.destinations[0]} recommendations are ready. Let's build your trip.`,
+        }]);
+        setSignals(FALLBACK_SIGNALS);
+        setIsDone(true);
+      }
     }
 
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const handleSkip = () => {
-    setSignalsRevealed(DEMO_TRIP_SIGNALS.length);
+    setSignals(FALLBACK_SIGNALS);
     setIsDone(true);
     setMessages(prev => [...prev, {
       role: 'terrazzo',
@@ -380,12 +415,12 @@ function TripConversation({
           </h2>
           <span
             className="text-[8px] font-bold uppercase tracking-[1.5px] px-2.5 py-1 rounded-full"
-            style={{ background: '#2d4a3a', color: 'white', fontFamily: "'Space Mono', monospace" }}
+            style={{ background: '#2d4a3a', color: 'white', fontFamily: FONT.mono }}
           >
             Trip Context
           </span>
         </div>
-        <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+        <p className="text-[12px]" style={{ color: INK['95'] }}>
           {seed.destinations.join(' → ')} · {seed.companion}
         </p>
       </div>
@@ -406,7 +441,7 @@ function TripConversation({
               style={{
                 background: msg.role === 'user' ? 'var(--t-ink)' : 'white',
                 color: msg.role === 'user' ? 'white' : 'var(--t-ink)',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 borderBottomRightRadius: msg.role === 'user' ? 4 : undefined,
                 borderBottomLeftRadius: msg.role === 'terrazzo' ? 4 : undefined,
                 border: msg.role === 'terrazzo' ? '1px solid var(--t-linen)' : undefined,
@@ -424,24 +459,24 @@ function TripConversation({
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)', animationDelay: '150ms' }} />
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)', animationDelay: '300ms' }} />
             </div>
-            <span className="text-[12px] italic" style={{ color: 'rgba(28,26,23,0.9)' }}>Thinking...</span>
+            <span className="text-[12px] italic" style={{ color: INK['90'] }}>Thinking...</span>
           </div>
         )}
 
         {/* Trip signals */}
-        {signalsRevealed > 0 && (
+        {signals.length > 0 && (
           <div
             className="mt-3 p-3 rounded-xl border-l-[3px]"
             style={{ background: 'rgba(42,122,86,0.04)', borderLeftColor: 'var(--t-verde)' }}
           >
             <div
               className="text-[8px] font-bold uppercase tracking-[1.5px] mb-2"
-              style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+              style={{ fontFamily: FONT.mono, color: INK['90'] }}
             >
-              {signalsRevealed} trip signal{signalsRevealed !== 1 ? 's' : ''}
+              {signals.length} trip signal{signals.length !== 1 ? 's' : ''}
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {DEMO_TRIP_SIGNALS.slice(0, signalsRevealed).map((signal, i) => (
+              {signals.map((signal, i) => (
                 <span
                   key={i}
                   className="text-[10px] px-2 py-1 rounded-full"
@@ -474,7 +509,7 @@ function TripConversation({
                 autoFocus
                 className="flex-1 px-3.5 py-2.5 rounded-xl border text-[13px] outline-none disabled:opacity-50"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                   color: 'var(--t-ink)',
                   borderColor: 'var(--t-linen)',
                   background: 'white',
@@ -494,7 +529,7 @@ function TripConversation({
             <button
               onClick={handleSkip}
               className="text-[12px] bg-transparent border-none cursor-pointer self-center py-1"
-              style={{ color: 'rgba(28,26,23,0.9)' }}
+              style={{ color: INK['90'] }}
             >
               Skip to trip →
             </button>
@@ -503,7 +538,7 @@ function TripConversation({
           <button
             onClick={onComplete}
             className="w-full py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold"
-            style={{ background: 'var(--t-ink)', color: 'white', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
           >
             Build My Trip
           </button>
@@ -540,7 +575,7 @@ function TripComplete({ seed, onDone }: {
       >
         Trip Profile Built
       </h2>
-      <p className="text-sm text-center leading-relaxed mb-8 max-w-xs" style={{ color: 'rgba(28,26,23,0.95)' }}>
+      <p className="text-sm text-center leading-relaxed mb-8 max-w-xs" style={{ color: INK['95'] }}>
         We've layered your trip context onto your base taste profile. Your {seed.destinations[0]} recommendations will
         reflect the specific energy, companions, and priorities for this journey.
       </p>
@@ -558,7 +593,7 @@ function TripComplete({ seed, onDone }: {
             'Each destination gets its own curated shortlist',
             'Stretch picks that push your boundaries thoughtfully',
           ].map((item, i) => (
-            <div key={i} className="text-[12px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.95)' }}>
+            <div key={i} className="text-[12px] leading-relaxed" style={{ color: INK['95'] }}>
               • {item}
             </div>
           ))}
@@ -568,7 +603,7 @@ function TripComplete({ seed, onDone }: {
       <button
         onClick={onDone}
         className="px-10 py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold"
-        style={{ background: 'var(--t-ink)', color: 'white', fontFamily: "'DM Sans', sans-serif" }}
+        style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
       >
         Go to Trip
       </button>
@@ -645,7 +680,7 @@ export default function NewTripPage() {
       {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
       {step === 'conversation' && seed && (
         <TripConversation
-          seed={{ name: seed.name, destinations: seed.destinations, companion: seed.companion }}
+          seed={seed}
           onComplete={handleConversationComplete}
         />
       )}

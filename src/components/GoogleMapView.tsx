@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 // Well-known city coordinates for demo data
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -129,15 +130,15 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
             background: isDashed ? '#f7f5f0' : 'white',
             borderRadius: 12,
             padding: '10px 12px',
-            boxShadow: '0 4px 20px rgba(28,26,23,0.18)',
+            boxShadow: `0 4px 20px ${INK['18']}`,
             minWidth: 160,
             maxWidth: 200,
-            border: isDashed ? '1.5px dashed rgba(28,26,23,0.2)' : '1px solid rgba(28,26,23,0.08)',
+            border: isDashed ? `1.5px dashed ${INK['20']}` : `1px solid ${INK['08']}`,
           }}>
             {isDashed && (
               <div style={{
                 fontSize: 8, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.5px',
-                color: 'rgba(28,26,23,0.45)', fontFamily: "'Space Mono', monospace",
+                color: INK['45'], fontFamily: FONT.mono,
                 marginBottom: 4,
               }}>Suggestion</div>
             )}
@@ -147,11 +148,11 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontSize: 12, fontWeight: 600, color: isDashed ? 'rgba(28,26,23,0.85)' : '#1c1a17',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12, fontWeight: 600, color: isDashed ? INK['85'] : '#1c1a17',
+                  fontFamily: FONT.sans,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>{marker.name}</div>
-                <div style={{ fontSize: 9, color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}>
+                <div style={{ fontSize: 9, color: INK['50'], fontFamily: FONT.sans }}>
                   {marker.type ? marker.type.charAt(0).toUpperCase() + marker.type.slice(1) : ''}
                   {marker.location ? ` · ${marker.location.split(',')[0]}` : ''}
                 </div>
@@ -159,7 +160,7 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
               {marker.matchScore && (
                 <span style={{
                   fontSize: 9, fontWeight: 700, color: '#c8923a',
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                   background: 'rgba(200,146,58,0.1)',
                   padding: '2px 5px', borderRadius: 4,
                 }}>{marker.matchScore}%</span>
@@ -167,8 +168,8 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
             </div>
             {marker.tasteNote && (
               <div style={{
-                fontSize: 10, color: 'rgba(28,26,23,0.5)', fontStyle: 'italic',
-                fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4,
+                fontSize: 10, color: INK['50'], fontStyle: 'italic',
+                fontFamily: FONT.sans, lineHeight: 1.4,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>{marker.tasteNote}</div>
             )}
@@ -179,19 +180,19 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
             background: isDashed ? '#f0ebe2' : 'white',
             borderRadius: 20,
             padding: '4px 10px 4px 6px',
-            boxShadow: isDashed ? '0 1px 4px rgba(28,26,23,0.1)' : '0 2px 8px rgba(28,26,23,0.15)',
+            boxShadow: isDashed ? `0 1px 4px ${INK['10']}` : `0 2px 8px ${INK['15']}`,
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            border: isDashed ? '1.5px dashed rgba(28,26,23,0.3)' : '1px solid rgba(28,26,23,0.08)',
+            border: isDashed ? `1.5px dashed ${INK['30']}` : `1px solid ${INK['08']}`,
             whiteSpace: 'nowrap',
           }}>
             <div style={{ fontSize: 12 }}>
               <PerriandIcon name={icon} size={12} />
             </div>
             <span style={{
-              fontSize: 10, fontWeight: 600, color: isDashed ? 'rgba(28,26,23,0.8)' : '#1c1a17',
-              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 10, fontWeight: 600, color: isDashed ? INK['80'] : '#1c1a17',
+              fontFamily: FONT.sans,
               maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis',
             }}>{marker.name}</span>
           </div>
@@ -203,7 +204,7 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
           borderRight: '6px solid transparent',
           borderTop: isExpanded ? `8px solid ${isDashed ? '#f7f5f0' : 'white'}` : `6px solid ${isDashed ? 'rgba(245,240,230,0.92)' : 'white'}`,
           marginTop: -1,
-          filter: 'drop-shadow(0 2px 2px rgba(28,26,23,0.1))',
+          filter: `drop-shadow(0 2px 2px ${INK['10']})`,
         }} />
       </div>
     </AdvancedMarker>
@@ -301,9 +302,9 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
     return (
       <div
         className="rounded-xl overflow-hidden flex items-center justify-center"
-        style={{ height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: 'rgba(28,26,23,0.9)' }}
+        style={{ height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: INK['90'] }}
       >
-        <div className="text-center text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        <div className="text-center text-xs" style={{ fontFamily: FONT.sans }}>
           Google Maps API key not configured
         </div>
       </div>

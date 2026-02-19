@@ -1,3 +1,4 @@
+import { FONT, INK } from '@/constants/theme';
 'use client';
 
 interface ScoreArcProps {
@@ -19,7 +20,7 @@ export default function ScoreArc({ score, size = 52, color = '#4a6741' }: ScoreA
         <circle
           cx={size / 2} cy={size / 2} r={radius}
           fill="none"
-          stroke="rgba(28,26,23,0.08)"
+          stroke={INK['08']}
           strokeWidth={strokeWidth}
         />
         {/* Progress arc */}
@@ -34,7 +35,7 @@ export default function ScoreArc({ score, size = 52, color = '#4a6741' }: ScoreA
       </svg>
       <span
         className="absolute text-[11px] font-bold"
-        style={{ color, fontFamily: "'Space Mono', monospace" }}
+        style={{ color, fontFamily: FONT.mono }}
       >
         {score}
       </span>

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import type { ImportedPlace, PlaceType } from '@/types';
+import { FONT, INK } from '@/constants/theme';
 
 interface GoogleResult {
   id: string;
@@ -133,7 +134,7 @@ export default function PlaceSearchBar() {
         <PerriandIcon
           name="discover"
           size={14}
-          color="rgba(28,26,23,0.35)"
+          color={INK['35']}
           style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
         />
         <input
@@ -152,7 +153,7 @@ export default function PlaceSearchBar() {
             background: 'white',
             border: '1px solid var(--t-linen)',
             color: 'var(--t-ink)',
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
             outline: 'none',
             boxSizing: 'border-box',
           }}
@@ -169,7 +170,7 @@ export default function PlaceSearchBar() {
             style={{
               position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
               width: 20, height: 20, borderRadius: 10,
-              background: 'rgba(28,26,23,0.08)', border: 'none', cursor: 'pointer',
+              background: INK['08'], border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -180,7 +181,7 @@ export default function PlaceSearchBar() {
                 animation: 'searchSpin 0.6s linear infinite',
               }} />
             ) : (
-              <PerriandIcon name="close" size={8} color="rgba(28,26,23,0.5)" />
+              <PerriandIcon name="close" size={8} color={INK['50']} />
             )}
           </button>
         )}
@@ -207,10 +208,10 @@ export default function PlaceSearchBar() {
             borderBottom: '1px solid var(--t-linen)',
           }}>
             <span style={{
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: FONT.mono,
               fontSize: 9,
               fontWeight: 600,
-              color: 'rgba(28,26,23,0.4)',
+              color: INK['40'],
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -230,7 +231,7 @@ export default function PlaceSearchBar() {
                   alignItems: 'center',
                   gap: 10,
                   padding: '10px 12px',
-                  borderBottom: idx < googleResults.length - 1 ? '1px solid rgba(28,26,23,0.06)' : 'none',
+                  borderBottom: idx < googleResults.length - 1 ? `1px solid ${INK['06']}` : 'none',
                   transition: 'background 0.15s',
                   cursor: 'default',
                 }}
@@ -239,14 +240,14 @@ export default function PlaceSearchBar() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     fontSize: 13, fontWeight: 600, color: 'var(--t-ink)',
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: FONT.sans,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {result.name}
                   </div>
                   <div style={{
-                    fontSize: 11, color: 'rgba(28,26,23,0.5)',
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 11, color: INK['50'],
+                    fontFamily: FONT.sans,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginTop: 1,
                   }}>
@@ -254,15 +255,15 @@ export default function PlaceSearchBar() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                     <span style={{
-                      fontSize: 10, color: 'rgba(28,26,23,0.45)',
-                      fontFamily: "'Space Mono', monospace",
+                      fontSize: 10, color: INK['45'],
+                      fontFamily: FONT.mono,
                     }}>
                       {result.category}
                     </span>
                     {result.rating && (
                       <span style={{
-                        fontSize: 10, color: 'rgba(28,26,23,0.45)',
-                        fontFamily: "'Space Mono', monospace",
+                        fontSize: 10, color: INK['45'],
+                        fontFamily: FONT.mono,
                         display: 'flex', alignItems: 'center', gap: 2,
                       }}>
                         ★ {result.rating}
@@ -270,8 +271,8 @@ export default function PlaceSearchBar() {
                     )}
                     {result.priceLevel && (
                       <span style={{
-                        fontSize: 10, color: 'rgba(28,26,23,0.35)',
-                        fontFamily: "'Space Mono', monospace",
+                        fontSize: 10, color: INK['35'],
+                        fontFamily: FONT.mono,
                       }}>
                         {result.priceLevel}
                       </span>
@@ -283,7 +284,7 @@ export default function PlaceSearchBar() {
                 {alreadyInLib ? (
                   <span style={{
                     fontSize: 9, fontWeight: 600, color: 'var(--t-verde)',
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                     whiteSpace: 'nowrap',
                   }}>
                     In library

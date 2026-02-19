@@ -14,6 +14,7 @@ import {
   BriefingSignal,
   BriefingAntiSignal,
 } from '@/types';
+import { FONT, INK } from '@/constants/theme';
 
 interface BriefingViewProps {
   googlePlaceId: string;
@@ -42,20 +43,20 @@ function SignalCard({ signal, domain }: { signal: BriefingSignal; domain: TasteD
       </div>
       <div className="flex items-center gap-2">
         {/* Confidence bar */}
-        <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(28,26,23,0.06)' }}>
+        <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: INK['06'] }}>
           <div
             className="h-full rounded-full"
             style={{ width: `${signal.confidence * 100}%`, background: color }}
           />
         </div>
-        <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
+        <span className="text-[9px]" style={{ color: INK['90'], fontFamily: FONT.mono }}>
           {Math.round(signal.confidence * 100)}%
         </span>
         {/* Source type tag */}
         {signal.source_type && (
           <span
             className="text-[8px] px-1.5 py-0.5 rounded"
-            style={{ background: 'var(--t-linen)', color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}
+            style={{ background: 'var(--t-linen)', color: INK['95'], fontFamily: FONT.mono }}
           >
             {signal.source_type}
           </span>
@@ -85,7 +86,7 @@ function AntiSignalCard({ signal }: { signal: BriefingAntiSignal }) {
         {signal.signal}
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[9px]" style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}>
+        <span className="text-[9px]" style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}>
           {strengthLabel(signal.confidence)} · {domain || signal.dimension}
         </span>
       </div>
@@ -137,17 +138,17 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                 <button
                   onClick={onClose}
                   className="text-[11px] mb-1 block"
-                  style={{ color: 'var(--t-honey)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'var(--t-honey)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT.mono }}
                 >
                   ← Back to summary
                 </button>
                 <h1
                   className="text-[20px] leading-tight italic"
-                  style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+                  style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
                 >
                   {placeName}
                 </h1>
-                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
+                <p className="text-[10px] mt-0.5" style={{ color: INK['90'], fontFamily: FONT.mono }}>
                   Terrazzo Briefing
                 </p>
               </div>
@@ -168,7 +169,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                 <div className="text-2xl mb-3 flex justify-center">
                   <PerriandIcon name="discover" size={36} color="var(--t-honey)" />
                 </div>
-                <p className="text-[12px]" style={{ color: 'rgba(28,26,23,0.9)' }}>Preparing your briefing...</p>
+                <p className="text-[12px]" style={{ color: INK['90'] }}>Preparing your briefing...</p>
               </div>
             )}
 
@@ -185,18 +186,18 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
               <>
                 {/* Summary bar — mosaic + stats */}
                 <div className="flex gap-2 mb-4">
-                  <div className="flex items-center justify-center p-2.5 rounded-xl" style={{ background: 'rgba(28,26,23,0.03)' }}>
+                  <div className="flex items-center justify-center p-2.5 rounded-xl" style={{ background: INK['03'] }}>
                     <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
                   </div>
                   {matchScore != null && (
                     <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(200,146,58,0.06)' }}>
                       <div
                         className="text-[18px] font-bold"
-                        style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
+                        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
                       >
                         {matchScore}%
                       </div>
-                      <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)' }}>Match</div>
+                      <div className="text-[9px]" style={{ color: INK['90'] }}>Match</div>
                     </div>
                   )}
                   <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(42,122,86,0.06)' }}>
@@ -204,21 +205,21 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                       className="text-[18px] font-bold"
                       style={{
                         color: data.reliabilityScore && data.reliabilityScore >= 0.6 ? 'var(--t-verde)' : 'var(--t-amber)',
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: FONT.mono,
                       }}
                     >
                       {data.reliabilityScore != null ? Math.round(data.reliabilityScore * 100) : '—'}
                     </div>
-                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)' }}>Reliability</div>
+                    <div className="text-[9px]" style={{ color: INK['90'] }}>Reliability</div>
                   </div>
-                  <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(28,26,23,0.03)' }}>
+                  <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: INK['03'] }}>
                     <div
                       className="text-[18px] font-bold"
-                      style={{ color: 'var(--t-ink)', fontFamily: "'Space Mono', monospace" }}
+                      style={{ color: 'var(--t-ink)', fontFamily: FONT.mono }}
                     >
                       {data.reviewCount}
                     </div>
-                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)' }}>Reviews</div>
+                    <div className="text-[9px]" style={{ color: INK['90'] }}>Reviews</div>
                   </div>
                 </div>
 
@@ -241,7 +242,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                   >
                     <div
                       className="text-[10px] font-bold uppercase tracking-wider mb-1"
-                      style={{ color: 'var(--t-signal-red)', fontFamily: "'Space Mono', monospace" }}
+                      style={{ color: 'var(--t-signal-red)', fontFamily: FONT.mono }}
                     >
                       Briefing incomplete
                     </div>
@@ -265,13 +266,13 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                         </div>
                         <span
                           className="text-[10px] font-bold uppercase tracking-wider"
-                          style={{ color, fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
+                          style={{ color, fontFamily: FONT.mono, letterSpacing: '1px' }}
                         >
                           {domain}
                         </span>
                         <span
                           className="text-[9px] px-1.5 py-0.5 rounded-full ml-1"
-                          style={{ background: `${color}15`, color, fontFamily: "'Space Mono', monospace" }}
+                          style={{ background: `${color}15`, color, fontFamily: FONT.mono }}
                         >
                           {signals.length}
                         </span>
@@ -291,13 +292,13 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                     <div className="flex items-center gap-1.5 mb-2">
                       <span
                         className="text-[10px] font-bold uppercase tracking-wider"
-                        style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
+                        style={{ color: 'var(--t-amber)', fontFamily: FONT.mono, letterSpacing: '1px' }}
                       >
                         Heads Up
                       </span>
                       <span
                         className="text-[9px] px-1.5 py-0.5 rounded-full ml-1"
-                        style={{ background: 'rgba(160,108,40,0.1)', color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+                        style={{ background: 'rgba(160,108,40,0.1)', color: 'var(--t-amber)', fontFamily: FONT.mono }}
                       >
                         {data.antiSignals.length}
                       </span>
@@ -315,7 +316,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                   <div className="mb-5">
                     <div
                       className="text-[10px] font-bold uppercase tracking-wider mb-2"
-                      style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
                     >
                       Facts
                     </div>
@@ -330,7 +331,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                           <div key={key}>
                             <div
                               className="text-[9px] uppercase tracking-wider"
-                              style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}
+                              style={{ color: INK['90'], fontFamily: FONT.mono }}
                             >
                               {displayKey}
                             </div>
@@ -347,11 +348,11 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                 {/* Footer — enrichment meta */}
                 <div className="flex items-center justify-between pt-3 mt-2" style={{ borderTop: '1px solid var(--t-linen)' }}>
                   {enrichedAgo && (
-                    <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
+                    <span className="text-[9px]" style={{ color: INK['90'], fontFamily: FONT.mono }}>
                       Last updated {enrichedAgo}
                     </span>
                   )}
-                  <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}>
+                  <span className="text-[9px]" style={{ color: INK['95'], fontFamily: FONT.mono }}>
                     {data.pipelineVersion}
                   </span>
                 </div>

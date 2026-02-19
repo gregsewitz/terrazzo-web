@@ -1,4 +1,5 @@
 import { ImportedPlace } from '@/types';
+import { INK } from '@/constants/theme';
 
 /**
  * Generate a self-contained HTML page with a Google Map showing all places as markers.
@@ -61,7 +62,7 @@ export function generateShareableMapHTML(
       font-size: 18px; color: #1c1a17; font-weight: 400; font-style: italic;
     }
     .header .count {
-      font-size: 11px; color: rgba(28,26,23,0.5);
+      font-size: 11px; color: INK['50'];
       font-family: 'Space Mono', monospace;
     }
     .gm-style .info-window {
@@ -72,7 +73,7 @@ export function generateShareableMapHTML(
       font-size: 14px; font-weight: 600; color: #1c1a17; margin-bottom: 4px;
       font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
     }
-    .info-window .meta { font-size: 11px; color: rgba(28,26,23,0.6); margin-bottom: 6px; }
+    .info-window .meta { font-size: 11px; color: INK['60']; margin-bottom: 6px; }
     .info-window .rating { color: #c8923a; font-weight: 600; }
     .info-window a {
       font-size: 11px; color: #c8923a; text-decoration: none; font-weight: 500;

@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { useOnboardingStore } from '@/stores/onboardingStore';
+import { TASTE_PROFILE } from '@/constants/profile';
+import { FONT, INK } from '@/constants/theme';
 
 interface Message {
   id: string;
@@ -10,32 +13,22 @@ interface Message {
   isFirstMessage?: boolean;
 }
 
+export interface ChatTripContext {
+  name: string;
+  destinations: string[];
+  totalDays: number;
+  currentDay?: {
+    dayNumber: number;
+    destination?: string;
+    slots: { label: string; place?: { name: string; type?: string; matchScore?: number } }[];
+    hotel?: string;
+  };
+}
+
 interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-// Smart response generator based on user input
-function getSmartResponse(userInput: string): string {
-  const lowerInput = userInput.toLowerCase();
-
-  if (lowerInput.includes('rearrange')) {
-    return "Looking at your Day 1... I'd swap Tsukiji Market to breakfast (it's best before 9am) and move TeamLab to late afternoon when the light installations hit different. Want me to make that switch?";
-  }
-
-  if (lowerInput.includes('late') || lowerInput.includes('night') || lowerInput.includes('drink')) {
-    return "For late-night in Shinjuku, there's Golden Gai — tiny bars stacked five stories. Your Character axis would light up. Or if you want something quieter, try Bar Benfiddich in Nishi-Shinjuku. The bartender forages his own ingredients.";
-  }
-
-  if (lowerInput.includes('skip')) {
-    return "Honestly? I'd skip the Meiji Shrine on a Tuesday — it's packed with tour groups. Your afternoon is better spent in Shimokitazawa, which matches your Design and Character signals much higher.";
-  }
-
-  if (lowerInput.includes('suggest') || lowerInput.includes('like')) {
-    return "Based on your taste profile... if you loved Narisawa's forest-to-table approach, try Florilège in Aoyama. Same philosophy, slightly more experimental. Your Food and Design axes both peak there. 94% match.";
-  }
-
-  return "I'm still getting everything set up, but I'm already thinking about your trip. Try dragging places from the unsorted tray into your day slots, or tap any ghost card to see why it landed there.";
+  tripContext?: ChatTripContext;
 }
 
 // Render message content with smart formatting
@@ -55,7 +48,7 @@ function renderMessageContent(content: string) {
     parts.push(
       <span key={`bold-${match.index}`} style={{ color: 'var(--t-honey)', fontWeight: 600 }}>
         {match[1]}
-        <span className="text-[9px] ml-1" style={{ color: 'rgba(28,26,23,0.9)' }}>
+        <span className="text-[9px] ml-1" style={{ color: INK['90'] }}>
           →
         </span>
       </span>
@@ -72,7 +65,9 @@ function renderMessageContent(content: string) {
   return parts;
 }
 
-export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
+export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSidebarProps) {
+  const generatedProfile = useOnboardingStore(s => s.generatedProfile);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -91,27 +86,55 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     'Suggest something like...',
   ];
 
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, isLoading]);
+
   async function handleSend() {
     if (!input.trim() || isLoading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input };
+    const currentInput = input;
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
 
-    // Simulate API delay
-    setTimeout(() => {
-      const aiResponse = getSmartResponse(input);
+    try {
+      const res = await fetch('/api/trips/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: currentInput,
+          conversationHistory: [...messages, userMsg].map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          tripContext: tripContext || null,
+          userProfile: generatedProfile || TASTE_PROFILE,
+        }),
+      });
+
+      const data = await res.json();
       setMessages(prev => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: aiResponse,
+          content: data.response || "Let me think about that — could you rephrase?",
         },
       ]);
+    } catch {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: "Having trouble connecting right now — try again in a moment.",
+        },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   }
 
   function handleQuickAction(action: string) {
@@ -156,25 +179,25 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
           <div>
             <h3
               className="text-sm font-semibold"
-              style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+              style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
             >
               Terrazzo Assistant
             </h3>
-            <p className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}>
               Your taste-aware trip companion
             </p>
           </div>
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-full border-none cursor-pointer"
-            style={{ background: 'rgba(28,26,23,0.06)' }}
+            style={{ background: INK['06'] }}
           >
             <PerriandIcon name="close" size={16} color="var(--t-ink)" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
           {messages.map((msg, idx) => (
             <div
               key={msg.id}
@@ -182,7 +205,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 msg.role === 'user' ? 'self-end' : 'self-start'
               }`}
               style={{
-                background: msg.role === 'user' ? 'var(--t-ink)' : 'rgba(28,26,23,0.04)',
+                background: msg.role === 'user' ? 'var(--t-ink)' : INK['04'],
                 color: msg.role === 'user' ? 'var(--t-cream)' : 'var(--t-ink)',
               }}
             >
@@ -193,7 +216,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             </div>
           ))}
           {isLoading && (
-            <div className="self-start p-3 rounded-xl text-[12px]" style={{ background: 'rgba(28,26,23,0.04)' }}>
+            <div className="self-start p-3 rounded-xl text-[12px]" style={{ background: INK['04'] }}>
               <span className="inline-block">
                 <span className="animate-bounce" style={{ animationDelay: '0ms' }}>•</span>
                 <span className="animate-bounce ml-1" style={{ animationDelay: '150ms' }}>•</span>
@@ -215,7 +238,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                   background: 'white',
                   color: 'var(--t-ink)',
                   border: '1px solid var(--t-linen)',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
                 {action}

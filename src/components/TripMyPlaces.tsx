@@ -1,15 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
+import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
 }
-
-type FilterType = PlaceType | 'all';
 
 const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
   restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', museum: 'museum', activity: 'activity',
@@ -43,7 +43,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
 
-  const [filter, setFilter] = useState<FilterType>('all');
+  const { filter, setFilter } = useTypeFilter();
 
   // Collect all placed items across all days
   const allPlaced = useMemo(() => {
@@ -88,7 +88,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
       {/* Header + filter chips */}
       <div className="px-4 pt-3 pb-2" style={{ background: 'white', borderBottom: '1px solid var(--t-linen)' }}>
         <div className="flex items-baseline justify-between mb-2">
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.85)' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['85'] }}>
             {allPlaced.length} place{allPlaced.length !== 1 ? 's' : ''} on this trip
           </span>
         </div>
@@ -103,12 +103,12 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
                 onClick={() => setFilter(chip.value)}
                 className="px-2.5 py-1 rounded-2xl text-[10px] whitespace-nowrap flex-shrink-0"
                 style={{
-                  background: isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.04)',
-                  color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
+                  background: isActive ? 'var(--t-ink)' : INK['04'],
+                  color: isActive ? 'white' : INK['90'],
                   fontWeight: isActive ? 600 : 500,
                   border: 'none',
                   cursor: 'pointer',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
                 {chip.label} {count > 0 ? count : ''}
@@ -124,10 +124,10 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
           <div className="text-3xl mb-3 block flex justify-center">
             <PerriandIcon name="trips" size={32} color="var(--t-ink)" />
           </div>
-          <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
+          <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
             No places added yet
           </p>
-          <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.85)', fontFamily: "'DM Sans', sans-serif" }}>
+          <p className="text-[11px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
             Drag places from your picks into the Day Planner to build your itinerary
           </p>
         </div>
@@ -173,20 +173,20 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
             <PerriandIcon name={typeIcon} size={24} color="var(--t-ink)" />
           </div>
           <div>
-            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 15, fontWeight: 600, color: 'var(--t-ink)', lineHeight: 1.2 }}>
+            <div style={{ fontFamily: FONT.serif, fontSize: 15, fontWeight: 600, color: 'var(--t-ink)', lineHeight: 1.2 }}>
               {place.name}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.85)' }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['85'] }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
               {google?.category && google.category !== place.type && (
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.8)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['80'] }}>
                   · {google.category}
                 </span>
               )}
               {place.location && (
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.8)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['80'] }}>
                   · {place.location.split(',')[0]}
                 </span>
               )}
@@ -197,7 +197,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
           <span
             className="px-2 py-0.5 rounded-md"
-            style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
+            style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
           >
             {place.matchScore}%
           </span>
@@ -209,11 +209,11 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* When/where on this trip */}
         <div className="flex items-center gap-1.5 mb-2">
           <PerriandIcon name={SLOT_ICONS[item.slotId] as any || 'pin'} size={13} color="var(--t-ink)" />
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: 'rgba(28,26,23,0.9)' }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: INK['90'] }}>
             {item.dayOfWeek?.slice(0, 3)} {item.date} · {item.slotTime}
           </span>
           {item.destination && (
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: destColor.accent }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: destColor.accent }}>
               {item.destination}
             </span>
           )}
@@ -223,7 +223,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         <div className="flex items-center gap-1.5 flex-wrap mb-2">
           <span
             className="px-2 py-0.5 rounded-md flex items-center gap-0.5"
-            style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: "'Space Mono', monospace" }}
+            style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}
           >
             <PerriandIcon name={srcStyle.icon} size={10} color={srcStyle.color} />
             {place.source?.name || srcStyle.label}
@@ -231,20 +231,20 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
           {isReservation && (
             <span
               className="px-2 py-0.5 rounded-md flex items-center gap-0.5"
-              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
+              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
             >
               <PerriandIcon name="check" size={10} color="var(--t-verde)" />
               Reservation
             </span>
           )}
           {google?.rating && (
-            <span className="flex items-center gap-0.5" style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.85)' }}>
-              <PerriandIcon name="star" size={10} color="rgba(28,26,23,0.85)" />
+            <span className="flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['85'] }}>
+              <PerriandIcon name="star" size={10} color={INK['85']} />
               {google.rating}{google.reviewCount ? ` (${google.reviewCount.toLocaleString()})` : ''}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'] }}>
               {priceStr}
             </span>
           )}
@@ -257,7 +257,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
               <div style={{ flexShrink: 0, marginTop: 1 }}>
                 <PerriandIcon name="terrazzo" size={11} color="var(--t-honey)" />
               </div>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.95)', lineHeight: 1.4 }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['95'], lineHeight: 1.4 }}>
                 {place.terrazzoInsight.why}
               </span>
             </div>
@@ -267,7 +267,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
                   {/* Using terrazzo for warning since there's no specific warning icon */}
                   <span style={{ fontSize: 12 }}>⚠️</span>
                 </div>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.85)', fontStyle: 'italic', lineHeight: 1.4 }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['85'], fontStyle: 'italic', lineHeight: 1.4 }}>
                   {place.terrazzoInsight.caveat}
                 </span>
               </div>
@@ -283,11 +283,11 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
                 <PerriandIcon name="friend" size={11} color="var(--t-verde)" />
               </div>
               <div>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 600, color: 'var(--t-verde)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: 'var(--t-verde)' }}>
                   {place.friendAttribution.name}
                 </span>
                 {place.friendAttribution.note && (
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.9)', fontStyle: 'italic', marginLeft: 6 }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['90'], fontStyle: 'italic', marginLeft: 6 }}>
                     "{place.friendAttribution.note}"
                   </span>
                 )}
@@ -299,7 +299,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* What to order */}
         {place.whatToOrder && place.whatToOrder.length > 0 && (
           <div className="mb-2">
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'], textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
               What to order
             </span>
             <div className="flex flex-wrap gap-1 mt-1">
@@ -307,7 +307,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
                 <span
                   key={i}
                   className="px-2 py-0.5 rounded-full"
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.9)' }}
+                  style={{ fontFamily: FONT.sans, fontSize: 10, background: INK['04'], color: INK['90'] }}
                 >
                   {item}
                 </span>
@@ -319,14 +319,14 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* Tips */}
         {place.tips && place.tips.length > 0 && (
           <div className="mb-1">
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.8)', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'], textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
               Tips
             </span>
             <div className="flex flex-col gap-0.5 mt-1">
               {place.tips.map((tip, i) => (
                 <span
                   key={i}
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.9)', lineHeight: 1.4 }}
+                  style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['90'], lineHeight: 1.4 }}
                 >
                   {tip}
                 </span>
@@ -338,7 +338,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         {/* Taste note fallback — if no insight or friend note */}
         {!place.terrazzoInsight?.why && !place.friendAttribution?.note && place.tasteNote && (
           <div className="mb-1">
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(28,26,23,0.9)', fontStyle: 'italic', lineHeight: 1.4 }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['90'], fontStyle: 'italic', lineHeight: 1.4 }}>
               {place.tasteNote}
             </span>
           </div>

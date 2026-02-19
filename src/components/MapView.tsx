@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { SOURCE_STYLES } from '@/types';
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
+import { FONT, INK } from '@/constants/theme';
 
 interface MapViewProps {
   dayNumber: number;
@@ -45,7 +46,7 @@ export default function MapView({
       <div className="flex items-center justify-between mb-3 px-0">
         <div
           className="text-sm font-bold uppercase tracking-wider"
-          style={{ fontFamily: "'Space Mono', monospace", color: 'var(--t-ink)' }}
+          style={{ fontFamily: FONT.mono, color: 'var(--t-ink)' }}
         >
           Day {dayNumber} · {destination}
         </div>
@@ -53,7 +54,7 @@ export default function MapView({
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-7 h-7 flex items-center justify-center rounded-full border-none cursor-pointer transition-transform"
           style={{
-            background: 'rgba(28,26,23,0.06)',
+            background: INK['06'],
             color: 'var(--t-ink)',
             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
           }}

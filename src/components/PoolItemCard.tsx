@@ -2,6 +2,7 @@
 
 import { ImportedPlace, T, DOMAIN_COLORS } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 interface PoolItemCardProps {
   item: ImportedPlace;
@@ -53,7 +54,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
         style={{
           background: `rgba(200,146,58,0.15)`,
           color: 'var(--t-amber)',
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: FONT.mono,
         }}
       >
         {item.matchScore}%
@@ -67,13 +68,13 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
         <div className="min-w-0">
           <div
             className="text-[11px] font-semibold leading-tight truncate"
-            style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
           >
             {item.name}
           </div>
           <div
             className="text-[9px] uppercase tracking-wider mt-0.5"
-            style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+            style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
           >
             {item.type}
           </div>
@@ -84,7 +85,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
       {!compact && item.tasteNote && (
         <div
           className="text-[10px] mt-1.5 leading-snug line-clamp-2"
-          style={{ color: 'rgba(28,26,23,0.9)', fontStyle: 'italic' }}
+          style={{ color: INK['90'], fontStyle: 'italic' }}
         >
           "{item.tasteNote}"
         </div>
@@ -98,7 +99,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
             {item.google.rating}
           </span>
           {item.google.reviewCount && (
-            <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+            <span className="text-[9px]" style={{ color: INK['90'] }}>
               ({item.google.reviewCount.toLocaleString()})
             </span>
           )}
@@ -111,9 +112,9 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
         <span
           className="text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1"
           style={{
-            background: 'rgba(28,26,23,0.06)',
-            color: 'rgba(28,26,23,0.95)',
-            fontFamily: "'Space Mono', monospace",
+            background: INK['06'],
+            color: INK['95'],
+            fontFamily: FONT.mono,
           }}
         >
           <PerriandIcon name={SOURCE_ICONS[item.source.name] || 'location'} size={10} />

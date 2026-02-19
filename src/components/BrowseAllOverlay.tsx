@@ -1,10 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
+import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant',
@@ -16,8 +18,6 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
   neighborhood: 'location',
   shop: 'shop',
 };
-
-type FilterType = 'all' | PlaceType;
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
   { value: 'all', label: 'All', icon: 'discover' },
@@ -38,7 +38,7 @@ interface BrowseAllOverlayProps {
 }
 
 export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }: BrowseAllOverlayProps) {
-  const [filterType, setFilterType] = useState<FilterType>(initialFilter || 'all');
+  const { filter: filterType, setFilter: setFilterType, toggle: toggleFilter } = useTypeFilter(initialFilter || 'all');
   const toggleStar = useSavedStore(s => s.toggleStar);
   const myPlaces = useSavedStore(s => s.myPlaces);
 
@@ -104,18 +104,18 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
           <div>
             <h2
               className="text-[18px] m-0"
-              style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', color: 'var(--t-ink)' }}
+              style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
             >
               Browse all
             </h2>
-            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.85)' }}>
+            <span className="text-[11px]" style={{ color: INK['85'] }}>
               {starredCount} picked · {destinationPlaces.length} saved for this destination
             </span>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(28,26,23,0.06)', border: 'none', cursor: 'pointer', color: 'rgba(28,26,23,0.9)' }}
+            style={{ background: INK['06'], border: 'none', cursor: 'pointer', color: INK['90'] }}
           >
             <PerriandIcon name="close" size={16} />
           </button>
@@ -131,13 +131,13 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
             return (
               <button
                 key={chip.value}
-                onClick={() => setFilterType(isActive ? 'all' : chip.value)}
+                onClick={() => toggleFilter(chip.value as FilterType)}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
                 style={{
                   background: isActive ? 'var(--t-ink)' : 'white',
-                  color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
+                  color: isActive ? 'white' : INK['90'],
                   border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
                 <PerriandIcon name={chip.icon} size={14} />
@@ -167,7 +167,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                 {/* Type icon */}
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(28,26,23,0.04)' }}
+                  style={{ background: INK['04'] }}
                 >
                   <PerriandIcon name={typeIcon} size={14} />
                 </div>
@@ -178,7 +178,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                       <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--t-ink)' }}>
                         {place.name}
                       </div>
-                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+                      <div className="text-[10px]" style={{ color: INK['90'] }}>
                         {place.location}
                       </div>
                     </div>
@@ -188,14 +188,14 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                       onClick={(e) => { e.stopPropagation(); toggleStar(place.id); }}
                       className="w-7 h-7 rounded-full flex items-center justify-center transition-all flex-shrink-0"
                       style={{
-                        background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
-                        color: isStarred ? 'white' : 'rgba(28,26,23,0.85)',
+                        background: isStarred ? 'var(--t-verde)' : INK['06'],
+                        color: isStarred ? 'white' : INK['85'],
                         border: 'none',
                         cursor: 'pointer',
                         fontSize: '13px',
                       }}
                     >
-                      <PerriandIcon name="star" size={12} color={isStarred ? 'white' : 'rgba(28,26,23,0.85)'} />
+                      <PerriandIcon name="star" size={12} color={isStarred ? 'white' : INK['85']} />
                     </button>
                   </div>
 
@@ -214,7 +214,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                       style={{
                         background: 'rgba(42,122,86,0.08)',
                         color: 'var(--t-verde)',
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: FONT.mono,
                       }}
                     >
                       {place.matchScore}%
@@ -228,12 +228,12 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
           {sortedPlaces.length === 0 && (
             <div className="text-center py-16">
               <div className="text-3xl mb-3 flex justify-center">
-                <PerriandIcon name="discover" size={36} color="rgba(28,26,23,0.5)" />
+                <PerriandIcon name="discover" size={36} color={INK['50']} />
               </div>
-              <p className="text-[13px] mb-1" style={{ color: 'rgba(28,26,23,0.9)' }}>
+              <p className="text-[13px] mb-1" style={{ color: INK['90'] }}>
                 No saved places for this destination
               </p>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.85)' }}>
+              <p className="text-[11px]" style={{ color: INK['85'] }}>
                 Import places in Collect to see them here
               </p>
             </div>

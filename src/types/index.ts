@@ -1,4 +1,5 @@
 import type { PerriandIconName } from '../components/icons/PerriandIcons';
+import { INK } from '@/constants/theme';
 export type { PerriandIconName };
 
 // Forme Libere Design Tokens
@@ -81,7 +82,7 @@ export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string;
   terrazzo: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: 'terrazzo', label: 'Terrazzo pick' },
   maps: { color: '#e86830', bg: 'rgba(232,104,48,0.06)', icon: 'maps', label: 'Google Maps' },
   article: { color: '#c8923a', bg: 'rgba(200,146,58,0.06)', icon: 'article', label: 'Article' },
-  manual: { color: '#1c1a17', bg: 'rgba(28,26,23,0.04)', icon: 'manual', label: 'Added' },
+  manual: { color: '#1c1a17', bg: INK['04'], icon: 'manual', label: 'Added' },
 };
 
 export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness';

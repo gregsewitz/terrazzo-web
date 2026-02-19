@@ -8,7 +8,9 @@ import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore } from '@/stores/savedStore';
 import { REACTIONS, ImportedPlace, PlaceRating, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { generateShareableMapHTML } from '@/lib/mapShare';
+import { FONT, INK } from '@/constants/theme';
 
 const TYPE_COLORS: Record<PlaceType, string> = {
   restaurant: '#e87080',
@@ -64,7 +66,7 @@ export default function ShortlistDetailPage() {
     return (
       <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden' }}>
         <div className="px-4 pt-5 text-center">
-          <p style={{ color: 'rgba(28,26,23,0.5)' }}>Shortlist not found</p>
+          <p style={{ color: INK['50'] }}>Shortlist not found</p>
           <button
             onClick={() => router.back()}
             className="mt-4 text-[12px] cursor-pointer"
@@ -130,7 +132,7 @@ export default function ShortlistDetailPage() {
                   background: 'rgba(200,146,58,0.08)',
                   color: 'var(--t-honey)',
                   border: 'none',
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                 }}
               >
                 <PerriandIcon name="pin" size={10} color="var(--t-honey)" />
@@ -143,10 +145,10 @@ export default function ShortlistDetailPage() {
                   onClick={startEditing}
                   className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
                   style={{
-                    background: 'rgba(28,26,23,0.04)',
-                    color: 'rgba(28,26,23,0.5)',
+                    background: INK['04'],
+                    color: INK['50'],
                     border: 'none',
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                   }}
                 >
                   Edit
@@ -158,7 +160,7 @@ export default function ShortlistDetailPage() {
                     background: 'rgba(214,48,32,0.06)',
                     color: 'var(--t-signal-red)',
                     border: 'none',
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                   }}
                 >
                   Delete
@@ -188,7 +190,7 @@ export default function ShortlistDetailPage() {
                     autoFocus
                     className="w-full text-[16px] rounded-lg px-2 py-1"
                     style={{
-                      fontFamily: "'DM Serif Display', serif",
+                      fontFamily: FONT.serif,
                       fontStyle: 'italic',
                       color: 'var(--t-ink)',
                       background: 'white',
@@ -204,8 +206,8 @@ export default function ShortlistDetailPage() {
                     placeholder="Add a description..."
                     className="w-full text-[11px] rounded-lg px-2 py-1"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: 'rgba(28,26,23,0.7)',
+                      fontFamily: FONT.sans,
+                      color: INK['70'],
                       background: 'white',
                       border: '1px solid var(--t-linen)',
                       outline: 'none',
@@ -216,14 +218,14 @@ export default function ShortlistDetailPage() {
                     <button
                       onClick={saveEditing}
                       className="text-[10px] px-3 py-1.5 rounded-full cursor-pointer"
-                      style={{ background: 'var(--t-ink)', color: 'white', border: 'none', fontFamily: "'Space Mono', monospace" }}
+                      style={{ background: 'var(--t-ink)', color: 'white', border: 'none', fontFamily: FONT.mono }}
                     >
                       Save
                     </button>
                     <button
                       onClick={() => setIsEditing(false)}
                       className="text-[10px] px-3 py-1.5 rounded-full cursor-pointer"
-                      style={{ background: 'rgba(28,26,23,0.06)', color: 'rgba(28,26,23,0.5)', border: 'none', fontFamily: "'Space Mono', monospace" }}
+                      style={{ background: INK['06'], color: INK['50'], border: 'none', fontFamily: FONT.mono }}
                     >
                       Cancel
                     </button>
@@ -233,12 +235,12 @@ export default function ShortlistDetailPage() {
                 <>
                   <h1
                     className="text-[22px] mb-1"
-                    style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', color: 'var(--t-ink)' }}
+                    style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
                   >
                     {shortlist.name}
                   </h1>
                   {shortlist.description && (
-                    <p className="text-[11px] mb-2" style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'DM Sans', sans-serif" }}>
+                    <p className="text-[11px] mb-2" style={{ color: INK['50'], fontFamily: FONT.sans }}>
                       {shortlist.description}
                     </p>
                   )}
@@ -246,13 +248,13 @@ export default function ShortlistDetailPage() {
               )}
 
               <div className="flex items-center gap-2 mt-1">
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.4)' }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['40'] }}>
                   {placesInShortlist.length} {placesInShortlist.length === 1 ? 'place' : 'places'}
                 </span>
                 {shortlist.cities.length > 0 && (
                   <>
-                    <span style={{ color: 'rgba(28,26,23,0.15)', fontSize: 10 }}>·</span>
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.4)' }}>
+                    <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['40'] }}>
                       {shortlist.cities.slice(0, 3).join(', ')}
                     </span>
                   </>
@@ -267,7 +269,7 @@ export default function ShortlistDetailPage() {
               <span
                 className="text-[9px] px-2 py-1 rounded-full"
                 style={{
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                   background: 'rgba(42,122,86,0.08)',
                   color: 'var(--t-verde)',
                 }}
@@ -275,7 +277,7 @@ export default function ShortlistDetailPage() {
                 Auto-updating · Curated Collection
               </span>
               {shortlist.query && (
-                <p className="text-[10px] mt-2" style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}>
+                <p className="text-[10px] mt-2" style={{ color: INK['40'], fontFamily: FONT.mono }}>
                   Query: "{shortlist.query}"
                 </p>
               )}
@@ -292,7 +294,7 @@ export default function ShortlistDetailPage() {
                   style={{
                     background: 'var(--t-verde)',
                     color: 'white',
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                   }}
                 >
                   {tag}
@@ -300,6 +302,11 @@ export default function ShortlistDetailPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Place search */}
+        <div className="mb-4">
+          <PlaceSearchBar />
         </div>
 
         {/* Places list */}
@@ -316,11 +323,11 @@ export default function ShortlistDetailPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <PerriandIcon name="discover" size={32} color="rgba(28,26,23,0.15)" />
-            <p className="text-[12px] mt-3" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <PerriandIcon name="discover" size={32} color={INK['15']} />
+            <p className="text-[12px] mt-3" style={{ color: INK['50'] }}>
               No places in this shortlist
             </p>
-            <p className="text-[11px] mt-1" style={{ color: 'rgba(28,26,23,0.35)' }}>
+            <p className="text-[11px] mt-1" style={{ color: INK['35'] }}>
               Add places from the Library to get started
             </p>
           </div>
@@ -339,10 +346,10 @@ export default function ShortlistDetailPage() {
             className="relative rounded-2xl px-6 py-5 mx-5"
             style={{ maxWidth: 320, background: 'var(--t-cream)' }}
           >
-            <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: "'DM Serif Display', serif" }}>
+            <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
               Delete "{shortlist.name}"?
             </p>
-            <p className="text-[11px] mb-5" style={{ color: 'rgba(28,26,23,0.5)' }}>
+            <p className="text-[11px] mb-5" style={{ color: INK['50'] }}>
               This won't remove the places from your library.
             </p>
             <div className="flex gap-2">
@@ -359,7 +366,7 @@ export default function ShortlistDetailPage() {
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl text-[12px] cursor-pointer"
-                style={{ background: 'rgba(28,26,23,0.06)', color: 'rgba(28,26,23,0.5)', border: 'none' }}
+                style={{ background: INK['06'], color: INK['50'], border: 'none' }}
               >
                 Cancel
               </button>
@@ -418,13 +425,13 @@ function ShortlistPlaceCard({ place, onTap, onRemove }: {
           className="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center"
           style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
         >
-          <PerriandIcon name={typeIcon as any} size={18} color="rgba(28,26,23,0.6)" />
+          <PerriandIcon name={typeIcon as any} size={18} color={INK['60']} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
-            <h3 className="text-[13px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
+            <h3 className="text-[13px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
               {place.name}
             </h3>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -435,26 +442,26 @@ function ShortlistPlaceCard({ place, onTap, onRemove }: {
                 <button
                   onClick={(e) => { e.stopPropagation(); onRemove(); }}
                   className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: 'rgba(28,26,23,0.04)', border: 'none' }}
+                  style={{ background: INK['04'], border: 'none' }}
                 >
-                  <PerriandIcon name="close" size={8} color="rgba(28,26,23,0.3)" />
+                  <PerriandIcon name="close" size={8} color={INK['30']} />
                 </button>
               )}
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
               {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
             </span>
-            <span style={{ fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>· {place.location.split(',')[0]}</span>
+            <span style={{ fontSize: 10, color: INK['50'] }}>· {place.location.split(',')[0]}</span>
             {place.google?.rating && (
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)' }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'] }}>
                 ★ {place.google.rating}
               </span>
             )}
           </div>
           {place.tasteNote && (
-            <p className="text-[10px] mt-1" style={{ color: 'rgba(28,26,23,0.5)', fontStyle: 'italic', lineHeight: 1.3 }}>
+            <p className="text-[10px] mt-1" style={{ color: INK['50'], fontStyle: 'italic', lineHeight: 1.3 }}>
               {place.tasteNote.length > 80 ? place.tasteNote.slice(0, 77) + '…' : place.tasteNote}
             </p>
           )}

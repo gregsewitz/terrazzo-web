@@ -16,10 +16,11 @@ import BrowseAllOverlay from '@/components/BrowseAllOverlay';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
-import ChatSidebar from '@/components/ChatSidebar';
+import ChatSidebar, { type ChatTripContext } from '@/components/ChatSidebar';
 import BriefingView from '@/components/BriefingView';
 import DragOverlay from '@/components/DragOverlay';
 import ExportToMaps from '@/components/ExportToMaps';
+import { INK } from '@/constants/theme';
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -201,7 +202,7 @@ export default function TripDetailPage() {
   if (!trip) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
-        <p style={{ color: 'rgba(28,26,23,0.9)' }}>Trip not found</p>
+        <p style={{ color: INK['90'] }}>Trip not found</p>
       </div>
     );
   }
@@ -354,6 +355,24 @@ export default function TripDetailPage() {
       <ChatSidebar
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
+        tripContext={trip ? {
+          name: trip.name,
+          destinations: trip.destinations || [trip.location],
+          totalDays: trip.days.length,
+          currentDay: trip.days[0] ? {
+            dayNumber: trip.days[0].dayNumber,
+            destination: trip.days[0].destination,
+            slots: trip.days[0].slots.map(s => ({
+              label: s.label,
+              place: s.places[0] ? {
+                name: s.places[0].name,
+                type: s.places[0].type,
+                matchScore: s.places[0].matchScore,
+              } : undefined,
+            })),
+            hotel: trip.days[0].hotel,
+          } : undefined,
+        } : undefined}
       />
     </div>
   );

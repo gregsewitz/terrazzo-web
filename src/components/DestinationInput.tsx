@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -187,7 +188,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
             style={{
               background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.1)',
               color: dest.lat ? 'var(--t-verde)' : 'var(--t-honey)',
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: FONT.sans,
               fontWeight: 500,
             }}
           >
@@ -216,14 +217,14 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
           }
           className="flex-1 min-w-[160px] text-[14px] bg-transparent border-none outline-none py-1"
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
             color: 'var(--t-ink)',
           }}
         />
       </div>
 
       {/* Helper text */}
-      <div className="mt-1.5 text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+      <div className="mt-1.5 text-[10px]" style={{ color: INK['90'] }}>
         {isDreaming
           ? 'Type anything — a city, a vibe, a region. Press Enter to add.'
           : destinations.length === 0
@@ -251,19 +252,19 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               className="w-full flex items-start gap-2.5 px-3.5 py-2.5 border-none cursor-pointer text-left transition-colors"
               style={{
                 background: i === activeIndex ? 'rgba(200,146,58,0.06)' : 'transparent',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 borderBottom: i < predictions.length - 1 ? '1px solid rgba(237,230,216,0.5)' : 'none',
               }}
               onMouseEnter={() => setActiveIndex(i)}
             >
-              <div style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <div style={{ color: INK['95'] }}>
                 <PerriandIcon name="location" size={13} />
               </div>
               <div>
                 <div className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>
                   {prediction.structured_formatting.main_text}
                 </div>
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+                <div className="text-[11px]" style={{ color: INK['90'] }}>
                   {prediction.structured_formatting.secondary_text}
                 </div>
               </div>
@@ -277,15 +278,15 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               className="w-full flex items-center gap-2.5 px-3.5 py-2.5 border-none cursor-pointer text-left"
               style={{
                 background: activeIndex === predictions.length ? 'rgba(200,146,58,0.06)' : 'rgba(248,243,234,0.5)',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 borderTop: '1px solid var(--t-linen)',
               }}
             >
-              <div style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <div style={{ color: INK['95'] }}>
                 <PerriandIcon name="profile" size={13} />
               </div>
               <div>
-                <div className="text-[12px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <div className="text-[12px]" style={{ color: INK['95'] }}>
                   Just add "<span style={{ color: 'var(--t-ink)', fontWeight: 500 }}>{inputValue.trim()}</span>" as-is
                 </div>
               </div>
@@ -357,7 +358,7 @@ function DestinationInputFallback({ destinations, onChange, isDreaming }: Destin
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addDestination(); } }}
           placeholder={destinations.length === 0 ? 'Type a destination and press Enter...' : '+ Add another'}
           className="flex-1 min-w-[160px] text-[14px] bg-transparent border-none outline-none py-1"
-          style={{ fontFamily: "'DM Sans', sans-serif", color: 'var(--t-ink)' }}
+          style={{ fontFamily: FONT.sans, color: 'var(--t-ink)' }}
         />
       </div>
     </div>

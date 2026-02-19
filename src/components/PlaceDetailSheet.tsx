@@ -8,6 +8,7 @@ import { getPlaceImage } from '@/constants/placeImages';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import PipelineProgress from '@/components/PipelineProgress';
+import { FONT, INK } from '@/constants/theme';
 
 interface PlaceDetailSheetProps {
   item: ImportedPlace;
@@ -101,16 +102,16 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
             <div className="flex-1 min-w-0">
               <h2
                 className="text-[22px] mb-1 italic leading-tight"
-                style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
               >
                 {item.name}
               </h2>
               {item.alsoKnownAs && (
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <div className="text-[11px]" style={{ color: INK['95'] }}>
                   Also known as &ldquo;{item.alsoKnownAs}&rdquo;
                 </div>
               )}
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <p className="text-[11px]" style={{ color: INK['95'] }}>
                 {item.location} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
               </p>
             </div>
@@ -126,7 +127,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                 }}
               >
                 <PerriandIcon name={ratingReaction.icon} size={16} color={ratingReaction.color} />
-                <span className="text-[10px] font-semibold" style={{ color: ratingReaction.color, fontFamily: "'Space Mono', monospace" }}>
+                <span className="text-[10px] font-semibold" style={{ color: ratingReaction.color, fontFamily: FONT.mono }}>
                   {ratingReaction.label}
                 </span>
               </button>
@@ -135,12 +136,12 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                 onClick={onRate}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] mt-1"
                 style={{
-                  background: 'rgba(28,26,23,0.04)',
-                  border: '1.5px solid rgba(28,26,23,0.08)',
+                  background: INK['04'],
+                  border: `1.5px solid ${INK['08']}`,
                 }}
               >
-                <PerriandIcon name="star" size={14} color="rgba(28,26,23,0.8)" />
-                <span className="text-[10px] font-medium" style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}>
+                <PerriandIcon name="star" size={14} color={INK['80']} />
+                <span className="text-[10px] font-medium" style={{ color: INK['80'], fontFamily: FONT.mono }}>
                   Rate
                 </span>
               </button>
@@ -172,18 +173,18 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
           {item.google && (
             <div className="flex gap-2 mt-3 mb-4 flex-wrap">
               {item.google.rating && (
-                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg" style={{ background: 'rgba(28,26,23,0.04)' }}>
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg" style={{ background: INK['04'] }}>
                   <PerriandIcon name="star" size={14} color="var(--t-chrome-yellow)" />
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.google.rating}</span>
                   {item.google.reviewCount && (
-                    <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+                    <span className="text-[10px]" style={{ color: INK['90'] }}>
                       ({item.google.reviewCount.toLocaleString()})
                     </span>
                   )}
                 </div>
               )}
               {item.google.priceLevel && (
-                <div className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium" style={{ background: 'rgba(28,26,23,0.04)', color: 'var(--t-ink)' }}>
+                <div className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium" style={{ background: INK['04'], color: 'var(--t-ink)' }}>
                   {'$'.repeat(item.google.priceLevel)}
                 </div>
               )}
@@ -192,25 +193,25 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
 
           {/* Description */}
           {item.enrichment?.description && (
-            <p className="text-[12px] leading-relaxed mb-4" style={{ color: 'rgba(28,26,23,0.85)' }}>
+            <p className="text-[12px] leading-relaxed mb-4" style={{ color: INK['85'] }}>
               {item.enrichment.description}
             </p>
           )}
 
           {/* Place details — address, website, phone, Google Maps link */}
           {item.google && (item.google.address || item.google.website || item.google.phone || item.google.placeId || item.google.lat) && (
-            <div className="mb-4 rounded-xl px-3.5 py-3" style={{ background: 'rgba(28,26,23,0.03)', border: '1px solid rgba(28,26,23,0.06)' }}>
+            <div className="mb-4 rounded-xl px-3.5 py-3" style={{ background: INK['03'], border: `1px solid ${INK['06']}` }}>
               {item.google.address && (
                 <div className="flex items-start gap-2 mb-2 last:mb-0">
-                  <PerriandIcon name="pin" size={13} color="rgba(28,26,23,0.5)" />
-                  <span className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.8)' }}>
+                  <PerriandIcon name="pin" size={13} color={INK['50']} />
+                  <span className="text-[11px] leading-relaxed" style={{ color: INK['80'] }}>
                     {item.google.address}
                   </span>
                 </div>
               )}
               {item.google.website && (
                 <div className="flex items-center gap-2 mb-2 last:mb-0">
-                  <PerriandIcon name="discover" size={13} color="rgba(28,26,23,0.5)" />
+                  <PerriandIcon name="discover" size={13} color={INK['50']} />
                   <a
                     href={item.google.website}
                     target="_blank"
@@ -225,7 +226,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               )}
               {item.google.phone && (
                 <div className="flex items-center gap-2 mb-2 last:mb-0">
-                  <PerriandIcon name="sparkle" size={13} color="rgba(28,26,23,0.5)" />
+                  <PerriandIcon name="sparkle" size={13} color={INK['50']} />
                   <a
                     href={`tel:${item.google.phone}`}
                     className="text-[11px] no-underline"
@@ -246,7 +247,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.name} ${item.location}`)}`;
                 return (
                   <div className="flex items-center gap-2 last:mb-0">
-                    <PerriandIcon name="location" size={13} color="rgba(28,26,23,0.5)" />
+                    <PerriandIcon name="location" size={13} color={INK['50']} />
                     <a
                       href={mapsUrl}
                       target="_blank"
@@ -291,7 +292,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                 className="text-[9px] font-bold uppercase tracking-widest mb-1"
                 style={{
                   color: sourceStyle?.color || '#c75233',
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                 }}
               >
                 {item.source?.name ? `From ${item.source.name}` : 'Source note'}
@@ -315,7 +316,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
             >
               <div
                 className="text-[9px] font-bold uppercase tracking-widest mb-1 flex items-center gap-1"
-                style={{ color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
+                style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}
               >
                 <PerriandIcon name="friend" size={12} color="var(--t-verde)" />
                 {item.friendAttribution.name}
@@ -332,7 +333,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
           {item.whatToOrder && item.whatToOrder.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}>
                 What to order
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -350,7 +351,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
           {item.tips && item.tips.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}>
                 Tips
               </div>
               <div className="rounded-xl px-3 py-2.5" style={{ background: 'var(--t-linen)' }}>
@@ -367,7 +368,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
           {siblingPlaces && siblingPlaces.length > 0 && (
             <div className="mb-4">
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}>
                 Also from this guide
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
@@ -375,7 +376,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                   <div key={sibling.id} className="min-w-[120px] rounded-xl p-2.5 flex-shrink-0"
                     style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                     <div className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{sibling.name}</div>
-                    <div className="text-[9px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                    <div className="text-[9px]" style={{ color: INK['95'] }}>
                       {sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)} · {sibling.location.split(',')[0]}
                     </div>
                   </div>
@@ -388,7 +389,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
           <div className="mb-4">
             <h3
               className="text-[10px] uppercase tracking-wider mb-2.5 font-bold"
-              style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: INK['95'], fontFamily: FONT.mono }}
             >
               Taste Mosaic
             </h3>
@@ -413,7 +414,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               style={{
                 background: 'linear-gradient(135deg, rgba(200,146,58,0.2), rgba(200,146,58,0.1))',
                 color: 'var(--t-honey)',
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: FONT.mono,
               }}
             >
               {item.matchScore}%
@@ -422,7 +423,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                 Taste match
               </div>
-              <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <div className="text-[10px]" style={{ color: INK['95'] }}>
                 Based on your profile preferences
               </div>
               {/* Inline pipeline progress when enriching */}
@@ -440,7 +441,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               {onViewBriefing && googlePlaceId && (
                 <button
                   className="text-[10px] mt-1 block border-none bg-transparent p-0 cursor-pointer"
-                  style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
                   onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}
                 >
                   View full briefing →
@@ -468,14 +469,14 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                     </span>
                   ))}
                   {existingRating.returnIntent === 'absolutely' && (
-                    <span className="text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(28,26,23,0.04)', color: 'rgba(28,26,23,0.9)' }}>
-                      Would return <PerriandIcon name="check" size={11} color="rgba(28,26,23,0.9)" />
+                    <span className="text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: INK['90'] }}>
+                      Would return <PerriandIcon name="check" size={11} color={INK['90']} />
                     </span>
                   )}
                 </div>
               )}
               {existingRating.personalNote && (
-                <p className="text-[11px] italic mt-1.5" style={{ color: 'rgba(28,26,23,0.9)' }}>
+                <p className="text-[11px] italic mt-1.5" style={{ color: INK['90'] }}>
                   &ldquo;{existingRating.personalNote}&rdquo;
                 </p>
               )}
@@ -492,7 +493,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               >
                 <h4
                   className="text-[10px] uppercase tracking-wider font-bold mb-1.5 flex items-center gap-1"
-                  style={{ color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}
                 >
                   <PerriandIcon name="terrazzo" size={12} color="var(--t-verde)" />
                   Why You&apos;ll Love It
@@ -510,7 +511,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
                 >
                   <h4
                     className="text-[10px] uppercase tracking-wider font-bold mb-1.5"
-                    style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+                    style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
                   >
                     Heads Up
                   </h4>
@@ -528,9 +529,9 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
               onClick={onRate}
               className="w-full mt-6 py-3.5 rounded-xl border-none cursor-pointer text-[13px] font-semibold transition-all hover:opacity-90"
               style={{
-                background: existingRating ? 'rgba(28,26,23,0.06)' : 'var(--t-ink)',
+                background: existingRating ? INK['06'] : 'var(--t-ink)',
                 color: existingRating ? 'var(--t-ink)' : 'var(--t-cream)',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
               }}
             >
               {existingRating ? 'Update your rating' : 'Rate this place'}

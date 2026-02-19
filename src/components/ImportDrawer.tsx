@@ -6,6 +6,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { streamImport, streamMapsImport } from '@/lib/importService';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 // Input type detection — Terrazzo figures out the rest
 function detectInputType(input: string): ImportMode {
@@ -290,14 +291,14 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
           {step === 'input' && (
             <>
               <div className="flex items-center justify-between mb-1 mt-1">
-                <h2 className="text-[20px] italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
+                <h2 className="text-[20px] italic" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
                   Add places
                 </h2>
-                <button onClick={handleClose} className="bg-transparent border-none cursor-pointer flex items-center justify-center w-6 h-6" style={{ color: 'rgba(28,26,23,0.8)' }}>
-                  <PerriandIcon name="close" size={16} color="rgba(28,26,23,0.8)" />
+                <button onClick={handleClose} className="bg-transparent border-none cursor-pointer flex items-center justify-center w-6 h-6" style={{ color: INK['80'] }}>
+                  <PerriandIcon name="close" size={16} color={INK['80']} />
                 </button>
               </div>
-              <p className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.85)', lineHeight: 1.5 }}>
+              <p className="text-[11px] mb-4" style={{ color: INK['85'], lineHeight: 1.5 }}>
                 Paste anything — an article, a Google Maps list, a Substack, a text from a friend. We&apos;ll figure out the rest.
               </p>
 
@@ -307,7 +308,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                 <textarea value={inputValue} onChange={e => { patch({ inputValue: e.target.value, mode: detectInputType(e.target.value) }); }}
                   placeholder={`Paste a link, a message, or a list of places…\n\ne.g. a Condé Nast article, a Google Maps list,\na Substack post, or a text from a friend`}
                   className="w-full p-4 text-[12px] resize-none border-none outline-none leading-relaxed"
-                  style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif", minHeight: 200 }} />
+                  style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: FONT.sans, minHeight: 200 }} />
                 {inputValue.length > 300 && (
                   <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
                     style={{ background: 'linear-gradient(transparent, white)' }} />
@@ -317,17 +318,17 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Detected type indicator */}
               {inputValue.trim() && (
                 <div className="flex items-center gap-2 mb-3 px-1">
-                  <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.8)', fontFamily: "'Space Mono', monospace" }}>
+                  <span className="text-[10px]" style={{ color: INK['80'], fontFamily: FONT.mono }}>
                     {mode === 'url' ? '🔗 Link detected' : mode === 'google-maps' ? '📍 Google Maps link detected' : '📋 Text'}
                   </span>
-                  <span style={{ color: 'rgba(28,26,23,0.15)' }}>·</span>
+                  <span style={{ color: INK['15'] }}>·</span>
                   <input
                     type="text"
                     value={sourceName}
                     onChange={e => patch({ sourceName: e.target.value })}
                     placeholder="Source name (optional)"
                     className="text-[10px] bg-transparent border-none outline-none flex-1"
-                    style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}
+                    style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
                     onClick={e => e.stopPropagation()}
                   />
                 </div>
@@ -343,7 +344,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Divider */}
               <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
-                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.4)', fontFamily: "'Space Mono', monospace" }}>or</span>
+                <span className="text-[10px]" style={{ color: INK['40'], fontFamily: FONT.mono }}>or</span>
                 <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
               </div>
 
@@ -367,7 +368,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                     onChange={e => setMapsUrl(e.target.value)}
                     placeholder="Paste your maps.app.goo.gl link…"
                     className="w-full px-3 py-2 text-[12px] border-none outline-none"
-                    style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: FONT.sans }}
                     autoFocus
                   />
                   <div className="flex gap-2 px-3 pb-3">
@@ -399,7 +400,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               <div className="mb-4 ghost-shimmer flex justify-center">
                 <PerriandIcon name="terrazzo" size={48} color="var(--t-honey)" />
               </div>
-              <h3 className="text-xl italic mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
+              <h3 className="text-xl italic mb-2" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
                 {progressPercent < 35 ? 'Reading your paste…' : progressPercent < 75 ? 'Looking up places…' : 'Almost there…'}
               </h3>
 
@@ -416,10 +417,10 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   />
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.7)', fontFamily: "'DM Sans', sans-serif" }}>
+                  <span className="text-[11px]" style={{ color: INK['70'], fontFamily: FONT.sans }}>
                     {progressLabel}
                   </span>
-                  <span className="text-[10px] font-semibold" style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}>
+                  <span className="text-[10px] font-semibold" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}>
                     {progressPercent}%
                   </span>
                 </div>
@@ -429,7 +430,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {discoveredNames.length > 0 && (
                 <div className="w-full max-w-[280px] mt-2 rounded-xl p-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                   <div className="text-[9px] uppercase font-bold tracking-wider mb-2"
-                    style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace", letterSpacing: '0.8px' }}>
+                    style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, letterSpacing: '0.8px' }}>
                     Places found
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -457,10 +458,10 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
           {step === 'results' && (
             <>
               <div className="mt-1 mb-1">
-                <h2 className="text-xl italic" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}>
+                <h2 className="text-xl italic" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
                   Found {importResults.length} places
                 </h2>
-                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <p className="text-[10px] mt-0.5" style={{ color: INK['95'] }}>
                   {sourceName ? `From "${sourceName}"` : 'From pasted content'}
                   {detectedDestination ? ` · ${detectedDestination}` : ''}
                 </p>
@@ -476,12 +477,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               {/* Bulk select controls */}
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <span className="text-[10px]" style={{ color: INK['95'] }}>
                   {selectedIds.size} of {importResults.length} selected
                 </span>
                 <div className="flex gap-2">
                   <button onClick={selectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'var(--t-verde)' }}>Select all</button>
-                  <button onClick={deselectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: 'rgba(28,26,23,0.9)' }}>Clear</button>
+                  <button onClick={deselectAll} className="text-[10px] font-semibold bg-transparent border-none cursor-pointer" style={{ color: INK['90'] }}>Clear</button>
                 </div>
               </div>
 
@@ -499,7 +500,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         <div className="flex items-center gap-1.5">
                           <PerriandIcon name={config.icon} size={18} color="var(--t-ink)" />
                           <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{config.label}</span>
-                          <span className="text-[10px]" style={{ color: 'rgba(28,26,23,0.9)' }}>{items.length}</span>
+                          <span className="text-[10px]" style={{ color: INK['90'] }}>{items.length}</span>
                         </div>
                         <span className="text-[10px] font-semibold" style={{ color: 'var(--t-verde)' }}>
                           {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
@@ -520,12 +521,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                               <div className="flex-1 min-w-0">
                                 <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.name}</div>
                                 {item.tasteNote && (
-                                  <div className="text-[10px] truncate" style={{ color: 'rgba(28,26,23,0.95)' }}>&ldquo;{item.tasteNote}&rdquo;</div>
+                                  <div className="text-[10px] truncate" style={{ color: INK['95'] }}>&ldquo;{item.tasteNote}&rdquo;</div>
                                 )}
                               </div>
                               {item.matchScore > 0 && (
                                 <span className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex-shrink-0"
-                                  style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}>
+                                  style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)', fontFamily: FONT.mono }}>
                                   {item.matchScore}%
                                 </span>
                               )}
@@ -549,17 +550,17 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Confirm button */}
               <button onClick={handleConfirmImport} disabled={selectedIds.size === 0}
                 className="w-full mt-6 py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-all flex items-center justify-center gap-2"
-                style={{ background: selectedIds.size > 0 ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)', color: selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.9)' }}>
+                style={{ background: selectedIds.size > 0 ? 'var(--t-ink)' : INK['10'], color: selectedIds.size > 0 ? 'white' : INK['90'] }}>
                 Save {selectedIds.size} places
-                <PerriandIcon name="terrazzo" size={16} color={selectedIds.size > 0 ? 'white' : 'rgba(28,26,23,0.9)'} />
+                <PerriandIcon name="terrazzo" size={16} color={selectedIds.size > 0 ? 'white' : INK['90']} />
               </button>
-              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: 'rgba(28,26,23,0.9)' }}>
+              <p className="text-center text-[10px] mt-1.5 mb-2" style={{ color: INK['90'] }}>
                 Deselect any you don&apos;t want
                 {detectedDestination ? ` · All go to ${detectedDestination}` : ''}
               </p>
 
               <button onClick={() => { setStep('input'); resetBackgroundTask(); }}
-                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                className="w-full mt-1 py-2 bg-transparent border-none cursor-pointer text-[11px]" style={{ color: INK['95'] }}>
                 ← Import more
               </button>
             </>
@@ -578,7 +579,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <div className="text-[13px] font-semibold" style={{ color: 'var(--t-verde)' }}>
                     {savedPlaces.length} places saved
                   </div>
-                  <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                  <div className="text-[10px]" style={{ color: INK['95'] }}>
                     {sourceName ? `From "${sourceName}"` : 'From pasted content'}
                     {detectedDestination ? ` · ${detectedDestination}` : ''}
                   </div>
@@ -629,7 +630,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{createdCollectionName}</div>
-                      <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                      <div className="text-[10px]" style={{ color: INK['95'] }}>
                         {savedPlaces.length} places · auto-created collection
                       </div>
                     </div>
@@ -642,7 +643,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {topMatches.length > 0 && (
                 <>
                   <div className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1"
-                    style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}>
+                    style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, letterSpacing: '1px' }}>
                     <PerriandIcon name="terrazzo" size={12} color="var(--t-honey)" />
                     Top matches for you
                   </div>
@@ -653,12 +654,12 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                       <div key={place.id} className="flex gap-2.5 rounded-xl p-3 mb-2"
                         style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                          style={{ background: `linear-gradient(135deg, ${sourceStyle?.color || '#c8923a'}30, ${sourceStyle?.color || '#c8923a'}15)`, color: sourceStyle?.color || 'var(--t-honey)', fontFamily: "'Space Mono', monospace" }}>
+                          style={{ background: `linear-gradient(135deg, ${sourceStyle?.color || '#c8923a'}30, ${sourceStyle?.color || '#c8923a'}15)`, color: sourceStyle?.color || 'var(--t-honey)', fontFamily: FONT.mono }}>
                           {place.matchScore}%
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
-                          <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                          <div className="text-[10px]" style={{ color: INK['95'] }}>
                             {place.type.charAt(0).toUpperCase() + place.type.slice(1)} · {place.location}
                           </div>
                           {place.tasteNote && (
@@ -682,7 +683,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
               <button onClick={() => { setStep('input'); resetBackgroundTask(); setSavedPlaces([]); }}
                 className="w-full mt-2 py-2 bg-transparent border-none cursor-pointer text-[11px]"
-                style={{ color: 'rgba(28,26,23,0.95)' }}>
+                style={{ color: INK['95'] }}>
                 Import more places
               </button>
             </>

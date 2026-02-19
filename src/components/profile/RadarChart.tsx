@@ -1,6 +1,7 @@
 'use client';
 
 import { AXIS_COLORS } from '@/constants/profile';
+import { FONT } from '@/constants/theme';
 
 interface RadarChartProps {
   data: Array<{ axis: string; value: number }>;
@@ -111,7 +112,7 @@ export default function RadarChart({ data, size = 280 }: RadarChartProps) {
             dominantBaseline="middle"
             fill="#f5f5f0"
             fontSize={10}
-            fontFamily="'Space Mono', monospace"
+            fontFamily={FONT.mono}
             opacity={0.7}
           >
             {d.axis}
@@ -131,7 +132,7 @@ export default function RadarChart({ data, size = 280 }: RadarChartProps) {
             dominantBaseline="middle"
             fill="#f5f5f0"
             fontSize={9}
-            fontFamily="'Space Mono', monospace"
+            fontFamily={FONT.mono}
             opacity={0.5}
           >
             {Math.round(d.value * 100)}

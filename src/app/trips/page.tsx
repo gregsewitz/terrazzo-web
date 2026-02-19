@@ -4,6 +4,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
@@ -25,12 +26,12 @@ export default function TripsPage() {
           <button
             onClick={() => router.push('/trips/new')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-none cursor-pointer text-[12px] font-medium transition-all hover:opacity-80"
-            style={{ background: 'var(--t-ink)', color: 'white', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
           >
             <span className="text-sm">+</span> New Trip
           </button>
         </div>
-        <p className="text-xs mb-6" style={{ color: 'rgba(28,26,23,0.95)' }}>
+        <p className="text-xs mb-6" style={{ color: INK['95'] }}>
           Plan and curate your bespoke travel itinerary
         </p>
 
@@ -65,7 +66,7 @@ export default function TripsPage() {
                       style={{
                         background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
                         color: trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)',
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: FONT.mono,
                       }}
                     >
                       <PerriandIcon
@@ -77,11 +78,11 @@ export default function TripsPage() {
                     </span>
                   )}
                 </div>
-                <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                <div className="text-[11px]" style={{ color: INK['95'] }}>
                   {trip.location} · {trip.days.length} days
                 </div>
               </div>
-              <span style={{ color: 'rgba(28,26,23,0.95)' }}>→</span>
+              <span style={{ color: INK['95'] }}>→</span>
             </button>
           ))}
 
@@ -90,14 +91,14 @@ export default function TripsPage() {
             onClick={() => router.push('/trips/new')}
             className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
             style={{
-              background: 'rgba(28,26,23,0.02)',
+              background: INK['02'],
               border: '1.5px dashed var(--t-travertine)',
-              color: 'rgba(28,26,23,0.9)',
+              color: INK['90'],
             }}
           >
             <span className="text-2xl">+</span>
             <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
-            <span className="text-[11px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+            <span className="text-[11px]" style={{ color: INK['90'] }}>
               Tell us where and when — we'll find your perfect places
             </span>
           </button>

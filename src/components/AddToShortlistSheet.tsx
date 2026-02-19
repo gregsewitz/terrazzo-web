@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 export default function AddToShortlistSheet({
   place,
@@ -50,18 +51,18 @@ export default function AddToShortlistSheet({
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <span
-            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
           >
             Add to Shortlist
           </span>
           <button
             onClick={onClose}
-            style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ color: INK['50'], background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            <PerriandIcon name="close" size={16} color="rgba(28,26,23,0.5)" />
+            <PerriandIcon name="close" size={16} color={INK['50']} />
           </button>
         </div>
-        <div className="text-[11px] mb-4" style={{ color: 'rgba(28,26,23,0.45)', fontFamily: "'DM Sans', sans-serif" }}>
+        <div className="text-[11px] mb-4" style={{ color: INK['45'], fontFamily: FONT.sans }}>
           {place.name}
         </div>
 
@@ -92,10 +93,10 @@ export default function AddToShortlistSheet({
 
                 {/* Name + count */}
                 <div className="flex-1 text-left">
-                  <span className="text-[13px]" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
+                  <span className="text-[13px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
                     {sl.name}
                   </span>
-                  <span className="ml-2 text-[10px]" style={{ color: 'rgba(28,26,23,0.35)', fontFamily: "'Space Mono', monospace" }}>
+                  <span className="ml-2 text-[10px]" style={{ color: INK['35'], fontFamily: FONT.mono }}>
                     {sl.placeIds.length}
                   </span>
                 </div>
@@ -104,7 +105,7 @@ export default function AddToShortlistSheet({
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center"
                   style={{
-                    background: isIn ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
+                    background: isIn ? 'var(--t-verde)' : INK['06'],
                   }}
                 >
                   {isIn && (
@@ -132,7 +133,7 @@ export default function AddToShortlistSheet({
                 background: 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -142,10 +143,10 @@ export default function AddToShortlistSheet({
               disabled={!newName.trim()}
               className="px-3 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer"
               style={{
-                background: newName.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
-                color: newName.trim() ? 'white' : 'rgba(28,26,23,0.3)',
+                background: newName.trim() ? 'var(--t-ink)' : INK['10'],
+                color: newName.trim() ? 'white' : INK['30'],
                 border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
               }}
             >
               Add
@@ -157,9 +158,9 @@ export default function AddToShortlistSheet({
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer transition-all hover:opacity-80"
             style={{
               background: 'none',
-              border: '1.5px dashed rgba(28,26,23,0.12)',
-              color: 'rgba(28,26,23,0.4)',
-              fontFamily: "'DM Sans', sans-serif",
+              border: `1.5px dashed ${INK['12']}`,
+              color: INK['40'],
+              fontFamily: FONT.sans,
               fontSize: 12,
             }}
           >

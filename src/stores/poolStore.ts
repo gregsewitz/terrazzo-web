@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { PlaceType } from '@/types';
 
 export type SortMode = 'match' | 'type' | 'source';
-export type FilterType = 'all' | 'restaurant' | 'museum' | 'activity' | 'hotel' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
+import type { FilterType } from '@/hooks/useTypeFilter';
+export type { FilterType };
 
 // Smart mapping: which place types are most relevant for each slot
 export const SLOT_TYPE_AFFINITY: Record<string, PlaceType[]> = {

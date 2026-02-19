@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant',
@@ -57,7 +58,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
             : 'white',
           border: isOverTarget
             ? '2px solid var(--t-verde)'
-            : '1.5px solid rgba(28,26,23,0.08)',
+            : `1.5px solid ${INK['08']}`,
           boxShadow: isOverTarget
             ? '0 8px 32px rgba(42,122,86,0.18), 0 2px 8px rgba(42,122,86,0.08)'
             : '0 12px 40px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.06)',
@@ -90,9 +91,9 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           </div>
           <div
             className="text-[10px] truncate flex items-center gap-1"
-            style={{ color: 'rgba(28,26,23,0.5)' }}
+            style={{ color: INK['50'] }}
           >
-            <PerriandIcon name={sourceStyle.icon} size={10} color="rgba(28,26,23,0.4)" />
+            <PerriandIcon name={sourceStyle.icon} size={10} color={INK['40']} />
             {item.location}
           </div>
         </div>
@@ -103,7 +104,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           style={{
             background: isOverTarget ? 'rgba(42,122,86,0.15)' : 'rgba(42,122,86,0.08)',
             color: 'var(--t-verde)',
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: FONT.mono,
           }}
         >
           {item.matchScore}%

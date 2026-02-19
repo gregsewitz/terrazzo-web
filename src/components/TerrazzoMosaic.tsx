@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { TasteDomain, TasteProfile, DOMAIN_COLORS } from '@/types';
+import { FONT, INK } from '@/constants/theme';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ export function TerrazzoMosaic({ profile, size = 'md', className, style }: Terra
         borderRadius: config.radius,
         overflow: 'hidden',
         background: '#ddd5c5', // grout / travertine
-        boxShadow: 'inset 0 0 0 1px rgba(28,26,23,0.04)',
+        boxShadow: `inset 0 0 0 1px ${INK['04']}`,
         width: totalPx,
         height: totalPx,
         flexShrink: 0,
@@ -207,10 +208,10 @@ export function MosaicLegend({ profile, className, style, dark = false }: Mosaic
           <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
           <span
             style={{
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: FONT.mono,
               fontSize: 9,
               letterSpacing: '0.03em',
-              color: dark ? 'rgba(245,240,230,0.6)' : 'rgba(28,26,23,0.55)',
+              color: dark ? 'rgba(245,240,230,0.6)' : INK['55'],
               whiteSpace: 'nowrap',
             }}
           >

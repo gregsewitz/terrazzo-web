@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT } from '@/constants/theme';
 
 const TABS = [
   { id: 'saved', label: 'Collect', icon: 'saved' as PerriandIconName, path: '/saved' },
@@ -43,7 +44,7 @@ export default function TabBar() {
             <span
               className="text-[9px] uppercase tracking-wider"
               style={{
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: FONT.mono,
                 fontWeight: isActive ? 700 : 400,
                 color: 'var(--t-ink)',
               }}

@@ -2,6 +2,7 @@
 
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 interface GhostCardProps {
   item: ImportedPlace;
@@ -95,7 +96,7 @@ export default function GhostCard({
           {note && (
             <div
               className="text-[10px] italic truncate mt-0.5"
-              style={{ color: 'rgba(28,26,23,0.9)' }}
+              style={{ color: INK['90'] }}
             >
               {sourceType === 'friend' ? `"${note}"` : note}
             </div>
@@ -112,7 +113,7 @@ export default function GhostCard({
               color: 'white',
               border: 'none',
               cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: FONT.sans,
             }}
           >
             <PerriandIcon name="check" size={12} color="white" /> Add
@@ -121,13 +122,13 @@ export default function GhostCard({
             onClick={(e) => { e.stopPropagation(); onDismiss(); }}
             className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
             style={{
-              background: 'rgba(28,26,23,0.06)',
-              color: 'rgba(28,26,23,0.85)',
+              background: INK['06'],
+              color: INK['85'],
               border: 'none',
               cursor: 'pointer',
             }}
           >
-            <PerriandIcon name="close" size={12} color="rgba(28,26,23,0.85)" />
+            <PerriandIcon name="close" size={12} color={INK['85']} />
           </button>
         </div>
       </div>
@@ -164,7 +165,7 @@ export default function GhostCard({
         className="font-semibold text-sm leading-tight pr-8 mb-0.5"
         style={{
           color: 'var(--t-ink)',
-          fontFamily: "'DM Serif Display', serif",
+          fontFamily: FONT.serif,
         }}
       >
         {item.name}
@@ -177,7 +178,7 @@ export default function GhostCard({
           style={{
             background: sourceStyle.bg,
             color: sourceStyle.color,
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: FONT.mono,
           }}
         >
           <PerriandIcon name={sourceStyle.icon} size={12} color={sourceStyle.color} />
@@ -186,7 +187,7 @@ export default function GhostCard({
         {note && (
           <div
             className="text-[10px] ml-0.5 italic mt-1"
-            style={{ color: 'rgba(28,26,23,0.9)' }}
+            style={{ color: INK['90'] }}
           >
             {sourceType === 'friend' ? `"${note}"` : note}
           </div>
@@ -203,7 +204,7 @@ export default function GhostCard({
             color: 'white',
             border: 'none',
             cursor: 'pointer',
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
           }}
         >
           <PerriandIcon name="check" size={12} color="white" />
@@ -216,7 +217,7 @@ export default function GhostCard({
             color: 'var(--t-ink)',
             border: 'none',
             cursor: 'pointer',
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
           }}
         >
           <PerriandIcon name="close" size={12} color="var(--t-ink)" />

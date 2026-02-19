@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 interface SmartCollectionSheetProps {
   isOpen: boolean;
@@ -188,7 +189,7 @@ export default function SmartCollectionSheet({
           {/* Title */}
           <h2
             className="text-lg italic mb-6"
-            style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
           >
             New Curated Collection
           </h2>
@@ -205,7 +206,7 @@ export default function SmartCollectionSheet({
                   className="w-full px-4 py-3 rounded-lg border text-[14px]"
                   style={{
                     backgroundColor: 'white', borderColor: 'var(--t-linen)',
-                    color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif",
+                    color: 'var(--t-ink)', fontFamily: FONT.sans,
                   }}
                   autoFocus
                 />
@@ -215,7 +216,7 @@ export default function SmartCollectionSheet({
               <div>
                 <p
                   className="text-[10px] uppercase tracking-wider mb-3"
-                  style={{ fontFamily: "'Space Mono', monospace", color: 'var(--t-amber)' }}
+                  style={{ fontFamily: FONT.mono, color: 'var(--t-amber)' }}
                 >
                   Try these
                 </p>
@@ -227,7 +228,7 @@ export default function SmartCollectionSheet({
                       className="px-3 py-1.5 rounded-full border text-[11px] cursor-pointer transition-colors"
                       style={{
                         backgroundColor: 'white', borderColor: 'var(--t-linen)',
-                        color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif",
+                        color: 'var(--t-ink)', fontFamily: FONT.sans,
                       }}
                     >
                       {prompt}
@@ -240,7 +241,7 @@ export default function SmartCollectionSheet({
                 onClick={handleSubmit}
                 disabled={!input.trim()}
                 className="w-full py-3 rounded-xl text-[14px] font-medium cursor-pointer transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)', fontFamily: "'DM Sans', sans-serif" }}
+                style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)', fontFamily: FONT.sans }}
               >
                 Create Collection <PerriandIcon name="star" size={12} color="var(--t-cream)" />
               </button>
@@ -284,7 +285,7 @@ export default function SmartCollectionSheet({
                   </div>
                 </div>
               </div>
-              <p className="text-center text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <p className="text-center text-[11px]" style={{ color: INK['95'] }}>
                 Terrazzo is thinking...
               </p>
             </div>
@@ -296,7 +297,7 @@ export default function SmartCollectionSheet({
               {parsed.reasoning && (
                 <div
                   className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px] flex gap-2 items-start"
-                  style={{ color: 'rgba(28,26,23,0.95)', background: 'rgba(200,146,58,0.06)' }}
+                  style={{ color: INK['95'], background: 'rgba(200,146,58,0.06)' }}
                 >
                   <div style={{ flexShrink: 0 }}>
                     <PerriandIcon name="sparkle" size={11} />
@@ -323,14 +324,14 @@ export default function SmartCollectionSheet({
                   </div>
                   <h3
                     className="text-[15px] italic"
-                    style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+                    style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
                   >
                     {parsed.name}
                   </h3>
                 </div>
                 <p
                   className="text-[12px] mb-4"
-                  style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(28,26,23,0.9)' }}
+                  style={{ fontFamily: FONT.mono, color: INK['90'] }}
                 >
                   {parsed.matchCount ?? 0} places found
                 </p>
@@ -343,7 +344,7 @@ export default function SmartCollectionSheet({
                         className="px-2.5 py-1 rounded-full text-[10px]"
                         style={{
                           backgroundColor: 'var(--t-verde)', color: 'white',
-                          fontFamily: "'Space Mono', monospace",
+                          fontFamily: FONT.mono,
                         }}
                       >
                         {tag}
@@ -360,7 +361,7 @@ export default function SmartCollectionSheet({
                   className="flex-1 py-3 rounded-xl text-[14px] font-medium cursor-pointer border"
                   style={{
                     backgroundColor: 'transparent', borderColor: 'var(--t-linen)',
-                    color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif",
+                    color: 'var(--t-ink)', fontFamily: FONT.sans,
                   }}
                 >
                   Back
@@ -370,7 +371,7 @@ export default function SmartCollectionSheet({
                   className="flex-1 py-3 rounded-xl text-[14px] font-medium cursor-pointer"
                   style={{
                     backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)',
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: FONT.sans,
                   }}
                 >
                   Create Collection

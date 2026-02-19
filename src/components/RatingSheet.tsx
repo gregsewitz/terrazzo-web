@@ -11,6 +11,7 @@ import {
   CONTEXT_TAGS,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 interface RatingSheetProps {
   item: ImportedPlace;
@@ -79,11 +80,11 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
             <div className="flex-1 min-w-0">
               <h2
                 className="text-lg truncate"
-                style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
               >
                 {item.name}
               </h2>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <p className="text-[11px]" style={{ color: INK['95'] }}>
                 {item.location}
               </p>
             </div>
@@ -94,7 +95,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                 style={{
                   background: `${selectedReaction.color}15`,
                   color: selectedReaction.color,
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                   fontSize: '12px',
                 }}
               >
@@ -109,7 +110,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
             <div className="flex flex-col items-center gap-6">
               <h3
                 className="text-sm font-medium"
-                style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}
+                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
               >
                 How did it feel?
               </h3>
@@ -133,8 +134,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                       <span
                         className="text-[10px] font-medium whitespace-nowrap"
                         style={{
-                          color: isSelected ? r.color : 'rgba(28,26,23,0.9)',
-                          fontFamily: "'Space Mono', monospace",
+                          color: isSelected ? r.color : INK['90'],
+                          fontFamily: FONT.mono,
                         }}
                       >
                         {r.label}
@@ -153,7 +154,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               <div>
                 <h3
                   className="text-[10px] uppercase tracking-wider font-bold mb-3"
-                  style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
                 >
                   What stood out?
                 </h3>
@@ -168,8 +169,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         style={{
                           background: isActive ? `${selectedReaction.color}12` : 'white',
                           borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
-                          color: isActive ? selectedReaction.color : 'rgba(28,26,23,0.9)',
-                          fontFamily: "'DM Sans', sans-serif",
+                          color: isActive ? selectedReaction.color : INK['90'],
+                          fontFamily: FONT.sans,
                           fontWeight: isActive ? 600 : 400,
                         }}
                       >
@@ -184,7 +185,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               <div>
                 <h3
                   className="text-[10px] uppercase tracking-wider font-bold mb-3"
-                  style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
                 >
                   Perfect for...
                 </h3>
@@ -199,8 +200,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         style={{
                           background: isActive ? 'var(--t-ink)' : 'white',
                           borderColor: isActive ? 'var(--t-ink)' : 'var(--t-linen)',
-                          color: isActive ? 'var(--t-cream)' : 'rgba(28,26,23,0.9)',
-                          fontFamily: "'DM Sans', sans-serif",
+                          color: isActive ? 'var(--t-cream)' : INK['90'],
+                          fontFamily: FONT.sans,
                           fontWeight: isActive ? 600 : 400,
                         }}
                       >
@@ -215,7 +216,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
               <div>
                 <h3
                   className="text-[10px] uppercase tracking-wider font-bold mb-3"
-                  style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+                  style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
                 >
                   Would you return?
                 </h3>
@@ -234,8 +235,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                         style={{
                           background: isActive ? selectedReaction.color : 'white',
                           borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
-                          color: isActive ? 'white' : 'rgba(28,26,23,0.9)',
-                          fontFamily: "'DM Sans', sans-serif",
+                          color: isActive ? 'white' : INK['90'],
+                          fontFamily: FONT.sans,
                         }}
                       >
                         {opt.label}
@@ -253,8 +254,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   style={{
                     background: 'white',
                     borderColor: 'var(--t-linen)',
-                    color: 'rgba(28,26,23,0.9)',
-                    fontFamily: "'DM Sans', sans-serif",
+                    color: INK['90'],
+                    fontFamily: FONT.sans,
                   }}
                 >
                   + Add a note
@@ -265,7 +266,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   style={{
                     background: selectedReaction.color,
                     color: 'white',
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: FONT.sans,
                   }}
                 >
                   Done
@@ -279,11 +280,11 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
             <div className="flex flex-col gap-4">
               <h3
                 className="text-[10px] uppercase tracking-wider font-bold"
-                style={{ color: 'var(--t-amber)', fontFamily: "'Space Mono', monospace" }}
+                style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
               >
                 Personal note
               </h3>
-              <p className="text-[11px] -mt-2" style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <p className="text-[11px] -mt-2" style={{ color: INK['95'] }}>
                 What would you tell a friend about this place?
               </p>
               <textarea
@@ -295,7 +296,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   background: 'white',
                   borderColor: 'var(--t-linen)',
                   color: 'var(--t-ink)',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                   minHeight: 120,
                   outline: 'none',
                 }}
@@ -309,8 +310,8 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   style={{
                     background: 'white',
                     borderColor: 'var(--t-linen)',
-                    color: 'rgba(28,26,23,0.9)',
-                    fontFamily: "'DM Sans', sans-serif",
+                    color: INK['90'],
+                    fontFamily: FONT.sans,
                   }}
                 >
                   Back
@@ -321,7 +322,7 @@ export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps)
                   style={{
                     background: selectedReaction.color,
                     color: 'white',
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: FONT.sans,
                   }}
                 >
                   Save

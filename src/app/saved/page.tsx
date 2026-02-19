@@ -118,30 +118,30 @@ export default function SavedPage() {
               onClick={() => setActiveView('shortlists')}
               className="cursor-pointer transition-all"
               style={{
-                fontFamily: "'DM Serif Display', serif",
+                fontFamily: FONT.serif,
                 fontStyle: 'italic',
                 fontSize: activeView === 'shortlists' ? 22 : 14,
-                color: activeView === 'shortlists' ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                color: activeView === 'shortlists' ? 'var(--t-ink)' : INK['50'],
                 lineHeight: 1.2,
               }}
             >
               Shortlists
             </span>
-            <span style={{ color: 'rgba(28,26,23,0.12)', fontSize: 16, fontWeight: 300 }}>|</span>
+            <span style={{ color: INK['12'], fontSize: 16, fontWeight: 300 }}>|</span>
             <span
               onClick={() => setActiveView('library')}
               className="cursor-pointer transition-all"
               style={{
-                fontFamily: "'DM Serif Display', serif",
+                fontFamily: FONT.serif,
                 fontStyle: 'italic',
                 fontSize: activeView === 'library' ? 22 : 14,
-                color: activeView === 'library' ? 'var(--t-ink)' : 'rgba(28,26,23,0.5)',
+                color: activeView === 'library' ? 'var(--t-ink)' : INK['50'],
                 lineHeight: 1.2,
               }}
             >
               Library
             </span>
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.4)' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['40'] }}>
               {activeView === 'library' ? filteredPlaces.length : shortlists.length}
             </span>
           </div>
@@ -158,9 +158,9 @@ export default function SavedPage() {
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4 cursor-pointer transition-all hover:opacity-80"
               style={{
                 background: 'none',
-                border: '1.5px dashed rgba(28,26,23,0.15)',
-                color: 'rgba(28,26,23,0.5)',
-                fontFamily: "'DM Sans', sans-serif",
+                border: `1.5px dashed ${INK['15']}`,
+                color: INK['50'],
+                fontFamily: FONT.sans,
                 fontSize: 12,
               }}
             >
@@ -182,11 +182,11 @@ export default function SavedPage() {
 
             {shortlists.length === 0 && (
               <div className="text-center py-12">
-                <PerriandIcon name="saved" size={36} color="rgba(28,26,23,0.15)" />
-                <p className="text-[13px] mt-3" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <PerriandIcon name="saved" size={36} color={INK['15']} />
+                <p className="text-[13px] mt-3" style={{ color: INK['50'] }}>
                   No shortlists yet
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: 'rgba(28,26,23,0.35)' }}>
+                <p className="text-[11px] mt-1" style={{ color: INK['35'] }}>
                   Create one to start curating your places
                 </p>
               </div>
@@ -213,7 +213,7 @@ export default function SavedPage() {
                   color: 'var(--t-panton-orange)',
                   fontSize: 10,
                   fontWeight: 600,
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
@@ -238,9 +238,9 @@ export default function SavedPage() {
                   className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
                   style={{
                     background: typeFilter === type ? 'var(--t-ink)' : 'white',
-                    color: typeFilter === type ? 'white' : 'rgba(28,26,23,0.6)',
+                    color: typeFilter === type ? 'white' : INK['60'],
                     border: typeFilter === type ? 'none' : '1px solid var(--t-linen)',
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                   }}
                 >
                   {type === 'all' ? 'All types' : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -256,9 +256,9 @@ export default function SavedPage() {
                   className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
                   style={{
                     background: cityFilter === 'all' ? 'var(--t-verde)' : 'white',
-                    color: cityFilter === 'all' ? 'white' : 'rgba(28,26,23,0.6)',
+                    color: cityFilter === 'all' ? 'white' : INK['60'],
                     border: cityFilter === 'all' ? 'none' : '1px solid var(--t-linen)',
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                   }}
                 >
                   All cities
@@ -270,9 +270,9 @@ export default function SavedPage() {
                     className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
                     style={{
                       background: cityFilter === city ? 'var(--t-verde)' : 'white',
-                      color: cityFilter === city ? 'white' : 'rgba(28,26,23,0.6)',
+                      color: cityFilter === city ? 'white' : INK['60'],
                       border: cityFilter === city ? 'none' : '1px solid var(--t-linen)',
-                      fontFamily: "'Space Mono', monospace",
+                      fontFamily: FONT.mono,
                     }}
                   >
                     {city}
@@ -296,13 +296,13 @@ export default function SavedPage() {
               </div>
             ) : (
               <div className="text-center py-16">
-                <PerriandIcon name="discover" size={36} color="rgba(28,26,23,0.15)" />
-                <p className="text-[13px] mt-3" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <PerriandIcon name="discover" size={36} color={INK['15']} />
+                <p className="text-[13px] mt-3" style={{ color: INK['50'] }}>
                   {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
                     ? 'No places match your filters'
                     : 'No saved places yet'}
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: 'rgba(28,26,23,0.35)' }}>
+                <p className="text-[11px] mt-1" style={{ color: INK['35'] }}>
                   {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
                     ? 'Try adjusting your search or filters'
                     : 'Import places to get started'}
@@ -459,20 +459,20 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
             background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
           }}
         >
-          <PerriandIcon name={typeIcon as any} size={20} color="rgba(28,26,23,0.7)" />
+          <PerriandIcon name={typeIcon as any} size={20} color={INK['70']} />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: "'DM Sans', sans-serif" }}>
+              <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
                 {place.name}
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
                   {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                 </span>
-                <span style={{ fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>· {place.location.split(',')[0]}</span>
+                <span style={{ fontSize: 10, color: INK['50'] }}>· {place.location.split(',')[0]}</span>
               </div>
             </div>
 
@@ -481,13 +481,13 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
               onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
               className="w-7 h-7 rounded-full flex items-center justify-center transition-all flex-shrink-0"
               style={{
-                background: isStarred ? 'var(--t-verde)' : 'rgba(28,26,23,0.06)',
-                color: isStarred ? 'white' : 'rgba(28,26,23,0.5)',
+                background: isStarred ? 'var(--t-verde)' : INK['06'],
+                color: isStarred ? 'white' : INK['50'],
                 border: 'none',
                 cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="star" size={12} color={isStarred ? 'white' : 'rgba(28,26,23,0.5)'} />
+              <PerriandIcon name="star" size={12} color={isStarred ? 'white' : INK['50']} />
             </button>
           </div>
         </div>
@@ -498,7 +498,7 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
           {ratingReaction && (
             <span
               className="px-1.5 py-0.5 rounded flex items-center gap-1"
-              style={{ fontSize: 9, fontWeight: 600, background: `${ratingReaction.color}10`, color: ratingReaction.color, fontFamily: "'Space Mono', monospace" }}
+              style={{ fontSize: 9, fontWeight: 600, background: `${ratingReaction.color}10`, color: ratingReaction.color, fontFamily: FONT.mono }}
             >
               <PerriandIcon name={ratingReaction.icon} size={10} color={ratingReaction.color} /> {ratingReaction.label}
             </span>
@@ -506,31 +506,31 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
           {place.friendAttribution && (
             <span
               className="px-1.5 py-0.5 rounded flex items-center gap-1"
-              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.06)', color: 'var(--t-verde)', fontFamily: "'Space Mono', monospace" }}
+              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.06)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
             >
               <PerriandIcon name="friend" size={10} color="var(--t-verde)" /> {place.friendAttribution.name}
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.5)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <PerriandIcon name="star" size={10} color="rgba(28,26,23,0.5)" /> {google.rating}
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['50'], display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <PerriandIcon name="star" size={10} color={INK['50']} /> {google.rating}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'rgba(28,26,23,0.4)' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'] }}>
               {priceStr}
             </span>
           )}
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, fontWeight: 600, color: 'var(--t-honey)' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: 'var(--t-honey)' }}>
             {place.matchScore}%
           </span>
         </div>
 
         {truncSub && (
           <div style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
             fontSize: 11,
-            color: 'rgba(28,26,23,0.6)',
+            color: INK['60'],
             fontStyle: 'italic',
             lineHeight: 1.4,
           }}>
@@ -745,16 +745,16 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
         }}
       >
         <span
-          style={{ fontFamily: "'DM Serif Display', serif", fontSize: 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
+          style={{ fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
         >
           New Shortlist
         </span>
         <button
           onClick={onClose}
           className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(28,26,23,0.05)', border: 'none', cursor: 'pointer' }}
+          style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
         >
-          <PerriandIcon name="close" size={12} color="rgba(28,26,23,0.5)" />
+          <PerriandIcon name="close" size={12} color={INK['50']} />
         </button>
       </div>
 
@@ -770,12 +770,12 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
             style={{
               background: !isSmartMode ? 'var(--t-ink)' : 'white',
-              color: !isSmartMode ? 'white' : 'rgba(28,26,23,0.6)',
+              color: !isSmartMode ? 'white' : INK['60'],
               border: !isSmartMode ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: FONT.mono,
             }}
           >
-            <PerriandIcon name="edit" size={10} color={!isSmartMode ? 'white' : 'rgba(28,26,23,0.5)'} />
+            <PerriandIcon name="edit" size={10} color={!isSmartMode ? 'white' : INK['50']} />
             Manual
           </button>
           <button
@@ -783,12 +783,12 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
             style={{
               background: isSmartMode ? 'var(--t-ink)' : 'white',
-              color: isSmartMode ? 'white' : 'rgba(28,26,23,0.6)',
+              color: isSmartMode ? 'white' : INK['60'],
               border: isSmartMode ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: FONT.mono,
             }}
           >
-            <PerriandIcon name="sparkle" size={10} color={isSmartMode ? 'white' : 'rgba(28,26,23,0.5)'} />
+            <PerriandIcon name="sparkle" size={10} color={isSmartMode ? 'white' : INK['50']} />
             AI curate
           </button>
         </div>
@@ -811,7 +811,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                   <PerriandIcon
                     name={icon.name}
                     size={14}
-                    color={selectedEmoji === icon.name ? 'white' : 'rgba(28,26,23,0.5)'}
+                    color={selectedEmoji === icon.name ? 'white' : INK['50']}
                   />
                 </button>
               ))}
@@ -830,7 +830,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                 background: 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -842,10 +842,10 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
               disabled={!name.trim()}
               className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer"
               style={{
-                background: name.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
-                color: name.trim() ? 'white' : 'rgba(28,26,23,0.3)',
+                background: name.trim() ? 'var(--t-ink)' : INK['10'],
+                color: name.trim() ? 'white' : INK['30'],
                 border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 boxSizing: 'border-box',
               }}
             >
@@ -871,7 +871,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                 background: 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -887,8 +887,8 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                   style={{
                     background: 'white',
                     border: '1px solid var(--t-linen)',
-                    color: 'rgba(28,26,23,0.7)',
-                    fontFamily: "'DM Sans', sans-serif",
+                    color: INK['70'],
+                    fontFamily: FONT.sans,
                   }}
                 >
                   {prompt}
@@ -902,14 +902,14 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
               disabled={!smartQuery.trim()}
               className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
               style={{
-                background: smartQuery.trim() ? 'var(--t-ink)' : 'rgba(28,26,23,0.1)',
-                color: smartQuery.trim() ? 'white' : 'rgba(28,26,23,0.3)',
+                background: smartQuery.trim() ? 'var(--t-ink)' : INK['10'],
+                color: smartQuery.trim() ? 'white' : INK['30'],
                 border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: FONT.sans,
                 boxSizing: 'border-box',
               }}
             >
-              <PerriandIcon name="sparkle" size={11} color={smartQuery.trim() ? 'white' : 'rgba(28,26,23,0.3)'} />
+              <PerriandIcon name="sparkle" size={11} color={smartQuery.trim() ? 'white' : INK['30']} />
               Find places
             </button>
           </div>
@@ -938,7 +938,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             </div>
             <p
               className="text-center text-[10px] mt-2"
-              style={{ color: 'rgba(28,26,23,0.5)', fontFamily: "'Space Mono', monospace" }}
+              style={{ color: INK['50'], fontFamily: FONT.mono }}
             >
               Terrazzo is curating...
             </p>
@@ -952,10 +952,10 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             {smartResult.reasoning && (
               <div
                 className="text-[10px] leading-relaxed px-3 py-2 rounded-lg flex gap-2 items-start mb-3"
-                style={{ color: 'rgba(28,26,23,0.8)', background: 'rgba(200,146,58,0.06)' }}
+                style={{ color: INK['80'], background: 'rgba(200,146,58,0.06)' }}
               >
                 <PerriandIcon name="sparkle" size={10} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span style={{ fontFamily: "'DM Sans', sans-serif" }}>{smartResult.reasoning}</span>
+                <span style={{ fontFamily: FONT.sans }}>{smartResult.reasoning}</span>
               </div>
             )}
 
@@ -963,7 +963,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             {smartError && (
               <div
                 className="text-[9px] px-2.5 py-1.5 rounded-lg mb-2"
-                style={{ color: 'rgba(28,26,23,0.5)', background: 'rgba(107,139,154,0.06)', fontFamily: "'Space Mono', monospace" }}
+                style={{ color: INK['50'], background: 'rgba(107,139,154,0.06)', fontFamily: FONT.mono }}
               >
                 Offline mode — {smartError}
               </div>
@@ -975,7 +975,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                 <PerriandIcon name={smartResult.emoji} size={16} />
                 <span
                   className="text-[14px] font-semibold"
-                  style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', color: 'var(--t-ink)' }}
+                  style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
                 >
                   {smartResult.name}
                 </span>
@@ -983,7 +983,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className="text-[11px] font-bold"
-                  style={{ fontFamily: "'Space Mono', monospace", color: 'var(--t-verde)' }}
+                  style={{ fontFamily: FONT.mono, color: 'var(--t-verde)' }}
                 >
                   {smartResult.matchCount ?? 0} places
                 </span>
@@ -997,7 +997,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                       style={{
                         background: 'rgba(42,122,86,0.08)',
                         color: 'var(--t-verde)',
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: FONT.mono,
                       }}
                     >
                       {tag}
@@ -1016,7 +1016,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                   background: 'transparent',
                   border: '1px solid var(--t-linen)',
                   color: 'var(--t-ink)',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
                 Try again
@@ -1028,7 +1028,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                   background: 'var(--t-ink)',
                   color: 'white',
                   border: 'none',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
                 Create
@@ -1056,6 +1056,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
 // ═══════════════════════════════════════════
 
 import type { Trip } from '@/types';
+import { FONT, INK } from '@/constants/theme';
 
 function AddToTripSheet({ place, trips, onClose, onAdd }: {
   place: ImportedPlace;
@@ -1076,19 +1077,19 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: "'DM Serif Display', serif" }}>
+            <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
               Add to trip
             </div>
-            <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.6)' }}>
+            <div className="text-[11px]" style={{ color: INK['60'] }}>
               {place.name}
             </div>
           </div>
           <button
             onClick={onClose}
             className="flex items-center justify-center"
-            style={{ color: 'rgba(28,26,23,0.5)', background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
+            style={{ color: INK['50'], background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
           >
-            <PerriandIcon name="close" size={16} color="rgba(28,26,23,0.5)" />
+            <PerriandIcon name="close" size={16} color={INK['50']} />
           </button>
         </div>
 
@@ -1104,7 +1105,7 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                   {trip.name}
                 </div>
-                <div className="text-[10px]" style={{ color: 'rgba(28,26,23,0.5)' }}>
+                <div className="text-[10px]" style={{ color: INK['50'] }}>
                   {trip.location} {trip.startDate && `· ${trip.startDate}`}
                 </div>
               </div>

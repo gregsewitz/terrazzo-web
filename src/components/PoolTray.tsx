@@ -6,6 +6,7 @@ import { usePoolStore, FilterType, SLOT_TYPE_AFFINITY } from '@/stores/poolStore
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -150,13 +151,13 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             borderTopWidth: '1px',
             borderTopStyle: 'solid',
             borderTopColor: 'var(--t-linen)',
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
           }}
         >
           <div className="flex items-center gap-2">
             <span
               style={{
-                fontFamily: "'DM Serif Display', serif",
+                fontFamily: FONT.serif,
                 fontSize: '14px',
                 fontWeight: 600,
                 color: 'var(--t-ink)',
@@ -170,12 +171,12 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                 background: 'rgba(200,146,58,0.12)',
                 color: 'var(--t-honey)',
                 padding: '2px 8px',
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: FONT.mono,
               }}
             >
               {starredPlaces.length}
             </span>
-            <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.9)' }}>▲</span>
+            <span style={{ fontSize: '10px', color: INK['90'] }}>▲</span>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onCurateMore(); }}
@@ -184,7 +185,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
               background: 'transparent',
               color: 'var(--t-panton-orange)',
               borderColor: 'var(--t-panton-orange)',
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: FONT.mono,
             }}
           >
             + Add more
@@ -227,14 +228,14 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             onClick={() => setExpanded(false)}
             className="flex items-center gap-2 bg-transparent border-none cursor-pointer"
             style={{
-              fontFamily: "'DM Serif Display', serif",
+              fontFamily: FONT.serif,
               fontSize: '18px',
               fontWeight: 600,
               color: 'var(--t-ink)',
             }}
           >
             Everywhere you want to go
-            <span style={{ fontSize: '10px', color: 'rgba(28,26,23,0.9)' }}>▼</span>
+            <span style={{ fontSize: '10px', color: INK['90'] }}>▼</span>
           </button>
           <div className="flex items-center gap-2">
             {onOpenExport && starredPlaces.length > 0 && (
@@ -245,7 +246,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                   background: 'transparent',
                   color: 'var(--t-honey)',
                   borderColor: 'var(--t-honey)',
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: FONT.mono,
                 }}
               >
                 <PerriandIcon name="pin" size={12} color="var(--t-honey)" />
@@ -259,7 +260,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                 background: 'transparent',
                 color: 'var(--t-panton-orange)',
                 borderColor: 'var(--t-panton-orange)',
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: FONT.mono,
               }}
             >
               + Add more
@@ -279,20 +280,20 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             <div className="flex items-center justify-between mb-1">
               <span
                 className="text-[12px] font-semibold"
-                style={{ color: 'var(--t-verde)', fontFamily: "'DM Sans', sans-serif" }}
+                style={{ color: 'var(--t-verde)', fontFamily: FONT.sans }}
               >
                 Picking for {slotContext.slotLabel} · Day {slotContext.dayNumber}
               </span>
               <button
                 onClick={() => usePoolStore.getState().setSlotContext(null)}
                 className="text-[10px] px-2 py-0.5 rounded-full border-none cursor-pointer"
-                style={{ background: 'rgba(28,26,23,0.06)', color: 'rgba(28,26,23,0.95)' }}
+                style={{ background: INK['06'], color: INK['95'] }}
               >
                 Clear
               </button>
             </div>
             {(slotContext.adjacentPlaces.before || slotContext.adjacentPlaces.after) && (
-              <div className="text-[11px]" style={{ color: 'rgba(28,26,23,0.95)' }}>
+              <div className="text-[11px]" style={{ color: INK['95'] }}>
                 {slotContext.adjacentPlaces.before && (
                   <span>After {slotContext.adjacentPlaces.before.name}</span>
                 )}
@@ -315,7 +316,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                         background: filterType === t ? 'var(--t-verde)' : 'rgba(42,122,86,0.08)',
                         color: filterType === t ? 'white' : 'var(--t-verde)',
                         border: 'none',
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: FONT.mono,
                         fontWeight: 600,
                       }}
                     >
@@ -330,7 +331,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
         )}
 
         {/* Subtitle */}
-        <div className="px-4 pb-2 text-xs" style={{ color: 'rgba(28,26,23,0.95)' }}>
+        <div className="px-4 pb-2 text-xs" style={{ color: INK['95'] }}>
           {sortedItems.length} place{sortedItems.length !== 1 ? 's' : ''}
           {filterType !== 'all' && ` · ${filterType}`}
           {sourceFilter !== 'all' && ` · ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label}`}
@@ -362,22 +363,22 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                     ? 'white'
                     : isSuggested
                       ? 'var(--t-verde)'
-                      : 'rgba(28,26,23,0.9)',
+                      : INK['90'],
                   border: isActive
                     ? '1px solid var(--t-ink)'
                     : isSuggested
                       ? '1px solid rgba(42,122,86,0.2)'
                       : '1px solid var(--t-linen)',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
-                <PerriandIcon name={chip.icon} size={12} color={isActive ? 'white' : isSuggested ? 'var(--t-verde)' : 'rgba(28,26,23,0.9)'} />
+                <PerriandIcon name={chip.icon} size={12} color={isActive ? 'white' : isSuggested ? 'var(--t-verde)' : INK['90']} />
                 {chip.label}
                 <span
                   className="text-[9px] font-bold"
                   style={{
                     opacity: 0.6,
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: FONT.mono,
                   }}
                 >
                   {count}
@@ -403,13 +404,13 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                 className="flex-1 min-w-fit px-4 py-2.5 text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all"
                 style={{
                   background: 'transparent',
-                  color: isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.95)',
+                  color: isActive ? 'var(--t-ink)' : INK['95'],
                   border: 'none',
                   borderBottom: isActive ? '2px solid var(--t-ink)' : '2px solid transparent',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: FONT.sans,
                 }}
               >
-                {tab.icon && <PerriandIcon name={tab.icon} size={13} color={isActive ? 'var(--t-ink)' : 'rgba(28,26,23,0.95)'} />}
+                {tab.icon && <PerriandIcon name={tab.icon} size={13} color={isActive ? 'var(--t-ink)' : INK['95']} />}
                 {tab.label} · {count}
               </button>
             );
@@ -448,7 +449,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                 <div
                   className="flex flex-col items-center justify-center px-1.5 self-stretch"
                   style={{
-                    color: 'rgba(28,26,23,0.2)',
+                    color: INK['20'],
                     fontSize: '10px',
                     letterSpacing: '2px',
                     touchAction: 'none',
@@ -467,26 +468,26 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                       <span
                         className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1"
                         style={{
-                          background: isSuggestedType ? 'rgba(42,122,86,0.1)' : 'rgba(28,26,23,0.05)',
-                          color: isSuggestedType ? 'var(--t-verde)' : 'rgba(28,26,23,0.95)',
-                          fontFamily: "'Space Mono', monospace",
+                          background: isSuggestedType ? 'rgba(42,122,86,0.1)' : INK['05'],
+                          color: isSuggestedType ? 'var(--t-verde)' : INK['95'],
+                          fontFamily: FONT.mono,
                           fontWeight: 600,
                         }}
                       >
-                        <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-verde)' : 'rgba(28,26,23,0.95)'} />
+                        <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-verde)' : INK['95']} />
                         {item.type}
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: 'rgba(28,26,23,0.95)' }}>
-                    <PerriandIcon name={sourceStyle.icon} size={12} color="rgba(28,26,23,0.95)" />
+                  <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: INK['95'] }}>
+                    <PerriandIcon name={sourceStyle.icon} size={12} color={INK['95']} />
                     {item.ghostSource === 'friend'
                       ? item.friendAttribution?.name
                       : item.ghostSource === 'maps' ? 'Google Maps'
                       : item.source?.name || sourceStyle.label}
                   </div>
                   {note && (
-                    <div className="text-[11px] italic" style={{ color: 'rgba(28,26,23,0.95)' }}>
+                    <div className="text-[11px] italic" style={{ color: INK['95'] }}>
                       {item.ghostSource === 'friend' ? `"${note}"` : note}
                     </div>
                   )}
@@ -499,7 +500,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                     style={{
                       background: 'rgba(42,122,86,0.08)',
                       color: 'var(--t-verde)',
-                      fontFamily: "'Space Mono', monospace",
+                      fontFamily: FONT.mono,
                     }}
                   >
                     {item.matchScore}%
@@ -510,18 +511,18 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
           })}
 
           {sortedItems.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: 'rgba(28,26,23,0.95)' }}>
+            <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: INK['95'] }}>
               <div className="text-2xl mb-3 flex justify-center">
-                <PerriandIcon name="star" size={28} color="rgba(28,26,23,0.95)" />
+                <PerriandIcon name="star" size={28} color={INK['95']} />
               </div>
-              <p className="text-[12px] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <p className="text-[12px] mb-1" style={{ fontFamily: FONT.sans }}>
                 {filterType !== 'all'
                   ? `No ${filterType} places starred`
                   : sourceFilter !== 'all'
                     ? 'No starred places from this source'
                     : 'No starred places yet'}
               </p>
-              <p className="text-[11px]" style={{ color: 'rgba(28,26,23,0.9)' }}>
+              <p className="text-[11px]" style={{ color: INK['90'] }}>
                 {filterType !== 'all'
                   ? <button onClick={() => setFilterType('all')} className="underline cursor-pointer bg-transparent border-none" style={{ color: 'var(--t-verde)', fontSize: '11px' }}>Show all types</button>
                   : 'Star places in My Places or Collect to add them here'}

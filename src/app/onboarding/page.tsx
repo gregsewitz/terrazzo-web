@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ALL_PHASE_IDS } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { FONT, INK } from '@/constants/theme';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -143,11 +144,11 @@ export default function OnboardingIntro() {
           onClick={handleDevSkip}
           className="mt-6 text-[12px] font-medium transition-colors hover:opacity-70"
           style={{
-            color: 'rgba(28,26,23,0.35)',
+            color: INK['35'],
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: FONT.sans,
           }}
         >
           Skip to app →

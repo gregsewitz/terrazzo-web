@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PIPELINE_STAGES } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 interface PipelineProgressProps {
   currentStage: string | null;
@@ -49,7 +50,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
             />
           ))}
         </div>
-        <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.95)', fontFamily: "'Space Mono', monospace" }}>
+        <span className="text-[9px]" style={{ color: INK['95'], fontFamily: FONT.mono }}>
           {completedCount}/{total}{currentLabel ? ` · ${currentLabel}` : ''}
           {elapsed > 0 ? ` · ${elapsed}s` : ''}
         </span>
@@ -62,12 +63,12 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
       <div className="flex items-center justify-between mb-3">
         <div
           className="text-[10px] font-bold uppercase tracking-wider"
-          style={{ color: 'var(--t-honey)', fontFamily: "'Space Mono', monospace", letterSpacing: '1px' }}
+          style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, letterSpacing: '1px' }}
         >
           Researching this place
         </div>
         {elapsed > 0 && (
-          <span className="text-[9px]" style={{ color: 'rgba(28,26,23,0.9)', fontFamily: "'Space Mono', monospace" }}>
+          <span className="text-[9px]" style={{ color: INK['90'], fontFamily: FONT.mono }}>
             {elapsed}s
           </span>
         )}
@@ -85,12 +86,12 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
                   ? 'rgba(42,122,86,0.08)'
                   : isCurrent
                     ? 'rgba(200,146,58,0.1)'
-                    : 'rgba(28,26,23,0.04)',
+                    : INK['04'],
               }}
             >
               <div
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.9)',
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : INK['90'],
                   ...(isCurrent ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
                 }}
               >
@@ -102,8 +103,8 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               <span
                 className="text-[9px] font-medium"
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : 'rgba(28,26,23,0.9)',
-                  fontFamily: "'Space Mono', monospace",
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : INK['90'],
+                  fontFamily: FONT.mono,
                 }}
               >
                 {stage.label}

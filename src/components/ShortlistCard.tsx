@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { Shortlist, ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
 
 const THUMB_GRADIENTS: Record<string, string> = {
   restaurant: 'linear-gradient(135deg, #d8c8ae, #c0ab8e)',
@@ -66,7 +67,7 @@ export default function ShortlistCard({
           gap: 2,
           padding: 2,
           borderRadius: '11px 11px 0 0', // match outer card rounding minus border
-          boxShadow: 'inset 0 0 0 1px rgba(28,26,23,0.04)', // subtle depth like Mosaic grout
+          boxShadow: `inset 0 0 0 1px ${INK['04']}`, // subtle depth like Mosaic grout
         }}
       >
         {previewPlaces.length > 0 ? (
@@ -105,7 +106,7 @@ export default function ShortlistCard({
             className="flex items-center justify-center"
             style={{ background: 'var(--t-linen)', borderRadius: 9 }}
           >
-            <PerriandIcon name="saved" size={24} color="rgba(28,26,23,0.2)" />
+            <PerriandIcon name="saved" size={24} color={INK['20']} />
           </div>
         )}
       </div>
@@ -124,28 +125,28 @@ export default function ShortlistCard({
           )}
           <span
             className="text-[14px] font-semibold truncate"
-            style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
           >
             {shortlist.name}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'rgba(28,26,23,0.6)' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
             {placeCount} {placeCount === 1 ? 'place' : 'places'}
           </span>
           {cityLabel && (
             <>
-              <span style={{ color: 'rgba(28,26,23,0.15)', fontSize: 10 }}>·</span>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(28,26,23,0.5)' }}>
+              <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
+              <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
                 {cityLabel}
               </span>
             </>
           )}
           {shortlist.isSmartCollection && (
             <>
-              <span style={{ color: 'rgba(28,26,23,0.15)', fontSize: 10 }}>·</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: 'var(--t-verde)' }}>
+              <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-verde)' }}>
                 Auto-updating
               </span>
             </>
