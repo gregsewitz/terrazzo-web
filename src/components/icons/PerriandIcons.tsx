@@ -41,7 +41,7 @@ export type PerriandIconName =
   | 'discover' | 'trips' | 'plan' | 'saved' | 'profile'
   // Misc
   | 'star' | 'edit' | 'check' | 'close' | 'heart' | 'pin'
-  | 'sparkle' | 'summer' | 'lightning';
+  | 'sparkle' | 'summer' | 'lightning' | 'bookmark' | 'add';
 
 interface PerriandIconProps {
   name: PerriandIconName;
@@ -460,6 +460,20 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M18,4 L10,17 L15,17 L13,28 L23,14 L17,14Z" stroke={s} strokeWidth="1.3" strokeLinejoin="round" fill="none" />
       <circle cx="16" cy="16" r="1.2" fill={a} />
+    </>
+  ),
+
+  bookmark: (s, a) => (
+    <>
+      <path d="M10,6 L10,26 L16,21 L22,26 L22,6 Z" stroke={s} strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+      <circle cx="16" cy="12" r="1.2" fill={a || 'var(--t-verde, #2a7a56)'} />
+    </>
+  ),
+
+  add: (s, _a) => (
+    <>
+      <line x1="16" y1="8" x2="16" y2="24" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="8" y1="16" x2="24" y2="16" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
     </>
   ),
 };

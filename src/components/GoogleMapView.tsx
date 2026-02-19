@@ -138,7 +138,7 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
             {isDashed && (
               <div style={{
                 fontSize: 8, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.5px',
-                color: INK['45'], fontFamily: FONT.mono,
+                color: INK['70'], fontFamily: FONT.mono,
                 marginBottom: 4,
               }}>Suggestion</div>
             )}
@@ -152,7 +152,7 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
                   fontFamily: FONT.sans,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>{marker.name}</div>
-                <div style={{ fontSize: 9, color: INK['50'], fontFamily: FONT.sans }}>
+                <div style={{ fontSize: 9, color: INK['70'], fontFamily: FONT.sans }}>
                   {marker.type ? marker.type.charAt(0).toUpperCase() + marker.type.slice(1) : ''}
                   {marker.location ? ` · ${marker.location.split(',')[0]}` : ''}
                 </div>
@@ -168,7 +168,7 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
             </div>
             {marker.tasteNote && (
               <div style={{
-                fontSize: 10, color: INK['50'], fontStyle: 'italic',
+                fontSize: 10, color: INK['70'], fontStyle: 'italic',
                 fontFamily: FONT.sans, lineHeight: 1.4,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>{marker.tasteNote}</div>

@@ -10,8 +10,9 @@ import AddToShortlistSheet from '@/components/AddToShortlistSheet';
 // ─── Config: each page provides its own callbacks ───
 
 interface PlaceDetailConfig {
-  /** Called when user saves a rating — page wires this to the appropriate store */
-  onRate: (placeId: string, rating: PlaceRating) => void;
+  /** Called when user saves a rating — page wires this to the appropriate store.
+   *  Receives the full place object so the page can do post-rating work (e.g. ghost injection). */
+  onRate: (place: ImportedPlace, rating: PlaceRating) => void;
   /** For search preview on saved/page — saves a preview place to the library */
   onSavePreview?: (place: ImportedPlace) => void;
   /** Get sibling places for the detail sheet (e.g. same import batch) */
@@ -29,6 +30,8 @@ interface PlaceDetailAPI {
   closeDetail: () => void;
   /** Currently open detail item (for pages that need to reference it) */
   detailItem: ImportedPlace | null;
+  /** Open the "Add to Shortlist" picker for a place (can be called from cards, etc.) */
+  openShortlistPicker: (place: ImportedPlace) => void;
 }
 
 const PlaceDetailContext = createContext<PlaceDetailAPI | null>(null);
@@ -96,6 +99,10 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     if (detailItem) setShortlistPickerItem(detailItem);
   }, [detailItem]);
 
+  const openShortlistPicker = useCallback((place: ImportedPlace) => {
+    setShortlistPickerItem(place);
+  }, []);
+
   const handleSaveFromPreview = useCallback(() => {
     if (!detailItem || !config.onSavePreview) return;
     config.onSavePreview(detailItem);
@@ -106,7 +113,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
 
   const handleRatingSave = useCallback((rating: PlaceRating) => {
     if (!ratingItem) return;
-    config.onRate(ratingItem.id, rating);
+    config.onRate(ratingItem, rating);
     // Update the detail item in-place so the badge refreshes
     setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
     setRatingItem(null);
@@ -116,7 +123,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     ? config.getSiblingPlaces(detailItem)
     : undefined;
 
-  const api: PlaceDetailAPI = { openDetail, openPreview, closeDetail, detailItem };
+  const api: PlaceDetailAPI = { openDetail, openPreview, closeDetail, detailItem, openShortlistPicker };
 
   return (
     <PlaceDetailContext.Provider value={api}>
@@ -128,6 +135,8 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           item={detailItem}
           onClose={closeDetail}
           onRate={isDetailPreview ? undefined : handleRate}
+          onEditRating={isDetailPreview ? undefined : handleEditRating}
+          onShortlistTap={isDetailPreview ? undefined : handleShortlistTap}
           onViewBriefing={isDetailPreview ? undefined : handleViewBriefing}
           siblingPlaces={siblingPlaces}
         />
@@ -147,8 +156,9 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
       {ratingItem && (
         <RatingSheet
           item={ratingItem}
-          onClose={() => setRatingItem(null)}
+          onClose={() => { setRatingItem(null); setRatingInitialStep('gut'); }}
           onSave={handleRatingSave}
+          initialStep={ratingInitialStep}
         />
       )}
 

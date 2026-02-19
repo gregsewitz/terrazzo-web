@@ -91,7 +91,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           </div>
           <div
             className="text-[10px] truncate flex items-center gap-1"
-            style={{ color: INK['50'] }}
+            style={{ color: INK['70'] }}
           >
             <PerriandIcon name={sourceStyle.icon} size={10} color={INK['40']} />
             {item.location}

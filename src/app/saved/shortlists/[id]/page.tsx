@@ -3,10 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
-import PlaceDetailSheet from '@/components/PlaceDetailSheet';
-import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore } from '@/stores/savedStore';
-import { REACTIONS, ImportedPlace, PlaceRating, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
+import { REACTIONS, ImportedPlace, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
+import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { generateShareableMapHTML } from '@/lib/mapShare';
 import { FONT, INK } from '@/constants/theme';
@@ -34,8 +33,21 @@ const THUMB_GRADIENTS: Record<string, string> = {
 };
 
 export default function ShortlistDetailPage() {
+  const ratePlace = useSavedStore(s => s.ratePlace);
+
+  return (
+    <PlaceDetailProvider config={{
+      onRate: (place, rating) => ratePlace(place.id, rating),
+    }}>
+      <ShortlistDetailContent />
+    </PlaceDetailProvider>
+  );
+}
+
+function ShortlistDetailContent() {
   const params = useParams();
   const router = useRouter();
+  const { openDetail } = usePlaceDetail();
   const shortlistId = params.id as string;
 
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -43,10 +55,7 @@ export default function ShortlistDetailPage() {
   const removePlaceFromShortlist = useSavedStore(s => s.removePlaceFromShortlist);
   const deleteShortlist = useSavedStore(s => s.deleteShortlist);
   const updateShortlist = useSavedStore(s => s.updateShortlist);
-  const ratePlace = useSavedStore(s => s.ratePlace);
 
-  const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
-  const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -65,7 +74,7 @@ export default function ShortlistDetailPage() {
     return (
       <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden' }}>
         <div className="px-4 pt-5 text-center">
-          <p style={{ color: INK['50'] }}>Shortlist not found</p>
+          <p style={{ color: INK['70'] }}>Shortlist not found</p>
           <button
             onClick={() => router.back()}
             className="mt-4 text-[12px] cursor-pointer"
@@ -81,13 +90,6 @@ export default function ShortlistDetailPage() {
 
   const isPerriandIcon = shortlist.emoji && !shortlist.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && shortlist.emoji.length > 2;
 
-  const handleRate = (rating: PlaceRating) => {
-    if (ratingItem) {
-      ratePlace(ratingItem.id, rating);
-      setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
-      setRatingItem(null);
-    }
-  };
 
   const startEditing = () => {
     setEditName(shortlist.name);
@@ -129,7 +131,7 @@ export default function ShortlistDetailPage() {
                 className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
                 style={{
                   background: 'rgba(200,146,58,0.08)',
-                  color: 'var(--t-honey)',
+                  color: '#8a6a2a',
                   border: 'none',
                   fontFamily: FONT.mono,
                 }}
@@ -145,7 +147,7 @@ export default function ShortlistDetailPage() {
                   className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
                   style={{
                     background: INK['04'],
-                    color: INK['50'],
+                    color: INK['70'],
                     border: 'none',
                     fontFamily: FONT.mono,
                   }}
@@ -224,7 +226,7 @@ export default function ShortlistDetailPage() {
                     <button
                       onClick={() => setIsEditing(false)}
                       className="text-[10px] px-3 py-1.5 rounded-full cursor-pointer"
-                      style={{ background: INK['06'], color: INK['50'], border: 'none', fontFamily: FONT.mono }}
+                      style={{ background: INK['06'], color: INK['70'], border: 'none', fontFamily: FONT.mono }}
                     >
                       Cancel
                     </button>
@@ -239,7 +241,7 @@ export default function ShortlistDetailPage() {
                     {shortlist.name}
                   </h1>
                   {shortlist.description && (
-                    <p className="text-[11px] mb-2" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                    <p className="text-[11px] mb-2" style={{ color: INK['70'], fontFamily: FONT.sans }}>
                       {shortlist.description}
                     </p>
                   )}
@@ -247,13 +249,13 @@ export default function ShortlistDetailPage() {
               )}
 
               <div className="flex items-center gap-2 mt-1">
-                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['40'] }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['70'] }}>
                   {placesInShortlist.length} {placesInShortlist.length === 1 ? 'place' : 'places'}
                 </span>
                 {shortlist.cities.length > 0 && (
                   <>
                     <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
-                    <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['40'] }}>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
                       {shortlist.cities.slice(0, 3).join(', ')}
                     </span>
                   </>
@@ -276,7 +278,7 @@ export default function ShortlistDetailPage() {
                 Auto-updating · Curated Collection
               </span>
               {shortlist.query && (
-                <p className="text-[10px] mt-2" style={{ color: INK['40'], fontFamily: FONT.mono }}>
+                <p className="text-[10px] mt-2" style={{ color: INK['70'], fontFamily: FONT.mono }}>
                   Query: "{shortlist.query}"
                 </p>
               )}
@@ -310,7 +312,7 @@ export default function ShortlistDetailPage() {
               <ShortlistPlaceCard
                 key={place.id}
                 place={place}
-                onTap={() => setDetailItem(place)}
+                onTap={() => openDetail(place)}
                 onRemove={!shortlist.isSmartCollection ? () => removePlaceFromShortlist(shortlist.id, place.id) : undefined}
               />
             ))}
@@ -318,10 +320,10 @@ export default function ShortlistDetailPage() {
         ) : (
           <div className="text-center py-12">
             <PerriandIcon name="discover" size={32} color={INK['15']} />
-            <p className="text-[12px] mt-3" style={{ color: INK['50'] }}>
+            <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
               No places in this shortlist
             </p>
-            <p className="text-[11px] mt-1" style={{ color: INK['35'] }}>
+            <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
               Add places from the Library to get started
             </p>
           </div>
@@ -343,7 +345,7 @@ export default function ShortlistDetailPage() {
             <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
               Delete "{shortlist.name}"?
             </p>
-            <p className="text-[11px] mb-5" style={{ color: INK['50'] }}>
+            <p className="text-[11px] mb-5" style={{ color: INK['70'] }}>
               This won't remove the places from your library.
             </p>
             <div className="flex gap-2">
@@ -360,7 +362,7 @@ export default function ShortlistDetailPage() {
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl text-[12px] cursor-pointer"
-                style={{ background: INK['06'], color: INK['50'], border: 'none' }}
+                style={{ background: INK['06'], color: INK['70'], border: 'none' }}
               >
                 Cancel
               </button>
@@ -369,24 +371,8 @@ export default function ShortlistDetailPage() {
         </div>
       )}
 
-      {/* Place Detail Sheet */}
-      {detailItem && (
-        <PlaceDetailSheet
-          item={detailItem}
-          onClose={() => setDetailItem(null)}
-          onRate={() => setRatingItem(detailItem)}
-          onViewBriefing={() => {}}
-        />
-      )}
-
-      {/* Rating Sheet */}
-      {ratingItem && (
-        <RatingSheet
-          item={ratingItem}
-          onClose={() => setRatingItem(null)}
-          onSave={handleRate}
-        />
-      )}
+      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
+           are all rendered by PlaceDetailProvider — no duplication needed */}
 
       <TabBar />
     </div>
@@ -444,18 +430,18 @@ function ShortlistPlaceCard({ place, onTap, onRemove }: {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
               {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
             </span>
-            <span style={{ fontSize: 10, color: INK['50'] }}>· {place.location.split(',')[0]}</span>
+            <span style={{ fontSize: 10, color: INK['70'] }}>· {place.location.split(',')[0]}</span>
             {place.google?.rating && (
-              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'] }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
                 ★ {place.google.rating}
               </span>
             )}
           </div>
           {place.tasteNote && (
-            <p className="text-[10px] mt-1" style={{ color: INK['50'], fontStyle: 'italic', lineHeight: 1.3 }}>
+            <p className="text-[10px] mt-1" style={{ color: INK['70'], fontStyle: 'italic', lineHeight: 1.3 }}>
               {place.tasteNote.length > 80 ? place.tasteNote.slice(0, 77) + '…' : place.tasteNote}
             </p>
           )}

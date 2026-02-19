@@ -138,7 +138,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                 <button
                   onClick={onClose}
                   className="text-[11px] mb-1 block"
-                  style={{ color: 'var(--t-honey)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT.mono }}
+                  style={{ color: '#8a6a2a', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT.mono }}
                 >
                   ← Back to summary
                 </button>
@@ -193,7 +193,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                     <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(200,146,58,0.06)' }}>
                       <div
                         className="text-[18px] font-bold"
-                        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
+                        style={{ color: '#8a6a2a', fontFamily: FONT.mono }}
                       >
                         {matchScore}%
                       </div>

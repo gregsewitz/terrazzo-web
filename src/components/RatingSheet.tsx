@@ -17,12 +17,13 @@ interface RatingSheetProps {
   item: ImportedPlace;
   onClose: () => void;
   onSave: (rating: PlaceRating) => void;
+  initialStep?: RatingStep;
 }
 
 type RatingStep = 'gut' | 'details' | 'note';
 
-export default function RatingSheet({ item, onClose, onSave }: RatingSheetProps) {
-  const [step, setStep] = useState<RatingStep>('gut');
+export default function RatingSheet({ item, onClose, onSave, initialStep }: RatingSheetProps) {
+  const [step, setStep] = useState<RatingStep>(initialStep || 'gut');
   const [reaction, setReaction] = useState<ReactionId | null>(item.rating?.reaction || null);
   const [selectedTags, setSelectedTags] = useState<string[]>(item.rating?.tags || []);
   const [contextTags, setContextTags] = useState<string[]>(item.rating?.contextTags || []);

@@ -57,12 +57,12 @@ export default function AddToShortlistSheet({
           </span>
           <button
             onClick={onClose}
-            style={{ color: INK['50'], background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ color: INK['70'], background: 'none', border: 'none', cursor: 'pointer' }}
           >
             <PerriandIcon name="close" size={16} color={INK['50']} />
           </button>
         </div>
-        <div className="text-[11px] mb-4" style={{ color: INK['45'], fontFamily: FONT.sans }}>
+        <div className="text-[11px] mb-4" style={{ color: INK['70'], fontFamily: FONT.sans }}>
           {place.name}
         </div>
 
@@ -96,7 +96,7 @@ export default function AddToShortlistSheet({
                   <span className="text-[13px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
                     {sl.name}
                   </span>
-                  <span className="ml-2 text-[10px]" style={{ color: INK['35'], fontFamily: FONT.mono }}>
+                  <span className="ml-2 text-[10px]" style={{ color: INK['70'], fontFamily: FONT.mono }}>
                     {sl.placeIds.length}
                   </span>
                 </div>
@@ -159,7 +159,7 @@ export default function AddToShortlistSheet({
             style={{
               background: 'none',
               border: `1.5px dashed ${INK['12']}`,
-              color: INK['40'],
+              color: INK['70'],
               fontFamily: FONT.sans,
               fontSize: 12,
             }}

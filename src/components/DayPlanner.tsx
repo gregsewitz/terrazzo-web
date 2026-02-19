@@ -27,9 +27,11 @@ interface DayPlannerProps {
   onRegisterSlotRef?: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
   onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
   dragItemId?: string | null;
+  /** Called when a place is removed from a slot (× button) — parent can animate the return */
+  onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
@@ -310,6 +312,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               : undefined}
             onDragStartFromSlot={onDragStartFromSlot}
             dragItemId={dragItemId}
+            onUnplace={onUnplace}
           />
         ))}
       </div>
@@ -468,9 +471,10 @@ interface TimeSlotCardProps {
   onRegisterRef?: (rect: DOMRect | null) => void;
   onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
   dragItemId?: string | null;
+  onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
@@ -731,10 +735,10 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     {p.name}
                   </span>
                   <span
-                    className="text-[8px] font-semibold px-1.5 py-px rounded flex-shrink-0"
+                    className="text-[8px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
                     style={{ background: srcStyle.bg, color: srcStyle.color }}
                   >
-                    {srcStyle.icon} {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
+                    <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
                   </span>
                 </div>
                 {subtitle && (
@@ -752,7 +756,14 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
               </div>
               {/* Remove button — returns place to picks strip */}
               <button
-                onClick={(e) => { e.stopPropagation(); unplaceFromSlot(dayNumber, slot.id, p.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onUnplace) {
+                    onUnplace(p.id, dayNumber, slot.id);
+                  } else {
+                    unplaceFromSlot(dayNumber, slot.id, p.id);
+                  }
+                }}
                 className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
                 style={{
                   background: INK['05'],

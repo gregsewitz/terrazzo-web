@@ -144,7 +144,7 @@ export default function OnboardingIntro() {
           onClick={handleDevSkip}
           className="mt-6 text-[12px] font-medium transition-colors hover:opacity-70"
           style={{
-            color: INK['35'],
+            color: INK['70'],
             background: 'none',
             border: 'none',
             cursor: 'pointer',

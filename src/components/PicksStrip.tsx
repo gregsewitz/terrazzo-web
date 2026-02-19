@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useCallback, useState } from 'react';
+import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
@@ -68,9 +68,15 @@ interface PicksStripProps {
   onBrowseAll: () => void;
   onDragStart: (item: ImportedPlace, e: React.PointerEvent) => void;
   dragItemId: string | null;
+  /** When true, strip shows a "drop here" visual — items spread apart */
+  isDropTarget?: boolean;
+  /** Callback so the parent page can hit-test the strip's bounding rect */
+  onRegisterRect?: (rect: DOMRect | null) => void;
+  /** ID of a place that just returned — used for the "land" animation */
+  returningPlaceId?: string | null;
 }
 
-export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId }: PicksStripProps) {
+export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropTarget, onRegisterRect, returningPlaceId }: PicksStripProps) {
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('match');
@@ -133,6 +139,24 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
     allStripPlaces.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
     return counts;
   }, [allStripPlaces]);
+
+  // ─── Drop target rect reporting ───
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!onRegisterRect || !containerRef.current) return;
+    const update = () => {
+      if (containerRef.current) onRegisterRect(containerRef.current.getBoundingClientRect());
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+      onRegisterRect(null);
+    };
+  }, [onRegisterRect]);
 
   // ─── Gesture detection refs ───
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -241,7 +265,17 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   }
 
   return (
-    <div style={{ background: 'white', borderTop: '1px solid var(--t-linen)', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      style={{
+        background: isDropTarget ? 'rgba(42,122,86,0.04)' : 'white',
+        borderTop: isDropTarget ? '2px solid var(--t-verde)' : '1px solid var(--t-linen)',
+        minWidth: 0,
+        maxWidth: '100%',
+        overflow: 'hidden',
+        transition: 'background 0.2s, border-top 0.2s',
+      }}
+    >
       {/* Header row: filter icon + type chips + count + browse all */}
       <div
         className="flex items-center gap-1.5 px-3 pt-2 pb-1 overflow-x-auto"
@@ -395,10 +429,12 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
         <span style={{
           fontFamily: FONT.mono,
           fontSize: 8,
-          color: INK['35'],
+          color: isDropTarget ? 'var(--t-verde)' : INK['70'],
           letterSpacing: '0.3px',
+          fontWeight: isDropTarget ? 700 : undefined,
+          transition: 'color 0.2s',
         }}>
-          HOLD + DRAG UP TO PLAN · TAP FOR DETAILS
+          {isDropTarget ? '↓ DROP HERE TO RETURN' : 'HOLD + DRAG UP TO PLAN · TAP FOR DETAILS'}
         </span>
       </div>
 
@@ -421,11 +457,12 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
             </span>
           </div>
         ) : (
-          stripPlaces.map(place => {
+          stripPlaces.map((place, idx) => {
             const typeIcon = TYPE_ICONS[place.type] || 'location';
             const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
             const isDragging = dragItemId === place.id;
             const isHolding = holdingId === place.id;
+            const isReturning = returningPlaceId === place.id;
 
             return (
               <div
@@ -434,6 +471,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                 style={{
                   width: 68,
                   opacity: isDragging ? 0.25 : 1,
+                  animation: isReturning ? 'stripLand 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards' : undefined,
                   transform: isDragging
                     ? 'scale(0.85)'
                     : isHolding

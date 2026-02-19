@@ -77,12 +77,12 @@ export const DEST_COLORS: Record<string, { bg: string; accent: string; text: str
 
 // Ghost card source types — each source gets its own visual treatment
 export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: PerriandIconName; label: string }> = {
-  email: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: 'email', label: 'Email' },
-  friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.06)', icon: 'friend', label: 'Friend' },
-  terrazzo: { color: '#6b8b9a', bg: 'rgba(107,139,154,0.06)', icon: 'terrazzo', label: 'Terrazzo pick' },
-  maps: { color: '#e86830', bg: 'rgba(232,104,48,0.06)', icon: 'maps', label: 'Google Maps' },
-  article: { color: '#c8923a', bg: 'rgba(200,146,58,0.06)', icon: 'article', label: 'Article' },
-  manual: { color: '#1c1a17', bg: INK['04'], icon: 'manual', label: 'Added' },
+  email: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'email', label: 'Email' },
+  friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.12)', icon: 'friend', label: 'Friend' },
+  terrazzo: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'terrazzo', label: 'Terrazzo pick' },
+  maps: { color: '#a84018', bg: 'rgba(232,104,48,0.10)', icon: 'maps', label: 'Google Maps' },
+  article: { color: '#7a5a20', bg: 'rgba(200,146,58,0.12)', icon: 'article', label: 'Article' },
+  manual: { color: '#1c1a17', bg: INK['06'], icon: 'manual', label: 'Added' },
 };
 
 export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness';

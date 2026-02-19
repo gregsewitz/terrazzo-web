@@ -211,7 +211,7 @@ export default function PlaceSearchBar() {
               fontFamily: FONT.mono,
               fontSize: 9,
               fontWeight: 600,
-              color: INK['40'],
+              color: INK['70'],
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -246,7 +246,7 @@ export default function PlaceSearchBar() {
                     {result.name}
                   </div>
                   <div style={{
-                    fontSize: 11, color: INK['50'],
+                    fontSize: 11, color: INK['70'],
                     fontFamily: FONT.sans,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginTop: 1,
@@ -255,14 +255,14 @@ export default function PlaceSearchBar() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                     <span style={{
-                      fontSize: 10, color: INK['45'],
+                      fontSize: 10, color: INK['70'],
                       fontFamily: FONT.mono,
                     }}>
                       {result.category}
                     </span>
                     {result.rating && (
                       <span style={{
-                        fontSize: 10, color: INK['45'],
+                        fontSize: 10, color: INK['70'],
                         fontFamily: FONT.mono,
                         display: 'flex', alignItems: 'center', gap: 2,
                       }}>
@@ -271,7 +271,7 @@ export default function PlaceSearchBar() {
                     )}
                     {result.priceLevel && (
                       <span style={{
-                        fontSize: 10, color: INK['35'],
+                        fontSize: 10, color: INK['70'],
                         fontFamily: FONT.mono,
                       }}>
                         {result.priceLevel}

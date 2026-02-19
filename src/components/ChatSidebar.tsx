@@ -46,7 +46,7 @@ function renderMessageContent(content: string) {
 
     // Add the bold place name with honey color
     parts.push(
-      <span key={`bold-${match.index}`} style={{ color: 'var(--t-honey)', fontWeight: 600 }}>
+      <span key={`bold-${match.index}`} style={{ color: '#8a6a2a', fontWeight: 600 }}>
         {match[1]}
         <span className="text-[9px] ml-1" style={{ color: INK['90'] }}>
           →
@@ -210,7 +210,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
               }}
             >
               {msg.role === 'assistant' && idx === 0 && (
-                <span style={{ color: 'var(--t-honey)', marginRight: '4px' }}>✦</span>
+                <span style={{ color: '#8a6a2a', marginRight: '4px' }}>✦</span>
               )}
               {renderMessageContent(msg.content)}
             </div>

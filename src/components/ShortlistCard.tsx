@@ -138,7 +138,7 @@ export default function ShortlistCard({
           {cityLabel && (
             <>
               <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
-              <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
                 {cityLabel}
               </span>
             </>

@@ -187,7 +187,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
             style={{
               background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.1)',
-              color: dest.lat ? 'var(--t-verde)' : 'var(--t-honey)',
+              color: dest.lat ? 'var(--t-verde)' : '#8a6a2a',
               fontFamily: FONT.sans,
               fontWeight: 500,
             }}
@@ -339,7 +339,7 @@ function DestinationInputFallback({ destinations, onChange, isDreaming }: Destin
           <span
             key={i}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
-            style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
+            style={{ background: 'rgba(200,146,58,0.1)', color: '#8a6a2a' }}
           >
             {dest.name}
             <button

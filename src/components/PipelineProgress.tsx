@@ -63,7 +63,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
       <div className="flex items-center justify-between mb-3">
         <div
           className="text-[10px] font-bold uppercase tracking-wider"
-          style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, letterSpacing: '1px' }}
+          style={{ color: '#8a6a2a', fontFamily: FONT.mono, letterSpacing: '1px' }}
         >
           Researching this place
         </div>
@@ -91,7 +91,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
             >
               <div
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : INK['90'],
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? '#8a6a2a' : INK['90'],
                   ...(isCurrent ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
                 }}
               >
@@ -103,7 +103,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               <span
                 className="text-[9px] font-medium"
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? 'var(--t-honey)' : INK['90'],
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? '#8a6a2a' : INK['90'],
                   fontFamily: FONT.mono,
                 }}
               >

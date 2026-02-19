@@ -197,7 +197,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
           <span
             className="px-2 py-0.5 rounded-md"
-            style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)' }}
+            style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(200,146,58,0.1)', color: '#8a6a2a' }}
           >
             {place.matchScore}%
           </span>

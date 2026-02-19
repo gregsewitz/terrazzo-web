@@ -65,7 +65,7 @@ export default function TripsPage() {
                       className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1"
                       style={{
                         background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
-                        color: trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)',
+                        color: trip.status === 'planning' ? 'var(--t-verde)' : '#8a6a2a',
                         fontFamily: FONT.mono,
                       }}
                     >

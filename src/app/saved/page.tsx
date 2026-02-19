@@ -3,18 +3,15 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
-import PlaceDetailSheet from '@/components/PlaceDetailSheet';
-import RatingSheet from '@/components/RatingSheet';
 import ShortlistCard from '@/components/ShortlistCard';
-import AddToShortlistSheet from '@/components/AddToShortlistSheet';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
-import { REACTIONS, PlaceType, ImportedPlace, PlaceRating, SOURCE_STYLES } from '@/types';
-import BriefingView from '@/components/BriefingView';
+import { REACTIONS, PlaceType, ImportedPlace, SOURCE_STYLES } from '@/types';
 import ImportDrawer from '@/components/ImportDrawer';
 import { useImportStore } from '@/stores/importStore';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import PlaceSearchBar from '@/components/PlaceSearchBar';
+import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 
 const TYPE_ICONS: Record<string, string> = {
   restaurant: 'restaurant',
@@ -39,7 +36,31 @@ const THUMB_GRADIENTS: Record<string, string> = {
 };
 
 export default function SavedPage() {
+  const myPlaces = useSavedStore(s => s.myPlaces);
+  const ratePlace = useSavedStore(s => s.ratePlace);
+  const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
+
+  return (
+    <PlaceDetailProvider config={{
+      onRate: (place, rating) => {
+        ratePlace(place.id, rating);
+        if (rating.reaction === 'myPlace' || rating.reaction === 'enjoyed') {
+          injectGhostCandidates([{ ...place, rating }]);
+        }
+      },
+      getSiblingPlaces: (place) =>
+        place.importBatchId
+          ? myPlaces.filter(p => p.importBatchId === place.importBatchId && p.id !== place.id)
+          : [],
+    }}>
+      <SavedPageContent />
+    </PlaceDetailProvider>
+  );
+}
+
+function SavedPageContent() {
   const router = useRouter();
+  const { openDetail, openShortlistPicker } = usePlaceDetail();
   const myPlaces = useSavedStore(s => s.myPlaces);
   const shortlists = useSavedStore(s => s.shortlists);
   const activeView = useSavedStore(s => s.activeView);
@@ -50,32 +71,59 @@ export default function SavedPage() {
   const setTypeFilter = useSavedStore(s => s.setTypeFilter);
   const cityFilter = useSavedStore(s => s.cityFilter);
   const setCityFilter = useSavedStore(s => s.setCityFilter);
-  const ratePlace = useSavedStore(s => s.ratePlace);
   const toggleStar = useSavedStore(s => s.toggleStar);
   const createShortlist = useSavedStore(s => s.createShortlist);
   const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
-  const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
   const importOpen = useImportStore(s => s.isOpen);
   const importPatch = useImportStore(s => s.patch);
   const resetImport = useImportStore(s => s.reset);
 
-  const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
-  const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
-  const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateShortlist, setShowCreateShortlist] = useState(false);
-  const [shortlistPickerItem, setShortlistPickerItem] = useState<ImportedPlace | null>(null);
 
   // ─── Library filtering ───
-  const allCities = useMemo(() => {
-    const cities = new Set<string>();
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [neighborhoodFilter, setNeighborhoodFilter] = useState<string>('all');
+
+  // Parse city from second segment, neighborhood from first
+  const parseLocation = useCallback((loc: string) => {
+    const parts = loc.split(',').map(s => s.trim());
+    // Format: "Neighborhood, City" or just "City"
+    if (parts.length >= 2) {
+      return { neighborhood: parts[0], city: parts[1] };
+    }
+    return { neighborhood: '', city: parts[0] };
+  }, []);
+
+  // Build city → neighborhoods map
+  const { allCities, cityNeighborhoods } = useMemo(() => {
+    const cityCount: Record<string, number> = {};
+    const neighborhoods: Record<string, Set<string>> = {};
     myPlaces.forEach(p => {
-      const city = p.location.split(',')[0].trim();
-      if (city) cities.add(city);
+      const { city, neighborhood } = parseLocation(p.location);
+      if (city) {
+        cityCount[city] = (cityCount[city] || 0) + 1;
+        if (!neighborhoods[city]) neighborhoods[city] = new Set();
+        if (neighborhood) neighborhoods[city].add(neighborhood);
+      }
     });
-    return Array.from(cities).sort();
-  }, [myPlaces]);
+    // Sort by count descending, then alphabetically
+    const sorted = Object.entries(cityCount)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([city]) => city);
+    const nbMap: Record<string, string[]> = {};
+    for (const [city, set] of Object.entries(neighborhoods)) {
+      nbMap[city] = Array.from(set).sort();
+    }
+    return { allCities: sorted, cityNeighborhoods: nbMap };
+  }, [myPlaces, parseLocation]);
+
+  // Reset neighborhood when city changes
+  const handleCityFilter = useCallback((city: string) => {
+    setCityFilter(city);
+    setNeighborhoodFilter('all');
+  }, [setCityFilter]);
 
   const filteredPlaces = useMemo(() => {
     let places = myPlaces;
@@ -92,21 +140,26 @@ export default function SavedPage() {
       places = places.filter(p => p.type === typeFilter);
     }
     if (cityFilter !== 'all') {
-      places = places.filter(p => p.location.toLowerCase().includes(cityFilter.toLowerCase()));
+      places = places.filter(p => {
+        const { city } = parseLocation(p.location);
+        return city.toLowerCase() === cityFilter.toLowerCase();
+      });
+    }
+    if (neighborhoodFilter !== 'all') {
+      places = places.filter(p => {
+        const { neighborhood } = parseLocation(p.location);
+        return neighborhood.toLowerCase() === neighborhoodFilter.toLowerCase();
+      });
+    }
+    if (sourceFilter !== 'all') {
+      places = places.filter(p => {
+        if (sourceFilter === 'friend') return !!p.friendAttribution;
+        return p.ghostSource === sourceFilter;
+      });
     }
     return places;
-  }, [myPlaces, searchQuery, typeFilter, cityFilter]);
+  }, [myPlaces, searchQuery, typeFilter, cityFilter, neighborhoodFilter, sourceFilter, parseLocation]);
 
-  const handleRate = (rating: PlaceRating) => {
-    if (ratingItem) {
-      ratePlace(ratingItem.id, rating);
-      setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
-      if (rating.reaction === 'myPlace' || rating.reaction === 'enjoyed') {
-        injectGhostCandidates([{ ...ratingItem, rating }]);
-      }
-      setRatingItem(null);
-    }
-  };
 
   return (
     <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
@@ -121,7 +174,7 @@ export default function SavedPage() {
                 fontFamily: FONT.serif,
                 fontStyle: 'italic',
                 fontSize: activeView === 'shortlists' ? 22 : 14,
-                color: activeView === 'shortlists' ? 'var(--t-ink)' : INK['50'],
+                color: activeView === 'shortlists' ? 'var(--t-ink)' : INK['70'],
                 lineHeight: 1.2,
               }}
             >
@@ -135,13 +188,13 @@ export default function SavedPage() {
                 fontFamily: FONT.serif,
                 fontStyle: 'italic',
                 fontSize: activeView === 'library' ? 22 : 14,
-                color: activeView === 'library' ? 'var(--t-ink)' : INK['50'],
+                color: activeView === 'library' ? 'var(--t-ink)' : INK['70'],
                 lineHeight: 1.2,
               }}
             >
               Library
             </span>
-            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['40'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['70'] }}>
               {activeView === 'library' ? filteredPlaces.length : shortlists.length}
             </span>
           </div>
@@ -164,7 +217,7 @@ export default function SavedPage() {
               style={{
                 background: 'none',
                 border: `1.5px dashed ${INK['15']}`,
-                color: INK['50'],
+                color: INK['70'],
                 fontFamily: FONT.sans,
                 fontSize: 12,
               }}
@@ -188,10 +241,10 @@ export default function SavedPage() {
             {shortlists.length === 0 && (
               <div className="text-center py-12">
                 <PerriandIcon name="saved" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['50'] }}>
+                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
                   No shortlists yet
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: INK['35'] }}>
+                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
                   Create one to start curating your places
                 </p>
               </div>
@@ -215,7 +268,7 @@ export default function SavedPage() {
                   borderRadius: 10,
                   background: 'rgba(232,115,58,0.08)',
                   border: '1px solid rgba(232,115,58,0.15)',
-                  color: 'var(--t-panton-orange)',
+                  color: '#c45020',
                   fontSize: 10,
                   fontWeight: 600,
                   fontFamily: FONT.mono,
@@ -255,9 +308,9 @@ export default function SavedPage() {
 
             {/* City filter row */}
             {allCities.length > 1 && (
-              <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 <button
-                  onClick={() => setCityFilter('all')}
+                  onClick={() => handleCityFilter('all')}
                   className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
                   style={{
                     background: cityFilter === 'all' ? 'var(--t-verde)' : 'white',
@@ -271,7 +324,7 @@ export default function SavedPage() {
                 {allCities.map(city => (
                   <button
                     key={city}
-                    onClick={() => setCityFilter(city)}
+                    onClick={() => handleCityFilter(city)}
                     className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
                     style={{
                       background: cityFilter === city ? 'var(--t-verde)' : 'white',
@@ -286,6 +339,65 @@ export default function SavedPage() {
               </div>
             )}
 
+            {/* Neighborhood sub-chips — show when a city is selected and has multiple neighborhoods */}
+            {cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 && (
+              <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-1 pl-3" style={{ scrollbarWidth: 'none' }}>
+                <button
+                  onClick={() => setNeighborhoodFilter('all')}
+                  className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer"
+                  style={{
+                    background: neighborhoodFilter === 'all' ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)',
+                    color: neighborhoodFilter === 'all' ? 'var(--t-verde)' : INK['50'],
+                    border: neighborhoodFilter === 'all' ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent',
+                    fontFamily: FONT.mono,
+                  }}
+                >
+                  All areas
+                </button>
+                {cityNeighborhoods[cityFilter].map(nb => (
+                  <button
+                    key={nb}
+                    onClick={() => setNeighborhoodFilter(nb)}
+                    className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer"
+                    style={{
+                      background: neighborhoodFilter === nb ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)',
+                      color: neighborhoodFilter === nb ? 'var(--t-verde)' : INK['50'],
+                      border: neighborhoodFilter === nb ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent',
+                      fontFamily: FONT.mono,
+                    }}
+                  >
+                    {nb}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Source filter row */}
+            <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {[
+                { key: 'all', label: 'All sources', icon: null },
+                { key: 'friend', label: 'Friends', icon: 'friend' as PerriandIconName },
+                { key: 'article', label: 'Articles', icon: 'article' as PerriandIconName },
+                { key: 'maps', label: 'Maps', icon: 'maps' as PerriandIconName },
+                { key: 'email', label: 'Email', icon: 'email' as PerriandIconName },
+              ].map(src => (
+                <button
+                  key={src.key}
+                  onClick={() => setSourceFilter(src.key)}
+                  className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer flex items-center gap-1"
+                  style={{
+                    background: sourceFilter === src.key ? 'var(--t-ink)' : 'white',
+                    color: sourceFilter === src.key ? 'white' : INK['60'],
+                    border: sourceFilter === src.key ? 'none' : '1px solid var(--t-linen)',
+                    fontFamily: FONT.mono,
+                  }}
+                >
+                  {src.icon && <PerriandIcon name={src.icon} size={9} color={sourceFilter === src.key ? 'white' : INK['50']} />}
+                  {src.label}
+                </button>
+              ))}
+            </div>
+
             {/* Place list */}
             {filteredPlaces.length > 0 ? (
               <div className="flex flex-col gap-2">
@@ -293,8 +405,8 @@ export default function SavedPage() {
                   <PlaceCard
                     key={place.id}
                     place={place}
-                    onTap={() => setDetailItem(place)}
-                    onToggleStar={() => setShortlistPickerItem(place)}
+                    onTap={() => openDetail(place)}
+                    onToggleStar={() => openShortlistPicker(place)}
                     onLongPress={() => setAddToTripItem(place)}
                   />
                 ))}
@@ -302,13 +414,13 @@ export default function SavedPage() {
             ) : (
               <div className="text-center py-16">
                 <PerriandIcon name="discover" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['50'] }}>
-                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
+                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
+                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all'
                     ? 'No places match your filters'
                     : 'No saved places yet'}
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: INK['35'] }}>
-                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
+                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
+                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all'
                     ? 'Try adjusting your search or filters'
                     : 'Import places to get started'}
                 </p>
@@ -333,14 +445,6 @@ export default function SavedPage() {
         />
       )}
 
-      {/* ═══ Add to Shortlist sheet ═══ */}
-      {shortlistPickerItem && (
-        <AddToShortlistSheet
-          place={shortlistPickerItem}
-          onClose={() => setShortlistPickerItem(null)}
-        />
-      )}
-
       {/* ═══ Add to Trip sheet ═══ */}
       {addToTripItem && trips.length > 0 && (
         <AddToTripSheet
@@ -356,42 +460,8 @@ export default function SavedPage() {
         />
       )}
 
-      {/* ═══ Place Detail Sheet ═══ */}
-      {detailItem && (
-        <PlaceDetailSheet
-          item={detailItem}
-          onClose={() => setDetailItem(null)}
-          onRate={() => setRatingItem(detailItem)}
-          onViewBriefing={() => {
-            const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
-            if (placeId) {
-              setBriefingPlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
-            }
-          }}
-          siblingPlaces={detailItem.importBatchId
-            ? myPlaces.filter(p => p.importBatchId === detailItem.importBatchId && p.id !== detailItem.id)
-            : undefined}
-        />
-      )}
-
-      {/* Briefing View */}
-      {briefingPlace && (
-        <BriefingView
-          googlePlaceId={briefingPlace.id}
-          placeName={briefingPlace.name}
-          matchScore={briefingPlace.matchScore}
-          onClose={() => setBriefingPlace(null)}
-        />
-      )}
-
-      {/* Rating Sheet */}
-      {ratingItem && (
-        <RatingSheet
-          item={ratingItem}
-          onClose={() => setRatingItem(null)}
-          onSave={handleRate}
-        />
-      )}
+      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
+           are all rendered by PlaceDetailProvider — no duplication needed */}
 
       {/* Import Drawer */}
       {importOpen && (
@@ -474,10 +544,10 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
                 {place.name}
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
                   {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                 </span>
-                <span style={{ fontSize: 10, color: INK['50'] }}>· {place.location.split(',')[0]}</span>
+                <span style={{ fontSize: 10, color: INK['70'] }}>· {place.location.split(',')[0]}</span>
               </div>
             </div>
 
@@ -517,16 +587,16 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['50'], display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], display: 'flex', alignItems: 'center', gap: '4px' }}>
               <PerriandIcon name="star" size={10} color={INK['50']} /> {google.rating}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
               {priceStr}
             </span>
           )}
-          <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: 'var(--t-honey)' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: '#8a6a2a' }}>
             {place.matchScore}%
           </span>
         </div>
@@ -535,7 +605,7 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
           <div style={{
             fontFamily: FONT.sans,
             fontSize: 11,
-            color: INK['60'],
+            color: INK['70'],
             fontStyle: 'italic',
             lineHeight: 1.4,
           }}>
@@ -943,7 +1013,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             </div>
             <p
               className="text-center text-[10px] mt-2"
-              style={{ color: INK['50'], fontFamily: FONT.mono }}
+              style={{ color: INK['70'], fontFamily: FONT.mono }}
             >
               Terrazzo is curating...
             </p>
@@ -968,7 +1038,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             {smartError && (
               <div
                 className="text-[9px] px-2.5 py-1.5 rounded-lg mb-2"
-                style={{ color: INK['50'], background: 'rgba(107,139,154,0.06)', fontFamily: FONT.mono }}
+                style={{ color: INK['70'], background: 'rgba(107,139,154,0.06)', fontFamily: FONT.mono }}
               >
                 Offline mode — {smartError}
               </div>
@@ -1085,14 +1155,14 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
             <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
               Add to trip
             </div>
-            <div className="text-[11px]" style={{ color: INK['60'] }}>
+            <div className="text-[11px]" style={{ color: INK['70'] }}>
               {place.name}
             </div>
           </div>
           <button
             onClick={onClose}
             className="flex items-center justify-center"
-            style={{ color: INK['50'], background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
+            style={{ color: INK['70'], background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
           >
             <PerriandIcon name="close" size={16} color={INK['50']} />
           </button>
@@ -1110,11 +1180,11 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
                   {trip.name}
                 </div>
-                <div className="text-[10px]" style={{ color: INK['50'] }}>
+                <div className="text-[10px]" style={{ color: INK['70'] }}>
                   {trip.location} {trip.startDate && `· ${trip.startDate}`}
                 </div>
               </div>
-              <span className="text-[11px]" style={{ color: 'var(--t-honey)' }}>Add →</span>
+              <span className="text-[11px]" style={{ color: '#8a6a2a' }}>Add →</span>
             </button>
           ))}
         </div>

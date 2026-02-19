@@ -169,7 +169,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
               className="inline-flex items-center justify-center rounded-full text-[10px] font-bold"
               style={{
                 background: 'rgba(200,146,58,0.12)',
-                color: 'var(--t-honey)',
+                color: '#8a6a2a',
                 padding: '2px 8px',
                 fontFamily: FONT.mono,
               }}
@@ -183,7 +183,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
             className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
             style={{
               background: 'transparent',
-              color: 'var(--t-panton-orange)',
+              color: '#c45020',
               borderColor: 'var(--t-panton-orange)',
               fontFamily: FONT.mono,
             }}
@@ -244,7 +244,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80 flex items-center gap-1"
                 style={{
                   background: 'transparent',
-                  color: 'var(--t-honey)',
+                  color: '#8a6a2a',
                   borderColor: 'var(--t-honey)',
                   fontFamily: FONT.mono,
                 }}
@@ -258,7 +258,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
               className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
               style={{
                 background: 'transparent',
-                color: 'var(--t-panton-orange)',
+                color: '#c45020',
                 borderColor: 'var(--t-panton-orange)',
                 fontFamily: FONT.mono,
               }}

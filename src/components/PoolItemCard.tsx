@@ -127,7 +127,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
             className="text-[9px] px-1.5 py-0.5 rounded-full"
             style={{
               background: 'rgba(232,104,48,0.1)',
-              color: 'var(--t-panton-orange)',
+              color: '#c45020',
             }}
           >
             ⚠ Closed {item.enrichment!.closedDays![0]}s

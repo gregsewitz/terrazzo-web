@@ -229,7 +229,7 @@ export default function ProfilePage() {
           <div className="px-4 py-6">
             <h3
               className="text-[10px] uppercase tracking-[0.2em] mb-4"
-              style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}
+              style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
             >
               Settings
             </h3>
@@ -295,11 +295,11 @@ export default function ProfilePage() {
             >
               <div className="flex items-center gap-2">
                 <PerriandIcon name="discover" size={12} color="var(--t-panton-orange)" />
-                <span className="text-[12px] font-medium" style={{ color: 'var(--t-panton-orange)' }}>
+                <span className="text-[12px] font-medium" style={{ color: '#c45020' }}>
                   Redo Onboarding
                 </span>
               </div>
-              <span style={{ color: 'var(--t-panton-orange)', fontSize: 12 }}>→</span>
+              <span style={{ color: '#c45020', fontSize: 12 }}>→</span>
             </button>
           </div>
         </>
@@ -581,7 +581,7 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
           <PerriandIcon name="discover" size={10} color="var(--t-panton-orange)" />
           <span
             className="text-[10px] uppercase tracking-wider font-bold"
-            style={{ color: 'var(--t-panton-orange)', fontFamily: FONT.mono }}
+            style={{ color: '#c45020', fontFamily: FONT.mono }}
           >
             This isn&apos;t your usual pick
           </span>
@@ -609,7 +609,7 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
         >
           <div
             className="text-[9px] uppercase tracking-wider mb-1"
-            style={{ color: 'var(--t-panton-orange)', fontFamily: FONT.mono }}
+            style={{ color: '#c45020', fontFamily: FONT.mono }}
           >
             Why we&apos;re suggesting it
           </div>
@@ -729,7 +729,7 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
         <button
           onClick={() => {/* already on profile page, could scroll to deep dive */}}
           className="text-[11px] font-semibold bg-transparent border-none cursor-pointer"
-          style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
+          style={{ color: '#8a6a2a', fontFamily: FONT.mono }}
         >
           See full profile →
         </button>

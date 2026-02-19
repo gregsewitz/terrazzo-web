@@ -211,7 +211,7 @@ export function MosaicLegend({ profile, className, style, dark = false }: Mosaic
               fontFamily: FONT.mono,
               fontSize: 9,
               letterSpacing: '0.03em',
-              color: dark ? 'rgba(245,240,230,0.6)' : INK['55'],
+              color: dark ? 'rgba(245,240,230,0.6)' : INK['70'],
               whiteSpace: 'nowrap',
             }}
           >

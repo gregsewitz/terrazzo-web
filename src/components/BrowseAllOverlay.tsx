@@ -202,10 +202,10 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                   {/* Source + match score */}
                   <div className="flex items-center gap-2 mt-1">
                     <span
-                      className="text-[9px] font-semibold px-2 py-0.5 rounded-md"
+                      className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1"
                       style={{ background: sourceStyle.bg, color: sourceStyle.color }}
                     >
-                      {sourceStyle.icon} {place.ghostSource === 'friend'
+                      <PerriandIcon name={sourceStyle.icon} size={9} color={sourceStyle.color} /> {place.ghostSource === 'friend'
                         ? place.friendAttribution?.name
                         : sourceStyle.label}
                     </span>

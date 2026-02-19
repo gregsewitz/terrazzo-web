@@ -125,7 +125,7 @@ function DimensionsSection() {
     <div className="px-4 py-6" style={{ background: 'var(--t-cream)' }}>
       <h3
         className="text-[10px] uppercase tracking-[0.2em] mb-4"
-        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}
+        style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
       >
         Taste Dimensions
       </h3>
@@ -207,7 +207,7 @@ function ContradictionsSection() {
     <div className="px-4 pb-6" style={{ background: 'var(--t-cream)' }}>
       <h3
         className="text-[10px] uppercase tracking-[0.2em] mb-4"
-        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}
+        style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
       >
         Contradictions
       </h3>
@@ -277,7 +277,7 @@ function ContextSection() {
     <div className="px-4 pb-6" style={{ background: 'var(--t-cream)' }}>
       <h3
         className="text-[10px] uppercase tracking-[0.2em] mb-4"
-        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}
+        style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
       >
         Context Modes
       </h3>
@@ -322,7 +322,7 @@ function VocabularySection() {
     <div className="px-4 pb-6" style={{ background: 'var(--t-cream)' }}>
       <h3
         className="text-[10px] uppercase tracking-[0.2em] mb-4"
-        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}
+        style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
       >
         Taste Vocabulary · {WRAPPED.vocabTerms} terms
       </h3>
@@ -382,7 +382,7 @@ function MatchesSection() {
     <div className="px-4 pb-8" style={{ background: 'var(--t-cream)' }}>
       <h3
         className="text-[10px] uppercase tracking-[0.2em] mb-4"
-        style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}
+        style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
       >
         Top Matches
       </h3>

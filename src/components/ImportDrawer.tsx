@@ -328,7 +328,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                     onChange={e => patch({ sourceName: e.target.value })}
                     placeholder="Source name (optional)"
                     className="text-[10px] bg-transparent border-none outline-none flex-1"
-                    style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
+                    style={{ color: '#8a6a2a', fontFamily: FONT.mono }}
                     onClick={e => e.stopPropagation()}
                   />
                 </div>
@@ -344,7 +344,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {/* Divider */}
               <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
-                <span className="text-[10px]" style={{ color: INK['40'], fontFamily: FONT.mono }}>or</span>
+                <span className="text-[10px]" style={{ color: INK['70'], fontFamily: FONT.mono }}>or</span>
                 <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
               </div>
 
@@ -420,7 +420,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                   <span className="text-[11px]" style={{ color: INK['70'], fontFamily: FONT.sans }}>
                     {progressLabel}
                   </span>
-                  <span className="text-[10px] font-semibold" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}>
+                  <span className="text-[10px] font-semibold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
                     {progressPercent}%
                   </span>
                 </div>
@@ -430,7 +430,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {discoveredNames.length > 0 && (
                 <div className="w-full max-w-[280px] mt-2 rounded-xl p-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                   <div className="text-[9px] uppercase font-bold tracking-wider mb-2"
-                    style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, letterSpacing: '0.8px' }}>
+                    style={{ color: '#8a6a2a', fontFamily: FONT.mono, letterSpacing: '0.8px' }}>
                     Places found
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -526,7 +526,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                               </div>
                               {item.matchScore > 0 && (
                                 <span className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex-shrink-0"
-                                  style={{ background: 'rgba(200,146,58,0.1)', color: 'var(--t-honey)', fontFamily: FONT.mono }}>
+                                  style={{ background: 'rgba(200,146,58,0.1)', color: '#8a6a2a', fontFamily: FONT.mono }}>
                                   {item.matchScore}%
                                 </span>
                               )}
@@ -537,7 +537,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         {items.length > MAX_VISIBLE && !isExpanded && (
                           <button onClick={() => setExpandedCategory(type)}
                             className="w-full py-2 text-center text-[10px] font-semibold cursor-pointer bg-transparent border-none"
-                            style={{ color: 'var(--t-honey)' }}>
+                            style={{ color: '#8a6a2a' }}>
                             + {items.length - MAX_VISIBLE} more {config.label.toLowerCase()}
                           </button>
                         )}
@@ -634,7 +634,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                         {savedPlaces.length} places · auto-created collection
                       </div>
                     </div>
-                    <div className="text-[12px]" style={{ color: 'var(--t-honey)' }}>→</div>
+                    <div className="text-[12px]" style={{ color: '#8a6a2a' }}>→</div>
                   </div>
                 </div>
               </div>
@@ -643,7 +643,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               {topMatches.length > 0 && (
                 <>
                   <div className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1"
-                    style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, letterSpacing: '1px' }}>
+                    style={{ color: '#8a6a2a', fontFamily: FONT.mono, letterSpacing: '1px' }}>
                     <PerriandIcon name="terrazzo" size={12} color="var(--t-honey)" />
                     Top matches for you
                   </div>
@@ -654,7 +654,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
                       <div key={place.id} className="flex gap-2.5 rounded-xl p-3 mb-2"
                         style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                          style={{ background: `linear-gradient(135deg, ${sourceStyle?.color || '#c8923a'}30, ${sourceStyle?.color || '#c8923a'}15)`, color: sourceStyle?.color || 'var(--t-honey)', fontFamily: FONT.mono }}>
+                          style={{ background: `linear-gradient(135deg, ${sourceStyle?.color || '#c8923a'}30, ${sourceStyle?.color || '#c8923a'}15)`, color: sourceStyle?.color || '#8a6a2a', fontFamily: FONT.mono }}>
                           {place.matchScore}%
                         </div>
                         <div className="flex-1 min-w-0">

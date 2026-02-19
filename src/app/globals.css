@@ -4,6 +4,7 @@
   /* Forme Libere Design System */
   --t-ink: #1c1a17;
   --t-honey: #c8923a;
+  --t-honey-text: #8a6a2a;    /* WCAG AA accessible honey for text on cream */
   --t-amber: #a06c28;
   --t-verde: #2a7a56;
   --t-panton-violet: #6844a0;
@@ -11,7 +12,7 @@
   --t-royere-pink: #e87080;
   --t-warm-white: #f5f0e6;
   --t-travertine: #e8dcc8;
-  --t-cream: #f8f3ea;
+  --t-cream: #fdfaf3;
   --t-signal-red: #d63020;
   --t-chrome-yellow: #eeb420;
   --t-linen: #ede6d8;
@@ -126,4 +127,19 @@ body {
 
 .message-enter {
   animation: messageSlideIn 0.35s ease-out forwards;
+}
+
+@keyframes stripLand {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(-20px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }

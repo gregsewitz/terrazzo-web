@@ -13,13 +13,11 @@ import type { TripViewMode, DropTarget } from '@/components/DayPlanner';
 import TripMyPlaces from '@/components/TripMyPlaces';
 import PicksStrip from '@/components/PicksStrip';
 import BrowseAllOverlay from '@/components/BrowseAllOverlay';
-import PlaceDetailSheet from '@/components/PlaceDetailSheet';
-import RatingSheet from '@/components/RatingSheet';
 import ImportDrawer from '@/components/ImportDrawer';
-import ChatSidebar, { type ChatTripContext } from '@/components/ChatSidebar';
-import BriefingView from '@/components/BriefingView';
+import ChatSidebar from '@/components/ChatSidebar';
 import DragOverlay from '@/components/DragOverlay';
 import ExportToMaps from '@/components/ExportToMaps';
+import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { INK } from '@/constants/theme';
 
 // ─── Auto-scroll config for drag near edges ───
@@ -27,11 +25,23 @@ const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
 const AUTO_SCROLL_SPEED = 6;   // px per frame at max proximity
 
 export default function TripDetailPage() {
-  const params = useParams();
-  const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const ratePlace = useTripStore(s => s.ratePlace);
+  return (
+    <PlaceDetailProvider config={{
+      onRate: (place, rating) => ratePlace(place.id, rating),
+    }}>
+      <TripDetailContent />
+    </PlaceDetailProvider>
+  );
+}
+
+function TripDetailContent() {
+  const params = useParams();
+  const { openDetail } = usePlaceDetail();
+  const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const placeFromSaved = useTripStore(s => s.placeFromSaved);
   const moveToSlot = useTripStore(s => s.moveToSlot);
+  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
@@ -40,22 +50,21 @@ export default function TripDetailPage() {
   const importOpen = useImportStore(s => s.isOpen);
   const importPatch = useImportStore(s => s.patch);
   const resetImport = useImportStore(s => s.reset);
-  const [detailItem, setDetailItem] = useState<ImportedPlace | null>(null);
-  const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-
   const [exportOpen, setExportOpen] = useState(false);
   const [browseAllOpen, setBrowseAllOpen] = useState(false);
   const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
   const [ghostsInjected, setGhostsInjected] = useState(false);
-  const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
 
   // ─── DRAG & DROP STATE ───
   const [dragItem, setDragItem] = useState<ImportedPlace | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  const [isOverStrip, setIsOverStrip] = useState(false);
+  const [returningPlaceId, setReturningPlaceId] = useState<string | null>(null);
   const slotRects = useRef<Map<string, { dayNumber: number; slotId: string; rect: DOMRect }>>(new Map());
+  const stripRect = useRef<DOMRect | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollRaf = useRef<number | null>(null);
   const latestDragY = useRef<number>(0);
@@ -69,6 +78,10 @@ export default function TripDetailPage() {
     } else {
       slotRects.current.delete(key);
     }
+  }, []);
+
+  const handleRegisterStripRect = useCallback((rect: DOMRect | null) => {
+    stripRect.current = rect;
   }, []);
 
   // Refresh all slot rects from DOM — needed during auto-scroll
@@ -102,6 +115,13 @@ export default function TripDetailPage() {
     latestDragY.current = e.clientY;
     if (navigator.vibrate) navigator.vibrate(10);
   }, []);
+
+  // Remove from slot → animate return to picks strip
+  const handleUnplace = useCallback((placeId: string, dayNumber: number, slotId: string) => {
+    unplaceFromSlot(dayNumber, slotId, placeId);
+    setReturningPlaceId(placeId);
+    setTimeout(() => setReturningPlaceId(null), 400);
+  }, [unplaceFromSlot]);
 
   // ─── Auto-scroll loop during drag ───
   const startAutoScroll = useCallback(() => {
@@ -147,12 +167,29 @@ export default function TripDetailPage() {
       latestDragY.current = e.clientY;
       const target = hitTestSlots(e.clientX, e.clientY);
       setDropTarget(target);
+
+      // Check if hovering over the picks strip (only relevant when dragging from a slot)
+      const sr = stripRect.current;
+      if (sr && dragSource.current) {
+        const over = e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom;
+        setIsOverStrip(over && !target); // slot takes priority
+      } else {
+        setIsOverStrip(false);
+      }
     };
 
     const handleUp = () => {
       stopAutoScroll();
-      if (dropTarget && dragItem) {
-        const src = dragSource.current;
+
+      const src = dragSource.current;
+
+      if (isOverStrip && src && dragItem) {
+        // Dropping from slot back onto picks strip — unplace it
+        unplaceFromSlot(src.dayNumber, src.slotId, dragItem.id);
+        setReturningPlaceId(dragItem.id);
+        setTimeout(() => setReturningPlaceId(null), 400);
+        if (navigator.vibrate) navigator.vibrate(15);
+      } else if (dropTarget && dragItem) {
         if (src) {
           // Dragging from one slot to another
           moveToSlot(dragItem, src.dayNumber, src.slotId, dropTarget.dayNumber, dropTarget.slotId);
@@ -162,10 +199,12 @@ export default function TripDetailPage() {
         }
         if (navigator.vibrate) navigator.vibrate(15);
       }
+
       dragSource.current = null;
       setDragItem(null);
       setDragPos(null);
       setDropTarget(null);
+      setIsOverStrip(false);
     };
 
     window.addEventListener('pointermove', handleMove, { passive: false });
@@ -178,7 +217,7 @@ export default function TripDetailPage() {
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
     };
-  }, [dragItem, dropTarget, hitTestSlots, placeFromSaved, moveToSlot, startAutoScroll, stopAutoScroll]);
+  }, [dragItem, dropTarget, isOverStrip, hitTestSlots, placeFromSaved, moveToSlot, unplaceFromSlot, startAutoScroll, stopAutoScroll]);
 
   useEffect(() => {
     if (params.id) {
@@ -207,13 +246,6 @@ export default function TripDetailPage() {
     );
   }
 
-  const handleRate = (rating: PlaceRating) => {
-    if (ratingItem) {
-      ratePlace(ratingItem.id, rating);
-      setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
-      setRatingItem(null);
-    }
-  };
 
   return (
     <div
@@ -245,7 +277,7 @@ export default function TripDetailPage() {
           <DayPlanner
             viewMode={viewMode}
             onSetViewMode={setViewMode}
-            onTapDetail={setDetailItem}
+            onTapDetail={openDetail}
             onOpenUnsorted={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
             onOpenForSlot={(ctx: SlotContext) => {
               setBrowseAllFilter(ctx.suggestedTypes?.[0] as PlaceType | undefined);
@@ -255,11 +287,12 @@ export default function TripDetailPage() {
             onRegisterSlotRef={handleRegisterSlotRef}
             onDragStartFromSlot={handleDragStartFromSlot}
             dragItemId={dragItem?.id ?? null}
+            onUnplace={handleUnplace}
           />
 
           {/* Trip Places — all placed items across itinerary */}
           {viewMode === 'myPlaces' && (
-            <TripMyPlaces onTapDetail={setDetailItem} />
+            <TripMyPlaces onTapDetail={openDetail} />
           )}
         </div>
 
@@ -267,10 +300,13 @@ export default function TripDetailPage() {
         {viewMode === 'planner' && (
           <div className="flex-shrink-0" style={{ paddingBottom: 90, minWidth: 0, width: '100%' }}>
             <PicksStrip
-              onTapDetail={setDetailItem}
+              onTapDetail={openDetail}
               onBrowseAll={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
               onDragStart={handleDragStart}
               dragItemId={dragItem?.id ?? null}
+              isDropTarget={isOverStrip}
+              onRegisterRect={handleRegisterStripRect}
+              returningPlaceId={returningPlaceId}
             />
           </div>
         )}
@@ -280,7 +316,7 @@ export default function TripDetailPage() {
       {browseAllOpen && (
         <BrowseAllOverlay
           onClose={() => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); }}
-          onTapDetail={(item) => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); setDetailItem(item); }}
+          onTapDetail={(item) => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); openDetail(item); }}
           initialFilter={browseAllFilter}
         />
       )}
@@ -298,39 +334,8 @@ export default function TripDetailPage() {
       {/* Tab Bar */}
       <TabBar />
 
-      {/* Place Detail Sheet */}
-      {detailItem && (
-        <PlaceDetailSheet
-          item={detailItem}
-          onClose={() => setDetailItem(null)}
-          onRate={() => setRatingItem(detailItem)}
-          onViewBriefing={() => {
-            const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
-            if (placeId) {
-              setBriefingPlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
-            }
-          }}
-        />
-      )}
-
-      {/* Briefing View */}
-      {briefingPlace && (
-        <BriefingView
-          googlePlaceId={briefingPlace.id}
-          placeName={briefingPlace.name}
-          matchScore={briefingPlace.matchScore}
-          onClose={() => setBriefingPlace(null)}
-        />
-      )}
-
-      {/* Rating Sheet */}
-      {ratingItem && (
-        <RatingSheet
-          item={ratingItem}
-          onClose={() => setRatingItem(null)}
-          onSave={handleRate}
-        />
-      )}
+      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
+           are all rendered by PlaceDetailProvider — no duplication needed */}
 
       {/* Import Drawer */}
       {importOpen && (

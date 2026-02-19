@@ -117,7 +117,7 @@ export default function FloatingImportBar() {
               {isError ? 'Import failed' : isComplete ? 'Import ready' : progressLabel || 'Importing…'}
             </p>
             <p style={{
-              fontSize: 11, color: INK['50'], margin: '2px 0 0',
+              fontSize: 11, color: INK['70'], margin: '2px 0 0',
               fontFamily: 'var(--font-sans)',
             }}>
               {isError

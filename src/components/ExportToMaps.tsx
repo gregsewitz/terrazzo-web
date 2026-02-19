@@ -172,7 +172,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
                     {place.location} · {place.type}
                   </div>
                 </div>
-                <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--t-honey)' }}>
+                <span className="text-[11px] flex-shrink-0" style={{ color: '#8a6a2a' }}>
                   Open ↗
                 </span>
               </a>
