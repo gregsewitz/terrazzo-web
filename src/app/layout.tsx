@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import GlobalImportUI from "@/components/GlobalImportUI";
 
 export const metadata: Metadata = {
   title: "Terrazzo — Your Bespoke Travel Concierge",
@@ -29,6 +30,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         {children}
+        <GlobalImportUI />
       </body>
     </html>
   );
