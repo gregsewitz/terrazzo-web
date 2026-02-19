@@ -149,7 +149,7 @@ export default function PlaceSearchBar() {
             width: '100%',
             borderRadius: 10,
             padding: '10px 36px 10px 36px',
-            fontSize: 12,
+            fontSize: 16,
             background: 'white',
             border: '1px solid var(--t-linen)',
             color: 'var(--t-ink)',

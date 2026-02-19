@@ -8,7 +8,6 @@ import RatingSheet from '@/components/RatingSheet';
 import { useSavedStore } from '@/stores/savedStore';
 import { REACTIONS, ImportedPlace, PlaceRating, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { generateShareableMapHTML } from '@/lib/mapShare';
 import { FONT, INK } from '@/constants/theme';
 
@@ -302,11 +301,6 @@ export default function ShortlistDetailPage() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Place search */}
-        <div className="mb-4">
-          <PlaceSearchBar />
         </div>
 
         {/* Places list */}

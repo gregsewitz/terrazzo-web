@@ -152,6 +152,11 @@ export default function SavedPage() {
         {/* ═══════════════════════════════════ */}
         {activeView === 'shortlists' && (
           <div>
+            {/* Search bar */}
+            <div className="mb-4">
+              <PlaceSearchBar />
+            </div>
+
             {/* Create shortlist button */}
             <button
               onClick={() => setShowCreateShortlist(true)}
