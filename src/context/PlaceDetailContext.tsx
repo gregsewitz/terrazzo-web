@@ -128,10 +128,6 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           item={detailItem}
           onClose={closeDetail}
           onRate={isDetailPreview ? undefined : handleRate}
-          onEditRating={isDetailPreview ? undefined : handleEditRating}
-          onSave={isDetailPreview ? handleSaveFromPreview : undefined}
-          isPreview={isDetailPreview}
-          onShortlistTap={handleShortlistTap}
           onViewBriefing={isDetailPreview ? undefined : handleViewBriefing}
           siblingPlaces={siblingPlaces}
         />
@@ -153,7 +149,6 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           item={ratingItem}
           onClose={() => setRatingItem(null)}
           onSave={handleRatingSave}
-          initialStep={ratingInitialStep}
         />
       )}
 
