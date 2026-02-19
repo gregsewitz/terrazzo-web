@@ -190,6 +190,55 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
             </div>
           )}
 
+          {/* Description */}
+          {item.enrichment?.description && (
+            <p className="text-[12px] leading-relaxed mb-4" style={{ color: 'rgba(28,26,23,0.85)' }}>
+              {item.enrichment.description}
+            </p>
+          )}
+
+          {/* Place details — address, website, phone */}
+          {item.google && (item.google.address || item.google.website || item.google.phone) && (
+            <div className="mb-4 rounded-xl px-3.5 py-3" style={{ background: 'rgba(28,26,23,0.03)', border: '1px solid rgba(28,26,23,0.06)' }}>
+              {item.google.address && (
+                <div className="flex items-start gap-2 mb-2 last:mb-0">
+                  <PerriandIcon name="pin" size={13} color="rgba(28,26,23,0.5)" />
+                  <span className="text-[11px] leading-relaxed" style={{ color: 'rgba(28,26,23,0.8)' }}>
+                    {item.google.address}
+                  </span>
+                </div>
+              )}
+              {item.google.website && (
+                <div className="flex items-center gap-2 mb-2 last:mb-0">
+                  <PerriandIcon name="discover" size={13} color="rgba(28,26,23,0.5)" />
+                  <a
+                    href={item.google.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] no-underline truncate"
+                    style={{ color: 'var(--t-honey)' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {item.google.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                  </a>
+                </div>
+              )}
+              {item.google.phone && (
+                <div className="flex items-center gap-2 last:mb-0">
+                  <PerriandIcon name="sparkle" size={13} color="rgba(28,26,23,0.5)" />
+                  <a
+                    href={`tel:${item.google.phone}`}
+                    className="text-[11px] no-underline"
+                    style={{ color: 'var(--t-honey)' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {item.google.phone}
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Enrichment warnings */}
           {item.enrichment?.closedDays && item.enrichment.closedDays.length > 0 && (
             <div
@@ -319,9 +368,9 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onViewBriefing
             >
               Taste Mosaic
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <TerrazzoMosaic profile={item.matchBreakdown} size="md" />
-              <MosaicLegend profile={item.matchBreakdown} />
+              <MosaicLegend profile={item.matchBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
             </div>
           </div>
 

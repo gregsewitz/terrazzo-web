@@ -96,8 +96,10 @@ function RadarSection() {
       >
         Your Terrazzo Mosaic
       </div>
-      <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="lg" />
-      <MosaicLegend profile={DEFAULT_USER_PROFILE} dark />
+      <div className="flex items-center gap-6">
+        <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="lg" />
+        <MosaicLegend profile={DEFAULT_USER_PROFILE} dark style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+      </div>
     </div>
   );
 }

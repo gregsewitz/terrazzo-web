@@ -19,6 +19,7 @@ interface TerrazzoMosaicProps {
 interface MosaicLegendProps {
   profile: TasteProfile;
   className?: string;
+  style?: React.CSSProperties;
   /** Use light text for dark backgrounds */
   dark?: boolean;
 }
@@ -183,7 +184,7 @@ export function TerrazzoMosaic({ profile, size = 'md', className, style }: Terra
 
 // ─── Legend ─────────────────────────────────────────────────────────────────────
 
-export function MosaicLegend({ profile, className, dark = false }: MosaicLegendProps) {
+export function MosaicLegend({ profile, className, style, dark = false }: MosaicLegendProps) {
   const DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
   const sorted = DOMAINS
@@ -198,6 +199,7 @@ export function MosaicLegend({ profile, className, dark = false }: MosaicLegendP
         gridTemplateColumns: 'repeat(3, auto)',
         gap: '6px 16px',
         justifyContent: 'center',
+        ...style,
       }}
     >
       {sorted.map(d => (

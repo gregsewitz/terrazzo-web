@@ -114,6 +114,8 @@ export interface GooglePlaceData {
   hours?: string[];
   photoUrl?: string;
   address?: string;
+  website?: string;
+  phone?: string;
   lat?: number;
   lng?: number;
 }
@@ -123,6 +125,7 @@ export interface PlaceEnrichment {
   hours?: string;
   seasonalNote?: string;
   priceRange?: string;
+  description?: string;
   confidence: number;
 }
 

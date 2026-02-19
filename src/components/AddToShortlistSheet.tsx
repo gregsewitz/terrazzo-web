@@ -38,14 +38,14 @@ export default function AddToShortlistSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-[60] flex items-end justify-center"
       onClick={onClose}
     >
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full rounded-t-2xl px-4 pt-4"
-        style={{ maxWidth: 480, background: 'var(--t-cream)', paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))', boxSizing: 'border-box' }}
+        className="relative w-full rounded-t-2xl px-4 pt-4 flex flex-col"
+        style={{ maxWidth: 480, maxHeight: '80vh', background: 'var(--t-cream)', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
@@ -66,7 +66,7 @@ export default function AddToShortlistSheet({
         </div>
 
         {/* Shortlist list */}
-        <div className="flex flex-col gap-1.5 mb-4 max-h-[50vh] overflow-y-auto">
+        <div className="flex flex-col gap-1.5 mb-4 flex-1 min-h-0 overflow-y-auto">
           {shortlists.map(sl => {
             const isIn = sl.placeIds.includes(place.id);
             const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
@@ -117,6 +117,7 @@ export default function AddToShortlistSheet({
         </div>
 
         {/* Create new shortlist inline */}
+        <div className="flex-shrink-0">
         {showCreate ? (
           <div className="flex gap-2 items-center">
             <input
@@ -166,6 +167,7 @@ export default function AddToShortlistSheet({
             New Shortlist
           </button>
         )}
+        </div>
       </div>
     </div>
   );
