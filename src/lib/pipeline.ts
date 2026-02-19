@@ -220,16 +220,17 @@ export const placeIntelligencePipeline = inngest.createFunction(
         where: { id: placeIntelligenceId },
         data: {
           status: 'complete',
-          signals: merged.signals,
-          antiSignals: merged.antiSignals,
-          reliability: merged.reliability,
-          facts: merged.facts,
-          reviewIntel: merged.reviewIntelSummary,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          signals: JSON.parse(JSON.stringify(merged.signals)) as any,
+          antiSignals: JSON.parse(JSON.stringify(merged.antiSignals)) as any,
+          reliability: JSON.parse(JSON.stringify(merged.reliability)) as any,
+          facts: JSON.parse(JSON.stringify(merged.facts)) as any,
+          reviewIntel: JSON.parse(JSON.stringify(merged.reviewIntelSummary)) as any,
           signalCount: merged.signals.length,
           antiSignalCount: merged.antiSignals.length,
           reviewCount: merged.reliability?.totalReviews || 0,
           reliabilityScore: merged.reliability?.overall || null,
-          sourcesProcessed: merged.sourceSummary,
+          sourcesProcessed: JSON.parse(JSON.stringify(merged.sourceSummary)) as any,
           lastEnrichedAt: new Date(),
         },
       });
