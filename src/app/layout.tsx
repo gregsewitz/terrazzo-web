@@ -3,6 +3,7 @@ import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
 import StoreHydration from "@/components/StoreHydration";
+import { AuthProvider } from "@/context/AuthContext";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -44,9 +45,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceMono.variable}`}>
       <body className="antialiased">
-        <StoreHydration />
-        {children}
-        <GlobalImportUI />
+        <AuthProvider>
+          <StoreHydration />
+          {children}
+          <GlobalImportUI />
+        </AuthProvider>
       </body>
     </html>
   );

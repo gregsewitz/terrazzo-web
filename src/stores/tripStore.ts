@@ -1,5 +1,45 @@
 import { create } from 'zustand';
 import { Trip, ImportedPlace, TripDay, TimeSlot, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData } from '@/types';
+import { apiFetch } from '@/lib/api-client';
+
+// ═══════════════════════════════════════════
+// DB types (shapes returned by API routes)
+// ═══════════════════════════════════════════
+
+export interface DBTrip {
+  id: string;
+  name: string;
+  location: string;
+  destinations?: string[] | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  groupSize?: number | null;
+  groupType?: string | null;
+  days: TripDay[];
+  pool?: ImportedPlace[] | null;
+  conversationHistory?: unknown;
+  status?: string | null;
+}
+
+/** Fire-and-forget DB write — never blocks the UI */
+function dbWrite(url: string, method: string, body?: unknown) {
+  apiFetch(url, {
+    method,
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  }).catch(err => console.warn('[tripStore] DB write failed:', err));
+}
+
+/** Debounced trip save — collapses rapid changes (e.g. drag-and-drop) */
+const _tripSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+function debouncedTripSave(tripId: string, getData: () => Partial<Trip>) {
+  const existing = _tripSaveTimers.get(tripId);
+  if (existing) clearTimeout(existing);
+  _tripSaveTimers.set(tripId, setTimeout(() => {
+    _tripSaveTimers.delete(tripId);
+    const data = getData();
+    dbWrite(`/api/trips/${tripId}/save`, 'PATCH', data);
+  }, 2000));
+}
 
 // ─── Immutable update helpers ────────────────────────────────────────────────
 
@@ -63,6 +103,7 @@ interface TripState {
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
   createTrip: (data: TripCreationData) => string; // returns new trip id
+  hydrateFromDB: (trips: DBTrip[]) => void;
 }
 
 // ─── Lazy demo data loader ───────────────────────────────────────────────────
@@ -100,73 +141,108 @@ export const useTripStore = create<TripState>((set, get) => ({
   setCurrentTrip: (id) => set({ currentTripId: id }),
   setCurrentDay: (day) => set({ currentDay: day }),
 
-  placeItem: (itemId, day, slotId) => set(state =>
-    updateCurrentTrip(state, trip => {
-      const item = trip.pool.find(p => p.id === itemId);
-      if (!item) return trip;
-      return {
+  placeItem: (itemId, day, slotId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => {
+        const item = trip.pool.find(p => p.id === itemId);
+        if (!item) return trip;
+        return {
+          ...trip,
+          pool: trip.pool.map(p =>
+            p.id === itemId ? { ...p, status: 'placed' as const, placedIn: { day, slot: slotId } } : p
+          ),
+          days: mapDaySlots(trip.days, day, s =>
+            s.id === slotId ? { ...s, places: [...s.places, { ...item, status: 'placed' as const }] } : s
+          ),
+        };
+      })
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, pool: t.pool } : {};
+    });
+  },
+
+  removeFromSlot: (day, slotId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
         ...trip,
-        pool: trip.pool.map(p =>
-          p.id === itemId ? { ...p, status: 'placed' as const, placedIn: { day, slot: slotId } } : p
-        ),
         days: mapDaySlots(trip.days, day, s =>
-          s.id === slotId ? { ...s, places: [...s.places, { ...item, status: 'placed' as const }] } : s
+          s.id === slotId ? { ...s, places: [] } : s
         ),
-      };
-    })
-  ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
 
-  removeFromSlot: (day, slotId) => set(state =>
-    updateCurrentTrip(state, trip => ({
-      ...trip,
-      days: mapDaySlots(trip.days, day, s =>
-        s.id === slotId ? { ...s, places: [] } : s
-      ),
-    }))
-  ),
+  unplaceFromSlot: (day, slotId, placeId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => {
+        let removedPlace: ImportedPlace | null = null;
+        const days = mapDaySlots(trip.days, day, s => {
+          if (s.id !== slotId) return s;
+          const place = s.places.find(p => p.id === placeId);
+          if (place) removedPlace = place;
+          return { ...s, places: s.places.filter(p => p.id !== placeId) };
+        });
 
-  unplaceFromSlot: (day, slotId, placeId) => set(state =>
-    updateCurrentTrip(state, trip => {
-      let removedPlace: ImportedPlace | null = null;
-      const days = mapDaySlots(trip.days, day, s => {
-        if (s.id !== slotId) return s;
-        const place = s.places.find(p => p.id === placeId);
-        if (place) removedPlace = place;
-        return { ...s, places: s.places.filter(p => p.id !== placeId) };
-      });
+        let pool = trip.pool;
+        if (removedPlace) {
+          const existsInPool = trip.pool.some(p => p.id === placeId);
+          pool = existsInPool
+            ? trip.pool.map(p => p.id === placeId ? { ...p, status: 'available' as const, placedIn: undefined } : p)
+            : [...trip.pool, { ...(removedPlace as ImportedPlace), status: 'available' as const, placedIn: undefined }];
+        }
 
-      let pool = trip.pool;
-      if (removedPlace) {
-        const existsInPool = trip.pool.some(p => p.id === placeId);
-        pool = existsInPool
-          ? trip.pool.map(p => p.id === placeId ? { ...p, status: 'available' as const, placedIn: undefined } : p)
-          : [...trip.pool, { ...(removedPlace as ImportedPlace), status: 'available' as const, placedIn: undefined }];
-      }
+        return { ...trip, pool, days };
+      })
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, pool: t.pool } : {};
+    });
+  },
 
-      return { ...trip, pool, days };
-    })
-  ),
+  addToPool: (items) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({ ...trip, pool: [...trip.pool, ...items] }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { pool: t.pool } : {};
+    });
+  },
 
-  addToPool: (items) => set(state =>
-    updateCurrentTrip(state, trip => ({ ...trip, pool: [...trip.pool, ...items] }))
-  ),
+  placeFromSaved: (place, dayNumber, slotId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => {
+        const placedItem = { ...place, status: 'placed' as const, placedIn: { day: dayNumber, slot: slotId } };
+        return {
+          ...trip,
+          days: mapDaySlots(trip.days, dayNumber, s =>
+            s.id === slotId ? { ...s, places: [...s.places, placedItem] } : s
+          ),
+        };
+      })
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
 
-  placeFromSaved: (place, dayNumber, slotId) => set(state =>
-    updateCurrentTrip(state, trip => {
-      const placedItem = { ...place, status: 'placed' as const, placedIn: { day: dayNumber, slot: slotId } };
-      return {
-        ...trip,
-        days: mapDaySlots(trip.days, dayNumber, s =>
-          s.id === slotId ? { ...s, places: [...s.places, placedItem] } : s
-        ),
-      };
-    })
-  ),
-
-  moveToSlot: (place, fromDay, fromSlotId, toDay, toSlotId) => set(state => {
-    if (fromDay === toDay && fromSlotId === toSlotId) return state;
+  moveToSlot: (place, fromDay, fromSlotId, toDay, toSlotId) => {
+    if (fromDay === toDay && fromSlotId === toSlotId) return;
     const movedItem = { ...place, status: 'placed' as const, placedIn: { day: toDay, slot: toSlotId } };
-    return updateCurrentTrip(state, trip => ({
+    set(state => updateCurrentTrip(state, trip => ({
       ...trip,
       days: trip.days.map(d => ({
         ...d,
@@ -176,61 +252,101 @@ export const useTripStore = create<TripState>((set, get) => ({
           return s;
         }),
       })),
-    }));
-  }),
+    })));
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
 
-  rejectItem: (itemId) => set(state =>
-    updateCurrentTrip(state, trip => ({
-      ...trip, pool: trip.pool.map(p => p.id === itemId ? { ...p, status: 'rejected' as const } : p),
-    }))
-  ),
+  rejectItem: (itemId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip, pool: trip.pool.map(p => p.id === itemId ? { ...p, status: 'rejected' as const } : p),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { pool: t.pool } : {};
+    });
+  },
 
-  updateItemStatus: (itemId, status) => set(state =>
-    updateCurrentTrip(state, trip => ({
-      ...trip, pool: trip.pool.map(p => p.id === itemId ? { ...p, status } : p),
-    }))
-  ),
+  updateItemStatus: (itemId, status) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip, pool: trip.pool.map(p => p.id === itemId ? { ...p, status } : p),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { pool: t.pool } : {};
+    });
+  },
 
-  confirmGhost: (dayNumber, slotId, ghostId) => set(state =>
-    updateCurrentTrip(state, trip => ({
-      ...trip,
-      days: mapDaySlots(trip.days, dayNumber, s => {
-        if (s.id !== slotId) return s;
-        const ghost = s.ghostItems?.find(g => g.id === ghostId);
-        if (!ghost) return s;
-        return {
+  confirmGhost: (dayNumber, slotId, ghostId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s => {
+          if (s.id !== slotId) return s;
+          const ghost = s.ghostItems?.find(g => g.id === ghostId);
+          if (!ghost) return s;
+          return {
+            ...s,
+            places: [...s.places, { ...ghost, ghostStatus: 'confirmed' as const, status: 'placed' as const }],
+            ghostItems: s.ghostItems?.filter(g => g.id !== ghostId),
+          };
+        }),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  dismissGhost: (dayNumber, slotId, ghostId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s =>
+          s.id === slotId ? { ...s, ghostItems: s.ghostItems?.filter(g => g.id !== ghostId) } : s
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  ratePlace: (itemId, rating) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        pool: trip.pool.map(p => p.id === itemId ? { ...p, rating } : p),
+        days: mapAllSlots(trip.days, s => ({
           ...s,
-          places: [...s.places, { ...ghost, ghostStatus: 'confirmed' as const, status: 'placed' as const }],
-          ghostItems: s.ghostItems?.filter(g => g.id !== ghostId),
-        };
-      }),
-    }))
-  ),
-
-  dismissGhost: (dayNumber, slotId, ghostId) => set(state =>
-    updateCurrentTrip(state, trip => ({
-      ...trip,
-      days: mapDaySlots(trip.days, dayNumber, s =>
-        s.id === slotId ? { ...s, ghostItems: s.ghostItems?.filter(g => g.id !== ghostId) } : s
-      ),
-    }))
-  ),
-
-  ratePlace: (itemId, rating) => set(state =>
-    updateCurrentTrip(state, trip => ({
-      ...trip,
-      pool: trip.pool.map(p => p.id === itemId ? { ...p, rating } : p),
-      days: mapAllSlots(trip.days, s => ({
-        ...s,
-        places: s.places.map(p => p.id === itemId ? { ...p, rating } : p),
-        ghostItems: s.ghostItems?.map(g => g.id === itemId ? { ...g, rating } : g),
-      })),
-    }))
-  ),
+          places: s.places.map(p => p.id === itemId ? { ...p, rating } : p),
+          ghostItems: s.ghostItems?.map(g => g.id === itemId ? { ...g, rating } : g),
+        })),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, pool: t.pool } : {};
+    });
+  },
 
   // Star → Ghost card candidacy: inject rated/starred places as ghost suggestions
-  injectGhostCandidates: (candidates) => set(state =>
-    updateCurrentTrip(state, trip => {
+  injectGhostCandidates: (candidates) => {
+    set(state => updateCurrentTrip(state, trip => {
       const destLower = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean))
         .map(d => d.toLowerCase());
 
@@ -309,8 +425,13 @@ export const useTripStore = create<TripState>((set, get) => ({
       }
 
       return { ...trip, days: updatedDays };
-    })
-  ),
+    }));
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
 
   createTrip: (data: TripCreationData) => {
     const id = `trip-${Date.now()}`;
@@ -366,6 +487,41 @@ export const useTripStore = create<TripState>((set, get) => ({
       currentDay: 1,
     }));
 
+    // Write-through: create trip in DB
+    dbWrite('/api/trips/mine', 'POST', {
+      name: data.name,
+      destinations: data.destinations,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      groupSize: data.groupSize,
+      groupType: data.travelContext,
+      days: days,
+      pool: [],
+      status: data.status || 'planning',
+    });
+
     return id;
+  },
+
+  // ─── DB Hydration ───
+  hydrateFromDB: (dbTrips) => {
+    const trips: Trip[] = dbTrips.map(dt => ({
+      id: dt.id,
+      name: dt.name,
+      location: dt.location,
+      startDate: dt.startDate || undefined,
+      endDate: dt.endDate || undefined,
+      destinations: Array.isArray(dt.destinations) ? dt.destinations : undefined,
+      groupSize: dt.groupSize || undefined,
+      status: (dt.status as Trip['status']) || 'planning',
+      days: Array.isArray(dt.days) ? dt.days : [],
+      pool: Array.isArray(dt.pool) ? dt.pool : [],
+    }));
+
+    set({
+      trips,
+      currentTripId: trips.length > 0 ? trips[0].id : null,
+      currentDay: 1,
+    });
   },
 }));

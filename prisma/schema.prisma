@@ -7,18 +7,36 @@ datasource db {
 }
 
 // ──────────────────────────────────────────────
-// Existing models
+// User & Auth
 // ──────────────────────────────────────────────
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  name         String?
-  tasteProfile Json?        // TasteProfile
-  nylasGrants  NylasGrant[]
-  trips        Trip[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id                   String       @id @default(cuid())
+  supabaseId           String       @unique
+  email                String       @unique
+  name                 String?
+  authProvider         String       @default("email")
+
+  // Taste profile (from onboarding)
+  tasteProfile         Json?        // GeneratedProfile
+  lifeContext          Json?        // { primaryCompanions, firstName, etc. }
+  allSignals           Json?        // Signal[]
+  allContradictions    Json?        // Contradiction[]
+  seedTrips            Json?        // SeedTripInput[]
+  trustedSources       Json?        // TrustedSource[]
+  isOnboardingComplete Boolean      @default(false)
+  onboardingDepth      String?      // shallow | standard | deep
+
+  // Relations
+  nylasGrants          NylasGrant[]
+  trips                Trip[]
+  savedPlaces          SavedPlace[]
+  shortlists           Shortlist[]
+
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([supabaseId])
 }
 
 model NylasGrant {
@@ -31,18 +49,119 @@ model NylasGrant {
   createdAt DateTime @default(now())
 }
 
+// ──────────────────────────────────────────────
+// Saved Places & Shortlists (Collect tab)
+// ──────────────────────────────────────────────
+
+model SavedPlace {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Place identity
+  googlePlaceId       String?
+  name                String
+  type                String   // restaurant | hotel | bar | cafe | museum | activity | neighborhood | shop
+  location            String?
+
+  // Import metadata
+  source              Json?    // { type, name, url } — ImportSource
+  ghostSource         String?  // friend | maps | article | email | ai | manual | instagram
+  friendAttribution   Json?    // { name, platform, date }
+  userContext          String?  // user's personal note about the place
+  timing              String?
+  travelWith          String?  // e.g. "bestie", "daughter", "friends"
+  intentStatus        String?  // booked | planning | dreaming | researching
+  savedDate           String?  // e.g. "Saved Jun 2024"
+  importBatchId       String?  // links places from same import
+
+  // Ratings
+  rating              Json?    // { reaction, tags, contextTags, returnIntent, personalNote }
+  isShortlisted       Boolean  @default(false)
+
+  // Enrichment data
+  enrichment          Json?    // { closedDays, hours, seasonalNote, priceRange, description, confidence }
+  whatToOrder          Json?    // string[] — e.g. ["Puntillas ★", "Gambas de la santa"]
+  tips                Json?    // string[] — e.g. ["Go early", "Drink at the bar"]
+  alsoKnownAs         String?  // e.g. "El Sótano"
+
+  // Taste matching
+  matchScore          Int?
+  matchBreakdown      Json?    // { Design, Character, Service, Food, Location, Wellness }
+  tasteNote           String?
+  terrazzoInsight     Json?    // { why, caveat }
+
+  // Google data cache
+  googleData          Json?
+
+  // Link to global intelligence
+  placeIntelligenceId String?
+  intelligence        PlaceIntelligence? @relation("SavedPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, googlePlaceId])
+  @@index([userId])
+  @@index([googlePlaceId])
+}
+
+model Shortlist {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name              String
+  description       String?
+  emoji             String   @default("sparkle")
+  isDefault         Boolean  @default(false)   // true for "Favorites"
+  isSmartCollection Boolean  @default(false)
+
+  // Smart collection config
+  query             String?
+  filterTags        Json?    // string[]
+
+  // Place membership (stored as SavedPlace IDs)
+  placeIds          Json     @default("[]")     // string[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ──────────────────────────────────────────────
+// Trips (Plan tab)
+// ──────────────────────────────────────────────
+
 model Trip {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  location  String
-  startDate DateTime?
-  endDate   DateTime?
-  days      Json     // TripDay[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  places    Place[]
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String
+  location     String
+  destinations Json?     // string[]
+  startDate    DateTime?
+  endDate      DateTime?
+  groupSize    Int?
+  groupType    String?   // partner | friends | family | solo
+  vibe         String?
+
+  // Full trip state (mirrors TripDay[] from Zustand)
+  days         Json      // TripDay[]
+  pool         Json?     // PoolItem[] — unplaced items
+
+  // Conversation history
+  conversationHistory Json? // Message[]
+
+  status       String    @default("planning") // planning | active | completed
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  places       Place[]
+
+  @@index([userId])
 }
 
 model Place {
@@ -66,7 +185,7 @@ model Place {
 
   // Link to global intelligence
   placeIntelligenceId String?
-  intelligence        PlaceIntelligence? @relation(fields: [placeIntelligenceId], references: [id])
+  intelligence        PlaceIntelligence? @relation("TripPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
 }
 
 model PlaceCache {
@@ -113,7 +232,8 @@ model PlaceIntelligence {
 
   // Relations
   pipelineRuns    PipelineRun[]
-  places          Place[]
+  tripPlaces      Place[]       @relation("TripPlaceIntelligence")
+  savedPlaces     SavedPlace[]  @relation("SavedPlaceIntelligence")
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

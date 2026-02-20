@@ -1,5 +1,60 @@
 import { create } from 'zustand';
 import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData, Shortlist } from '@/types';
+import { apiFetch } from '@/lib/api-client';
+
+// ═══════════════════════════════════════════
+// DB types (shapes returned by API routes)
+// ═══════════════════════════════════════════
+
+export interface DBSavedPlace {
+  id: string;
+  googlePlaceId?: string | null;
+  name: string;
+  type: string;
+  location?: string | null;
+  source?: Record<string, unknown> | null;
+  ghostSource?: string | null;
+  friendAttribution?: Record<string, unknown> | null;
+  userContext?: string | null;
+  timing?: string | null;
+  travelWith?: string | null;
+  intentStatus?: string | null;
+  savedDate?: string | null;
+  importBatchId?: string | null;
+  rating?: Record<string, unknown> | null;
+  isShortlisted: boolean;
+  matchScore?: number | null;
+  matchBreakdown?: Record<string, number> | null;
+  tasteNote?: string | null;
+  terrazzoInsight?: Record<string, unknown> | null;
+  enrichment?: Record<string, unknown> | null;
+  whatToOrder?: string[] | null;
+  tips?: string[] | null;
+  alsoKnownAs?: string | null;
+  googleData?: Record<string, unknown> | null;
+}
+
+export interface DBShortlist {
+  id: string;
+  name: string;
+  description?: string | null;
+  emoji: string;
+  isDefault: boolean;
+  isSmartCollection: boolean;
+  query?: string | null;
+  filterTags?: string[] | null;
+  placeIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Fire-and-forget DB write — never blocks the UI */
+function dbWrite(url: string, method: string, body?: unknown) {
+  apiFetch(url, {
+    method,
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  }).catch(err => console.warn('[savedStore] DB write failed:', err));
+}
 
 export type ViewMode = 'myPlaces' | 'history';
 
@@ -137,6 +192,8 @@ interface SavedState {
   archiveToHistory: (id: string) => void;
   addHistoryItems: (items: HistoryItem[]) => void;
 
+  // DB hydration
+  hydrateFromDB: (places: DBSavedPlace[], shortlists: DBShortlist[]) => void;
 }
 
 export const useSavedStore = create<SavedState>((set, get) => ({
@@ -158,41 +215,71 @@ export const useSavedStore = create<SavedState>((set, get) => ({
   setCityFilter: (city) => set({ cityFilter: city }),
 
   // ─── Library Actions ───
-  addPlace: (place) => set((state) => ({
-    myPlaces: [place, ...state.myPlaces],
-  })),
+  addPlace: (place) => {
+    set((state) => ({ myPlaces: [place, ...state.myPlaces] }));
+    // Write-through: save to DB
+    dbWrite('/api/places/save', 'POST', {
+      name: place.name,
+      type: place.type,
+      location: place.location,
+      googlePlaceId: place.google?.placeId,
+      source: place.source,
+      ghostSource: place.ghostSource,
+      friendAttribution: place.friendAttribution,
+      matchScore: place.matchScore,
+      matchBreakdown: place.matchBreakdown,
+      tasteNote: place.tasteNote,
+      googleData: place.google,
+      terrazzoInsight: place.terrazzoInsight,
+      enrichment: place.enrichment,
+      whatToOrder: place.whatToOrder,
+      tips: place.tips,
+      alsoKnownAs: place.alsoKnownAs,
+      importBatchId: place.importBatchId,
+      savedDate: place.savedDate,
+      travelWith: place.travelWith,
+      isShortlisted: place.isShortlisted || false,
+      userContext: place.userContext,
+      timing: place.timing,
+      intentStatus: place.intentStatus,
+    });
+  },
 
-  removePlace: (id) => set((state) => ({
-    myPlaces: state.myPlaces.filter((p) => p.id !== id),
-    // Also remove from all shortlists
-    shortlists: state.shortlists.map(sl => ({
-      ...sl,
-      placeIds: sl.placeIds.filter(pid => pid !== id),
-    })),
-  })),
+  removePlace: (id) => {
+    set((state) => ({
+      myPlaces: state.myPlaces.filter((p) => p.id !== id),
+      shortlists: state.shortlists.map(sl => ({
+        ...sl,
+        placeIds: sl.placeIds.filter(pid => pid !== id),
+      })),
+    }));
+    dbWrite(`/api/places/${id}`, 'DELETE');
+  },
 
-  ratePlace: (id, rating) => set((state) => ({
-    myPlaces: state.myPlaces.map((p) =>
-      p.id === id ? { ...p, rating } : p
-    ),
-  })),
+  ratePlace: (id, rating) => {
+    set((state) => ({
+      myPlaces: state.myPlaces.map((p) =>
+        p.id === id ? { ...p, rating } : p
+      ),
+    }));
+    dbWrite(`/api/places/${id}`, 'PATCH', { rating });
+  },
 
   // ─── Shortlist Actions ───
-  toggleStar: (id) => set((state) => {
+  toggleStar: (id) => {
+    const state = get();
     const favShortlist = state.shortlists.find(s => s.isDefault);
-    if (!favShortlist) return state;
+    if (!favShortlist) return;
 
     const isCurrentlyFavorited = favShortlist.placeIds.includes(id);
     const newPlaceIds = isCurrentlyFavorited
       ? favShortlist.placeIds.filter(pid => pid !== id)
       : [...favShortlist.placeIds, id];
 
-    return {
-      // Sync isShortlisted on the place (backward compat for ghost injection, PicksStrip, etc.)
+    set({
       myPlaces: state.myPlaces.map((p) =>
         p.id === id ? { ...p, isShortlisted: !isCurrentlyFavorited } : p
       ),
-      // Update Favorites shortlist
       shortlists: state.shortlists.map(sl =>
         sl.isDefault
           ? {
@@ -203,8 +290,14 @@ export const useSavedStore = create<SavedState>((set, get) => ({
             }
           : sl
       ),
-    };
-  }),
+    });
+
+    // Write-through: update place + favorites shortlist
+    dbWrite(`/api/places/${id}`, 'PATCH', { isShortlisted: !isCurrentlyFavorited });
+    if (favShortlist.id !== DEFAULT_SHORTLIST_ID) {
+      dbWrite(`/api/shortlists/${favShortlist.id}`, 'PATCH', { placeIds: newPlaceIds });
+    }
+  },
 
   createShortlist: (name, emoji, description) => {
     const newId = `shortlist-${Date.now()}`;
@@ -226,60 +319,82 @@ export const useSavedStore = create<SavedState>((set, get) => ({
         },
       ],
     }));
+    // Write-through: create in DB (will get a real ID but we keep local ID for now)
+    dbWrite('/api/shortlists', 'POST', { name, emoji: emoji || 'pin', description });
     return newId;
   },
 
-  deleteShortlist: (id) => set((state) => ({
-    // Prevent deleting the default Favorites shortlist
-    shortlists: state.shortlists.filter(sl => sl.id !== id || sl.isDefault),
-  })),
+  deleteShortlist: (id) => {
+    const state = get();
+    const sl = state.shortlists.find(s => s.id === id);
+    if (sl?.isDefault) return; // Prevent deleting Favorites
+    set({ shortlists: state.shortlists.filter(s => s.id !== id) });
+    dbWrite(`/api/shortlists/${id}`, 'DELETE');
+  },
 
-  updateShortlist: (id, updates) => set((state) => ({
-    shortlists: state.shortlists.map(sl =>
-      sl.id === id
-        ? { ...sl, ...updates, updatedAt: new Date().toISOString() }
-        : sl
-    ),
-  })),
+  updateShortlist: (id, updates) => {
+    set((state) => ({
+      shortlists: state.shortlists.map(sl =>
+        sl.id === id
+          ? { ...sl, ...updates, updatedAt: new Date().toISOString() }
+          : sl
+      ),
+    }));
+    dbWrite(`/api/shortlists/${id}`, 'PATCH', updates);
+  },
 
-  addPlaceToShortlist: (shortlistId, placeId) => set((state) => {
-    return {
-      shortlists: state.shortlists.map(sl => {
-        if (sl.id !== shortlistId) return sl;
-        if (sl.placeIds.includes(placeId)) return sl; // already in shortlist
-        const newPlaceIds = [...sl.placeIds, placeId];
-        return {
-          ...sl,
-          placeIds: newPlaceIds,
-          cities: deriveCities(newPlaceIds, state.myPlaces),
-          updatedAt: new Date().toISOString(),
-        };
-      }),
-      // If adding to Favorites, also sync isShortlisted
-      myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
-        ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: true } : p)
-        : state.myPlaces,
-    };
-  }),
+  addPlaceToShortlist: (shortlistId, placeId) => {
+    set((state) => {
+      return {
+        shortlists: state.shortlists.map(sl => {
+          if (sl.id !== shortlistId) return sl;
+          if (sl.placeIds.includes(placeId)) return sl;
+          const newPlaceIds = [...sl.placeIds, placeId];
+          return {
+            ...sl,
+            placeIds: newPlaceIds,
+            cities: deriveCities(newPlaceIds, state.myPlaces),
+            updatedAt: new Date().toISOString(),
+          };
+        }),
+        myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
+          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: true } : p)
+          : state.myPlaces,
+      };
+    });
+    // Write-through
+    const sl = get().shortlists.find(s => s.id === shortlistId);
+    if (sl) dbWrite(`/api/shortlists/${shortlistId}`, 'PATCH', { placeIds: sl.placeIds });
+    if (shortlistId === DEFAULT_SHORTLIST_ID) {
+      dbWrite(`/api/places/${placeId}`, 'PATCH', { isShortlisted: true });
+    }
+  },
 
-  removePlaceFromShortlist: (shortlistId, placeId) => set((state) => {
-    return {
-      shortlists: state.shortlists.map(sl => {
-        if (sl.id !== shortlistId) return sl;
-        const newPlaceIds = sl.placeIds.filter(pid => pid !== placeId);
-        return {
-          ...sl,
-          placeIds: newPlaceIds,
-          cities: deriveCities(newPlaceIds, state.myPlaces),
-          updatedAt: new Date().toISOString(),
-        };
-      }),
-      // If removing from Favorites, also sync isShortlisted
-      myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
-        ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: false } : p)
-        : state.myPlaces,
-    };
-  }),
+  removePlaceFromShortlist: (shortlistId, placeId) => {
+    set((state) => {
+      return {
+        shortlists: state.shortlists.map(sl => {
+          if (sl.id !== shortlistId) return sl;
+          const newPlaceIds = sl.placeIds.filter(pid => pid !== placeId);
+          return {
+            ...sl,
+            placeIds: newPlaceIds,
+            cities: deriveCities(newPlaceIds, state.myPlaces),
+            updatedAt: new Date().toISOString(),
+          };
+        }),
+        myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
+          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: false } : p)
+          : state.myPlaces,
+      };
+    });
+    // Write-through
+    const sl = get().shortlists.find(s => s.id === shortlistId);
+    if (sl) dbWrite(`/api/shortlists/${shortlistId}`, 'PATCH', { placeIds: sl.placeIds });
+    if (shortlistId === DEFAULT_SHORTLIST_ID) {
+      dbWrite(`/api/places/${placeId}`, 'PATCH', { isShortlisted: false });
+    }
+  },
 
   createSmartShortlist: (name, emoji, query, filterTags, placeIds) => {
     const newId = `shortlist-smart-${Date.now()}`;
@@ -321,13 +436,23 @@ export const useSavedStore = create<SavedState>((set, get) => ({
         },
       ],
     }));
+    // Write-through: create smart shortlist in DB
+    dbWrite('/api/shortlists', 'POST', {
+      name,
+      emoji,
+      isSmartCollection: true,
+      query,
+      filterTags,
+      placeIds: resolvedIds,
+    });
     return newId;
   },
 
   // ─── History Actions ───
-  promoteFromHistory: (id) => set((state) => {
+  promoteFromHistory: (id) => {
+    const state = get();
     const histItem = state.history.find((h) => h.id === id);
-    if (!histItem) return state;
+    if (!histItem) return;
 
     const newPlace: ImportedPlace = {
       id: `promoted-${id}`,
@@ -342,15 +467,26 @@ export const useSavedStore = create<SavedState>((set, get) => ({
       ghostSource: 'manual',
     };
 
-    return {
+    set({
       myPlaces: [newPlace, ...state.myPlaces],
       history: state.history.filter((h) => h.id !== id),
-    };
-  }),
+    });
 
-  archiveToHistory: (id) => set((state) => {
+    // Write-through: save promoted place to DB
+    dbWrite('/api/places/save', 'POST', {
+      name: newPlace.name,
+      type: newPlace.type,
+      location: newPlace.location,
+      ghostSource: 'manual',
+      matchScore: 0,
+      matchBreakdown: newPlace.matchBreakdown,
+    });
+  },
+
+  archiveToHistory: (id) => {
+    const state = get();
     const place = state.myPlaces.find((p) => p.id === id);
-    if (!place) return state;
+    if (!place) return;
 
     const historyItem: HistoryItem = {
       id: `hist-archived-${id}`,
@@ -362,11 +498,14 @@ export const useSavedStore = create<SavedState>((set, get) => ({
       ghostSource: place.ghostSource || 'manual',
     };
 
-    return {
+    set({
       myPlaces: state.myPlaces.filter((p) => p.id !== id),
       history: [historyItem, ...state.history],
-    };
-  }),
+    });
+
+    // Write-through: remove archived place from DB
+    dbWrite(`/api/places/${id}`, 'DELETE');
+  },
 
   addHistoryItems: (items) => set((state) => {
     const existingNames = new Set(state.history.map(h => h.name.toLowerCase()));
@@ -375,5 +514,63 @@ export const useSavedStore = create<SavedState>((set, get) => ({
       history: [...newItems, ...state.history],
     };
   }),
+
+  // ─── DB Hydration ───
+  hydrateFromDB: (dbPlaces, dbShortlists) => {
+    // Map DB places → store ImportedPlace format
+    const places: ImportedPlace[] = dbPlaces.map(dp => ({
+      id: dp.id,
+      name: dp.name,
+      type: (dp.type || 'restaurant') as PlaceType,
+      location: dp.location || '',
+      source: dp.source
+        ? dp.source as unknown as ImportedPlace['source']
+        : { type: 'email' as const, name: dp.ghostSource || 'manual' },
+      matchScore: dp.matchScore || 0,
+      matchBreakdown: (dp.matchBreakdown as ImportedPlace['matchBreakdown']) || { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+      tasteNote: dp.tasteNote || '',
+      status: 'available' as const,
+      ghostSource: (dp.ghostSource || 'manual') as GhostSourceType,
+      isShortlisted: dp.isShortlisted,
+      rating: dp.rating as PlaceRating | undefined,
+      friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
+      terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
+      enrichment: dp.enrichment as ImportedPlace['enrichment'],
+      google: dp.googleData as GooglePlaceData | undefined,
+      userContext: dp.userContext || undefined,
+      timing: dp.timing || undefined,
+      travelWith: dp.travelWith || undefined,
+      intentStatus: dp.intentStatus as ImportedPlace['intentStatus'],
+      savedDate: dp.savedDate || undefined,
+      importBatchId: dp.importBatchId || undefined,
+      whatToOrder: dp.whatToOrder || undefined,
+      tips: dp.tips || undefined,
+      alsoKnownAs: dp.alsoKnownAs || undefined,
+    }));
+
+    // Map DB shortlists → store Shortlist format
+    const shortlists: Shortlist[] = dbShortlists.map(ds => ({
+      id: ds.id,
+      name: ds.name,
+      description: ds.description || undefined,
+      emoji: ds.emoji || 'pin',
+      placeIds: Array.isArray(ds.placeIds) ? ds.placeIds : [],
+      cities: deriveCities(Array.isArray(ds.placeIds) ? ds.placeIds : [], places),
+      isDefault: ds.isDefault,
+      isSmartCollection: ds.isSmartCollection,
+      query: ds.query || undefined,
+      filterTags: Array.isArray(ds.filterTags) ? ds.filterTags : undefined,
+      createdAt: ds.createdAt,
+      updatedAt: ds.updatedAt,
+    }));
+
+    // Ensure there's always a default Favorites shortlist
+    if (!shortlists.some(s => s.isDefault)) {
+      const favoritePlaceIds = places.filter(p => p.isShortlisted).map(p => p.id);
+      shortlists.unshift(createDefaultShortlist(favoritePlaceIds));
+    }
+
+    set({ myPlaces: places, shortlists, history: [] });
+  },
 
 }));

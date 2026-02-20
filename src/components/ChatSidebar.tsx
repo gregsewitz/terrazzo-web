@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useTripStore } from '@/stores/tripStore';
+import { apiFetch } from '@/lib/api-client';
 import { TASTE_PROFILE } from '@/constants/profile';
 import { FONT, INK } from '@/constants/theme';
 
@@ -86,9 +88,26 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
     'Suggest something like...',
   ];
 
+  const currentTripId = useTripStore(s => s.currentTripId);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  // Persist conversation history to DB (debounced via trip save)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveConversation = useCallback((msgs: Message[]) => {
+    if (!currentTripId || msgs.length <= 1) return; // Skip if just the welcome message
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      apiFetch(`/api/trips/${currentTripId}/save`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          conversationHistory: msgs.map(m => ({ role: m.role, content: m.content })),
+        }),
+      }).catch(err => console.warn('[ChatSidebar] Failed to save conversation:', err));
+    }, 2000);
+  }, [currentTripId]);
 
   async function handleSend() {
     if (!input.trim() || isLoading) return;
@@ -115,14 +134,16 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
       });
 
       const data = await res.json();
-      setMessages(prev => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: data.response || "Let me think about that — could you rephrase?",
-        },
-      ]);
+      const aiMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.response || "Let me think about that — could you rephrase?",
+      };
+      setMessages(prev => {
+        const updated = [...prev, aiMsg];
+        saveConversation(updated);
+        return updated;
+      });
     } catch {
       setMessages(prev => [
         ...prev,

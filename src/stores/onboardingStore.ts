@@ -8,6 +8,15 @@ import type {
   SeedTripInput, OnboardingLifeContext, OnboardingDepth,
 } from '@/types';
 import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
+import { apiFetch } from '@/lib/api-client';
+
+/** Fire-and-forget profile save to DB */
+function saveProfileToDB(data: Record<string, unknown>) {
+  apiFetch('/api/profile/save', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).catch(err => console.warn('[onboardingStore] DB save failed:', err));
+}
 
 interface OnboardingState {
   // ─── Progress ───
@@ -113,7 +122,10 @@ export const useOnboardingStore = create<OnboardingState>()(
         allContradictions: [...state.allContradictions, ...contradictions],
       })),
 
-      setGeneratedProfile: (profile) => set({ generatedProfile: profile }),
+      setGeneratedProfile: (profile) => {
+        set({ generatedProfile: profile });
+        saveProfileToDB({ tasteProfile: profile });
+      },
 
       setLifeContext: (update) => set((state) => ({
         lifeContext: { ...state.lifeContext, ...update },
@@ -131,10 +143,20 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       setLiveMode: (live) => set({ isLiveMode: live }),
 
-      finishOnboarding: (depth) => set({
-        isComplete: true,
-        onboardingDepth: depth,
-      }),
+      finishOnboarding: (depth) => {
+        set({ isComplete: true, onboardingDepth: depth });
+        const state = get();
+        saveProfileToDB({
+          tasteProfile: state.generatedProfile,
+          lifeContext: state.lifeContext,
+          allSignals: state.allSignals,
+          allContradictions: state.allContradictions,
+          seedTrips: state.seedTrips,
+          trustedSources: state.trustedSources,
+          isOnboardingComplete: true,
+          onboardingDepth: depth,
+        });
+      },
 
       reset: () => set({
         isComplete: false,
