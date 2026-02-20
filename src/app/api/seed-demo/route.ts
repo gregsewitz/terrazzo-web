@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
         isDefault: sl.isDefault,
         isSmartCollection: sl.isSmartCollection,
         query: sl.query || null,
-        filterTags: sl.filterTags || null,
+        filterTags: sl.filterTags ? sl.filterTags : undefined,
         // Map demo IDs → real DB IDs (skip any that didn't map)
         placeIds: sl.demoPlaceIds
           .map(demoId => idMap.get(demoId))
