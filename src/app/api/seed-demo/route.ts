@@ -245,16 +245,17 @@ export async function POST(req: NextRequest) {
     // Remap place IDs in the days and pool
     const remappedDays = trip.days.map(day => ({
       ...day,
-      slots: Object.fromEntries(
-        Object.entries(day.slots || {}).map(([slot, items]) => [
-          slot,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (items as any[]).map((item: any) => ({
-            ...item,
-            id: idMap.get(item.id) || item.id,
-          })),
-        ])
-      ),
+      slots: (day.slots || []).map(slot => ({
+        ...slot,
+        places: (slot.places || []).map(p => ({
+          ...p,
+          id: idMap.get(p.id) || p.id,
+        })),
+        ghostItems: (slot.ghostItems || []).map(p => ({
+          ...p,
+          id: idMap.get(p.id) || p.id,
+        })),
+      })),
     }));
 
     const remappedPool = (trip.pool || []).map(p => ({
