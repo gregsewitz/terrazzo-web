@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { FONT, INK } from '@/constants/theme';
@@ -16,7 +16,7 @@ interface InviteInfo {
   collaboratorId: string;
 }
 
-export default function JoinTripPage() {
+function JoinTripInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -214,5 +214,25 @@ export default function JoinTripPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function JoinTripPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ background: 'var(--t-cream)' }}
+        >
+          <div
+            className="w-6 h-6 rounded-full border-2 animate-spin"
+            style={{ borderColor: INK['15'], borderTopColor: INK['60'] }}
+          />
+        </div>
+      }
+    >
+      <JoinTripInner />
+    </Suspense>
   );
 }
