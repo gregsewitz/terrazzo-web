@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 export type TripRole = 'owner' | 'suggester' | 'viewer' | null;
 
@@ -51,6 +52,6 @@ export function logTripActivity(
 ) {
   // Fire and forget — don't await
   prisma.tripActivity.create({
-    data: { tripId, userId, type, summary, data: data || undefined },
+    data: { tripId, userId, type, summary, data: (data ?? undefined) as Prisma.InputJsonValue | undefined },
   }).catch(() => {}); // Silently ignore errors
 }
