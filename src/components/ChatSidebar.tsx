@@ -166,6 +166,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
     <div
       className="fixed inset-0 flex items-end justify-center z-55 transition-all duration-300 pointer-events-none"
       style={{
+        height: '100dvh',
         opacity: isOpen ? 1 : 0,
         pointerEvents: isOpen ? 'auto' : 'none',
       }}
@@ -183,7 +184,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
         className="relative w-full max-w-md rounded-t-2xl flex flex-col transition-transform duration-300"
         style={{
           background: 'var(--t-cream)',
-          maxHeight: '85vh',
+          maxHeight: '85dvh',
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
         }}
         onClick={e => e.stopPropagation()}

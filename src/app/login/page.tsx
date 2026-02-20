@@ -28,7 +28,14 @@ export default function LoginPage() {
     const { error } = await signIn(email.trim());
     if (error) {
       setStatus('error');
-      setErrorMsg(error);
+      // Friendly messaging for common errors
+      if (error.toLowerCase().includes('rate') || error.toLowerCase().includes('limit')) {
+        setErrorMsg('Too many sign-in attempts. Please wait a few minutes before trying again.');
+      } else if (error.toLowerCase().includes('invalid') && error.toLowerCase().includes('email')) {
+        setErrorMsg('Please enter a valid email address.');
+      } else {
+        setErrorMsg(error);
+      }
     } else {
       setStatus('sent');
     }

@@ -70,10 +70,10 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ height: '100dvh', background: 'rgba(0,0,0,0.4)' }}>
       <div
         className="w-full rounded-t-2xl overflow-hidden"
-        style={{ background: 'white', maxWidth: 480, maxHeight: '80vh' }}
+        style={{ background: 'white', maxWidth: 480, maxHeight: '80dvh' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -150,7 +150,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
         </div>
 
         {/* Individual place links */}
-        <div className="px-5 pb-6 overflow-y-auto" style={{ maxHeight: '35vh' }}>
+        <div className="px-5 pb-6 overflow-y-auto" style={{ maxHeight: '35dvh' }}>
           <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['90'], fontFamily: FONT.mono }}>
             Or open individually
           </p>

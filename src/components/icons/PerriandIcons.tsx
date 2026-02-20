@@ -41,7 +41,10 @@ export type PerriandIconName =
   | 'discover' | 'trips' | 'plan' | 'saved' | 'profile'
   // Misc
   | 'star' | 'edit' | 'check' | 'close' | 'heart' | 'pin'
-  | 'sparkle' | 'summer' | 'lightning' | 'bookmark' | 'add';
+  | 'sparkle' | 'summer' | 'lightning' | 'bookmark' | 'add'
+  // Collaboration / Activity
+  | 'invite' | 'wave' | 'lightbulb' | 'acceptCircle' | 'rejectCircle'
+  | 'chatBubble' | 'loveReaction' | 'unsure' | 'swap';
 
 interface PerriandIconProps {
   name: PerriandIconName;
@@ -98,6 +101,16 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   sparkle:    '#eeb420',
   summer:     '#e86830',
   lightning:  '#e86830',
+  // Collaboration / Activity
+  invite:       '#6366f1',
+  wave:         '#2a7a56',
+  lightbulb:    '#eeb420',
+  acceptCircle: '#2a7a56',
+  rejectCircle: '#d63020',
+  chatBubble:   '#c8923a',
+  loveReaction: '#e87080',
+  unsure:       '#6b8b9a',
+  swap:         '#6366f1',
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────
@@ -474,6 +487,93 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <line x1="16" y1="8" x2="16" y2="24" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
       <line x1="8" y1="16" x2="24" y2="16" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
+    </>
+  ),
+
+  // ── Collaboration / Activity ───────────────────────────────────────────
+
+  invite: (s, a) => (
+    <>
+      {/* Envelope */}
+      <rect x="6" y="11" width="16" height="12" rx="2" stroke={s} strokeWidth="1.5" fill="none" />
+      <path d="M6,14 L14,19 L22,14" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      {/* Plus badge */}
+      <line x1="25" y1="8" x2="25" y2="14" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="22" y1="11" x2="28" y2="11" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="13" r="1" fill={a} />
+    </>
+  ),
+
+  wave: (s, a) => (
+    <>
+      {/* Person silhouette */}
+      <circle cx="14" cy="11" r="3.5" stroke={s} strokeWidth="1.5" fill="none" />
+      <path d="M7,26 C7,22 10,19 14,19 C18,19 21,22 21,26" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      {/* Raised hand / greeting arc */}
+      <path d="M22,14 C22,11 24,9 26,9" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M23,17 C24,15 26,14 27,14" stroke={s} strokeWidth="1.2" strokeLinecap="round" fill="none" opacity=".5" />
+      <circle cx="14" cy="11" r="1" fill={a} />
+    </>
+  ),
+
+  lightbulb: (s, a) => (
+    <>
+      <path d="M16,6 C11.5,6 8,9.5 8,14 C8,17 10,19 12,20.5 L12,24 L20,24 L20,20.5 C22,19 24,17 24,14 C24,9.5 20.5,6 16,6Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <line x1="12" y1="27" x2="20" y2="27" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M14,17 L14,20" stroke={s} strokeWidth="1" strokeLinecap="round" opacity=".4" />
+      <path d="M18,17 L18,20" stroke={s} strokeWidth="1" strokeLinecap="round" opacity=".4" />
+      <circle cx="16" cy="12" r="1.5" fill={a} />
+    </>
+  ),
+
+  acceptCircle: (s, a) => (
+    <>
+      <circle cx="16" cy="16" r="9" stroke={s} strokeWidth="1.5" fill="none" />
+      <path d="M11,16 L14.5,19.5 L21,12.5" stroke={s} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="16" cy="8" r="1" fill={a} />
+    </>
+  ),
+
+  rejectCircle: (s, a) => (
+    <>
+      <circle cx="16" cy="16" r="9" stroke={s} strokeWidth="1.5" fill="none" />
+      <line x1="12" y1="12" x2="20" y2="20" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="20" y1="12" x2="12" y2="20" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="16" cy="8" r="1" fill={a} />
+    </>
+  ),
+
+  chatBubble: (s, a) => (
+    <>
+      <path d="M8,8 L24,8 C25.1,8 26,8.9 26,10 L26,20 C26,21.1 25.1,22 24,22 L14,22 L10,26 L10,22 L8,22 C6.9,22 6,21.1 6,20 L6,10 C6,8.9 6.9,8 8,8Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <line x1="11" y1="13" x2="21" y2="13" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".4" />
+      <line x1="11" y1="17" x2="17" y2="17" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".4" />
+      <circle cx="22" cy="10" r="1" fill={a} />
+    </>
+  ),
+
+  loveReaction: (s, a) => (
+    <>
+      <path d="M16,26 C16,26 26,20 26,13 C26,10 24,8 21,8 C19,8 17,9 16,11 C15,9 13,8 11,8 C8,8 6,10 6,13 C6,20 16,26 16,26Z" stroke={s} strokeWidth="1.5" fill="none" />
+      <circle cx="16" cy="16" r="1.5" fill={a} />
+    </>
+  ),
+
+  unsure: (s, a) => (
+    <>
+      <circle cx="16" cy="16" r="9" stroke={s} strokeWidth="1.5" fill="none" />
+      <path d="M13,12 C13,10 14.5,9 16,9 C17.5,9 19,10 19,12 C19,14 16,14.5 16,17" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <circle cx="16" cy="21" r="1.2" fill={a} />
+    </>
+  ),
+
+  swap: (s, a) => (
+    <>
+      <path d="M8,12 L24,12" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M20,8 L24,12 L20,16" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M24,20 L8,20" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12,16 L8,20 L12,24" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="16" cy="16" r="1" fill={a} />
     </>
   ),
 };

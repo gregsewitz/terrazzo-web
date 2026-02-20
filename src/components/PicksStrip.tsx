@@ -150,8 +150,8 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
       return false;
     });
 
-    // 3. If nothing matched (conceptual destination, no geo data), show all unplaced
-    return matched.length > 0 ? matched : unplaced;
+    // 3. Only show what actually matches — don't flood with unrelated destinations
+    return matched;
   }, [myPlaces, currentDayInfo, placedIds]);
 
   const filteredPlaces = useMemo(() => {

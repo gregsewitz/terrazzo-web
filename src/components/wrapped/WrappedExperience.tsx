@@ -44,7 +44,7 @@ export default function WrappedExperience({ onClose }: WrappedExperienceProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col"
-      style={{ background: CARD_BACKGROUNDS[currentCard] }}
+      style={{ height: '100dvh', background: CARD_BACKGROUNDS[currentCard] }}
     >
       {/* Top bar: back + dots */}
       <div className="flex items-center justify-between px-5 pt-12 pb-4">

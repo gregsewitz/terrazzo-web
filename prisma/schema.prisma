@@ -34,6 +34,12 @@ model User {
   shortlists           Shortlist[]
   shareLinks           ShareLink[]
 
+  // Collaboration relations
+  tripCollaborations   TripCollaborator[]
+  tripSuggestions      TripSuggestion[]
+  tripReactions        TripReaction[]
+  slotNotes            SlotNote[]
+
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
@@ -158,6 +164,13 @@ model Trip {
 
   status       String    @default("planning") // planning | active | completed
 
+  // Collaboration relations
+  collaborators       TripCollaborator[]
+  suggestions         TripSuggestion[]
+  reactions           TripReaction[]
+  slotNotes           SlotNote[]
+  activities          TripActivity[]
+
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   places       Place[]
@@ -214,6 +227,118 @@ model ShareLink {
   @@index([resourceType, resourceId])
   @@index([userId])
 }
+
+// ──────────────────────────────────────────────
+// Trip Collaboration
+// ──────────────────────────────────────────────
+
+model TripCollaborator {
+  id          String    @id @default(cuid())
+  tripId      String
+  trip        Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role        String    @default("suggester") // "viewer" | "suggester"
+  status      String    @default("pending")   // "pending" | "accepted" | "declined"
+  invitedBy   String                          // userId of inviter
+  inviteToken String    @unique @default(cuid())
+
+  invitedAt   DateTime  @default(now())
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([tripId, userId])
+  @@index([tripId])
+  @@index([userId])
+  @@index([inviteToken])
+}
+
+model TripSuggestion {
+  id            String    @id @default(cuid())
+  tripId        String
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Place data (self-contained, not linked to Place model)
+  placeName     String
+  placeType     String
+  placeLocation String?
+  placeData     Json?     // Full ImportedPlace-like payload
+
+  // Target slot
+  targetDay     Int
+  targetSlotId  String    // "breakfast", "lunch", "dinner", etc.
+
+  // Collaborator's note
+  reason        String?   // "You'd love this — amazing courtyard"
+
+  // Owner response
+  status        String    @default("pending") // "pending" | "accepted" | "rejected"
+  respondedAt   DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([tripId])
+  @@index([userId])
+  @@index([status])
+}
+
+model TripReaction {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  placeKey    String   // "dayNumber-slotId-placeName" composite key
+  reaction    String   // "love" | "not_for_me"
+  note        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tripId, userId, placeKey])
+  @@index([tripId])
+}
+
+model SlotNote {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dayNumber   Int
+  slotId      String
+  content     String   // "I booked 8pm reservation"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tripId])
+}
+
+model TripActivity {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String?  // null for system actions
+  type        String   // "collaborator_joined" | "suggestion_added" | "suggestion_accepted" | "reaction_added" | "note_added" | "place_moved"
+  summary     String   // Human-readable: "Alice suggested Noma for Day 2 lunch"
+  data        Json?    // Structured payload for UI rendering
+
+  createdAt   DateTime @default(now())
+
+  @@index([tripId])
+  @@index([createdAt])
+}
+
+// ──────────────────────────────────────────────
+// Caches
+// ──────────────────────────────────────────────
 
 model PlaceCache {
   id            String   @id @default(cuid())

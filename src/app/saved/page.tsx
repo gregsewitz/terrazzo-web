@@ -805,6 +805,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
     <div
       className="fixed inset-0 z-50 flex flex-col"
       style={{
+        height: '100dvh',
         background: 'var(--t-cream)',
         maxWidth: 480,
         margin: '0 auto',
@@ -1142,6 +1143,7 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ height: '100dvh' }}
       onClick={onClose}
     >
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />

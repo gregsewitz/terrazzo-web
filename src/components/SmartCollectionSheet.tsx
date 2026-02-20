@@ -178,7 +178,7 @@ export default function SmartCollectionSheet({
       {/* Sheet */}
       <div
         className="fixed bottom-0 left-0 right-0 z-[60] overflow-y-auto rounded-t-2xl"
-        style={{ maxWidth: 480, margin: '0 auto', maxHeight: '90vh', background: 'var(--t-cream)' }}
+        style={{ maxWidth: 480, margin: '0 auto', maxHeight: '90dvh', background: 'var(--t-cream)' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">

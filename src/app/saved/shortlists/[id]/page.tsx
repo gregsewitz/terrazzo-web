@@ -391,7 +391,7 @@ function ShortlistDetailContent() {
       {mapOpen && (
         <div
           className="fixed inset-0 z-50 flex flex-col"
-          style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+          style={{ height: '100dvh', background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
         >
           {/* Map header bar */}
           <div
@@ -429,7 +429,7 @@ function ShortlistDetailContent() {
           </div>
 
           {/* Map fills remaining space */}
-          <div className="relative" style={{ height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+          <div className="relative" style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden' }}>
             <GoogleMapView
               markers={placesInShortlist.map(p => ({
                 id: p.id,

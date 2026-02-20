@@ -6,7 +6,7 @@ interface SheetProps {
   onClose: () => void;
   children: ReactNode;
   zIndex?: number;
-  maxHeight?: '80vh' | '90vh' | 'full';
+  maxHeight?: '80dvh' | '90dvh' | 'full';
   showDragHandle?: boolean;
   stickyDragHandle?: boolean;
   backdropOpacity?: 30 | 40;
@@ -16,7 +16,7 @@ export default function Sheet({
   onClose,
   children,
   zIndex = 60,
-  maxHeight = '90vh',
+  maxHeight = '90dvh',
   showDragHandle = false,
   stickyDragHandle = false,
   backdropOpacity = 30,

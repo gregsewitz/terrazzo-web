@@ -278,7 +278,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
       <div className="fixed inset-0 z-50 bg-black/30" onClick={handleClose} />
       <div
         className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl overflow-y-auto"
-        style={{ maxWidth: 480, margin: '0 auto', background: 'var(--t-cream)', maxHeight: '90vh' }}
+        style={{ maxWidth: 480, margin: '0 auto', background: 'var(--t-cream)', maxHeight: '90dvh' }}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-1 sticky top-0" style={{ background: 'var(--t-cream)', zIndex: 1 }}>

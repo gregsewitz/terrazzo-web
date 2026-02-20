@@ -102,6 +102,8 @@ interface TripState {
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
+  setDayHotel: (dayNumber: number, hotel: string) => void;
+  setMultipleDaysHotel: (dayNumbers: number[], hotel: string) => void;
   createTrip: (data: TripCreationData) => string; // returns new trip id
   hydrateFromDB: (trips: DBTrip[]) => void;
 }
@@ -426,6 +428,39 @@ export const useTripStore = create<TripState>((set, get) => ({
 
       return { ...trip, days: updatedDays };
     }));
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  setDayHotel: (dayNumber, hotel) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          d.dayNumber === dayNumber ? { ...d, hotel: hotel || undefined } : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  setMultipleDaysHotel: (dayNumbers, hotel) => {
+    const daySet = new Set(dayNumbers);
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          daySet.has(d.dayNumber) ? { ...d, hotel: hotel || undefined } : d
+        ),
+      }))
+    );
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);

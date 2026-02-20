@@ -6,11 +6,15 @@ import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOUR
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from './GhostCard';
+import CollaboratorGhostCard from './CollaboratorGhostCard';
+import ReactionPills from './ReactionPills';
+import SlotNoteBubble from './SlotNoteBubble';
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import { FONT, INK } from '@/constants/theme';
+import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
 
-export type TripViewMode = 'planner' | 'overview' | 'myPlaces';
+export type TripViewMode = 'planner' | 'overview' | 'myPlaces' | 'activity';
 
 export interface DropTarget {
   dayNumber: number;
@@ -29,15 +33,78 @@ interface DayPlannerProps {
   dragItemId?: string | null;
   /** Called when a place is removed from a slot (× button) — parent can animate the return */
   onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
+  // Collaboration props
+  suggestions?: Suggestion[];
+  reactions?: Reaction[];
+  slotNotes?: SlotNoteItem[];
+  myRole?: 'owner' | 'suggester' | 'viewer' | null;
+  onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
+  onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
+  onAddSlotNote?: (dayNumber: number, slotId: string, content: string) => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
+  const setDayHotel = useTripStore(s => s.setDayHotel);
+  const setMultipleDaysHotel = useTripStore(s => s.setMultipleDaysHotel);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const [dayMapOpen, setDayMapOpen] = useState(false);
+  const [editingHotel, setEditingHotel] = useState(false);
+  const [hotelDraft, setHotelDraft] = useState('');
+  const [propagationPrompt, setPropagationPrompt] = useState<{ hotel: string; dayNumbers: number[]; destination: string } | null>(null);
+  const hotelInputRef = useRef<HTMLInputElement>(null);
+  // Focus hotel input when entering edit mode
+  useEffect(() => {
+    if (editingHotel && hotelInputRef.current) {
+      hotelInputRef.current.focus();
+    }
+  }, [editingHotel]);
+
+  // Reset hotel editing state when switching days
+  useEffect(() => {
+    setEditingHotel(false);
+    setHotelDraft('');
+    setPropagationPrompt(null);
+  }, [currentDay]);
+
+  const handleHotelSave = useCallback(() => {
+    if (!trip) return;
+    const trimmed = hotelDraft.trim();
+    const dayObj = trip.days.find(d => d.dayNumber === currentDay);
+    if (!dayObj) return;
+
+    setDayHotel(currentDay, trimmed);
+    setEditingHotel(false);
+
+    // Smart propagation: find contiguous same-destination days without a hotel set
+    if (trimmed && dayObj.destination) {
+      const dest = dayObj.destination;
+      const eligibleDays: number[] = [];
+
+      // Scan forward from current day
+      for (let i = currentDay + 1; i <= trip.days.length; i++) {
+        const d = trip.days.find(td => td.dayNumber === i);
+        if (d && d.destination === dest && !d.hotel) {
+          eligibleDays.push(i);
+        } else break;
+      }
+      // Scan backward from current day
+      for (let i = currentDay - 1; i >= 1; i--) {
+        const d = trip.days.find(td => td.dayNumber === i);
+        if (d && d.destination === dest && !d.hotel) {
+          eligibleDays.unshift(i);
+        } else break;
+      }
+
+      if (eligibleDays.length > 0) {
+        setPropagationPrompt({ hotel: trimmed, dayNumbers: eligibleDays, destination: dest });
+      }
+    }
+  }, [trip, currentDay, hotelDraft, setDayHotel]);
+
   if (!trip) return null;
 
   const day = trip.days.find(d => d.dayNumber === currentDay) || trip.days[0];
@@ -76,7 +143,10 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           className="flex gap-1 mt-2.5 p-0.5 rounded-lg"
           style={{ background: 'var(--t-linen)' }}
         >
-          {(['overview', 'planner', 'myPlaces'] as const).map(mode => (
+          {(myRole
+            ? (['overview', 'planner', 'myPlaces', 'activity'] as const)
+            : (['overview', 'planner', 'myPlaces'] as const)
+          ).map(mode => (
             <button
               key={mode}
               onClick={() => onSetViewMode(mode)}
@@ -90,7 +160,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : mode === 'activity' ? 'Activity' : 'Day Planner'}
             </button>
           ))}
         </div>
@@ -191,17 +261,77 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               }}
             >
               <div className="flex items-center gap-2 min-w-0">
-                {day.hotel && (
-                  <span className="flex items-center gap-1" style={{
-                    fontFamily: FONT.sans,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: destColor.text,
-                    whiteSpace: 'nowrap',
-                  }}>
+                {editingHotel ? (
+                  <form
+                    className="flex items-center gap-1"
+                    onSubmit={(e) => { e.preventDefault(); handleHotelSave(); }}
+                  >
+                    <PerriandIcon name="hotel" size={12} color={destColor.accent} />
+                    <input
+                      ref={hotelInputRef}
+                      type="text"
+                      value={hotelDraft}
+                      onChange={(e) => setHotelDraft(e.target.value)}
+                      onBlur={handleHotelSave}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setEditingHotel(false);
+                          setHotelDraft('');
+                        }
+                      }}
+                      placeholder="Hotel name…"
+                      style={{
+                        fontFamily: FONT.sans,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: destColor.text,
+                        background: 'transparent',
+                        border: 'none',
+                        borderBottom: `1px solid ${destColor.accent}`,
+                        outline: 'none',
+                        padding: '0 2px 1px',
+                        width: 130,
+                      }}
+                    />
+                  </form>
+                ) : day.hotel ? (
+                  <button
+                    onClick={() => { setHotelDraft(day.hotel || ''); setEditingHotel(true); }}
+                    className="flex items-center gap-1"
+                    style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: destColor.text,
+                      whiteSpace: 'nowrap',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
                     <PerriandIcon name="hotel" size={12} color={destColor.text} />
                     {day.hotel}
-                  </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setHotelDraft(''); setEditingHotel(true); }}
+                    className="flex items-center gap-1"
+                    style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: `${destColor.accent}80`,
+                      whiteSpace: 'nowrap',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    <PerriandIcon name="hotel" size={12} color={`${destColor.accent}80`} />
+                    + Hotel
+                  </button>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
@@ -258,6 +388,61 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               </div>
             </div>
 
+            {/* Smart hotel propagation prompt */}
+            {propagationPrompt && (
+              <div
+                className="flex items-center justify-between px-3.5 py-2"
+                style={{
+                  background: `${destColor.accent}10`,
+                  borderBottom: `1px solid ${destColor.accent}18`,
+                }}
+              >
+                <span style={{
+                  fontFamily: FONT.sans,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: destColor.text,
+                }}>
+                  Apply <strong>{propagationPrompt.hotel}</strong> to all {propagationPrompt.destination} days?
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      setMultipleDaysHotel(propagationPrompt.dayNumbers, propagationPrompt.hotel);
+                      setPropagationPrompt(null);
+                    }}
+                    className="px-2.5 py-1 rounded-full"
+                    style={{
+                      background: destColor.accent,
+                      color: 'white',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: FONT.sans,
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Apply
+                  </button>
+                  <button
+                    onClick={() => setPropagationPrompt(null)}
+                    className="px-2.5 py-1 rounded-full"
+                    style={{
+                      background: `${destColor.accent}15`,
+                      color: destColor.accent,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: FONT.sans,
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Inline map panel */}
             {dayMapOpen && (
               <div style={{ borderBottom: `1px solid ${destColor.accent}18` }}>
@@ -295,26 +480,47 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
       {/* Compact time slots */}
       <div className="flex flex-col">
-        {day.slots.map((slot, idx) => (
-          <TimeSlotCard
-            key={slot.id}
-            slot={slot}
-            dayNumber={day.dayNumber}
-            destColor={destColor}
-            onTapDetail={onTapDetail}
-            onOpenUnsorted={onOpenUnsorted}
-            onOpenForSlot={onOpenForSlot}
-            allSlots={day.slots}
-            slotIndex={idx}
-            isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
-            onRegisterRef={onRegisterSlotRef
-              ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
-              : undefined}
-            onDragStartFromSlot={onDragStartFromSlot}
-            dragItemId={dragItemId}
-            onUnplace={onUnplace}
-          />
-        ))}
+        {day.slots.map((slot, idx) => {
+          // Filter collaboration data for this slot
+          const slotSuggestions = suggestions?.filter(
+            s => s.targetDay === day.dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
+          ) || [];
+          const slotReactions = reactions?.filter(r => {
+            // placeKey format: "dayNumber-slotId-placeName"
+            return r.placeKey.startsWith(`${day.dayNumber}-${slot.id}-`);
+          }) || [];
+          const slotNoteItems = slotNotes?.filter(
+            n => n.dayNumber === day.dayNumber && n.slotId === slot.id
+          ) || [];
+
+          return (
+            <TimeSlotCard
+              key={slot.id}
+              slot={slot}
+              dayNumber={day.dayNumber}
+              destColor={destColor}
+              onTapDetail={onTapDetail}
+              onOpenUnsorted={onOpenUnsorted}
+              onOpenForSlot={onOpenForSlot}
+              allSlots={day.slots}
+              slotIndex={idx}
+              isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
+              onRegisterRef={onRegisterSlotRef
+                ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
+                : undefined}
+              onDragStartFromSlot={onDragStartFromSlot}
+              dragItemId={dragItemId}
+              onUnplace={onUnplace}
+              suggestions={slotSuggestions}
+              reactions={slotReactions}
+              slotNoteItems={slotNoteItems}
+              myRole={myRole}
+              onRespondSuggestion={onRespondSuggestion}
+              onAddReaction={onAddReaction}
+              onAddSlotNote={onAddSlotNote ? (content: string) => onAddSlotNote(day.dayNumber, slot.id, content) : undefined}
+            />
+          );
+        })}
       </div>
 
       </>}
@@ -475,9 +681,17 @@ interface TimeSlotCardProps {
   onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
   dragItemId?: string | null;
   onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
+  // Collaboration
+  suggestions?: Suggestion[];
+  reactions?: Reaction[];
+  slotNoteItems?: SlotNoteItem[];
+  myRole?: 'owner' | 'suggester' | 'viewer' | null;
+  onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
+  onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
+  onAddSlotNote?: (content: string) => void;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNoteItems, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
@@ -632,7 +846,27 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
               onTapDetail={() => onTapDetail(ghost)}
             />
           ))}
+          {/* Collaborator suggestions */}
+          {suggestions && suggestions.length > 0 && suggestions.map(sg => (
+            <CollaboratorGhostCard
+              key={sg.id}
+              suggestion={sg}
+              isOwner={myRole === 'owner'}
+              onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
+              onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
+            />
+          ))}
         </div>
+        {/* Slot notes */}
+        {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
+          <div className="px-4 pb-2">
+            <SlotNoteBubble
+              notes={slotNoteItems || []}
+              canAdd={myRole === 'suggester' || myRole === 'owner'}
+              onAddNote={onAddSlotNote}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -757,29 +991,82 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                   </div>
                 )}
               </div>
-              {/* Remove button — returns place to picks strip */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onUnplace) {
-                    onUnplace(p.id, dayNumber, slot.id);
-                  } else {
-                    unplaceFromSlot(dayNumber, slot.id, p.id);
-                  }
-                }}
-                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                style={{
-                  background: INK['05'],
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <PerriandIcon name="close" size={8} color={INK['35']} />
-              </button>
+              {/* Remove button — visible to owner or when not in collaboration mode */}
+              {(myRole === 'owner' || !myRole) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onUnplace) {
+                      onUnplace(p.id, dayNumber, slot.id);
+                    } else {
+                      unplaceFromSlot(dayNumber, slot.id, p.id);
+                    }
+                  }}
+                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                  style={{
+                    background: INK['05'],
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <PerriandIcon name="close" size={8} color={INK['35']} />
+                </button>
+              )}
             </div>
+            {/* Reaction pills for this place */}
+            {(() => {
+              const placeKey = `${dayNumber}-${slot.id}-${p.name}`;
+              const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
+              if (placeReactions.length === 0 && !myRole) return null;
+              return (
+                <div className="flex items-center gap-1.5 px-2.5 pb-1.5">
+                  <ReactionPills reactions={placeReactions} compact />
+                  {myRole && myRole !== 'owner' && onAddReaction && (
+                    <div className="flex gap-1 ml-auto">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'love'); }}
+                        className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(239,68,68,0.06)', border: 'none', cursor: 'pointer' }}
+                      ><PerriandIcon name="loveReaction" size={12} color="#dc2626" accent="#dc2626" /></button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'not_for_me'); }}
+                        className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
+                        style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
+                      ><PerriandIcon name="unsure" size={12} color={INK['60']} accent={INK['60']} /></button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         );
       })}
+
+      {/* Collaborator suggestions for this slot */}
+      {suggestions && suggestions.length > 0 && (
+        <div className="px-3 pb-2 flex flex-col gap-1.5">
+          {suggestions.map(sg => (
+            <CollaboratorGhostCard
+              key={sg.id}
+              suggestion={sg}
+              isOwner={myRole === 'owner'}
+              onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
+              onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Slot notes */}
+      {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
+        <div className="px-3 pb-2">
+          <SlotNoteBubble
+            notes={slotNoteItems || []}
+            canAdd={myRole === 'suggester' || myRole === 'owner'}
+            onAddNote={onAddSlotNote}
+          />
+        </div>
+      )}
 
       {/* Add padding at bottom of filled slots */}
       {hasPlaces && <div style={{ height: 4 }} />}

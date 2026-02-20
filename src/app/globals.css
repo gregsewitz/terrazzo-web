@@ -122,6 +122,11 @@ body {
   to { transform: scaleX(1); }
 }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 /* Message entrance animation */
 @keyframes messageSlideIn {
   from {

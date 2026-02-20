@@ -40,13 +40,14 @@ export default function AddToShortlistSheet({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end justify-center"
+      style={{ height: '100dvh' }}
       onClick={onClose}
     >
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
       <div
         onClick={(e) => e.stopPropagation()}
         className="relative w-full rounded-t-2xl px-4 pt-4 flex flex-col"
-        style={{ maxWidth: 480, maxHeight: '80vh', background: 'var(--t-cream)', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}
+        style={{ maxWidth: 480, maxHeight: '80dvh', background: 'var(--t-cream)', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-1">

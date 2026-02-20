@@ -66,7 +66,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
         style={{
           maxWidth: 480,
           margin: '0 auto',
-          maxHeight: '90vh',
+          maxHeight: '90dvh',
           background: 'var(--t-cream)',
         }}
       >

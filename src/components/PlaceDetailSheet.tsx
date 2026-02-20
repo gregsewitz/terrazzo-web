@@ -73,7 +73,7 @@ export default function PlaceDetailSheet({ item, onClose, onRate, onSave, onEdit
         style={{
           maxWidth: 480,
           margin: '0 auto',
-          maxHeight: '90vh',
+          maxHeight: '90dvh',
           background: 'var(--t-cream)',
         }}
       >

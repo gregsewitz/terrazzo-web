@@ -16,10 +16,13 @@ import BrowseAllOverlay from '@/components/BrowseAllOverlay';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
 import ShareSheet from '@/components/ShareSheet';
+import ActivityFeed from '@/components/ActivityFeed';
 import DragOverlay from '@/components/DragOverlay';
 import ExportToMaps from '@/components/ExportToMaps';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
-import { INK } from '@/constants/theme';
+import { useCollaborationStore } from '@/stores/collaborationStore';
+import { useCollaborationSync } from '@/hooks/useCollaborationSync';
+import { INK, FONT } from '@/constants/theme';
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -58,6 +61,21 @@ function TripDetailContent() {
   const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
+
+  // Collaboration state
+  const collabSuggestions = useCollaborationStore(s => s.suggestions);
+  const collabReactions = useCollaborationStore(s => s.reactions);
+  const collabSlotNotes = useCollaborationStore(s => s.slotNotes);
+  const collabMyRole = useCollaborationStore(s => s.myRole);
+  const collabCollaborators = useCollaborationStore(s => s.collaborators);
+  const collabActivities = useCollaborationStore(s => s.activities);
+  const respondToSuggestion = useCollaborationStore(s => s.respondToSuggestion);
+  const addReaction = useCollaborationStore(s => s.addReaction);
+  const addSlotNote = useCollaborationStore(s => s.addSlotNote);
+  const tripId = params.id as string;
+
+  // Start collaboration sync polling
+  useCollaborationSync(tripId, true);
 
   // ─── DRAG & DROP STATE ───
   const [dragItem, setDragItem] = useState<ImportedPlace | null>(null);
@@ -251,8 +269,9 @@ function TripDetailContent() {
 
   return (
     <div
-      className="h-screen relative flex flex-col"
+      className="relative flex flex-col"
       style={{
+        height: '100dvh',
         background: 'var(--t-cream)',
         maxWidth: 480,
         margin: '0 auto',
@@ -261,11 +280,44 @@ function TripDetailContent() {
       }}
     >
       {/* Top-right action pills */}
-      <div className="fixed top-4 right-4 z-30 flex gap-2">
+      <div className="fixed top-4 right-4 z-30 flex items-center gap-2">
+        {/* Collaborator avatar stack */}
+        {collabCollaborators.filter(c => c.status === 'accepted').length > 0 && (
+          <div className="flex -space-x-2 mr-1" onClick={() => setShowShareSheet(true)} style={{ cursor: 'pointer' }}>
+            {collabCollaborators.filter(c => c.status === 'accepted').slice(0, 3).map((c) => (
+              <div
+                key={c.id}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm"
+                style={{
+                  background: 'var(--t-linen)',
+                  color: 'var(--t-ink)',
+                  border: '2px solid var(--t-cream)',
+                  fontFamily: FONT.sans,
+                }}
+                title={c.name || c.email}
+              >
+                {(c.name || c.email).charAt(0).toUpperCase()}
+              </div>
+            ))}
+            {collabCollaborators.filter(c => c.status === 'accepted').length > 3 && (
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-bold shadow-sm"
+                style={{
+                  background: INK['10'],
+                  color: INK['60'],
+                  border: '2px solid var(--t-cream)',
+                  fontFamily: FONT.mono,
+                }}
+              >
+                +{collabCollaborators.filter(c => c.status === 'accepted').length - 3}
+              </div>
+            )}
+          </div>
+        )}
         <button
           onClick={() => setShowShareSheet(true)}
           className="w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center shadow-md"
-          style={{ background: 'white', color: 'var(--t-ink)', border: '1px solid var(--t-linen)' }}
+          style={{ background: 'var(--t-cream)', color: 'var(--t-verde)' }}
           title="Share trip"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -302,11 +354,23 @@ function TripDetailContent() {
             onDragStartFromSlot={handleDragStartFromSlot}
             dragItemId={dragItem?.id ?? null}
             onUnplace={handleUnplace}
+            suggestions={collabSuggestions}
+            reactions={collabReactions}
+            slotNotes={collabSlotNotes}
+            myRole={collabMyRole}
+            onRespondSuggestion={(suggestionId, status) => respondToSuggestion(tripId, suggestionId, status)}
+            onAddReaction={(placeKey, reaction) => addReaction(tripId, placeKey, reaction)}
+            onAddSlotNote={(dayNumber, slotId, content) => addSlotNote(tripId, dayNumber, slotId, content)}
           />
 
           {/* Trip Places — all placed items across itinerary */}
           {viewMode === 'myPlaces' && (
             <TripMyPlaces onTapDetail={openDetail} />
+          )}
+
+          {/* Activity Feed — collaboration timeline */}
+          {viewMode === 'activity' && (
+            <ActivityFeed activities={collabActivities} />
           )}
         </div>
 
