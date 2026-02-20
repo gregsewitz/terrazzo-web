@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         name: trip.name,
         location: trip.location,
-        destinations: trip.destinations || null,
+        destinations: trip.destinations ? trip.destinations : undefined,
         startDate: trip.startDate ? new Date(trip.startDate) : null,
         endDate: trip.endDate ? new Date(trip.endDate) : null,
         status: trip.status || 'planning',
