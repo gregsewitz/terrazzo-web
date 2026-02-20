@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     prisma.savedPlace.create({
       data: {
         userId: user.id,
-        googlePlaceId: p.googlePlaceId || null,
+        googlePlaceId: p.google?.placeId || null,
         name: p.name,
         type: p.type,
         location: p.location || null,
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         whatToOrder: toJson(p.whatToOrder),
         tips: toJson(p.tips),
         alsoKnownAs: p.alsoKnownAs || null,
-        googleData: toJson(p.googleData),
+        googleData: toJson(p.google),
       },
     })
   );
