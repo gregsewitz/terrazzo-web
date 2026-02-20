@@ -330,8 +330,11 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 // Helper to format ISO date range into readable text
 function formatDateRange(startDate: string, endDate: string): string {
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const s = new Date(startDate + 'T00:00:00');
-  const e = new Date(endDate + 'T00:00:00');
+  // Normalize: strip time portion if present, then parse as local date
+  const normalize = (d: string) => new Date(d.split('T')[0] + 'T00:00:00');
+  const s = normalize(startDate);
+  const e = normalize(endDate);
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) return '';
   const sMonth = monthNames[s.getMonth()];
   const eMonth = monthNames[e.getMonth()];
   if (sMonth === eMonth) {

@@ -505,12 +505,22 @@ export const useTripStore = create<TripState>((set, get) => ({
 
   // ─── DB Hydration ───
   hydrateFromDB: (dbTrips) => {
+    // Normalize DB DateTime to YYYY-MM-DD string (or undefined)
+    const toDateStr = (d: string | null | undefined): string | undefined => {
+      if (!d) return undefined;
+      try {
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return undefined;
+        return date.toISOString().split('T')[0];
+      } catch { return undefined; }
+    };
+
     const trips: Trip[] = dbTrips.map(dt => ({
       id: dt.id,
       name: dt.name,
       location: dt.location,
-      startDate: dt.startDate || undefined,
-      endDate: dt.endDate || undefined,
+      startDate: toDateStr(dt.startDate),
+      endDate: toDateStr(dt.endDate),
       destinations: Array.isArray(dt.destinations) ? dt.destinations : undefined,
       groupSize: dt.groupSize || undefined,
       status: (dt.status as Trip['status']) || 'planning',
