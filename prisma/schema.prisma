@@ -32,6 +32,7 @@ model User {
   trips                Trip[]
   savedPlaces          SavedPlace[]
   shortlists           Shortlist[]
+  shareLinks           ShareLink[]
 
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
@@ -186,6 +187,32 @@ model Place {
   // Link to global intelligence
   placeIntelligenceId String?
   intelligence        PlaceIntelligence? @relation("TripPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
+}
+
+// ──────────────────────────────────────────────
+// Share Links (public sharing)
+// ──────────────────────────────────────────────
+
+model ShareLink {
+  id            String    @id @default(cuid())
+  token         String    @unique @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resourceType  String    // "shortlist" | "trip"
+  resourceId    String    // ID of the shortlist or trip
+
+  permission    String    @default("view") // "view" | "edit"
+  isActive      Boolean   @default(true)
+  viewCount     Int       @default(0)
+  expiresAt     DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([token])
+  @@index([resourceType, resourceId])
+  @@index([userId])
 }
 
 model PlaceCache {

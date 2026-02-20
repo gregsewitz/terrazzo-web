@@ -15,6 +15,7 @@ import PicksStrip from '@/components/PicksStrip';
 import BrowseAllOverlay from '@/components/BrowseAllOverlay';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
+import ShareSheet from '@/components/ShareSheet';
 import DragOverlay from '@/components/DragOverlay';
 import ExportToMaps from '@/components/ExportToMaps';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
@@ -51,6 +52,7 @@ function TripDetailContent() {
   const importPatch = useImportStore(s => s.patch);
   const resetImport = useImportStore(s => s.reset);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [browseAllOpen, setBrowseAllOpen] = useState(false);
   const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
@@ -258,8 +260,20 @@ function TripDetailContent() {
         overflow: 'hidden',
       }}
     >
-      {/* Top-right action pill */}
-      <div className="fixed top-4 right-4 z-30">
+      {/* Top-right action pills */}
+      <div className="fixed top-4 right-4 z-30 flex gap-2">
+        <button
+          onClick={() => setShowShareSheet(true)}
+          className="w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center shadow-md"
+          style={{ background: 'white', color: 'var(--t-ink)', border: '1px solid var(--t-linen)' }}
+          title="Share trip"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+        </button>
         <button
           onClick={() => setChatOpen(true)}
           className="w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center text-sm shadow-md"
@@ -298,7 +312,7 @@ function TripDetailContent() {
 
         {/* Picks Strip — pinned at bottom above tab bar */}
         {viewMode === 'planner' && (
-          <div className="flex-shrink-0" style={{ paddingBottom: 60, minWidth: 0, width: '100%' }}>
+          <div className="flex-shrink-0" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', minWidth: 0, width: '100%' }}>
             <PicksStrip
               onTapDetail={openDetail}
               onBrowseAll={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
@@ -353,6 +367,16 @@ function TripDetailContent() {
           places={myPlaces.filter(p => p.isShortlisted)}
           collectionName={trip.name}
           onClose={() => setExportOpen(false)}
+        />
+      )}
+
+      {/* Share Sheet */}
+      {showShareSheet && trip && (
+        <ShareSheet
+          resourceType="trip"
+          resourceId={trip.id}
+          resourceName={trip.name}
+          onClose={() => setShowShareSheet(false)}
         />
       )}
 

@@ -8,6 +8,7 @@ import { REACTIONS, ImportedPlace, SOURCE_STYLES, PlaceType, GhostSourceType } f
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GoogleMapView from '@/components/GoogleMapView';
+import ShareSheet from '@/components/ShareSheet';
 import { FONT, INK } from '@/constants/theme';
 
 const TYPE_COLORS: Record<PlaceType, string> = {
@@ -61,6 +62,7 @@ function ShortlistDetailContent() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   const shortlist = shortlists.find(s => s.id === shortlistId);
 
@@ -121,19 +123,38 @@ function ShortlistDetailContent() {
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             {placesInShortlist.length > 0 && (
-              <button
-                onClick={() => setMapOpen(true)}
-                className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
-                style={{
-                  background: 'rgba(200,146,58,0.08)',
-                  color: '#8a6a2a',
-                  border: 'none',
-                  fontFamily: FONT.mono,
-                }}
-              >
-                <PerriandIcon name="pin" size={10} color="var(--t-honey)" />
-                Map
-              </button>
+              <>
+                <button
+                  onClick={() => setShowShareSheet(true)}
+                  className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
+                  style={{
+                    background: 'rgba(42,122,86,0.08)',
+                    color: 'var(--t-verde)',
+                    border: 'none',
+                    fontFamily: FONT.mono,
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                  Share
+                </button>
+                <button
+                  onClick={() => setMapOpen(true)}
+                  className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
+                  style={{
+                    background: 'rgba(200,146,58,0.08)',
+                    color: '#8a6a2a',
+                    border: 'none',
+                    fontFamily: FONT.mono,
+                  }}
+                >
+                  <PerriandIcon name="pin" size={10} color="var(--t-honey)" />
+                  Map
+                </button>
+              </>
             )}
             {!shortlist.isDefault && (
               <>
@@ -458,6 +479,16 @@ function ShortlistDetailContent() {
 
       {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
            are all rendered by PlaceDetailProvider — no duplication needed */}
+
+      {/* Share Sheet */}
+      {showShareSheet && shortlist && (
+        <ShareSheet
+          resourceType="shortlist"
+          resourceId={shortlist.id}
+          resourceName={shortlist.name}
+          onClose={() => setShowShareSheet(false)}
+        />
+      )}
 
       <TabBar />
     </div>

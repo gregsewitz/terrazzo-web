@@ -83,13 +83,29 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [holdingId, setHoldingId] = useState<string | null>(null); // visual "about to drag" feedback
 
-  const tripDestinations = useTripStore(s => {
-    const trip = s.trips.find(t => t.id === s.currentTripId);
-    return trip?.destinations || [trip?.location?.split(',')[0]?.trim()].filter(Boolean);
-  });
-
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
+  const currentDay = useTripStore(s => s.currentDay);
   const myPlaces = useSavedStore(s => s.myPlaces);
+
+  // Get the current day's destination info for filtering
+  const currentDayInfo = useMemo(() => {
+    if (!trip) return { names: [] as string[], geo: null as { lat: number; lng: number } | null };
+    const day = trip.days.find(d => d.dayNumber === currentDay);
+    const destName = day?.destination;
+
+    // Try to get geo coordinates from geoDestinations
+    const geoDest = destName
+      ? trip.geoDestinations?.find(g => g.name.toLowerCase() === destName.toLowerCase())
+      : trip.geoDestinations?.[0];
+    const geo = geoDest?.lat && geoDest?.lng ? { lat: geoDest.lat, lng: geoDest.lng } : null;
+
+    // Name(s) for string matching
+    const names = destName
+      ? [destName.toLowerCase()]
+      : (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean) as string[]).map(d => d.toLowerCase());
+
+    return { names, geo };
+  }, [trip, currentDay]);
 
   const placedIds = useMemo(() => {
     if (!trip) return new Set<string>();
@@ -102,16 +118,41 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
     return ids;
   }, [trip]);
 
+  // Match places to the current day's destination using geo-proximity + string matching
   const allStripPlaces = useMemo(() => {
-    const destLower = (tripDestinations as string[] || []).map(d => d.toLowerCase());
-    if (destLower.length === 0) return [];
+    const unplaced = myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+    if (unplaced.length === 0) return [];
 
-    return myPlaces.filter(place =>
-      place.isShortlisted &&
-      !placedIds.has(place.id) &&
-      destLower.some(dest => place.location.toLowerCase().includes(dest))
-    );
-  }, [myPlaces, tripDestinations, placedIds]);
+    const { names, geo } = currentDayInfo;
+    if (names.length === 0 && !geo) return [];
+
+    // Haversine distance in km (good enough for ~50km radius checks)
+    const distKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    const GEO_RADIUS_KM = 60; // covers regional destinations like the Cotswolds
+
+    const matched = unplaced.filter(place => {
+      // 1. Geo-proximity match (best — works for regions, neighborhoods, etc.)
+      const pLat = place.google?.lat;
+      const pLng = place.google?.lng;
+      if (geo && pLat && pLng) {
+        if (distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM) return true;
+      }
+      // 2. String match on location (fallback for places without coordinates)
+      if (names.some(dest => place.location.toLowerCase().includes(dest))) return true;
+      return false;
+    });
+
+    // 3. If nothing matched (conceptual destination, no geo data), show all unplaced
+    return matched.length > 0 ? matched : unplaced;
+  }, [myPlaces, currentDayInfo, placedIds]);
 
   const filteredPlaces = useMemo(() => {
     let result = allStripPlaces;

@@ -76,12 +76,24 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
           types: ['(regions)'], // cities, regions, countries — not businesses
         },
         (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
             setPredictions(results);
             setShowDropdown(true);
             setActiveIndex(-1);
           } else {
-            setPredictions([]);
+            // Silent retry with 'geocode' for regional/conceptual destinations
+            autocompleteService.current!.getPlacePredictions(
+              { input, types: ['geocode'] },
+              (geoResults, geoStatus) => {
+                if (geoStatus === google.maps.places.PlacesServiceStatus.OK && geoResults) {
+                  setPredictions(geoResults);
+                  setShowDropdown(true);
+                  setActiveIndex(-1);
+                } else {
+                  setPredictions([]);
+                }
+              },
+            );
           }
         },
       );
