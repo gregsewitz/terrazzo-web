@@ -78,7 +78,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ height: '100dvh', maxWidth: 480, margin: '0 auto' }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ height: '100dvh', maxWidth: 600, margin: '0 auto' }}>
       {/* Backdrop */}
       <div
         className="absolute inset-0"

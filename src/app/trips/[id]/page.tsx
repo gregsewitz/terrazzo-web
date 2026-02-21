@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { useImportStore } from '@/stores/importStore';
@@ -23,6 +23,13 @@ import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContex
 import { useCollaborationStore } from '@/stores/collaborationStore';
 import { useCollaborationSync } from '@/hooks/useCollaborationSync';
 import { INK, FONT } from '@/constants/theme';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
+import DesktopNav from '@/components/DesktopNav';
+import DayBoardView from '@/components/DayBoardView';
+import PicksGrid from '@/components/PicksGrid';
+import PicksRail from '@/components/PicksRail';
+import RightPanel from '@/components/RightPanel';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -41,6 +48,9 @@ export default function TripDetailPage() {
 
 function TripDetailContent() {
   const params = useParams();
+  const router = useRouter();
+  const breakpoint = useBreakpoint();
+  const isDesktop = breakpoint === 'desktop';
   const { openDetail } = usePlaceDetail();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const placeFromSaved = useTripStore(s => s.placeFromSaved);
@@ -62,6 +72,39 @@ function TripDetailContent() {
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
 
+  // Desktop resizable split
+  const [boardHeight, setBoardHeight] = useState(60); // percentage of left workspace
+  const resizing = useRef(false);
+
+  // Picks rail resizable width
+  const RAIL_MIN = 140;
+  const RAIL_MAX = 400;
+  const [railWidth, setRailWidth] = useState(200);
+  const railResizing = useRef(false);
+
+  // Shared day selector state between PicksRail and DayBoardView
+  const [selectedRailDay, setSelectedRailDay] = useState<number | null>(null);
+
+  const handleRailResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    railResizing.current = true;
+    const startX = e.clientX;
+    const startWidth = railWidth;
+
+    const onMove = (ev: PointerEvent) => {
+      if (!railResizing.current) return;
+      const delta = ev.clientX - startX;
+      setRailWidth(Math.min(RAIL_MAX, Math.max(RAIL_MIN, startWidth + delta)));
+    };
+    const onUp = () => {
+      railResizing.current = false;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }, [railWidth]);
+
   // Collaboration state
   const collabSuggestions = useCollaborationStore(s => s.suggestions);
   const collabReactions = useCollaborationStore(s => s.reactions);
@@ -77,7 +120,7 @@ function TripDetailContent() {
   // Start collaboration sync polling
   useCollaborationSync(tripId, true);
 
-  // ─── DRAG & DROP STATE ───
+  // ─── DRAG & DROP STATE (mobile only) ───
   const [dragItem, setDragItem] = useState<ImportedPlace | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -88,7 +131,6 @@ function TripDetailContent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollRaf = useRef<number | null>(null);
   const latestDragY = useRef<number>(0);
-  // Track where the drag originated — null means from pick strip, { day, slotId } means from a slot
   const dragSource = useRef<{ dayNumber: number; slotId: string } | null>(null);
 
   const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null) => {
@@ -104,12 +146,6 @@ function TripDetailContent() {
     stripRect.current = rect;
   }, []);
 
-  // Refresh all slot rects from DOM — needed during auto-scroll
-  const refreshSlotRects = useCallback(() => {
-    // The slot rects auto-refresh via scroll listeners in TimeSlotCard
-    // but we can force a sync re-read here
-  }, []);
-
   const hitTestSlots = useCallback((x: number, y: number): DropTarget | null => {
     for (const [, entry] of slotRects.current) {
       const { rect, dayNumber, slotId } = entry;
@@ -121,7 +157,7 @@ function TripDetailContent() {
   }, []);
 
   const handleDragStart = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
-    dragSource.current = null; // from pick strip
+    dragSource.current = null;
     setDragItem(item);
     setDragPos({ x: e.clientX, y: e.clientY });
     latestDragY.current = e.clientY;
@@ -129,14 +165,13 @@ function TripDetailContent() {
   }, []);
 
   const handleDragStartFromSlot = useCallback((item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => {
-    dragSource.current = { dayNumber, slotId }; // from a time slot
+    dragSource.current = { dayNumber, slotId };
     setDragItem(item);
     setDragPos({ x: e.clientX, y: e.clientY });
     latestDragY.current = e.clientY;
     if (navigator.vibrate) navigator.vibrate(10);
   }, []);
 
-  // Remove from slot → animate return to picks strip
   const handleUnplace = useCallback((placeId: string, dayNumber: number, slotId: string) => {
     unplaceFromSlot(dayNumber, slotId, placeId);
     setReturningPlaceId(placeId);
@@ -148,21 +183,15 @@ function TripDetailContent() {
     const scroll = () => {
       const container = scrollContainerRef.current;
       if (!container) { autoScrollRaf.current = null; return; }
-
       const rect = container.getBoundingClientRect();
       const y = latestDragY.current;
-
-      // Near top edge — scroll up
       if (y < rect.top + AUTO_SCROLL_ZONE && y > rect.top - 20) {
         const proximity = 1 - Math.max(0, y - rect.top) / AUTO_SCROLL_ZONE;
         container.scrollTop -= AUTO_SCROLL_SPEED * proximity;
-      }
-      // Near bottom edge — scroll down
-      else if (y > rect.bottom - AUTO_SCROLL_ZONE && y < rect.bottom + 20) {
+      } else if (y > rect.bottom - AUTO_SCROLL_ZONE && y < rect.bottom + 20) {
         const proximity = 1 - Math.max(0, rect.bottom - y) / AUTO_SCROLL_ZONE;
         container.scrollTop += AUTO_SCROLL_SPEED * proximity;
       }
-
       autoScrollRaf.current = requestAnimationFrame(scroll);
     };
     autoScrollRaf.current = requestAnimationFrame(scroll);
@@ -178,59 +207,46 @@ function TripDetailContent() {
   // Global pointer move / up while dragging
   useEffect(() => {
     if (!dragItem) return;
-
     startAutoScroll();
-
     const handleMove = (e: PointerEvent) => {
       e.preventDefault();
       setDragPos({ x: e.clientX, y: e.clientY });
       latestDragY.current = e.clientY;
       const target = hitTestSlots(e.clientX, e.clientY);
       setDropTarget(target);
-
-      // Check if hovering over the picks strip (only relevant when dragging from a slot)
       const sr = stripRect.current;
       if (sr && dragSource.current) {
         const over = e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom;
-        setIsOverStrip(over && !target); // slot takes priority
+        setIsOverStrip(over && !target);
       } else {
         setIsOverStrip(false);
       }
     };
-
     const handleUp = () => {
       stopAutoScroll();
-
       const src = dragSource.current;
-
       if (isOverStrip && src && dragItem) {
-        // Dropping from slot back onto picks strip — unplace it
         unplaceFromSlot(src.dayNumber, src.slotId, dragItem.id);
         setReturningPlaceId(dragItem.id);
         setTimeout(() => setReturningPlaceId(null), 400);
         if (navigator.vibrate) navigator.vibrate(15);
       } else if (dropTarget && dragItem) {
         if (src) {
-          // Dragging from one slot to another
           moveToSlot(dragItem, src.dayNumber, src.slotId, dropTarget.dayNumber, dropTarget.slotId);
         } else {
-          // Dragging from pick strip
           placeFromSaved(dragItem, dropTarget.dayNumber, dropTarget.slotId);
         }
         if (navigator.vibrate) navigator.vibrate(15);
       }
-
       dragSource.current = null;
       setDragItem(null);
       setDragPos(null);
       setDropTarget(null);
       setIsOverStrip(false);
     };
-
     window.addEventListener('pointermove', handleMove, { passive: false });
     window.addEventListener('pointerup', handleUp);
     window.addEventListener('pointercancel', handleUp);
-
     return () => {
       stopAutoScroll();
       window.removeEventListener('pointermove', handleMove);
@@ -258,6 +274,32 @@ function TripDetailContent() {
     }
   }, [trip, myPlaces, ghostsInjected, injectGhostCandidates]);
 
+  // ─── Desktop resize handle ───
+  const handleResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    resizing.current = true;
+    const startY = e.clientY;
+    const startHeight = boardHeight;
+    const container = (e.target as HTMLElement).closest('[data-desktop-workspace]');
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+
+    const onMove = (ev: PointerEvent) => {
+      if (!resizing.current) return;
+      const delta = ev.clientY - startY;
+      const pctDelta = (delta / containerRect.height) * 100;
+      const newHeight = Math.min(85, Math.max(25, startHeight + pctDelta));
+      setBoardHeight(newHeight);
+    };
+    const onUp = () => {
+      resizing.current = false;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }, [boardHeight]);
+
   if (!trip) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
@@ -266,7 +308,213 @@ function TripDetailContent() {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  DESKTOP LAYOUT
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (isDesktop) {
+    return (
+      <div className="flex flex-col" style={{ height: '100dvh', background: 'var(--t-cream)' }}>
+        {/* Desktop top nav */}
+        <DesktopNav />
 
+        {/* Trip header bar */}
+        <div
+          className="flex items-center justify-between px-6 py-2.5"
+          style={{ borderBottom: '1px solid var(--t-linen)', background: 'white' }}
+        >
+          <div className="flex items-center gap-3">
+            {/* Breadcrumb */}
+            <button
+              onClick={() => router.push('/trips')}
+              className="bg-transparent border-none cursor-pointer link-hover"
+              style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'], padding: 0 }}
+            >
+              Trips
+            </button>
+            <span style={{ color: INK['20'], fontSize: 12 }}>→</span>
+            <h1 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
+              {trip.name}
+            </h1>
+            {trip.startDate && trip.endDate && (
+              <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['50'] }}>
+                {formatDateRange(trip.startDate, trip.endDate)}
+              </span>
+            )}
+            {trip.destinations && trip.destinations.length > 0 && (
+              <div className="flex items-center gap-1">
+                {trip.destinations.map(d => (
+                  <span
+                    key={d}
+                    className="px-2 py-0.5 rounded-full"
+                    style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 10,
+                      fontWeight: 500,
+                      background: INK['04'],
+                      color: INK['70'],
+                    }}
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Collaborator avatars */}
+            {collabCollaborators.filter(c => c.status === 'accepted').length > 0 && (
+              <div className="flex -space-x-2 mr-1" onClick={() => setShowShareSheet(true)} style={{ cursor: 'pointer' }}>
+                {collabCollaborators.filter(c => c.status === 'accepted').slice(0, 4).map((c) => (
+                  <div
+                    key={c.id}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm"
+                    style={{
+                      background: 'var(--t-linen)',
+                      color: 'var(--t-ink)',
+                      border: '2px solid white',
+                      fontFamily: FONT.sans,
+                    }}
+                    title={c.name || c.email}
+                  >
+                    {(c.name || c.email).charAt(0).toUpperCase()}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowShareSheet(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer nav-hover"
+              style={{
+                background: INK['04'],
+                border: '1px solid var(--t-linen)',
+                fontFamily: FONT.sans,
+                fontSize: 12,
+                fontWeight: 500,
+                color: INK['70'],
+              }}
+            >
+              <PerriandIcon name="invite" size={14} color={INK['50']} />
+              Share
+            </button>
+            <button
+              onClick={() => setChatOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover"
+              style={{
+                background: 'var(--t-ink)',
+                border: 'none',
+                fontFamily: FONT.sans,
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--t-cream)',
+              }}
+            >
+              <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
+              Ask Terrazzo
+            </button>
+          </div>
+        </div>
+
+        {/* Three-panel layout: picks rail | itinerary board | collapsible right panel */}
+        <div className="flex flex-1 min-h-0">
+          {/* ── LEFT: PICKS RAIL ── */}
+          <PicksRail
+            onTapDetail={openDetail}
+            width={railWidth}
+            onResizeStart={handleRailResizeStart}
+            onUnplace={(placeId, fromDay, fromSlot) => unplaceFromSlot(fromDay, fromSlot, placeId)}
+            selectedDay={selectedRailDay}
+            onSelectedDayChange={setSelectedRailDay}
+          />
+
+          {/* ── CENTER: ITINERARY BOARD ── */}
+          <div
+            className="flex-1 min-w-0 overflow-hidden"
+          >
+            <DayBoardView
+              onTapDetail={openDetail}
+              suggestions={collabSuggestions}
+              reactions={collabReactions}
+              slotNotes={collabSlotNotes}
+              myRole={collabMyRole}
+              onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
+              onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
+              onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
+              onDropPlace={(placeId, dayNumber, slotId) => {
+                const place = myPlaces.find(p => p.id === placeId);
+                if (place) placeFromSaved(place, dayNumber, slotId);
+              }}
+              onMovePlace={(placeId, fromDay, fromSlot, toDay, toSlot) => {
+                const place = myPlaces.find(p => p.id === placeId);
+                if (place) moveToSlot(place, fromDay, fromSlot, toDay, toSlot);
+              }}
+              onUnplace={(placeId, dayNumber, slotId) => {
+                unplaceFromSlot(dayNumber, slotId, placeId);
+              }}
+              onDaySelect={setSelectedRailDay}
+              selectedDay={selectedRailDay}
+            />
+          </div>
+
+          {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
+          <RightPanel activities={collabActivities} />
+        </div>
+
+        {/* Overlays shared between mobile/desktop */}
+        {browseAllOpen && (
+          <BrowseAllOverlay
+            onClose={() => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); }}
+            onTapDetail={(item) => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); openDetail(item); }}
+            initialFilter={browseAllFilter}
+          />
+        )}
+        {importOpen && (
+          <ImportDrawer onClose={() => { importPatch({ isOpen: false }); resetImport(); }} />
+        )}
+        {exportOpen && (
+          <ExportToMaps
+            places={myPlaces.filter(p => p.isShortlisted)}
+            collectionName={trip.name}
+            onClose={() => setExportOpen(false)}
+          />
+        )}
+        {showShareSheet && trip && (
+          <ShareSheet
+            resourceType="trip"
+            resourceId={trip.id}
+            resourceName={trip.name}
+            onClose={() => setShowShareSheet(false)}
+          />
+        )}
+        <ChatSidebar
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          tripContext={trip ? {
+            name: trip.name,
+            destinations: trip.destinations || [trip.location],
+            totalDays: trip.days.length,
+            currentDay: trip.days[0] ? {
+              dayNumber: trip.days[0].dayNumber,
+              destination: trip.days[0].destination,
+              slots: trip.days[0].slots.map(s => ({
+                label: s.label,
+                place: s.places[0] ? {
+                  name: s.places[0].name,
+                  type: s.places[0].type,
+                  matchScore: s.places[0].matchScore,
+                } : undefined,
+              })),
+              hotel: trip.days[0].hotel,
+            } : undefined,
+          } : undefined}
+        />
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  MOBILE LAYOUT (existing — unchanged)
+  // ═══════════════════════════════════════════════════════════════════════════
   return (
     <div
       className="relative flex flex-col"
@@ -332,7 +580,7 @@ function TripDetailContent() {
           style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
           title="Ask Terrazzo"
         >
-          💬
+          <PerriandIcon name="chatBubble" size={16} color="var(--t-cream)" accent="var(--t-cream)" />
         </button>
       </div>
 
@@ -412,9 +660,6 @@ function TripDetailContent() {
       {/* Tab Bar */}
       <TabBar />
 
-      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
-           are all rendered by PlaceDetailProvider — no duplication needed */}
-
       {/* Import Drawer */}
       {importOpen && (
         <ImportDrawer
@@ -469,4 +714,17 @@ function TripDetailContent() {
       />
     </div>
   );
+}
+
+// Helper to format ISO date range
+function formatDateRange(startDate: string, endDate: string): string {
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const normalize = (d: string) => new Date(d.split('T')[0] + 'T00:00:00');
+  const s = normalize(startDate);
+  const e = normalize(endDate);
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) return '';
+  const sMonth = monthNames[s.getMonth()];
+  const eMonth = monthNames[e.getMonth()];
+  if (sMonth === eMonth) return `${sMonth} ${s.getDate()}–${e.getDate()}`;
+  return `${sMonth} ${s.getDate()} – ${eMonth} ${e.getDate()}`;
 }

@@ -7,6 +7,8 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 import { TravelContext, TripStatus, GeoDestination } from '@/types';
 import DestinationInput, { Destination } from '@/components/DestinationInput';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
+import DesktopNav from '@/components/DesktopNav';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
 
 // ============================================================
@@ -617,6 +619,7 @@ function TripComplete({ seed, onDone }: {
 export default function NewTripPage() {
   const router = useRouter();
   const createTrip = useTripStore(s => s.createTrip);
+  const isDesktop = useIsDesktop();
   const [step, setStep] = useState<'seed' | 'conversation' | 'complete'>('seed');
   const [seed, setSeed] = useState<SeedData | null>(null);
   const [createdTripId, setCreatedTripId] = useState<string | null>(null);
@@ -656,36 +659,75 @@ export default function NewTripPage() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+      style={{ background: 'var(--t-cream)' }}
     >
-      {/* Back button */}
-      <div className="flex items-center px-5 pt-3 pb-1">
-        <button
-          onClick={() => router.push('/trips')}
-          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer"
-          style={{ color: 'var(--t-ink)' }}
-        >
-          <PerriandIcon name="edit" size={20} color="var(--t-ink)" />
-        </button>
-        {step === 'conversation' && (
-          <span
-            className="text-base ml-1"
-            style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
-          >
-            Trip Conversation
-          </span>
-        )}
-      </div>
+      {isDesktop ? (
+        <>
+          <DesktopNav />
+          <div style={{ maxWidth: 720, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', padding: '0 24px' }}>
+            {/* Back button */}
+            <div className="flex items-center pt-6 pb-2">
+              <button
+                onClick={() => router.push('/trips')}
+                className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer link-hover"
+                style={{ color: 'var(--t-verde)', fontFamily: FONT.sans, fontSize: 13, padding: 0 }}
+              >
+                ← Back to Trips
+              </button>
+              {step === 'conversation' && (
+                <span
+                  className="text-base ml-4"
+                  style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
+                >
+                  Trip Conversation
+                </span>
+              )}
+            </div>
 
-      {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
-      {step === 'conversation' && seed && (
-        <TripConversation
-          seed={seed}
-          onComplete={handleConversationComplete}
-        />
-      )}
-      {step === 'complete' && seed && (
-        <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
+            {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
+            {step === 'conversation' && seed && (
+              <TripConversation
+                seed={seed}
+                onComplete={handleConversationComplete}
+              />
+            )}
+            {step === 'complete' && seed && (
+              <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
+            )}
+          </div>
+        </>
+      ) : (
+        <div style={{ maxWidth: 480, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Back button */}
+          <div className="flex items-center px-5 pt-3 pb-1">
+            <button
+              onClick={() => router.push('/trips')}
+              className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer"
+              style={{ color: 'var(--t-ink)' }}
+            >
+              <PerriandIcon name="edit" size={20} color="var(--t-ink)" />
+            </button>
+            {step === 'conversation' && (
+              <span
+                className="text-base ml-1"
+                style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
+              >
+                Trip Conversation
+              </span>
+            )}
+          </div>
+
+          {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
+          {step === 'conversation' && seed && (
+            <TripConversation
+              seed={seed}
+              onComplete={handleConversationComplete}
+            />
+          )}
+          {step === 'complete' && seed && (
+            <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
+          )}
+        </div>
       )}
     </div>
   );

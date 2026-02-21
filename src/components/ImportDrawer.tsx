@@ -7,6 +7,7 @@ import { streamImport, streamMapsImport } from '@/lib/importService';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 // Input type detection — Terrazzo figures out the rest
 function detectInputType(input: string): ImportMode {
@@ -101,6 +102,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     setProgress, resetBackgroundTask, patch,
   } = useImportStore();
 
+  const isDesktop = useIsDesktop();
   const addPlace = useSavedStore(s => s.addPlace);
   const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
 
@@ -275,30 +277,42 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/30" onClick={handleClose} />
+      <div className="fixed inset-0 z-50 bg-black/30" onClick={handleClose} style={isDesktop ? { opacity: 0, animation: 'fadeInBackdrop 200ms ease both' } : undefined} />
+      {/* Centering wrapper on desktop (flex avoids transform conflict with fadeInUp) */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl overflow-y-auto"
-        style={{ maxWidth: 480, margin: '0 auto', background: 'var(--t-cream)', maxHeight: '90dvh' }}
+        className={isDesktop ? "fixed inset-0 flex items-center justify-center pointer-events-none" : "fixed bottom-0 left-0 right-0 z-50"}
+        style={isDesktop ? { zIndex: 51 } : { maxWidth: 480, margin: '0 auto' }}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-1 sticky top-0" style={{ background: 'var(--t-cream)', zIndex: 1 }}>
-          <div className="w-8 h-1 rounded-full" style={{ background: 'var(--t-travertine)' }} />
-        </div>
+      <div
+        className={isDesktop ? "rounded-2xl overflow-y-auto pointer-events-auto" : "rounded-t-2xl overflow-y-auto"}
+        style={isDesktop ? {
+          width: 560, maxHeight: '80vh',
+          background: 'var(--t-cream)',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.12)',
+          opacity: 0, animation: 'fadeInUp 250ms ease both',
+        } : { background: 'var(--t-cream)', maxHeight: '90dvh' }}
+      >
+        {/* Handle bar — mobile only */}
+        {!isDesktop && (
+          <div className="flex justify-center pt-3 pb-1 sticky top-0" style={{ background: 'var(--t-cream)', zIndex: 1 }}>
+            <div className="w-8 h-1 rounded-full" style={{ background: 'var(--t-travertine)' }} />
+          </div>
+        )}
 
-        <div className="px-5 pb-20">
+        <div className={isDesktop ? "px-7 pb-8 pt-2" : "px-5 pb-20"}>
 
           {/* ========== STEP 1: INPUT ========== */}
           {step === 'input' && (
             <>
               <div className="flex items-center justify-between mb-1 mt-1">
-                <h2 className="text-[20px] italic" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
+                <h2 style={{ fontFamily: FONT.serif, color: 'var(--t-ink)', fontSize: isDesktop ? 22 : 20, fontStyle: 'italic' }}>
                   Add places
                 </h2>
-                <button onClick={handleClose} className="bg-transparent border-none cursor-pointer flex items-center justify-center w-6 h-6" style={{ color: INK['80'] }}>
+                <button onClick={handleClose} className="bg-transparent border-none cursor-pointer flex items-center justify-center w-8 h-8 rounded-full nav-hover" style={{ color: INK['80'] }}>
                   <PerriandIcon name="close" size={16} color={INK['80']} />
                 </button>
               </div>
-              <p className="text-[11px] mb-4" style={{ color: INK['85'], lineHeight: 1.5 }}>
+              <p style={{ color: INK['85'], lineHeight: 1.5, fontSize: isDesktop ? 13 : 11, marginBottom: 16 }}>
                 Paste anything — an article, a Google Maps list, a Substack, a text from a friend. We&apos;ll figure out the rest.
               </p>
 
@@ -690,6 +704,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
           )}
 
         </div>
+      </div>
       </div>
     </>
   );

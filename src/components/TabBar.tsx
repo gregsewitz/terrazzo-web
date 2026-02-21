@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT } from '@/constants/theme';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 const TABS = [
   { id: 'saved', label: 'Collect', icon: 'saved' as PerriandIconName, path: '/saved' },
@@ -13,6 +14,10 @@ const TABS = [
 export default function TabBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const isDesktop = useIsDesktop();
+
+  // Hide on desktop — DesktopNav handles navigation
+  if (isDesktop) return null;
 
   const activeTab = TABS.find(t => pathname.startsWith(t.path))?.id || 'trips';
 

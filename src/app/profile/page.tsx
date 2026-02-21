@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TabBar from '@/components/TabBar';
+import DesktopNav from '@/components/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
 import WrappedExperience from '@/components/wrapped/WrappedExperience';
 import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
@@ -13,6 +14,7 @@ import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 import {
   BECAUSE_YOU_CARDS,
   WEEKLY_COLLECTION,
@@ -55,6 +57,7 @@ type ProfileTab = 'discover' | 'profile';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const isDesktop = useIsDesktop();
   const [showWrapped, setShowWrapped] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('discover');
@@ -130,63 +133,177 @@ export default function ProfilePage() {
     return <WrappedExperience onClose={() => setShowWrapped(false)} />;
   }
 
-  return (
-    <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
-      {/* User Header */}
-      <div className="px-5 pt-6 pb-2">
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(200,146,58,0.1)' }}
-            >
-              <PerriandIcon name="profile" size={24} color="var(--t-honey)" />
+  /* ─── Shared header + tab component ─── */
+  const headerBlock = (
+    <>
+      <div className="flex items-start justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(200,146,58,0.1)' }}
+          >
+            <PerriandIcon name="profile" size={24} color="var(--t-honey)" />
+          </div>
+          <div>
+            <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>{userName}</div>
+            <div className="text-[11px]" style={{ color: INK['90'] }}>{profile.overallArchetype}</div>
+          </div>
+        </div>
+        <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
+      </div>
+
+      {/* Inner tab toggle */}
+      <div
+        className="flex gap-1 p-0.5 rounded-lg mb-1"
+        style={{ background: 'var(--t-linen)' }}
+      >
+        {(['discover', 'profile'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="flex-1 py-1.5 px-2 rounded-md text-[11px] font-medium transition-all"
+            style={{
+              background: activeTab === tab ? 'white' : 'transparent',
+              color: activeTab === tab ? 'var(--t-ink)' : INK['85'],
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: FONT.sans,
+              boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+            }}
+          >
+            {tab === 'discover' ? 'Discover' : 'My Profile'}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+
+  const discoverFeed = (
+    <>
+      <HeroSection profile={profile} signalCount={signalCount} />
+      <BecauseYouSection cards={discoverContent?.becauseYouCards} />
+      <ContradictionSection profile={profile} />
+      <WeeklyEditSection collection={discoverContent?.weeklyCollection} />
+      <StretchPickSection stretch={discoverContent?.stretchPick} />
+      <ContextModeSection recs={discoverContent?.contextRecs} contextLabel={discoverContent?.contextLabel} />
+      <VocabTeaser profile={profile} />
+      <FriendsSavingSection />
+    </>
+  );
+
+  /* ─── Desktop Profile layout ─── */
+  if (isDesktop) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
+        <DesktopNav />
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 48px 48px' }}>
+          <div className="flex gap-10">
+            {/* Left: profile card (sticky) */}
+            <div className="flex-shrink-0" style={{ width: 300 }}>
+              <div
+                className="rounded-2xl p-6 sticky"
+                style={{
+                  top: 88, /* 56 nav + 32 padding */
+                  background: 'white',
+                  border: '1px solid var(--t-linen)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                }}
+              >
+                {headerBlock}
+
+                {/* Quick stats — 3-col grid */}
+                <div
+                  className="grid grid-cols-3 gap-3 mt-5 pt-5"
+                  style={{ borderTop: '1px solid var(--t-linen)' }}
+                >
+                  <div className="text-center">
+                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{signalCount}</div>
+                    <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
+                  </div>
+                  <div className="text-center">
+                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{profile.contradictions?.length || 3}</div>
+                    <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
+                  </div>
+                  <div className="text-center">
+                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{Object.values(profile.microTasteSignals || {}).flat().length || 35}</div>
+                    <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
+                  </div>
+                </div>
+
+                {/* Wrapped CTA */}
+                <button
+                  onClick={() => setShowWrapped(true)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90"
+                  style={{ background: '#2d3a2d' }}
+                >
+                  <span className="text-[11px] font-semibold" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
+                    Taste Wrapped
+                  </span>
+                  <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(245,245,240,0.12)', color: '#f5f5f0', fontFamily: FONT.mono }}>
+                    Replay →
+                  </span>
+                </button>
+
+                {/* Settings links */}
+                <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                  {SETTINGS_LINKS.map(({ label, action }) => (
+                    <div
+                      key={action}
+                      onClick={() => handleSettingTap(action)}
+                      className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg cursor-pointer nav-hover"
+                      style={{ fontSize: 12, color: INK['60'], fontFamily: FONT.sans }}
+                    >
+                      <span>{label}</span>
+                      <span style={{ color: INK['30'] }}>→</span>
+                    </div>
+                  ))}
+                  <button
+                    onClick={handleRedoOnboarding}
+                    className="flex items-center gap-1.5 mt-2 py-2 bg-transparent border-none cursor-pointer"
+                    style={{ fontSize: 11, color: '#c45020', fontFamily: FONT.sans }}
+                  >
+                    <PerriandIcon name="discover" size={10} color="#c45020" />
+                    Redo Onboarding
+                  </button>
+                </div>
+
+                {/* Auth */}
+                <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                  {isAuthenticated ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: INK['50'] }}>{user?.email}</span>
+                      <button onClick={signOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(214,48,32,0.08)', color: '#c44', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
+                    </div>
+                  ) : (
+                    <Link href="/login" className="text-[11px] font-semibold" style={{ color: 'var(--t-verde)', textDecoration: 'none' }}>Sign in →</Link>
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>{userName}</div>
-              <div className="text-[11px]" style={{ color: INK['90'] }}>{profile.overallArchetype}</div>
+
+            {/* Right: content feed */}
+            <div className="flex-1 min-w-0">
+              {activeTab === 'discover' ? discoverFeed : (
+                <>
+                  <ProfileDeepDive />
+                </>
+              )}
             </div>
           </div>
-          <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
         </div>
+      </div>
+    );
+  }
 
-        {/* Inner tab toggle: Discover / My Profile */}
-        <div
-          className="flex gap-1 p-0.5 rounded-lg mb-1"
-          style={{ background: 'var(--t-linen)' }}
-        >
-          {(['discover', 'profile'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className="flex-1 py-1.5 px-2 rounded-md text-[11px] font-medium transition-all"
-              style={{
-                background: activeTab === tab ? 'white' : 'transparent',
-                color: activeTab === tab ? 'var(--t-ink)' : INK['85'],
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: FONT.sans,
-                boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-              }}
-            >
-              {tab === 'discover' ? 'Discover' : 'My Profile'}
-            </button>
-          ))}
-        </div>
+  /* ─── Mobile Profile layout (unchanged) ─── */
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64 }}>
+      <div className="px-5 pt-6 pb-2">
+        {headerBlock}
       </div>
 
       {activeTab === 'discover' ? (
-        /* ═══════════ DISCOVER FEED ═══════════ */
-        <>
-          <HeroSection profile={profile} signalCount={signalCount} />
-          <BecauseYouSection cards={discoverContent?.becauseYouCards} />
-          <ContradictionSection profile={profile} />
-          <WeeklyEditSection collection={discoverContent?.weeklyCollection} />
-          <StretchPickSection stretch={discoverContent?.stretchPick} />
-          <ContextModeSection recs={discoverContent?.contextRecs} contextLabel={discoverContent?.contextLabel} />
-          <VocabTeaser profile={profile} />
-          <FriendsSavingSection />
-        </>
+        discoverFeed
       ) : (
         /* ═══════════ MY PROFILE ═══════════ */
         <>

@@ -206,7 +206,7 @@ export default function SharedViewPage() {
     const isPerriandIcon = shortlist.emoji && !shortlist.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && shortlist.emoji.length > 2;
 
     return (
-      <div className="min-h-screen pb-24" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
+      <div className="min-h-screen pb-24" style={{ background: 'var(--t-cream)', maxWidth: 640, margin: '0 auto' }}>
         <div className="px-4 pt-6">
           {/* Terrazzo branding */}
           <div className="text-center mb-6">
@@ -313,7 +313,7 @@ export default function SharedViewPage() {
     }>;
 
     return (
-      <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}>
+      <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 640, margin: '0 auto' }}>
         <div className="px-4 pt-6">
           {/* Terrazzo branding */}
           <div className="text-center mb-6">
@@ -438,7 +438,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
 
   return (
     <div
-      className="rounded-xl overflow-hidden"
+      className="rounded-xl overflow-hidden card-hover"
       style={{
         background: 'white',
         border: '1px solid var(--t-linen)',

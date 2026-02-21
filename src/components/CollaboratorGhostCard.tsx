@@ -3,6 +3,7 @@
 import { Suggestion } from '@/stores/collaborationStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 // Stable color palette for collaborator accents
 const COLLAB_COLORS = [
@@ -39,95 +40,112 @@ export default function CollaboratorGhostCard({
   onReject,
   onTapDetail,
 }: CollaboratorGhostCardProps) {
+  const isDesktop = useIsDesktop();
   const color = getCollaboratorColor(suggestion.userId);
   const userName = suggestion.user.name || suggestion.user.email.split('@')[0];
 
   return (
     <div
-      className="relative cursor-pointer transition-all rounded-lg flex items-center gap-2"
+      className="relative cursor-pointer transition-all rounded-lg"
       style={{
         background: 'var(--t-cream)',
         border: `1.5px dashed ${color}`,
-        padding: '8px 10px',
+        padding: isDesktop ? '8px 10px' : '8px 10px',
         borderLeft: `3px solid ${color}`,
       }}
       onClick={onTapDetail}
     >
-      {/* Left: collaborator avatar circle */}
-      <div
-        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
-        style={{ background: `${color}18`, color }}
-      >
-        {userName.charAt(0).toUpperCase()}
-      </div>
-
-      {/* Middle: name + place + reason */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
+      {/* Top row: avatar + place name + action buttons inline */}
+      <div className="flex items-center gap-2">
+        <div
+          className="rounded-full flex items-center justify-center flex-shrink-0 font-bold"
+          style={{
+            width: 28,
+            height: 28,
+            background: `${color}18`,
+            color,
+            fontSize: 11,
+          }}
+        >
+          {userName.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
           <span
-            className="text-[12px] font-medium truncate"
-            style={{ color: 'var(--t-ink)' }}
+            className="font-medium block truncate"
+            style={{ color: 'var(--t-ink)', fontSize: isDesktop ? 12 : 11 }}
           >
             {suggestion.placeName}
           </span>
-          <span
-            className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: `${color}12`, color }}
-          >
-            {userName}
-          </span>
+          {suggestion.placeType && (
+            <span
+              className="block truncate"
+              style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['50'], marginTop: 1 }}
+            >
+              {suggestion.placeType}
+            </span>
+          )}
         </div>
-        {suggestion.reason && (
-          <div
-            className="text-[10px] italic truncate mt-0.5"
-            style={{ color: INK['85'] }}
-          >
-            &ldquo;{suggestion.reason}&rdquo;
+        {/* Action buttons or status — inline right */}
+        {isOwner && suggestion.status === 'pending' ? (
+          <div className="flex gap-1 flex-shrink-0 items-center">
+            <button
+              onClick={(e) => { e.stopPropagation(); onAccept(); }}
+              className="px-2 py-0.5 rounded-md font-semibold transition-all flex items-center gap-0.5 btn-hover"
+              style={{
+                background: 'var(--t-verde)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: FONT.sans,
+                fontSize: 10,
+              }}
+            >
+              <PerriandIcon name="check" size={10} color="white" /> Add
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onReject(); }}
+              className="w-6 h-6 rounded-full flex items-center justify-center transition-all nav-hover"
+              style={{
+                background: INK['06'],
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <PerriandIcon name="close" size={10} color={INK['85']} />
+            </button>
           </div>
-        )}
+        ) : suggestion.status !== 'pending' ? (
+          <span
+            className="font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{
+              background: suggestion.status === 'accepted' ? 'rgba(42,122,86,0.08)' : 'rgba(200,50,50,0.06)',
+              color: suggestion.status === 'accepted' ? 'var(--t-verde)' : INK['60'],
+              fontFamily: FONT.mono,
+              fontSize: 8,
+            }}
+          >
+            {suggestion.status === 'accepted' ? 'Added' : 'Dismissed'}
+          </span>
+        ) : null}
       </div>
 
-      {/* Right: owner actions or status */}
-      {isOwner && suggestion.status === 'pending' ? (
-        <div className="flex gap-1 flex-shrink-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); onAccept(); }}
-            className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all flex items-center gap-1"
-            style={{
-              background: 'var(--t-verde)',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: FONT.sans,
-            }}
-          >
-            <PerriandIcon name="check" size={12} color="white" /> Add
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onReject(); }}
-            className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
-            style={{
-              background: INK['06'],
-              color: INK['85'],
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            <PerriandIcon name="close" size={12} color={INK['85']} />
-          </button>
-        </div>
-      ) : suggestion.status !== 'pending' ? (
+      {/* Collaborator badge + reason */}
+      <div className="flex items-center gap-1.5 mt-1">
         <span
-          className="text-[9px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-          style={{
-            background: suggestion.status === 'accepted' ? 'rgba(42,122,86,0.08)' : 'rgba(200,50,50,0.06)',
-            color: suggestion.status === 'accepted' ? 'var(--t-verde)' : INK['60'],
-            fontFamily: FONT.mono,
-          }}
+          className="font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0"
+          style={{ background: `${color}12`, color, fontSize: 8 }}
         >
-          {suggestion.status === 'accepted' ? 'Added' : 'Dismissed'}
+          {userName}
         </span>
-      ) : null}
+        {suggestion.reason && (
+          <span
+            className="italic truncate"
+            style={{ color: INK['50'], fontSize: 9 }}
+          >
+            &ldquo;{suggestion.reason}&rdquo;
+          </span>
+        )}
+      </div>
     </div>
   );
 }

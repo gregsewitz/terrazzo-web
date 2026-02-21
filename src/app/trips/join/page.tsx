@@ -94,7 +94,7 @@ function JoinTripInner() {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center px-6"
-        style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+        style={{ background: 'var(--t-cream)' }}
       >
         <div className="text-center">
           <div
@@ -130,13 +130,13 @@ function JoinTripInner() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-6"
-      style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+      style={{ background: 'var(--t-cream)' }}
     >
       <div className="w-full max-w-sm">
         {/* Trip card */}
         <div
           className="rounded-2xl p-6 mb-6"
-          style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+          style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}
         >
           <div
             className="text-[10px] font-semibold mb-3"
@@ -186,7 +186,7 @@ function JoinTripInner() {
           <button
             onClick={handleAccept}
             disabled={accepting}
-            className="w-full py-3.5 rounded-xl text-[14px] font-semibold transition-all"
+            className="w-full py-3.5 rounded-xl text-[14px] font-semibold btn-hover"
             style={{
               background: 'var(--t-verde)',
               color: 'white',

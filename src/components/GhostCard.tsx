@@ -3,6 +3,7 @@
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 interface GhostCardProps {
   item: ImportedPlace;
@@ -19,6 +20,7 @@ export default function GhostCard({
   onDismiss,
   onTapDetail,
 }: GhostCardProps) {
+  const isDesktop = useIsDesktop();
   const sourceType = item.ghostSource || 'manual';
   const sourceStyle = SOURCE_STYLES[sourceType as GhostSourceType];
 
@@ -56,80 +58,87 @@ export default function GhostCard({
 
   const note = getSourceNote();
 
-  // === SLOT VARIANT — compact two-line card ===
+  // === SLOT VARIANT — compact card layout ===
   if (variant === 'slot') {
     return (
       <div
-        className="relative cursor-pointer transition-all ghost-shimmer rounded-lg flex items-center gap-2"
+        className="relative cursor-pointer transition-all ghost-shimmer rounded-lg"
         style={{
           background: 'var(--t-cream)',
           border: `1.5px dashed ${sourceStyle.color}`,
-          padding: '8px 10px',
+          padding: isDesktop ? '8px 10px' : '8px 10px',
         }}
         onClick={onTapDetail}
       >
-        {/* Left: source icon */}
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: sourceStyle.bg }}
-        >
-          <PerriandIcon name={sourceStyle.icon} size={16} color={sourceStyle.color} />
-        </div>
-
-        {/* Middle: name + source/note on two lines */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
+        {/* Top row: icon + name + action buttons inline */}
+        <div className="flex items-center gap-2">
+          <div
+            className="rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ width: 28, height: 28, background: sourceStyle.bg }}
+          >
+            <PerriandIcon name={sourceStyle.icon} size={14} color={sourceStyle.color} />
+          </div>
+          <div className="flex-1 min-w-0">
             <span
-              className="text-[12px] font-medium truncate"
-              style={{ color: 'var(--t-ink)' }}
+              className="font-medium block truncate"
+              style={{ color: 'var(--t-ink)', fontSize: isDesktop ? 12 : 11 }}
             >
               {item.name}
             </span>
             <span
-              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-0.5"
-              style={{ background: sourceStyle.bg, color: sourceStyle.color }}
+              className="block truncate"
+              style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['50'], marginTop: 1 }}
             >
-              <PerriandIcon name={sourceStyle.icon} size={11} color={sourceStyle.color} />
-              {getSourceLabel()}
+              {item.type}{item.location ? ` · ${item.location.split(',')[0]}` : ''}
             </span>
           </div>
-          {note && (
-            <div
-              className="text-[10px] italic truncate mt-0.5"
-              style={{ color: INK['90'] }}
+          {/* Action buttons — inline right */}
+          <div className="flex gap-1 flex-shrink-0 items-center">
+            <button
+              onClick={(e) => { e.stopPropagation(); onConfirm(); }}
+              className="px-2 py-0.5 rounded-md font-semibold transition-all flex items-center gap-0.5 btn-hover"
+              style={{
+                background: 'var(--t-verde)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: FONT.sans,
+                fontSize: 10,
+              }}
             >
-              {sourceType === 'friend' ? `"${note}"` : note}
-            </div>
-          )}
+              <PerriandIcon name="check" size={10} color="white" /> Add
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+              className="w-6 h-6 rounded-full flex items-center justify-center transition-all nav-hover"
+              style={{
+                background: INK['06'],
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <PerriandIcon name="close" size={10} color={INK['85']} />
+            </button>
+          </div>
         </div>
 
-        {/* Right: action buttons */}
-        <div className="flex gap-1 flex-shrink-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); onConfirm(); }}
-            className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all flex items-center gap-1"
-            style={{
-              background: 'var(--t-verde)',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: FONT.sans,
-            }}
+        {/* Source badge + note */}
+        <div className="flex items-center gap-1.5 mt-1">
+          <span
+            className="font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0"
+            style={{ background: sourceStyle.bg, color: sourceStyle.color, fontSize: 8 }}
           >
-            <PerriandIcon name="check" size={12} color="white" /> Add
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-            className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
-            style={{
-              background: INK['06'],
-              color: INK['85'],
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            <PerriandIcon name="close" size={12} color={INK['85']} />
-          </button>
+            <PerriandIcon name={sourceStyle.icon} size={9} color={sourceStyle.color} />
+            {getSourceLabel()}
+          </span>
+          {note && (
+            <span
+              className="italic truncate"
+              style={{ color: INK['50'], fontSize: 9 }}
+            >
+              {sourceType === 'friend' ? `"${note}"` : note}
+            </span>
+          )}
         </div>
       </div>
     );

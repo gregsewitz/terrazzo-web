@@ -1,0 +1,249 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { useTripStore } from '@/stores/tripStore';
+import { useSavedStore } from '@/stores/savedStore';
+import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { FONT, INK } from '@/constants/theme';
+import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+
+const TYPE_ICONS: Record<string, PerriandIconName> = {
+  restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
+  museum: 'museum', activity: 'activity', neighborhood: 'location', shop: 'shop',
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  restaurant: '#c0ab8e', hotel: '#b8b0c0', bar: '#a8c0b0', cafe: '#c8c0b0',
+  museum: '#a8b0b8', activity: '#a8b8a8', neighborhood: '#b8c0a8', shop: '#c0b0a0',
+};
+
+const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
+  { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
+  { value: 'cafe', label: 'Cafe', icon: 'cafe' },
+  { value: 'bar', label: 'Drink', icon: 'bar' },
+  { value: 'museum', label: 'See', icon: 'museum' },
+  { value: 'activity', label: 'Do', icon: 'activity' },
+  { value: 'hotel', label: 'Stay', icon: 'hotel' },
+  { value: 'shop', label: 'Shop', icon: 'shop' },
+  { value: 'neighborhood', label: 'Walk', icon: 'location' },
+];
+
+interface PicksGridProps {
+  onTapDetail: (item: ImportedPlace) => void;
+}
+
+export default function PicksGrid({ onTapDetail }: PicksGridProps) {
+  const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
+  const myPlaces = useSavedStore(s => s.myPlaces);
+
+  const placedIds = useMemo(() => {
+    if (!trip) return new Set<string>();
+    const ids = new Set<string>();
+    trip.days.forEach(day => day.slots.forEach(slot => slot.places.forEach(p => ids.add(p.id))));
+    return ids;
+  }, [trip]);
+
+  const allPicks = useMemo(() => {
+    return myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+  }, [myPlaces, placedIds]);
+
+  const filteredPicks = useMemo(() => {
+    let result = allPicks;
+    if (activeFilter !== 'all') {
+      result = result.filter(p => p.type === activeFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) || p.location.toLowerCase().includes(q)
+      );
+    }
+    return result.sort((a, b) => b.matchScore - a.matchScore);
+  }, [allPicks, activeFilter, searchQuery]);
+
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allPicks.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
+    return counts;
+  }, [allPicks]);
+
+  return (
+    <div className="flex flex-col h-full" style={{ background: 'white' }}>
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-4 py-2"
+        style={{ borderBottom: '1px solid var(--t-linen)' }}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 10,
+              fontWeight: 700,
+              color: INK['50'],
+              textTransform: 'uppercase',
+              letterSpacing: 1.5,
+            }}
+          >
+            Your Picks
+          </span>
+          <span
+            className="px-1.5 py-0.5 rounded-full"
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 9,
+              fontWeight: 700,
+              background: 'rgba(42,122,86,0.08)',
+              color: 'var(--t-verde)',
+            }}
+          >
+            {allPicks.length}
+          </span>
+        </div>
+
+        {/* Search input */}
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{ background: INK['03'], border: '1px solid var(--t-linen)', width: 180 }}
+        >
+          <PerriandIcon name="discover" size={12} color={INK['40']} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search picks..."
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              fontFamily: FONT.sans,
+              fontSize: 11,
+              color: 'var(--t-ink)',
+              width: '100%',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Filter chips */}
+      <div
+        className="flex items-center gap-1 px-4 py-1.5 overflow-x-auto"
+        style={{ scrollbarWidth: 'none', borderBottom: '1px solid var(--t-linen)' }}
+      >
+        {TYPE_CHIPS.filter(chip => typeCounts[chip.value as string] > 0).map(chip => {
+          const isActive = activeFilter === chip.value;
+          return (
+            <button
+              key={chip.value}
+              onClick={() => toggleFilter(chip.value)}
+              className="flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
+              style={{
+                background: isActive ? 'var(--t-ink)' : 'transparent',
+                color: isActive ? 'white' : INK['70'],
+                border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+                fontFamily: FONT.sans,
+              }}
+            >
+              <PerriandIcon name={chip.icon} size={10} color={isActive ? 'white' : INK['50']} />
+              {chip.label}
+              <span style={{ opacity: 0.6, fontSize: 9 }}>
+                {typeCounts[chip.value as string] || 0}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Grid of picks */}
+      <div
+        className="flex-1 overflow-y-auto px-3 py-2"
+        style={{ scrollbarWidth: 'thin' }}
+      >
+        {filteredPicks.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['40'] }}>
+              {allPicks.length === 0 ? 'No unplaced picks' : 'No picks match this filter'}
+            </span>
+          </div>
+        ) : (
+          <div
+            className="grid gap-2"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
+          >
+            {filteredPicks.map(place => {
+              const typeIcon = TYPE_ICONS[place.type] || 'location';
+              const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
+              const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+
+              return (
+                <div
+                  key={place.id}
+                  onClick={() => onTapDetail(place)}
+                  className="rounded-xl cursor-pointer transition-all hover:shadow-md"
+                  style={{
+                    background: `linear-gradient(135deg, ${typeColor}18, ${typeColor}08)`,
+                    border: `1px solid ${typeColor}30`,
+                    padding: '10px 12px',
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    {/* Type icon */}
+                    <div
+                      className="flex-shrink-0 rounded-lg flex items-center justify-center"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        background: `${typeColor}25`,
+                      }}
+                    >
+                      <PerriandIcon name={typeIcon} size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="text-[12px] font-semibold truncate"
+                        style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                      >
+                        {place.name}
+                      </div>
+                      <div
+                        className="text-[10px] truncate"
+                        style={{ color: INK['50'], fontFamily: FONT.sans }}
+                      >
+                        {place.location}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom row: match score + source */}
+                  <div className="flex items-center justify-between mt-2">
+                    <span
+                      className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                      style={{
+                        background: 'rgba(42,122,86,0.1)',
+                        color: 'var(--t-verde)',
+                        fontFamily: FONT.mono,
+                      }}
+                    >
+                      {place.matchScore}%
+                    </span>
+                    <span
+                      className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded"
+                      style={{ background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}
+                    >
+                      <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} />
+                      {srcStyle.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

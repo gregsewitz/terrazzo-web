@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
+import DesktopNav from '@/components/DesktopNav';
 import ShortlistCard from '@/components/ShortlistCard';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
@@ -12,6 +13,7 @@ import { useImportStore } from '@/stores/importStore';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 const TYPE_ICONS: Record<string, string> = {
   restaurant: 'restaurant',
@@ -60,6 +62,7 @@ export default function SavedPage() {
 
 function SavedPageContent() {
   const router = useRouter();
+  const isDesktop = useIsDesktop();
   const { openDetail, openShortlistPicker } = usePlaceDetail();
   const myPlaces = useSavedStore(s => s.myPlaces);
   const shortlists = useSavedStore(s => s.shortlists);
@@ -161,8 +164,357 @@ function SavedPageContent() {
   }, [myPlaces, searchQuery, typeFilter, cityFilter, neighborhoodFilter, sourceFilter, parseLocation]);
 
 
+  /* ─── Desktop Collect layout ─── */
+  if (isDesktop) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
+        <DesktopNav />
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 48px 48px' }}>
+          {/* ═══ Header row ═══ */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h1
+                style={{
+                  fontFamily: FONT.serif,
+                  fontStyle: 'italic',
+                  fontSize: 32,
+                  color: 'var(--t-ink)',
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                Collect
+              </h1>
+              <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
+                {myPlaces.length} places across {allCities.length} {allCities.length === 1 ? 'city' : 'cities'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => importPatch({ isOpen: true })}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
+                style={{
+                  background: 'rgba(232,115,58,0.08)',
+                  border: '1px solid rgba(232,115,58,0.15)',
+                  color: '#c45020',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: FONT.mono,
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Import
+              </button>
+              <button
+                onClick={() => setShowCreateShortlist(true)}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
+                style={{
+                  background: 'var(--t-ink)',
+                  color: 'white',
+                  border: 'none',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  fontFamily: FONT.sans,
+                }}
+              >
+                <span>+</span> New Shortlist
+              </button>
+            </div>
+          </div>
+
+          {/* ═══ View toggle ═══ */}
+          <div className="flex items-center gap-1.5 mb-7">
+            {(['shortlists', 'library'] as const).map(view => (
+              <button
+                key={view}
+                onClick={() => setActiveView(view)}
+                className="px-5 py-2.5 rounded-full text-[13px] font-medium cursor-pointer btn-hover"
+                style={{
+                  background: activeView === view ? 'var(--t-ink)' : 'transparent',
+                  color: activeView === view ? 'white' : INK['60'],
+                  border: activeView === view ? 'none' : '1px solid var(--t-linen)',
+                  fontFamily: FONT.sans,
+                  transition: 'all 150ms ease',
+                }}
+              >
+                {view === 'shortlists' ? `Shortlists (${shortlists.length})` : `Library (${filteredPlaces.length})`}
+              </button>
+            ))}
+          </div>
+
+          {/* ═══ Shortlists — Desktop grid ═══ */}
+          {activeView === 'shortlists' && (
+            <>
+              <div className="mb-5" style={{ maxWidth: 400 }}>
+                <PlaceSearchBar />
+              </div>
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
+              >
+                {shortlists.map(sl => (
+                  <ShortlistCard
+                    key={sl.id}
+                    shortlist={sl}
+                    places={myPlaces}
+                    onClick={() => router.push(`/saved/shortlists/${sl.id}`)}
+                  />
+                ))}
+                {/* Create CTA card */}
+                <button
+                  onClick={() => setShowCreateShortlist(true)}
+                  className="rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
+                  style={{
+                    minHeight: 160,
+                    background: INK['02'],
+                    border: `1.5px dashed ${INK['15']}`,
+                    color: INK['70'],
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>+</span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 500, color: 'var(--t-ink)' }}>
+                    Create Shortlist
+                  </span>
+                </button>
+              </div>
+              {shortlists.length === 0 && (
+                <div className="text-center py-16">
+                  <PerriandIcon name="saved" size={36} color={INK['15']} />
+                  <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>No shortlists yet</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ═══ Library — Desktop sidebar filters + grid ═══ */}
+          {activeView === 'library' && (
+            <div className="flex gap-8">
+              {/* Left sidebar: filters */}
+              <div className="flex-shrink-0" style={{ width: 220 }}>
+                <div className="mb-5">
+                  <PlaceSearchBar />
+                </div>
+
+                {/* Type filters */}
+                <div className="mb-5">
+                  <div
+                    className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
+                    style={{ color: INK['50'], fontFamily: FONT.mono }}
+                  >
+                    Type
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {(['all', 'restaurant', 'bar', 'cafe', 'hotel', 'museum', 'activity'] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => setTypeFilter(type)}
+                        className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer"
+                        style={{
+                          background: typeFilter === type ? 'var(--t-ink)' : 'transparent',
+                          color: typeFilter === type ? 'white' : INK['60'],
+                          border: 'none',
+                          fontFamily: FONT.sans,
+                          fontWeight: typeFilter === type ? 600 : 400,
+                        }}
+                      >
+                        {type === 'all' ? 'All types' : type.charAt(0).toUpperCase() + type.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* City filters */}
+                {allCities.length > 1 && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
+                      style={{ color: INK['50'], fontFamily: FONT.mono }}
+                    >
+                      City
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => handleCityFilter('all')}
+                        className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer"
+                        style={{
+                          background: cityFilter === 'all' ? 'var(--t-verde)' : 'transparent',
+                          color: cityFilter === 'all' ? 'white' : INK['60'],
+                          border: 'none',
+                          fontFamily: FONT.sans,
+                          fontWeight: cityFilter === 'all' ? 600 : 400,
+                        }}
+                      >
+                        All cities
+                      </button>
+                      {allCities.map(city => (
+                        <button
+                          key={city}
+                          onClick={() => handleCityFilter(city)}
+                          className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer"
+                          style={{
+                            background: cityFilter === city ? 'var(--t-verde)' : 'transparent',
+                            color: cityFilter === city ? 'white' : INK['60'],
+                            border: 'none',
+                            fontFamily: FONT.sans,
+                            fontWeight: cityFilter === city ? 600 : 400,
+                          }}
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Source filters */}
+                <div className="mb-5">
+                  <div
+                    className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
+                    style={{ color: INK['50'], fontFamily: FONT.mono }}
+                  >
+                    Source
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {[
+                      { key: 'all', label: 'All sources', icon: null },
+                      { key: 'friend', label: 'Friends', icon: 'friend' as PerriandIconName },
+                      { key: 'article', label: 'Articles', icon: 'article' as PerriandIconName },
+                      { key: 'maps', label: 'Maps', icon: 'maps' as PerriandIconName },
+                      { key: 'email', label: 'Email', icon: 'email' as PerriandIconName },
+                    ].map(src => (
+                      <button
+                        key={src.key}
+                        onClick={() => setSourceFilter(src.key)}
+                        className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer flex items-center gap-1.5"
+                        style={{
+                          background: sourceFilter === src.key ? 'var(--t-ink)' : 'transparent',
+                          color: sourceFilter === src.key ? 'white' : INK['60'],
+                          border: 'none',
+                          fontFamily: FONT.sans,
+                          fontWeight: sourceFilter === src.key ? 600 : 400,
+                        }}
+                      >
+                        {src.icon && <PerriandIcon name={src.icon} size={10} color={sourceFilter === src.key ? 'white' : INK['50']} />}
+                        {src.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Neighborhood sub-filter */}
+                {cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
+                      style={{ color: INK['50'], fontFamily: FONT.mono }}
+                    >
+                      Neighborhood
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => setNeighborhoodFilter('all')}
+                        className="px-3 py-1.5 rounded-lg text-left text-[10px] transition-all cursor-pointer"
+                        style={{
+                          background: neighborhoodFilter === 'all' ? 'rgba(42,122,86,0.12)' : 'transparent',
+                          color: neighborhoodFilter === 'all' ? 'var(--t-verde)' : INK['50'],
+                          border: 'none',
+                          fontFamily: FONT.sans,
+                        }}
+                      >
+                        All areas
+                      </button>
+                      {cityNeighborhoods[cityFilter].map(nb => (
+                        <button
+                          key={nb}
+                          onClick={() => setNeighborhoodFilter(nb)}
+                          className="px-3 py-1.5 rounded-lg text-left text-[10px] transition-all cursor-pointer"
+                          style={{
+                            background: neighborhoodFilter === nb ? 'rgba(42,122,86,0.12)' : 'transparent',
+                            color: neighborhoodFilter === nb ? 'var(--t-verde)' : INK['50'],
+                            border: 'none',
+                            fontFamily: FONT.sans,
+                          }}
+                        >
+                          {nb}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: place grid */}
+              <div className="flex-1 min-w-0">
+                {filteredPlaces.length > 0 ? (
+                  <div
+                    className="grid gap-4"
+                    style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
+                  >
+                    {filteredPlaces.map(place => (
+                      <PlaceCard
+                        key={place.id}
+                        place={place}
+                        onTap={() => openDetail(place)}
+                        onToggleStar={() => openShortlistPicker(place)}
+                        onLongPress={() => setAddToTripItem(place)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <PerriandIcon name="discover" size={36} color={INK['15']} />
+                    <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
+                      {searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all'
+                        ? 'No places match your filters'
+                        : 'No saved places yet'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ═══ Shared overlays ═══ */}
+        {showCreateShortlist && (
+          <CreateShortlistModal
+            onClose={() => setShowCreateShortlist(false)}
+            onCreate={(name, emoji) => {
+              createShortlist(name, emoji);
+              setShowCreateShortlist(false);
+            }}
+            onCreateSmart={(name, emoji, query, filterTags, placeIds) => {
+              createSmartShortlist(name, emoji, query, filterTags, placeIds);
+              setShowCreateShortlist(false);
+            }}
+          />
+        )}
+        {addToTripItem && trips.length > 0 && (
+          <AddToTripSheet
+            place={addToTripItem}
+            trips={trips}
+            onClose={() => setAddToTripItem(null)}
+            onAdd={(tripId) => {
+              if (!addToTripItem.isShortlisted) {
+                toggleStar(addToTripItem.id);
+              }
+              setAddToTripItem(null);
+            }}
+          />
+        )}
+        {importOpen && (
+          <ImportDrawer onClose={() => { resetImport(); importPatch({ isOpen: false }); }} />
+        )}
+      </div>
+    );
+  }
+
+  /* ─── Mobile Collect layout (unchanged) ─── */
   return (
-    <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <div className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64, overflowX: 'hidden', boxSizing: 'border-box' }}>
       <div className="px-4 pt-5">
         {/* ═══ Header ═══ */}
         <div className="flex items-center justify-between mb-4">
@@ -200,179 +552,68 @@ function SavedPageContent() {
           </div>
         </div>
 
-        {/* ═══════════════════════════════════ */}
-        {/* SHORTLISTS VIEW                     */}
-        {/* ═══════════════════════════════════ */}
+        {/* Shortlists */}
         {activeView === 'shortlists' && (
           <div>
-            {/* Search bar */}
-            <div className="mb-4">
-              <PlaceSearchBar />
-            </div>
-
-            {/* Create shortlist button */}
+            <div className="mb-4"><PlaceSearchBar /></div>
             <button
               onClick={() => setShowCreateShortlist(true)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4 cursor-pointer transition-all hover:opacity-80"
-              style={{
-                background: 'none',
-                border: `1.5px dashed ${INK['15']}`,
-                color: INK['70'],
-                fontFamily: FONT.sans,
-                fontSize: 12,
-              }}
+              style={{ background: 'none', border: `1.5px dashed ${INK['15']}`, color: INK['70'], fontFamily: FONT.sans, fontSize: 12 }}
             >
-              <span style={{ fontSize: 14 }}>+</span>
-              Create Shortlist
+              <span style={{ fontSize: 14 }}>+</span> Create Shortlist
             </button>
-
-            {/* Shortlist cards */}
             <div className="flex flex-col gap-3">
               {shortlists.map(sl => (
-                <ShortlistCard
-                  key={sl.id}
-                  shortlist={sl}
-                  places={myPlaces}
-                  onClick={() => router.push(`/saved/shortlists/${sl.id}`)}
-                />
+                <ShortlistCard key={sl.id} shortlist={sl} places={myPlaces} onClick={() => router.push(`/saved/shortlists/${sl.id}`)} />
               ))}
             </div>
-
             {shortlists.length === 0 && (
               <div className="text-center py-12">
                 <PerriandIcon name="saved" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
-                  No shortlists yet
-                </p>
-                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
-                  Create one to start curating your places
-                </p>
+                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>No shortlists yet</p>
+                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>Create one to start curating your places</p>
               </div>
             )}
           </div>
         )}
 
-        {/* ═══════════════════════════════════ */}
-        {/* LIBRARY VIEW                        */}
-        {/* ═══════════════════════════════════ */}
+        {/* Library */}
         {activeView === 'library' && (
           <div>
-            {/* Search bar + Batch import */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <PlaceSearchBar />
               <button
                 onClick={() => importPatch({ isOpen: true })}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  padding: '9px 12px',
-                  borderRadius: 10,
-                  background: 'rgba(232,115,58,0.08)',
-                  border: '1px solid rgba(232,115,58,0.15)',
-                  color: '#c45020',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  fontFamily: FONT.mono,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  transition: 'opacity 0.15s',
-                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '9px 12px', borderRadius: 10, background: 'rgba(232,115,58,0.08)', border: '1px solid rgba(232,115,58,0.15)', color: '#c45020', fontSize: 10, fontWeight: 600, fontFamily: FONT.mono, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
                 Import
               </button>
             </div>
-
-            {/* Filter chips */}
             <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {/* Type filter */}
               {(['all', 'restaurant', 'bar', 'cafe', 'hotel', 'museum', 'activity'] as const).map(type => (
-                <button
-                  key={type}
-                  onClick={() => setTypeFilter(type)}
-                  className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
-                  style={{
-                    background: typeFilter === type ? 'var(--t-ink)' : 'white',
-                    color: typeFilter === type ? 'white' : INK['60'],
-                    border: typeFilter === type ? 'none' : '1px solid var(--t-linen)',
-                    fontFamily: FONT.mono,
-                  }}
-                >
+                <button key={type} onClick={() => setTypeFilter(type)} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer" style={{ background: typeFilter === type ? 'var(--t-ink)' : 'white', color: typeFilter === type ? 'white' : INK['60'], border: typeFilter === type ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>
                   {type === 'all' ? 'All types' : type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
               ))}
             </div>
-
-            {/* City filter row */}
             {allCities.length > 1 && (
               <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                <button
-                  onClick={() => handleCityFilter('all')}
-                  className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
-                  style={{
-                    background: cityFilter === 'all' ? 'var(--t-verde)' : 'white',
-                    color: cityFilter === 'all' ? 'white' : INK['60'],
-                    border: cityFilter === 'all' ? 'none' : '1px solid var(--t-linen)',
-                    fontFamily: FONT.mono,
-                  }}
-                >
-                  All cities
-                </button>
+                <button onClick={() => handleCityFilter('all')} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer" style={{ background: cityFilter === 'all' ? 'var(--t-verde)' : 'white', color: cityFilter === 'all' ? 'white' : INK['60'], border: cityFilter === 'all' ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>All cities</button>
                 {allCities.map(city => (
-                  <button
-                    key={city}
-                    onClick={() => handleCityFilter(city)}
-                    className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer"
-                    style={{
-                      background: cityFilter === city ? 'var(--t-verde)' : 'white',
-                      color: cityFilter === city ? 'white' : INK['60'],
-                      border: cityFilter === city ? 'none' : '1px solid var(--t-linen)',
-                      fontFamily: FONT.mono,
-                    }}
-                  >
-                    {city}
-                  </button>
+                  <button key={city} onClick={() => handleCityFilter(city)} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer" style={{ background: cityFilter === city ? 'var(--t-verde)' : 'white', color: cityFilter === city ? 'white' : INK['60'], border: cityFilter === city ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>{city}</button>
                 ))}
               </div>
             )}
-
-            {/* Neighborhood sub-chips — show when a city is selected and has multiple neighborhoods */}
             {cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 && (
               <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-1 pl-3" style={{ scrollbarWidth: 'none' }}>
-                <button
-                  onClick={() => setNeighborhoodFilter('all')}
-                  className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer"
-                  style={{
-                    background: neighborhoodFilter === 'all' ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)',
-                    color: neighborhoodFilter === 'all' ? 'var(--t-verde)' : INK['50'],
-                    border: neighborhoodFilter === 'all' ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent',
-                    fontFamily: FONT.mono,
-                  }}
-                >
-                  All areas
-                </button>
+                <button onClick={() => setNeighborhoodFilter('all')} className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer" style={{ background: neighborhoodFilter === 'all' ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)', color: neighborhoodFilter === 'all' ? 'var(--t-verde)' : INK['50'], border: neighborhoodFilter === 'all' ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent', fontFamily: FONT.mono }}>All areas</button>
                 {cityNeighborhoods[cityFilter].map(nb => (
-                  <button
-                    key={nb}
-                    onClick={() => setNeighborhoodFilter(nb)}
-                    className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer"
-                    style={{
-                      background: neighborhoodFilter === nb ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)',
-                      color: neighborhoodFilter === nb ? 'var(--t-verde)' : INK['50'],
-                      border: neighborhoodFilter === nb ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent',
-                      fontFamily: FONT.mono,
-                    }}
-                  >
-                    {nb}
-                  </button>
+                  <button key={nb} onClick={() => setNeighborhoodFilter(nb)} className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer" style={{ background: neighborhoodFilter === nb ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)', color: neighborhoodFilter === nb ? 'var(--t-verde)' : INK['50'], border: neighborhoodFilter === nb ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent', fontFamily: FONT.mono }}>{nb}</button>
                 ))}
               </div>
             )}
-
-            {/* Source filter row */}
             <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               {[
                 { key: 'all', label: 'All sources', icon: null },
@@ -381,93 +622,42 @@ function SavedPageContent() {
                 { key: 'maps', label: 'Maps', icon: 'maps' as PerriandIconName },
                 { key: 'email', label: 'Email', icon: 'email' as PerriandIconName },
               ].map(src => (
-                <button
-                  key={src.key}
-                  onClick={() => setSourceFilter(src.key)}
-                  className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer flex items-center gap-1"
-                  style={{
-                    background: sourceFilter === src.key ? 'var(--t-ink)' : 'white',
-                    color: sourceFilter === src.key ? 'white' : INK['60'],
-                    border: sourceFilter === src.key ? 'none' : '1px solid var(--t-linen)',
-                    fontFamily: FONT.mono,
-                  }}
-                >
+                <button key={src.key} onClick={() => setSourceFilter(src.key)} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer flex items-center gap-1" style={{ background: sourceFilter === src.key ? 'var(--t-ink)' : 'white', color: sourceFilter === src.key ? 'white' : INK['60'], border: sourceFilter === src.key ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>
                   {src.icon && <PerriandIcon name={src.icon} size={9} color={sourceFilter === src.key ? 'white' : INK['50']} />}
                   {src.label}
                 </button>
               ))}
             </div>
-
-            {/* Place list */}
             {filteredPlaces.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {filteredPlaces.map(place => (
-                  <PlaceCard
-                    key={place.id}
-                    place={place}
-                    onTap={() => openDetail(place)}
-                    onToggleStar={() => openShortlistPicker(place)}
-                    onLongPress={() => setAddToTripItem(place)}
-                  />
+                  <PlaceCard key={place.id} place={place} onTap={() => openDetail(place)} onToggleStar={() => openShortlistPicker(place)} onLongPress={() => setAddToTripItem(place)} />
                 ))}
               </div>
             ) : (
               <div className="text-center py-16">
                 <PerriandIcon name="discover" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
-                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all'
-                    ? 'No places match your filters'
-                    : 'No saved places yet'}
-                </p>
-                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
-                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all'
-                    ? 'Try adjusting your search or filters'
-                    : 'Import places to get started'}
-                </p>
+                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
+                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* ═══ Create Shortlist Modal ═══ */}
       {showCreateShortlist && (
         <CreateShortlistModal
           onClose={() => setShowCreateShortlist(false)}
-          onCreate={(name, emoji) => {
-            createShortlist(name, emoji);
-            setShowCreateShortlist(false);
-          }}
-          onCreateSmart={(name, emoji, query, filterTags, placeIds) => {
-            createSmartShortlist(name, emoji, query, filterTags, placeIds);
-            setShowCreateShortlist(false);
-          }}
+          onCreate={(name, emoji) => { createShortlist(name, emoji); setShowCreateShortlist(false); }}
+          onCreateSmart={(name, emoji, query, filterTags, placeIds) => { createSmartShortlist(name, emoji, query, filterTags, placeIds); setShowCreateShortlist(false); }}
         />
       )}
-
-      {/* ═══ Add to Trip sheet ═══ */}
       {addToTripItem && trips.length > 0 && (
-        <AddToTripSheet
-          place={addToTripItem}
-          trips={trips}
-          onClose={() => setAddToTripItem(null)}
-          onAdd={(tripId) => {
-            if (!addToTripItem.isShortlisted) {
-              toggleStar(addToTripItem.id);
-            }
-            setAddToTripItem(null);
-          }}
-        />
+        <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { if (!addToTripItem.isShortlisted) { toggleStar(addToTripItem.id); } setAddToTripItem(null); }} />
       )}
-
-      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
-           are all rendered by PlaceDetailProvider — no duplication needed */}
-
-      {/* Import Drawer */}
       {importOpen && (
         <ImportDrawer onClose={() => { resetImport(); importPatch({ isOpen: false }); }} />
       )}
-
       <TabBar />
     </div>
   );
@@ -519,7 +709,7 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
-      className="rounded-xl cursor-pointer transition-all overflow-hidden"
+      className="rounded-xl cursor-pointer transition-all overflow-hidden card-hover"
       style={{
         background: isStarred ? 'rgba(42,122,86,0.03)' : 'white',
         border: isStarred ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
@@ -670,6 +860,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
   onCreate: (name: string, emoji: string) => void;
   onCreateSmart: (name: string, emoji: string, query: string, filterTags: string[], placeIds: string[]) => void;
 }) {
+  const isDesktop = useIsDesktop();
   const [name, setName] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState('pin');
   const [isSmartMode, setIsSmartMode] = useState(false);
@@ -802,43 +993,57 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col"
-      style={{
-        height: '100dvh',
-        background: 'var(--t-cream)',
-        maxWidth: 480,
-        margin: '0 auto',
-      }}
-    >
-      {/* Header — fixed top bar with close */}
+    <>
+      {/* Backdrop — desktop only (mobile uses full-screen takeover) */}
+      {isDesktop && (
+        <div className="fixed inset-0 z-50 bg-black/30" onClick={onClose} style={{ opacity: 0, animation: 'fadeInBackdrop 200ms ease both' }} />
+      )}
+      {/* Centering wrapper on desktop (flex avoids transform conflict with fadeInUp) */}
       <div
-        className="flex items-center justify-between px-4 flex-shrink-0"
-        style={{
-          height: 52,
-          borderBottom: '1px solid var(--t-linen)',
-          paddingTop: 'env(safe-area-inset-top, 0)',
-        }}
+        className={isDesktop ? "fixed inset-0 z-50 flex items-center justify-center pointer-events-none" : "fixed inset-0 z-50 flex flex-col"}
+        style={!isDesktop ? { height: '100dvh', background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' } : undefined}
       >
-        <span
-          style={{ fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
+      <div
+        className={isDesktop ? "rounded-2xl flex flex-col pointer-events-auto" : "contents"}
+        style={isDesktop ? {
+          width: 520, maxHeight: '80vh',
+          background: 'var(--t-cream)',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.12)',
+          opacity: 0, animation: 'fadeInUp 250ms ease both',
+        } : undefined}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between flex-shrink-0"
+          style={{
+            height: isDesktop ? 56 : 52,
+            borderBottom: '1px solid var(--t-linen)',
+            paddingTop: isDesktop ? 0 : 'env(safe-area-inset-top, 0)',
+            padding: isDesktop ? '0 24px' : '0 16px',
+          }}
         >
-          New Shortlist
-        </span>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
-        >
-          <PerriandIcon name="close" size={12} color={INK['50']} />
-        </button>
-      </div>
+          <span
+            style={{ fontFamily: FONT.serif, fontSize: isDesktop ? 19 : 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
+          >
+            New Shortlist
+          </span>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center nav-hover"
+            style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
+          >
+            <PerriandIcon name="close" size={12} color={INK['50']} />
+          </button>
+        </div>
 
-      {/* Scrollable content */}
-      <div
-        className="flex-1 overflow-y-auto px-4 pt-4"
-        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}
-      >
+        {/* Scrollable content */}
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{
+            padding: isDesktop ? '16px 24px 24px' : '16px 16px',
+            paddingBottom: isDesktop ? 24 : 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))',
+          }}
+        >
         {/* Mode toggle */}
         <div className="flex gap-1.5 mb-4">
           <button
@@ -900,10 +1105,10 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
-              className="w-full rounded-lg py-2.5 px-3 mb-4"
+              className="w-full rounded-lg py-2.5 px-3 mb-4 focus-ring"
               style={{
                 fontSize: 16,
-                background: 'white',
+                background: isDesktop ? 'var(--t-cream)' : 'white',
                 border: '1px solid var(--t-linen)',
                 color: 'var(--t-ink)',
                 fontFamily: FONT.sans,
@@ -916,7 +1121,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             <button
               onClick={() => { if (name.trim()) onCreate(name.trim(), selectedEmoji); }}
               disabled={!name.trim()}
-              className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer"
+              className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer btn-hover"
               style={{
                 background: name.trim() ? 'var(--t-ink)' : INK['10'],
                 color: name.trim() ? 'white' : INK['30'],
@@ -1123,6 +1328,8 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
         }
       `}</style>
     </div>
+    </div>
+    </>
   );
 }
 
@@ -1140,17 +1347,22 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
   onClose: () => void;
   onAdd: (tripId: string) => void;
 }) {
+  const isDesktop = useIsDesktop();
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className={isDesktop ? "fixed inset-0 z-50 flex items-center justify-center" : "fixed inset-0 z-50 flex items-end justify-center"}
       style={{ height: '100dvh' }}
       onClick={onClose}
     >
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)', ...(isDesktop ? { opacity: 0, animation: 'fadeInBackdrop 200ms ease both' } : {}) }} />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full rounded-t-2xl px-5 pt-5 pb-8"
-        style={{ maxWidth: 480, background: 'var(--t-cream)' }}
+        className={isDesktop ? "relative rounded-2xl px-7 pt-6 pb-8" : "relative w-full rounded-t-2xl px-5 pt-5 pb-8"}
+        style={isDesktop ? {
+          width: 440, background: 'var(--t-cream)',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.12)',
+          opacity: 0, animation: 'fadeInUp 250ms ease both',
+        } : { maxWidth: 480, background: 'var(--t-cream)' }}
       >
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -1175,7 +1387,7 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
             <button
               key={trip.id}
               onClick={() => onAdd(trip.id)}
-              className="flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+              className="flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all card-hover"
               style={{ background: 'white', border: '1px solid var(--t-linen)' }}
             >
               <div>

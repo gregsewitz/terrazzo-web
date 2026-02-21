@@ -53,7 +53,7 @@ function AuthCallbackInner() {
     return (
       <div
         className="min-h-dvh flex flex-col items-center justify-center px-6"
-        style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+        style={{ background: 'var(--t-cream)' }}
       >
         <p className="text-[13px] mb-4" style={{ color: '#c44', fontFamily: FONT.sans }}>
           {error}
@@ -77,7 +77,7 @@ function AuthCallbackInner() {
   return (
     <div
       className="min-h-dvh flex flex-col items-center justify-center px-6"
-      style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+      style={{ background: 'var(--t-cream)' }}
     >
       <h1
         className="text-[24px] mb-3"
@@ -98,7 +98,7 @@ export default function AuthCallbackPage() {
       fallback={
         <div
           className="min-h-dvh flex flex-col items-center justify-center px-6"
-          style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
+          style={{ background: 'var(--t-cream)' }}
         >
           <h1
             className="text-[24px] mb-3"
