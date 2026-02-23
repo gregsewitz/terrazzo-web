@@ -8,6 +8,7 @@ import GhostCard from './GhostCard';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import ReactionPills from './ReactionPills';
 import SlotNoteBubble from './SlotNoteBubble';
+import { TransportBanner, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
@@ -80,6 +81,12 @@ export default function DayBoardView({
         const destColor = DEST_COLORS[day.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
         const shortDay = day.dayOfWeek?.slice(0, 3) || '';
         const dateNum = day.date?.replace(/\D/g, ' ').trim().split(' ').pop() || day.dayNumber;
+        // Extract month abbreviation from date string like "Jun 15"
+        const shortMonth = day.date?.match(/^([A-Za-z]+)/)?.[1] || '';
+        const dayIdx = trip.days.indexOf(day);
+        const prevDay = dayIdx > 0 ? trip.days[dayIdx - 1] : null;
+        const prevMonth = prevDay?.date?.match(/^([A-Za-z]+)/)?.[1] || '';
+        const showMonth = !prevDay || shortMonth !== prevMonth;
 
         return (
           <div
@@ -107,6 +114,21 @@ export default function DayBoardView({
               }}
             >
               <div>
+                {showMonth && (
+                  <div style={{
+                    fontFamily: FONT.mono,
+                    fontSize: 9,
+                    fontWeight: 600,
+                    color: destColor.accent,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    lineHeight: 1,
+                    marginBottom: 2,
+                    opacity: 0.7,
+                  }}>
+                    {shortMonth}
+                  </div>
+                )}
                 <div style={{ fontFamily: FONT.sans, fontSize: DAY_TITLE_SIZE, fontWeight: 700, color: destColor.text }}>
                   {shortDay} {dateNum}
                 </div>
@@ -114,23 +136,45 @@ export default function DayBoardView({
                   {day.destination || 'TBD'}
                 </div>
               </div>
-              {day.hotel && (
+              {(day.hotelInfo || day.hotel) && (
                 <div
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-                  style={{ background: `${destColor.accent}12`, maxWidth: 120 }}
+                  className="flex flex-col items-end gap-0"
+                  style={{ maxWidth: 140 }}
                 >
-                  <PerriandIcon name="hotel" size={10} color={destColor.accent} />
-                  <span
-                    className="truncate"
-                    style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: destColor.text, fontWeight: 500 }}
+                  <div
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                    style={{ background: `${destColor.accent}12` }}
                   >
-                    {day.hotel}
-                  </span>
+                    <PerriandIcon name="hotel" size={10} color={destColor.accent} />
+                    <span
+                      className="truncate"
+                      style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: destColor.text, fontWeight: 500 }}
+                    >
+                      {day.hotelInfo?.name || day.hotel}
+                    </span>
+                  </div>
+                  {day.hotelInfo?.address && (
+                    <span
+                      className="truncate px-2"
+                      style={{ fontFamily: FONT.sans, fontSize: 8, color: INK['40'], maxWidth: 140 }}
+                    >
+                      {day.hotelInfo.address}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Scrollable slot list */}
+            {/* Early departures — transports before the first slot */}
+            {getTransportsBeforeSlots(day.transport).length > 0 && (
+              <div className="flex-shrink-0">
+                {getTransportsBeforeSlots(day.transport).map(t => (
+                  <TransportBanner key={t.id} transport={t} compact />
+                ))}
+              </div>
+            )}
+
+            {/* Scrollable slot list with inter-slot transport banners */}
             <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
               {day.slots.map(slot => {
                 const icon = SLOT_ICONS[slot.id] || 'pin';
@@ -387,6 +431,11 @@ export default function DayBoardView({
                         </span>
                       </div>
                     )}
+
+                    {/* Transport banners positioned after this slot based on departure time */}
+                    {getTransportsAfterSlot(day.transport, slot.id).map(t => (
+                      <TransportBanner key={t.id} transport={t} compact />
+                    ))}
                   </div>
                 );
               })}

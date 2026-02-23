@@ -8,6 +8,7 @@ import { TravelContext, TripStatus, GeoDestination } from '@/types';
 import DestinationInput, { Destination } from '@/components/DestinationInput';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import DesktopNav from '@/components/DesktopNav';
+import DestinationAllocator from '@/components/DestinationAllocator';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
 
@@ -55,6 +56,7 @@ interface SeedData {
   companion: TravelContext;
   groupSize?: number;
   status: TripStatus;
+  dayAllocation?: Record<string, number>;
 }
 
 function TripSeedForm({ onStart }: {
@@ -293,6 +295,86 @@ function TripSeedForm({ onStart }: {
         <p className="text-center text-[11px] mt-4" style={{ color: INK['95'] }}>
           ~3 minutes · text or voice · we'll use your taste profile
         </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Step 1b: Destination Day Allocator (multi-city only)
+// ============================================================
+function DestinationAllocationStep({
+  seed,
+  onComplete,
+  onBack,
+}: {
+  seed: SeedData;
+  onComplete: (allocation: Record<string, number>) => void;
+  onBack: () => void;
+}) {
+  // Calculate total days from dates
+  const start = new Date(seed.startDate + 'T00:00:00');
+  const end = new Date(seed.endDate + 'T00:00:00');
+  const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+  // Initialize allocation: even split with remainder going to first destination
+  const [allocation, setAllocation] = useState<Record<string, number>>(() => {
+    const perDest = Math.floor(totalDays / seed.destinations.length);
+    const remainder = totalDays - perDest * seed.destinations.length;
+    const alloc: Record<string, number> = {};
+    seed.destinations.forEach((dest, i) => {
+      alloc[dest] = perDest + (i < remainder ? 1 : 0);
+    });
+    return alloc;
+  });
+
+  return (
+    <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="px-6 pt-6 pb-10 max-w-lg mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="text-4xl mb-3">
+            <PerriandIcon name="location" size={40} color="var(--t-verde)" />
+          </div>
+          <h1
+            className="text-2xl mb-2"
+            style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
+          >
+            How long in each place?
+          </h1>
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: INK['60'] }}>
+            You have {totalDays} days across {seed.destinations.length} destinations.
+            Adjust the split however you like — you can always change it later.
+          </p>
+        </div>
+
+        <DestinationAllocator
+          destinations={seed.destinations}
+          totalDays={totalDays}
+          allocation={allocation}
+          onChange={setAllocation}
+        />
+
+        {/* CTA */}
+        <button
+          onClick={() => onComplete(allocation)}
+          className="w-full py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold transition-all"
+          style={{
+            background: 'var(--t-ink)',
+            color: 'white',
+            fontFamily: FONT.sans,
+          }}
+        >
+          Looks Good
+        </button>
+
+        <button
+          onClick={onBack}
+          className="w-full text-center text-[12px] bg-transparent border-none cursor-pointer py-3 mt-1"
+          style={{ color: INK['50'] }}
+        >
+          ← Back to details
+        </button>
       </div>
     </div>
   );
@@ -614,18 +696,29 @@ function TripComplete({ seed, onDone }: {
 }
 
 // ============================================================
-// Main Page — 3 steps: seed → conversation → complete
+// Main Page — steps: seed → [allocate] → conversation → complete
 // ============================================================
 export default function NewTripPage() {
   const router = useRouter();
   const createTrip = useTripStore(s => s.createTrip);
   const isDesktop = useIsDesktop();
-  const [step, setStep] = useState<'seed' | 'conversation' | 'complete'>('seed');
+  const [step, setStep] = useState<'seed' | 'allocate' | 'conversation' | 'complete'>('seed');
   const [seed, setSeed] = useState<SeedData | null>(null);
   const [createdTripId, setCreatedTripId] = useState<string | null>(null);
 
   const handleSeedComplete = (s: SeedData) => {
     setSeed(s);
+    // If multi-destination + planning (has dates), show allocator
+    if (s.destinations.length > 1 && s.status === 'planning') {
+      setStep('allocate');
+    } else {
+      setStep('conversation');
+    }
+  };
+
+  const handleAllocationComplete = (allocation: Record<string, number>) => {
+    if (!seed) return;
+    setSeed({ ...seed, dayAllocation: allocation });
     setStep('conversation');
   };
 
@@ -642,6 +735,7 @@ export default function NewTripPage() {
       travelContext: seed.companion,
       groupSize: seed.groupSize,
       status: seed.status,
+      dayAllocation: seed.dayAllocation,
     });
 
     setCreatedTripId(tripId);
@@ -685,6 +779,13 @@ export default function NewTripPage() {
             </div>
 
             {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
+            {step === 'allocate' && seed && (
+              <DestinationAllocationStep
+                seed={seed}
+                onComplete={handleAllocationComplete}
+                onBack={() => setStep('seed')}
+              />
+            )}
             {step === 'conversation' && seed && (
               <TripConversation
                 seed={seed}
@@ -707,17 +808,24 @@ export default function NewTripPage() {
             >
               <PerriandIcon name="edit" size={20} color="var(--t-ink)" />
             </button>
-            {step === 'conversation' && (
+            {(step === 'conversation' || step === 'allocate') && (
               <span
                 className="text-base ml-1"
                 style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
               >
-                Trip Conversation
+                {step === 'allocate' ? 'Day Allocation' : 'Trip Conversation'}
               </span>
             )}
           </div>
 
           {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
+          {step === 'allocate' && seed && (
+            <DestinationAllocationStep
+              seed={seed}
+              onComplete={handleAllocationComplete}
+              onBack={() => setStep('seed')}
+            />
+          )}
           {step === 'conversation' && seed && (
             <TripConversation
               seed={seed}

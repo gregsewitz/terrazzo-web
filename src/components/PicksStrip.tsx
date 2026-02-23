@@ -7,6 +7,7 @@ import { ImportedPlace, PlaceType } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant',
@@ -82,10 +83,19 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [holdingId, setHoldingId] = useState<string | null>(null); // visual "about to drag" feedback
+  const [showAddPlace, setShowAddPlace] = useState(false);
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const currentDay = useTripStore(s => s.currentDay);
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const addPlace = useSavedStore(s => s.addPlace);
+
+  // Destination for biasing search results
+  const activeDestination = useMemo(() => {
+    if (!trip) return undefined;
+    const day = trip.days.find(d => d.dayNumber === currentDay);
+    return day?.destination || trip.location?.split(',')[0]?.trim() || undefined;
+  }, [trip, currentDay]);
 
   // Get the current day's destination info for filtering
   const currentDayInfo = useMemo(() => {
@@ -491,14 +501,15 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
           touchAction: 'pan-x',
         }}
       >
-        {stripPlaces.length === 0 ? (
+        {stripPlaces.length === 0 && !showAddPlace ? (
           <div className="flex items-center justify-center w-full py-1">
             <span className="text-[10px]" style={{ color: INK['80'] }}>
               No picks match this filter
             </span>
           </div>
         ) : (
-          stripPlaces.map((place, idx) => {
+          <>
+          {stripPlaces.map((place, idx) => {
             const typeIcon = TYPE_ICONS[place.type] || 'location';
             const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
             const isDragging = dragItemId === place.id;
@@ -593,7 +604,86 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
                 </span>
               </div>
             );
-          })
+          })}
+
+          {/* + Add place card */}
+          {showAddPlace ? (
+            <div
+              className="flex-shrink-0 rounded-xl overflow-hidden"
+              style={{
+                minWidth: 220,
+                background: 'white',
+                border: '1.5px dashed var(--t-verde)',
+                boxShadow: '0 2px 8px rgba(42,122,86,0.1)',
+              }}
+            >
+              <PlaceSearchInput
+                compact
+                destination={activeDestination}
+                placeholder="Search place…"
+                onSelect={(result: PlaceSearchResult) => {
+                  const newPlace: ImportedPlace = {
+                    id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    name: result.name,
+                    type: result.type,
+                    location: result.address || activeDestination || '',
+                    source: { type: 'text', name: 'Manual' },
+                    matchScore: 0,
+                    matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+                    tasteNote: '',
+                    status: 'available',
+                    isShortlisted: true,
+                    ...(result.placeId && {
+                      google: {
+                        placeId: result.placeId,
+                        lat: result.lat,
+                        lng: result.lng,
+                        address: result.address,
+                      },
+                    }),
+                  };
+                  addPlace(newPlace);
+                  setShowAddPlace(false);
+                }}
+                onCancel={() => setShowAddPlace(false)}
+              />
+            </div>
+          ) : (
+            <div
+              className="flex flex-col items-center flex-shrink-0 cursor-pointer select-none"
+              style={{ width: 68 }}
+              onClick={() => setShowAddPlace(true)}
+            >
+              {/* Spacer to align with grip dots */}
+              <div style={{ height: 7 }} />
+              {/* Icon */}
+              <div
+                className="rounded-xl flex items-center justify-center"
+                style={{
+                  width: 50,
+                  height: 50,
+                  border: `1.5px dashed ${INK['20']}`,
+                  background: INK['04'],
+                  transition: 'border-color 0.15s, background 0.15s',
+                }}
+              >
+                <PerriandIcon name="add" size={18} color={INK['35']} />
+              </div>
+              {/* Label */}
+              <span
+                className="text-[9px] font-medium text-center leading-tight mt-1"
+                style={{
+                  color: INK['35'],
+                  fontFamily: FONT.sans,
+                  maxWidth: '100%',
+                  lineHeight: '1.15',
+                }}
+              >
+                Add place
+              </span>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

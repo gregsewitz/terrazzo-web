@@ -2,19 +2,21 @@
 
 import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from './GhostCard';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import ReactionPills from './ReactionPills';
 import SlotNoteBubble from './SlotNoteBubble';
+import HotelInput from './HotelInput';
+import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import { FONT, INK } from '@/constants/theme';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
 
-export type TripViewMode = 'planner' | 'overview' | 'myPlaces' | 'activity';
+export type TripViewMode = 'planner' | 'overview' | 'myPlaces' | 'activity' | 'scratchpad';
 
 export interface DropTarget {
   dayNumber: number;
@@ -48,62 +50,48 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
-  const setDayHotel = useTripStore(s => s.setDayHotel);
-  const setMultipleDaysHotel = useTripStore(s => s.setMultipleDaysHotel);
+  const setDayHotelInfo = useTripStore(s => s.setDayHotelInfo);
+  const setMultipleDaysHotelInfo = useTripStore(s => s.setMultipleDaysHotelInfo);
+  const addTransport = useTripStore(s => s.addTransport);
+  const removeTransport = useTripStore(s => s.removeTransport);
+  const updateTransport = useTripStore(s => s.updateTransport);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const [dayMapOpen, setDayMapOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState(false);
-  const [hotelDraft, setHotelDraft] = useState('');
-  const [propagationPrompt, setPropagationPrompt] = useState<{ hotel: string; dayNumbers: number[]; destination: string } | null>(null);
-  const hotelInputRef = useRef<HTMLInputElement>(null);
-  // Focus hotel input when entering edit mode
-  useEffect(() => {
-    if (editingHotel && hotelInputRef.current) {
-      hotelInputRef.current.focus();
-    }
-  }, [editingHotel]);
+  const [addingTransport, setAddingTransport] = useState(false);
+  const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
 
-  // Reset hotel editing state when switching days
+  // Reset editing state when switching days
   useEffect(() => {
     setEditingHotel(false);
-    setHotelDraft('');
-    setPropagationPrompt(null);
+    setAddingTransport(false);
+    setEditingTransportId(null);
   }, [currentDay]);
 
-  const handleHotelSave = useCallback(() => {
+  const handleHotelSave = useCallback((hotelInfo: HotelInfo | null) => {
     if (!trip) return;
-    const trimmed = hotelDraft.trim();
     const dayObj = trip.days.find(d => d.dayNumber === currentDay);
     if (!dayObj) return;
 
-    setDayHotel(currentDay, trimmed);
     setEditingHotel(false);
 
-    // Smart propagation: find contiguous same-destination days without a hotel set
-    if (trimmed && dayObj.destination) {
+    // Auto-apply to ALL same-destination days
+    if (dayObj.destination) {
       const dest = dayObj.destination;
-      const eligibleDays: number[] = [];
+      const sameDest = trip.days
+        .filter(d => d.destination === dest)
+        .map(d => d.dayNumber);
 
-      // Scan forward from current day
-      for (let i = currentDay + 1; i <= trip.days.length; i++) {
-        const d = trip.days.find(td => td.dayNumber === i);
-        if (d && d.destination === dest && !d.hotel) {
-          eligibleDays.push(i);
-        } else break;
+      if (hotelInfo) {
+        setMultipleDaysHotelInfo(sameDest, hotelInfo);
+      } else {
+        // Clearing: just clear current day
+        setDayHotelInfo(currentDay, null);
       }
-      // Scan backward from current day
-      for (let i = currentDay - 1; i >= 1; i--) {
-        const d = trip.days.find(td => td.dayNumber === i);
-        if (d && d.destination === dest && !d.hotel) {
-          eligibleDays.unshift(i);
-        } else break;
-      }
-
-      if (eligibleDays.length > 0) {
-        setPropagationPrompt({ hotel: trimmed, dayNumbers: eligibleDays, destination: dest });
-      }
+    } else {
+      setDayHotelInfo(currentDay, hotelInfo);
     }
-  }, [trip, currentDay, hotelDraft, setDayHotel]);
+  }, [trip, currentDay, setDayHotelInfo, setMultipleDaysHotelInfo]);
 
   if (!trip) return null;
 
@@ -144,8 +132,8 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           style={{ background: 'var(--t-linen)' }}
         >
           {(myRole
-            ? (['overview', 'planner', 'myPlaces', 'activity'] as const)
-            : (['overview', 'planner', 'myPlaces'] as const)
+            ? (['overview', 'planner', 'myPlaces', 'activity', 'scratchpad'] as const)
+            : (['overview', 'planner', 'myPlaces', 'scratchpad'] as const)
           ).map(mode => (
             <button
               key={mode}
@@ -160,7 +148,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : mode === 'activity' ? 'Activity' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : mode === 'activity' ? 'Activity' : mode === 'scratchpad' ? 'Notes' : 'Day Planner'}
             </button>
           ))}
         </div>
@@ -182,6 +170,12 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           const dayDestColor = DEST_COLORS[d.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
           const shortDay = d.dayOfWeek?.slice(0, 3) || '';
           const dateNum = d.date?.replace(/\D/g, ' ').trim().split(' ').pop() || d.dayNumber;
+          // Extract month abbreviation from date string like "Jun 15"
+          const shortMonth = d.date?.match(/^([A-Za-z]+)/)?.[1] || '';
+          // Show month label on first day, and whenever month changes from previous day
+          const prevDay = trip.days[trip.days.indexOf(d) - 1];
+          const prevMonth = prevDay?.date?.match(/^([A-Za-z]+)/)?.[1] || '';
+          const showMonth = !prevDay || shortMonth !== prevMonth;
 
           return (
             <button
@@ -194,6 +188,20 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 background: isDayActive ? `${dayDestColor.accent}08` : 'transparent',
               }}
             >
+              {showMonth && (
+                <span style={{
+                  fontFamily: FONT.mono,
+                  fontSize: 8,
+                  fontWeight: 600,
+                  color: isDayActive ? dayDestColor.accent : INK['60'],
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  lineHeight: 1,
+                  marginBottom: 1,
+                }}>
+                  {shortMonth}
+                </span>
+              )}
               <span style={{
                 fontFamily: FONT.sans,
                 fontSize: 12,
@@ -262,60 +270,60 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             >
               <div className="flex items-center gap-2 min-w-0">
                 {editingHotel ? (
-                  <form
-                    className="flex items-center gap-1"
-                    onSubmit={(e) => { e.preventDefault(); handleHotelSave(); }}
-                  >
-                    <PerriandIcon name="hotel" size={12} color={destColor.accent} />
-                    <input
-                      ref={hotelInputRef}
-                      type="text"
-                      value={hotelDraft}
-                      onChange={(e) => setHotelDraft(e.target.value)}
-                      onBlur={handleHotelSave}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setEditingHotel(false);
-                          setHotelDraft('');
-                        }
-                      }}
-                      placeholder="Hotel name…"
-                      style={{
-                        fontFamily: FONT.sans,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: destColor.text,
-                        background: 'transparent',
-                        border: 'none',
-                        borderBottom: `1px solid ${destColor.accent}`,
-                        outline: 'none',
-                        padding: '0 2px 1px',
-                        width: 130,
-                      }}
-                    />
-                  </form>
-                ) : day.hotel ? (
+                  <HotelInput
+                    value={day.hotelInfo}
+                    legacyValue={day.hotel}
+                    onSave={handleHotelSave}
+                    onCancel={() => setEditingHotel(false)}
+                    accentColor={destColor.accent}
+                    textColor={destColor.text}
+                    destination={day.destination}
+                  />
+                ) : day.hotel || day.hotelInfo ? (
                   <button
-                    onClick={() => { setHotelDraft(day.hotel || ''); setEditingHotel(true); }}
-                    className="flex items-center gap-1"
+                    onClick={() => setEditingHotel(true)}
+                    className="flex flex-col items-start gap-0"
                     style={{
-                      fontFamily: FONT.sans,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: destColor.text,
-                      whiteSpace: 'nowrap',
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
                       padding: 0,
                     }}
                   >
-                    <PerriandIcon name="hotel" size={12} color={destColor.text} />
-                    {day.hotel}
+                    <span className="flex items-center gap-1" style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: destColor.text,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      <PerriandIcon name="hotel" size={12} color={destColor.text} />
+                      {day.hotelInfo?.name || day.hotel}
+                      {day.hotelInfo?.isCustom && (
+                        <span style={{ fontSize: 9, fontWeight: 400, color: destColor.accent, opacity: 0.7 }}>
+                          (custom)
+                        </span>
+                      )}
+                    </span>
+                    {day.hotelInfo?.address && (
+                      <span style={{
+                        fontFamily: FONT.sans,
+                        fontSize: 9,
+                        color: INK['45'],
+                        marginLeft: 16,
+                        whiteSpace: 'nowrap',
+                        maxWidth: 180,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: 'block',
+                      }}>
+                        {day.hotelInfo.address}
+                      </span>
+                    )}
                   </button>
                 ) : (
                   <button
-                    onClick={() => { setHotelDraft(''); setEditingHotel(true); }}
+                    onClick={() => setEditingHotel(true)}
                     className="flex items-center gap-1"
                     style={{
                       fontFamily: FONT.sans,
@@ -331,6 +339,33 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   >
                     <PerriandIcon name="hotel" size={12} color={`${destColor.accent}80`} />
                     + Hotel
+                  </button>
+                )}
+
+                {/* Separator */}
+                {(day.hotel || day.hotelInfo) && !editingHotel && (
+                  <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
+                )}
+
+                {/* + Transport button */}
+                {!addingTransport && !editingHotel && (
+                  <button
+                    onClick={() => setAddingTransport(true)}
+                    className="flex items-center gap-1"
+                    style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: `${destColor.accent}80`,
+                      whiteSpace: 'nowrap',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    <PerriandIcon name="plan" size={12} color={`${destColor.accent}80`} />
+                    + Travel
                   </button>
                 )}
               </div>
@@ -388,60 +423,42 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               </div>
             </div>
 
-            {/* Smart hotel propagation prompt */}
-            {propagationPrompt && (
-              <div
-                className="flex items-center justify-between px-3.5 py-2"
-                style={{
-                  background: `${destColor.accent}10`,
-                  borderBottom: `1px solid ${destColor.accent}18`,
+            {/* Hotel auto-applied to all same-destination days */}
+
+            {/* Transport input form (new transport) */}
+            {addingTransport && (
+              <TransportInput
+                fromDefault={day.destination}
+                onSave={(t) => {
+                  addTransport(currentDay, t);
+                  setAddingTransport(false);
                 }}
-              >
-                <span style={{
-                  fontFamily: FONT.sans,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: destColor.text,
-                }}>
-                  Apply <strong>{propagationPrompt.hotel}</strong> to all {propagationPrompt.destination} days?
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => {
-                      setMultipleDaysHotel(propagationPrompt.dayNumbers, propagationPrompt.hotel);
-                      setPropagationPrompt(null);
-                    }}
-                    className="px-2.5 py-1 rounded-full"
-                    style={{
-                      background: destColor.accent,
-                      color: 'white',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontFamily: FONT.sans,
-                      fontSize: 10,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Apply
-                  </button>
-                  <button
-                    onClick={() => setPropagationPrompt(null)}
-                    className="px-2.5 py-1 rounded-full"
-                    style={{
-                      background: `${destColor.accent}15`,
-                      color: destColor.accent,
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontFamily: FONT.sans,
-                      fontSize: 10,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Skip
-                  </button>
-                </div>
-              </div>
+                onCancel={() => setAddingTransport(false)}
+              />
             )}
+
+            {/* Early departures — transports before the first slot */}
+            {!addingTransport && getTransportsBeforeSlots(day.transport).map(t => (
+              editingTransportId === t.id ? (
+                <TransportInput
+                  key={t.id}
+                  initial={t}
+                  fromDefault={day.destination}
+                  onSave={(updates) => {
+                    updateTransport(currentDay, t.id, updates);
+                    setEditingTransportId(null);
+                  }}
+                  onCancel={() => setEditingTransportId(null)}
+                />
+              ) : (
+                <TransportBanner
+                  key={t.id}
+                  transport={t}
+                  onEdit={() => setEditingTransportId(t.id)}
+                  onRemove={() => removeTransport(currentDay, t.id)}
+                />
+              )
+            ))}
 
             {/* Inline map panel */}
             {dayMapOpen && (
@@ -478,7 +495,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         );
       })()}
 
-      {/* Compact time slots */}
+      {/* Compact time slots with inter-slot transport banners */}
       <div className="flex flex-col">
         {day.slots.map((slot, idx) => {
           // Filter collaboration data for this slot
@@ -493,32 +510,60 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             n => n.dayNumber === day.dayNumber && n.slotId === slot.id
           ) || [];
 
+          // Transport banners that should appear AFTER this slot
+          const transportsAfter = !addingTransport
+            ? getTransportsAfterSlot(day.transport, slot.id)
+            : [];
+
           return (
-            <TimeSlotCard
-              key={slot.id}
-              slot={slot}
-              dayNumber={day.dayNumber}
-              destColor={destColor}
-              onTapDetail={onTapDetail}
-              onOpenUnsorted={onOpenUnsorted}
-              onOpenForSlot={onOpenForSlot}
-              allSlots={day.slots}
-              slotIndex={idx}
-              isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
-              onRegisterRef={onRegisterSlotRef
-                ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
-                : undefined}
-              onDragStartFromSlot={onDragStartFromSlot}
-              dragItemId={dragItemId}
-              onUnplace={onUnplace}
-              suggestions={slotSuggestions}
-              reactions={slotReactions}
-              slotNoteItems={slotNoteItems}
-              myRole={myRole}
-              onRespondSuggestion={onRespondSuggestion}
-              onAddReaction={onAddReaction}
-              onAddSlotNote={onAddSlotNote ? (content: string) => onAddSlotNote(day.dayNumber, slot.id, content) : undefined}
-            />
+            <div key={slot.id}>
+              <TimeSlotCard
+                slot={slot}
+                dayNumber={day.dayNumber}
+                destColor={destColor}
+                onTapDetail={onTapDetail}
+                onOpenUnsorted={onOpenUnsorted}
+                onOpenForSlot={onOpenForSlot}
+                allSlots={day.slots}
+                slotIndex={idx}
+                isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
+                onRegisterRef={onRegisterSlotRef
+                  ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
+                  : undefined}
+                onDragStartFromSlot={onDragStartFromSlot}
+                dragItemId={dragItemId}
+                onUnplace={onUnplace}
+                suggestions={slotSuggestions}
+                reactions={slotReactions}
+                slotNoteItems={slotNoteItems}
+                myRole={myRole}
+                onRespondSuggestion={onRespondSuggestion}
+                onAddReaction={onAddReaction}
+                onAddSlotNote={onAddSlotNote ? (content: string) => onAddSlotNote(day.dayNumber, slot.id, content) : undefined}
+              />
+              {/* Transport banners positioned after this slot based on departure time */}
+              {transportsAfter.map(t => (
+                editingTransportId === t.id ? (
+                  <TransportInput
+                    key={t.id}
+                    initial={t}
+                    fromDefault={day.destination}
+                    onSave={(updates) => {
+                      updateTransport(currentDay, t.id, updates);
+                      setEditingTransportId(null);
+                    }}
+                    onCancel={() => setEditingTransportId(null)}
+                  />
+                ) : (
+                  <TransportBanner
+                    key={t.id}
+                    transport={t}
+                    onEdit={() => setEditingTransportId(t.id)}
+                    onRemove={() => removeTransport(currentDay, t.id)}
+                  />
+                )
+              ))}
+            </div>
           );
         })}
       </div>
@@ -590,10 +635,10 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {d.hotel && (
+                  {(d.hotelInfo || d.hotel) && (
                     <span className="flex items-center gap-1" style={{ fontFamily: FONT.sans, fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
                       <PerriandIcon name="hotel" size={11} color={dColor.accent} />
-                      {d.hotel}
+                      {d.hotelInfo?.name || d.hotel}
                     </span>
                   )}
                   <span style={{ fontFamily: FONT.mono, fontSize: 9, color: dColor.accent, opacity: 0.6 }}>

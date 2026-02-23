@@ -6,6 +6,7 @@ import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import ActivityFeed from '@/components/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import Scratchpad from '@/components/Scratchpad';
 import { FONT, INK } from '@/constants/theme';
 import { DEST_COLORS } from '@/types';
 import type { Activity } from '@/stores/collaborationStore';
@@ -19,7 +20,6 @@ interface RightPanelProps {
 export default function RightPanel({ activities }: RightPanelProps) {
   const [collapsed, setCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<RightPanelTab>('notes');
-  const [notes, setNotes] = useState('');
 
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
@@ -212,31 +212,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
         {activeTab === 'notes' && (
-          <div className="p-3">
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Trip notes, ideas, links..."
-              className="w-full rounded-lg resize-none focus-ring"
-              style={{
-                minHeight: 120,
-                padding: '10px 12px',
-                background: 'white',
-                border: '1px solid var(--t-linen)',
-                fontFamily: FONT.sans,
-                fontSize: 12,
-                color: 'var(--t-ink)',
-                outline: 'none',
-                lineHeight: 1.6,
-              }}
-            />
-            <p
-              className="mt-1.5"
-              style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['35'], letterSpacing: 0.3 }}
-            >
-              SCRATCHPAD — AUTO-SAVED LOCALLY
-            </p>
-          </div>
+          <Scratchpad compact />
         )}
 
         {activeTab === 'logistics' && (
@@ -257,11 +233,11 @@ export default function RightPanel({ activities }: RightPanelProps) {
                       <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: destColor.text }}>
                         Day {day.dayNumber} — {day.destination || 'TBD'}
                       </span>
-                      {day.hotel && (
+                      {(day.hotelInfo || day.hotel) && (
                         <div className="flex items-center gap-1">
                           <PerriandIcon name="hotel" size={10} color={destColor.accent} />
                           <span style={{ fontFamily: FONT.sans, fontSize: 10, color: destColor.accent }}>
-                            {day.hotel}
+                            {day.hotelInfo?.name || day.hotel}
                           </span>
                         </div>
                       )}

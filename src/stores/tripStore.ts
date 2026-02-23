@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Trip, ImportedPlace, TripDay, TimeSlot, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData } from '@/types';
+import { Trip, ImportedPlace, TripDay, TimeSlot, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData, ScratchpadEntry, HotelInfo, TransportEvent } from '@/types';
 import { apiFetch } from '@/lib/api-client';
 
 // ═══════════════════════════════════════════
@@ -104,7 +104,19 @@ interface TripState {
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
   setDayHotel: (dayNumber: number, hotel: string) => void;
   setMultipleDaysHotel: (dayNumbers: number[], hotel: string) => void;
+  setDayHotelInfo: (dayNumber: number, hotelInfo: HotelInfo | null) => void;
+  setMultipleDaysHotelInfo: (dayNumbers: number[], hotelInfo: HotelInfo) => void;
+  // Transport
+  addTransport: (dayNumber: number, transport: Omit<TransportEvent, 'id'>) => void;
+  updateTransport: (dayNumber: number, transportId: string, updates: Partial<TransportEvent>) => void;
+  removeTransport: (dayNumber: number, transportId: string) => void;
+  // Scratchpad
+  addScratchpadEntry: (entry: Omit<ScratchpadEntry, 'id' | 'createdAt'>) => void;
+  updateScratchpadEntry: (entryId: string, updates: Partial<ScratchpadEntry>) => void;
+  removeScratchpadEntry: (entryId: string) => void;
+  toggleScratchpadPin: (entryId: string) => void;
   createTrip: (data: TripCreationData) => string; // returns new trip id
+  graduateToPlanning: (startDate: string, endDate: string, dayAllocation?: Record<string, number>) => void;
   hydrateFromDB: (trips: DBTrip[]) => void;
 }
 
@@ -468,6 +480,181 @@ export const useTripStore = create<TripState>((set, get) => ({
     });
   },
 
+  setDayHotelInfo: (dayNumber, hotelInfo) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          d.dayNumber === dayNumber
+            ? {
+                ...d,
+                hotel: hotelInfo?.name || undefined,
+                hotelInfo: hotelInfo || undefined,
+              }
+            : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  setMultipleDaysHotelInfo: (dayNumbers, hotelInfo) => {
+    const daySet = new Set(dayNumbers);
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          daySet.has(d.dayNumber)
+            ? {
+                ...d,
+                hotel: hotelInfo.name,
+                hotelInfo,
+              }
+            : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  // ─── Transport ───
+  addTransport: (dayNumber, transport) => {
+    const newTransport: TransportEvent = {
+      ...transport,
+      id: `tr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    };
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          d.dayNumber === dayNumber
+            ? { ...d, transport: [...(d.transport || []), newTransport] }
+            : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  updateTransport: (dayNumber, transportId, updates) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          d.dayNumber === dayNumber
+            ? {
+                ...d,
+                transport: (d.transport || []).map(t =>
+                  t.id === transportId ? { ...t, ...updates } : t
+                ),
+              }
+            : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  removeTransport: (dayNumber, transportId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          d.dayNumber === dayNumber
+            ? { ...d, transport: (d.transport || []).filter(t => t.id !== transportId) }
+            : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  // ─── Scratchpad ───
+  addScratchpadEntry: (entry) => {
+    const newEntry: ScratchpadEntry = {
+      ...entry,
+      id: `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        scratchpad: [...(trip.scratchpad || []), newEntry],
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { scratchpad: t.scratchpad } : {};
+    });
+  },
+
+  updateScratchpadEntry: (entryId, updates) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        scratchpad: (trip.scratchpad || []).map(e =>
+          e.id === entryId ? { ...e, ...updates } : e
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { scratchpad: t.scratchpad } : {};
+    });
+  },
+
+  removeScratchpadEntry: (entryId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        scratchpad: (trip.scratchpad || []).filter(e => e.id !== entryId),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { scratchpad: t.scratchpad } : {};
+    });
+  },
+
+  toggleScratchpadPin: (entryId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        scratchpad: (trip.scratchpad || []).map(e =>
+          e.id === entryId ? { ...e, pinned: !e.pinned } : e
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { scratchpad: t.scratchpad } : {};
+    });
+  },
+
   createTrip: (data: TripCreationData) => {
     const id = `trip-${Date.now()}`;
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -478,28 +665,47 @@ export const useTripStore = create<TripState>((set, get) => ({
     const end = new Date(data.endDate + 'T00:00:00');
     const numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
 
+    // Build destination-to-day mapping
+    // If dayAllocation provided, use it; otherwise distribute evenly
+    const destOrder: string[] = [];
+    if (data.dayAllocation && data.destinations.length > 1) {
+      for (const dest of data.destinations) {
+        const count = data.dayAllocation[dest] || 1;
+        for (let d = 0; d < count; d++) destOrder.push(dest);
+      }
+      while (destOrder.length < numDays) destOrder.push(data.destinations[data.destinations.length - 1]);
+      if (destOrder.length > numDays) destOrder.length = numDays;
+    } else if (data.destinations.length > 1) {
+      for (let i = 0; i < numDays; i++) {
+        const destIdx = Math.min(Math.floor(i / (numDays / data.destinations.length)), data.destinations.length - 1);
+        destOrder.push(data.destinations[destIdx] || data.destinations[0]);
+      }
+    } else {
+      for (let i = 0; i < numDays; i++) destOrder.push(data.destinations[0]);
+    }
+
+    // For dreaming trips without dates, create a minimal placeholder structure
+    const isDreaming = data.status === 'dreaming';
+
     // Generate day structure with empty time slots
-    const days: TripDay[] = Array.from({ length: numDays }, (_, i) => {
-      const date = new Date(start);
-      date.setDate(date.getDate() + i);
+    const days: TripDay[] = isDreaming
+      ? [] // dreaming trips start with no day structure — it's a collection/mood board
+      : Array.from({ length: numDays }, (_, i) => {
+          const date = new Date(start);
+          date.setDate(date.getDate() + i);
 
-      // Distribute destinations across days for multi-city
-      const destIdx = data.destinations.length > 1
-        ? Math.min(Math.floor(i / (numDays / data.destinations.length)), data.destinations.length - 1)
-        : 0;
-
-      return {
-        dayNumber: i + 1,
-        date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
-        dayOfWeek: dayNames[date.getDay()],
-        destination: data.destinations[destIdx] || data.destinations[0],
-        slots: DEFAULT_TIME_SLOTS.map(s => ({
-          ...s,
-          places: [],
-          ghostItems: [],
-        })),
-      };
-    });
+          return {
+            dayNumber: i + 1,
+            date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
+            dayOfWeek: dayNames[date.getDay()],
+            destination: destOrder[i],
+            slots: DEFAULT_TIME_SLOTS.map(s => ({
+              ...s,
+              places: [],
+              ghostItems: [],
+            })),
+          };
+        });
 
     const newTrip: Trip = {
       id,
@@ -536,6 +742,66 @@ export const useTripStore = create<TripState>((set, get) => ({
     });
 
     return id;
+  },
+
+  // Graduate a dreaming trip to planning — generates day structure from dates
+  graduateToPlanning: (startDate, endDate, dayAllocation) => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    set(state => {
+      const trip = state.trips.find(t => t.id === state.currentTripId);
+      if (!trip) return state;
+
+      const start = new Date(startDate + 'T00:00:00');
+      const end = new Date(endDate + 'T00:00:00');
+      const numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      const dests = trip.destinations || [trip.location];
+
+      // Build destination order
+      const destOrder: string[] = [];
+      if (dayAllocation && dests.length > 1) {
+        for (const dest of dests) {
+          const count = dayAllocation[dest] || 1;
+          for (let d = 0; d < count; d++) destOrder.push(dest);
+        }
+        while (destOrder.length < numDays) destOrder.push(dests[dests.length - 1]);
+        if (destOrder.length > numDays) destOrder.length = numDays;
+      } else if (dests.length > 1) {
+        for (let i = 0; i < numDays; i++) {
+          const destIdx = Math.min(Math.floor(i / (numDays / dests.length)), dests.length - 1);
+          destOrder.push(dests[destIdx] || dests[0]);
+        }
+      } else {
+        for (let i = 0; i < numDays; i++) destOrder.push(dests[0]);
+      }
+
+      const days: TripDay[] = Array.from({ length: numDays }, (_, i) => {
+        const date = new Date(start);
+        date.setDate(date.getDate() + i);
+        return {
+          dayNumber: i + 1,
+          date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
+          dayOfWeek: dayNames[date.getDay()],
+          destination: destOrder[i],
+          slots: DEFAULT_TIME_SLOTS.map(s => ({ ...s, places: [], ghostItems: [] })),
+        };
+      });
+
+      return {
+        trips: state.trips.map(t =>
+          t.id === trip.id
+            ? { ...t, status: 'planning' as const, startDate, endDate, days }
+            : t
+        ),
+      };
+    });
+
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, status: t.status, startDate, endDate } : {};
+    });
   },
 
   // ─── DB Hydration ───

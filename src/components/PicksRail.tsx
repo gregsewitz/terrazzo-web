@@ -3,10 +3,11 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace } from '@/types';
+import { ImportedPlace, PlaceType } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
@@ -46,9 +47,11 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
+  const [showAddPlace, setShowAddPlace] = useState(false);
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const addPlace = useSavedStore(s => s.addPlace);
 
   // Day options for the selector
   const dayOptions = useMemo(() => {
@@ -372,7 +375,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
           );
         })}
 
-        {sortedPicks.length === 0 && (
+        {sortedPicks.length === 0 && !showAddPlace && (
           <div className="flex flex-col items-center justify-center py-8 px-3">
             <PerriandIcon name="discover" size={20} color={INK['20']} />
             <span
@@ -382,6 +385,69 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
               {allPicks.length === 0 ? 'No unplaced picks' : 'No picks match this filter'}
             </span>
           </div>
+        )}
+
+        {/* + Add place — inline search or button */}
+        {showAddPlace ? (
+          <div
+            className="flex-shrink-0 rounded-lg mx-1 mb-1"
+            style={{ background: INK['04'], border: `1px dashed ${INK['15']}` }}
+          >
+            <PlaceSearchInput
+              compact
+              destination={activeDestination || trip?.location}
+              placeholder="Search for a place…"
+              onSelect={(result: PlaceSearchResult) => {
+                // Create an ImportedPlace and add to library + shortlist
+                const newPlace: ImportedPlace = {
+                  id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                  name: result.name,
+                  type: result.type,
+                  location: result.address || activeDestination || trip?.location || '',
+                  source: { type: 'text', name: 'Manual' },
+                  matchScore: 0,
+                  matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+                  tasteNote: '',
+                  status: 'available',
+                  isShortlisted: true,
+                  ...(result.placeId && {
+                    google: {
+                      placeId: result.placeId,
+                      lat: result.lat,
+                      lng: result.lng,
+                      address: result.address,
+                    },
+                  }),
+                };
+                addPlace(newPlace);
+                setShowAddPlace(false);
+              }}
+              onCancel={() => setShowAddPlace(false)}
+            />
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAddPlace(true)}
+            className="flex items-center gap-2 flex-shrink-0 mx-1 mb-1 py-2.5 px-3 rounded-lg transition-all"
+            style={{
+              background: 'transparent',
+              border: `1px dashed ${INK['15']}`,
+              cursor: 'pointer',
+              width: 'calc(100% - 8px)',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = INK['04']; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--t-verde)12' }}
+            >
+              <PerriandIcon name="add" size={14} color="var(--t-verde)" />
+            </div>
+            <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: INK['40'] }}>
+              Add a place
+            </span>
+          </button>
         )}
       </div>
     </div>

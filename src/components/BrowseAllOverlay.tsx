@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant',
@@ -40,7 +41,9 @@ interface BrowseAllOverlayProps {
 export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }: BrowseAllOverlayProps) {
   const { filter: filterType, setFilter: setFilterType, toggle: toggleFilter } = useTypeFilter(initialFilter || 'all');
   const toggleStar = useSavedStore(s => s.toggleStar);
+  const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const [showAddPlace, setShowAddPlace] = useState(false);
 
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
@@ -149,6 +152,61 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
 
         {/* List */}
         <div className="flex-1 overflow-y-auto px-4 pb-20" style={{ scrollbarWidth: 'thin' }}>
+          {/* + Add place */}
+          {showAddPlace ? (
+            <div
+              className="rounded-xl mb-2 overflow-hidden"
+              style={{ background: 'white', border: '1.5px dashed var(--t-verde)' }}
+            >
+              <PlaceSearchInput
+                destination={tripDestinations?.[0] || undefined}
+                suggestedType={initialFilter}
+                placeholder="Search for a place…"
+                onSelect={(result: PlaceSearchResult) => {
+                  const newPlace: ImportedPlace = {
+                    id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    name: result.name,
+                    type: result.type,
+                    location: result.address || (tripDestinations as string[])?.[0] || '',
+                    source: { type: 'text', name: 'Manual' },
+                    matchScore: 0,
+                    matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+                    tasteNote: '',
+                    status: 'available',
+                    isShortlisted: true,
+                    ...(result.placeId && {
+                      google: {
+                        placeId: result.placeId,
+                        lat: result.lat,
+                        lng: result.lng,
+                        address: result.address,
+                      },
+                    }),
+                  };
+                  addPlace(newPlace);
+                  setShowAddPlace(false);
+                }}
+                onCancel={() => setShowAddPlace(false)}
+              />
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddPlace(true)}
+              className="flex items-center gap-2.5 w-full p-3 rounded-xl mb-2 cursor-pointer transition-all"
+              style={{ background: 'white', border: '1px dashed var(--t-linen)' }}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(42,122,86,0.08)' }}
+              >
+                <PerriandIcon name="add" size={16} color="var(--t-verde)" />
+              </div>
+              <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'var(--t-verde)' }}>
+                Add a new place
+              </span>
+            </button>
+          )}
+
           {sortedPlaces.map(place => {
             const isStarred = place.isShortlisted;
             const typeIcon = TYPE_ICONS[place.type] || 'location';

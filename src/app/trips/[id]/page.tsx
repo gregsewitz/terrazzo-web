@@ -29,6 +29,9 @@ import DayBoardView from '@/components/DayBoardView';
 import PicksGrid from '@/components/PicksGrid';
 import PicksRail from '@/components/PicksRail';
 import RightPanel from '@/components/RightPanel';
+import DreamingBoard from '@/components/DreamingBoard';
+import GraduateModal from '@/components/GraduateModal';
+import Scratchpad from '@/components/Scratchpad';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 // ─── Auto-scroll config for drag near edges ───
@@ -71,6 +74,7 @@ function TripDetailContent() {
   const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
+  const [showGraduateModal, setShowGraduateModal] = useState(false);
 
   // Desktop resizable split
   const [boardHeight, setBoardHeight] = useState(60); // percentage of left workspace
@@ -335,6 +339,14 @@ function TripDetailContent() {
             <h1 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
               {trip.name}
             </h1>
+            {trip.status === 'dreaming' && (
+              <span
+                className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[1px]"
+                style={{ background: 'rgba(200,146,58,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
+              >
+                Dreaming
+              </span>
+            )}
             {trip.startDate && trip.endDate && (
               <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['50'] }}>
                 {formatDateRange(trip.startDate, trip.endDate)}
@@ -415,50 +427,58 @@ function TripDetailContent() {
           </div>
         </div>
 
-        {/* Three-panel layout: picks rail | itinerary board | collapsible right panel */}
-        <div className="flex flex-1 min-h-0">
-          {/* ── LEFT: PICKS RAIL ── */}
-          <PicksRail
-            onTapDetail={openDetail}
-            width={railWidth}
-            onResizeStart={handleRailResizeStart}
-            onUnplace={(placeId, fromDay, fromSlot) => unplaceFromSlot(fromDay, fromSlot, placeId)}
-            selectedDay={selectedRailDay}
-            onSelectedDayChange={setSelectedRailDay}
-          />
-
-          {/* ── CENTER: ITINERARY BOARD ── */}
-          <div
-            className="flex-1 min-w-0 overflow-hidden"
-          >
-            <DayBoardView
+        {/* Main content area — switches between dreaming board and planning grid */}
+        {trip.status === 'dreaming' ? (
+          <div className="flex flex-1 min-h-0">
+            <DreamingBoard
               onTapDetail={openDetail}
-              suggestions={collabSuggestions}
-              reactions={collabReactions}
-              slotNotes={collabSlotNotes}
-              myRole={collabMyRole}
-              onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
-              onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
-              onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
-              onDropPlace={(placeId, dayNumber, slotId) => {
-                const place = myPlaces.find(p => p.id === placeId);
-                if (place) placeFromSaved(place, dayNumber, slotId);
-              }}
-              onMovePlace={(placeId, fromDay, fromSlot, toDay, toSlot) => {
-                const place = myPlaces.find(p => p.id === placeId);
-                if (place) moveToSlot(place, fromDay, fromSlot, toDay, toSlot);
-              }}
-              onUnplace={(placeId, dayNumber, slotId) => {
-                unplaceFromSlot(dayNumber, slotId, placeId);
-              }}
-              onDaySelect={setSelectedRailDay}
-              selectedDay={selectedRailDay}
+              onGraduate={() => setShowGraduateModal(true)}
             />
+            <RightPanel activities={collabActivities} />
           </div>
+        ) : (
+          <div className="flex flex-1 min-h-0">
+            {/* ── LEFT: PICKS RAIL ── */}
+            <PicksRail
+              onTapDetail={openDetail}
+              width={railWidth}
+              onResizeStart={handleRailResizeStart}
+              onUnplace={(placeId, fromDay, fromSlot) => unplaceFromSlot(fromDay, fromSlot, placeId)}
+              selectedDay={selectedRailDay}
+              onSelectedDayChange={setSelectedRailDay}
+            />
 
-          {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
-          <RightPanel activities={collabActivities} />
-        </div>
+            {/* ── CENTER: ITINERARY BOARD ── */}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <DayBoardView
+                onTapDetail={openDetail}
+                suggestions={collabSuggestions}
+                reactions={collabReactions}
+                slotNotes={collabSlotNotes}
+                myRole={collabMyRole}
+                onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
+                onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
+                onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
+                onDropPlace={(placeId, dayNumber, slotId) => {
+                  const place = myPlaces.find(p => p.id === placeId);
+                  if (place) placeFromSaved(place, dayNumber, slotId);
+                }}
+                onMovePlace={(placeId, fromDay, fromSlot, toDay, toSlot) => {
+                  const place = myPlaces.find(p => p.id === placeId);
+                  if (place) moveToSlot(place, fromDay, fromSlot, toDay, toSlot);
+                }}
+                onUnplace={(placeId, dayNumber, slotId) => {
+                  unplaceFromSlot(dayNumber, slotId, placeId);
+                }}
+                onDaySelect={setSelectedRailDay}
+                selectedDay={selectedRailDay}
+              />
+            </div>
+
+            {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
+            <RightPanel activities={collabActivities} />
+          </div>
+        )}
 
         {/* Overlays shared between mobile/desktop */}
         {browseAllOpen && (
@@ -485,6 +505,9 @@ function TripDetailContent() {
             resourceName={trip.name}
             onClose={() => setShowShareSheet(false)}
           />
+        )}
+        {showGraduateModal && (
+          <GraduateModal onClose={() => setShowGraduateModal(false)} />
         )}
         <ChatSidebar
           isOpen={chatOpen}
@@ -586,6 +609,14 @@ function TripDetailContent() {
 
       {/* Main content — fills available space between top and tab bar */}
       <div className="flex-1 flex flex-col min-h-0">
+        {trip.status === 'dreaming' ? (
+          /* Dreaming mode — mood board / collection view */
+          <DreamingBoard
+            onTapDetail={openDetail}
+            onGraduate={() => setShowGraduateModal(true)}
+          />
+        ) : (
+          <>
         {/* Day Planner (includes header + 3-way toggle for all modes) */}
         <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto">
           <DayPlanner
@@ -620,6 +651,10 @@ function TripDetailContent() {
           {viewMode === 'activity' && (
             <ActivityFeed activities={collabActivities} />
           )}
+
+          {viewMode === 'scratchpad' && (
+            <Scratchpad />
+          )}
         </div>
 
         {/* Picks Strip — pinned at bottom above tab bar */}
@@ -635,6 +670,8 @@ function TripDetailContent() {
               returningPlaceId={returningPlaceId}
             />
           </div>
+        )}
+          </>
         )}
       </div>
 
@@ -687,6 +724,11 @@ function TripDetailContent() {
           resourceName={trip.name}
           onClose={() => setShowShareSheet(false)}
         />
+      )}
+
+      {/* Graduate Modal (dreaming → planning) */}
+      {showGraduateModal && (
+        <GraduateModal onClose={() => setShowGraduateModal(false)} />
       )}
 
       {/* Chat Sidebar */}

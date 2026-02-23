@@ -190,13 +190,64 @@ export interface TimeSlot {
   ghostItems?: ImportedPlace[]; // proposed items (ghost cards) for this slot
 }
 
+// ─── Hotel / Accommodation ───
+export interface HotelInfo {
+  name: string;
+  placeId?: string;        // Google Places ID for enrichment
+  address?: string;        // formatted address
+  lat?: number;
+  lng?: number;
+  isCustom?: boolean;      // true for Airbnbs, villas, etc. (no placeId)
+}
+
+// ─── Transport / Travel Events ───
+export type TransportMode = 'flight' | 'train' | 'ferry' | 'bus' | 'drive' | 'other';
+
+export interface TransportEvent {
+  id: string;
+  mode: TransportMode;
+  from: string;                 // origin city/station/airport
+  to: string;                   // destination city/station/airport
+  departureTime?: string;       // e.g. "14:30" or "2:30 PM"
+  arrivalTime?: string;
+  details?: string;             // flight number, booking ref, etc.
+  isConfirmed?: boolean;        // true = from email sync or confirmed booking
+  /** Which slot boundary this renders after: e.g. 'morning' means between morning & lunch */
+  afterSlot?: string;
+}
+
+export const TRANSPORT_ICONS: Record<TransportMode, PerriandIconName> = {
+  flight: 'discover',
+  train: 'plan',
+  ferry: 'discover',
+  bus: 'plan',
+  drive: 'location',
+  other: 'plan',
+};
+
 export interface TripDay {
   dayNumber: number;
   date?: string;
   dayOfWeek?: string;
   destination?: string; // city name for multi-destination trips
-  hotel?: string;
+  hotel?: string;              // legacy plain-text field
+  hotelInfo?: HotelInfo;       // structured hotel data
+  transport?: TransportEvent[];
   slots: TimeSlot[];
+}
+
+// ─── Scratchpad ───
+export type ScratchpadEntryType = 'note' | 'link' | 'checklist';
+
+export interface ScratchpadEntry {
+  id: string;
+  type: ScratchpadEntryType;
+  content: string;           // text for notes, URL for links
+  title?: string;            // display title for links, or checklist title
+  items?: { text: string; done: boolean }[]; // checklist items
+  pinned?: boolean;
+  createdAt: string;         // ISO timestamp
+  color?: string;            // optional accent color
 }
 
 export interface Trip {
@@ -212,6 +263,7 @@ export interface Trip {
   status?: TripStatus;
   days: TripDay[];
   pool: ImportedPlace[];
+  scratchpad?: ScratchpadEntry[]; // freeform notes, links, checklists
 }
 
 // Rating system types
@@ -261,6 +313,7 @@ export interface TripCreationData {
   travelContext: TravelContext;
   groupSize?: number; // for friends/family
   status: TripStatus;
+  dayAllocation?: Record<string, number>; // e.g. { "Tokyo": 6, "Kyoto": 4 } — days per destination
 }
 
 export interface AISuggestion {
