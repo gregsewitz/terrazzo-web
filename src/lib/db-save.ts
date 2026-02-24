@@ -72,6 +72,23 @@ async function processQueue() {
       notify();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Save failed';
+      const isAuthError = msg.includes('401') || msg.includes('Unauthorized') || msg.includes('403');
+
+      // Auth errors (401/403) — don't retry, don't surface loudly.
+      // These happen when token is expired or user isn't signed in yet.
+      // The old fire-and-forget pattern silently swallowed these.
+      if (isAuthError) {
+        console.warn(`[dbSave] Auth error (skipping):`, save.url, msg);
+        _queue.shift();
+        _pendingCount = _queue.length;
+        if (_queue.length === 0) {
+          _status = 'idle';
+          _lastError = undefined;
+        }
+        notify();
+        continue;
+      }
+
       console.error(`[dbSave] Failed (attempt ${save.retries + 1}/${MAX_RETRIES}):`, save.url, msg);
 
       if (save.retries < MAX_RETRIES - 1) {
