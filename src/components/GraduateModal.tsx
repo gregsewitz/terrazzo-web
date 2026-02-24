@@ -11,7 +11,10 @@ interface GraduateModalProps {
 }
 
 export default function GraduateModal({ onClose }: GraduateModalProps) {
-  const trip = useTripStore(s => s.currentTrip());
+  // Use stable selectors — calling store methods in selectors returns new refs every render
+  const trips = useTripStore(s => s.trips);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const graduateToPlanning = useTripStore(s => s.graduateToPlanning);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');

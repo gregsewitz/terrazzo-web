@@ -18,6 +18,42 @@ function saveProfileToDB(data: Record<string, unknown>) {
   }).catch(err => console.warn('[onboardingStore] DB save failed:', err));
 }
 
+/** Milestones at which we re-synthesize the full taste profile */
+const RESYNTHESIS_MILESTONES = new Set([10, 25, 50, 75, 95]);
+
+/** Re-synthesize the full taste profile from all signals + contradictions */
+async function resynthesizeProfile() {
+  try {
+    const state = useOnboardingStore.getState();
+    const res = await apiFetch<GeneratedTasteProfile>('/api/onboarding/synthesize', {
+      method: 'POST',
+      body: JSON.stringify({
+        signals: state.allSignals,
+        messages: state.allMessages,
+        contradictions: state.allContradictions,
+        certainties: state.certainties,
+      }),
+    });
+
+    if (res && res.overallArchetype) {
+      useOnboardingStore.setState({ generatedProfile: res });
+      // Persist to DB
+      saveProfileToDB({ tasteProfile: res });
+      console.log('[mosaic] Profile re-synthesized:', res.overallArchetype);
+    }
+  } catch (err) {
+    console.warn('[mosaic] Re-synthesis failed (non-blocking):', err);
+  }
+}
+
+/** A single mosaic answer record for persistence */
+export interface MosaicAnswer {
+  questionId: number;
+  axes: Record<string, number>;   // axis deltas applied
+  signals: string[];              // signals emitted
+  answeredAt: number;             // timestamp
+}
+
 interface OnboardingState {
   // ─── Progress ───
   isComplete: boolean;
@@ -32,6 +68,10 @@ interface OnboardingState {
   allMessages: ConversationMessage[];
   allContradictions: TasteContradiction[];
   generatedProfile: GeneratedTasteProfile | null;
+
+  // ─── Expand Your Mosaic ───
+  mosaicAnswers: MosaicAnswer[];      // full answer log (persisted)
+  mosaicAxes: Record<string, number>; // accumulated axis values (running totals, start at 0.5)
 
   // ─── Life Context ───
   lifeContext: OnboardingLifeContext;
@@ -63,6 +103,7 @@ interface OnboardingState {
   setGoBackPlace: (place: GoBackPlace) => void;
   setLiveMode: (live: boolean) => void;
   finishOnboarding: (depth: OnboardingDepth) => void;
+  recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   reset: () => void;
 }
 
@@ -88,6 +129,8 @@ export const useOnboardingStore = create<OnboardingState>()(
       allMessages: [],
       allContradictions: [],
       generatedProfile: null,
+      mosaicAnswers: [],
+      mosaicAxes: {},
       lifeContext: { ...INITIAL_LIFE_CONTEXT },
       seedTrips: [],
       trustedSources: [],
@@ -158,6 +201,46 @@ export const useOnboardingStore = create<OnboardingState>()(
         });
       },
 
+      recordMosaicAnswer: (questionId, axes, signals) => {
+        const state = get();
+
+        // Build new answer record
+        const answer: MosaicAnswer = { questionId, axes, signals, answeredAt: Date.now() };
+        const newAnswers = [...state.mosaicAnswers, answer];
+
+        // Accumulate axis deltas (start at 0.5, clamp 0–1)
+        const newAxes = { ...state.mosaicAxes };
+        for (const [axis, delta] of Object.entries(axes)) {
+          const current = newAxes[axis] ?? 0.5;
+          newAxes[axis] = Math.max(0, Math.min(1, current + delta));
+        }
+
+        // Convert to TasteSignals and append to allSignals
+        const newTasteSignals: TasteSignal[] = signals.map(tag => ({
+          tag,
+          cat: 'Mosaic',
+          confidence: 0.75,
+        }));
+        const newAllSignals = [...state.allSignals, ...newTasteSignals];
+
+        set({
+          mosaicAnswers: newAnswers,
+          mosaicAxes: newAxes,
+          allSignals: newAllSignals,
+        });
+
+        // Fire-and-forget save to DB — persist signals + mosaic axes
+        saveProfileToDB({
+          allSignals: newAllSignals,
+          mosaicData: { answers: newAnswers, axes: newAxes },
+        });
+
+        // Trigger re-synthesis at milestones (non-blocking)
+        if (RESYNTHESIS_MILESTONES.has(newAnswers.length)) {
+          resynthesizeProfile();
+        }
+      },
+
       reset: () => set({
         isComplete: false,
         currentPhaseIndex: 0,
@@ -169,6 +252,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         allMessages: [],
         allContradictions: [],
         generatedProfile: null,
+        mosaicAnswers: [],
+        mosaicAxes: {},
         lifeContext: { ...INITIAL_LIFE_CONTEXT },
         seedTrips: [],
         trustedSources: [],
@@ -191,6 +276,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         allMessages: state.allMessages,
         allContradictions: state.allContradictions,
         generatedProfile: state.generatedProfile,
+        mosaicAnswers: state.mosaicAnswers,
+        mosaicAxes: state.mosaicAxes,
         lifeContext: state.lifeContext,
         seedTrips: state.seedTrips,
         trustedSources: state.trustedSources,

@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
       ...(body.allContradictions !== undefined && { allContradictions: body.allContradictions }),
       ...(body.seedTrips !== undefined && { seedTrips: body.seedTrips }),
       ...(body.trustedSources !== undefined && { trustedSources: body.trustedSources }),
+      ...(body.mosaicData !== undefined && { mosaicData: body.mosaicData }),
       ...(body.isOnboardingComplete !== undefined && { isOnboardingComplete: body.isOnboardingComplete }),
       ...(body.onboardingDepth !== undefined && { onboardingDepth: body.onboardingDepth }),
     },

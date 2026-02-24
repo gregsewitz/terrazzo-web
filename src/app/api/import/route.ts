@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { extractAndMatchPlaces, ExtractedPlace } from '@/lib/anthropic';
 import { searchPlace, priceLevelToString, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import { getUserTasteProfile } from '@/lib/user-profile';
 import type { ImportedPlace } from '@/types';
 
 // ─── Concurrency helper ──────────────────────────────────────────────────────
@@ -38,6 +39,9 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  // Load real user profile if authenticated, else default
+  const userProfile = await getUserTasteProfile(request);
 
   const trimmed = content.trim();
   const encoder = new TextEncoder();
@@ -93,7 +97,7 @@ export async function POST(request: NextRequest) {
           });
 
           try {
-            const result = await extractAndMatchPlaces(textContent, isUrl, DEFAULT_USER_PROFILE);
+            const result = await extractAndMatchPlaces(textContent, isUrl, userProfile);
             extracted = result.places;
             inferredRegion = result.region;
           } catch (e) {

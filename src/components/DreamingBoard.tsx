@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
@@ -40,8 +40,14 @@ interface DreamingBoardProps {
 }
 
 export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoardProps) {
-  const trip = useTripStore(s => s.currentTrip());
-  const poolItems = useTripStore(s => s.poolItems());
+  // Use stable selectors — calling store methods in selectors returns new refs every render
+  const trips = useTripStore(s => s.trips);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
+  const poolItems = useMemo(
+    () => trip?.pool.filter(p => p.status === 'available') ?? [],
+    [trip],
+  );
   const myPlaces = useSavedStore(s => s.myPlaces);
   const [filter, setFilter] = useState<PlaceType | 'all'>('all');
   const [sortBy, setSortBy] = useState<'added' | 'type' | 'match'>('added');

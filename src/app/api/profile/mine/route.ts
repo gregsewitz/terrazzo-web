@@ -6,6 +6,9 @@ export async function GET(req: NextRequest) {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
+  // Cast to access mosaicData (may not exist in generated Prisma client yet)
+  const userData = user as Record<string, unknown>;
+
   return Response.json({
     user: {
       id: user.id,
@@ -17,6 +20,7 @@ export async function GET(req: NextRequest) {
       allContradictions: user.allContradictions,
       seedTrips: user.seedTrips,
       trustedSources: user.trustedSources,
+      mosaicData: userData.mosaicData ?? null,
       isOnboardingComplete: user.isOnboardingComplete,
       onboardingDepth: user.onboardingDepth,
     },

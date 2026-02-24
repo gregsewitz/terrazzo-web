@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { searchPlace, priceLevelToString } from '@/lib/places';
 import { generateTasteMatchBatch } from '@/lib/anthropic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import { getUserTasteProfile } from '@/lib/user-profile';
 
 /**
  * Google Maps Saved List Import — Direct API approach (fast)
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  // Load real user profile if authenticated, else default
+  const userProfile = await getUserTasteProfile(request);
 
   const encoder = new TextEncoder();
 
@@ -271,7 +275,7 @@ export async function POST(request: NextRequest) {
         try {
           const tasteResults = await generateTasteMatchBatch(
             enrichedPlaces.map(p => ({ name: p.name, type: p.type, city: p.location })),
-            DEFAULT_USER_PROFILE
+            userProfile
           );
 
           if (tasteResults && tasteResults.length === enrichedPlaces.length) {

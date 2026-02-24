@@ -24,6 +24,7 @@ model User {
   allContradictions    Json?        // Contradiction[]
   seedTrips            Json?        // SeedTripInput[]
   trustedSources       Json?        // TrustedSource[]
+  mosaicData           Json?        // { answers: MosaicAnswer[], axes: Record<string,number> }
   isOnboardingComplete Boolean      @default(false)
   onboardingDepth      String?      // shallow | standard | deep
 

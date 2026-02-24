@@ -5,6 +5,8 @@ import { useBriefing } from '@/hooks/useBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import { useOnboardingStore } from '@/stores/onboardingStore';
+import type { TasteProfile as NumericProfile } from '@/types';
 import PipelineProgress from '@/components/PipelineProgress';
 import {
   DOMAIN_COLORS,
@@ -97,6 +99,24 @@ function AntiSignalCard({ signal }: { signal: BriefingAntiSignal }) {
 export default function BriefingView({ googlePlaceId, placeName, matchScore, onClose }: BriefingViewProps) {
   const { data, loading, error } = useBriefing(googlePlaceId);
 
+  // Build real numeric profile from store for mosaic thumbnail
+  const generatedProfile = useOnboardingStore(s => s.generatedProfile);
+  const numericProfile: NumericProfile = useMemo(() => {
+    const gp = generatedProfile as unknown as { radarData?: { axis: string; value: number }[] } | null;
+    if (!gp?.radarData?.length) return DEFAULT_USER_PROFILE;
+    const radarMap: Record<string, keyof NumericProfile> = {
+      Sensory: 'Design', Material: 'Design',
+      Authenticity: 'Character', Social: 'Service',
+      Cultural: 'Location', Spatial: 'Wellness',
+    };
+    const result: NumericProfile = { ...DEFAULT_USER_PROFILE };
+    for (const r of gp.radarData) {
+      const d = radarMap[r.axis];
+      if (d) result[d] = Math.max(result[d], r.value);
+    }
+    return result;
+  }, [generatedProfile]);
+
   // Group signals by domain
   const signalsByDomain = useMemo(() => {
     if (!data?.signals) return {} as Record<TasteDomain, BriefingSignal[]>;
@@ -187,7 +207,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                 {/* Summary bar — mosaic + stats */}
                 <div className="flex gap-2 mb-4">
                   <div className="flex items-center justify-center p-2.5 rounded-xl" style={{ background: INK['03'] }}>
-                    <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
+                    <TerrazzoMosaic profile={numericProfile} size="xs" />
                   </div>
                   {matchScore != null && (
                     <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(200,146,58,0.06)' }}>

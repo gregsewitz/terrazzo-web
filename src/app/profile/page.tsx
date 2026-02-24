@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
+import ExpandMosaicView from '@/components/profile/ExpandMosaicView';
 import WrappedExperience from '@/components/wrapped/WrappedExperience';
 import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
 import TasteStone from '@/components/profile/TasteStone';
 import ScoreArc from '@/components/profile/ScoreArc';
 import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
-import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import type { TasteProfile as NumericProfile } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
@@ -59,6 +60,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const [showWrapped, setShowWrapped] = useState(false);
+  const [showMosaic, setShowMosaic] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('discover');
   const [discoverContent, setDiscoverContent] = useState<DiscoverContent | null>(null);
@@ -74,6 +76,26 @@ export default function ProfilePage() {
   const profile = generatedProfile || TASTE_PROFILE;
   const userName = lifeContext?.firstName || 'Greg';
   const signalCount = allSignals?.length || 238;
+
+  // Build numeric profile for mosaic visualization from radar data
+  const numericProfile: NumericProfile = useMemo(() => {
+    const radarMap: Record<string, string> = {
+      Sensory: 'Design', Material: 'Design',
+      Authenticity: 'Character', Social: 'Service',
+      Cultural: 'Location', Spatial: 'Wellness',
+    };
+    const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.75, Location: 0.5, Wellness: 0.5 };
+    const radarData = (profile as { radarData?: { axis: string; value: number }[] }).radarData;
+    if (radarData) {
+      for (const r of radarData) {
+        const domain = radarMap[r.axis];
+        if (domain && domain in result) {
+          result[domain as keyof NumericProfile] = Math.max(result[domain as keyof NumericProfile], r.value);
+        }
+      }
+    }
+    return result;
+  }, [profile]);
 
   // Generate discover content from real profile
   const fetchDiscoverContent = useCallback(async () => {
@@ -128,9 +150,12 @@ export default function ProfilePage() {
     router.push('/onboarding');
   };
 
-  // Full-screen wrapped overlay
+  // Full-screen overlays
   if (showWrapped) {
     return <WrappedExperience onClose={() => setShowWrapped(false)} />;
+  }
+  if (showMosaic) {
+    return <ExpandMosaicView onClose={() => setShowMosaic(false)} />;
   }
 
   /* ─── Shared header + tab component ─── */
@@ -149,7 +174,7 @@ export default function ProfilePage() {
             <div className="text-[11px]" style={{ color: INK['90'] }}>{profile.overallArchetype}</div>
           </div>
         </div>
-        <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="xs" />
+        <TerrazzoMosaic profile={numericProfile} size="xs" />
       </div>
 
       {/* Inner tab toggle */}
@@ -244,6 +269,25 @@ export default function ProfilePage() {
                   </span>
                 </button>
 
+                {/* Expand Your Mosaic CTA */}
+                <button
+                  onClick={() => setShowMosaic(true)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)', border: '1px solid rgba(200,146,58,0.12)' }}
+                >
+                  <div>
+                    <span className="text-[11px] font-semibold block" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                      Expand Your Mosaic
+                    </span>
+                    <span className="text-[9px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+                      Sharpen your matches
+                    </span>
+                  </div>
+                  <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(28,26,23,0.06)', color: 'var(--t-ink)', fontFamily: FONT.mono }}>
+                    Play →
+                  </span>
+                </button>
+
                 {/* Settings links */}
                 <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
                   {SETTINGS_LINKS.map(({ label, action }) => (
@@ -307,29 +351,29 @@ export default function ProfilePage() {
       ) : (
         /* ═══════════ MY PROFILE ═══════════ */
         <>
-          {/* Replay Wrapped button */}
-          <div className="px-5 pt-3">
+          {/* Action buttons */}
+          <div className="px-5 pt-2 pb-4 flex flex-col gap-2.5">
             <button
               onClick={() => setShowWrapped(true)}
-              className="w-full flex items-center justify-between p-4 rounded-xl mb-5 cursor-pointer border-none transition-all hover:opacity-90"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{ background: '#2d3a2d' }}
             >
-              <div className="flex flex-col items-start gap-1">
+              <div className="flex flex-col items-start gap-0.5">
                 <span
-                  className="text-[13px] font-semibold"
+                  className="text-[12px] font-semibold"
                   style={{ color: '#f5f5f0', fontFamily: FONT.sans }}
                 >
                   Your Taste Wrapped
                 </span>
                 <span
-                  className="text-[10px]"
-                  style={{ color: 'rgba(245,245,240,0.5)', fontFamily: FONT.mono }}
+                  className="text-[9px]"
+                  style={{ color: 'rgba(245,245,240,0.45)', fontFamily: FONT.mono }}
                 >
-                  {signalCount} signals · {profile.contradictions?.length || 3} tensions · {Object.values(profile.microTasteSignals || {}).flat().length || 35} taste terms
+                  {signalCount} signals · {profile.contradictions?.length || 3} tensions
                 </span>
               </div>
               <span
-                className="text-[11px] px-3 py-1.5 rounded-full font-semibold"
+                className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
                 style={{
                   background: 'rgba(245,245,240,0.12)',
                   color: '#f5f5f0',
@@ -337,6 +381,40 @@ export default function ProfilePage() {
                 }}
               >
                 Replay →
+              </span>
+            </button>
+
+            <button
+              onClick={() => setShowMosaic(true)}
+              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+              style={{
+                background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
+                border: '1px solid rgba(200,146,58,0.12)',
+              }}
+            >
+              <div className="flex flex-col items-start gap-0.5">
+                <span
+                  className="text-[12px] font-semibold"
+                  style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                >
+                  Expand Your Mosaic
+                </span>
+                <span
+                  className="text-[9px]"
+                  style={{ color: INK['50'], fontFamily: FONT.mono }}
+                >
+                  Quick questions that sharpen your matches
+                </span>
+              </div>
+              <span
+                className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
+                style={{
+                  background: 'rgba(28,26,23,0.06)',
+                  color: 'var(--t-ink)',
+                  fontFamily: FONT.mono,
+                }}
+              >
+                Play →
               </span>
             </button>
           </div>

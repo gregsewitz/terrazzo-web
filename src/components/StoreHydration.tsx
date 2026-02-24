@@ -68,6 +68,16 @@ async function loadUserData() {
       if (profile.user.allContradictions) updates.allContradictions = profile.user.allContradictions;
       if (profile.user.seedTrips) updates.seedTrips = profile.user.seedTrips;
       if (profile.user.trustedSources) updates.trustedSources = profile.user.trustedSources;
+
+      // Hydrate mosaic data from DB (cross-device resume)
+      const mosaicData = profile.user.mosaicData as { answers?: unknown[]; axes?: Record<string, number> } | null;
+      if (mosaicData?.answers && !onboarding.mosaicAnswers?.length) {
+        updates.mosaicAnswers = mosaicData.answers;
+      }
+      if (mosaicData?.axes && !Object.keys(onboarding.mosaicAxes || {}).length) {
+        updates.mosaicAxes = mosaicData.axes;
+      }
+
       if (Object.keys(updates).length > 0) {
         useOnboardingStore.setState(updates);
       }

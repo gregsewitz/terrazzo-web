@@ -1,33 +1,57 @@
 'use client';
 
 import { TASTE_PROFILE, WRAPPED, DOMAIN_COLORS, AXIS_COLORS, CONTEXT_ICONS, CONTEXT_COLORS } from '@/constants/profile';
+import type { TasteProfile as ProfileShape } from '@/constants/profile';
 import RadarChart from './RadarChart';
 import ScoreArc from './ScoreArc';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
-import { DEFAULT_USER_PROFILE } from '@/lib/taste';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
-
-const profile = TASTE_PROFILE;
+import type { TasteProfile as NumericProfile } from '@/types';
 
 export default function ProfileDeepDive() {
+  const generatedProfile = useOnboardingStore(s => s.generatedProfile);
+  // Use real synthesized profile if available, fallback to demo
+  const profile: ProfileShape = (generatedProfile as unknown as ProfileShape) || TASTE_PROFILE;
+
+  // Build numeric profile from radar data for the mosaic visualization
+  const numericProfile: NumericProfile = buildNumericProfile(profile);
+
   return (
     <div>
-      <HeroSection />
-      <RadarSection />
-      <DimensionsSection />
-      <ContradictionsSection />
-      <ContextSection />
-      <VocabularySection />
-      <MatchesSection />
+      <HeroSection profile={profile} />
+      <RadarSection numericProfile={numericProfile} />
+      <DimensionsSection profile={profile} />
+      <ContradictionsSection profile={profile} />
+      <ContextSection profile={profile} />
+      <VocabularySection profile={profile} />
+      <MatchesSection profile={profile} />
     </div>
   );
+}
+
+/** Convert radar data to TasteProfile for mosaic visualization */
+function buildNumericProfile(profile: ProfileShape): NumericProfile {
+  const radarMap: Record<string, string> = {
+    Sensory: 'Design', Material: 'Design',
+    Authenticity: 'Character', Social: 'Service',
+    Cultural: 'Location', Spatial: 'Wellness',
+  };
+  const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.5, Location: 0.5, Wellness: 0.5 };
+  for (const r of profile.radarData || []) {
+    const domain = radarMap[r.axis];
+    if (domain && domain in result) {
+      result[domain as keyof NumericProfile] = Math.max(result[domain as keyof NumericProfile], r.value);
+    }
+  }
+  return result;
 }
 
 // ═══════════════════════════════════════════
 // HERO — Dark bg, archetype name + drivers
 // ═══════════════════════════════════════════
-function HeroSection() {
+function HeroSection({ profile }: { profile: ProfileShape }) {
   return (
     <div
       className="px-5 pt-8 pb-2"
@@ -80,7 +104,7 @@ function HeroSection() {
 // ═══════════════════════════════════════════
 // MOSAIC — Terrazzo Mosaic replaces radar chart
 // ═══════════════════════════════════════════
-function RadarSection() {
+function RadarSection({ numericProfile }: { numericProfile: NumericProfile }) {
   return (
     <div
       className="flex flex-col items-center px-5 pt-6 pb-8 gap-4"
@@ -98,8 +122,8 @@ function RadarSection() {
         Your Terrazzo Mosaic
       </div>
       <div className="flex items-center gap-6">
-        <TerrazzoMosaic profile={DEFAULT_USER_PROFILE} size="lg" />
-        <MosaicLegend profile={DEFAULT_USER_PROFILE} dark style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+        <TerrazzoMosaic profile={numericProfile} size="lg" />
+        <MosaicLegend profile={numericProfile} dark style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
       </div>
     </div>
   );
@@ -118,7 +142,7 @@ const DIMENSION_CERTAINTIES: Record<string, number> = {
   "Wellness & Body": 72,
 };
 
-function DimensionsSection() {
+function DimensionsSection({ profile }: { profile: ProfileShape }) {
   const domains = Object.keys(profile.microTasteSignals).filter(k => k !== 'Rejection');
 
   return (
@@ -202,7 +226,7 @@ function DimensionsSection() {
 // ═══════════════════════════════════════════
 // CONTRADICTIONS — Stated vs Revealed
 // ═══════════════════════════════════════════
-function ContradictionsSection() {
+function ContradictionsSection({ profile }: { profile: ProfileShape }) {
   return (
     <div className="px-4 pb-6" style={{ background: 'var(--t-cream)' }}>
       <h3
@@ -272,7 +296,7 @@ function ContradictionsSection() {
 // ═══════════════════════════════════════════
 // CONTEXT MODIFIERS — How taste shifts
 // ═══════════════════════════════════════════
-function ContextSection() {
+function ContextSection({ profile }: { profile: ProfileShape }) {
   return (
     <div className="px-4 pb-6" style={{ background: 'var(--t-cream)' }}>
       <h3
@@ -315,7 +339,7 @@ function ContextSection() {
 // ═══════════════════════════════════════════
 // VOCABULARY — Micro-taste signals by category
 // ═══════════════════════════════════════════
-function VocabularySection() {
+function VocabularySection({ profile }: { profile: ProfileShape }) {
   const categories = Object.entries(profile.microTasteSignals);
 
   return (
@@ -377,7 +401,7 @@ function VocabularySection() {
 // ═══════════════════════════════════════════
 // MATCHED PROPERTIES — Top matches with scores
 // ═══════════════════════════════════════════
-function MatchesSection() {
+function MatchesSection({ profile }: { profile: ProfileShape }) {
   return (
     <div className="px-4 pb-8" style={{ background: 'var(--t-cream)' }}>
       <h3
