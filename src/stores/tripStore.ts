@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Trip, ImportedPlace, TripDay, TimeSlot, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData, DreamBoardEntry, HotelInfo, TransportEvent } from '@/types';
 import { apiFetch } from '@/lib/api-client';
+import { dbSave } from '@/lib/db-save';
 
 // ═══════════════════════════════════════════
 // DB types (shapes returned by API routes)
@@ -21,12 +22,9 @@ export interface DBTrip {
   status?: string | null;
 }
 
-/** Fire-and-forget DB write — never blocks the UI */
+/** DB write with retry + error surfacing (replaces fire-and-forget) */
 function dbWrite(url: string, method: string, body?: unknown) {
-  apiFetch(url, {
-    method,
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  }).catch(err => console.warn('[tripStore] DB write failed:', err));
+  dbSave(url, method, body);
 }
 
 /** Debounced trip save — collapses rapid changes (e.g. drag-and-drop) */

@@ -94,9 +94,11 @@ async function loadUserData() {
     // Mark DB hydration complete — consumers can now trust the store data
     useOnboardingStore.getState().setDbHydrated(true);
   } catch (err) {
-    console.error('Failed to load user data, falling back to demo:', err);
-    useOnboardingStore.getState().setDbHydrated(true); // still mark hydrated so UI doesn't hang
-    initSavedDemoData();
-    initTripDemoData();
+    console.error('Failed to load user data from database:', err);
+    // Mark hydrated so UI doesn't hang, but do NOT load demo data for
+    // authenticated users — showing fake data is worse than showing empty.
+    // The user's localStorage data (if any) remains intact from the
+    // rehydrate() call above.
+    useOnboardingStore.getState().setDbHydrated(true);
   }
 }

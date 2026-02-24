@@ -184,8 +184,8 @@ export const useCollaborationStore = create<CollaborationState>((set, get) => ({
         { method: 'POST', body: JSON.stringify(suggestData) },
       );
       set(s => ({ suggestions: [data.suggestion, ...s.suggestions] }));
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[collaboration] suggestPlace failed:', err);
     }
   },
 
@@ -200,8 +200,8 @@ export const useCollaborationStore = create<CollaborationState>((set, get) => ({
           sg.id === suggestionId ? { ...sg, status, respondedAt: new Date().toISOString() } : sg
         ),
       }));
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[collaboration] respondToSuggestion failed:', err);
     }
   },
 
@@ -217,8 +217,8 @@ export const useCollaborationStore = create<CollaborationState>((set, get) => ({
         );
         return { reactions: [data.reaction, ...filtered] };
       });
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[collaboration] addReaction failed:', err);
     }
   },
 
@@ -229,8 +229,8 @@ export const useCollaborationStore = create<CollaborationState>((set, get) => ({
         { method: 'POST', body: JSON.stringify({ dayNumber, slotId, content }) },
       );
       set(s => ({ slotNotes: [...s.slotNotes, data.note] }));
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[collaboration] addSlotNote failed:', err);
     }
   },
 

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData, Shortlist } from '@/types';
 import { apiFetch } from '@/lib/api-client';
+import { dbSave } from '@/lib/db-save';
 
 // ═══════════════════════════════════════════
 // DB types (shapes returned by API routes)
@@ -48,12 +49,9 @@ export interface DBShortlist {
   updatedAt: string;
 }
 
-/** Fire-and-forget DB write — never blocks the UI */
+/** DB write with retry + error surfacing (replaces fire-and-forget) */
 function dbWrite(url: string, method: string, body?: unknown) {
-  apiFetch(url, {
-    method,
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  }).catch(err => console.warn('[savedStore] DB write failed:', err));
+  dbSave(url, method, body);
 }
 
 export type ViewMode = 'myPlaces' | 'history';

@@ -3,6 +3,7 @@ import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
 import StoreHydration from "@/components/StoreHydration";
+import SaveIndicator from "@/components/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
 
 const dmSans = DM_Sans({
@@ -47,6 +48,7 @@ export default function RootLayout({
           <StoreHydration />
           {children}
           <GlobalImportUI />
+          <SaveIndicator />
         </AuthProvider>
       </body>
     </html>

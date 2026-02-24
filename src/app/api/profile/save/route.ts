@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { apiHandler } from '@/lib/api-handler';
 
-export async function POST(req: NextRequest) {
+export const POST = apiHandler(async (req: NextRequest) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
-  const body = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: any = await req.json();
 
   const updated = await prisma.user.update({
     where: { id: user.id },
@@ -24,4 +26,4 @@ export async function POST(req: NextRequest) {
   });
 
   return Response.json({ user: updated });
-}
+});

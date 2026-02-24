@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { apiHandler } from '@/lib/api-handler';
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
@@ -30,9 +31,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   return Response.json({ place });
-}
+});
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
@@ -48,4 +49,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   await prisma.savedPlace.delete({ where: { id } });
   return Response.json({ success: true });
-}
+});

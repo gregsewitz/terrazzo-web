@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { apiHandler } from '@/lib/api-handler';
 
-export async function GET(req: NextRequest) {
+export const GET = apiHandler(async (req: NextRequest) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
@@ -18,4 +19,4 @@ export async function GET(req: NextRequest) {
   ]);
 
   return Response.json({ places, shortlists });
-}
+});

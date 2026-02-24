@@ -9,13 +9,11 @@ import type {
 } from '@/types';
 import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
 import { apiFetch } from '@/lib/api-client';
+import { dbSave, flushSaves } from '@/lib/db-save';
 
-/** Fire-and-forget profile save to DB */
+/** Save profile data to DB with retry + error surfacing */
 function saveProfileToDB(data: Record<string, unknown>) {
-  apiFetch('/api/profile/save', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }).catch(err => console.warn('[onboardingStore] DB save failed:', err));
+  dbSave('/api/profile/save', 'POST', data);
 }
 
 /** Milestones at which we re-synthesize the full taste profile */
@@ -106,7 +104,7 @@ interface OnboardingState {
   addTrustedSource: (source: TrustedSource) => void;
   setGoBackPlace: (place: GoBackPlace) => void;
   setLiveMode: (live: boolean) => void;
-  finishOnboarding: (depth: OnboardingDepth) => void;
+  finishOnboarding: (depth: OnboardingDepth) => Promise<void>;
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   reset: () => void;
   /** Soft reset for "redo onboarding" — keeps all taste data & profile, only resets progress */
@@ -194,7 +192,7 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       setLiveMode: (live) => set({ isLiveMode: live }),
 
-      finishOnboarding: (depth) => {
+      finishOnboarding: async (depth) => {
         set({ isComplete: true, onboardingDepth: depth });
         const state = get();
         saveProfileToDB({
@@ -207,6 +205,8 @@ export const useOnboardingStore = create<OnboardingState>()(
           isOnboardingComplete: true,
           onboardingDepth: depth,
         });
+        // Wait for all pending saves to complete — this is the critical moment
+        await flushSaves();
       },
 
       recordMosaicAnswer: (questionId, axes, signals) => {
