@@ -11,6 +11,7 @@ function pickNextQuestion(
   answered: Set<number>,
   lastSection: string | null,
   lastType: string | null,
+  recentlySkipped?: Set<number>,
 ): MosaicQuestion | null {
   const eligible = MOSAIC_QUESTIONS.filter(q => {
     if (answered.has(q.id)) return false;
@@ -21,7 +22,11 @@ function pickNextQuestion(
 
   // Avoid same section and same type back-to-back
   const preferred = eligible.filter(q => q.section !== lastSection && q.type !== lastType);
-  const pool = preferred.length > 0 ? preferred : eligible;
+  // Also deprioritize recently skipped questions so they don't immediately reappear
+  const notSkipped = (preferred.length > 0 ? preferred : eligible).filter(
+    q => !recentlySkipped?.has(q.id)
+  );
+  const pool = notSkipped.length > 0 ? notSkipped : (preferred.length > 0 ? preferred : eligible);
 
   // Weighted random: boost under-represented domains
   const domainCounts: Record<string, number> = {};
@@ -96,6 +101,7 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
   const [showProgress, setShowProgress] = useState(false);
   const lastSectionRef = useRef<string | null>(null);
   const lastTypeRef = useRef<string | null>(null);
+  const recentlySkippedRef = useRef<Set<number>>(new Set());
 
   // Sync from store on mount (handles hydration timing)
   useEffect(() => {
@@ -126,11 +132,28 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
 
     // Brief pause for the satisfying transition
     setTimeout(() => {
-      const next = pickNextQuestion(newAnswered, lastSectionRef.current, lastTypeRef.current);
+      const next = pickNextQuestion(newAnswered, lastSectionRef.current, lastTypeRef.current, recentlySkippedRef.current);
       setCurrent(next);
       setPhase('question');
     }, 600);
   }, [current, answered, recordMosaicAnswer]);
+
+  const handleSkip = useCallback(() => {
+    if (!current || phase === 'transition') return;
+    // Track as recently skipped so it doesn't immediately reappear
+    recentlySkippedRef.current.add(current.id);
+    // Clear skipped memory once it gets large (so questions can resurface later)
+    if (recentlySkippedRef.current.size > 8) {
+      const arr = Array.from(recentlySkippedRef.current);
+      recentlySkippedRef.current = new Set(arr.slice(-4));
+    }
+    setPhase('transition');
+    setTimeout(() => {
+      const next = pickNextQuestion(answered, current.section, current.type, recentlySkippedRef.current);
+      setCurrent(next);
+      setPhase('question');
+    }, 300);
+  }, [current, phase, answered]);
 
   const sectionMeta = current ? MOSAIC_SECTIONS[current.section] : null;
 
@@ -242,12 +265,12 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
         )}
       </div>
 
-      {/* ─── Bottom: Signal flash + count ─── */}
+      {/* ─── Bottom: Skip + Signal flash + count ─── */}
       <div style={{ padding: '12px 20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['35'] }}>
           {answered.size} of {totalQuestions} answered
         </div>
-        {phase === 'transition' && lastSignals.length > 0 && (
+        {phase === 'transition' && lastSignals.length > 0 ? (
           <div style={{ display: 'flex', gap: 4, animation: 'fadeIn 0.2s ease' }}>
             {lastSignals.slice(0, 2).map(s => (
               <span
@@ -261,7 +284,21 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
               </span>
             ))}
           </div>
-        )}
+        ) : current ? (
+          <button
+            onClick={handleSkip}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: FONT.mono, fontSize: 11, color: INK['35'],
+              padding: '4px 0',
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = INK['60'])}
+            onMouseLeave={e => (e.currentTarget.style.color = INK['35'])}
+          >
+            Skip →
+          </button>
+        ) : null}
       </div>
     </div>
   );

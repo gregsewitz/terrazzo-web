@@ -14,11 +14,14 @@ export default function ProcessingPage() {
   const hasSynthesized = useRef(false);
   const { allSignals, allMessages, allContradictions, certainties, setGeneratedProfile } = useOnboardingStore();
 
-  // Animate through processing steps
+  // Animate through processing steps — stagger timing so early steps feel snappy,
+  // middle steps feel like real work, and the last step holds until the API returns
   useEffect(() => {
     if (hasError) return; // pause animation on error
     if (currentStep < PROCESSING_STEPS.length - 1) {
-      const timer = setTimeout(() => setCurrentStep((i) => i + 1), 800);
+      // First couple steps go a bit faster, middle steps slower, creating a natural rhythm
+      const delay = currentStep < 2 ? 1200 : currentStep < 5 ? 1800 : 2200;
+      const timer = setTimeout(() => setCurrentStep((i) => i + 1), delay);
       return () => clearTimeout(timer);
     }
   }, [currentStep, hasError]);
@@ -43,7 +46,8 @@ export default function ProcessingPage() {
       setGeneratedProfile(profile);
 
       // Wait for animation to finish before navigating
-      const minDelay = Math.max(0, PROCESSING_STEPS.length * 800 - 2000);
+      // Steps take ~14s total (variable timing), so allow up to that before proceeding
+      const minDelay = Math.max(0, PROCESSING_STEPS.length * 1800 - 2000);
       setTimeout(() => setIsDone(true), minDelay);
     } catch (err) {
       console.error('Synthesis failed:', err);
@@ -97,6 +101,7 @@ export default function ProcessingPage() {
             {PROCESSING_STEPS.map((step, i) => {
               const isActive = i === currentStep;
               const isDoneStep = i < currentStep;
+              const isLastStep = i === PROCESSING_STEPS.length - 1;
               return (
                 <div
                   key={step}
@@ -111,7 +116,7 @@ export default function ProcessingPage() {
                     ${isDoneStep
                       ? 'bg-[var(--t-verde)]'
                       : isActive
-                        ? 'bg-[var(--t-honey)] animate-pulse'
+                        ? 'bg-[var(--t-honey)]'
                         : 'bg-[var(--t-travertine)]'
                     }
                   `}>
@@ -119,8 +124,13 @@ export default function ProcessingPage() {
                       <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
                         <path d="M2 6l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
+                    ) : isActive && isLastStep ? (
+                      /* Spinning indicator on the final step so it's clearly still working */
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" className="animate-spin">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                      </svg>
                     ) : isActive ? (
-                      <div className="w-2 h-2 rounded-full bg-white" />
+                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                     ) : null}
                   </div>
                   <span className={`

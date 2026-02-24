@@ -85,6 +85,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     startListening,
     stopListening,
     resetTranscript,
+    hasFailed: speechFailed,
   } = useSpeechRecognition({
     silenceTimeout: voiceMode ? 1500 : 0, // 1.5s silence auto-sends in voice mode
     onSilenceDetected: handleSilenceDetected,
@@ -151,6 +152,13 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (transcript) setInputText(transcript);
   }, [transcript]);
 
+  // Auto-switch to text mode if speech recognition fails (e.g. mobile Safari, permissions denied)
+  useEffect(() => {
+    if (speechFailed && voiceMode) {
+      setVoiceMode(false);
+    }
+  }, [speechFailed, voiceMode]);
+
   // Auto-resize textarea (only in text mode)
   useEffect(() => {
     if (voiceMode) return;
@@ -197,9 +205,9 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     isAnalyzing ? 'thinking' : 'idle';
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
+    <div className="flex flex-col h-full min-h-0">
+      {/* Messages — scrollable area between fixed header and fixed input */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-6 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -260,8 +268,8 @@ export default function ConversationView({ phase, onComplete }: ConversationView
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-[var(--t-travertine)] px-4 py-3">
+      {/* Input Area — anchored to bottom */}
+      <div className="flex-shrink-0 border-t border-[var(--t-travertine)] px-4 py-3 bg-[var(--t-cream)]">
         {isPhaseComplete ? (
           <button
             onClick={() => {
@@ -281,7 +289,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
               </>
             ) : 'Continue'}
           </button>
-        ) : voiceMode && speechSupported ? (
+        ) : voiceMode && speechSupported && !speechFailed ? (
           /* Voice-first mode — clean, centered UI */
           <div className="flex flex-col items-center gap-3">
             {/* Voice state indicator */}
@@ -380,7 +388,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           /* Text mode — with option to switch back to voice */
           <div className="flex items-end gap-2">
             {/* Voice mode button */}
-            {speechSupported && (
+            {speechSupported && !speechFailed && (
               <button
                 onClick={() => {
                   setVoiceMode(true);

@@ -29,9 +29,8 @@ import DayBoardView from '@/components/DayBoardView';
 import PicksGrid from '@/components/PicksGrid';
 import PicksRail from '@/components/PicksRail';
 import RightPanel from '@/components/RightPanel';
-import DreamingBoard from '@/components/DreamingBoard';
+import DreamBoard from '@/components/DreamBoard';
 import GraduateModal from '@/components/GraduateModal';
-import Scratchpad from '@/components/Scratchpad';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 // ─── Auto-scroll config for drag near edges ───
@@ -427,13 +426,26 @@ function TripDetailContent() {
           </div>
         </div>
 
-        {/* Main content area — switches between dreaming board and planning grid */}
+        {/* Main content area — switches between dream board and planning grid */}
         {trip.status === 'dreaming' ? (
           <div className="flex flex-1 min-h-0">
-            <DreamingBoard
-              onTapDetail={openDetail}
-              onGraduate={() => setShowGraduateModal(true)}
-            />
+            <div className="flex-1 flex flex-col min-h-0">
+              {/* Graduation banner */}
+              <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+                <span className="text-[12px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                  Ready to set dates and build an itinerary?
+                </span>
+                <button
+                  onClick={() => setShowGraduateModal(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover flex-shrink-0"
+                  style={{ background: 'var(--t-verde)', border: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'white' }}
+                >
+                  <PerriandIcon name="pin" size={13} color="white" />
+                  Start Planning
+                </button>
+              </div>
+              <DreamBoard />
+            </div>
             <RightPanel activities={collabActivities} />
           </div>
         ) : (
@@ -550,71 +562,78 @@ function TripDetailContent() {
         overflow: 'hidden',
       }}
     >
-      {/* Top-right action pills */}
-      <div className="fixed top-4 right-4 z-30 flex items-center gap-2">
-        {/* Collaborator avatar stack */}
-        {collabCollaborators.filter(c => c.status === 'accepted').length > 0 && (
-          <div className="flex -space-x-2 mr-1" onClick={() => setShowShareSheet(true)} style={{ cursor: 'pointer' }}>
-            {collabCollaborators.filter(c => c.status === 'accepted').slice(0, 3).map((c) => (
-              <div
-                key={c.id}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm"
-                style={{
-                  background: 'var(--t-linen)',
-                  color: 'var(--t-ink)',
-                  border: '2px solid var(--t-cream)',
-                  fontFamily: FONT.sans,
-                }}
-                title={c.name || c.email}
-              >
-                {(c.name || c.email).charAt(0).toUpperCase()}
-              </div>
-            ))}
-            {collabCollaborators.filter(c => c.status === 'accepted').length > 3 && (
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-bold shadow-sm"
-                style={{
-                  background: INK['10'],
-                  color: INK['60'],
-                  border: '2px solid var(--t-cream)',
-                  fontFamily: FONT.mono,
-                }}
-              >
-                +{collabCollaborators.filter(c => c.status === 'accepted').length - 3}
-              </div>
-            )}
-          </div>
-        )}
-        <button
-          onClick={() => setShowShareSheet(true)}
-          className="w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center shadow-md"
-          style={{ background: 'var(--t-cream)', color: 'var(--t-verde)' }}
-          title="Share trip"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setChatOpen(true)}
-          className="w-10 h-10 rounded-full border-none cursor-pointer flex items-center justify-center text-sm shadow-md"
-          style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
-          title="Ask Terrazzo"
-        >
-          <PerriandIcon name="chatBubble" size={16} color="var(--t-cream)" accent="var(--t-cream)" />
-        </button>
-      </div>
-
       {/* Main content — fills available space between top and tab bar */}
       <div className="flex-1 flex flex-col min-h-0">
         {trip.status === 'dreaming' ? (
-          /* Dreaming mode — mood board / collection view */
-          <DreamingBoard
-            onTapDetail={openDetail}
-            onGraduate={() => setShowGraduateModal(true)}
-          />
+          /* Dreaming mode — dream board thinking space */
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Dreaming header — back + trip name + actions */}
+            <div
+              className="flex items-center justify-between px-3 py-2 flex-shrink-0"
+              style={{ background: 'white', borderBottom: '1px solid var(--t-linen)' }}
+            >
+              <div className="flex items-center gap-1 min-w-0 flex-1">
+                <button
+                  onClick={() => router.push('/trips')}
+                  className="flex items-center justify-center flex-shrink-0 bg-transparent border-none cursor-pointer"
+                  style={{ width: 28, height: 28, padding: 0 }}
+                  title="Back to trips"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={INK['50']} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <h1
+                  className="text-[16px] truncate"
+                  style={{ fontFamily: FONT.serif, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}
+                >
+                  {trip.name}
+                </h1>
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-[0.5px] flex-shrink-0"
+                  style={{ background: 'rgba(200,146,58,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
+                >
+                  Dreaming
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={() => setShowShareSheet(true)}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
+                  style={{ background: INK['04'], color: 'var(--t-verde)' }}
+                  title="Share trip"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setChatOpen(true)}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
+                  style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
+                  title="Ask Terrazzo"
+                >
+                  <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
+                </button>
+              </div>
+            </div>
+            {/* Graduation banner */}
+            <div className="flex items-center justify-center px-4 py-2.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+              <button
+                onClick={() => setShowGraduateModal(true)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer"
+                style={{ background: 'var(--t-verde)', border: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'white' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                Ready to start planning?
+              </button>
+            </div>
+            <DreamBoard />
+          </div>
         ) : (
           <>
         {/* Day Planner (includes header + 3-way toggle for all modes) */}
@@ -640,6 +659,9 @@ function TripDetailContent() {
             onRespondSuggestion={(suggestionId, status) => respondToSuggestion(tripId, suggestionId, status)}
             onAddReaction={(placeKey, reaction) => addReaction(tripId, placeKey, reaction)}
             onAddSlotNote={(dayNumber, slotId, content) => addSlotNote(tripId, dayNumber, slotId, content)}
+            onBack={() => router.push('/trips')}
+            onShare={() => setShowShareSheet(true)}
+            onChat={() => setChatOpen(true)}
           />
 
           {/* Trip Places — all placed items across itinerary */}
@@ -653,7 +675,7 @@ function TripDetailContent() {
           )}
 
           {viewMode === 'scratchpad' && (
-            <Scratchpad />
+            <DreamBoard />
           )}
         </div>
 

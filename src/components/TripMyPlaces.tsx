@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import FilterSortBar from './ui/FilterSortBar';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -44,6 +45,7 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
 
   const { filter, setFilter } = useTypeFilter();
+  const [sortBy, setSortBy] = useState<'day' | 'name' | 'type'>('day');
 
   // Collect all placed items across all days
   const allPlaced = useMemo(() => {
@@ -75,47 +77,45 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
     return c;
   }, [allPlaced]);
 
-  // Filter
+  // Filter + sort
   const filtered = useMemo(() => {
-    if (filter === 'all') return allPlaced;
-    return allPlaced.filter(item => item.place.type === filter);
-  }, [allPlaced, filter]);
+    let items = filter === 'all' ? [...allPlaced] : allPlaced.filter(item => item.place.type === filter);
+    switch (sortBy) {
+      case 'name': items.sort((a, b) => a.place.name.localeCompare(b.place.name)); break;
+      case 'type': items.sort((a, b) => a.place.type.localeCompare(b.place.type)); break;
+      default: items.sort((a, b) => a.dayNumber - b.dayNumber); break; // day order (default)
+    }
+    return items;
+  }, [allPlaced, filter, sortBy]);
 
   if (!trip) return null;
 
   return (
     <div className="pb-48" style={{ background: 'var(--t-cream)' }}>
-      {/* Header + filter chips */}
+      {/* Header + filter */}
       <div className="px-4 pt-3 pb-2" style={{ background: 'white', borderBottom: '1px solid var(--t-linen)' }}>
         <div className="flex items-baseline justify-between mb-2">
           <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['85'] }}>
             {allPlaced.length} place{allPlaced.length !== 1 ? 's' : ''} on this trip
           </span>
         </div>
-        <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {TYPE_CHIPS.map(chip => {
-            const count = chip.value === 'all' ? allPlaced.length : (typeCounts[chip.value] || 0);
-            if (chip.value !== 'all' && count === 0) return null;
-            const isActive = filter === chip.value;
-            return (
-              <button
-                key={chip.value}
-                onClick={() => setFilter(chip.value)}
-                className="px-2.5 py-1 rounded-2xl text-[10px] whitespace-nowrap flex-shrink-0"
-                style={{
-                  background: isActive ? 'var(--t-ink)' : INK['04'],
-                  color: isActive ? 'white' : INK['90'],
-                  fontWeight: isActive ? 600 : 500,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontFamily: FONT.sans,
-                }}
-              >
-                {chip.label} {count > 0 ? count : ''}
-              </button>
-            );
-          })}
-        </div>
+        <FilterSortBar
+          filterGroups={[{
+            key: 'type',
+            label: 'Type',
+            options: TYPE_CHIPS.filter(c => c.value === 'all' || (typeCounts[c.value] || 0) > 0).map(c => ({ value: c.value, label: c.label })),
+            value: filter,
+            onChange: (v) => setFilter(v as FilterType),
+          }]}
+          sortOptions={[
+            { value: 'day', label: 'Day order' },
+            { value: 'name', label: 'A–Z' },
+            { value: 'type', label: 'Type' },
+          ]}
+          sortValue={sortBy}
+          onSortChange={(v) => setSortBy(v as any)}
+          onResetAll={() => { setFilter('all'); setSortBy('day'); }}
+        />
       </div>
 
       {/* Place cards */}

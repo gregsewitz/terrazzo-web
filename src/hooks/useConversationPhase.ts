@@ -68,6 +68,13 @@ export function useConversationPhase({
       const userMessageCount = allMessages.filter((m) => m.role === 'user').length;
 
       // Build condensed cross-phase context so Claude knows what the user has already shared
+      // Include summaries of user messages from prior phases so Claude remembers specific
+      // hotels, places, and details the user mentioned (not just abstract taste signals)
+      const priorPhaseMessages = storedMessages.filter((m) => m.phaseId !== phaseId && m.role === 'user');
+      const priorUserSummaries = priorPhaseMessages.length > 0
+        ? priorPhaseMessages.slice(-15).map((m) => m.text) // last 15 user messages from prior phases
+        : undefined;
+
       const crossPhaseContext = {
         completedPhases: completedPhaseIds,
         lifeContext: Object.keys(lifeContext).length > 1 ? lifeContext : undefined, // skip if only default
@@ -79,6 +86,7 @@ export function useConversationPhase({
           : undefined,
         trustedSources: trustedSources.length > 0 ? trustedSources.map((s) => s.name) : undefined,
         goBackPlace: goBackPlace?.placeName || undefined,
+        priorUserMessages: priorUserSummaries,
       };
 
       const res = await fetch('/api/onboarding/analyze', {
@@ -203,7 +211,7 @@ export function useConversationPhase({
         fallbackText = followUps[followUpIndex.current];
         followUpIndex.current += 1;
       } else {
-        fallbackText = "That's really interesting. Tell me more about what that meant to you.";
+        fallbackText = "I think I've got what I need here — let's keep going.";
       }
 
       const aiMsg: ConversationMessage = { role: 'ai', text: fallbackText, phaseId };

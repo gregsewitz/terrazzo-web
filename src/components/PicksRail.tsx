@@ -8,6 +8,7 @@ import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
+import FilterSortBar from './ui/FilterSortBar';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
@@ -48,6 +49,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [showAddPlace, setShowAddPlace] = useState(false);
+  const [sortBy, setSortBy] = useState<'match' | 'name'>('match');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -104,9 +106,9 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
         const bMatch = matchesDestination(b) ? 1 : 0;
         if (aMatch !== bMatch) return bMatch - aMatch;
       }
-      return b.matchScore - a.matchScore;
+      return sortBy === 'name' ? a.name.localeCompare(b.name) : b.matchScore - a.matchScore;
     });
-  }, [filteredPicks, activeDestination, matchesDestination]);
+  }, [filteredPicks, activeDestination, matchesDestination, sortBy]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -217,36 +219,25 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
         )}
       </div>
 
-      {/* Type filter chips — horizontal row */}
-      <div
-        className="flex items-center gap-1 px-3 py-1.5 flex-shrink-0 overflow-x-auto"
-        style={{ borderBottom: '1px solid var(--t-linen)', scrollbarWidth: 'none' }}
-      >
-        {TYPE_CHIPS.filter(chip => typeCounts[chip.value as string] > 0).map(chip => {
-          const isActive = activeFilter === chip.value;
-          return (
-            <button
-              key={chip.value}
-              onClick={() => toggleFilter(chip.value)}
-              className="flex items-center gap-0.5 cursor-pointer transition-all flex-shrink-0"
-              style={{
-                height: 24,
-                padding: '0 6px',
-                borderRadius: 12,
-                background: isActive ? 'var(--t-ink)' : 'transparent',
-                border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                fontFamily: FONT.sans,
-                fontSize: 9,
-                fontWeight: 500,
-                color: isActive ? 'white' : INK['60'],
-              }}
-              title={chip.label}
-            >
-              <PerriandIcon name={chip.icon} size={10} color={isActive ? 'white' : INK['45']} />
-              <span>{chip.label}</span>
-            </button>
-          );
-        })}
+      {/* Type filter */}
+      <div className="px-3 py-1.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+        <FilterSortBar
+          compact
+          filterGroups={[{
+            key: 'type',
+            label: 'Type',
+            options: TYPE_CHIPS.filter(c => typeCounts[c.value as string] > 0).map(c => ({ value: c.value, label: c.label, icon: c.icon })),
+            value: activeFilter,
+            onChange: (v) => toggleFilter(v as FilterType),
+          }]}
+          sortOptions={[
+            { value: 'match', label: 'Match %' },
+            { value: 'name', label: 'A–Z' },
+          ]}
+          sortValue={sortBy}
+          onSortChange={(v) => setSortBy(v as any)}
+          onResetAll={() => { toggleFilter('all'); setSortBy('match'); }}
+        />
       </div>
 
       {/* Scrollable picks list */}

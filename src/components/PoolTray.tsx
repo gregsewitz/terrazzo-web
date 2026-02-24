@@ -7,6 +7,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import FilterSortBar from './ui/FilterSortBar';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -48,6 +49,7 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
   });
   const { isExpanded, setExpanded, filterType, setFilterType, slotContext } = usePoolStore();
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
+  const [sortBy, setSortBy] = useState<'match' | 'name' | 'source'>('match');
 
   // Starred places from savedStore, geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -75,17 +77,25 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
   // Smart sorting: if slot context exists, boost items matching suggested types
   const sortedItems = useMemo(() => {
     const items = [...typeFiltered];
+    // Primary sort based on user selection
+    const primarySort = (a: ImportedPlace, b: ImportedPlace) => {
+      switch (sortBy) {
+        case 'name': return a.name.localeCompare(b.name);
+        case 'source': return (a.ghostSource || '').localeCompare(b.ghostSource || '');
+        default: return b.matchScore - a.matchScore;
+      }
+    };
     if (slotContext && slotContext.suggestedTypes.length > 0) {
       const suggestedSet = new Set(slotContext.suggestedTypes);
       return items.sort((a, b) => {
         const aMatch = suggestedSet.has(a.type) ? 1 : 0;
         const bMatch = suggestedSet.has(b.type) ? 1 : 0;
         if (bMatch !== aMatch) return bMatch - aMatch;
-        return b.matchScore - a.matchScore;
+        return primarySort(a, b);
       });
     }
-    return items.sort((a, b) => b.matchScore - a.matchScore);
-  }, [typeFiltered, slotContext]);
+    return items.sort(primarySort);
+  }, [typeFiltered, slotContext, sortBy]);
 
   // Count items by type (for chip badges)
   const typeCounts = useMemo(() => {
@@ -338,83 +348,34 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
           {' '}· hold &amp; drag to assign
         </div>
 
-        {/* Type Filter Chips — scrollable row */}
-        <div
-          className="flex gap-1.5 px-4 pb-2 overflow-x-auto"
-          style={{ scrollbarWidth: 'none' }}
-        >
-          {TYPE_FILTER_CHIPS.map(chip => {
-            const count = chip.value === 'all' ? sourceFiltered.length : (typeCounts[chip.value] || 0);
-            if (chip.value !== 'all' && count === 0) return null;
-            const isActive = filterType === chip.value;
-            const isSuggested = slotContext?.suggestedTypes.includes(chip.value as PlaceType);
-            return (
-              <button
-                key={chip.value}
-                onClick={() => setFilterType(isActive ? 'all' : chip.value)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
-                style={{
-                  background: isActive
-                    ? 'var(--t-ink)'
-                    : isSuggested
-                      ? 'rgba(42,122,86,0.08)'
-                      : 'var(--t-cream)',
-                  color: isActive
-                    ? 'white'
-                    : isSuggested
-                      ? 'var(--t-verde)'
-                      : INK['90'],
-                  border: isActive
-                    ? '1px solid var(--t-ink)'
-                    : isSuggested
-                      ? '1px solid rgba(42,122,86,0.2)'
-                      : '1px solid var(--t-linen)',
-                  fontFamily: FONT.sans,
-                }}
-              >
-                <PerriandIcon name={chip.icon} size={12} color={isActive ? 'white' : isSuggested ? 'var(--t-verde)' : INK['90']} />
-                {chip.label}
-                <span
-                  className="text-[9px] font-bold"
-                  style={{
-                    opacity: 0.6,
-                    fontFamily: FONT.mono,
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Source Filter Tabs */}
-        <div
-          className="flex overflow-x-auto"
-          style={{ borderBottom: '1px solid var(--t-linen)', scrollbarWidth: 'none' }}
-        >
-          {SOURCE_FILTER_TABS.map(tab => {
-            const isActive = sourceFilter === tab.value;
-            const count = tab.value === 'all' ? starredPlaces.length : (sourceCounts[tab.value] || 0);
-            if (tab.value !== 'all' && count === 0) return null;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setSourceFilter(tab.value)}
-                className="flex-1 min-w-fit px-4 py-2.5 text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all"
-                style={{
-                  background: 'transparent',
-                  color: isActive ? 'var(--t-ink)' : INK['95'],
-                  border: 'none',
-                  borderBottom: isActive ? '2px solid var(--t-ink)' : '2px solid transparent',
-                  fontFamily: FONT.sans,
-                }}
-              >
-                {tab.icon && <PerriandIcon name={tab.icon} size={13} color={isActive ? 'var(--t-ink)' : INK['95']} />}
-                {tab.label} · {count}
-              </button>
-            );
-          })}
+        {/* Filter & Sort */}
+        <div className="px-4 pb-2" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+          <FilterSortBar
+            filterGroups={[
+              {
+                key: 'type',
+                label: 'Type',
+                options: TYPE_FILTER_CHIPS.map(c => ({ value: c.value, label: c.label, icon: c.icon })),
+                value: filterType,
+                onChange: (v) => setFilterType(v as FilterType),
+              },
+              {
+                key: 'source',
+                label: 'Source',
+                options: SOURCE_FILTER_TABS.filter(t => t.value === 'all' || (sourceCounts[t.value] || 0) > 0).map(t => ({ value: t.value, label: t.label, icon: t.icon })),
+                value: sourceFilter,
+                onChange: (v) => setSourceFilter(v as SourceFilterType),
+              },
+            ]}
+            sortOptions={[
+              { value: 'match', label: 'Match %' },
+              { value: 'name', label: 'A–Z' },
+              { value: 'source', label: 'Source' },
+            ]}
+            sortValue={sortBy}
+            onSortChange={(v) => setSortBy(v as any)}
+            onResetAll={() => { setFilterType('all'); setSourceFilter('all'); setSortBy('match'); }}
+          />
         </div>
 
         {/* Items List */}

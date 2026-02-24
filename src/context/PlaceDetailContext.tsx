@@ -55,7 +55,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
   const [isDetailPreview, setIsDetailPreview] = useState(false);
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [ratingInitialStep, setRatingInitialStep] = useState<'gut' | 'details' | 'note'>('gut');
-  const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number } | null>(null);
+  const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number; place?: ImportedPlace } | null>(null);
   const [shortlistPickerItem, setShortlistPickerItem] = useState<ImportedPlace | null>(null);
 
   // ─── Public API ───
@@ -91,7 +91,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     if (!detailItem) return;
     const placeId = (detailItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
     if (placeId) {
-      setBriefingPlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore });
+      setBriefingPlace({ id: placeId, name: detailItem.name, matchScore: detailItem.matchScore, place: detailItem });
     }
   }, [detailItem]);
 
@@ -148,6 +148,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           googlePlaceId={briefingPlace.id}
           placeName={briefingPlace.name}
           matchScore={briefingPlace.matchScore}
+          place={briefingPlace.place}
           onClose={() => setBriefingPlace(null)}
         />
       )}

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
-import { ONBOARDING_PHASES, ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
+import { ONBOARDING_PHASES, ALL_PHASE_IDS, ACT_1_PHASE_IDS, ACT_2_PHASE_IDS } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import CertaintyBar from '@/components/onboarding/CertaintyBar';
 import ConversationView from '@/components/onboarding/ConversationView';
@@ -52,7 +52,7 @@ export default function PhasePage() {
     completePhase(phaseId);
 
     if (isLastAct1) {
-      // After Act 1 ends, offer the fast-track exit
+      // Show celebratory milestone screen before Act 2
       router.push('/onboarding/act1-complete');
       return;
     }
@@ -76,9 +76,9 @@ export default function PhasePage() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--t-cream)] max-w-lg mx-auto">
-      {/* Phase header */}
-      <div className="px-5 pt-5 pb-3">
+    <div className="h-dvh flex flex-col bg-[var(--t-cream)] max-w-lg mx-auto overflow-hidden">
+      {/* Phase header — fixed at top */}
+      <div className="flex-shrink-0 px-5 pt-5 pb-3">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
@@ -102,7 +102,7 @@ export default function PhasePage() {
         <CertaintyBar />
       </div>
 
-      {/* Phase content — varies by modality */}
+      {/* Phase content — fills remaining space between header and bottom */}
       <div className="flex-1 flex flex-col min-h-0">
         {(phase.modality === 'voice' || phase.modality === 'voice+cards') && interpolatedPhase && (
           <ConversationView phase={interpolatedPhase} onComplete={handlePhaseComplete} />

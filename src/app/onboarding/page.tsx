@@ -19,6 +19,7 @@ export default function OnboardingIntro() {
     completedPhaseIds,
     currentPhaseIndex,
     isComplete,
+    generatedProfile,
   } = useOnboardingStore();
 
   // Wait for zustand hydration from localStorage before showing resume UI
@@ -41,10 +42,14 @@ export default function OnboardingIntro() {
   }, []);
 
   const hasInProgressSession = hydrated && !isComplete && completedPhaseIds.length > 0;
+  // Redo mode: user already has a profile but came back to do more phases
+  const isRedoSession = hydrated && !isComplete && generatedProfile !== null;
   const currentPhaseId = ALL_PHASE_IDS[currentPhaseIndex] || ALL_PHASE_IDS[0];
 
   const handleStart = () => {
-    reset(); // clear any previous session
+    if (!isRedoSession) {
+      reset(); // only wipe data for truly fresh starts, not redos
+    }
     setIsStarting(true);
     setTimeout(() => {
       router.push(`/onboarding/phase/${ALL_PHASE_IDS[0]}`);

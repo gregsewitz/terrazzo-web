@@ -11,13 +11,13 @@ export async function POST(req: NextRequest) {
     // Look up the phase definition so Claude knows the purpose and scripted follow-ups
     const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);
     const phaseIndex = phase ? ONBOARDING_PHASES.indexOf(phase) : -1;
-    const nextPhase = phaseIndex >= 0 && phaseIndex < ONBOARDING_PHASES.length - 1 ? ONBOARDING_PHASES[phaseIndex + 1] : null;
+    const isLastPhase = phaseIndex === ONBOARDING_PHASES.length - 1;
 
     const contextMessage = `
 CURRENT PHASE: "${phase?.title || phaseId}"
 PHASE PURPOSE: ${phase?.subtitle || 'General taste profiling'}
 OPENING QUESTION FOR THIS PHASE: ${phase?.aiPrompt || ''}
-${nextPhase ? `NEXT PHASE COMING UP: "${nextPhase.title}" — ${nextPhase.subtitle}` : 'This is the final phase.'}
+${isLastPhase ? 'This is the final phase.' : ''}
 
 SCRIPTED FOLLOW-UPS (use these as your guide for what to ask next — rephrase naturally based on what the user actually said, but stay on topic and don't invent tangential questions):
 ${phase?.followUps?.map((f, i) => `${i + 1}. ${f}`).join('\n') || 'None'}
@@ -30,8 +30,10 @@ ${crossPhaseContext.lifeContext ? `- Life context: ${JSON.stringify(crossPhaseCo
 ${crossPhaseContext.keySignals?.length ? `- Key taste signals so far: ${crossPhaseContext.keySignals.join(', ')}` : ''}
 ${crossPhaseContext.trustedSources?.length ? `- Their trusted sources: ${crossPhaseContext.trustedSources.join(', ')}` : ''}
 ${crossPhaseContext.goBackPlace ? `- Their go-back place: ${crossPhaseContext.goBackPlace}` : ''}
-Use this context to make the conversation feel CONNECTED — e.g., "You mentioned Masseria Moroseta earlier..." or "Given how much you value [signal], I'm curious..." But don't force it — only reference previous answers when it naturally adds to the conversation.` : ''}
-Conversation so far: ${JSON.stringify(conversationHistory.slice(-6))}
+${crossPhaseContext.priorUserMessages?.length ? `- WHAT THE USER SAID IN EARLIER PHASES (these are their actual words — you should recognize hotels, places, and details they've already mentioned and NOT act surprised or unfamiliar when they come up again):
+${crossPhaseContext.priorUserMessages.map((m: string) => `  "${m}"`).join('\n')}` : ''}
+Use this context to make the conversation feel CONNECTED and CONTINUOUS. If the user mentions a hotel or place they've already discussed in a previous phase, acknowledge that you remember it — e.g., "Forestis again — that place clearly left an impression" or "You mentioned that one earlier." NEVER react to a previously discussed place as if hearing about it for the first time.` : ''}
+Conversation so far (this phase): ${JSON.stringify(conversationHistory.slice(-6))}
 
 User's latest response: "${userText}"
 
@@ -107,7 +109,7 @@ Return valid JSON only.`;
     return NextResponse.json({
       signals: [],
       certainties: {},
-      followUp: "That's really interesting. Tell me more about what that experience meant to you.",
+      followUp: null,
       contradictions: [],
       phaseComplete: false,
     });

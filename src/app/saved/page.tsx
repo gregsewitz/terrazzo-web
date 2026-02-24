@@ -14,6 +14,7 @@ import { PerriandIcon, type PerriandIconName } from '@/components/icons/Perriand
 import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
+import FilterSortBar from '@/components/ui/FilterSortBar';
 
 const TYPE_ICONS: Record<string, string> = {
   restaurant: 'restaurant',
@@ -85,9 +86,24 @@ function SavedPageContent() {
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateShortlist, setShowCreateShortlist] = useState(false);
 
+  // ─── Shortlist sorting ───
+  const [shortlistSortBy, setShortlistSortBy] = useState<'recent' | 'name' | 'places' | 'updated'>('recent');
+
+  const sortedShortlists = useMemo(() => {
+    const sorted = [...shortlists];
+    switch (shortlistSortBy) {
+      case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case 'places': sorted.sort((a, b) => b.placeIds.length - a.placeIds.length); break;
+      case 'updated': sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()); break;
+      default: sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
+    }
+    return sorted;
+  }, [shortlists, shortlistSortBy]);
+
   // ─── Library filtering ───
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [neighborhoodFilter, setNeighborhoodFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'match' | 'name' | 'type' | 'source'>('match');
 
   // Parse city from second segment, neighborhood from first
   const parseLocation = useCallback((loc: string) => {
@@ -160,8 +176,16 @@ function SavedPageContent() {
         return p.ghostSource === sourceFilter;
       });
     }
-    return places;
-  }, [myPlaces, searchQuery, typeFilter, cityFilter, neighborhoodFilter, sourceFilter, parseLocation]);
+    // Sort
+    const sorted = [...places];
+    switch (sortBy) {
+      case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
+      case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case 'type': sorted.sort((a, b) => a.type.localeCompare(b.type)); break;
+      case 'source': sorted.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
+    }
+    return sorted;
+  }, [myPlaces, searchQuery, typeFilter, cityFilter, neighborhoodFilter, sourceFilter, sortBy, parseLocation]);
 
 
   /* ─── Desktop Collect layout ─── */
@@ -248,39 +272,37 @@ function SavedPageContent() {
           {/* ═══ Shortlists — Desktop grid ═══ */}
           {activeView === 'shortlists' && (
             <>
-              <div className="mb-5" style={{ maxWidth: 400 }}>
-                <PlaceSearchBar />
+              <div className="flex items-center gap-4 mb-5">
+                <div style={{ maxWidth: 400, flex: 1 }}>
+                  <PlaceSearchBar />
+                </div>
+                <FilterSortBar
+                  sortOptions={[
+                    { value: 'recent', label: 'Recently created' },
+                    { value: 'updated', label: 'Recently updated' },
+                    { value: 'name', label: 'A–Z' },
+                    { value: 'places', label: 'Most places' },
+                  ]}
+                  sortValue={shortlistSortBy}
+                  onSortChange={(v) => setShortlistSortBy(v as any)}
+                  compact
+                />
               </div>
-              <div
-                className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
-              >
-                {shortlists.map(sl => (
-                  <ShortlistCard
-                    key={sl.id}
-                    shortlist={sl}
-                    places={myPlaces}
-                    onClick={() => router.push(`/saved/shortlists/${sl.id}`)}
-                  />
-                ))}
-                {/* Create CTA card */}
-                <button
-                  onClick={() => setShowCreateShortlist(true)}
-                  className="rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
-                  style={{
-                    minHeight: 160,
-                    background: INK['02'],
-                    border: `1.5px dashed ${INK['15']}`,
-                    color: INK['70'],
-                  }}
+              {sortedShortlists.length > 0 ? (
+                <div
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
                 >
-                  <span style={{ fontSize: 20 }}>+</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 500, color: 'var(--t-ink)' }}>
-                    Create Shortlist
-                  </span>
-                </button>
-              </div>
-              {shortlists.length === 0 && (
+                  {sortedShortlists.map(sl => (
+                    <ShortlistCard
+                      key={sl.id}
+                      shortlist={sl}
+                      places={myPlaces}
+                      onClick={() => router.push(`/saved/shortlists/${sl.id}`)}
+                    />
+                  ))}
+                </div>
+              ) : (
                 <div className="text-center py-16">
                   <PerriandIcon name="saved" size={36} color={INK['15']} />
                   <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>No shortlists yet</p>
@@ -298,152 +320,67 @@ function SavedPageContent() {
                   <PlaceSearchBar />
                 </div>
 
-                {/* Type filters */}
-                <div className="mb-5">
-                  <div
-                    className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
-                    style={{ color: INK['50'], fontFamily: FONT.mono }}
-                  >
-                    Type
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {(['all', 'restaurant', 'bar', 'cafe', 'hotel', 'museum', 'activity'] as const).map(type => (
-                      <button
-                        key={type}
-                        onClick={() => setTypeFilter(type)}
-                        className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer"
-                        style={{
-                          background: typeFilter === type ? 'var(--t-ink)' : 'transparent',
-                          color: typeFilter === type ? 'white' : INK['60'],
-                          border: 'none',
-                          fontFamily: FONT.sans,
-                          fontWeight: typeFilter === type ? 600 : 400,
-                        }}
-                      >
-                        {type === 'all' ? 'All types' : type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* City filters */}
-                {allCities.length > 1 && (
-                  <div className="mb-5">
-                    <div
-                      className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
-                      style={{ color: INK['50'], fontFamily: FONT.mono }}
-                    >
-                      City
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <button
-                        onClick={() => handleCityFilter('all')}
-                        className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer"
-                        style={{
-                          background: cityFilter === 'all' ? 'var(--t-verde)' : 'transparent',
-                          color: cityFilter === 'all' ? 'white' : INK['60'],
-                          border: 'none',
-                          fontFamily: FONT.sans,
-                          fontWeight: cityFilter === 'all' ? 600 : 400,
-                        }}
-                      >
-                        All cities
-                      </button>
-                      {allCities.map(city => (
-                        <button
-                          key={city}
-                          onClick={() => handleCityFilter(city)}
-                          className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer"
-                          style={{
-                            background: cityFilter === city ? 'var(--t-verde)' : 'transparent',
-                            color: cityFilter === city ? 'white' : INK['60'],
-                            border: 'none',
-                            fontFamily: FONT.sans,
-                            fontWeight: cityFilter === city ? 600 : 400,
-                          }}
-                        >
-                          {city}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Source filters */}
-                <div className="mb-5">
-                  <div
-                    className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
-                    style={{ color: INK['50'], fontFamily: FONT.mono }}
-                  >
-                    Source
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {[
-                      { key: 'all', label: 'All sources', icon: null },
-                      { key: 'friend', label: 'Friends', icon: 'friend' as PerriandIconName },
-                      { key: 'article', label: 'Articles', icon: 'article' as PerriandIconName },
-                      { key: 'maps', label: 'Maps', icon: 'maps' as PerriandIconName },
-                      { key: 'email', label: 'Email', icon: 'email' as PerriandIconName },
-                    ].map(src => (
-                      <button
-                        key={src.key}
-                        onClick={() => setSourceFilter(src.key)}
-                        className="px-3 py-1.5 rounded-lg text-left text-[11px] transition-all cursor-pointer flex items-center gap-1.5"
-                        style={{
-                          background: sourceFilter === src.key ? 'var(--t-ink)' : 'transparent',
-                          color: sourceFilter === src.key ? 'white' : INK['60'],
-                          border: 'none',
-                          fontFamily: FONT.sans,
-                          fontWeight: sourceFilter === src.key ? 600 : 400,
-                        }}
-                      >
-                        {src.icon && <PerriandIcon name={src.icon} size={10} color={sourceFilter === src.key ? 'white' : INK['50']} />}
-                        {src.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Neighborhood sub-filter */}
-                {cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 && (
-                  <div className="mb-5">
-                    <div
-                      className="text-[9px] uppercase tracking-[0.15em] mb-2 font-bold"
-                      style={{ color: INK['50'], fontFamily: FONT.mono }}
-                    >
-                      Neighborhood
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <button
-                        onClick={() => setNeighborhoodFilter('all')}
-                        className="px-3 py-1.5 rounded-lg text-left text-[10px] transition-all cursor-pointer"
-                        style={{
-                          background: neighborhoodFilter === 'all' ? 'rgba(42,122,86,0.12)' : 'transparent',
-                          color: neighborhoodFilter === 'all' ? 'var(--t-verde)' : INK['50'],
-                          border: 'none',
-                          fontFamily: FONT.sans,
-                        }}
-                      >
-                        All areas
-                      </button>
-                      {cityNeighborhoods[cityFilter].map(nb => (
-                        <button
-                          key={nb}
-                          onClick={() => setNeighborhoodFilter(nb)}
-                          className="px-3 py-1.5 rounded-lg text-left text-[10px] transition-all cursor-pointer"
-                          style={{
-                            background: neighborhoodFilter === nb ? 'rgba(42,122,86,0.12)' : 'transparent',
-                            color: neighborhoodFilter === nb ? 'var(--t-verde)' : INK['50'],
-                            border: 'none',
-                            fontFamily: FONT.sans,
-                          }}
-                        >
-                          {nb}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <FilterSortBar
+                  filterGroups={[
+                    {
+                      key: 'type',
+                      label: 'Type',
+                      options: [
+                        { value: 'all', label: 'All types' },
+                        { value: 'restaurant', label: 'Restaurant' },
+                        { value: 'bar', label: 'Bar' },
+                        { value: 'cafe', label: 'Café' },
+                        { value: 'hotel', label: 'Hotel' },
+                        { value: 'museum', label: 'Museum' },
+                        { value: 'activity', label: 'Activity' },
+                      ],
+                      value: typeFilter,
+                      onChange: (v) => setTypeFilter(v as any),
+                    },
+                    ...(allCities.length > 1 ? [{
+                      key: 'city',
+                      label: 'City',
+                      options: [
+                        { value: 'all', label: 'All cities' },
+                        ...allCities.map(c => ({ value: c, label: c })),
+                      ],
+                      value: cityFilter,
+                      onChange: (v: string) => handleCityFilter(v),
+                    }] : []),
+                    ...(cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 ? [{
+                      key: 'neighborhood',
+                      label: 'Neighborhood',
+                      options: [
+                        { value: 'all', label: 'All areas' },
+                        ...cityNeighborhoods[cityFilter].map(nb => ({ value: nb, label: nb })),
+                      ],
+                      value: neighborhoodFilter,
+                      onChange: (v: string) => setNeighborhoodFilter(v),
+                    }] : []),
+                    {
+                      key: 'source',
+                      label: 'Source',
+                      options: [
+                        { value: 'all', label: 'All sources' },
+                        { value: 'friend', label: 'Friends' },
+                        { value: 'article', label: 'Articles' },
+                        { value: 'maps', label: 'Maps' },
+                        { value: 'email', label: 'Email' },
+                      ],
+                      value: sourceFilter,
+                      onChange: (v) => setSourceFilter(v),
+                    },
+                  ]}
+                  sortOptions={[
+                    { value: 'match', label: 'Match %' },
+                    { value: 'name', label: 'A–Z' },
+                    { value: 'type', label: 'Type' },
+                    { value: 'source', label: 'Source' },
+                  ]}
+                  sortValue={sortBy}
+                  onSortChange={(v) => setSortBy(v as any)}
+                  onResetAll={() => { setTypeFilter('all'); handleCityFilter('all'); setSourceFilter('all'); setSortBy('match'); }}
+                />
               </div>
 
               {/* Right: place grid */}
@@ -483,8 +420,9 @@ function SavedPageContent() {
           <CreateShortlistModal
             onClose={() => setShowCreateShortlist(false)}
             onCreate={(name, emoji) => {
-              createShortlist(name, emoji);
+              const newId = createShortlist(name, emoji);
               setShowCreateShortlist(false);
+              router.push(`/saved/shortlists/${newId}`);
             }}
             onCreateSmart={(name, emoji, query, filterTags, placeIds) => {
               createSmartShortlist(name, emoji, query, filterTags, placeIds);
@@ -555,20 +493,42 @@ function SavedPageContent() {
         {/* Shortlists */}
         {activeView === 'shortlists' && (
           <div>
-            <div className="mb-4"><PlaceSearchBar /></div>
-            <button
-              onClick={() => setShowCreateShortlist(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4 cursor-pointer transition-all hover:opacity-80"
-              style={{ background: 'none', border: `1.5px dashed ${INK['15']}`, color: INK['70'], fontFamily: FONT.sans, fontSize: 12 }}
-            >
-              <span style={{ fontSize: 14 }}>+</span> Create Shortlist
-            </button>
-            <div className="flex flex-col gap-3">
-              {shortlists.map(sl => (
-                <ShortlistCard key={sl.id} shortlist={sl} places={myPlaces} onClick={() => router.push(`/saved/shortlists/${sl.id}`)} />
-              ))}
+            <div className="mb-3"><PlaceSearchBar /></div>
+            <div className="flex items-center gap-2 mb-4">
+              <button
+                onClick={() => setShowCreateShortlist(true)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer transition-all hover:opacity-90"
+                style={{
+                  background: 'var(--t-ink)',
+                  color: 'white',
+                  border: 'none',
+                  fontFamily: FONT.sans,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{ fontSize: 15, lineHeight: 1, fontWeight: 400 }}>+</span> New Shortlist
+              </button>
+              <FilterSortBar
+                sortOptions={[
+                  { value: 'recent', label: 'Recently created' },
+                  { value: 'updated', label: 'Recently updated' },
+                  { value: 'name', label: 'A–Z' },
+                  { value: 'places', label: 'Most places' },
+                ]}
+                sortValue={shortlistSortBy}
+                onSortChange={(v) => setShortlistSortBy(v as any)}
+                compact
+              />
             </div>
-            {shortlists.length === 0 && (
+            {sortedShortlists.length > 0 ? (
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                {sortedShortlists.map(sl => (
+                  <ShortlistCard key={sl.id} shortlist={sl} places={myPlaces} onClick={() => router.push(`/saved/shortlists/${sl.id}`)} />
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-12">
                 <PerriandIcon name="saved" size={36} color={INK['15']} />
                 <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>No shortlists yet</p>
@@ -591,42 +551,68 @@ function SavedPageContent() {
                 Import
               </button>
             </div>
-            <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {(['all', 'restaurant', 'bar', 'cafe', 'hotel', 'museum', 'activity'] as const).map(type => (
-                <button key={type} onClick={() => setTypeFilter(type)} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer" style={{ background: typeFilter === type ? 'var(--t-ink)' : 'white', color: typeFilter === type ? 'white' : INK['60'], border: typeFilter === type ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>
-                  {type === 'all' ? 'All types' : type.charAt(0).toUpperCase() + type.slice(1)}
-                </button>
-              ))}
-            </div>
-            {allCities.length > 1 && (
-              <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                <button onClick={() => handleCityFilter('all')} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer" style={{ background: cityFilter === 'all' ? 'var(--t-verde)' : 'white', color: cityFilter === 'all' ? 'white' : INK['60'], border: cityFilter === 'all' ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>All cities</button>
-                {allCities.map(city => (
-                  <button key={city} onClick={() => handleCityFilter(city)} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer" style={{ background: cityFilter === city ? 'var(--t-verde)' : 'white', color: cityFilter === city ? 'white' : INK['60'], border: cityFilter === city ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>{city}</button>
-                ))}
-              </div>
-            )}
-            {cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 && (
-              <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-1 pl-3" style={{ scrollbarWidth: 'none' }}>
-                <button onClick={() => setNeighborhoodFilter('all')} className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer" style={{ background: neighborhoodFilter === 'all' ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)', color: neighborhoodFilter === 'all' ? 'var(--t-verde)' : INK['50'], border: neighborhoodFilter === 'all' ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent', fontFamily: FONT.mono }}>All areas</button>
-                {cityNeighborhoods[cityFilter].map(nb => (
-                  <button key={nb} onClick={() => setNeighborhoodFilter(nb)} className="px-2 py-1 rounded-full whitespace-nowrap text-[9px] transition-all cursor-pointer" style={{ background: neighborhoodFilter === nb ? 'rgba(42,122,86,0.12)' : 'rgba(42,122,86,0.04)', color: neighborhoodFilter === nb ? 'var(--t-verde)' : INK['50'], border: neighborhoodFilter === nb ? '1px solid rgba(42,122,86,0.25)' : '1px solid transparent', fontFamily: FONT.mono }}>{nb}</button>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {[
-                { key: 'all', label: 'All sources', icon: null },
-                { key: 'friend', label: 'Friends', icon: 'friend' as PerriandIconName },
-                { key: 'article', label: 'Articles', icon: 'article' as PerriandIconName },
-                { key: 'maps', label: 'Maps', icon: 'maps' as PerriandIconName },
-                { key: 'email', label: 'Email', icon: 'email' as PerriandIconName },
-              ].map(src => (
-                <button key={src.key} onClick={() => setSourceFilter(src.key)} className="px-2.5 py-1.5 rounded-full whitespace-nowrap text-[10px] transition-all cursor-pointer flex items-center gap-1" style={{ background: sourceFilter === src.key ? 'var(--t-ink)' : 'white', color: sourceFilter === src.key ? 'white' : INK['60'], border: sourceFilter === src.key ? 'none' : '1px solid var(--t-linen)', fontFamily: FONT.mono }}>
-                  {src.icon && <PerriandIcon name={src.icon} size={9} color={sourceFilter === src.key ? 'white' : INK['50']} />}
-                  {src.label}
-                </button>
-              ))}
+            <div className="mb-4">
+              <FilterSortBar
+                filterGroups={[
+                  {
+                    key: 'type',
+                    label: 'Type',
+                    options: [
+                      { value: 'all', label: 'All types' },
+                      { value: 'restaurant', label: 'Restaurant' },
+                      { value: 'bar', label: 'Bar' },
+                      { value: 'cafe', label: 'Café' },
+                      { value: 'hotel', label: 'Hotel' },
+                      { value: 'museum', label: 'Museum' },
+                      { value: 'activity', label: 'Activity' },
+                    ],
+                    value: typeFilter,
+                    onChange: (v) => setTypeFilter(v as any),
+                  },
+                  ...(allCities.length > 1 ? [{
+                    key: 'city',
+                    label: 'City',
+                    options: [
+                      { value: 'all', label: 'All cities' },
+                      ...allCities.map(c => ({ value: c, label: c })),
+                    ],
+                    value: cityFilter,
+                    onChange: (v: string) => handleCityFilter(v),
+                  }] : []),
+                  ...(cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 ? [{
+                    key: 'neighborhood',
+                    label: 'Neighborhood',
+                    options: [
+                      { value: 'all', label: 'All areas' },
+                      ...cityNeighborhoods[cityFilter].map(nb => ({ value: nb, label: nb })),
+                    ],
+                    value: neighborhoodFilter,
+                    onChange: (v: string) => setNeighborhoodFilter(v),
+                  }] : []),
+                  {
+                    key: 'source',
+                    label: 'Source',
+                    options: [
+                      { value: 'all', label: 'All sources' },
+                      { value: 'friend', label: 'Friends' },
+                      { value: 'article', label: 'Articles' },
+                      { value: 'maps', label: 'Maps' },
+                      { value: 'email', label: 'Email' },
+                    ],
+                    value: sourceFilter,
+                    onChange: (v) => setSourceFilter(v),
+                  },
+                ]}
+                sortOptions={[
+                  { value: 'match', label: 'Match %' },
+                  { value: 'name', label: 'A–Z' },
+                  { value: 'type', label: 'Type' },
+                  { value: 'source', label: 'Source' },
+                ]}
+                sortValue={sortBy}
+                onSortChange={(v) => setSortBy(v as any)}
+                onResetAll={() => { setTypeFilter('all'); handleCityFilter('all'); setSourceFilter('all'); setSortBy('match'); }}
+              />
             </div>
             {filteredPlaces.length > 0 ? (
               <div className="flex flex-col gap-2">
@@ -648,7 +634,7 @@ function SavedPageContent() {
       {showCreateShortlist && (
         <CreateShortlistModal
           onClose={() => setShowCreateShortlist(false)}
-          onCreate={(name, emoji) => { createShortlist(name, emoji); setShowCreateShortlist(false); }}
+          onCreate={(name, emoji) => { const newId = createShortlist(name, emoji); setShowCreateShortlist(false); router.push(`/saved/shortlists/${newId}`); }}
           onCreateSmart={(name, emoji, query, filterTags, placeIds) => { createSmartShortlist(name, emoji, query, filterTags, placeIds); setShowCreateShortlist(false); }}
         />
       )}

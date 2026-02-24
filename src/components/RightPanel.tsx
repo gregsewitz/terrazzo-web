@@ -6,7 +6,7 @@ import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import ActivityFeed from '@/components/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import Scratchpad from '@/components/Scratchpad';
+import DreamBoard from '@/components/DreamBoard';
 import { FONT, INK } from '@/constants/theme';
 import { DEST_COLORS } from '@/types';
 import type { Activity } from '@/stores/collaborationStore';
@@ -56,7 +56,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
   }, [trip]);
 
   const TABS: { id: RightPanelTab; label: string; icon: string }[] = [
-    { id: 'notes', label: 'Notes', icon: 'manual' },
+    { id: 'notes', label: 'Dream Board', icon: 'manual' },
     { id: 'logistics', label: 'Logistics', icon: 'hotel' },
     { id: 'activity', label: 'Activity', icon: 'chatBubble' },
   ];
@@ -212,7 +212,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
         {activeTab === 'notes' && (
-          <Scratchpad compact />
+          <DreamBoard compact />
         )}
 
         {activeTab === 'logistics' && (

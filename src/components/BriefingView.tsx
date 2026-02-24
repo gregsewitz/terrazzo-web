@@ -15,6 +15,7 @@ import {
   TasteDomain,
   BriefingSignal,
   BriefingAntiSignal,
+  ImportedPlace,
 } from '@/types';
 import { FONT, INK } from '@/constants/theme';
 
@@ -22,6 +23,7 @@ interface BriefingViewProps {
   googlePlaceId: string;
   placeName: string;
   matchScore?: number;
+  place?: ImportedPlace;
   onClose: () => void;
 }
 
@@ -96,7 +98,7 @@ function AntiSignalCard({ signal }: { signal: BriefingAntiSignal }) {
   );
 }
 
-export default function BriefingView({ googlePlaceId, placeName, matchScore, onClose }: BriefingViewProps) {
+export default function BriefingView({ googlePlaceId, placeName, matchScore, place, onClose }: BriefingViewProps) {
   const { data, loading, error } = useBriefing(googlePlaceId);
 
   // Build real numeric profile from store for mosaic thumbnail
@@ -200,6 +202,268 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, onC
                   Couldn&apos;t load briefing: {error}
                 </p>
               </div>
+            )}
+
+            {/* No data at all */}
+            {!data && !loading && !error && !place?.terrazzoInsight && (
+              <div className="text-center py-12">
+                <div className="text-2xl mb-3 flex justify-center">
+                  <PerriandIcon name="discover" size={36} color={INK['30']} />
+                </div>
+                <p className="text-[12px] mb-1" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+                  No briefing data available yet
+                </p>
+                <p className="text-[10px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+                  Intelligence data will appear here once the pipeline has run for this place.
+                </p>
+              </div>
+            )}
+
+            {/* Fallback briefing from local place data when API has no intelligence */}
+            {!data && !loading && place && place.terrazzoInsight && (
+              <>
+                {/* Summary bar — mosaic + match */}
+                <div className="flex gap-2 mb-4">
+                  <div className="flex items-center justify-center p-2.5 rounded-xl" style={{ background: INK['03'] }}>
+                    <TerrazzoMosaic profile={numericProfile} size="xs" />
+                  </div>
+                  {matchScore != null && (
+                    <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: 'rgba(200,146,58,0.06)' }}>
+                      <div
+                        className="text-[18px] font-bold"
+                        style={{ color: '#8a6a2a', fontFamily: FONT.mono }}
+                      >
+                        {matchScore}%
+                      </div>
+                      <div className="text-[9px]" style={{ color: INK['90'] }}>Match</div>
+                    </div>
+                  )}
+                  {place.google?.rating && (
+                    <div className="flex-1 p-2.5 rounded-xl text-center" style={{ background: INK['03'] }}>
+                      <div
+                        className="text-[18px] font-bold"
+                        style={{ color: 'var(--t-ink)', fontFamily: FONT.mono }}
+                      >
+                        {place.google.rating}
+                      </div>
+                      <div className="text-[9px]" style={{ color: INK['90'] }}>Google</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Terrazzo Insight — why this place */}
+                {place.terrazzoInsight && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: 'var(--t-verde)', fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Why This Place
+                    </div>
+                    <div
+                      className="p-3 rounded-xl"
+                      style={{ background: 'rgba(42,122,86,0.04)', border: '1px solid rgba(42,122,86,0.12)' }}
+                    >
+                      <p className="text-[13px] leading-relaxed" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                        {place.terrazzoInsight.why}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Caveat / heads-up */}
+                {place.terrazzoInsight?.caveat && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: 'var(--t-amber)', fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Heads Up
+                    </div>
+                    <div
+                      className="p-3 rounded-xl"
+                      style={{ background: 'rgba(160,108,40,0.04)', borderLeft: '3px solid var(--t-amber)' }}
+                    >
+                      <p className="text-[12px] leading-relaxed" style={{ color: 'var(--t-ink)' }}>
+                        {place.terrazzoInsight.caveat}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Match Breakdown by domain */}
+                {place.matchBreakdown && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Taste Match
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {TASTE_DOMAINS.map(domain => {
+                        const score = place.matchBreakdown[domain] ?? 0;
+                        if (score < 0.1) return null;
+                        const color = DOMAIN_COLORS[domain];
+                        const icon = DOMAIN_ICONS[domain];
+                        return (
+                          <div key={domain} className="flex items-center gap-2">
+                            <div style={{ width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <PerriandIcon name={icon} size={12} color={color} />
+                            </div>
+                            <span className="text-[10px] w-16" style={{ color: INK['90'], fontFamily: FONT.mono }}>
+                              {domain}
+                            </span>
+                            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: INK['06'] }}>
+                              <div
+                                className="h-full rounded-full"
+                                style={{ width: `${score * 100}%`, background: color }}
+                              />
+                            </div>
+                            <span className="text-[9px] w-8 text-right" style={{ color: INK['90'], fontFamily: FONT.mono }}>
+                              {Math.round(score * 100)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* What to order */}
+                {place.whatToOrder && place.whatToOrder.length > 0 && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      What to Order
+                    </div>
+                    <div className="flex flex-col gap-1" style={{ padding: '10px 12px', background: 'white', borderRadius: 12, border: '1px solid var(--t-linen)' }}>
+                      {place.whatToOrder.map((item, i) => (
+                        <div key={i} className="text-[12px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tips */}
+                {place.tips && place.tips.length > 0 && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Tips
+                    </div>
+                    <div className="flex flex-col gap-1" style={{ padding: '10px 12px', background: 'white', borderRadius: 12, border: '1px solid var(--t-linen)' }}>
+                      {place.tips.map((tip, i) => (
+                        <div key={i} className="text-[12px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                          {tip}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Enrichment facts */}
+                {place.enrichment && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Details
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 p-3 rounded-xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+                      {place.enrichment.priceRange && (
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['90'], fontFamily: FONT.mono }}>Price Range</div>
+                          <div className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{place.enrichment.priceRange}</div>
+                        </div>
+                      )}
+                      {place.enrichment.hours && (
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['90'], fontFamily: FONT.mono }}>Hours</div>
+                          <div className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{place.enrichment.hours}</div>
+                        </div>
+                      )}
+                      {place.enrichment.closedDays && place.enrichment.closedDays.length > 0 && (
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['90'], fontFamily: FONT.mono }}>Closed</div>
+                          <div className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{place.enrichment.closedDays.join(', ')}</div>
+                        </div>
+                      )}
+                      {place.enrichment.seasonalNote && (
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['90'], fontFamily: FONT.mono }}>Note</div>
+                          <div className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{place.enrichment.seasonalNote}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Taste note */}
+                {place.tasteNote && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Taste Note
+                    </div>
+                    <div
+                      className="p-3 rounded-xl text-[12px] leading-relaxed italic"
+                      style={{ background: 'white', border: '1px solid var(--t-linen)', color: INK['90'], fontFamily: FONT.serif }}
+                    >
+                      {place.tasteNote}
+                    </div>
+                  </div>
+                )}
+
+                {/* Friend attribution */}
+                {place.friendAttribution && (
+                  <div className="mb-5">
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                    >
+                      Recommended By
+                    </div>
+                    <div
+                      className="p-3 rounded-xl flex items-start gap-2"
+                      style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold"
+                        style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
+                      >
+                        {place.friendAttribution.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                          {place.friendAttribution.name}
+                        </div>
+                        {place.friendAttribution.note && (
+                          <div className="text-[11px] italic mt-0.5" style={{ color: INK['70'], fontFamily: FONT.serif }}>
+                            &ldquo;{place.friendAttribution.note}&rdquo;
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-3 mt-2" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                  <span className="text-[9px]" style={{ color: INK['90'], fontFamily: FONT.mono }}>
+                    Local briefing
+                  </span>
+                </div>
+              </>
             )}
 
             {data && (

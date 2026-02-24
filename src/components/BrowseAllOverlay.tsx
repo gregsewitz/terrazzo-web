@@ -7,6 +7,7 @@ import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES } from '@/type
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import FilterSortBar from './ui/FilterSortBar';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
@@ -44,6 +45,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const [showAddPlace, setShowAddPlace] = useState(false);
+  const [sortBy, setSortBy] = useState<'match' | 'alpha' | 'type' | 'source'>('match');
 
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
@@ -65,15 +67,25 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
     return destinationPlaces.filter(p => p.type === filterType);
   }, [destinationPlaces, filterType]);
 
-  // Sort: starred first, then by match score
+  // Sort: starred always first, then by selected sort
   const sortedPlaces = useMemo(() => {
     return [...filteredPlaces].sort((a, b) => {
+      // Starred always float to top
       const aStarred = a.isShortlisted ? 1 : 0;
       const bStarred = b.isShortlisted ? 1 : 0;
       if (bStarred !== aStarred) return bStarred - aStarred;
+
+      if (sortBy === 'alpha') return a.name.localeCompare(b.name);
+      if (sortBy === 'type') return a.type.localeCompare(b.type) || b.matchScore - a.matchScore;
+      if (sortBy === 'source') {
+        const aSource = (a.ghostSource || 'manual');
+        const bSource = (b.ghostSource || 'manual');
+        return aSource.localeCompare(bSource) || b.matchScore - a.matchScore;
+      }
+      // Default: match score descending
       return b.matchScore - a.matchScore;
     });
-  }, [filteredPlaces]);
+  }, [filteredPlaces, sortBy]);
 
   const starredCount = useMemo(() =>
     destinationPlaces.filter(p => p.isShortlisted).length,
@@ -124,30 +136,26 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
           </button>
         </div>
 
-        {/* Type filter chips */}
-        <div
-          className="flex gap-1.5 px-4 pb-3 overflow-x-auto"
-          style={{ scrollbarWidth: 'none' }}
-        >
-          {TYPE_CHIPS.map(chip => {
-            const isActive = filterType === chip.value;
-            return (
-              <button
-                key={chip.value}
-                onClick={() => toggleFilter(chip.value as FilterType)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
-                style={{
-                  background: isActive ? 'var(--t-ink)' : 'white',
-                  color: isActive ? 'white' : INK['90'],
-                  border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                  fontFamily: FONT.sans,
-                }}
-              >
-                <PerriandIcon name={chip.icon} size={14} />
-                {chip.label}
-              </button>
-            );
-          })}
+        {/* Filter & Sort */}
+        <div className="px-4 pb-2">
+          <FilterSortBar
+            filterGroups={[{
+              key: 'type',
+              label: 'Type',
+              options: TYPE_CHIPS.map(c => ({ value: c.value, label: c.label, icon: c.icon })),
+              value: filterType,
+              onChange: (v) => setFilterType(v as FilterType),
+            }]}
+            sortOptions={[
+              { value: 'match', label: 'Match %' },
+              { value: 'alpha', label: 'A–Z' },
+              { value: 'type', label: 'Type' },
+              { value: 'source', label: 'Source' },
+            ]}
+            sortValue={sortBy}
+            onSortChange={(v) => setSortBy(v as 'match' | 'alpha' | 'type' | 'source')}
+            onResetAll={() => { setFilterType('all'); setSortBy('match'); }}
+          />
         </div>
 
         {/* List */}

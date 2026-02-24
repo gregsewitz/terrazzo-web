@@ -20,16 +20,29 @@ interface GoogleResult {
   photoUrl: string | null;
 }
 
-export default function PlaceSearchBar() {
+interface PlaceSearchBarProps {
+  /** Called after a place is added to the library — use to auto-add to a shortlist */
+  onPlaceAdded?: (place: ImportedPlace) => void;
+  /** If true, skip the shortlist picker after adding (used when inside a shortlist detail) */
+  skipShortlistPicker?: boolean;
+  /** Placeholder text override */
+  placeholder?: string;
+}
+
+export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, placeholder }: PlaceSearchBarProps = {}) {
   const searchQuery = useSavedStore(s => s.searchQuery);
   const setSearchQuery = useSavedStore(s => s.setSearchQuery);
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const shortlists = useSavedStore(s => s.shortlists);
+  const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
 
   const [googleResults, setGoogleResults] = useState<GoogleResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [showShortlistPicker, setShowShortlistPicker] = useState(false);
+  const [justAddedPlace, setJustAddedPlace] = useState<ImportedPlace | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,11 +91,12 @@ export default function PlaceSearchBar() {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
+        if (showShortlistPicker) dismissShortlistPicker();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [showShortlistPicker]);
 
   // Handle Escape
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -118,13 +132,37 @@ export default function PlaceSearchBar() {
     addPlace(newPlace);
     setAddedIds(prev => new Set(prev).add(result.id));
 
-    // Brief visual feedback then clear
-    setTimeout(() => {
-      setSearchQuery('');
+    // Call the onPlaceAdded callback (e.g. auto-add to current shortlist)
+    onPlaceAdded?.(newPlace);
+
+    // Show shortlist picker unless told to skip
+    if (!skipShortlistPicker && shortlists.length > 0) {
+      setJustAddedPlace(newPlace);
+      setShowShortlistPicker(true);
+      // Close the Google dropdown
       setShowDropdown(false);
       setGoogleResults([]);
-      setAddedIds(new Set());
-    }, 600);
+      setSearchQuery('');
+    } else {
+      // Brief visual feedback then clear
+      setTimeout(() => {
+        setSearchQuery('');
+        setShowDropdown(false);
+        setGoogleResults([]);
+        setAddedIds(new Set());
+      }, 600);
+    }
+  }
+
+  function handleShortlistToggle(shortlistId: string) {
+    if (!justAddedPlace) return;
+    addPlaceToShortlist(shortlistId, justAddedPlace.id);
+  }
+
+  function dismissShortlistPicker() {
+    setShowShortlistPicker(false);
+    setJustAddedPlace(null);
+    setAddedIds(new Set());
   }
 
   return (
@@ -140,7 +178,7 @@ export default function PlaceSearchBar() {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search or add a place..."
+          placeholder={placeholder || "Search or add a place..."}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => { if (googleResults.length > 0) setShowDropdown(true); }}
@@ -223,9 +261,11 @@ export default function PlaceSearchBar() {
           {googleResults.map((result, idx) => {
             const alreadyAdded = addedIds.has(result.id);
             const alreadyInLib = isInLibrary(result.id);
+            const canAdd = !alreadyInLib && !alreadyAdded;
             return (
               <div
                 key={result.id}
+                onClick={() => { if (canAdd) handleAdd(result); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -233,8 +273,10 @@ export default function PlaceSearchBar() {
                   padding: '10px 12px',
                   borderBottom: idx < googleResults.length - 1 ? `1px solid ${INK['06']}` : 'none',
                   transition: 'background 0.15s',
-                  cursor: 'default',
+                  cursor: canAdd ? 'pointer' : 'default',
                 }}
+                onMouseEnter={(e) => { if (canAdd) e.currentTarget.style.background = INK['03']; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -280,7 +322,7 @@ export default function PlaceSearchBar() {
                   </div>
                 </div>
 
-                {/* Add button */}
+                {/* Status indicator */}
                 {alreadyInLib ? (
                   <span style={{
                     fontSize: 9, fontWeight: 600, color: 'var(--t-verde)',
@@ -299,24 +341,147 @@ export default function PlaceSearchBar() {
                     <span style={{ color: 'white', fontSize: 14, fontWeight: 700 }}>✓</span>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => handleAdd(result)}
+                  <div
                     style={{
                       width: 28, height: 28, borderRadius: 14,
                       background: 'var(--t-honey)',
-                      border: 'none', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
-                      transition: 'transform 0.15s, opacity 0.15s',
                     }}
-                    onMouseDown={(e) => e.preventDefault()}
                   >
                     <span style={{ color: 'white', fontSize: 16, fontWeight: 700, lineHeight: 1 }}>+</span>
-                  </button>
+                  </div>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Quick add to shortlist picker */}
+      {showShortlistPicker && justAddedPlace && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          zIndex: 60,
+          marginTop: 4,
+          background: 'white',
+          border: '1px solid var(--t-linen)',
+          borderRadius: 12,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
+          overflow: 'hidden',
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: '10px 12px 8px',
+            borderBottom: '1px solid var(--t-linen)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <span style={{
+                fontFamily: FONT.mono,
+                fontSize: 9,
+                fontWeight: 600,
+                color: 'var(--t-verde)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}>
+                Added to library
+              </span>
+              <span style={{
+                fontFamily: FONT.sans,
+                fontSize: 11,
+                color: INK['70'],
+                marginLeft: 8,
+              }}>
+                Add to a shortlist?
+              </span>
+            </div>
+            <button
+              onClick={dismissShortlistPicker}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+              }}
+            >
+              <PerriandIcon name="close" size={12} color={INK['40']} />
+            </button>
+          </div>
+
+          {/* Shortlist options */}
+          <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+            {shortlists.map((sl) => {
+              const isIn = sl.placeIds.includes(justAddedPlace.id);
+              const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
+              return (
+                <button
+                  key={sl.id}
+                  onClick={() => handleShortlistToggle(sl.id)}
+                  disabled={isIn}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '8px 12px',
+                    width: '100%',
+                    textAlign: 'left',
+                    background: isIn ? 'rgba(42,122,86,0.04)' : 'transparent',
+                    border: 'none',
+                    borderBottom: `1px solid ${INK['04']}`,
+                    cursor: isIn ? 'default' : 'pointer',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => { if (!isIn) (e.currentTarget.style.background = INK['03']); }}
+                  onMouseLeave={(e) => { if (!isIn) (e.currentTarget.style.background = 'transparent'); }}
+                >
+                  <span style={{ fontSize: isPerriandIcon ? 12 : 14, width: 18, textAlign: 'center', flexShrink: 0 }}>
+                    {isPerriandIcon ? (
+                      <PerriandIcon name={sl.emoji as any} size={12} color="var(--t-ink)" />
+                    ) : (
+                      sl.emoji
+                    )}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 12, fontFamily: FONT.sans, color: 'var(--t-ink)' }}>
+                    {sl.name}
+                  </span>
+                  {isIn ? (
+                    <span style={{ fontSize: 9, fontFamily: FONT.mono, color: 'var(--t-verde)', fontWeight: 600 }}>
+                      Added
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 12, color: INK['30'] }}>+</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Done button */}
+          <div style={{ padding: '8px 12px', borderTop: '1px solid var(--t-linen)' }}>
+            <button
+              onClick={dismissShortlistPicker}
+              style={{
+                width: '100%',
+                padding: '8px 0',
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: FONT.sans,
+                background: 'var(--t-ink)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Done
+            </button>
+          </div>
         </div>
       )}
 

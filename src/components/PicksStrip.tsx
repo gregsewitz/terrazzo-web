@@ -8,6 +8,7 @@ import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
+import FilterSortBar from './ui/FilterSortBar';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant',
@@ -47,12 +48,6 @@ const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[]
   { value: 'neighborhood', label: 'Walk', icon: 'location' },
 ];
 
-const SORT_OPTIONS = [
-  { value: 'match', label: 'Match score', icon: 'discover' as PerriandIconName },
-  { value: 'name', label: 'Name A–Z', icon: 'manual' as PerriandIconName },
-  { value: 'source', label: 'Source', icon: 'location' as PerriandIconName },
-] as const;
-
 const SOURCE_FILTERS = [
   { value: 'all', label: 'All sources' },
   { value: 'article', label: 'Articles' },
@@ -61,7 +56,7 @@ const SOURCE_FILTERS = [
   { value: 'maps', label: 'Maps' },
 ] as const;
 
-type SortOption = typeof SORT_OPTIONS[number]['value'];
+type SortOption = 'match' | 'name' | 'source';
 type SourceFilter = typeof SOURCE_FILTERS[number]['value'];
 
 interface PicksStripProps {
@@ -79,7 +74,6 @@ interface PicksStripProps {
 
 export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropTarget, onRegisterRect, returningPlaceId }: PicksStripProps) {
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
-  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [holdingId, setHoldingId] = useState<string | null>(null); // visual "about to drag" feedback
@@ -327,53 +321,37 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
         transition: 'background 0.2s, border-top 0.2s',
       }}
     >
-      {/* Header row: filter icon + type chips + count + browse all */}
-      <div
-        className="flex items-center gap-1.5 px-3 pt-2 pb-1 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', minWidth: 0 }}
-      >
-        {/* Filter icon */}
-        <button
-          onClick={() => setFilterMenuOpen(!filterMenuOpen)}
-          className="flex items-center justify-center flex-shrink-0 cursor-pointer transition-all"
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            background: hasActiveFilters ? 'var(--t-ink)' : INK['04'],
-            color: hasActiveFilters ? 'white' : INK['85'],
-            border: hasActiveFilters ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-          }}
-        >
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
-
-        {/* Type chips — compact */}
-        {TYPE_CHIPS.filter(chip => typeCounts[chip.value as string] > 0).map(chip => {
-          const isActive = activeFilter === chip.value;
-          return (
-            <button
-              key={chip.value}
-              onClick={() => toggleFilter(chip.value as FilterType)}
-              className="flex items-center gap-0.5 px-1.5 rounded-full text-[9px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
-              style={{
-                height: 22,
-                background: isActive ? 'var(--t-ink)' : 'white',
-                color: isActive ? 'white' : INK['90'],
-                border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                fontFamily: FONT.sans,
-              }}
-            >
-              <PerriandIcon name={chip.icon} size={10} />
-              {chip.label}
-            </button>
-          );
-        })}
-
-        {/* Spacer */}
-        <div className="flex-1" />
+      {/* Header row: FilterSortBar + count + browse all */}
+      <div className="flex items-center gap-1.5 px-3 pt-2 pb-1">
+        <div className="flex-1 min-w-0">
+          <FilterSortBar
+            compact
+            filterGroups={[
+              {
+                key: 'type',
+                label: 'Type',
+                options: TYPE_CHIPS.filter(c => typeCounts[c.value as string] > 0).map(c => ({ value: c.value, label: c.label, icon: c.icon })),
+                value: activeFilter,
+                onChange: (v) => setActiveFilter(v as FilterType),
+              },
+              {
+                key: 'source',
+                label: 'Source',
+                options: SOURCE_FILTERS.map(s => ({ value: s.value, label: s.label })),
+                value: sourceFilter,
+                onChange: (v) => setSourceFilter(v as SourceFilter),
+              },
+            ]}
+            sortOptions={[
+              { value: 'match', label: 'Match score' },
+              { value: 'name', label: 'Name A–Z' },
+              { value: 'source', label: 'Source' },
+            ]}
+            sortValue={sortBy}
+            onSortChange={(v) => setSortBy(v as SortOption)}
+            onResetAll={() => { setActiveFilter('all'); setSortBy('match'); setSourceFilter('all'); }}
+          />
+        </div>
 
         {/* Count badge */}
         <span
@@ -401,79 +379,6 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
           All →
         </button>
       </div>
-
-      {/* Detailed filter menu — only when open */}
-      {filterMenuOpen && (
-        <div
-          className="mx-3 mb-1.5 p-2.5 rounded-xl"
-          style={{
-            background: 'white',
-            border: '1px solid var(--t-linen)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-          }}
-        >
-          <div className="mb-2.5">
-            <span
-              className="text-[9px] font-semibold uppercase tracking-wider block mb-1"
-              style={{ color: INK['80'], fontFamily: FONT.mono }}
-            >
-              Sort by
-            </span>
-            <div className="flex gap-1">
-              {SORT_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSortBy(opt.value)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer transition-all"
-                  style={{
-                    background: sortBy === opt.value ? 'var(--t-ink)' : INK['03'],
-                    color: sortBy === opt.value ? 'white' : INK['90'],
-                    border: sortBy === opt.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                    fontFamily: FONT.sans,
-                  }}
-                >
-                  <PerriandIcon name={opt.icon} size={10} />
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="mb-1.5">
-            <span
-              className="text-[9px] font-semibold uppercase tracking-wider block mb-1"
-              style={{ color: INK['80'], fontFamily: FONT.mono }}
-            >
-              Source
-            </span>
-            <div className="flex flex-wrap gap-1">
-              {SOURCE_FILTERS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSourceFilter(opt.value)}
-                  className="px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer transition-all"
-                  style={{
-                    background: sourceFilter === opt.value ? 'var(--t-ink)' : INK['03'],
-                    color: sourceFilter === opt.value ? 'white' : INK['90'],
-                    border: sourceFilter === opt.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                    fontFamily: FONT.sans,
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          {hasActiveFilters && (
-            <button
-              onClick={() => { setActiveFilter('all'); setSortBy('match'); setSourceFilter('all'); }}
-              className="text-[9px] font-medium mt-0.5 cursor-pointer"
-              style={{ background: 'none', border: 'none', color: 'var(--t-verde)', fontFamily: FONT.sans }}
-            >
-              Reset all
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Hint label */}
       <div className="px-3 pb-1">

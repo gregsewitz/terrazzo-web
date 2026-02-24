@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Trip, ImportedPlace, TripDay, TimeSlot, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData, ScratchpadEntry, HotelInfo, TransportEvent } from '@/types';
+import { Trip, ImportedPlace, TripDay, TimeSlot, DEFAULT_TIME_SLOTS, PlaceRating, TripCreationData, DreamBoardEntry, HotelInfo, TransportEvent } from '@/types';
 import { apiFetch } from '@/lib/api-client';
 
 // ═══════════════════════════════════════════
@@ -110,10 +110,18 @@ interface TripState {
   addTransport: (dayNumber: number, transport: Omit<TransportEvent, 'id'>) => void;
   updateTransport: (dayNumber: number, transportId: string, updates: Partial<TransportEvent>) => void;
   removeTransport: (dayNumber: number, transportId: string) => void;
-  // Scratchpad
-  addScratchpadEntry: (entry: Omit<ScratchpadEntry, 'id' | 'createdAt'>) => void;
-  updateScratchpadEntry: (entryId: string, updates: Partial<ScratchpadEntry>) => void;
+  // Dream Board
+  addDreamBoardEntry: (entry: Omit<DreamBoardEntry, 'id' | 'createdAt'>) => void;
+  updateDreamBoardEntry: (entryId: string, updates: Partial<DreamBoardEntry>) => void;
+  removeDreamBoardEntry: (entryId: string) => void;
+  toggleDreamBoardPin: (entryId: string) => void;
+  /** @deprecated Use addDreamBoardEntry */
+  addScratchpadEntry: (entry: Omit<DreamBoardEntry, 'id' | 'createdAt'>) => void;
+  /** @deprecated Use updateDreamBoardEntry */
+  updateScratchpadEntry: (entryId: string, updates: Partial<DreamBoardEntry>) => void;
+  /** @deprecated Use removeDreamBoardEntry */
   removeScratchpadEntry: (entryId: string) => void;
+  /** @deprecated Use toggleDreamBoardPin */
   toggleScratchpadPin: (entryId: string) => void;
   createTrip: (data: TripCreationData) => string; // returns new trip id
   graduateToPlanning: (startDate: string, endDate: string, dayAllocation?: Record<string, number>) => void;
@@ -589,31 +597,34 @@ export const useTripStore = create<TripState>((set, get) => ({
     });
   },
 
-  // ─── Scratchpad ───
-  addScratchpadEntry: (entry) => {
-    const newEntry: ScratchpadEntry = {
+  // ─── Dream Board (formerly Scratchpad) ───
+  // Helper: get entries from dreamBoard or fall back to legacy scratchpad field
+  // (not in interface — internal only)
+
+  addDreamBoardEntry: (entry) => {
+    const newEntry: DreamBoardEntry = {
       ...entry,
-      id: `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: `db-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       createdAt: new Date().toISOString(),
     };
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
-        scratchpad: [...(trip.scratchpad || []), newEntry],
+        dreamBoard: [...(trip.dreamBoard || trip.scratchpad || []), newEntry],
       }))
     );
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
-      return t ? { scratchpad: t.scratchpad } : {};
+      return t ? { dreamBoard: t.dreamBoard || t.scratchpad } : {};
     });
   },
 
-  updateScratchpadEntry: (entryId, updates) => {
+  updateDreamBoardEntry: (entryId, updates) => {
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
-        scratchpad: (trip.scratchpad || []).map(e =>
+        dreamBoard: (trip.dreamBoard || trip.scratchpad || []).map(e =>
           e.id === entryId ? { ...e, ...updates } : e
         ),
       }))
@@ -621,29 +632,29 @@ export const useTripStore = create<TripState>((set, get) => ({
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
-      return t ? { scratchpad: t.scratchpad } : {};
+      return t ? { dreamBoard: t.dreamBoard || t.scratchpad } : {};
     });
   },
 
-  removeScratchpadEntry: (entryId) => {
+  removeDreamBoardEntry: (entryId) => {
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
-        scratchpad: (trip.scratchpad || []).filter(e => e.id !== entryId),
+        dreamBoard: (trip.dreamBoard || trip.scratchpad || []).filter(e => e.id !== entryId),
       }))
     );
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
-      return t ? { scratchpad: t.scratchpad } : {};
+      return t ? { dreamBoard: t.dreamBoard || t.scratchpad } : {};
     });
   },
 
-  toggleScratchpadPin: (entryId) => {
+  toggleDreamBoardPin: (entryId) => {
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
-        scratchpad: (trip.scratchpad || []).map(e =>
+        dreamBoard: (trip.dreamBoard || trip.scratchpad || []).map(e =>
           e.id === entryId ? { ...e, pinned: !e.pinned } : e
         ),
       }))
@@ -651,9 +662,15 @@ export const useTripStore = create<TripState>((set, get) => ({
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
-      return t ? { scratchpad: t.scratchpad } : {};
+      return t ? { dreamBoard: t.dreamBoard || t.scratchpad } : {};
     });
   },
+
+  // Legacy aliases
+  addScratchpadEntry: (...args) => get().addDreamBoardEntry(...args),
+  updateScratchpadEntry: (...args) => get().updateDreamBoardEntry(...args),
+  removeScratchpadEntry: (...args) => get().removeDreamBoardEntry(...args),
+  toggleScratchpadPin: (...args) => get().toggleDreamBoardPin(...args),
 
   createTrip: (data: TripCreationData) => {
     const id = `trip-${Date.now()}`;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import { useSavedStore } from '@/stores/savedStore';
@@ -10,6 +10,8 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GoogleMapView from '@/components/GoogleMapView';
 import ShareSheet from '@/components/ShareSheet';
 import DesktopNav from '@/components/DesktopNav';
+import PlaceSearchBar from '@/components/PlaceSearchBar';
+import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
 
@@ -57,8 +59,14 @@ function ShortlistDetailContent() {
   const myPlaces = useSavedStore(s => s.myPlaces);
   const shortlists = useSavedStore(s => s.shortlists);
   const removePlaceFromShortlist = useSavedStore(s => s.removePlaceFromShortlist);
+  const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
   const deleteShortlist = useSavedStore(s => s.deleteShortlist);
   const updateShortlist = useSavedStore(s => s.updateShortlist);
+
+  // Auto-add newly searched places to this shortlist
+  const handlePlaceAdded = useCallback((place: ImportedPlace) => {
+    addPlaceToShortlist(shortlistId, place.id);
+  }, [addPlaceToShortlist, shortlistId]);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -67,14 +75,38 @@ function ShortlistDetailContent() {
   const [mapOpen, setMapOpen] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
 
+  // Filter & sort
+  const [typeFilter, setTypeFilter] = useState<PlaceType | 'all'>('all');
+  const [detailSortBy, setDetailSortBy] = useState<'added' | 'name' | 'type' | 'rating'>('added');
+
   const shortlist = shortlists.find(s => s.id === shortlistId);
 
-  const placesInShortlist = useMemo(() => {
+  const allPlacesInShortlist = useMemo(() => {
     if (!shortlist) return [];
     return shortlist.placeIds
       .map(id => myPlaces.find(p => p.id === id))
       .filter(Boolean) as ImportedPlace[];
   }, [shortlist, myPlaces]);
+
+  // Unique types present in this shortlist (for filter options)
+  const typeOptions = useMemo(() => {
+    const types = new Set(allPlacesInShortlist.map(p => p.type));
+    return Array.from(types).sort();
+  }, [allPlacesInShortlist]);
+
+  // Filtered + sorted
+  const placesInShortlist = useMemo(() => {
+    let items = typeFilter === 'all'
+      ? [...allPlacesInShortlist]
+      : allPlacesInShortlist.filter(p => p.type === typeFilter);
+    switch (detailSortBy) {
+      case 'name': items.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case 'type': items.sort((a, b) => a.type.localeCompare(b.type)); break;
+      case 'rating': items.sort((a, b) => (b.google?.rating ?? 0) - (a.google?.rating ?? 0)); break;
+      // 'added' keeps original order (insertion order from placeIds)
+    }
+    return items;
+  }, [allPlacesInShortlist, typeFilter, detailSortBy]);
 
   if (!shortlist) {
     return (
@@ -318,28 +350,73 @@ function ShortlistDetailContent() {
     </div>
   );
 
+  /* ── Search bar for adding places directly ── */
+  const searchBar = !shortlist.isSmartCollection && (
+    <div className="mb-3">
+      <PlaceSearchBar
+        onPlaceAdded={handlePlaceAdded}
+        skipShortlistPicker
+        placeholder={`Add a place to ${shortlist.name}...`}
+      />
+    </div>
+  );
+
+  /* ── Filter + Sort bar ── */
+  const filterSortBar = allPlacesInShortlist.length > 1 && (
+    <div className="mb-4">
+      <FilterSortBar
+        filterGroups={typeOptions.length > 1 ? [{
+          key: 'type',
+          label: 'Type',
+          options: [
+            { value: 'all', label: 'All types' },
+            ...typeOptions.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })),
+          ],
+          value: typeFilter,
+          onChange: (v) => setTypeFilter(v as any),
+        }] : undefined}
+        sortOptions={[
+          { value: 'added', label: 'Order added' },
+          { value: 'name', label: 'A–Z' },
+          { value: 'type', label: 'Type' },
+          { value: 'rating', label: 'Rating' },
+        ]}
+        sortValue={detailSortBy}
+        onSortChange={(v) => setDetailSortBy(v as any)}
+        onResetAll={() => { setTypeFilter('all'); setDetailSortBy('added'); }}
+        compact
+      />
+    </div>
+  );
+
   /* ── Places list shared ── */
-  const placesList = placesInShortlist.length > 0 ? (
-    <div className={isDesktop ? 'grid gap-3' : 'flex flex-col gap-2'} style={isDesktop ? { gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' } : undefined}>
-      {placesInShortlist.map(place => (
-        <ShortlistPlaceCard
-          key={place.id}
-          place={place}
-          onTap={() => openDetail(place)}
-          onRemove={!shortlist.isSmartCollection ? () => removePlaceFromShortlist(shortlist.id, place.id) : undefined}
-        />
-      ))}
-    </div>
-  ) : (
-    <div className="text-center py-12">
-      <PerriandIcon name="discover" size={32} color={INK['15']} />
-      <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
-        No places in this shortlist
-      </p>
-      <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
-        Add places from the Library to get started
-      </p>
-    </div>
+  const placesList = (
+    <>
+      {searchBar}
+      {filterSortBar}
+      {placesInShortlist.length > 0 ? (
+        <div className={isDesktop ? 'grid gap-3' : 'flex flex-col gap-2'} style={isDesktop ? { gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' } : undefined}>
+          {placesInShortlist.map(place => (
+            <ShortlistPlaceCard
+              key={place.id}
+              place={place}
+              onTap={() => openDetail(place)}
+              onRemove={!shortlist.isSmartCollection ? () => removePlaceFromShortlist(shortlist.id, place.id) : undefined}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <PerriandIcon name="discover" size={32} color={INK['15']} />
+          <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
+            No places in this shortlist yet
+          </p>
+          <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
+            Use the search bar above to find and add places
+          </p>
+        </div>
+      )}
+    </>
   );
 
   /* ═══════════════════════════════════════════

@@ -43,9 +43,12 @@ interface DayPlannerProps {
   onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
   onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
   onAddSlotNote?: (dayNumber: number, slotId: string, content: string) => void;
+  onBack?: () => void;
+  onShare?: () => void;
+  onChat?: () => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote, onBack, onShare, onChat }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const trips = useTripStore(s => s.trips);
@@ -108,22 +111,63 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         style={{ background: 'white' }}
       >
         <div className="flex items-center justify-between mb-0.5">
-          <h1
-            className="text-lg"
-            style={{
-              fontFamily: FONT.serif,
-              fontWeight: 600,
-              color: 'var(--t-ink)',
-            }}
-          >
-            {trip.name}
-          </h1>
-          <span
-            className="text-[10px]"
-            style={{ color: INK['90'], fontFamily: FONT.mono }}
-          >
-            {trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate)}
-          </span>
+          <div className="flex items-center gap-1 min-w-0">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center justify-center flex-shrink-0 bg-transparent border-none cursor-pointer"
+                style={{ width: 28, height: 28, padding: 0, marginLeft: -6 }}
+                title="Back to trips"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={INK['50']} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+            )}
+            <h1
+              className="text-lg truncate"
+              style={{
+                fontFamily: FONT.serif,
+                fontWeight: 600,
+                color: 'var(--t-ink)',
+                margin: 0,
+              }}
+            >
+              {trip.name}
+            </h1>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span
+              className="text-[10px]"
+              style={{ color: INK['90'], fontFamily: FONT.mono }}
+            >
+              {trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate)}
+            </span>
+            {onShare && (
+              <button
+                onClick={onShare}
+                className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
+                style={{ background: INK['04'], color: 'var(--t-verde)' }}
+                title="Share trip"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+              </button>
+            )}
+            {onChat && (
+              <button
+                onClick={onChat}
+                className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
+                style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
+                title="Ask Terrazzo"
+              >
+                <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* View Toggle */}
@@ -148,7 +192,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : mode === 'activity' ? 'Activity' : mode === 'scratchpad' ? 'Notes' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : mode === 'activity' ? 'Activity' : mode === 'scratchpad' ? 'Dream Board' : 'Day Planner'}
             </button>
           ))}
         </div>

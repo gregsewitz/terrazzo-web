@@ -67,12 +67,14 @@ export default function ProfilePage() {
   const [isLoadingDiscover, setIsLoadingDiscover] = useState(false);
 
   const { isAuthenticated, user, signOut } = useAuth();
-  const resetOnboarding = useOnboardingStore(s => s.reset);
+  const resetForRedo = useOnboardingStore(s => s.resetForRedo);
   const generatedProfile = useOnboardingStore(s => s.generatedProfile);
   const lifeContext = useOnboardingStore(s => s.lifeContext);
   const allSignals = useOnboardingStore(s => s.allSignals);
+  const dbHydrated = useOnboardingStore(s => s.dbHydrated);
 
-  // Use real profile if available, fallback to demo
+  // DB is the source of truth — show loading until hydration completes,
+  // then use the real profile (no hardcoded demo fallback for auth users)
   const profile = generatedProfile || TASTE_PROFILE;
   const userName = lifeContext?.firstName || 'Greg';
   const signalCount = allSignals?.length || 238;
@@ -146,9 +148,18 @@ export default function ProfilePage() {
   };
 
   const handleRedoOnboarding = () => {
-    resetOnboarding();
+    resetForRedo();
     router.push('/onboarding');
   };
+
+  // Wait for DB hydration before rendering profile data
+  if (!dbHydrated) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
+        <div className="animate-pulse text-[13px]" style={{ color: INK['85'] }}>Loading your profile…</div>
+      </div>
+    );
+  }
 
   // Full-screen overlays
   if (showWrapped) {

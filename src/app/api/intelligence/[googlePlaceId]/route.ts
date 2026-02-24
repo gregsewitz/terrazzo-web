@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ googlePlaceId: string }> }
 ) {
   try {
@@ -38,6 +38,26 @@ export async function GET(
     }
 
     const latestRun = intel.pipelineRuns[0] || null;
+
+    // Debug mode: return raw DB record for inspection
+    const url = new URL(req.url);
+    if (url.searchParams.get('debug') === 'true') {
+      return NextResponse.json({
+        raw: {
+          signals: intel.signals,
+          signalsType: typeof intel.signals,
+          signalsIsArray: Array.isArray(intel.signals),
+          signalsLength: Array.isArray(intel.signals) ? intel.signals.length : null,
+          signalsSample: Array.isArray(intel.signals) ? intel.signals.slice(0, 2) : intel.signals,
+          antiSignals: intel.antiSignals,
+          facts: intel.facts,
+          reliability: intel.reliability,
+          status: intel.status,
+          signalCount: intel.signalCount,
+          antiSignalCount: intel.antiSignalCount,
+        },
+      });
+    }
 
     return NextResponse.json({
       status: intel.status,

@@ -236,19 +236,25 @@ export interface TripDay {
   slots: TimeSlot[];
 }
 
-// ─── Scratchpad ───
-export type ScratchpadEntryType = 'note' | 'link' | 'checklist';
+// ─── Dream Board ───
+export type DreamBoardEntryType = 'note' | 'link' | 'checklist' | 'question' | 'vibe';
 
-export interface ScratchpadEntry {
+export interface DreamBoardEntry {
   id: string;
-  type: ScratchpadEntryType;
-  content: string;           // text for notes, URL for links
+  type: DreamBoardEntryType;
+  content: string;           // text for notes/vibes/questions, URL for links
   title?: string;            // display title for links, or checklist title
   items?: { text: string; done: boolean }[]; // checklist items
   pinned?: boolean;
+  resolved?: boolean;        // for questions — marks as answered/figured out
   createdAt: string;         // ISO timestamp
-  color?: string;            // optional accent color
+  color?: string;            // accent color (used by vibes, optional for others)
 }
+
+/** @deprecated Use DreamBoardEntry — kept for migration compatibility */
+export type ScratchpadEntryType = DreamBoardEntryType;
+/** @deprecated Use DreamBoardEntry — kept for migration compatibility */
+export type ScratchpadEntry = DreamBoardEntry;
 
 export interface Trip {
   id: string;
@@ -263,7 +269,9 @@ export interface Trip {
   status?: TripStatus;
   days: TripDay[];
   pool: ImportedPlace[];
-  scratchpad?: ScratchpadEntry[]; // freeform notes, links, checklists
+  dreamBoard?: DreamBoardEntry[];  // freeform notes, links, checklists, questions, vibes
+  /** @deprecated Use dreamBoard */
+  scratchpad?: DreamBoardEntry[];
 }
 
 // Rating system types

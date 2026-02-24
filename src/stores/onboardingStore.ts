@@ -88,6 +88,10 @@ interface OnboardingState {
   // ─── Mode ───
   isLiveMode: boolean;
 
+  // ─── Hydration ───
+  /** True once DB profile data has been loaded (or skipped for unauth users) */
+  dbHydrated: boolean;
+
   // ─── Actions ───
   setPhaseIndex: (index: number) => void;
   setCurrentPhaseProgress: (progress: number) => void;
@@ -105,6 +109,9 @@ interface OnboardingState {
   finishOnboarding: (depth: OnboardingDepth) => void;
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   reset: () => void;
+  /** Soft reset for "redo onboarding" — keeps all taste data & profile, only resets progress */
+  resetForRedo: () => void;
+  setDbHydrated: (hydrated: boolean) => void;
 }
 
 const INITIAL_CERTAINTIES: Record<string, number> = {
@@ -136,6 +143,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       trustedSources: [],
       goBackPlace: null,
       isLiveMode: false,
+      dbHydrated: false,
 
       // ─── Actions ───
       setPhaseIndex: (index) => set({ currentPhaseIndex: index, currentPhaseProgress: 0 }),
@@ -259,6 +267,20 @@ export const useOnboardingStore = create<OnboardingState>()(
         trustedSources: [],
         goBackPlace: null,
       }),
+
+      resetForRedo: () => set({
+        // Only reset progress tracking — keep all taste data intact
+        isComplete: false,
+        currentPhaseIndex: 0,
+        completedPhaseIds: [],
+        currentPhaseProgress: 0,
+        onboardingDepth: null,
+        // Everything else (signals, messages, contradictions, generatedProfile,
+        // mosaicAnswers, mosaicAxes, lifeContext, seedTrips, trustedSources,
+        // goBackPlace, certainties) is intentionally preserved
+      }),
+
+      setDbHydrated: (hydrated) => set({ dbHydrated: hydrated }),
     }),
     {
       name: 'terrazzo-onboarding', // localStorage key

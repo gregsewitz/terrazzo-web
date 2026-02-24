@@ -14,6 +14,8 @@ interface UseSpeechRecognitionReturn {
   startListening: () => void;
   stopListening: () => void;
   resetTranscript: () => void;
+  /** True if speech recognition was attempted but failed (e.g. permissions denied, unsupported on device) */
+  hasFailed: boolean;
 }
 
 export function useSpeechRecognition({
@@ -22,6 +24,7 @@ export function useSpeechRecognition({
 }: UseSpeechRecognitionOptions = {}): UseSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [hasFailed, setHasFailed] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasFinalResultRef = useRef(false);
@@ -81,9 +84,15 @@ export function useSpeechRecognition({
       }
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: Event & { error?: string }) => {
       setIsListening(false);
       clearSilenceTimer();
+      // Mark as failed for errors that indicate the feature won't work on this device
+      // (not-allowed = permissions denied, service-not-allowed = not supported on this browser/OS)
+      const errorType = event.error || '';
+      if (errorType === 'not-allowed' || errorType === 'service-not-allowed' || errorType === 'audio-capture') {
+        setHasFailed(true);
+      }
     };
 
     recognition.onend = () => {
@@ -115,7 +124,9 @@ export function useSpeechRecognition({
         recognitionRef.current.start();
         setIsListening(true);
       } catch {
-        // May throw if already started
+        // .start() can throw if already started, or on mobile browsers where
+        // the API constructor exists but speech recognition isn't actually available
+        setHasFailed(true);
       }
     }
   }, [isListening, clearSilenceTimer]);
@@ -134,5 +145,5 @@ export function useSpeechRecognition({
     hasFinalResultRef.current = false;
   }, []);
 
-  return { isListening, transcript, isSupported, startListening, stopListening, resetTranscript };
+  return { isListening, transcript, isSupported, startListening, stopListening, resetTranscript, hasFailed };
 }

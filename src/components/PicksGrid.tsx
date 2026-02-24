@@ -7,6 +7,7 @@ import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/type
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import FilterSortBar from './ui/FilterSortBar';
 
 const TYPE_ICONS: Record<string, PerriandIconName> = {
   restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
@@ -36,6 +37,7 @@ interface PicksGridProps {
 export default function PicksGrid({ onTapDetail }: PicksGridProps) {
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'match' | 'name'>('match');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -62,8 +64,8 @@ export default function PicksGrid({ onTapDetail }: PicksGridProps) {
         p.name.toLowerCase().includes(q) || p.location.toLowerCase().includes(q)
       );
     }
-    return result.sort((a, b) => b.matchScore - a.matchScore);
-  }, [allPicks, activeFilter, searchQuery]);
+    return result.sort((a, b) => sortBy === 'name' ? a.name.localeCompare(b.name) : b.matchScore - a.matchScore);
+  }, [allPicks, activeFilter, searchQuery, sortBy]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -129,33 +131,25 @@ export default function PicksGrid({ onTapDetail }: PicksGridProps) {
         </div>
       </div>
 
-      {/* Filter chips */}
-      <div
-        className="flex items-center gap-1 px-4 py-1.5 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', borderBottom: '1px solid var(--t-linen)' }}
-      >
-        {TYPE_CHIPS.filter(chip => typeCounts[chip.value as string] > 0).map(chip => {
-          const isActive = activeFilter === chip.value;
-          return (
-            <button
-              key={chip.value}
-              onClick={() => toggleFilter(chip.value)}
-              className="flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
-              style={{
-                background: isActive ? 'var(--t-ink)' : 'transparent',
-                color: isActive ? 'white' : INK['70'],
-                border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                fontFamily: FONT.sans,
-              }}
-            >
-              <PerriandIcon name={chip.icon} size={10} color={isActive ? 'white' : INK['50']} />
-              {chip.label}
-              <span style={{ opacity: 0.6, fontSize: 9 }}>
-                {typeCounts[chip.value as string] || 0}
-              </span>
-            </button>
-          );
-        })}
+      {/* Filter */}
+      <div className="px-4 py-1.5" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+        <FilterSortBar
+          compact
+          filterGroups={[{
+            key: 'type',
+            label: 'Type',
+            options: TYPE_CHIPS.filter(c => typeCounts[c.value as string] > 0).map(c => ({ value: c.value, label: c.label, icon: c.icon })),
+            value: activeFilter,
+            onChange: (v) => toggleFilter(v as FilterType),
+          }]}
+          sortOptions={[
+            { value: 'match', label: 'Match %' },
+            { value: 'name', label: 'A–Z' },
+          ]}
+          sortValue={sortBy}
+          onSortChange={(v) => setSortBy(v as any)}
+          onResetAll={() => { toggleFilter('all'); setSortBy('match'); }}
+        />
       </div>
 
       {/* Grid of picks */}
