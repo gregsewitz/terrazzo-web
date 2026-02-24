@@ -138,8 +138,8 @@ export function TransportBanner({ transport, onEdit, onRemove, compact = false }
         {(transport.details || transport.arrivalTime) && (
           <span style={{
             fontFamily: FONT.mono,
-            fontSize: compact ? 8 : 9,
-            color: INK['45'],
+            fontSize: compact ? 9 : 10,
+            color: INK['55'],
           }}>
             {transport.details}
             {transport.details && transport.arrivalTime ? ' · ' : ''}
@@ -155,7 +155,7 @@ export function TransportBanner({ transport, onEdit, onRemove, compact = false }
           style={{ background: 'rgba(42,122,86,0.1)' }}
         >
           <PerriandIcon name="check" size={8} color="var(--t-verde)" />
-          <span style={{ fontFamily: FONT.mono, fontSize: 7, fontWeight: 700, color: 'var(--t-verde)' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 8, fontWeight: 700, color: 'var(--t-verde)' }}>
             Booked
           </span>
         </div>
@@ -270,7 +270,7 @@ export function TransportInput({ initial, onSave, onCancel, fromDefault, compact
                 border: 'none',
               }}
             >
-              <PerriandIcon name={c.icon as any} size={9} color={active ? 'white' : INK['40']} />
+              <PerriandIcon name={c.icon as any} size={9} color={active ? 'white' : INK['55']} />
               {c.label}
             </button>
           );
@@ -288,7 +288,7 @@ export function TransportInput({ initial, onSave, onCancel, fromDefault, compact
           onKeyDown={e => { if (e.key === 'Escape') onCancel(); }}
           autoFocus
         />
-        <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['30'] }}>→</span>
+        <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['55'] }}>→</span>
         <input
           type="text"
           value={to}

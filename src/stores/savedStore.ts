@@ -33,6 +33,9 @@ export interface DBSavedPlace {
   tips?: string[] | null;
   alsoKnownAs?: string | null;
   googleData?: Record<string, unknown> | null;
+  placeIntelligenceId?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface DBShortlist {
@@ -214,7 +217,8 @@ export const useSavedStore = create<SavedState>((set, get) => ({
 
   // ─── Library Actions ───
   addPlace: (place) => {
-    set((state) => ({ myPlaces: [place, ...state.myPlaces] }));
+    const stamped = { ...place, addedAt: place.addedAt || new Date().toISOString() };
+    set((state) => ({ myPlaces: [stamped, ...state.myPlaces] }));
     // Write-through: save to DB
     dbWrite('/api/places/save', 'POST', {
       name: place.name,
@@ -540,6 +544,7 @@ export const useSavedStore = create<SavedState>((set, get) => ({
       travelWith: dp.travelWith || undefined,
       intentStatus: dp.intentStatus as ImportedPlace['intentStatus'],
       savedDate: dp.savedDate || undefined,
+      addedAt: dp.createdAt || dp.savedDate || undefined,
       importBatchId: dp.importBatchId || undefined,
       whatToOrder: dp.whatToOrder || undefined,
       tips: dp.tips || undefined,

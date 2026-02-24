@@ -90,7 +90,7 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
                 <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'var(--t-ink)' }}>
                   {name}
                 </span>
-                <span style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['50'] }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'] }}>
                   {timeAgo}
                 </span>
               </div>

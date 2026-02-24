@@ -56,7 +56,7 @@ const SOURCE_FILTERS = [
   { value: 'maps', label: 'Maps' },
 ] as const;
 
-type SortOption = 'match' | 'name' | 'source';
+type SortOption = 'match' | 'name' | 'source' | 'recent';
 type SourceFilter = typeof SOURCE_FILTERS[number]['value'];
 
 interface PicksStripProps {
@@ -78,6 +78,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [holdingId, setHoldingId] = useState<string | null>(null); // visual "about to drag" feedback
   const [showAddPlace, setShowAddPlace] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const currentDay = useTripStore(s => s.currentDay);
@@ -158,16 +159,30 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
     return matched;
   }, [myPlaces, currentDayInfo, placedIds]);
 
+  // All unplaced shortlisted picks (no destination filter) — used when searching
+  const allUnplaced = useMemo(() => {
+    return myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+  }, [myPlaces, placedIds]);
+
   const filteredPlaces = useMemo(() => {
-    let result = allStripPlaces;
+    // When searching, search across ALL library places, not just current destination
+    let result = searchQuery.trim() ? allUnplaced : allStripPlaces;
     if (activeFilter !== 'all') {
       result = result.filter(p => p.type === activeFilter);
     }
     if (sourceFilter !== 'all') {
       result = result.filter(p => p.ghostSource === sourceFilter);
     }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.location || '').toLowerCase().includes(q) ||
+        (p.tasteNote || '').toLowerCase().includes(q)
+      );
+    }
     return result;
-  }, [allStripPlaces, activeFilter, sourceFilter]);
+  }, [allStripPlaces, allUnplaced, activeFilter, sourceFilter, searchQuery]);
 
   const stripPlaces = useMemo(() => {
     const sorted = [...filteredPlaces];
@@ -175,6 +190,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
       case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'source': sorted.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
+      case 'recent': sorted.sort((a, b) => (b.addedAt || '').localeCompare(a.addedAt || '')); break;
     }
     return sorted;
   }, [filteredPlaces, sortBy]);
@@ -277,7 +293,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
     if (!dragItemId) onTapDetail(item);
   }, [dragItemId, onTapDetail]);
 
-  const hasActiveFilters = activeFilter !== 'all' || sourceFilter !== 'all' || sortBy !== 'match';
+  const hasActiveFilters = activeFilter !== 'all' || sourceFilter !== 'all' || sortBy !== 'match' || searchQuery.trim() !== '';
 
   if (allStripPlaces.length === 0) {
     return (
@@ -344,12 +360,13 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
             ]}
             sortOptions={[
               { value: 'match', label: 'Match score' },
+              { value: 'recent', label: 'Recently added' },
               { value: 'name', label: 'Name A–Z' },
               { value: 'source', label: 'Source' },
             ]}
             sortValue={sortBy}
             onSortChange={(v) => setSortBy(v as SortOption)}
-            onResetAll={() => { setActiveFilter('all'); setSortBy('match'); setSourceFilter('all'); }}
+            onResetAll={() => { setActiveFilter('all'); setSortBy('match'); setSourceFilter('all'); setSearchQuery(''); }}
           />
         </div>
 
@@ -378,6 +395,40 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
         >
           All →
         </button>
+      </div>
+
+      {/* Search bar */}
+      <div className="px-3 pb-1">
+        <div className="relative">
+          <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
+            <PerriandIcon name="discover" size={12} color={INK['40']} />
+          </span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search picks…"
+            style={{
+              width: '100%',
+              fontFamily: FONT.sans,
+              fontSize: 10,
+              color: 'var(--t-ink)',
+              background: INK['04'],
+              border: `1px solid var(--t-linen)`,
+              borderRadius: 6,
+              padding: '4px 8px 4px 24px',
+              outline: 'none',
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <PerriandIcon name="close" size={10} color={INK['50']} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Hint label */}

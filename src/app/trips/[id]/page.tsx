@@ -80,9 +80,9 @@ function TripDetailContent() {
   const resizing = useRef(false);
 
   // Picks rail resizable width
-  const RAIL_MIN = 140;
+  const RAIL_MIN = 220;
   const RAIL_MAX = 400;
-  const [railWidth, setRailWidth] = useState(200);
+  const [railWidth, setRailWidth] = useState(250);
   const railResizing = useRef(false);
 
   // Shared day selector state between PicksRail and DayBoardView
@@ -664,8 +664,8 @@ function TripDetailContent() {
             onChat={() => setChatOpen(true)}
           />
 
-          {/* Trip Places — all placed items across itinerary */}
-          {viewMode === 'myPlaces' && (
+          {/* Featured Places — all placed items across itinerary */}
+          {viewMode === 'featuredPlaces' && (
             <TripMyPlaces onTapDetail={openDetail} />
           )}
 
@@ -674,7 +674,7 @@ function TripDetailContent() {
             <ActivityFeed activities={collabActivities} />
           )}
 
-          {viewMode === 'scratchpad' && (
+          {viewMode === 'dreamBoard' && (
             <DreamBoard />
           )}
         </div>

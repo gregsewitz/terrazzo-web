@@ -35,6 +35,16 @@ const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[]
   { value: 'shop', label: 'Shop', icon: 'shop' },
 ];
 
+const SOURCE_FILTERS = [
+  { value: 'all', label: 'All sources' },
+  { value: 'article', label: 'Articles' },
+  { value: 'friend', label: 'Friends' },
+  { value: 'email', label: 'Email' },
+  { value: 'maps', label: 'Maps' },
+] as const;
+
+type SourceFilter = typeof SOURCE_FILTERS[number]['value'];
+
 interface PicksRailProps {
   onTapDetail: (item: ImportedPlace) => void;
   width: number;
@@ -49,7 +59,9 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [showAddPlace, setShowAddPlace] = useState(false);
-  const [sortBy, setSortBy] = useState<'match' | 'name'>('match');
+  const [sortBy, setSortBy] = useState<'match' | 'name' | 'recent'>('match');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -88,8 +100,19 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
     if (activeFilter !== 'all') {
       picks = picks.filter(p => p.type === activeFilter);
     }
+    if (sourceFilter !== 'all') {
+      picks = picks.filter(p => p.ghostSource === sourceFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      picks = picks.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.location || '').toLowerCase().includes(q) ||
+        (p.tasteNote || '').toLowerCase().includes(q)
+      );
+    }
     return picks;
-  }, [allPicks, activeFilter]);
+  }, [allPicks, activeFilter, sourceFilter, searchQuery]);
 
   // Sort: if a day destination is selected, matching places float to top
   const matchesDestination = useCallback((place: ImportedPlace): boolean => {
@@ -106,7 +129,9 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
         const bMatch = matchesDestination(b) ? 1 : 0;
         if (aMatch !== bMatch) return bMatch - aMatch;
       }
-      return sortBy === 'name' ? a.name.localeCompare(b.name) : b.matchScore - a.matchScore;
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'recent') return (b.addedAt || '').localeCompare(a.addedAt || '');
+      return b.matchScore - a.matchScore;
     });
   }, [filteredPicks, activeDestination, matchesDestination, sortBy]);
 
@@ -219,7 +244,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
         )}
       </div>
 
-      {/* Type filter */}
+      {/* Filters & sort */}
       <div className="px-3 py-1.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
         <FilterSortBar
           compact
@@ -229,15 +254,56 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
             options: TYPE_CHIPS.filter(c => typeCounts[c.value as string] > 0).map(c => ({ value: c.value, label: c.label, icon: c.icon })),
             value: activeFilter,
             onChange: (v) => toggleFilter(v as FilterType),
+          }, {
+            key: 'source',
+            label: 'Source',
+            options: SOURCE_FILTERS.map(s => ({ value: s.value, label: s.label })),
+            value: sourceFilter,
+            onChange: (v) => setSourceFilter(v as SourceFilter),
           }]}
           sortOptions={[
             { value: 'match', label: 'Match %' },
+            { value: 'recent', label: 'Recent' },
             { value: 'name', label: 'A–Z' },
           ]}
           sortValue={sortBy}
           onSortChange={(v) => setSortBy(v as any)}
-          onResetAll={() => { toggleFilter('all'); setSortBy('match'); }}
+          onResetAll={() => { toggleFilter('all'); setSortBy('match'); setSourceFilter('all'); setSearchQuery(''); }}
         />
+      </div>
+
+      {/* Search bar */}
+      <div className="px-3 py-1.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+        <div className="relative">
+          <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
+            <PerriandIcon name="discover" size={12} color={INK['40']} />
+          </span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search all picks…"
+            style={{
+              width: '100%',
+              fontFamily: FONT.sans,
+              fontSize: 11,
+              color: 'var(--t-ink)',
+              background: INK['04'],
+              border: `1px solid var(--t-linen)`,
+              borderRadius: 8,
+              padding: '5px 28px 5px 26px',
+              outline: 'none',
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <PerriandIcon name="close" size={10} color={INK['50']} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Scrollable picks list */}
@@ -332,7 +398,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
                   style={{
                     fontFamily: FONT.mono,
                     fontSize: 9,
-                    color: INK['45'],
+                    color: INK['55'],
                     lineHeight: 1.3,
                     display: '-webkit-box',
                     WebkitLineClamp: 1,
@@ -349,7 +415,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
                       fontFamily: FONT.serif,
                       fontStyle: 'italic',
                       fontSize: 9,
-                      color: INK['40'],
+                      color: INK['55'],
                       lineHeight: 1.3,
                       marginTop: 1,
                       display: '-webkit-box',

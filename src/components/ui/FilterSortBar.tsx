@@ -96,11 +96,11 @@ export default function FilterSortBar({
   return (
     <div>
       {/* Button row */}
-      <div className="flex items-center gap-2" style={{ padding: compact ? '0' : undefined }}>
+      <div className="flex items-center gap-1.5" style={{ padding: compact ? '0' : undefined }}>
         {hasFilters && (
           <button
             onClick={() => setOpenPanel(openPanel === 'filter' ? null : 'filter')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-all"
+            className={`flex items-center gap-1.5 rounded-full font-medium cursor-pointer transition-all ${compact ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'}`}
             style={{
               background: isFilterActive || openPanel === 'filter' ? 'var(--t-ink)' : 'white',
               color: isFilterActive || openPanel === 'filter' ? 'white' : INK['70'],
@@ -121,7 +121,7 @@ export default function FilterSortBar({
         {hasSort && (
           <button
             onClick={() => setOpenPanel(openPanel === 'sort' ? null : 'sort')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-all"
+            className={`flex items-center gap-1.5 rounded-full font-medium cursor-pointer transition-all ${compact ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'}`}
             style={{
               background: isSortActive || openPanel === 'sort' ? 'var(--t-ink)' : 'white',
               color: isSortActive || openPanel === 'sort' ? 'white' : INK['70'],

@@ -29,6 +29,8 @@ export interface PlaceSearchResult {
   lng?: number;
   type: PlaceType;
   isCustom?: boolean;
+  googleTypes?: string[];
+  addressComponents?: google.maps.GeocoderAddressComponent[];
 }
 
 interface PlaceSearchInputProps {
@@ -38,6 +40,7 @@ interface PlaceSearchInputProps {
   suggestedType?: PlaceType;   // hint from slot affinity
   placeholder?: string;
   compact?: boolean;           // smaller variant for PicksRail
+  searchTypes?: string[];      // override autocomplete types (default: ['establishment'])
 }
 
 function PlaceSearchInputInner({
@@ -47,6 +50,7 @@ function PlaceSearchInputInner({
   suggestedType,
   placeholder = 'Search for a place…',
   compact = false,
+  searchTypes,
 }: PlaceSearchInputProps) {
   const places = useMapsLibrary('places');
 
@@ -91,7 +95,9 @@ function PlaceSearchInputInner({
       debounceTimer.current = setTimeout(() => {
         const request: google.maps.places.AutocompletionRequest = {
           input: destination ? `${input} ${destination}` : input,
-          types: ['establishment'],
+          ...(searchTypes !== undefined
+            ? (searchTypes.length > 0 ? { types: searchTypes } : {})
+            : { types: ['establishment'] }),
         };
 
         autocompleteService.current!.getPlacePredictions(request, (results, status) => {
@@ -106,7 +112,7 @@ function PlaceSearchInputInner({
         });
       }, 250);
     },
-    [destination],
+    [destination, searchTypes],
   );
 
   // ─── Select prediction ───
@@ -121,7 +127,7 @@ function PlaceSearchInputInner({
         placesService.current.getDetails(
           {
             placeId: prediction.place_id,
-            fields: ['geometry', 'formatted_address', 'name', 'types'],
+            fields: ['geometry', 'formatted_address', 'name', 'types', 'address_components'],
           },
           (place, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK && place) {
@@ -132,6 +138,8 @@ function PlaceSearchInputInner({
                 lat: place.geometry?.location?.lat(),
                 lng: place.geometry?.location?.lng(),
                 type: place.types ? inferPlaceType(place.types) : suggestedType || 'activity',
+                googleTypes: place.types || undefined,
+                addressComponents: place.address_components || undefined,
               });
             } else {
               onSelect({

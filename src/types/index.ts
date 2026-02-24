@@ -168,6 +168,7 @@ export interface ImportedPlace {
   friendAttribution?: FriendAttribution;
   terrazzoReasoning?: TerrazzoReasoning;
   savedDate?: string; // for Maps imports: "Saved Jun 2024"
+  addedAt?: string; // ISO timestamp of when place was added to library
   rating?: PlaceRating; // user's personal rating
   // Enriched card fields (from import briefing)
   whatToOrder?: string[];  // e.g. ["Puntillas ★", "Gambas de la santa"]

@@ -87,7 +87,7 @@ export default function GhostCard({
             </span>
             <span
               className="block truncate"
-              style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['50'], marginTop: 1 }}
+              style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], marginTop: 1 }}
             >
               {item.type}{item.location ? ` · ${item.location.split(',')[0]}` : ''}
             </span>
@@ -126,7 +126,7 @@ export default function GhostCard({
         <div className="flex items-center gap-1.5 mt-1">
           <span
             className="font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0"
-            style={{ background: sourceStyle.bg, color: sourceStyle.color, fontSize: 8 }}
+            style={{ background: sourceStyle.bg, color: sourceStyle.color, fontSize: 9 }}
           >
             <PerriandIcon name={sourceStyle.icon} size={9} color={sourceStyle.color} />
             {getSourceLabel()}
@@ -134,7 +134,7 @@ export default function GhostCard({
           {note && (
             <span
               className="italic truncate"
-              style={{ color: INK['50'], fontSize: 9 }}
+              style={{ color: INK['60'], fontSize: 10 }}
             >
               {sourceType === 'friend' ? `"${note}"` : note}
             </span>

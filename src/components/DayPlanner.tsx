@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
+import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -14,9 +15,11 @@ import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsB
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import { FONT, INK } from '@/constants/theme';
+import { generateDestColor } from '@/lib/destination-helpers';
+import AddDestinationSearch from './AddDestinationSearch';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
 
-export type TripViewMode = 'planner' | 'overview' | 'myPlaces' | 'activity' | 'scratchpad';
+export type TripViewMode = 'planner' | 'overview' | 'featuredPlaces' | 'activity' | 'dreamBoard';
 
 export interface DropTarget {
   dayNumber: number;
@@ -51,16 +54,22 @@ interface DayPlannerProps {
 export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote, onBack, onShare, onChat }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
+  const reorderDays = useTripStore(s => s.reorderDays);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const setDayHotelInfo = useTripStore(s => s.setDayHotelInfo);
   const setMultipleDaysHotelInfo = useTripStore(s => s.setMultipleDaysHotelInfo);
+  const setDayDestination = useTripStore(s => s.setDayDestination);
   const addTransport = useTripStore(s => s.addTransport);
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const [dayMapOpen, setDayMapOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState(false);
+  const [destPickerDay, setDestPickerDay] = useState<number | 'add-new' | null>(null);
+  const [destPickerAddMode, setDestPickerAddMode] = useState(false);
+  const destPickerRef = useRef<HTMLDivElement>(null);
+  const addBtnRef = useRef<HTMLButtonElement>(null);
   const [addingTransport, setAddingTransport] = useState(false);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
 
@@ -69,7 +78,41 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
     setEditingHotel(false);
     setAddingTransport(false);
     setEditingTransportId(null);
+    setDestPickerDay(null);
+    setDestPickerAddMode(false);
   }, [currentDay]);
+
+  // Close destination picker on click outside
+  useEffect(() => {
+    if (destPickerDay === null) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        destPickerRef.current && !destPickerRef.current.contains(e.target as Node) &&
+        (!addBtnRef.current || !addBtnRef.current.contains(e.target as Node))
+      ) {
+        setDestPickerDay(null);
+        setDestPickerAddMode(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [destPickerDay]);
+
+  // Gather unique destinations for the picker
+  const uniqueDestinations = useMemo(() => {
+    if (!trip) return [];
+    const dests = new Set<string>();
+    trip.days.forEach(d => { if (d.destination) dests.add(d.destination); });
+    return Array.from(dests);
+  }, [trip]);
+
+  // Get destination color with hash-based fallback for new destinations
+  const getDestColor = useCallback((dest: string) => {
+    return DEST_COLORS[dest] || generateDestColor(dest);
+  }, []);
+
+  // Check if the current day's destination has any saved places
+  const myPlaces = useSavedStore(s => s.myPlaces);
 
   const handleHotelSave = useCallback((hotelInfo: HotelInfo | null) => {
     if (!trip) return;
@@ -101,7 +144,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const day = trip.days.find(d => d.dayNumber === currentDay) || trip.days[0];
   if (!day) return null;
 
-  const destColor = DEST_COLORS[day.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+  const destColor = getDestColor(day.destination || '');
 
   return (
     <div style={{ background: 'var(--t-cream)' }}>
@@ -176,8 +219,8 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           style={{ background: 'var(--t-linen)' }}
         >
           {(myRole
-            ? (['overview', 'planner', 'myPlaces', 'activity', 'scratchpad'] as const)
-            : (['overview', 'planner', 'myPlaces', 'scratchpad'] as const)
+            ? (['overview', 'planner', 'dreamBoard', 'featuredPlaces', 'activity'] as const)
+            : (['overview', 'planner', 'dreamBoard', 'featuredPlaces'] as const)
           ).map(mode => (
             <button
               key={mode}
@@ -192,7 +235,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'myPlaces' ? 'Trip Places' : mode === 'activity' ? 'Activity' : mode === 'scratchpad' ? 'Dream Board' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'featuredPlaces' ? 'Featured Places' : mode === 'activity' ? 'Activity' : mode === 'dreamBoard' ? 'Dream Board' : 'Day Planner'}
             </button>
           ))}
         </div>
@@ -211,7 +254,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
       >
         {trip.days.map((d) => {
           const isDayActive = d.dayNumber === currentDay;
-          const dayDestColor = DEST_COLORS[d.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+          const dayDestColor = getDestColor(d.destination || '');
           const shortDay = d.dayOfWeek?.slice(0, 3) || '';
           const dateNum = d.date?.replace(/\D/g, ' ').trim().split(' ').pop() || d.dayNumber;
           // Extract month abbreviation from date string like "Jun 15"
@@ -230,22 +273,22 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 border: 'none',
                 borderBottom: isDayActive ? `2px solid ${dayDestColor.accent}` : '2px solid transparent',
                 background: isDayActive ? `${dayDestColor.accent}08` : 'transparent',
+                position: 'relative',
               }}
             >
-              {showMonth && (
-                <span style={{
-                  fontFamily: FONT.mono,
-                  fontSize: 8,
-                  fontWeight: 600,
-                  color: isDayActive ? dayDestColor.accent : INK['60'],
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                  lineHeight: 1,
-                  marginBottom: 1,
-                }}>
-                  {shortMonth}
-                </span>
-              )}
+              <span style={{
+                fontFamily: FONT.mono,
+                fontSize: 9,
+                fontWeight: 600,
+                color: isDayActive ? dayDestColor.accent : INK['60'],
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                lineHeight: 1,
+                marginBottom: 1,
+                visibility: showMonth ? 'visible' : 'hidden',
+              }}>
+                {shortMonth || '\u00A0'}
+              </span>
               <span style={{
                 fontFamily: FONT.sans,
                 fontSize: 12,
@@ -255,17 +298,218 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               }}>
                 {shortDay} {dateNum}
               </span>
-              <span style={{
-                fontFamily: FONT.sans,
-                fontSize: 9,
-                fontWeight: 500,
-                color: isDayActive ? dayDestColor.accent : INK['80'],
-              }}>
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentDay(d.dayNumber);
+                  setDestPickerDay(prev => prev === d.dayNumber ? null : d.dayNumber);
+                }}
+                style={{
+                  fontFamily: FONT.sans,
+                  fontSize: 9,
+                  fontWeight: 500,
+                  color: isDayActive ? dayDestColor.accent : INK['80'],
+                  borderBottom: `1px dashed ${isDayActive ? dayDestColor.accent + '60' : INK['30']}`,
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
                 {d.destination || 'TBD'}
               </span>
+
+              {/* Reorder arrows — visible on active day */}
+              {isDayActive && trip.days.length > 1 && (
+                <div className="flex gap-0.5 mt-0.5">
+                  {d.dayNumber > 1 && (
+                    <span
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); reorderDays(d.dayNumber, d.dayNumber - 1); }}
+                      className="flex items-center justify-center rounded"
+                      style={{
+                        width: 16, height: 14, background: `${dayDestColor.accent}15`,
+                        cursor: 'pointer', padding: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 8, color: dayDestColor.accent, lineHeight: 1 }}>◀</span>
+                    </span>
+                  )}
+                  {d.dayNumber < trip.days.length && (
+                    <span
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); reorderDays(d.dayNumber, d.dayNumber + 1); }}
+                      className="flex items-center justify-center rounded"
+                      style={{
+                        width: 16, height: 14, background: `${dayDestColor.accent}15`,
+                        cursor: 'pointer', padding: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 8, color: dayDestColor.accent, lineHeight: 1 }}>▶</span>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Destination picker popover */}
+              {destPickerDay === d.dayNumber && (
+                <div
+                  ref={destPickerRef}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginTop: 4,
+                    background: 'white',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    border: '1px solid var(--t-linen)',
+                    padding: destPickerAddMode ? 0 : 8,
+                    zIndex: 50,
+                    minWidth: destPickerAddMode ? 240 : 160,
+                  }}
+                >
+                  {destPickerAddMode ? (
+                    <AddDestinationSearch
+                      onAdded={() => {
+                        setDestPickerDay(null);
+                        setDestPickerAddMode(false);
+                      }}
+                      onCancel={() => {
+                        setDestPickerAddMode(false);
+                      }}
+                    />
+                  ) : (
+                    <>
+                      {uniqueDestinations.map(dest => {
+                        const isCurrent = dest === d.destination;
+                        const destC = getDestColor(dest);
+                        return (
+                          <button
+                            key={dest}
+                            onClick={() => {
+                              if (!isCurrent) setDayDestination(d.dayNumber, dest);
+                              setDestPickerDay(null);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              width: '100%',
+                              textAlign: 'left',
+                              padding: '6px 10px',
+                              borderRadius: 8,
+                              border: 'none',
+                              background: isCurrent ? destC.bg : 'transparent',
+                              fontFamily: FONT.sans,
+                              fontSize: 13,
+                              color: 'var(--t-ink)',
+                              cursor: isCurrent ? 'default' : 'pointer',
+                              fontWeight: isCurrent ? 600 : 400,
+                              opacity: isCurrent ? 0.6 : 1,
+                            }}
+                          >
+                            <span style={{
+                              width: 8, height: 8, borderRadius: '50%',
+                              background: destC.accent, flexShrink: 0,
+                            }} />
+                            {dest}
+                          </button>
+                        );
+                      })}
+                      <button
+                        onClick={() => setDestPickerAddMode(true)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '6px 10px',
+                          marginTop: 2,
+                          borderRadius: 8,
+                          border: 'none',
+                          borderTop: '1px solid var(--t-linen)',
+                          background: 'transparent',
+                          fontFamily: FONT.sans,
+                          fontSize: 12,
+                          color: INK['50'],
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
+                        Add destination
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </button>
           );
         })}
+
+        {/* "+" button to add a new destination */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            ref={addBtnRef}
+            onClick={() => {
+              if (destPickerDay === 'add-new') {
+                setDestPickerDay(null);
+                setDestPickerAddMode(false);
+              } else {
+                setDestPickerDay('add-new');
+                setDestPickerAddMode(false);
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: '100%',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: '2px solid transparent',
+              cursor: 'pointer',
+              color: INK['55'],
+              fontSize: 18,
+              padding: 0,
+            }}
+            title="Add destination"
+          >
+            +
+          </button>
+          {destPickerDay === 'add-new' && (
+            <div
+              ref={destPickerRef}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: 4,
+                background: 'white',
+                borderRadius: 12,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                border: '1px solid var(--t-linen)',
+                zIndex: 50,
+                minWidth: 240,
+              }}
+            >
+              <AddDestinationSearch
+                onAdded={() => {
+                  setDestPickerDay(null);
+                  setDestPickerAddMode(false);
+                }}
+                onCancel={() => {
+                  setDestPickerDay(null);
+                  setDestPickerAddMode(false);
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Active day context bar — hotel + map toggle */}
@@ -344,7 +588,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       <PerriandIcon name="hotel" size={12} color={destColor.text} />
                       {day.hotelInfo?.name || day.hotel}
                       {day.hotelInfo?.isCustom && (
-                        <span style={{ fontSize: 9, fontWeight: 400, color: destColor.accent, opacity: 0.7 }}>
+                        <span style={{ fontSize: 9, fontWeight: 400, color: destColor.accent, opacity: 0.85 }}>
                           (custom)
                         </span>
                       )}
@@ -353,7 +597,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       <span style={{
                         fontFamily: FONT.sans,
                         fontSize: 9,
-                        color: INK['45'],
+                        color: INK['55'],
                         marginLeft: 16,
                         whiteSpace: 'nowrap',
                         maxWidth: 180,
@@ -373,7 +617,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       fontFamily: FONT.sans,
                       fontSize: 11,
                       fontWeight: 500,
-                      color: `${destColor.accent}80`,
+                      color: `${destColor.accent}cc`,
                       whiteSpace: 'nowrap',
                       background: 'none',
                       border: 'none',
@@ -381,7 +625,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       padding: 0,
                     }}
                   >
-                    <PerriandIcon name="hotel" size={12} color={`${destColor.accent}80`} />
+                    <PerriandIcon name="hotel" size={12} color={`${destColor.accent}cc`} />
                     + Hotel
                   </button>
                 )}
@@ -400,7 +644,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       fontFamily: FONT.sans,
                       fontSize: 11,
                       fontWeight: 500,
-                      color: `${destColor.accent}80`,
+                      color: `${destColor.accent}cc`,
                       whiteSpace: 'nowrap',
                       background: 'none',
                       border: 'none',
@@ -408,7 +652,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                       padding: 0,
                     }}
                   >
-                    <PerriandIcon name="plan" size={12} color={`${destColor.accent}80`} />
+                    <PerriandIcon name="plan" size={12} color={`${destColor.accent}cc`} />
                     + Travel
                   </button>
                 )}
@@ -519,7 +763,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   {placedItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.manual.color }} />
-                      <span style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['85'] }}>
+                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['85'] }}>
                         {placedItems.length} planned
                       </span>
                     </div>
@@ -527,7 +771,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   {ghostItems.length > 0 && (
                     <div className="flex items-center gap-1">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.terrazzo.color, opacity: 0.5 }} />
-                      <span style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['80'] }}>
+                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'] }}>
                         {ghostItems.length} suggested
                       </span>
                     </div>
@@ -536,6 +780,49 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               </div>
             )}
           </>
+        );
+      })()}
+
+      {/* Empty destination nudge — no saved places match this day */}
+      {(() => {
+        const dest = day.destination;
+        if (!dest) return null;
+        const destLower = dest.toLowerCase();
+        const hasPlacedOrGhost = day.slots.some(s =>
+          s.places.length > 0 || (s.ghostItems && s.ghostItems.length > 0)
+        );
+        if (hasPlacedOrGhost) return null;
+        const hasSavedPlaces = myPlaces.some(p =>
+          p.isShortlisted && p.location?.toLowerCase().includes(destLower)
+        );
+        if (hasSavedPlaces) return null;
+        return (
+          <div
+            className="mx-3 my-2 px-4 py-3 flex flex-col items-center gap-1.5"
+            style={{
+              background: `${destColor.accent}08`,
+              borderRadius: 12,
+              border: `1px dashed ${destColor.accent}30`,
+            }}
+          >
+            <span style={{
+              fontFamily: FONT.sans,
+              fontSize: 13,
+              fontWeight: 500,
+              color: destColor.text || INK['70'],
+              textAlign: 'center',
+            }}>
+              No saved places in {dest} yet
+            </span>
+            <span style={{
+              fontFamily: FONT.sans,
+              fontSize: 11,
+              color: INK['50'],
+              textAlign: 'center',
+            }}>
+              Search and save places to start planning this day
+            </span>
+          </div>
         );
       })()}
 
@@ -680,12 +967,12 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                 </div>
                 <div className="flex items-center gap-2">
                   {(d.hotelInfo || d.hotel) && (
-                    <span className="flex items-center gap-1" style={{ fontFamily: FONT.sans, fontSize: 10, color: dColor.accent, opacity: 0.7 }}>
+                    <span className="flex items-center gap-1" style={{ fontFamily: FONT.sans, fontSize: 10, color: dColor.accent, opacity: 0.85 }}>
                       <PerriandIcon name="hotel" size={11} color={dColor.accent} />
                       {d.hotelInfo?.name || d.hotel}
                     </span>
                   )}
-                  <span style={{ fontFamily: FONT.mono, fontSize: 9, color: dColor.accent, opacity: 0.6 }}>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 9, color: dColor.accent, opacity: 0.8 }}>
                     {allPlaced.length}/{d.slots.length}
                   </span>
                 </div>
@@ -724,7 +1011,7 @@ function OverviewItinerary({ trip, onTapDay, onTapDetail }: { trip: Trip; onTapD
                             <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
                             </span>
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 8, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}>
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}>
                               <PerriandIcon name={srcStyle.icon} size={10} color={srcStyle.color} />
                               {place.source?.name || srcStyle.label}
                             </span>
@@ -1061,7 +1348,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     {p.name}
                   </span>
                   <span
-                    className="text-[8px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
+                    className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
                     style={{ background: srcStyle.bg, color: srcStyle.color }}
                   >
                     <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
@@ -1098,7 +1385,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     cursor: 'pointer',
                   }}
                 >
-                  <PerriandIcon name="close" size={8} color={INK['35']} />
+                  <PerriandIcon name="close" size={8} color={INK['55']} />
                 </button>
               )}
             </div>

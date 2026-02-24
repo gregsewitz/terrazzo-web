@@ -26,6 +26,9 @@ export const PATCH = apiHandler(async (req: NextRequest, { params }: { params: P
       ...(updates.conversationHistory !== undefined && { conversationHistory: updates.conversationHistory }),
       ...(updates.status !== undefined && { status: updates.status }),
       ...(updates.destinations !== undefined && { destinations: updates.destinations }),
+      ...(updates.endDate !== undefined && { endDate: new Date(updates.endDate) }),
+      ...(updates.startDate !== undefined && { startDate: new Date(updates.startDate) }),
+      ...(updates.location !== undefined && { location: updates.location }),
     },
   });
 

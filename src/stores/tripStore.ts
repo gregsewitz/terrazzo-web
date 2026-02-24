@@ -100,6 +100,9 @@ interface TripState {
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
+  setDayDestination: (dayNumber: number, destination: string) => void;
+  reorderDays: (fromDayNumber: number, toDayNumber: number) => void;
+  addDestinationToTrip: (destination: string, maybePlace?: ImportedPlace) => void;
   setDayHotel: (dayNumber: number, hotel: string) => void;
   setMultipleDaysHotel: (dayNumbers: number[], hotel: string) => void;
   setDayHotelInfo: (dayNumber: number, hotelInfo: HotelInfo | null) => void;
@@ -450,6 +453,112 @@ export const useTripStore = create<TripState>((set, get) => ({
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
       return t ? { days: t.days } : {};
+    });
+  },
+
+  setDayDestination: (dayNumber, destination) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: trip.days.map(d =>
+          d.dayNumber === dayNumber ? { ...d, destination } : d
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  reorderDays: (fromDayNumber, toDayNumber) => {
+    if (fromDayNumber === toDayNumber) return;
+    set(state =>
+      updateCurrentTrip(state, trip => {
+        const days = [...trip.days];
+        const fromIdx = days.findIndex(d => d.dayNumber === fromDayNumber);
+        const toIdx = days.findIndex(d => d.dayNumber === toDayNumber);
+        if (fromIdx === -1 || toIdx === -1) return trip;
+        // Remove from old position and insert at new position
+        const [moved] = days.splice(fromIdx, 1);
+        days.splice(toIdx, 0, moved);
+        // Reassign dayNumbers sequentially (1-based) to keep them consistent
+        const renumbered = days.map((d, i) => ({ ...d, dayNumber: i + 1 }));
+        return { ...trip, days: renumbered };
+      })
+    );
+    // Update currentDay to follow the moved day
+    const trip = get().trips.find(t => t.id === get().currentTripId);
+    if (trip) {
+      const movedDay = trip.days.find(d => d.dayNumber !== undefined);
+      // currentDay should track to the new position of the moved day
+      const fromIdx = fromDayNumber - 1;
+      const toIdx = toDayNumber - 1;
+      const currentDay = get().currentDay;
+      if (currentDay === fromDayNumber) {
+        set({ currentDay: toDayNumber });
+      } else if (fromDayNumber < toDayNumber && currentDay > fromDayNumber && currentDay <= toDayNumber) {
+        set({ currentDay: currentDay - 1 });
+      } else if (fromDayNumber > toDayNumber && currentDay >= toDayNumber && currentDay < fromDayNumber) {
+        set({ currentDay: currentDay + 1 });
+      }
+    }
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  addDestinationToTrip: (destination, maybePlace) => {
+    const state = get();
+    const trip = state.trips.find(t => t.id === state.currentTripId);
+    if (!trip) return;
+
+    // Guard: skip if destination already exists
+    if (trip.destinations?.some(d => d.toLowerCase() === destination.toLowerCase())) return;
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Calculate new end date (extend by 1 day)
+    const oldEnd = trip.endDate ? new Date(trip.endDate + 'T00:00:00') : new Date();
+    const newEndDate = new Date(oldEnd);
+    newEndDate.setDate(newEndDate.getDate() + 1);
+    const newEndDateStr = newEndDate.toISOString().split('T')[0];
+
+    // Create the new day
+    const newDayNumber = trip.days.length + 1;
+    const newDay: TripDay = {
+      dayNumber: newDayNumber,
+      date: `${monthNames[newEndDate.getMonth()]} ${newEndDate.getDate()}`,
+      dayOfWeek: dayNames[newEndDate.getDay()],
+      destination,
+      slots: DEFAULT_TIME_SLOTS.map(s => ({ ...s, places: [], ghostItems: [] })),
+    };
+
+    const newDestinations = [...(trip.destinations || []), destination];
+
+    set(state2 => ({
+      trips: state2.trips.map(t =>
+        t.id === state2.currentTripId
+          ? {
+              ...t,
+              destinations: newDestinations,
+              location: newDestinations.join(', '),
+              endDate: newEndDateStr,
+              days: [...t.days, newDay],
+            }
+          : t
+      ),
+      currentDay: newDayNumber, // auto-navigate to the new day
+    }));
+
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { destinations: t.destinations, days: t.days, endDate: t.endDate } : {};
     });
   },
 
