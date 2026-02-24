@@ -499,6 +499,52 @@ export interface ImagePair {
   bSignals: string[];
 }
 
+// ─── Elo-Ranked Comparison Types ───
+
+export type TasteAxes = {
+  volume: number;      // minimal ↔ maximal
+  temperature: number; // cool ↔ warm
+  time: number;        // antique ↔ contemporary
+  formality: number;   // raw ↔ polished
+  culture: number;     // universal ↔ place-specific
+  mood: number;        // dark/moody ↔ bright/joyful
+};
+
+export interface ExperienceItem {
+  id: string;
+  label: string;
+  cluster: string;
+  signals: string[];
+  category: string; // TasteDomain
+}
+
+export interface DesignerItem {
+  id: string;
+  name: string;
+  hotel: string;
+  vibe: string;
+  cluster: string;
+  imageUrls: string[];
+  axes: TasteAxes;
+  signals: string[];
+}
+
+export interface EloItem {
+  id: string;
+  rating: number;
+  comparisons: number;
+  cluster: string;
+  signals: string[];
+  category?: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface EloState {
+  items: EloItem[];
+  history: { winnerId: string; loserId: string; round: number }[];
+  round: number;
+}
+
 export type OnboardingPhaseModality = 'voice' | 'cards' | 'visual' | 'voice+cards' | 'trip-seed';
 
 export interface OnboardingPhase {
@@ -515,6 +561,8 @@ export interface OnboardingPhase {
   certaintyAfter: Record<string, number>;
   diagnosticQuestions?: DiagnosticQuestion[];
   imagePairs?: ImagePair[];
+  experiencePool?: ExperienceItem[];
+  designerPool?: DesignerItem[];
 }
 
 export interface TrustedSource {

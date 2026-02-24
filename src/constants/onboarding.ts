@@ -1,7 +1,243 @@
-import type { OnboardingPhase, DiagnosticQuestion, ImagePair, TasteSignal } from '@/types';
+import type { OnboardingPhase, DiagnosticQuestion, ImagePair, TasteSignal, ExperienceItem, DesignerItem } from '@/types';
 
-// ─── Diagnostic Questions (Phase 8) ───
-// No "Winter escape" per user request
+// ─── Experience Pool (Phase 8 — Elo-ranked adaptive comparisons) ───
+
+export const EXPERIENCE_POOL: ExperienceItem[] = [
+  // SERVICE cluster — cocoon vs explorer
+  { id: 'room-service', label: 'Room service breakfast in bed', cluster: 'cocoon',
+    signals: ['Room-service-ritual', 'Cocoon-morning'], category: 'Service' },
+  { id: 'local-cafe', label: 'Walk to a local café for espresso', cluster: 'explorer',
+    signals: ['Local-café-seeker', 'Neighborhood-explorer'], category: 'Food' },
+  // SCENE cluster — scene vs retreat
+  { id: 'infinity-pool', label: 'Infinity pool with a scene', cluster: 'scene',
+    signals: ['Pool-as-scene', 'Social-energy'], category: 'Wellness' },
+  { id: 'hidden-pool', label: 'Hidden natural pool, just you', cluster: 'retreat',
+    signals: ['Natural-pool-preference', 'Anti-resort-pool'], category: 'Wellness' },
+  // DINING cluster — refined vs explorer
+  { id: 'tasting-menu', label: "Chef's tasting menu, wine pairing", cluster: 'refined',
+    signals: ['Fine-dining-curious', 'Chef-driven'], category: 'Food' },
+  { id: 'hidden-gem', label: 'No-sign-on-the-door local spot', cluster: 'explorer',
+    signals: ['Hidden-gem-hunter', 'Anti-obvious'], category: 'Food' },
+  // PLANNING cluster — structure vs spontaneous
+  { id: 'planned', label: 'Every hour mapped out in advance', cluster: 'structure',
+    signals: ['Planned-itinerary', 'Structure-seeker'], category: 'Character' },
+  { id: 'spontaneous', label: 'No plans, follow your nose', cluster: 'explorer',
+    signals: ['Spontaneous-discovery', 'Anti-scheduled'], category: 'Character' },
+  // DESIGN cluster — design-forward vs warm
+  { id: 'design-museum', label: 'Room feels like a design museum', cluster: 'design-forward',
+    signals: ['Design-museum-aesthetic', 'Curated-space'], category: 'Design' },
+  { id: 'lived-in', label: "Feels like someone's beautiful home", cluster: 'warm',
+    signals: ['Lived-in-warmth', 'Home-feeling'], category: 'Design' },
+  // LOCATION cluster — urban vs retreat
+  { id: 'walkable', label: 'Walking distance to everything', cluster: 'urban',
+    signals: ['Walkable-radius', 'Urban-embedded'], category: 'Location' },
+  { id: 'remote', label: 'Deliberately removed from it all', cluster: 'retreat',
+    signals: ['Remote-isolated', 'Destination-property'], category: 'Location' },
+  // SERVICE STYLE cluster — efficiency vs ritual
+  { id: 'whisked-away', label: 'Whisked straight to your room', cluster: 'efficiency',
+    signals: ['Efficiency-valued', 'Anti-lobby'], category: 'Service' },
+  { id: 'arrival-drink', label: 'Drink at the bar while they prepare', cluster: 'ritual',
+    signals: ['Arrival-ritual', 'Lobby-matters'], category: 'Service' },
+  // SCALE cluster — grand vs intimate
+  { id: 'grand-lobby', label: 'Grand lobby that takes your breath away', cluster: 'scene',
+    signals: ['Grand-hotel-lover', 'Scale-as-drama'], category: 'Design' },
+  { id: 'intimate-inn', label: 'Tiny inn, 8 rooms, owner knows your name', cluster: 'warm',
+    signals: ['Intimate-under-20', 'Micro-property'], category: 'Character' },
+];
+
+// ─── Designer Pool (Phase 9 — Elo-ranked mood board comparisons) ───
+
+export const DESIGNER_POOL: DesignerItem[] = [
+  // ── EXPRESSIVE ── high visual energy, decorative, personality-driven
+  { id: 'proper', name: 'Kelly Wearstler', hotel: 'Proper Santa Monica',
+    vibe: 'Bold color and pattern-on-pattern, California confidence',
+    cluster: 'expressive', imageUrls: [
+      '/onboarding/designers/ProperSantaMonica/ProperSantaMonica1.jpg',
+      '/onboarding/designers/ProperSantaMonica/ProperSantaMonica2.jpg',
+      '/onboarding/designers/ProperSantaMonica/ProperSantaMonica3.jpg',
+      '/onboarding/designers/ProperSantaMonica/ProperSantaMonica4.jpg',
+    ],
+    axes: { volume: 0.95, temperature: 0.75, time: 0.75, formality: 0.50, culture: 0.35, mood: 0.75 },
+    signals: ['Bold-color', 'California-energy', 'Pattern-maximalism'] },
+  { id: 'commodore', name: 'Ken Fulk', hotel: 'Commodore Perry Estate',
+    vibe: 'Darkly romantic rooms that feel like a film set',
+    cluster: 'expressive', imageUrls: [
+      '/onboarding/designers/CommodorePerryEstate/CommodorePerryEstate1.jpg',
+      '/onboarding/designers/CommodorePerryEstate/CommodorePerryEstate2.jpg',
+      '/onboarding/designers/CommodorePerryEstate/CommodorePerryEstate3.jpg',
+      '/onboarding/designers/CommodorePerryEstate/CommodorePerryEstate4.jpg',
+    ],
+    axes: { volume: 0.90, temperature: 0.40, time: 0.40, formality: 0.60, culture: 0.45, mood: 0.15 },
+    signals: ['Dark-romantic', 'Cinematic-narrative', 'Layered-opulence'] },
+  { id: 'hamyard', name: 'Kit Kemp', hotel: 'Ham Yard Hotel',
+    vibe: 'Clashing prints and handmade charm, joyfully eccentric',
+    cluster: 'expressive', imageUrls: [
+      '/onboarding/designers/HamYardHotel/HamYardHotel1.jpg',
+      '/onboarding/designers/HamYardHotel/HamYardHotel2.jpg',
+      '/onboarding/designers/HamYardHotel/HamYardHotel3.jpg',
+      '/onboarding/designers/HamYardHotel/HamYardHotel4.jpg',
+    ],
+    axes: { volume: 0.80, temperature: 0.80, time: 0.50, formality: 0.25, culture: 0.55, mood: 0.85 },
+    signals: ['Playful-eclectic', 'Handmade-craft', 'Joyful-maximalism'] },
+  { id: 'nomad', name: 'Jacques Garcia', hotel: 'The NoMad',
+    vibe: 'Candlelit baroque seduction, velvet and shadow',
+    cluster: 'expressive', imageUrls: [
+      '/onboarding/designers/TheNoMad/TheNoMad1.jpg',
+      '/onboarding/designers/TheNoMad/TheNoMad2.jpg',
+      '/onboarding/designers/TheNoMad/TheNoMad3.jpg',
+      '/onboarding/designers/TheNoMad/TheNoMad4.jpg',
+    ],
+    axes: { volume: 0.85, temperature: 0.30, time: 0.10, formality: 0.85, culture: 0.30, mood: 0.10 },
+    signals: ['Baroque-drama', 'Velvet-shadow', 'Unapologetic-opulence'] },
+
+  // ── GRAND ── formal authority, institutional scale, heritage or modern power
+  { id: 'ritz', name: 'Thierry Despont', hotel: 'The Ritz Paris',
+    vibe: 'Gilded restoration, chandeliers and protocol',
+    cluster: 'grand', imageUrls: [
+      '/onboarding/designers/TheRitzParis/TheRitzParis1.jpg',
+      '/onboarding/designers/TheRitzParis/TheRitzParis2.jpg',
+      '/onboarding/designers/TheRitzParis/TheRitzParis3.jpg',
+      '/onboarding/designers/TheRitzParis/TheRitzParis4.jpg',
+    ],
+    axes: { volume: 0.75, temperature: 0.35, time: 0.05, formality: 0.95, culture: 0.60, mood: 0.50 },
+    signals: ['Gilded-classicism', 'Grand-dame-heritage', 'Formal-protocol'] },
+  { id: 'peninsula', name: 'The Peninsula Hong Kong', hotel: 'The Peninsula Hong Kong',
+    vibe: 'Asia\'s grande dame — harbour views and white-glove precision',
+    cluster: 'grand', imageUrls: [
+      '/onboarding/designers/ThePeninsulaHongKong/ThePeninsulaHongKong1.jpg',
+      '/onboarding/designers/ThePeninsulaHongKong/ThePeninsulaHongKong2.jpg',
+      '/onboarding/designers/ThePeninsulaHongKong/ThePeninsulaHongKong3.jpg',
+      '/onboarding/designers/ThePeninsulaHongKong/ThePeninsulaHongKong4.jpg',
+    ],
+    axes: { volume: 0.65, temperature: 0.45, time: 0.20, formality: 0.90, culture: 0.75, mood: 0.50 },
+    signals: ['Asian-grand-dame', 'White-glove-precision', 'Harbor-glamour'] },
+  { id: 'cliveden', name: 'Cliveden House', hotel: 'Cliveden',
+    vibe: 'Centuries of stories in every room, parkland and portraits',
+    cluster: 'grand', imageUrls: [
+      '/onboarding/designers/ClivedenHouse/ClivedenHouse1.jpg',
+      '/onboarding/designers/ClivedenHouse/ClivedenHouse2.jpg',
+      '/onboarding/designers/ClivedenHouse/ClivedenHouse3.jpg',
+      '/onboarding/designers/ClivedenHouse/ClivedenHouse4.jpg',
+    ],
+    axes: { volume: 0.70, temperature: 0.50, time: 0.05, formality: 0.80, culture: 0.80, mood: 0.55 },
+    signals: ['English-country-estate', 'Inherited-grandeur', 'Aristocratic-ease'] },
+  { id: 'rosewood', name: 'Joseph Dirand', hotel: 'Rosewood Chancery',
+    vibe: 'Monochrome stone and monumental proportions, modern power',
+    cluster: 'grand', imageUrls: [
+      '/onboarding/designers/RosewoodChancery/RosewoodChancery1.jpg',
+      '/onboarding/designers/RosewoodChancery/RosewoodChancery2.jpg',
+      '/onboarding/designers/RosewoodChancery/RosewoodChancery3.jpg',
+      '/onboarding/designers/RosewoodChancery/RosewoodChancery4.jpg',
+    ],
+    axes: { volume: 0.40, temperature: 0.15, time: 0.65, formality: 0.85, culture: 0.25, mood: 0.30 },
+    signals: ['Monochrome-power', 'Architectural-rigor', 'Cool-luxury'] },
+  { id: 'mansour', name: 'Royal Mansour', hotel: 'Royal Mansour Marrakech',
+    vibe: 'Zellige tile and courtyard riads, Islamic geometry at palatial scale',
+    cluster: 'grand', imageUrls: [
+      '/onboarding/designers/RoyalMansour/RoyalMansour1.jpg',
+      '/onboarding/designers/RoyalMansour/RoyalMansour2.jpg',
+      '/onboarding/designers/RoyalMansour/RoyalMansour3.jpg',
+      '/onboarding/designers/RoyalMansour/RoyalMansour4.jpg',
+    ],
+    axes: { volume: 0.85, temperature: 0.70, time: 0.10, formality: 0.80, culture: 0.95, mood: 0.55 },
+    signals: ['Islamic-geometry', 'Riad-courtyard', 'Ornamental-culture'] },
+
+  // ── QUIET ── low volume, contemplative, space and material speak
+  { id: 'capella', name: 'André Fu', hotel: 'Capella Taipei',
+    vibe: 'Near-obsessive material care, every surface considered',
+    cluster: 'quiet', imageUrls: [
+      '/onboarding/designers/CapellaTaipei/CapellaTaipei1.jpg',
+      '/onboarding/designers/CapellaTaipei/CapellaTaipei2.jpg',
+      '/onboarding/designers/CapellaTaipei/CapellaTaipei3.jpg',
+      '/onboarding/designers/CapellaTaipei/CapellaTaipei4.jpg',
+    ],
+    axes: { volume: 0.25, temperature: 0.65, time: 0.85, formality: 0.70, culture: 0.70, mood: 0.55 },
+    signals: ['Quiet-refinement', 'Material-obsessive', 'Asian-modernism'] },
+  { id: 'aman-tokyo', name: 'Kerry Hill', hotel: 'Aman Tokyo',
+    vibe: 'Timber screens and washi walls, Japanese serenity at scale',
+    cluster: 'quiet', imageUrls: [
+      '/onboarding/designers/AmanTokyo/AmanTokyo1.jpg',
+      '/onboarding/designers/AmanTokyo/AmanTokyo2.jpg',
+      '/onboarding/designers/AmanTokyo/AmanTokyo3.jpg',
+      '/onboarding/designers/AmanTokyo/AmanTokyo4.jpg',
+    ],
+    axes: { volume: 0.15, temperature: 0.55, time: 0.70, formality: 0.65, culture: 0.85, mood: 0.45 },
+    signals: ['Japanese-serenity', 'Timber-and-paper', 'Ritual-calm'] },
+  { id: 'edition', name: 'John Pawson', hotel: 'The West Hollywood EDITION',
+    vibe: 'Pure light and proportion, nothing superfluous',
+    cluster: 'quiet', imageUrls: [
+      '/onboarding/designers/TheEditionWestHollywood/TheEditionWestHollywood1.jpg',
+      '/onboarding/designers/TheEditionWestHollywood/TheEditionWestHollywood2.jpg',
+      '/onboarding/designers/TheEditionWestHollywood/TheEditionWestHollywood3.jpg',
+      '/onboarding/designers/TheEditionWestHollywood/TheEditionWestHollywood4.jpg',
+    ],
+    axes: { volume: 0.05, temperature: 0.25, time: 0.95, formality: 0.55, culture: 0.15, mood: 0.80 },
+    signals: ['Monastic-restraint', 'Light-as-material', 'White-abstraction'] },
+  { id: 'amangiri', name: 'Amangiri', hotel: 'Amangiri',
+    vibe: 'Desert silence, architecture dissolved into canyon walls',
+    cluster: 'quiet', imageUrls: [
+      '/onboarding/designers/Amangiri/Amangiri1.jpg',
+      '/onboarding/designers/Amangiri/Amangiri2.jpg',
+      '/onboarding/designers/Amangiri/Amangiri3.jpg',
+      '/onboarding/designers/Amangiri/Amangiri4.jpg',
+    ],
+    axes: { volume: 0.10, temperature: 0.50, time: 0.90, formality: 0.35, culture: 0.95, mood: 0.55 },
+    signals: ['Desert-silence', 'Landscape-architecture', 'Elemental-rawness'] },
+  { id: 'cheval-blanc', name: 'Jean-Michel Gathy', hotel: 'Cheval Blanc Randheli',
+    vibe: 'Barefoot luxury, island architecture open to the sky',
+    cluster: 'quiet', imageUrls: [
+      '/onboarding/designers/ChevalBlancRandheli/ChevalBlancRandheli1.jpg',
+      '/onboarding/designers/ChevalBlancRandheli/ChevalBlancRandheli2.jpg',
+      '/onboarding/designers/ChevalBlancRandheli/ChevalBlancRandheli3.jpg',
+      '/onboarding/designers/ChevalBlancRandheli/ChevalBlancRandheli4.jpg',
+    ],
+    axes: { volume: 0.30, temperature: 0.75, time: 0.80, formality: 0.40, culture: 0.90, mood: 0.80 },
+    signals: ['Barefoot-luxury', 'Tropical-immersion', 'Indoor-outdoor-flow'] },
+
+  // ── SOULFUL ── warm, textured, human connection, alive
+  { id: 'ett-hem', name: 'Ilse Crawford', hotel: 'Ett Hem Stockholm',
+    vibe: 'A brilliant friend\'s home — every surface you want to touch',
+    cluster: 'soulful', imageUrls: [
+      '/onboarding/designers/EttHem/EttHem1.jpg',
+      '/onboarding/designers/EttHem/EttHem2.jpg',
+      '/onboarding/designers/EttHem/EttHem3.jpg',
+      '/onboarding/designers/EttHem/EttHem4.jpg',
+    ],
+    axes: { volume: 0.30, temperature: 0.90, time: 0.55, formality: 0.10, culture: 0.55, mood: 0.70 },
+    signals: ['Home-warmth', 'Tactile-comfort', 'Scandinavian-simplicity'] },
+  { id: 'blackberry', name: 'Blackberry Farm', hotel: 'Blackberry Farm',
+    vibe: 'Smoky Mountain farmstead, garden-to-table, rocking-chair porches',
+    cluster: 'soulful', imageUrls: [
+      '/onboarding/designers/BlackberryFarm/BlackberryFarm1.jpg',
+      '/onboarding/designers/BlackberryFarm/BlackberryFarm2.jpg',
+      '/onboarding/designers/BlackberryFarm/BlackberryFarm3.jpg',
+      '/onboarding/designers/BlackberryFarm/BlackberryFarm4.jpg',
+    ],
+    axes: { volume: 0.40, temperature: 0.85, time: 0.30, formality: 0.15, culture: 0.75, mood: 0.75 },
+    signals: ['Rustic-refinement', 'Mountain-lodge', 'Garden-to-glass'] },
+  { id: 'eden-roc', name: 'Hotel du Cap-Eden-Roc', hotel: 'Hotel du Cap-Eden-Roc',
+    vibe: 'White stone, pine trees, and eternal Riviera glamour',
+    cluster: 'soulful', imageUrls: [
+      '/onboarding/designers/HotelDuCapEdenRoc/HotelDuCapEdenRoc1.jpg',
+      '/onboarding/designers/HotelDuCapEdenRoc/HotelDuCapEdenRoc2.jpg',
+      '/onboarding/designers/HotelDuCapEdenRoc/HotelDuCapEdenRoc3.jpg',
+      '/onboarding/designers/HotelDuCapEdenRoc/HotelDuCapEdenRoc4.jpg',
+    ],
+    axes: { volume: 0.55, temperature: 0.80, time: 0.15, formality: 0.55, culture: 0.80, mood: 0.90 },
+    signals: ['Riviera-legend', 'Sun-stone-pine', 'Eternal-glamour'] },
+  { id: 'mazarin', name: 'Martin Brudnizki', hotel: 'Le Grand Mazarin',
+    vibe: 'Warm brass and worn leather, feels like it has always been here',
+    cluster: 'soulful', imageUrls: [
+      '/onboarding/designers/LeGrandMazarin/LeGrandMazarin1.jpg',
+      '/onboarding/designers/LeGrandMazarin/LeGrandMazarin2.jpg',
+      '/onboarding/designers/LeGrandMazarin/LeGrandMazarin3.jpg',
+      '/onboarding/designers/LeGrandMazarin/LeGrandMazarin4.jpg',
+    ],
+    axes: { volume: 0.65, temperature: 0.70, time: 0.35, formality: 0.65, culture: 0.40, mood: 0.60 },
+    signals: ['Warm-layered-glamour', 'Convivial-luxury', 'Brass-and-leather'] },
+];
+
+// ─── Legacy Diagnostic Questions (Phase 8) — kept for type compatibility ───
 
 export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
   {
@@ -342,12 +578,13 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     extractedSignals: [],
     certaintyAfter: { Design: 95, Character: 88, Service: 92, Food: 75, Location: 85, Wellness: 74 },
     diagnosticQuestions: DIAGNOSTIC_QUESTIONS,
+    experiencePool: EXPERIENCE_POOL,
   },
   {
     id: 'visual-taste',
     phaseNumber: 9,
-    title: 'Visual Taste',
-    subtitle: 'Pick the vibe — no words needed',
+    title: 'Design Eye',
+    subtitle: 'Pick the vibe — trust your gut',
     modality: 'visual',
     act: 2,
     aiPrompt: '',
@@ -356,6 +593,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     extractedSignals: [],
     certaintyAfter: { Design: 97, Character: 90, Service: 92, Food: 78, Location: 88, Wellness: 76 },
     imagePairs: IMAGE_PAIRS,
+    designerPool: DESIGNER_POOL,
   },
   {
     id: 'emotional-core',

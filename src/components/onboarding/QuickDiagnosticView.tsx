@@ -1,91 +1,127 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import type { DiagnosticQuestion, TasteSignal } from '@/types';
+import { useState, useCallback, useMemo } from 'react';
+import type { EloState, EloItem } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { DIAGNOSTIC_QUESTIONS } from '@/constants/onboarding';
+import { EXPERIENCE_POOL } from '@/constants/onboarding';
+import { initEloState, pickNextPair, recordChoice, extractSignals } from '@/lib/elo';
+
+const TOTAL_ROUNDS = 10;
 
 interface QuickDiagnosticViewProps {
   onComplete: () => void;
 }
 
 export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedSide, setSelectedSide] = useState<'a' | 'b' | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const addSignals = useOnboardingStore((s) => s.addSignals);
+  const setCurrentPhaseProgress = useOnboardingStore((s) => s.setCurrentPhaseProgress);
 
-  const questions = DIAGNOSTIC_QUESTIONS;
-  const currentQ = questions[currentIndex];
-  const isLast = currentIndex === questions.length - 1;
+  const [eloState, setEloState] = useState<EloState>(() =>
+    initEloState(
+      EXPERIENCE_POOL.map(exp => ({
+        id: exp.id,
+        cluster: exp.cluster,
+        signals: exp.signals,
+        category: exp.category,
+        metadata: { label: exp.label },
+      }))
+    )
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  const handleSelect = useCallback((side: 'a' | 'b') => {
+  const currentPair = useMemo(
+    () => pickNextPair(eloState, TOTAL_ROUNDS),
+    [eloState]
+  );
+
+  const round = eloState.round;
+
+  const handleSelect = useCallback((winner: EloItem, loser: EloItem) => {
     if (isAnimating) return;
-    setSelectedSide(side);
+    setSelectedId(winner.id);
     setIsAnimating(true);
 
-    // Extract signals from selection
-    const signalTags = side === 'a' ? currentQ.aSignals : currentQ.bSignals;
-    const signals: TasteSignal[] = signalTags.map((tag) => ({
-      tag,
-      cat: inferCategory(tag),
-      confidence: 0.8,
-    }));
-    addSignals(signals);
-
-    // Advance after brief animation
     setTimeout(() => {
-      if (isLast) {
+      const nextState = recordChoice(eloState, winner.id, loser.id, TOTAL_ROUNDS);
+      setEloState(nextState);
+
+      // Update phase progress for CertaintyBar
+      setCurrentPhaseProgress(Math.min((nextState.round) / TOTAL_ROUNDS, 1));
+
+      if (nextState.round >= TOTAL_ROUNDS) {
+        // Extract final ranked signals and complete
+        const signals = extractSignals(nextState);
+        addSignals(signals);
         onComplete();
       } else {
-        setCurrentIndex((i) => i + 1);
-        setSelectedSide(null);
+        setSelectedId(null);
         setIsAnimating(false);
       }
     }, 400);
-  }, [currentIndex, currentQ, isLast, isAnimating, addSignals, onComplete]);
+  }, [eloState, isAnimating, addSignals, onComplete, setCurrentPhaseProgress]);
+
+  if (!currentPair) {
+    // Exhausted all pairs before reaching TOTAL_ROUNDS — complete early
+    const signals = extractSignals(eloState);
+    addSignals(signals);
+    onComplete();
+    return null;
+  }
+
+  const [itemA, itemB] = currentPair;
 
   return (
     <div className="flex flex-col h-full px-5 py-6">
-      {/* Progress */}
+      {/* Progress bar — fills incrementally */}
       <div className="flex gap-1 mb-8">
-        {questions.map((_, i) => (
+        {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => (
           <div
             key={i}
-            className="flex-1 h-0.5 rounded-full transition-all duration-300"
+            className="flex-1 h-0.5 rounded-full transition-all duration-500"
             style={{
-              backgroundColor: i <= currentIndex ? 'var(--t-ink)' : 'var(--t-travertine)',
+              backgroundColor: i < round
+                ? 'var(--t-ink)'
+                : i === round
+                  ? 'var(--t-honey)'
+                  : 'var(--t-travertine)',
             }}
           />
         ))}
       </div>
 
-      {/* Question */}
+      {/* Prompt */}
       <div className="text-center mb-2">
         <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--t-ink)]/40 mb-2">
-          Don&apos;t overthink it
+          {round < 3
+            ? 'Broad strokes'
+            : round < 7
+              ? 'Getting warmer'
+              : 'Fine-tuning'}
         </p>
-        <h2 className="font-serif text-[28px] text-[var(--t-ink)] leading-tight">
-          {currentQ.q}
+        <h2 className="font-serif text-[26px] text-[var(--t-ink)] leading-tight">
+          Which sounds more like you?
         </h2>
       </div>
 
-      {/* Cards */}
+      {/* Experience cards */}
       <div className="flex-1 flex flex-col gap-3 justify-center max-w-sm mx-auto w-full">
         <button
-          onClick={() => handleSelect('a')}
+          onClick={() => handleSelect(itemA, itemB)}
           disabled={isAnimating}
           className={`
             relative py-6 px-5 rounded-2xl border-2 text-center transition-all duration-300
-            ${selectedSide === 'a'
+            ${selectedId === itemA.id
               ? 'border-[var(--t-ink)] bg-[var(--t-ink)] text-[var(--t-cream)] scale-[1.02]'
-              : selectedSide === 'b'
+              : selectedId === itemB.id
                 ? 'border-[var(--t-travertine)] text-[var(--t-ink)]/30 scale-[0.98]'
                 : 'border-[var(--t-travertine)] text-[var(--t-ink)] hover:border-[var(--t-honey)]'
             }
           `}
         >
-          <span className="text-[17px] font-medium">{currentQ.a}</span>
+          <span className="text-[17px] font-medium">
+            {itemA.metadata.label as string}
+          </span>
         </button>
 
         <div className="flex items-center gap-3 px-8">
@@ -95,38 +131,28 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
         </div>
 
         <button
-          onClick={() => handleSelect('b')}
+          onClick={() => handleSelect(itemB, itemA)}
           disabled={isAnimating}
           className={`
             relative py-6 px-5 rounded-2xl border-2 text-center transition-all duration-300
-            ${selectedSide === 'b'
+            ${selectedId === itemB.id
               ? 'border-[var(--t-ink)] bg-[var(--t-ink)] text-[var(--t-cream)] scale-[1.02]'
-              : selectedSide === 'a'
+              : selectedId === itemA.id
                 ? 'border-[var(--t-travertine)] text-[var(--t-ink)]/30 scale-[0.98]'
                 : 'border-[var(--t-travertine)] text-[var(--t-ink)] hover:border-[var(--t-honey)]'
             }
           `}
         >
-          <span className="text-[17px] font-medium">{currentQ.b}</span>
+          <span className="text-[17px] font-medium">
+            {itemB.metadata.label as string}
+          </span>
         </button>
       </div>
 
-      {/* Counter */}
+      {/* Round counter */}
       <p className="text-center text-[12px] font-mono text-[var(--t-ink)]/30 mt-4">
-        {currentIndex + 1} / {questions.length}
+        {round + 1} / {TOTAL_ROUNDS}
       </p>
     </div>
   );
-}
-
-// Simple heuristic to infer category from signal tag
-function inferCategory(tag: string): string {
-  const lower = tag.toLowerCase();
-  if (lower.includes('room') || lower.includes('cocoon') || lower.includes('service') || lower.includes('lobby') || lower.includes('efficiency') || lower.includes('arrival')) return 'Service';
-  if (lower.includes('café') || lower.includes('cafe') || lower.includes('chef') || lower.includes('dining') || lower.includes('fine-dining')) return 'Food';
-  if (lower.includes('design') || lower.includes('museum') || lower.includes('curated') || lower.includes('minimal') || lower.includes('lived-in') || lower.includes('home')) return 'Design';
-  if (lower.includes('walk') || lower.includes('urban') || lower.includes('remote') || lower.includes('isolated') || lower.includes('neighborhood') || lower.includes('local')) return 'Location';
-  if (lower.includes('pool') || lower.includes('natural') || lower.includes('social')) return 'Wellness';
-  if (lower.includes('plan') || lower.includes('spontaneous') || lower.includes('scheduled') || lower.includes('hidden') || lower.includes('anti-obvious')) return 'Character';
-  return 'Character';
 }
