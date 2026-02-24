@@ -338,6 +338,19 @@ model TripActivity {
 }
 
 // ──────────────────────────────────────────────
+// Waitlist
+// ──────────────────────────────────────────────
+
+model WaitlistEntry {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  referralSource String?  // how they heard about Terrazzo
+  createdAt      DateTime @default(now())
+
+  @@index([email])
+}
+
+// ──────────────────────────────────────────────
 // Caches
 // ──────────────────────────────────────────────
 
