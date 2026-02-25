@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/types';
@@ -8,16 +8,7 @@ import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
-
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
-  museum: 'museum', activity: 'activity', neighborhood: 'location', shop: 'shop',
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  restaurant: '#c0ab8e', hotel: '#b8b0c0', bar: '#a8c0b0', cafe: '#c8c0b0',
-  museum: '#a8b0b8', activity: '#a8b8a8', neighborhood: '#b8c0a8', shop: '#c0b0a0',
-};
+import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
   { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
@@ -34,7 +25,7 @@ interface PicksGridProps {
   onTapDetail: (item: ImportedPlace) => void;
 }
 
-export default function PicksGrid({ onTapDetail }: PicksGridProps) {
+function PicksGridInner({ onTapDetail }: PicksGridProps) {
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'match' | 'name'>('match');
@@ -170,7 +161,7 @@ export default function PicksGrid({ onTapDetail }: PicksGridProps) {
           >
             {filteredPicks.map(place => {
               const typeIcon = TYPE_ICONS[place.type] || 'location';
-              const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
+              const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
               const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
 
               return (
@@ -241,3 +232,7 @@ export default function PicksGrid({ onTapDetail }: PicksGridProps) {
     </div>
   );
 }
+
+const PicksGrid = React.memo(PicksGridInner);
+PicksGrid.displayName = 'PicksGrid';
+export default PicksGrid;

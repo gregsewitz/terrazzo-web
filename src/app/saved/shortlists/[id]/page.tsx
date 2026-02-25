@@ -14,28 +14,7 @@ import PlaceSearchBar from '@/components/PlaceSearchBar';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
-
-const TYPE_COLORS: Record<PlaceType, string> = {
-  restaurant: '#e87080',
-  hotel: '#c8923a',
-  bar: '#6844a0',
-  museum: '#2a7a56',
-  cafe: '#eeb420',
-  activity: '#e86830',
-  neighborhood: '#5a7a9a',
-  shop: '#a06c28',
-};
-
-const THUMB_GRADIENTS: Record<string, string> = {
-  restaurant: 'linear-gradient(135deg, #d8c8ae, #c0ab8e)',
-  hotel: 'linear-gradient(135deg, #d0c8d8, #b8b0c0)',
-  bar: 'linear-gradient(135deg, #c0d0c8, #a8c0b0)',
-  cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0)',
-  museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8)',
-  activity: 'linear-gradient(135deg, #c0d0c8, #a8b8a8)',
-  neighborhood: 'linear-gradient(135deg, #d0d8c8, #b8c0a8)',
-  shop: 'linear-gradient(135deg, #d8c8b8, #c0b0a0)',
-};
+import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS } from '@/constants/placeTypes';
 
 export default function ShortlistDetailPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
@@ -671,7 +650,7 @@ function ShortlistDetailContent() {
                   const types = new Set(placesInShortlist.map(p => p.type));
                   return Array.from(types).slice(0, 4).map(type => (
                     <div key={type} className="flex items-center gap-1">
-                      <PerriandIcon name={type as any} size={11} color={TYPE_COLORS[type as PlaceType] || INK['60']} />
+                      <PerriandIcon name={type as any} size={11} color={TYPE_COLORS_VIBRANT[type as PlaceType] || INK['60']} />
                       <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
                         {placesInShortlist.filter(p => p.type === type).length}
                       </span>

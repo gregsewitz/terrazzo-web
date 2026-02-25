@@ -6,20 +6,14 @@ import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { TYPE_ICONS as CANONICAL_TYPE_ICONS } from '@/constants/placeTypes';
 
-// ─── Type icon mapping ───
+// Extend canonical TYPE_ICONS with dreaming-specific subtypes
 const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  bar: 'bar',
-  cafe: 'cafe',
-  museum: 'museum',
-  hotel: 'hotel',
-  shop: 'shop',
-  activity: 'activity',
+  ...CANONICAL_TYPE_ICONS,
   park: 'activity',
   beach: 'activity',
   sight: 'location',
-  neighborhood: 'neighborhood',
 };
 
 // ─── Category filter pills ───

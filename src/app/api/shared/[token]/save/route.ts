@@ -1,14 +1,13 @@
 import { NextRequest } from 'next/server';
-import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { authHandler } from '@/lib/api-auth-handler';
+import type { User } from '@prisma/client';
 
 /**
  * POST /api/shared/[token]/save — Save shared places to your library
  * Requires auth (you need an account to save).
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const user = await getUser(req);
-  if (!user) return unauthorized();
+export const POST = authHandler(async (req: NextRequest, { params }: { params: Promise<{ token: string }> }, user: User) => {
 
   const { token } = await params;
   const { placeIds, saveAll, createShortlist } = await req.json() as {
@@ -125,4 +124,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     skippedCount: sourcePlaces.length - newPlaces.length,
     shortlist: newShortlist,
   });
-}
+});

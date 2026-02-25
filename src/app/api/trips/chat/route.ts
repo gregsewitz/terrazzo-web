@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, tripChatSchema } from '@/lib/api-validation';
 
 const anthropic = new Anthropic();
 
@@ -27,8 +29,16 @@ Return valid JSON only:
 }`;
 
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req.headers);
+  const rl = rateLimit(clientIp, { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
+
   try {
-    const { userMessage, conversationHistory, tripContext, userProfile } = await req.json();
+    const validation = await validateBody(req, tripChatSchema);
+    if ('error' in validation) {
+      return validation.error;
+    }
+    const { userMessage, conversationHistory, tripContext, userProfile } = validation.data;
 
     const profileSummary = userProfile
       ? `USER'S TASTE PROFILE:

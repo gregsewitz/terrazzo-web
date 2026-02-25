@@ -4,17 +4,7 @@ import { useEffect, useState } from 'react';
 import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
-
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  hotel: 'hotel',
-  bar: 'bar',
-  cafe: 'cafe',
-  museum: 'museum',
-  activity: 'activity',
-  neighborhood: 'location',
-  shop: 'shop',
-};
+import { TYPE_ICONS } from '@/constants/placeTypes';
 
 interface DragOverlayProps {
   item: ImportedPlace;

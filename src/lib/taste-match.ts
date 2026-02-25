@@ -35,6 +35,9 @@ interface MatchResult {
 /**
  * Compute taste match from raw signals + user profile.
  *
+ * Use for pipeline-enriched places with signal/anti-signal data from Place Intelligence.
+ * Returns fine-grained scoring based on signal density and confidence.
+ *
  * Scoring logic:
  * - Group signals by domain
  * - For each domain: density (how many signals) × avg confidence × user affinity
@@ -114,6 +117,9 @@ export function computeMatchFromSignals(
 
 /**
  * Compute match score from flat 0–1 profiles (used by import route for initial scoring).
+ *
+ * Use for quick scoring during import — compares flat user profile weights against
+ * flat place profile scores. Returns 0-100 match percentage.
  */
 export function computeMatchScore(userProfile: TasteProfile, placeProfile: TasteProfile): number {
   let weightedSum = 0;
@@ -155,3 +161,25 @@ export const DEFAULT_USER_PROFILE: TasteProfile = {
   Location: 0.7,
   Wellness: 0.4,
 };
+
+/**
+ * Polymorphic taste match — automatically selects the right scoring algorithm
+ * based on the shape of the place data.
+ */
+export function computeMatch(
+  userProfile: TasteProfile,
+  placeData: { signals?: Signal[]; antiSignals?: AntiSignal[]; profile?: TasteProfile }
+): MatchResult {
+  if (placeData.signals && placeData.signals.length > 0) {
+    return computeMatchFromSignals(placeData.signals, placeData.antiSignals || [], userProfile);
+  }
+  if (placeData.profile) {
+    const score = computeMatchScore(userProfile, placeData.profile);
+    return {
+      overallScore: score,
+      breakdown: {} as Record<TasteDomain, number>,
+      topDimension: getTopAxes(placeData.profile)[0] || 'Design',
+    };
+  }
+  return { overallScore: 50, breakdown: {} as Record<TasteDomain, number>, topDimension: 'Design' };
+}

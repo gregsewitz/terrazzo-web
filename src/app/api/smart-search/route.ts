@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, smartSearchSchema } from '@/lib/api-validation';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -37,12 +39,16 @@ Rules:
 - Return ONLY the JSON object, no markdown formatting or extra text`;
 
 export async function POST(req: NextRequest) {
-  try {
-    const { query, places } = await req.json();
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
 
-    if (!query || typeof query !== 'string') {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 });
+  try {
+    const validation = await validateBody(req, smartSearchSchema);
+    if ('error' in validation) {
+      return validation.error;
     }
+    const { query, places } = validation.data;
 
     // Build context about the user's actual collection
     let collectionContext = '';

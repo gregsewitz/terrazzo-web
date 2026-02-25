@@ -6,17 +6,26 @@ export async function POST(request: NextRequest) {
     const { query, locationBias } = await request.json();
 
     if (!query) {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Query is required' }, {
+        status: 400,
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+      });
     }
 
     if (!process.env.GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json({ error: 'Google Places API key not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Google Places API key not configured' }, {
+        status: 500,
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+      });
     }
 
     const result = await searchPlace(query, locationBias);
 
     if (!result) {
-      return NextResponse.json({ error: 'No places found' }, { status: 404 });
+      return NextResponse.json({ error: 'No places found' }, {
+        status: 404,
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+      });
     }
 
     return NextResponse.json({
@@ -33,9 +42,14 @@ export async function POST(request: NextRequest) {
         lng: result.location.longitude,
       } : null,
       types: result.types,
+    }, {
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
     });
   } catch (error) {
     console.error('Places search error:', error);
-    return NextResponse.json({ error: 'Search failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Search failed' }, {
+      status: 500,
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+    });
   }
 }

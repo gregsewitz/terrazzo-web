@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, onboardingAnalyzeSchema } from '@/lib/api-validation';
 import { TASTE_ONTOLOGY_SYSTEM_PROMPT, ONBOARDING_PHASES } from '@/constants/onboarding';
 
 const anthropic = new Anthropic();
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
+
   try {
-    const { userText, conversationHistory, phaseId, certainties, userMessageCount, crossPhaseContext } = await req.json();
+    const validation = await validateBody(req, onboardingAnalyzeSchema);
+    if ('error' in validation) {
+      return validation.error;
+    }
+    const { userText, conversationHistory, phaseId, certainties, userMessageCount, crossPhaseContext } = validation.data;
 
     // Look up the phase definition so Claude knows the purpose and scripted follow-ups
     const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);

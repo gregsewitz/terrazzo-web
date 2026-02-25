@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, importMapsSchema } from '@/lib/api-validation';
 import { searchPlace, priceLevelToString } from '@/lib/places';
 
 /**
@@ -6,12 +8,15 @@ import { searchPlace, priceLevelToString } from '@/lib/places';
  * looks each one up via Google Places API, and returns structured ImportedPlace data.
  */
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
   try {
-    const { content } = await request.json();
-
-    if (!content) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+    const validation = await validateBody(request, importMapsSchema);
+    if ('error' in validation) {
+      return validation.error;
     }
+    const { content } = validation.data;
 
     if (!process.env.GOOGLE_PLACES_API_KEY) {
       return NextResponse.json({ error: 'Google Places API key not configured' }, { status: 500 });

@@ -86,7 +86,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
             <h2 style={{ fontFamily: FONT.serif, fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
               Export to Google Maps
             </h2>
-            <button onClick={onClose} className="bg-transparent border-none cursor-pointer" style={{ color: INK['90'] }}>
+            <button onClick={onClose} className="bg-transparent border-none cursor-pointer" style={{ color: INK['90'] }} aria-label="Close">
               <PerriandIcon name="close" size={16} />
             </button>
           </div>

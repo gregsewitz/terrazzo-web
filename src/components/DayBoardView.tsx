@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
@@ -29,7 +29,7 @@ interface DayBoardViewProps {
   selectedDay?: number | null;
 }
 
-export default function DayBoardView({
+function DayBoardView({
   onTapDetail,
   suggestions,
   reactions,
@@ -602,3 +602,5 @@ export default function DayBoardView({
     </div>
   );
 }
+
+export default React.memo(DayBoardView);

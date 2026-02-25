@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { TYPE_ICONS } from '@/constants/placeTypes';
 
 // Well-known city coordinates for demo data
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -76,11 +77,6 @@ function getCityCoords(location: string): { lat: number; lng: number } | null {
   return best?.coords ?? null;
 }
 
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
-  museum: 'museum', activity: 'activity', neighborhood: 'location', shop: 'shop',
-};
-
 export interface MapMarker {
   id: string;
   name: string;
@@ -114,7 +110,7 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const icon = TYPE_ICONS[marker.type || ''] || 'location';
+  const icon = TYPE_ICONS[(marker.type || '') as keyof typeof TYPE_ICONS] || 'location';
   const isDashed = marker.isDashed;
 
   return (

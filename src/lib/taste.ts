@@ -3,6 +3,7 @@
  * This barrel re-exports for backward compatibility.
  */
 export {
+  computeMatch,
   computeMatchScore,
   getTopAxes,
   isStretchPick,

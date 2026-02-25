@@ -1,28 +1,39 @@
 import { NextRequest } from 'next/server';
-import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
-import { apiHandler } from '@/lib/api-handler';
+import { authHandler } from '@/lib/api-auth-handler';
+import { validateBody, shortlistCreateSchema } from '@/lib/api-validation';
+import type { User } from '@prisma/client';
 
-export const POST = apiHandler(async (req: NextRequest) => {
-  const user = await getUser(req);
-  if (!user) return unauthorized();
+export const GET = authHandler(async (req: NextRequest, _ctx, user: User) => {
+  const shortlists = await prisma.shortlist.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  const body = await req.json();
-  const { name, description, emoji, isSmartCollection, query, filterTags, placeIds } = body;
+  return Response.json({ shortlists }, {
+    headers: { 'Cache-Control': 'private, max-age=30' }
+  });
+});
 
-  if (!name) {
-    return Response.json({ error: 'Name required' }, { status: 400 });
-  }
+export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
+  const result = await validateBody(req, shortlistCreateSchema);
+  if ('error' in result) return result.error;
+
+  const { data } = result;
+  const { name, description, emoji, isSmartCollection, query, filterTags, placeIds } = data;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toNull = (v: any) => v === undefined ? null : v;
 
   const shortlist = await prisma.shortlist.create({
     data: {
       userId: user.id,
       name,
-      description: description || null,
+      description: toNull(description),
       emoji: emoji || 'sparkle',
       isSmartCollection: isSmartCollection || false,
-      query: query || null,
-      filterTags: filterTags || null,
+      query: toNull(query),
+      filterTags: toNull(filterTags),
       placeIds: placeIds || [],
     },
   });

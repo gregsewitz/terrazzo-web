@@ -15,28 +15,7 @@ import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
-
-const TYPE_ICONS: Record<string, string> = {
-  restaurant: 'restaurant',
-  hotel: 'hotel',
-  bar: 'bar',
-  cafe: 'cafe',
-  museum: 'museum',
-  activity: 'activity',
-  neighborhood: 'location',
-  shop: 'shop',
-};
-
-const THUMB_GRADIENTS: Record<string, string> = {
-  restaurant: 'linear-gradient(135deg, #d8c8ae, #c0ab8e)',
-  hotel: 'linear-gradient(135deg, #d0c8d8, #b8b0c0)',
-  bar: 'linear-gradient(135deg, #c0d0c8, #a8c0b0)',
-  cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0)',
-  museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8)',
-  activity: 'linear-gradient(135deg, #c0d0c8, #a8b8a8)',
-  neighborhood: 'linear-gradient(135deg, #d0d8c8, #b8c0a8)',
-  shop: 'linear-gradient(135deg, #d8c8b8, #c0b0a0)',
-};
+import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -76,7 +55,7 @@ function SavedPageContent() {
   const cityFilter = useSavedStore(s => s.cityFilter);
   const setCityFilter = useSavedStore(s => s.setCityFilter);
   const toggleStar = useSavedStore(s => s.toggleStar);
-  const createShortlist = useSavedStore(s => s.createShortlist);
+  const createShortlistAsync = useSavedStore(s => s.createShortlistAsync);
   const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
   const trips = useTripStore(s => s.trips);
   const importOpen = useImportStore(s => s.isOpen);
@@ -419,10 +398,10 @@ function SavedPageContent() {
         {showCreateShortlist && (
           <CreateShortlistModal
             onClose={() => setShowCreateShortlist(false)}
-            onCreate={(name, emoji) => {
-              const newId = createShortlist(name, emoji);
+            onCreate={async (name, emoji) => {
               setShowCreateShortlist(false);
-              router.push(`/saved/shortlists/${newId}`);
+              const realId = await createShortlistAsync(name, emoji);
+              router.push(`/saved/shortlists/${realId}`);
             }}
             onCreateSmart={(name, emoji, query, filterTags, placeIds) => {
               createSmartShortlist(name, emoji, query, filterTags, placeIds);
@@ -634,7 +613,7 @@ function SavedPageContent() {
       {showCreateShortlist && (
         <CreateShortlistModal
           onClose={() => setShowCreateShortlist(false)}
-          onCreate={(name, emoji) => { const newId = createShortlist(name, emoji); setShowCreateShortlist(false); router.push(`/saved/shortlists/${newId}`); }}
+          onCreate={async (name, emoji) => { setShowCreateShortlist(false); const realId = await createShortlistAsync(name, emoji); router.push(`/saved/shortlists/${realId}`); }}
           onCreateSmart={(name, emoji, query, filterTags, placeIds) => { createSmartShortlist(name, emoji, query, filterTags, placeIds); setShowCreateShortlist(false); }}
         />
       )}

@@ -1,21 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
+import { TYPE_ICONS } from '@/constants/placeTypes';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
 }
-
-const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
-  restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', museum: 'museum', activity: 'activity',
-  hotel: 'hotel', neighborhood: 'neighborhood', shop: 'shop',
-};
 
 const TYPE_CHIPS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -39,7 +35,7 @@ interface PlacedItem {
   destination?: string;
 }
 
-export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
+function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
@@ -141,6 +137,8 @@ export default function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
     </div>
   );
 }
+
+export default React.memo(TripMyPlaces);
 
 // Rich place card component
 function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, tripConversationSchema } from '@/lib/api-validation';
 
 const anthropic = new Anthropic();
 
@@ -36,8 +38,16 @@ Signal labels should be specific to what was actually discussed, e.g.:
 When isComplete is true, your response should be a warm closing that references specifics from the conversation.`;
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
+
   try {
-    const { userMessage, conversationHistory, messageCount, tripContext, userProfile } = await req.json();
+    const validation = await validateBody(req, tripConversationSchema);
+    if ('error' in validation) {
+      return validation.error;
+    }
+    const { userMessage, conversationHistory, messageCount, tripContext, userProfile } = validation.data;
 
     const profileSummary = userProfile
       ? `

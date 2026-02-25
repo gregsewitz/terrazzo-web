@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { usePoolStore, FilterType, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { useSavedStore } from '@/stores/savedStore';
@@ -42,7 +42,7 @@ const TYPE_FILTER_CHIPS: { value: FilterType; label: string; icon: PerriandIconN
 
 const HOLD_DELAY = 180; // ms before drag activates
 
-export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragItemId }: PoolTrayProps) {
+function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragItemId }: PoolTrayProps) {
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
     return trip?.destinations || [trip?.location?.split(',')[0]?.trim()].filter(Boolean);
@@ -495,3 +495,5 @@ export default function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDr
     </div>
   );
 }
+
+export default React.memo(PoolTray);

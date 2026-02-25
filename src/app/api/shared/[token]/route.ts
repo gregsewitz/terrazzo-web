@@ -32,6 +32,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     || shareLink.user.email.split('@')[0]
     || 'Someone';
 
+  const cacheHeaders = {
+    'Cache-Control': 'public, max-age=300, s-maxage=600',
+  };
+
   if (shareLink.resourceType === 'shortlist') {
     const shortlist = await prisma.shortlist.findUnique({
       where: { id: shareLink.resourceId },
@@ -79,7 +83,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         },
         places,
       },
-    });
+    }, { headers: cacheHeaders });
   }
 
   if (shareLink.resourceType === 'trip') {
@@ -109,7 +113,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
           status: trip.status,
         },
       },
-    });
+    }, { headers: cacheHeaders });
   }
 
   return Response.json({ error: 'Unknown resource type' }, { status: 400 });

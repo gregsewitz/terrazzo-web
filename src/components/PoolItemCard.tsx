@@ -1,8 +1,10 @@
 'use client';
 
+import React from 'react';
 import { ImportedPlace, T, DOMAIN_COLORS } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { TYPE_ICONS } from '@/constants/placeTypes';
 
 interface PoolItemCardProps {
   item: ImportedPlace;
@@ -10,31 +12,15 @@ interface PoolItemCardProps {
   compact?: boolean;
 }
 
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  museum: 'museum',
-  activity: 'activity',
-  hotel: 'hotel',
-  neighborhood: 'neighborhood',
-  bar: 'bar',
-  cafe: 'cafe',
-  shop: 'shop',
-};
-
-const SOURCE_ICONS: Record<string, PerriandIconName> = {
-  'CN Traveller': 'article',
-  'YOLO Journal': 'manual',
-  "Lizzie's List": 'friend',
-  'Google Maps': 'location',
-  'Gmail': 'email',
-};
-
-export default function PoolItemCard({ item, onTapDetail, compact = false }: PoolItemCardProps) {
+function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardProps) {
   const hasWarning = item.enrichment?.closedDays && item.enrichment.closedDays.length > 0;
 
   return (
     <div
       onClick={() => onTapDetail(item)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapDetail(item); } }}
       className="relative cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
       style={{
         background: item.status === 'placed' ? 'white' : 'rgba(107,139,154,0.06)',
@@ -117,7 +103,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
             fontFamily: FONT.mono,
           }}
         >
-          <PerriandIcon name={SOURCE_ICONS[item.source.name] || 'location'} size={10} />
+          <PerriandIcon name="location" size={10} />
           {item.source.name}
         </span>
 
@@ -137,3 +123,7 @@ export default function PoolItemCard({ item, onTapDetail, compact = false }: Poo
     </div>
   );
 }
+
+const PoolItemCard = React.memo(PoolItemCardInner);
+PoolItemCard.displayName = 'PoolItemCard';
+export default PoolItemCard;

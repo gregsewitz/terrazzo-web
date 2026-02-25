@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, profileDiscoverSchema } from '@/lib/api-validation';
 
 const anthropic = new Anthropic();
 
@@ -66,12 +68,16 @@ RULES:
 - Every "why" and "note" must reference SPECIFIC profile signals, not generic praise.`;
 
 export async function POST(req: NextRequest) {
-  try {
-    const { userProfile, lifeContext } = await req.json();
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
 
-    if (!userProfile) {
-      return NextResponse.json({ error: 'No profile provided' }, { status: 400 });
+  try {
+    const validation = await validateBody(req, profileDiscoverSchema);
+    if ('error' in validation) {
+      return validation.error;
     }
+    const { userProfile, lifeContext } = validation.data;
 
     // Determine context based on season and life context
     const month = new Date().getMonth();

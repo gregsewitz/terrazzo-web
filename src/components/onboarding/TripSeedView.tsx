@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { SeedTripInput, TravelContext } from '@/types';
+import type { SeedTripInput, TravelContext, GeoDestination } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import DestinationInput, { type Destination } from '@/components/DestinationInput';
+import { FONT, INK } from '@/constants/theme';
 
 interface TripSeedViewProps {
   onComplete: () => void;
@@ -12,41 +14,55 @@ type SeedStep = 'planning' | 'dream' | 'done';
 
 export default function TripSeedView({ onComplete }: TripSeedViewProps) {
   const [step, setStep] = useState<SeedStep>('planning');
-  const [destination, setDestination] = useState('');
+  const [tripName, setTripName] = useState('');
+  const [destinations, setDestinations] = useState<Destination[]>([]);
   const [dates, setDates] = useState('');
   const [context, setContext] = useState<TravelContext>('partner');
   const addSeedTrip = useOnboardingStore((s) => s.addSeedTrip);
 
-  const handleSubmitPlanning = () => {
-    if (!destination.trim()) return;
-    const trip: SeedTripInput = {
-      destination: destination.trim(),
-      dates: dates.trim() || undefined,
-      travelContext: context,
-      status: 'planning',
-      seedSource: 'onboarding_planning',
-      rawUserInput: `${destination}${dates ? `, ${dates}` : ''}`,
-    };
-    addSeedTrip(trip);
-    // Reset for dream trip
-    setDestination('');
-    setDates('');
-    setStep('dream');
-  };
+  const isDreaming = step === 'dream';
 
-  const handleSubmitDream = () => {
-    if (!destination.trim()) return;
+  // Auto-generate a trip name from destinations if the user hasn't typed one
+  const effectiveName = tripName.trim() ||
+    (destinations.length > 0
+      ? destinations.map(d => d.name).join(' & ')
+      : '');
+
+  const canSubmit = destinations.length > 0;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+
+    const geoDestinations: GeoDestination[] = destinations.map(d => ({
+      name: d.name,
+      placeId: d.placeId,
+      lat: d.lat,
+      lng: d.lng,
+      formattedAddress: d.formattedAddress,
+    }));
+
     const trip: SeedTripInput = {
-      destination: destination.trim(),
+      name: effectiveName,
+      destinations: geoDestinations,
       dates: dates.trim() || undefined,
       travelContext: context,
-      status: 'dreaming',
-      seedSource: 'onboarding_dream',
-      rawUserInput: `${destination}${dates ? `, ${dates}` : ''}`,
+      status: isDreaming ? 'dreaming' : 'planning',
+      seedSource: isDreaming ? 'onboarding_dream' : 'onboarding_planning',
+      rawUserInput: `${effectiveName}${dates ? `, ${dates}` : ''}`,
     };
     addSeedTrip(trip);
-    setStep('done');
-    setTimeout(onComplete, 300);
+
+    // Reset for next step
+    setTripName('');
+    setDestinations([]);
+    setDates('');
+
+    if (isDreaming) {
+      setStep('done');
+      setTimeout(onComplete, 300);
+    } else {
+      setStep('dream');
+    }
   };
 
   const handleSkipDream = () => {
@@ -55,7 +71,6 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
   };
 
   const isPlanning = step === 'planning';
-  const isDream = step === 'dream';
 
   return (
     <div className="flex flex-col h-full px-5 py-6">
@@ -72,29 +87,47 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
         </h2>
         <p className="text-[14px] text-[var(--t-ink)]/50 mt-2">
           {isPlanning
-            ? 'Even if it\'s vague — "Italy this fall" works perfectly.'
+            ? 'Add one or more destinations — we\'ll build your itinerary from there.'
             : 'The one that\'s been on your list forever.'
           }
         </p>
       </div>
 
       {/* Form */}
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 space-y-5">
+        {/* Trip name (optional) */}
+        <div>
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
+            Trip name (optional)
+          </label>
+          <input
+            type="text"
+            value={tripName}
+            onChange={(e) => setTripName(e.target.value)}
+            placeholder={destinations.length > 0
+              ? destinations.map(d => d.name).join(' & ')
+              : 'e.g., Family Ireland Trip'
+            }
+            className="w-full bg-transparent border-b-2 border-[var(--t-travertine)] focus:border-[var(--t-honey)]
+              text-[17px] text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/25
+              outline-none py-2 transition-colors"
+            style={{ fontFamily: FONT.sans }}
+          />
+        </div>
+
+        {/* Destinations (Google autocomplete) */}
         <div>
           <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
             Where?
           </label>
-          <input
-            type="text"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder={isPlanning ? 'e.g., Sicily in September' : 'e.g., Japan during cherry blossom season'}
-            className="w-full bg-transparent border-b-2 border-[var(--t-travertine)] focus:border-[var(--t-honey)]
-              text-[17px] text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/25
-              outline-none py-2 transition-colors"
+          <DestinationInput
+            destinations={destinations}
+            onChange={setDestinations}
+            isDreaming={isDreaming}
           />
         </div>
 
+        {/* When */}
         <div>
           <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
             When? (optional)
@@ -107,9 +140,11 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
             className="w-full bg-transparent border-b-2 border-[var(--t-travertine)] focus:border-[var(--t-honey)]
               text-[15px] text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/25
               outline-none py-2 transition-colors"
+            style={{ fontFamily: FONT.sans }}
           />
         </div>
 
+        {/* Who with */}
         <div>
           <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
             Who with?
@@ -137,8 +172,8 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
       {/* Actions */}
       <div className="space-y-2 mt-4">
         <button
-          onClick={isPlanning ? handleSubmitPlanning : handleSubmitDream}
-          disabled={!destination.trim()}
+          onClick={handleSubmit}
+          disabled={!canSubmit}
           className="w-full py-3 rounded-xl text-[14px] font-medium text-white transition-all
             hover:opacity-90 active:scale-[0.98] disabled:opacity-30"
           style={{ backgroundColor: 'var(--t-ink)' }}
@@ -146,7 +181,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
           {isPlanning ? 'Save & add dream trip' : 'Save dream trip'}
         </button>
 
-        {isDream && (
+        {isDreaming && (
           <button
             onClick={handleSkipDream}
             className="w-full py-2 text-[13px] text-[var(--t-ink)]/40 hover:text-[var(--t-ink)]/60 transition-colors"

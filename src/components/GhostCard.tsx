@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
@@ -13,7 +14,7 @@ interface GhostCardProps {
   onTapDetail: () => void;
 }
 
-export default function GhostCard({
+function GhostCardInner({
   item,
   variant = 'pool',
   onConfirm,
@@ -69,6 +70,9 @@ export default function GhostCard({
           padding: isDesktop ? '8px 10px' : '8px 10px',
         }}
         onClick={onTapDetail}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapDetail(); } }}
       >
         {/* Top row: icon + name + action buttons inline */}
         <div className="flex items-center gap-2">
@@ -158,6 +162,9 @@ export default function GhostCard({
         flexShrink: 0,
       }}
       onClick={onTapDetail}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapDetail(); } }}
     >
       {/* Source icon badge - top right */}
       <div
@@ -235,3 +242,7 @@ export default function GhostCard({
     </div>
   );
 }
+
+const GhostCard = React.memo(GhostCardInner);
+GhostCard.displayName = 'GhostCard';
+export default GhostCard;

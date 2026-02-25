@@ -9,17 +9,7 @@ import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
-
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  hotel: 'hotel',
-  bar: 'bar',
-  cafe: 'cafe',
-  museum: 'museum',
-  activity: 'activity',
-  neighborhood: 'location',
-  shop: 'shop',
-};
+import { TYPE_ICONS } from '@/constants/placeTypes';
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
   { value: 'all', label: 'All', icon: 'discover' },
@@ -131,6 +121,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
             style={{ background: INK['06'], border: 'none', cursor: 'pointer', color: INK['90'] }}
+            aria-label="Close"
           >
             <PerriandIcon name="close" size={16} />
           </button>

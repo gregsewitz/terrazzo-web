@@ -612,17 +612,6 @@ export function PerriandIcon({
 // ─── Convenience: icon name lookups for constants ────────────────────────────
 
 /** Place type → icon name mapping */
-export const PLACE_TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  bar: 'bar',
-  hotel: 'hotel',
-  cafe: 'cafe',
-  museum: 'museum',
-  activity: 'activity',
-  neighborhood: 'neighborhood',
-  shop: 'shop',
-};
-
 /** Time slot → icon name mapping */
 export const SLOT_ICON_NAMES: Record<string, PerriandIconName> = {
   breakfast: 'breakfast',

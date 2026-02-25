@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateBody, waitlistSchema } from '@/lib/api-validation';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const email = (body.email || '').trim().toLowerCase();
+    const result = await validateBody(body, waitlistSchema);
+    if ('error' in result) return result.error;
 
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
-    }
+    const { data } = result;
+    const email = data.email.trim().toLowerCase();
 
     // Check for existing entry
     const existing = await prisma.waitlistEntry.findUnique({ where: { email } });

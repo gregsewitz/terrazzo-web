@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import type { TransportEvent, TransportMode, TRANSPORT_ICONS } from '@/types';
@@ -81,7 +81,7 @@ interface TransportBannerProps {
   compact?: boolean;
 }
 
-export function TransportBanner({ transport, onEdit, onRemove, compact = false }: TransportBannerProps) {
+function TransportBannerComponent({ transport, onEdit, onRemove, compact = false }: TransportBannerProps) {
   const config = MODE_CONFIG[transport.mode];
   const [hovered, setHovered] = useState(false);
 
@@ -193,6 +193,8 @@ export function TransportBanner({ transport, onEdit, onRemove, compact = false }
     </div>
   );
 }
+
+export const TransportBanner = React.memo(TransportBannerComponent);
 
 // ═══════════════════════════════════════════
 // TransportInput — add/edit form

@@ -7,16 +7,21 @@
  * Body: { googlePlaceId: string, propertyName: string, userId?: string }
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { inngest } from '@/lib/inngest';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 
 function daysBetween(a: Date | null, b: Date): number {
   if (!a) return Infinity;
   return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req.headers);
+  const rl = rateLimit(clientIp, { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
+
   try {
     const { googlePlaceId, propertyName, userId } = await req.json();
 

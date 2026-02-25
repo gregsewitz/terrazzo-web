@@ -590,7 +590,10 @@ export interface GoBackPlace {
 }
 
 export interface SeedTripInput {
-  destination: string;
+  name: string;
+  destinations: GeoDestination[];
+  /** @deprecated Use name + destinations instead */
+  destination?: string;
   dates?: string;
   travelContext?: TravelContext;
   status: TripStatus;

@@ -48,10 +48,10 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
-  const addEntry = useTripStore(s => s.addScratchpadEntry);
-  const updateEntry = useTripStore(s => s.updateScratchpadEntry);
-  const removeEntry = useTripStore(s => s.removeScratchpadEntry);
-  const togglePin = useTripStore(s => s.toggleScratchpadPin);
+  const addEntry = useTripStore(s => s.addDreamBoardEntry);
+  const updateEntry = useTripStore(s => s.updateDreamBoardEntry);
+  const removeEntry = useTripStore(s => s.removeDreamBoardEntry);
+  const togglePin = useTripStore(s => s.toggleDreamBoardPin);
 
   const entries = trip?.scratchpad || [];
 

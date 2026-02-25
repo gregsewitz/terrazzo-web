@@ -1,18 +1,21 @@
 'use client';
 
+import React from 'react';
 import { Shortlist, ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
-export default function ShortlistCard({
-  shortlist,
-  places,
-  onClick,
-}: {
+interface ShortlistCardProps {
   shortlist: Shortlist;
   places: ImportedPlace[];
   onClick: () => void;
-}) {
+}
+
+function ShortlistCardInner({
+  shortlist,
+  places,
+  onClick,
+}: ShortlistCardProps) {
   const placeCount = shortlist.placeIds.length;
   const isPerriandIcon = shortlist.emoji && !shortlist.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && shortlist.emoji.length > 2;
 
@@ -74,3 +77,7 @@ export default function ShortlistCard({
     </div>
   );
 }
+
+const ShortlistCard = React.memo(ShortlistCardInner);
+ShortlistCard.displayName = 'ShortlistCard';
+export default ShortlistCard;

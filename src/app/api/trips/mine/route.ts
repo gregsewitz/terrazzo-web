@@ -12,7 +12,9 @@ export const GET = apiHandler(async (req: NextRequest) => {
     orderBy: { updatedAt: 'desc' },
   });
 
-  return Response.json({ trips });
+  return Response.json({ trips }, {
+    headers: { 'Cache-Control': 'private, no-cache' }
+  });
 });
 
 export const POST = apiHandler(async (req: NextRequest) => {

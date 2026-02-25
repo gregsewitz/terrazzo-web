@@ -16,10 +16,11 @@ export default function AddToShortlistSheet({
   const shortlists = useSavedStore(s => s.shortlists);
   const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
   const removePlaceFromShortlist = useSavedStore(s => s.removePlaceFromShortlist);
-  const createShortlist = useSavedStore(s => s.createShortlist);
+  const createShortlistAsync = useSavedStore(s => s.createShortlistAsync);
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const toggleMembership = (shortlistId: string, isIn: boolean) => {
     if (isIn) {
@@ -29,12 +30,17 @@ export default function AddToShortlistSheet({
     }
   };
 
-  const handleCreate = () => {
-    if (!newName.trim()) return;
-    const newId = createShortlist(newName.trim(), 'pin');
-    addPlaceToShortlist(newId, place.id);
-    setNewName('');
-    setShowCreate(false);
+  const handleCreate = async () => {
+    if (!newName.trim() || creating) return;
+    setCreating(true);
+    try {
+      const realId = await createShortlistAsync(newName.trim(), 'pin');
+      addPlaceToShortlist(realId, place.id);
+      setNewName('');
+      setShowCreate(false);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (

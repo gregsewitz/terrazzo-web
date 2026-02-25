@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
@@ -28,7 +28,7 @@ interface ParsedCollection {
   matchCount?: number;
 }
 
-export default function SmartCollectionSheet({
+function SmartCollectionSheet({
   isOpen,
   onClose,
   onCreate,
@@ -384,3 +384,5 @@ export default function SmartCollectionSheet({
     </>
   );
 }
+
+export default React.memo(SmartCollectionSheet);

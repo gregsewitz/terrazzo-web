@@ -5,6 +5,11 @@ import { prisma } from '@/lib/prisma';
  * GET /api/seed-demo — List users in the DB (for finding the right email).
  */
 export async function GET() {
+  // Development-only seed endpoint — disabled in production
+  if (process.env.NODE_ENV === 'production') {
+    return Response.json({ error: 'Not available in production' }, { status: 404 });
+  }
+
   const users = await prisma.user.findMany({
     select: { id: true, email: true, name: true, createdAt: true },
     take: 20,
@@ -19,6 +24,11 @@ export async function GET() {
  * This is a one-time utility route — safe to remove after use.
  */
 export async function POST(req: NextRequest) {
+  // Development-only seed endpoint — disabled in production
+  if (process.env.NODE_ENV === 'production') {
+    return Response.json({ error: 'Not available in production' }, { status: 404 });
+  }
+  
   try {
     const email = req.nextUrl.searchParams.get('email');
     if (!email) {

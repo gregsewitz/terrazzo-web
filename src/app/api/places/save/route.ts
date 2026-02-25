@@ -1,44 +1,47 @@
 import { NextRequest } from 'next/server';
-import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
-import { apiHandler } from '@/lib/api-handler';
+import { authHandler } from '@/lib/api-auth-handler';
+import { validateBody, placeSchema } from '@/lib/api-validation';
+import type { User } from '@prisma/client';
 
-export const POST = apiHandler(async (req: NextRequest) => {
-  const user = await getUser(req);
-  if (!user) return unauthorized();
-
+export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   const body = await req.json();
   // Accept flat body or nested { place: {...} }
-  const place = body.place || body;
+  const placeData = body.place || body;
 
-  if (!place?.name || !place?.type) {
-    return Response.json({ error: 'Place name and type required' }, { status: 400 });
-  }
+  const result = await validateBody(placeData, placeSchema);
+  if ('error' in result) return result.error;
+
+  const place = result.data;
+
+  // Helper to convert undefined to null for Prisma
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toNull = (v: any) => v === undefined ? null : v;
 
   const commonData = {
     name: place.name,
     type: place.type,
-    location: place.location || null,
-    source: place.source || null,
-    ghostSource: place.ghostSource || null,
-    friendAttribution: place.friendAttribution || null,
-    userContext: place.userContext || null,
-    timing: place.timing || null,
-    travelWith: place.travelWith || null,
-    intentStatus: place.intentStatus || null,
-    savedDate: place.savedDate || null,
-    importBatchId: place.importBatchId || null,
-    rating: place.rating || null,
+    location: toNull(place.location),
+    source: toNull(place.source),
+    ghostSource: toNull(place.ghostSource),
+    friendAttribution: toNull(place.friendAttribution),
+    userContext: toNull(place.userContext),
+    timing: toNull(place.timing),
+    travelWith: toNull(place.travelWith),
+    intentStatus: toNull(place.intentStatus),
+    savedDate: toNull(place.savedDate),
+    importBatchId: toNull(place.importBatchId),
+    rating: toNull(place.rating),
     isShortlisted: place.isShortlisted || false,
-    matchScore: place.matchScore || null,
-    matchBreakdown: place.matchBreakdown || null,
-    tasteNote: place.tasteNote || null,
-    terrazzoInsight: place.terrazzoInsight || null,
-    enrichment: place.enrichment || null,
-    whatToOrder: place.whatToOrder || null,
-    tips: place.tips || null,
-    alsoKnownAs: place.alsoKnownAs || null,
-    googleData: place.googleData || null,
+    matchScore: toNull(place.matchScore),
+    matchBreakdown: toNull(place.matchBreakdown),
+    tasteNote: toNull(place.tasteNote),
+    terrazzoInsight: toNull(place.terrazzoInsight),
+    enrichment: toNull(place.enrichment),
+    whatToOrder: toNull(place.whatToOrder),
+    tips: toNull(place.tips),
+    alsoKnownAs: toNull(place.alsoKnownAs),
+    googleData: toNull(place.googleData),
   };
 
   // Upsert: if same googlePlaceId exists for this user, update; otherwise create

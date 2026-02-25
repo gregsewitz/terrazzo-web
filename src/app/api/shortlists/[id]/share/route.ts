@@ -1,86 +1,32 @@
 import { NextRequest } from 'next/server';
-import { getUser, unauthorized } from '@/lib/supabase-server';
-import { prisma } from '@/lib/prisma';
+import { createOrGetShareLink, revokeShareLinks, getShareStatus } from '@/lib/share-helpers';
+import { authHandler } from '@/lib/api-auth-handler';
+import { verifyOwnership } from '@/lib/ownership';
+import type { User } from '@prisma/client';
 
-/**
- * POST /api/shortlists/[id]/share — Generate a share link for a shortlist
- * Returns existing active link or creates a new one.
- */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return unauthorized();
-
+/** POST /api/shortlists/[id]/share — Generate a share link for a shortlist */
+export const POST = authHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }, user: User) => {
   const { id } = await params;
 
   // Verify ownership
-  const shortlist = await prisma.shortlist.findFirst({
-    where: { id, userId: user.id },
-  });
-  if (!shortlist) {
+  if (!(await verifyOwnership('shortlist', id, user.id))) {
     return Response.json({ error: 'Shortlist not found' }, { status: 404 });
   }
 
-  // Check for existing active link
-  const existing = await prisma.shareLink.findFirst({
-    where: { resourceType: 'shortlist', resourceId: id, userId: user.id, isActive: true },
-  });
+  return Response.json(await createOrGetShareLink(user.id, 'shortlist', id));
+});
 
-  if (existing) {
-    return Response.json({
-      shareLink: existing,
-      url: `/shared/${existing.token}`,
-    });
-  }
-
-  // Create new share link
-  const shareLink = await prisma.shareLink.create({
-    data: {
-      userId: user.id,
-      resourceType: 'shortlist',
-      resourceId: id,
-    },
-  });
-
-  return Response.json({
-    shareLink,
-    url: `/shared/${shareLink.token}`,
-  });
-}
-
-/**
- * DELETE /api/shortlists/[id]/share — Revoke sharing for a shortlist
- */
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return unauthorized();
-
+/** DELETE /api/shortlists/[id]/share — Revoke sharing for a shortlist */
+export const DELETE = authHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }, user: User) => {
   const { id } = await params;
 
-  // Deactivate all share links for this shortlist
-  await prisma.shareLink.updateMany({
-    where: { resourceType: 'shortlist', resourceId: id, userId: user.id },
-    data: { isActive: false },
-  });
-
+  await revokeShareLinks(user.id, 'shortlist', id);
   return Response.json({ success: true });
-}
+});
 
-/**
- * GET /api/shortlists/[id]/share — Check if shortlist is currently shared
- */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return unauthorized();
-
+/** GET /api/shortlists/[id]/share — Check if shortlist is currently shared */
+export const GET = authHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }, user: User) => {
   const { id } = await params;
 
-  const shareLink = await prisma.shareLink.findFirst({
-    where: { resourceType: 'shortlist', resourceId: id, userId: user.id, isActive: true },
-  });
-
-  return Response.json({
-    isShared: !!shareLink,
-    shareLink: shareLink || null,
-    url: shareLink ? `/shared/${shareLink.token}` : null,
-  });
-}
+  return Response.json(await getShareStatus(user.id, 'shortlist', id));
+});

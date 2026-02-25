@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, ttsSchema } from '@/lib/api-validation';
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
   try {
-    const { text, voice } = await req.json();
-
-    if (!text || typeof text !== 'string') {
-      return NextResponse.json({ error: 'Missing text' }, { status: 400 });
+    const validation = await validateBody(req, ttsSchema);
+    if ('error' in validation) {
+      return validation.error;
     }
+    const { text, voice } = validation.data;
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {

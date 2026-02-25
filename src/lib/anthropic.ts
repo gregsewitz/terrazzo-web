@@ -11,12 +11,36 @@ function getClient(): Anthropic {
   return _anthropic;
 }
 
-const MODEL = 'claude-sonnet-4-20250514';
+const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
 function extractJSON(text: string): string {
   // Strip markdown code fences if present
   const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
   return cleaned;
+}
+
+/**
+ * Retry helper with exponential backoff for rate-limited API calls.
+ */
+async function callClaudeWithRetry(
+  params: Parameters<typeof Anthropic.prototype.messages.create>[0],
+  maxRetries = 3
+): Promise<any> {
+  const client = getClient();
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await client.messages.create(params);
+    } catch (err: any) {
+      if (err?.status === 429 && attempt < maxRetries - 1) {
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+        console.warn(`[anthropic] Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('Max retries exceeded');
 }
 
 // ─── Unified extraction + optional taste matching ────────────────────────────
@@ -40,6 +64,7 @@ export interface ExtractedPlace {
 export interface ExtractAndMatchResult {
   region: string | null;
   places: ExtractedPlace[];
+  parseError?: string;
 }
 
 // Backward-compatible alias for callers that only need extraction
@@ -124,7 +149,7 @@ Return a JSON object:
 
 Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
 
-  const response = await getClient().messages.create({
+  const response = await callClaudeWithRetry({
     model: MODEL,
     max_tokens: includeTasteMatch ? 16384 : 8192,
     system: [{ type: 'text', text: extractSystemPrompt, cache_control: { type: 'ephemeral' } }],
@@ -132,7 +157,7 @@ Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
   });
 
   try {
-    const textBlock = response.content.find((b) => b.type === 'text');
+    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
     const rawText = textBlock?.type === 'text' ? textBlock.text : '{}';
     const jsonStr = extractJSON(rawText);
     const parsed = JSON.parse(jsonStr);
@@ -144,13 +169,13 @@ Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
       places: Array.isArray(parsed.places) ? parsed.places : [],
     };
   } catch (e) {
-    const textBlock = response.content.find((b) => b.type === 'text');
+    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
     const rawText = textBlock?.type === 'text' ? textBlock.text : '';
     console.error('[extractAndMatch] JSON parse failed:', (e as Error).message);
     console.error('[extractAndMatch] stop_reason:', response.stop_reason);
     console.error('[extractAndMatch] raw response length:', rawText.length);
     console.error('[extractAndMatch] raw response tail:', rawText.slice(-200));
-    return { region: null, places: [] };
+    return { region: null, places: [], parseError: (e as Error).message };
   }
 }
 
@@ -184,7 +209,7 @@ For each place, return an object with:
 Return a JSON array in the SAME ORDER as the input list. Each element corresponds to the place at that index.
 Return ONLY the JSON array, no markdown.`;
 
-  const response = await getClient().messages.create({
+  const response = await callClaudeWithRetry({
     model: MODEL,
     max_tokens: 4096,
     system: [{ type: 'text', text: tasteMatchSystemPrompt, cache_control: { type: 'ephemeral' } }],
@@ -197,7 +222,7 @@ Return ONLY the JSON array, no markdown.`;
   });
 
   try {
-    const textBlock = response.content.find((b) => b.type === 'text');
+    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
     return JSON.parse(extractJSON(textBlock?.type === 'text' ? textBlock.text : '[]'));
   } catch {
     return [];

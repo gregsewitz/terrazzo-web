@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
@@ -20,7 +20,7 @@ interface DestinationAllocatorProps {
   onChange: (allocation: Record<string, number>) => void;
 }
 
-export default function DestinationAllocator({
+function DestinationAllocator({
   destinations,
   totalDays,
   allocation,
@@ -275,3 +275,5 @@ export default function DestinationAllocator({
     </div>
   );
 }
+
+export default React.memo(DestinationAllocator);

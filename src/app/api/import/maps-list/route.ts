@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { validateBody, importMapsListSchema } from '@/lib/api-validation';
 import { searchPlace, priceLevelToString } from '@/lib/places';
 import { generateTasteMatchBatch } from '@/lib/anthropic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
@@ -41,14 +43,15 @@ async function parallelMap<T, R>(
 }
 
 export async function POST(request: NextRequest) {
-  const { url } = await request.json();
+  const ip = getClientIp(request.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
 
-  if (!url?.trim()) {
-    return new Response(JSON.stringify({ error: 'URL is required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  const validation = await validateBody(request, importMapsListSchema);
+  if ('error' in validation) {
+    return validation.error;
   }
+  const { url } = validation.data;
 
   // Load real user profile if authenticated, else default
   const userProfile = await getUserTasteProfile(request);

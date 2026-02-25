@@ -700,7 +700,7 @@ function TripComplete({ seed, onDone }: {
 // ============================================================
 export default function NewTripPage() {
   const router = useRouter();
-  const createTrip = useTripStore(s => s.createTrip);
+  const createTripAsync = useTripStore(s => s.createTripAsync);
   const isDesktop = useIsDesktop();
   const [step, setStep] = useState<'seed' | 'allocate' | 'conversation' | 'complete'>('seed');
   const [seed, setSeed] = useState<SeedData | null>(null);
@@ -722,11 +722,11 @@ export default function NewTripPage() {
     setStep('conversation');
   };
 
-  const handleConversationComplete = () => {
+  const handleConversationComplete = async () => {
     if (!seed) return;
 
-    // Actually create the trip in the store
-    const tripId = createTrip({
+    // Actually create the trip in the store and wait for server ID
+    const tripId = await createTripAsync({
       name: seed.name,
       destinations: seed.destinations,
       geoDestinations: seed.geoDestinations,

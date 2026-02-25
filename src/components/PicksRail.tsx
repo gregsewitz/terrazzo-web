@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
@@ -9,20 +9,11 @@ import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 import FilterSortBar from './ui/FilterSortBar';
-
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant', hotel: 'hotel', bar: 'bar', cafe: 'cafe',
-  museum: 'museum', activity: 'activity', neighborhood: 'location', shop: 'shop',
-};
+import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant', hotel: 'Hotel', bar: 'Bar', cafe: 'Café',
   museum: 'Museum', activity: 'Activity', neighborhood: 'Neighborhood', shop: 'Shop',
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  restaurant: '#c0ab8e', hotel: '#b8b0c0', bar: '#a8c0b0', cafe: '#c8c0b0',
-  museum: '#a8b0b8', activity: '#a8b8a8', neighborhood: '#b8c0a8', shop: '#c0b0a0',
 };
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
@@ -54,7 +45,7 @@ interface PicksRailProps {
   onSelectedDayChange: (day: number | null) => void;
 }
 
-export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace, selectedDay, onSelectedDayChange }: PicksRailProps) {
+function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selectedDay, onSelectedDayChange }: PicksRailProps) {
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
@@ -313,7 +304,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
       >
         {sortedPicks.map(place => {
           const typeIcon = TYPE_ICONS[place.type] || 'location';
-          const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
+          const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
           const typeLabel = TYPE_LABELS[place.type] || place.type;
           const isHovered = hoveredId === place.id;
           const tasteNote = place.tasteNote;
@@ -541,3 +532,7 @@ export default function PicksRail({ onTapDetail, width, onResizeStart, onUnplace
     </div>
   );
 }
+
+const PicksRail = React.memo(PicksRailInner);
+PicksRail.displayName = 'PicksRail';
+export default PicksRail;

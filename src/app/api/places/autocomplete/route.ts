@@ -24,9 +24,14 @@ export async function POST(req: NextRequest) {
       photoUrl: p.photos?.[0]?.name ? getPhotoUrl(p.photos[0].name, 200) : null,
     }));
 
-    return NextResponse.json({ results });
+    return NextResponse.json({ results }, {
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+    });
   } catch (err) {
     console.error('Autocomplete error:', err);
-    return NextResponse.json({ results: [] }, { status: 500 });
+    return NextResponse.json({ results: [] }, {
+      status: 500,
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+    });
   }
 }

@@ -25,5 +25,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
       isOnboardingComplete: user.isOnboardingComplete,
       onboardingDepth: user.onboardingDepth,
     },
+  }, {
+    headers: { 'Cache-Control': 'private, no-cache' }
   });
 });

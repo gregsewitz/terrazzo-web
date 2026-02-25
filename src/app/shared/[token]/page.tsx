@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 
 // ─── Types for shared data ───
 
@@ -72,28 +73,6 @@ interface SharedTripData {
 }
 
 type SharedData = SharedShortlistData | SharedTripData;
-
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  hotel: 'hotel',
-  bar: 'bar',
-  cafe: 'cafe',
-  museum: 'museum',
-  activity: 'activity',
-  neighborhood: 'location',
-  shop: 'shop',
-};
-
-const THUMB_GRADIENTS: Record<string, string> = {
-  restaurant: 'linear-gradient(135deg, #d8c8ae, #c0ab8e)',
-  hotel: 'linear-gradient(135deg, #d0c8d8, #b8b0c0)',
-  bar: 'linear-gradient(135deg, #c0d0c8, #a8c0b0)',
-  cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0)',
-  museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8)',
-  activity: 'linear-gradient(135deg, #c0d0c8, #a8b8a8)',
-  neighborhood: 'linear-gradient(135deg, #d0d8c8, #b8c0a8)',
-  shop: 'linear-gradient(135deg, #d8c8b8, #c0b0a0)',
-};
 
 export default function SharedViewPage() {
   const params = useParams();
@@ -379,11 +358,11 @@ export default function SharedViewPage() {
                         <div
                           className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                           style={{
-                            background: THUMB_GRADIENTS[slot.placed.type] || THUMB_GRADIENTS.restaurant,
+                            background: THUMB_GRADIENTS[slot.placed.type as keyof typeof THUMB_GRADIENTS] || THUMB_GRADIENTS.restaurant,
                           }}
                         >
                           <PerriandIcon
-                            name={TYPE_ICONS[slot.placed.type] || 'location'}
+                            name={TYPE_ICONS[slot.placed.type as keyof typeof TYPE_ICONS] || 'location'}
                             size={12}
                             color={INK['70']}
                           />
@@ -427,7 +406,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
   onSave: () => void;
   isAuthenticated: boolean;
 }) {
-  const typeIcon = TYPE_ICONS[place.type] || 'location';
+  const typeIcon = TYPE_ICONS[place.type as keyof typeof TYPE_ICONS] || 'location';
   const google = place.googleData as { rating?: number; priceLevel?: number } | null;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
   const subtitle = (place.rating?.personalNote)
@@ -450,7 +429,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
           className="rounded-lg flex items-center justify-center flex-shrink-0"
           style={{
             width: 44, height: 44,
-            background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
+            background: THUMB_GRADIENTS[place.type as keyof typeof THUMB_GRADIENTS] || THUMB_GRADIENTS.restaurant,
           }}
         >
           <PerriandIcon name={typeIcon} size={18} color={INK['70']} />

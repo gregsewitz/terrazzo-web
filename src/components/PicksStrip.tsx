@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
@@ -9,28 +9,7 @@ import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 import FilterSortBar from './ui/FilterSortBar';
-
-const TYPE_ICONS: Record<string, PerriandIconName> = {
-  restaurant: 'restaurant',
-  hotel: 'hotel',
-  bar: 'bar',
-  cafe: 'cafe',
-  museum: 'museum',
-  activity: 'activity',
-  neighborhood: 'location',
-  shop: 'shop',
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  restaurant: '#c0ab8e',
-  hotel: '#b8b0c0',
-  bar: '#a8c0b0',
-  cafe: '#c8c0b0',
-  museum: '#a8b0b8',
-  activity: '#a8b8a8',
-  neighborhood: '#b8c0a8',
-  shop: '#c0b0a0',
-};
+import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 
 // ─── Gesture thresholds ───
 const HOLD_DELAY = 300;            // ms before drag activates (longer = more forgiving for scrollers)
@@ -72,7 +51,7 @@ interface PicksStripProps {
   returningPlaceId?: string | null;
 }
 
-export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropTarget, onRegisterRect, returningPlaceId }: PicksStripProps) {
+function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropTarget, onRegisterRect, returningPlaceId }: PicksStripProps) {
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
@@ -467,7 +446,7 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
           <>
           {stripPlaces.map((place, idx) => {
             const typeIcon = TYPE_ICONS[place.type] || 'location';
-            const typeColor = TYPE_COLORS[place.type] || '#c0ab8e';
+            const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
             const isDragging = dragItemId === place.id;
             const isHolding = holdingId === place.id;
             const isReturning = returningPlaceId === place.id;
@@ -645,3 +624,5 @@ export default function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, drag
     </div>
   );
 }
+
+export default React.memo(PicksStrip);
