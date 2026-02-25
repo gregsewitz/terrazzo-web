@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAddBarStore } from '@/stores/addBarStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { useImportStore } from '@/stores/importStore';
 import { streamImport } from '@/lib/importService';
 import { detectInputType, DEMO_IMPORT_RESULTS } from '@/lib/import-helpers';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
@@ -538,68 +537,32 @@ export default function UniversalAddBar() {
                           <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', margin: '0 0 8px' }}>
                             Don&apos;t have what you need?
                           </p>
-                          <div className="flex flex-col gap-1.5">
-                            <QuickAction
-                              icon="discover"
-                              label={`Search Google for ${tripContext.destination || ''} places`}
-                              onTap={() => {
-                                setQuery(tripContext.destination || '');
-                                setTimeout(() => inputRef.current?.focus(), 50);
-                              }}
-                            />
-                            <QuickAction
-                              icon="article"
-                              label="Paste a link or list"
-                              onTap={async () => {
-                                try {
-                                  const text = await navigator.clipboard.readText();
-                                  if (text) {
-                                    setQuery(text);
-                                    if (text.split('\n').filter(l => l.trim()).length >= 2) {
-                                      handleInputSubmit(text);
-                                    }
-                                  }
-                                } catch { /* clipboard permission denied */ }
-                              }}
-                            />
-                          </div>
+                          <button
+                            onClick={() => {
+                              setQuery(tripContext.destination || '');
+                              setTimeout(() => inputRef.current?.focus(), 50);
+                            }}
+                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl cursor-pointer transition-all"
+                            style={{
+                              background: 'white',
+                              border: '1px solid var(--t-linen)',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <PerriandIcon name="discover" size={15} color={INK['50']} />
+                            <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)' }}>
+                              Search Google for {tripContext.destination || ''} places
+                            </span>
+                          </button>
                         </div>
                       </>
                     ) : (
                       /* ════ GLOBAL (non-trip) empty state ════ */
                       <>
-                        {/* Quick actions */}
-                        <SectionHeader label="Quick actions" />
-                        <div className="flex flex-col gap-1">
-                          <QuickAction
-                            icon="article"
-                            label="Paste from clipboard"
-                            subtitle="Links, lists, or text from a friend"
-                            onTap={async () => {
-                              try {
-                                const text = await navigator.clipboard.readText();
-                                if (text) {
-                                  setQuery(text);
-                                  handleInputSubmit(text);
-                                }
-                              } catch { /* clipboard permission denied */ }
-                            }}
-                          />
-                          <QuickAction
-                            icon="email"
-                            label="Import from email"
-                            subtitle="Forward a newsletter or rec email"
-                            onTap={() => {
-                              close();
-                              useImportStore.getState().patch({ isOpen: true });
-                            }}
-                          />
-                        </div>
-
                         {/* Recent saves */}
-                        {recentSaves.length > 0 && (
+                        {recentSaves.length > 0 ? (
                           <>
-                            <SectionHeader label="Recent saves" />
+                            <SectionHeader label="Recently saved" />
                             {recentSaves.map(place => (
                               <PlaceRow
                                 key={place.id}
@@ -611,6 +574,12 @@ export default function UniversalAddBar() {
                               />
                             ))}
                           </>
+                        ) : (
+                          <div className="pt-6 pb-2 text-center">
+                            <p style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['40'], margin: 0, lineHeight: 1.5 }}>
+                              Search for a place, paste a link,<br />or drop in a list from a friend
+                            </p>
+                          </div>
                         )}
                       </>
                     )}
@@ -958,32 +927,6 @@ function SectionHeader({ label }: { label: string }) {
     >
       {label}
     </p>
-  );
-}
-
-function QuickAction({ icon, label, subtitle, onTap }: { icon: PerriandIconName; label: string; subtitle?: string; onTap: () => void }) {
-  return (
-    <button
-      onClick={onTap}
-      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl cursor-pointer transition-all"
-      style={{
-        background: 'white',
-        border: '1px solid var(--t-linen)',
-        textAlign: 'left',
-      }}
-    >
-      <PerriandIcon name={icon} size={15} color={INK['50']} />
-      <div className="flex-1 min-w-0">
-        <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)', display: 'block' }}>
-          {label}
-        </span>
-        {subtitle && (
-          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['40'], display: 'block', marginTop: 1 }}>
-            {subtitle}
-          </span>
-        )}
-      </div>
-    </button>
   );
 }
 
