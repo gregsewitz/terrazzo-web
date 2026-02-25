@@ -97,31 +97,31 @@ export const waitlistSchema = z.object({
 // Smart search schema
 export const smartSearchSchema = z.object({
   query: z.string().min(1, 'Query is required'),
-  places: z.array(z.record(z.unknown())).nullable().optional(),
+  places: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 // Profile discover schema
 export const profileDiscoverSchema = z.object({
-  userProfile: z.record(z.unknown()),
-  lifeContext: z.record(z.unknown()).nullable().optional(),
+  userProfile: z.record(z.string(), z.unknown()),
+  lifeContext: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 // Onboarding analyze schema
 export const onboardingAnalyzeSchema = z.object({
   userText: z.string().min(1, 'User text is required'),
-  conversationHistory: z.array(z.record(z.unknown())),
+  conversationHistory: z.array(z.record(z.string(), z.unknown())),
   phaseId: z.string().min(1, 'Phase ID is required'),
-  certainties: z.record(z.unknown()).nullable().optional(),
+  certainties: z.record(z.string(), z.unknown()).nullable().optional(),
   userMessageCount: z.number().optional(),
-  crossPhaseContext: z.record(z.unknown()).nullable().optional(),
+  crossPhaseContext: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 // Onboarding synthesize schema
 export const onboardingSynthesizeSchema = z.object({
   signals: z.array(z.unknown()),
-  messages: z.array(z.record(z.unknown())),
-  contradictions: z.array(z.record(z.unknown())),
-  certainties: z.record(z.unknown()),
+  messages: z.array(z.record(z.string(), z.unknown())),
+  contradictions: z.array(z.record(z.string(), z.unknown())),
+  certainties: z.record(z.string(), z.unknown()),
 });
 
 // TTS schema
@@ -143,16 +143,16 @@ export const importMapsListSchema = z.object({
 // Trip chat schema
 export const tripChatSchema = z.object({
   userMessage: z.string().min(1, 'Message is required'),
-  conversationHistory: z.array(z.record(z.unknown())),
-  tripContext: z.record(z.unknown()),
-  userProfile: z.record(z.unknown()),
+  conversationHistory: z.array(z.record(z.string(), z.unknown())),
+  tripContext: z.record(z.string(), z.unknown()),
+  userProfile: z.record(z.string(), z.unknown()),
 });
 
 // Trip conversation schema
 export const tripConversationSchema = z.object({
   userMessage: z.string().min(1, 'Message is required'),
-  conversationHistory: z.array(z.record(z.unknown())),
+  conversationHistory: z.array(z.record(z.string(), z.unknown())),
   messageCount: z.number().optional(),
-  tripContext: z.record(z.unknown()),
-  userProfile: z.record(z.unknown()),
+  tripContext: z.record(z.string(), z.unknown()),
+  userProfile: z.record(z.string(), z.unknown()),
 });

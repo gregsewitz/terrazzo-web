@@ -94,7 +94,7 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
     // Create in DB and sync the real ID back to the store
     (async () => {
       try {
-        const res = await apiFetch('/api/shortlists', {
+        const res = await apiFetch<{ shortlist?: { id: string } }>('/api/shortlists', {
           method: 'POST',
           body: JSON.stringify({ name, emoji: emoji || 'pin', description }),
         });
@@ -134,7 +134,7 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
       ],
     }));
     try {
-      const res = await apiFetch('/api/shortlists', {
+      const res = await apiFetch<{ shortlist?: { id: string } }>('/api/shortlists', {
         method: 'POST',
         body: JSON.stringify({ name, emoji: emoji || 'pin', description }),
       });
@@ -269,7 +269,7 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
     // Create in DB and sync the real ID back to the store
     (async () => {
       try {
-        const res = await apiFetch('/api/shortlists', {
+        const res = await apiFetch<{ shortlist?: { id: string } }>('/api/shortlists', {
           method: 'POST',
           body: JSON.stringify({
             name,

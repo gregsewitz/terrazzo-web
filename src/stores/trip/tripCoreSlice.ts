@@ -177,7 +177,7 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     };
     (async () => {
       try {
-        const res = await apiFetch('/api/trips/mine', {
+        const res = await apiFetch<{ trip?: { id: string } }>('/api/trips/mine', {
           method: 'POST',
           body: JSON.stringify(payload),
         });
@@ -261,7 +261,7 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     }));
 
     try {
-      const res = await apiFetch('/api/trips/mine', {
+      const res = await apiFetch<{ trip?: { id: string } }>('/api/trips/mine', {
         method: 'POST',
         body: JSON.stringify({
           name: data.name,
