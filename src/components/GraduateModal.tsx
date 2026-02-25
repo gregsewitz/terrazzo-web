@@ -16,6 +16,8 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const graduateToPlanning = useTripStore(s => s.graduateToPlanning);
+  const [flexibleDates, setFlexibleDates] = useState(false);
+  const [numDays, setNumDays] = useState('5');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [step, setStep] = useState<'dates' | 'allocate'>('dates');
@@ -25,11 +27,12 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
 
   // Calculate total days
   const totalDays = useMemo(() => {
+    if (flexibleDates) return Math.max(1, parseInt(numDays) || 5);
     if (!startDate || !endDate) return 0;
     const s = new Date(startDate + 'T00:00:00');
     const e = new Date(endDate + 'T00:00:00');
     return Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-  }, [startDate, endDate]);
+  }, [flexibleDates, numDays, startDate, endDate]);
 
   // Initialize allocation for multi-city
   const [allocation, setAllocation] = useState<Record<string, number>>({});
@@ -45,7 +48,9 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
     setAllocation(alloc);
   };
 
-  const canProceed = startDate && endDate && totalDays > 0;
+  const canProceed = flexibleDates ? totalDays > 0 : (startDate && endDate && totalDays > 0);
+
+  const flexOpts = flexibleDates ? { flexibleDates: true, numDays: totalDays } : undefined;
 
   const handleDatesNext = () => {
     if (!canProceed) return;
@@ -53,13 +58,13 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
       initAllocation();
       setStep('allocate');
     } else {
-      graduateToPlanning(startDate, endDate);
+      graduateToPlanning(startDate, endDate, undefined, flexOpts);
       onClose();
     }
   };
 
   const handleAllocateComplete = () => {
-    graduateToPlanning(startDate, endDate, allocation);
+    graduateToPlanning(startDate, endDate, allocation, flexOpts);
     onClose();
   };
 
@@ -114,38 +119,83 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                 >
                   WHEN ARE YOU GOING?
                 </label>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+
+                {/* Flexible toggle */}
+                <div className="flex gap-2 mb-3">
+                  {([
+                    { key: false, label: 'Specific dates' },
+                    { key: true, label: 'Flexible / undecided' },
+                  ] as const).map(opt => (
+                    <button
+                      key={String(opt.key)}
+                      onClick={() => setFlexibleDates(opt.key)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-full border cursor-pointer transition-all text-[11px]"
                       style={{
+                        background: flexibleDates === opt.key ? 'var(--t-ink)' : 'white',
+                        color: flexibleDates === opt.key ? 'white' : 'var(--t-ink)',
+                        borderColor: flexibleDates === opt.key ? 'var(--t-ink)' : 'var(--t-linen)',
                         fontFamily: FONT.sans,
-                        color: startDate ? 'var(--t-ink)' : INK['90'],
-                        borderColor: 'var(--t-linen)',
+                        fontWeight: 500,
                       }}
-                    />
-                    <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
-                  </div>
-                  <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
-                  <div className="flex-1">
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={e => setEndDate(e.target.value)}
-                      min={startDate || undefined}
-                      className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
-                      style={{
-                        fontFamily: FONT.sans,
-                        color: endDate ? 'var(--t-ink)' : INK['90'],
-                        borderColor: 'var(--t-linen)',
-                      }}
-                    />
-                    <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
-                  </div>
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
+
+                {flexibleDates ? (
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="60"
+                      value={numDays}
+                      onChange={e => setNumDays(e.target.value)}
+                      className="w-20 text-center text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+                      style={{
+                        fontFamily: FONT.sans,
+                        color: 'var(--t-ink)',
+                        borderColor: 'var(--t-linen)',
+                      }}
+                    />
+                    <span className="text-[12px]" style={{ color: INK['90'], fontFamily: FONT.sans }}>
+                      days
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+                        style={{
+                          fontFamily: FONT.sans,
+                          color: startDate ? 'var(--t-ink)' : INK['90'],
+                          borderColor: 'var(--t-linen)',
+                        }}
+                      />
+                      <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
+                    </div>
+                    <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
+                    <div className="flex-1">
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                        min={startDate || undefined}
+                        className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+                        style={{
+                          fontFamily: FONT.sans,
+                          color: endDate ? 'var(--t-ink)' : INK['90'],
+                          borderColor: 'var(--t-linen)',
+                        }}
+                      />
+                      <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
+                    </div>
+                  </div>
+                )}
 
                 {totalDays > 0 && (
                   <div

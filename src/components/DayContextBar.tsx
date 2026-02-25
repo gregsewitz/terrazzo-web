@@ -191,47 +191,25 @@ const DayContextBar = memo(({
           {!addingTransport && !editingHotel && (
             <button
               onClick={() => setAddingTransport(true)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
               style={{
                 fontFamily: FONT.sans,
-                fontSize: 11,
-                fontWeight: 500,
-                color: `${destColor.accent}cc`,
+                fontSize: 10,
+                fontWeight: 600,
+                color: destColor.text,
                 whiteSpace: 'nowrap',
-                background: 'none',
+                background: `${destColor.accent}22`,
                 border: 'none',
                 cursor: 'pointer',
-                padding: 0,
+                transition: 'all 0.15s ease',
               }}
             >
-              <PerriandIcon name="plan" size={12} color={`${destColor.accent}cc`} />
-              + Travel
+              <PerriandIcon name="transport" size={12} color={destColor.accent} />
+              + Transportation
             </button>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setDayMapOpen(!dayMapOpen)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-            style={{
-              background: dayMapOpen ? destColor.accent : `${destColor.accent}15`,
-              color: dayMapOpen ? 'white' : destColor.accent,
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: FONT.sans,
-              fontSize: 10,
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <PerriandIcon name="pin" size={12} color={dayMapOpen ? 'white' : destColor.accent} />
-            {dayMapOpen ? 'Hide Map' : 'View Map'}
-            {!dayMapOpen && placedItems.length > 0 && (
-              <span style={{ fontFamily: FONT.mono, fontSize: 9, opacity: 0.7 }}>
-                · {placedItems.length} place{placedItems.length !== 1 ? 's' : ''}
-              </span>
-            )}
-          </button>
           {placedItems.length >= 2 && (
             <button
               onClick={() => {

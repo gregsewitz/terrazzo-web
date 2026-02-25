@@ -30,6 +30,8 @@ interface TimeSlotCardProps {
   onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
   dragItemId?: string | null;
   onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
+  // AI suggestion loading state
+  isLoadingSuggestions?: boolean;
   // Collaboration
   suggestions?: Suggestion[];
   reactions?: Reaction[];
@@ -40,7 +42,7 @@ interface TimeSlotCardProps {
   onAddSlotNote?: (content: string) => void;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNoteItems, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace, isLoadingSuggestions, suggestions, reactions, slotNoteItems, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
@@ -431,8 +433,79 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
       {/* Add padding at bottom of filled slots */}
       {hasPlaces && <div style={{ height: 4 }} />}
 
+      {/* Loading shimmer — shown in empty slots while AI suggestions are being fetched */}
+      {!hasPlaces && !hasGhosts && isLoadingSuggestions && (
+        <div style={{ borderBottom: '1px solid var(--t-linen)' }}>
+          <div className="flex items-center gap-2 px-4" style={{ height: 32 }}>
+            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+              <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
+            </div>
+            <span
+              className="text-[11px]"
+              style={{
+                fontFamily: FONT.mono,
+                color: INK['85'],
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.5px',
+              }}
+            >
+              {slot.label}
+            </span>
+          </div>
+          <div className="px-4 pb-2.5 flex flex-col gap-2">
+            {[0, 1].map(i => (
+              <div
+                key={i}
+                className="rounded-lg overflow-hidden"
+                style={{
+                  background: 'var(--t-cream)',
+                  border: '1.5px dashed rgba(107,139,154,0.25)',
+                  padding: '8px 10px',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="rounded-full flex-shrink-0 shimmer-pulse"
+                    style={{ width: 28, height: 28, background: 'rgba(42,122,86,0.06)' }}
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <div
+                      className="shimmer-pulse rounded"
+                      style={{ height: 11, width: '60%', background: 'rgba(42,122,86,0.08)' }}
+                    />
+                    <div
+                      className="shimmer-pulse rounded"
+                      style={{ height: 9, width: '40%', background: 'rgba(42,122,86,0.05)' }}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <div
+                    className="shimmer-pulse rounded-full"
+                    style={{ height: 16, width: 80, background: 'rgba(42,122,86,0.06)' }}
+                  />
+                  <div
+                    className="shimmer-pulse rounded"
+                    style={{ height: 10, width: 120, background: 'rgba(42,122,86,0.04)' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <style>{`
+            @keyframes shimmerPulse {
+              0%, 100% { opacity: 0.4; }
+              50% { opacity: 1; }
+            }
+            .shimmer-pulse {
+              animation: shimmerPulse 1.8s ease-in-out infinite;
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* Empty slot — drop target / add row */}
-      {!hasPlaces && (
+      {!hasPlaces && !isLoadingSuggestions && (
         <div
           className="flex items-center gap-2 px-4 cursor-pointer"
           onClick={handleEmptyClick}

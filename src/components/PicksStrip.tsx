@@ -338,9 +338,9 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
               },
             ]}
             sortOptions={[
-              { value: 'match', label: 'Match score' },
-              { value: 'recent', label: 'Recently added' },
-              { value: 'name', label: 'Name A–Z' },
+              { value: 'match', label: 'Match %' },
+              { value: 'recent', label: 'Most recent' },
+              { value: 'name', label: 'A–Z' },
               { value: 'source', label: 'Source' },
             ]}
             sortValue={sortBy}

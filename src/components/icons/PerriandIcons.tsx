@@ -42,6 +42,8 @@ export type PerriandIconName =
   // Misc
   | 'star' | 'edit' | 'check' | 'close' | 'heart' | 'pin'
   | 'sparkle' | 'summer' | 'lightning' | 'bookmark' | 'add'
+  // Transport
+  | 'transport'
   // Collaboration / Activity
   | 'invite' | 'wave' | 'lightbulb' | 'acceptCircle' | 'rejectCircle'
   | 'chatBubble' | 'loveReaction' | 'unsure' | 'swap';
@@ -101,6 +103,8 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   sparkle:    '#eeb420',
   summer:     '#e86830',
   lightning:  '#e86830',
+  // Transport
+  transport:    '#6b8b9a',
   // Collaboration / Activity
   invite:       '#6366f1',
   wave:         '#2a7a56',
@@ -487,6 +491,24 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <line x1="16" y1="8" x2="16" y2="24" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
       <line x1="8" y1="16" x2="24" y2="16" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
+    </>
+  ),
+
+  // ── Transport ───────────────────────────────────────────────────────────
+
+  transport: (s, a) => (
+    <>
+      {/* Car body — simple sedan profile */}
+      <path d="M6,20 L6,17 C6,16 7,15 8,15 L11,15 L13,11 C13.5,10 14.5,9.5 15.5,9.5 L20,9.5 C21,9.5 22,10 22.5,11 L24,15 L25,15 C26,15 26,16 26,17 L26,20" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      {/* Underline */}
+      <line x1="6" y1="20" x2="26" y2="20" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      {/* Windshield hint */}
+      <path d="M13.5,15 L15,11 L20,11 L21.5,15" stroke={s} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity=".4" />
+      {/* Wheels */}
+      <circle cx="11" cy="21" r="2.5" stroke={s} strokeWidth="1.5" fill="none" />
+      <circle cx="22" cy="21" r="2.5" stroke={s} strokeWidth="1.5" fill="none" />
+      {/* Accent dot */}
+      <circle cx="11" cy="21" r="1" fill={a} />
     </>
   ),
 

@@ -780,7 +780,50 @@ Generate a JSON object with this structure:
   "contextModifiers": [4-6 situational shifts with context/shifts],
   "microTasteSignals": { "category_name": ["term1", "term2", ...], ... } (6-8 categories, 4-6 terms each),
   "radarData": [{ "axis": "Sensory|Authenticity|Material|Social|Cultural|Spatial", "value": 0.0-1.0 }],
-  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved]
+  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved],
+
+  "bestQuote": {
+    "quote": "A real line the user said during onboarding — the moment that revealed the most about their taste. Choose for emotional resonance, not information. Pick a moment where they described a FEELING or SCENE, not a factual statement.",
+    "insight": "One sentence: what this quote revealed about them. Warm, knowing, never condescending."
+  },
+
+  "designInsight": {
+    "headline": "A short sentence about how they see space (e.g., 'You read a room before you feel it.')",
+    "annotations": [
+      { "axis": "volume", "label": ["Minimal", "Maximal"], "note": "Observation referencing their actual words about visual density and ornamentation." },
+      { "axis": "temperature", "label": ["Cool & Composed", "Warm & Rich"], "note": "Observation about their material/color warmth preference." },
+      { "axis": "time", "label": ["Contemporary", "Historic & Layered"], "note": "Observation about their temporal aesthetic preference." },
+      { "axis": "formality", "label": ["Raw & Natural", "Polished & Sleek"], "note": "Observation about their material finish and craft preference." },
+      { "axis": "culture", "label": ["International", "Deeply Local"], "note": "Observation about universal vs place-specific design." },
+      { "axis": "mood", "label": ["Serene", "Energetic"], "note": "Observation about their light and energy preference in spaces." }
+    ]
+  },
+
+  "perfectDay": {
+    "morning": "2-3 sentences. Sensory, specific. What their ideal morning on a trip looks like, drawn from their signals about rhythm, food, and ritual. Write in second person.",
+    "afternoon": "2-3 sentences. Their natural pace, what draws them, how they explore. Reference specific things they said.",
+    "evening": "2-3 sentences. How the energy shifts for them. Dining, social energy, what a great evening feels like."
+  },
+
+  "howYouShift": [
+    { "context": "With [partner name if mentioned, else 'a partner']", "insight": "1-2 sentences on how taste changes with this companion." },
+    { "context": "Solo", "insight": "1-2 sentences on solo travel identity." },
+    { "context": "With friends", "insight": "1-2 sentences on group travel dynamics." }
+  ],
+
+  "tasteNeighbors": {
+    "nearbyArchetypes": ["2-3 archetype names they share overlap with"],
+    "distinction": "1 sentence: what makes them different from these neighbors.",
+    "rarityStat": "A specific, interesting stat about their signal combination rarity, e.g., 'Only 6% of travelers pair deep material sensitivity with a preference for invisible service.'"
+  },
+
+  "destinations": {
+    "familiar": ["2-3 destination regions they'd expect to love"],
+    "surprise": {
+      "name": "One unexpected destination that scores highly for their profile",
+      "reason": "One line explaining WHY, referencing their specific signals."
+    }
+  }
 }
 
 RULES:
@@ -788,4 +831,11 @@ RULES:
 - Contradictions must have actionable matchRules that a scoring algorithm can use.
 - Micro-taste signals should include both positive and rejection signals.
 - Matched properties must be REAL hotels/properties the person would actually love.
-- Write like a well-traveled friend — warm, specific, never clinical.`;
+- Write like a well-traveled friend — warm, specific, never clinical.
+- bestQuote must be a REAL quote pulled verbatim from the conversation highlights. Do not fabricate quotes.
+- designInsight annotations should reference specific things the user said when possible.
+- perfectDay should feel like a lived experience, not a data summary. Use sensory language.
+- howYouShift should use the partner's actual name if it appears in the conversation.
+- tasteNeighbors rarityStat should cite a specific, non-obvious signal combination.
+- destinations.surprise must be a real, lesser-known place — not a generic bucket-list destination.
+- Never mention AI, algorithms, or data processing. Terrazzo is an advisor, not a recommendation engine.`;

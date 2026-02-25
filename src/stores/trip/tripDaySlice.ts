@@ -91,21 +91,24 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    // Calculate new end date (extend by 1 day)
-    const oldEnd = trip.endDate ? new Date(trip.endDate + 'T00:00:00') : new Date();
-    const newEndDate = new Date(oldEnd);
-    newEndDate.setDate(newEndDate.getDate() + 1);
-    const newEndDateStr = newEndDate.toISOString().split('T')[0];
-
     // Create the new day
     const newDayNumber = trip.days.length + 1;
     const newDay: TripDay = {
       dayNumber: newDayNumber,
-      date: `${monthNames[newEndDate.getMonth()]} ${newEndDate.getDate()}`,
-      dayOfWeek: dayNames[newEndDate.getDay()],
       destination,
       slots: DEFAULT_TIME_SLOTS.map(s => ({ ...s, places: [], ghostItems: [] })),
     };
+
+    // For trips with specific dates, compute date/dayOfWeek and extend endDate
+    let newEndDateStr = trip.endDate;
+    if (!trip.flexibleDates && trip.endDate) {
+      const oldEnd = new Date(trip.endDate + 'T00:00:00');
+      const newEndDate = new Date(oldEnd);
+      newEndDate.setDate(newEndDate.getDate() + 1);
+      newEndDateStr = newEndDate.toISOString().split('T')[0];
+      newDay.date = `${monthNames[newEndDate.getMonth()]} ${newEndDate.getDate()}`;
+      newDay.dayOfWeek = dayNames[newEndDate.getDay()];
+    }
 
     const newDestinations = [...(trip.destinations || []), destination];
 

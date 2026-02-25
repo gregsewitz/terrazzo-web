@@ -31,6 +31,9 @@ import PicksRail from '@/components/PicksRail';
 import RightPanel from '@/components/RightPanel';
 import DreamBoard from '@/components/DreamBoard';
 import GraduateModal from '@/components/GraduateModal';
+import TripMapView from '@/components/TripMapView';
+import OverviewItinerary from '@/components/OverviewItinerary';
+import TripBriefing from '@/components/TripBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 // ─── Auto-scroll config for drag near edges ───
@@ -74,6 +77,7 @@ function TripDetailContent() {
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
   const [showGraduateModal, setShowGraduateModal] = useState(false);
+  const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map'>('board');
 
   // Desktop resizable split
   const [boardHeight, setBoardHeight] = useState(60); // percentage of left workspace
@@ -346,9 +350,12 @@ function TripDetailContent() {
                 Dreaming
               </span>
             )}
-            {trip.startDate && trip.endDate && (
+            {(trip.flexibleDates || (trip.startDate && trip.endDate)) && (
               <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['50'] }}>
-                {formatDateRange(trip.startDate, trip.endDate)}
+                {trip.flexibleDates
+                  ? `${trip.days.length} days · flexible`
+                  : formatDateRange(trip.startDate!, trip.endDate!)
+                }
               </span>
             )}
             {trip.destinations && trip.destinations.length > 0 && (
@@ -373,6 +380,41 @@ function TripDetailContent() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* View mode toggle */}
+            {trip.status !== 'dreaming' && (
+              <div
+                className="flex rounded-full overflow-hidden"
+                style={{ border: '1px solid var(--t-linen)', background: INK['04'] }}
+              >
+                {([
+                  { key: 'overview' as const, label: 'Overview', icon: 'discover' as const },
+                  { key: 'board' as const, label: 'Itinerary', icon: 'plan' as const },
+                  { key: 'map' as const, label: 'Map', icon: 'location' as const },
+                ]).map(tab => {
+                  const isActive = desktopView === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setDesktopView(tab.key)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 cursor-pointer"
+                      style={{
+                        border: 'none',
+                        fontFamily: FONT.sans,
+                        fontSize: 11,
+                        fontWeight: isActive ? 600 : 400,
+                        background: isActive ? 'white' : 'transparent',
+                        color: isActive ? 'var(--t-ink)' : INK['50'],
+                        boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                        borderRadius: isActive ? 20 : 0,
+                      }}
+                    >
+                      <PerriandIcon name={tab.icon} size={13} color={isActive ? 'var(--t-ink)' : INK['40']} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {/* Collaborator avatars */}
             {collabCollaborators.filter(c => c.status === 'accepted').length > 0 && (
               <div className="flex -space-x-2 mr-1" onClick={() => setShowShareSheet(true)} style={{ cursor: 'pointer' }}>
@@ -448,48 +490,66 @@ function TripDetailContent() {
             </div>
             <RightPanel activities={collabActivities} />
           </div>
-        ) : (
-          <div className="flex flex-1 min-h-0">
-            {/* ── LEFT: PICKS RAIL ── */}
-            <PicksRail
-              onTapDetail={openDetail}
-              width={railWidth}
-              onResizeStart={handleRailResizeStart}
-              onUnplace={(placeId, fromDay, fromSlot) => unplaceFromSlot(fromDay, fromSlot, placeId)}
-              selectedDay={selectedRailDay}
-              onSelectedDayChange={setSelectedRailDay}
-            />
-
-            {/* ── CENTER: ITINERARY BOARD ── */}
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <DayBoardView
-                onTapDetail={openDetail}
-                suggestions={collabSuggestions}
-                reactions={collabReactions}
-                slotNotes={collabSlotNotes}
-                myRole={collabMyRole}
-                onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
-                onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
-                onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
-                onDropPlace={(placeId, dayNumber, slotId) => {
-                  const place = myPlaces.find(p => p.id === placeId);
-                  if (place) placeFromSaved(place, dayNumber, slotId);
-                }}
-                onMovePlace={(placeId, fromDay, fromSlot, toDay, toSlot) => {
-                  const place = myPlaces.find(p => p.id === placeId);
-                  if (place) moveToSlot(place, fromDay, fromSlot, toDay, toSlot);
-                }}
-                onUnplace={(placeId, dayNumber, slotId) => {
-                  unplaceFromSlot(dayNumber, slotId, placeId);
-                }}
-                onDaySelect={setSelectedRailDay}
-                selectedDay={selectedRailDay}
-              />
+        ) : desktopView === 'overview' ? (
+            /* ── OVERVIEW — Editorial Briefing ── */
+            <div className="flex flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto">
+                <TripBriefing
+                  trip={trip}
+                  onTapDay={(dayNum) => { useTripStore.getState().setCurrentDay(dayNum); setDesktopView('board'); }}
+                  onTapDetail={openDetail}
+                />
+              </div>
+              <RightPanel activities={collabActivities} />
             </div>
+        ) : desktopView === 'map' ? (
+            /* ── FULL MAP VIEW ── */
+            <div className="flex flex-1 min-h-0">
+              <TripMapView onTapDetail={openDetail} variant="desktop" />
+            </div>
+        ) : (
+            /* ── ITINERARY BOARD VIEW ── */
+            <div className="flex flex-1 min-h-0">
+              {/* ── LEFT: PICKS RAIL ── */}
+              <PicksRail
+                onTapDetail={openDetail}
+                width={railWidth}
+                onResizeStart={handleRailResizeStart}
+                onUnplace={(placeId, fromDay, fromSlot) => unplaceFromSlot(fromDay, fromSlot, placeId)}
+                selectedDay={selectedRailDay}
+                onSelectedDayChange={setSelectedRailDay}
+              />
 
-            {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
-            <RightPanel activities={collabActivities} />
-          </div>
+              {/* ── CENTER: ITINERARY BOARD ── */}
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <DayBoardView
+                  onTapDetail={openDetail}
+                  suggestions={collabSuggestions}
+                  reactions={collabReactions}
+                  slotNotes={collabSlotNotes}
+                  myRole={collabMyRole}
+                  onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
+                  onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
+                  onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
+                  onDropPlace={(placeId, dayNumber, slotId) => {
+                    const place = myPlaces.find(p => p.id === placeId);
+                    if (place) placeFromSaved(place, dayNumber, slotId);
+                  }}
+                  onMovePlace={(placeId, fromDay, fromSlot, toDay, toSlot) => {
+                    const place = myPlaces.find(p => p.id === placeId);
+                    if (place) moveToSlot(place, fromDay, fromSlot, toDay, toSlot);
+                  }}
+                  onUnplace={(placeId, dayNumber, slotId) => {
+                    unplaceFromSlot(dayNumber, slotId, placeId);
+                  }}
+                  onDaySelect={setSelectedRailDay}
+                  selectedDay={selectedRailDay}
+                />
+              </div>
+
+              {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
+              <RightPanel activities={collabActivities} />
+            </div>
         )}
 
         {/* Overlays shared between mobile/desktop */}
@@ -634,6 +694,28 @@ function TripDetailContent() {
             </div>
             <DreamBoard />
           </div>
+        ) : viewMode === 'mapView' ? (
+          /* ── MAP VIEW — takes full available space ── */
+          <>
+            {/* Minimal header with view toggle */}
+            <DayPlanner
+              viewMode={viewMode}
+              onSetViewMode={setViewMode}
+              onTapDetail={openDetail}
+              onOpenUnsorted={() => {}}
+              dropTarget={null}
+              onRegisterSlotRef={handleRegisterSlotRef}
+              onDragStartFromSlot={handleDragStartFromSlot}
+              dragItemId={null}
+              onUnplace={handleUnplace}
+              onBack={() => router.push('/trips')}
+              onShare={() => setShowShareSheet(true)}
+              onChat={() => setChatOpen(true)}
+            />
+            <div className="flex-1 flex flex-col min-h-0">
+              <TripMapView onTapDetail={openDetail} variant="mobile" />
+            </div>
+          </>
         ) : (
           <>
         {/* Day Planner (includes header + 3-way toggle for all modes) */}

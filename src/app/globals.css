@@ -87,6 +87,11 @@ body {
   scrollbar-width: none;
 }
 
+/* Spinner animation for loading states */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Ghost card shimmer animation */
 @keyframes ghostShimmer {
   0%, 100% { opacity: 0.92; }

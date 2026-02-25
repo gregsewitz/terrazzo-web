@@ -57,14 +57,15 @@ const DaySelector = memo(({
       {trip.days.map((d) => {
         const isDayActive = d.dayNumber === currentDay;
         const dayDestColor = getDestColor(d.destination || '');
-        const shortDay = d.dayOfWeek?.slice(0, 3) || '';
-        const dateNum = d.date?.replace(/\D/g, ' ').trim().split(' ').pop() || d.dayNumber;
+        const isFlexible = trip.flexibleDates === true;
+        const shortDay = isFlexible ? '' : (d.dayOfWeek?.slice(0, 3) || '');
+        const dateNum = isFlexible ? d.dayNumber : (d.date?.replace(/\D/g, ' ').trim().split(' ').pop() || d.dayNumber);
         // Extract month abbreviation from date string like "Jun 15"
-        const shortMonth = d.date?.match(/^([A-Za-z]+)/)?.[1] || '';
+        const shortMonth = isFlexible ? '' : (d.date?.match(/^([A-Za-z]+)/)?.[1] || '');
         // Show month label on first day, and whenever month changes from previous day
         const prevDay = trip.days[trip.days.indexOf(d) - 1];
         const prevMonth = prevDay?.date?.match(/^([A-Za-z]+)/)?.[1] || '';
-        const showMonth = !prevDay || shortMonth !== prevMonth;
+        const showMonth = !isFlexible && (!prevDay || shortMonth !== prevMonth);
 
         return (
           <button
@@ -89,16 +90,16 @@ const DaySelector = memo(({
               marginBottom: 1,
               visibility: showMonth ? 'visible' : 'hidden',
             }}>
-              {shortMonth || '\u00A0'}
+              {isFlexible ? '\u00A0' : (shortMonth || '\u00A0')}
             </span>
             <span style={{
               fontFamily: FONT.sans,
-              fontSize: 12,
+              fontSize: isFlexible ? 11 : 12,
               fontWeight: 600,
               color: isDayActive ? 'var(--t-ink)' : INK['85'],
               lineHeight: 1.2,
             }}>
-              {shortDay} {dateNum}
+              {isFlexible ? `Day ${dateNum}` : `${shortDay} ${dateNum}`}
             </span>
             <button
               onClick={(e) => {

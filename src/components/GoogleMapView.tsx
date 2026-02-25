@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
@@ -98,6 +98,8 @@ interface GoogleMapViewProps {
   fallbackDestination?: string;
   fallbackCoords?: { lat: number; lng: number };
   onMarkerTap?: (markerId: string) => void;
+  /** Externally-controlled active marker — avoids full marker rebuild */
+  activeMarkerId?: string | null;
 }
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -105,23 +107,39 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 // Muted map style — matches Terrazzo aesthetic
 const MAP_ID = 'terrazzo-map';
 
-function MarkerPin({ marker, isExpanded, onToggle }: {
+function MarkerPin({ marker, isExpanded, isHighlighted, onToggle }: {
   marker: MapMarker & { lat: number; lng: number };
   isExpanded: boolean;
+  /** External highlight — just glow the pin, don't expand into a card (prevents map re-layout/flash) */
+  isHighlighted: boolean;
   onToggle: () => void;
 }) {
   const icon = TYPE_ICONS[(marker.type || '') as keyof typeof TYPE_ICONS] || 'location';
   const isDashed = marker.isDashed;
+  const hasCount = marker.count != null && marker.count > 0;
+  const glowing = isHighlighted || isExpanded;
+  // Confirmed pins use vibrant accent fill; ghost pins use cream
+  const accentColor = marker.color || 'var(--t-ink)';
+  const isVibrant = !isDashed && !!marker.color;
 
   return (
     <AdvancedMarker
       position={{ lat: marker.lat, lng: marker.lng }}
-      onClick={onToggle}
-      zIndex={isExpanded ? 100 : 1}
+      onClick={() => {
+        onToggle();
+        marker.onClick?.();
+      }}
+      zIndex={glowing ? 100 : isDashed ? 0 : (hasCount ? 50 : 1)}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-        {/* Expanded card */}
-        {isExpanded ? (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer',
+        // Ghost shimmer — subtle opacity pulse
+        ...(isDashed && !glowing ? {
+          animation: 'ghostShimmer 2.5s ease-in-out infinite',
+        } : {}),
+      }}>
+        {/* Expanded card — only when internally controlled (no external activeMarkerId) */}
+        {isExpanded && !isHighlighted ? (
           <div style={{
             background: isDashed ? '#f7f5f0' : 'white',
             borderRadius: 12,
@@ -139,9 +157,18 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
               }}>Suggestion</div>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <div style={{ fontSize: 16 }}>
-                <PerriandIcon name={icon} size={16} />
-              </div>
+              {hasCount ? (
+                <div style={{
+                  width: 22, height: 22, borderRadius: '50%',
+                  background: accentColor, color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, flexShrink: 0,
+                }}>{marker.count}</div>
+              ) : (
+                <div style={{ fontSize: 16 }}>
+                  <PerriandIcon name={icon} size={16} />
+                </div>
+              )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontSize: 12, fontWeight: 600, color: isDashed ? INK['85'] : '#1c1a17',
@@ -170,89 +197,188 @@ function MarkerPin({ marker, isExpanded, onToggle }: {
               }}>{marker.tasteNote}</div>
             )}
           </div>
-        ) : (
-          /* Compact mini card — name pill with type icon */
+        ) : hasCount ? (
+          /* Numbered route pin */
           <div style={{
-            background: isDashed ? '#f0ebe2' : 'white',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <div style={{
+              width: glowing ? 34 : 28, height: glowing ? 34 : 28, borderRadius: '50%',
+              background: accentColor, color: 'white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: FONT.mono, fontSize: glowing ? 13 : 11, fontWeight: 700,
+              boxShadow: glowing
+                ? `0 0 0 4px rgba(255,255,255,0.9), 0 0 16px ${accentColor}60`
+                : `0 2px 8px ${INK['20']}`,
+              border: '2px solid white',
+              transition: 'all 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+            }}>{marker.count}</div>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: glowing ? 10 : 9, fontWeight: 600,
+              color: '#1c1a17', background: 'white',
+              borderRadius: 6, padding: glowing ? '2px 8px' : '1px 6px', marginTop: 2,
+              boxShadow: glowing
+                ? `0 2px 12px ${INK['18']}`
+                : `0 1px 4px ${INK['10']}`,
+              maxWidth: glowing ? 120 : 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              transition: 'all 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+            }}>{marker.name}</div>
+          </div>
+        ) : (
+          /* Compact pill — vibrant accent fill for confirmed, cream+dashed for ghosts */
+          <div style={{
+            background: isDashed ? '#f0ebe2' : isVibrant ? accentColor : 'white',
             borderRadius: 20,
-            padding: '4px 10px 4px 6px',
-            boxShadow: isDashed ? `0 1px 4px ${INK['10']}` : `0 2px 8px ${INK['15']}`,
+            padding: glowing ? '5px 12px 5px 7px' : '4px 10px 4px 6px',
+            boxShadow: glowing
+              ? `0 0 0 3px rgba(255,255,255,0.85), 0 4px 20px ${accentColor}50`
+              : isDashed ? `0 1px 4px ${INK['10']}` : `0 2px 12px ${accentColor}30`,
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            border: isDashed ? `1.5px dashed ${INK['30']}` : `1px solid ${INK['08']}`,
+            border: glowing
+              ? `2px solid white`
+              : isDashed ? `1.5px dashed ${INK['30']}` : `1.5px solid rgba(255,255,255,0.5)`,
             whiteSpace: 'nowrap',
+            transform: glowing ? 'scale(1.12)' : 'scale(1)',
+            transition: 'all 200ms cubic-bezier(0.32, 0.72, 0, 1)',
           }}>
             <div style={{ fontSize: 12 }}>
-              <PerriandIcon name={icon} size={12} />
+              <PerriandIcon
+                name={icon}
+                size={glowing ? 14 : 12}
+                color={isDashed ? INK['60'] : isVibrant ? 'rgba(255,255,255,0.95)' : undefined}
+              />
             </div>
             <span style={{
-              fontSize: 10, fontWeight: 600, color: isDashed ? INK['80'] : '#1c1a17',
+              fontSize: glowing ? 11 : 10, fontWeight: 600,
+              color: isDashed ? INK['80'] : isVibrant ? 'white' : '#1c1a17',
               fontFamily: FONT.sans,
-              maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis',
+              maxWidth: glowing ? 130 : 100, overflow: 'hidden', textOverflow: 'ellipsis',
+              textShadow: isVibrant ? '0 1px 2px rgba(0,0,0,0.15)' : 'none',
             }}>{marker.name}</span>
           </div>
         )}
-        {/* Pointer triangle */}
-        <div style={{
-          width: 0, height: 0,
-          borderLeft: '6px solid transparent',
-          borderRight: '6px solid transparent',
-          borderTop: isExpanded ? `8px solid ${isDashed ? '#f7f5f0' : 'white'}` : `6px solid ${isDashed ? 'rgba(245,240,230,0.92)' : 'white'}`,
-          marginTop: -1,
-          filter: `drop-shadow(0 2px 2px ${INK['10']})`,
-        }} />
+        {/* Pointer triangle — hide for numbered pins */}
+        {!hasCount && (
+          <div style={{
+            width: 0, height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: `6px solid ${isDashed ? 'rgba(245,240,230,0.92)' : isVibrant ? accentColor : 'white'}`,
+            marginTop: -1,
+            filter: `drop-shadow(0 2px 2px ${INK['10']})`,
+          }} />
+        )}
       </div>
     </AdvancedMarker>
   );
 }
-// Inner component that uses useMap() to auto-fit bounds after mount
+// Inner component that uses useMap() to auto-fit bounds after mount + smooth re-fit on filter
 function MapFitter({ coords, fallbackCenter }: {
   coords: { lat: number; lng: number }[];
   fallbackCenter: { lat: number; lng: number };
 }) {
   const map = useMap();
+  const hasFitted = useRef(false);
+  const prevCoordsKey = useRef('');
 
   useEffect(() => {
     if (!map) return;
 
-    const fit = () => {
+    // Build a stable key for current coords to detect real changes
+    const key = coords.map(c => `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`).sort().join('|');
+    if (key === prevCoordsKey.current) return;
+    prevCoordsKey.current = key;
+
+    const padding = { top: 60, bottom: 90, left: 50, right: 50 };
+
+    if (!hasFitted.current) {
+      // ── First fit: instant, no animation ──
       if (coords.length === 0) {
         map.setCenter(fallbackCenter);
         map.setZoom(14);
-        return;
-      }
-
-      if (coords.length === 1) {
+      } else if (coords.length === 1) {
         map.setCenter(coords[0]);
         map.setZoom(15);
-        return;
+      } else {
+        const bounds = new google.maps.LatLngBounds();
+        coords.forEach(c => bounds.extend(c));
+        map.fitBounds(bounds, padding);
+        // Cap max zoom
+        const listener = map.addListener('idle', () => {
+          const z = map.getZoom();
+          if (z != null && z > 16) map.setZoom(16);
+          google.maps.event.removeListener(listener);
+        });
       }
+      hasFitted.current = true;
+      // Re-fit after layout settles
+      const timer = setTimeout(() => {
+        if (coords.length > 1) {
+          const bounds = new google.maps.LatLngBounds();
+          coords.forEach(c => bounds.extend(c));
+          map.fitBounds(bounds, padding);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
 
-      // Use Google's fitBounds to perfectly frame all markers
-      const bounds = new google.maps.LatLngBounds();
-      coords.forEach(c => bounds.extend(c));
-      map.fitBounds(bounds, { top: 50, bottom: 80, left: 40, right: 40 });
+    // ── Subsequent fits (day toggle): smooth animated transition ──
+    if (coords.length === 0) {
+      // No markers for this filter — don't move the map
+      return;
+    }
 
-      // Cap max zoom so we don't zoom in too far on clustered markers
+    const bounds = new google.maps.LatLngBounds();
+    coords.forEach(c => bounds.extend(c));
+
+    if (coords.length === 1) {
+      // Single marker — smooth pan + zoom
+      map.panTo(coords[0]);
+      setTimeout(() => {
+        const currentZoom = map.getZoom() || 13;
+        const targetZoom = 15;
+        // Animate zoom step-by-step for smoothness
+        if (Math.abs(currentZoom - targetZoom) > 1) {
+          const step = currentZoom < targetZoom ? 0.5 : -0.5;
+          let z = currentZoom;
+          const interval = setInterval(() => {
+            z += step;
+            map.setZoom(z);
+            if ((step > 0 && z >= targetZoom) || (step < 0 && z <= targetZoom)) {
+              map.setZoom(targetZoom);
+              clearInterval(interval);
+            }
+          }, 40);
+        } else {
+          map.setZoom(targetZoom);
+        }
+      }, 100);
+      return;
+    }
+
+    // Multiple markers — use panToBounds for smooth animation, then fitBounds to finalize
+    map.panToBounds(bounds, padding);
+    // After the pan animation completes (~600ms), fit precisely
+    setTimeout(() => {
+      map.fitBounds(bounds, padding);
+      // Cap max zoom
       const listener = map.addListener('idle', () => {
         const z = map.getZoom();
         if (z != null && z > 16) map.setZoom(16);
         google.maps.event.removeListener(listener);
       });
-    };
-
-    // Fit immediately, then again after layout settles (handles overlay/flex timing)
-    fit();
-    const timer = setTimeout(fit, 150);
-    return () => clearTimeout(timer);
+    }, 500);
   }, [map, coords, fallbackCenter]);
 
   return null;
 }
 
-export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords, onMarkerTap }: GoogleMapViewProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords, onMarkerTap, activeMarkerId }: GoogleMapViewProps) {
+  const [internalExpandedId, setInternalExpandedId] = useState<string | null>(null);
+  // Use external activeMarkerId if provided, otherwise fall back to internal state
+  const expandedId = activeMarkerId !== undefined ? activeMarkerId : internalExpandedId;
   // Resolve coordinates with jitter for overlapping pins
   const resolved = useMemo(() => {
     const withCoords = markers
@@ -301,11 +427,17 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
     }
     return { lat: 40, lng: 0 };
   }, [fallbackCoords, fallbackDestination]);
+
+  const isFullScreen = height === '100%';
+
   if (!API_KEY) {
     return (
       <div
-        className="rounded-xl overflow-hidden flex items-center justify-center"
-        style={{ height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: INK['90'] }}
+        className={`${isFullScreen ? '' : 'rounded-xl'} overflow-hidden flex items-center justify-center`}
+        style={isFullScreen
+          ? { position: 'absolute' as const, inset: 0, background: 'var(--t-cream)', color: INK['90'] }
+          : { height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: INK['90'] }
+        }
       >
         <div className="text-center text-xs" style={{ fontFamily: FONT.sans }}>
           Google Maps API key not configured
@@ -315,7 +447,13 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
   }
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ height, border: '1px solid var(--t-linen)' }}>
+    <div
+      className={isFullScreen ? 'overflow-hidden' : 'rounded-xl overflow-hidden'}
+      style={isFullScreen
+        ? { position: 'absolute' as const, inset: 0 }
+        : { height, border: '1px solid var(--t-linen)' }
+      }
+    >
       <APIProvider apiKey={API_KEY}>
         <Map
           defaultCenter={fallbackCenter}
@@ -334,8 +472,14 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
             <MarkerPin
               key={m.id}
               marker={m}
-              isExpanded={expandedId === m.id}
-              onToggle={() => setExpandedId(prev => prev === m.id ? null : m.id)}
+              isExpanded={activeMarkerId === undefined && expandedId === m.id}
+              isHighlighted={activeMarkerId !== undefined && activeMarkerId === m.id}
+              onToggle={() => {
+                if (activeMarkerId === undefined) {
+                  setInternalExpandedId(prev => prev === m.id ? null : m.id);
+                }
+                if (onMarkerTap) onMarkerTap(m.id);
+              }}
             />
           ))}
         </Map>

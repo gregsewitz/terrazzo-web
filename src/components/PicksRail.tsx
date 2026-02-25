@@ -254,7 +254,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
           }]}
           sortOptions={[
             { value: 'match', label: 'Match %' },
-            { value: 'recent', label: 'Recent' },
+            { value: 'recent', label: 'Most recent' },
             { value: 'name', label: 'A–Z' },
           ]}
           sortValue={sortBy}

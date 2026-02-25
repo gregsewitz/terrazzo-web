@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { apiFetch } from '@/lib/api-client';
-import { useCollaborationStore } from '@/stores/collaborationStore';
 
 interface ShareSheetProps {
   resourceType: 'collection' | 'trip';
@@ -32,15 +31,6 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Collaboration state (only for trips)
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviting, setInviting] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
-  const collaborators = useCollaborationStore(s => s.collaborators);
-  const inviteCollaborator = useCollaborationStore(s => s.inviteCollaborator);
-  const myRole = useCollaborationStore(s => s.myRole);
 
   // Check current share status on mount
   useEffect(() => {
@@ -138,23 +128,6 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
     }
   }, [state.url, resourceName, resourceType, copyLink]);
 
-  const handleInvite = useCallback(async () => {
-    if (!inviteEmail.trim()) return;
-    setInviting(true);
-    setInviteError(null);
-    setInviteSuccess(null);
-
-    const result = await inviteCollaborator(resourceId, inviteEmail.trim());
-    if (result.error) {
-      setInviteError(result.error);
-    } else {
-      setInviteSuccess(`Invite sent to ${inviteEmail}`);
-      setInviteEmail('');
-      setTimeout(() => setInviteSuccess(null), 3000);
-    }
-    setInviting(false);
-  }, [inviteEmail, resourceId, inviteCollaborator]);
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
@@ -199,98 +172,6 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
               <PerriandIcon name="close" size={12} color={INK['50']} />
             </button>
           </div>
-
-          {/* ─── Invite Collaborator Section (trips only, owner only) ─── */}
-          {resourceType === 'trip' && (myRole === 'owner' || !myRole) && (
-            <div className="mb-5">
-              <div
-                className="text-[10px] font-semibold mb-2"
-                style={{ color: INK['50'], fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: '0.5px' }}
-              >
-                Invite collaborator
-              </div>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={e => setInviteEmail(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleInvite()}
-                  placeholder="friend@email.com"
-                  className="flex-1 text-[12px] px-3 py-2.5 rounded-xl"
-                  style={{
-                    background: 'white',
-                    border: '1px solid var(--t-linen)',
-                    outline: 'none',
-                    fontFamily: FONT.sans,
-                    color: 'var(--t-ink)',
-                  }}
-                />
-                <button
-                  onClick={handleInvite}
-                  disabled={inviting || !inviteEmail.trim()}
-                  className="px-4 py-2.5 rounded-xl text-[12px] font-semibold"
-                  style={{
-                    background: inviteEmail.trim() ? 'var(--t-verde)' : INK['10'],
-                    color: inviteEmail.trim() ? 'white' : INK['50'],
-                    border: 'none',
-                    cursor: inviteEmail.trim() ? 'pointer' : 'default',
-                    fontFamily: FONT.sans,
-                    opacity: inviting ? 0.6 : 1,
-                  }}
-                >
-                  {inviting ? '...' : 'Invite'}
-                </button>
-              </div>
-              {inviteError && (
-                <p className="text-[10px]" style={{ color: 'var(--t-signal-red)', fontFamily: FONT.mono }}>
-                  {inviteError}
-                </p>
-              )}
-              {inviteSuccess && (
-                <p className="text-[10px]" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}>
-                  {inviteSuccess}
-                </p>
-              )}
-
-              {/* Current collaborators list */}
-              {collaborators.length > 0 && (
-                <div className="mt-3">
-                  {collaborators.map(c => (
-                    <div
-                      key={c.id}
-                      className="flex items-center gap-2 py-1.5"
-                      style={{ borderBottom: '1px solid var(--t-linen)' }}
-                    >
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: INK['08'], color: INK['60'] }}
-                      >
-                        {(c.name || c.email).charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[11px] truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
-                          {c.name || c.email}
-                        </div>
-                      </div>
-                      <span
-                        className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
-                        style={{
-                          background: c.status === 'accepted' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
-                          color: c.status === 'accepted' ? 'var(--t-verde)' : '#8a6a2a',
-                          fontFamily: FONT.mono,
-                        }}
-                      >
-                        {c.status === 'accepted' ? c.role : 'pending'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Divider */}
-              <div className="mt-4 mb-4" style={{ borderTop: '1px solid var(--t-linen)' }} />
-            </div>
-          )}
 
           {/* ─── Share Link Section ─── */}
           <div

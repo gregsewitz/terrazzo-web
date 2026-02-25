@@ -106,6 +106,8 @@ interface OnboardingState {
   setLiveMode: (live: boolean) => void;
   finishOnboarding: (depth: OnboardingDepth) => Promise<void>;
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
+  /** Manually trigger a full re-synthesis of the taste profile (e.g. after prompt updates) */
+  triggerResynthesis: () => Promise<boolean>;
   reset: () => void;
   /** Soft reset for "redo onboarding" — keeps all taste data & profile, only resets progress */
   resetForRedo: () => void;
@@ -246,6 +248,15 @@ export const useOnboardingStore = create<OnboardingState>()(
         // Trigger re-synthesis at milestones (non-blocking)
         if (RESYNTHESIS_MILESTONES.has(newAnswers.length)) {
           resynthesizeProfile();
+        }
+      },
+
+      triggerResynthesis: async () => {
+        try {
+          await resynthesizeProfile();
+          return true;
+        } catch {
+          return false;
         }
       },
 

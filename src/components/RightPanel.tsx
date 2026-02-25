@@ -64,56 +64,73 @@ export default function RightPanel({ activities }: RightPanelProps) {
   // ═══ COLLAPSED STATE ═══
   if (collapsed) {
     return (
-      <div
-        className="flex flex-col items-center h-full cursor-pointer"
-        style={{
-          width: 44,
-          flexShrink: 0,
-          background: 'var(--t-cream)',
-          borderLeft: '1px solid var(--t-linen)',
-          transition: 'width 200ms ease',
-        }}
-        onClick={() => setCollapsed(false)}
-      >
-        {/* Expand chevron */}
+      <>
+        {/* Bounce keyframes */}
+        <style>{`
+          @keyframes nudge-left {
+            0%, 100% { transform: translateX(0); }
+            30% { transform: translateX(-5px); }
+            60% { transform: translateX(2px); }
+          }
+          .right-panel-collapsed {
+            animation: nudge-left 1.8s ease-in-out 1.5s 2;
+          }
+          .right-panel-collapsed:hover {
+            animation: none;
+          }
+        `}</style>
         <div
-          className="flex items-center justify-center mt-3 mb-2"
-          style={{ width: 28, height: 28, borderRadius: '50%', background: INK['04'] }}
-        >
-          <span style={{ fontSize: 12, color: INK['50'] }}>‹</span>
-        </div>
-        {/* Rotated label */}
-        <div
+          className="right-panel-collapsed flex flex-col items-center h-full cursor-pointer"
           style={{
-            writingMode: 'vertical-rl',
-            textOrientation: 'mixed',
-            fontFamily: FONT.mono,
-            fontSize: 9,
-            fontWeight: 600,
-            color: INK['40'],
-            letterSpacing: 1.5,
-            textTransform: 'uppercase',
+            width: 48,
+            flexShrink: 0,
+            background: 'white',
+            borderLeft: '1px solid var(--t-linen)',
+            boxShadow: '-2px 0 8px rgba(28,26,23,0.04)',
+            transition: 'width 200ms ease, box-shadow 200ms ease',
           }}
+          onClick={() => setCollapsed(false)}
         >
-          Map & Notes
-        </div>
-        {/* Map pin indicator */}
-        {markers.length > 0 && (
+          {/* Expand chevron */}
           <div
-            className="flex items-center justify-center mt-3"
+            className="flex items-center justify-center mt-3 mb-3"
+            style={{ width: 30, height: 30, borderRadius: '50%', background: INK['06'] }}
+          >
+            <span style={{ fontSize: 13, color: INK['60'], fontWeight: 500 }}>‹</span>
+          </div>
+          {/* Rotated label */}
+          <div
             style={{
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              background: 'rgba(42,122,86,0.08)',
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              fontFamily: FONT.sans,
+              fontSize: 10,
+              fontWeight: 600,
+              color: INK['60'],
+              letterSpacing: 1.2,
+              textTransform: 'uppercase',
             }}
           >
-            <span style={{ fontFamily: FONT.mono, fontSize: 8, fontWeight: 700, color: 'var(--t-verde)' }}>
-              {markers.length}
-            </span>
+            Map & Notes
           </div>
-        )}
-      </div>
+          {/* Map pin indicator */}
+          {markers.length > 0 && (
+            <div
+              className="flex items-center justify-center mt-4"
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                background: 'rgba(42,122,86,0.1)',
+              }}
+            >
+              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, color: 'var(--t-verde)' }}>
+                {markers.length}
+              </span>
+            </div>
+          )}
+        </div>
+      </>
     );
   }
 

@@ -53,6 +53,8 @@ interface SeedData {
   geoDestinations: GeoDestination[];
   startDate: string;
   endDate: string;
+  flexibleDates?: boolean;
+  numDays?: number;
   companion: TravelContext;
   groupSize?: number;
   status: TripStatus;
@@ -64,6 +66,8 @@ function TripSeedForm({ onStart }: {
 }) {
   const [geoDestinations, setGeoDestinations] = useState<Destination[]>([]);
   const [tripName, setTripName] = useState('');
+  const [flexibleDates, setFlexibleDates] = useState(false);
+  const [numDays, setNumDays] = useState('5');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [companion, setCompanion] = useState<TravelContext | null>(null);
@@ -141,38 +145,85 @@ function TripSeedForm({ onStart }: {
           >
             WHEN
           </label>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <input
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+
+          {/* Flexible toggle */}
+          <div className="flex gap-2 mb-3">
+            {([
+              { key: false, label: 'Specific dates' },
+              { key: true, label: 'Flexible / undecided' },
+            ] as const).map(opt => (
+              <button
+                key={String(opt.key)}
+                onClick={() => setFlexibleDates(opt.key)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border cursor-pointer transition-all text-[11px]"
                 style={{
+                  background: flexibleDates === opt.key ? 'var(--t-ink)' : 'white',
+                  color: flexibleDates === opt.key ? 'white' : 'var(--t-ink)',
+                  borderColor: flexibleDates === opt.key ? 'var(--t-ink)' : 'var(--t-linen)',
                   fontFamily: FONT.sans,
-                  color: startDate ? 'var(--t-ink)' : INK['90'],
-                  borderColor: 'var(--t-linen)',
+                  fontWeight: 500,
                 }}
-              />
-              <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
-            </div>
-            <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
-            <div className="flex-1">
-              <input
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                min={startDate || undefined}
-                className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
-                style={{
-                  fontFamily: FONT.sans,
-                  color: endDate ? 'var(--t-ink)' : INK['90'],
-                  borderColor: 'var(--t-linen)',
-                }}
-              />
-              <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
-            </div>
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
+
+          {flexibleDates ? (
+            /* Flexible: just ask how many days */
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={numDays}
+                onChange={e => setNumDays(e.target.value)}
+                className="w-20 text-center text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+                style={{
+                  fontFamily: FONT.sans,
+                  color: 'var(--t-ink)',
+                  borderColor: 'var(--t-linen)',
+                }}
+              />
+              <span className="text-[12px]" style={{ color: INK['90'], fontFamily: FONT.sans }}>
+                days
+              </span>
+            </div>
+          ) : (
+            /* Specific dates: existing date pickers */
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+                  style={{
+                    fontFamily: FONT.sans,
+                    color: startDate ? 'var(--t-ink)' : INK['90'],
+                    borderColor: 'var(--t-linen)',
+                  }}
+                />
+                <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
+              </div>
+              <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
+              <div className="flex-1">
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  min={startDate || undefined}
+                  className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
+                  style={{
+                    fontFamily: FONT.sans,
+                    color: endDate ? 'var(--t-ink)' : INK['90'],
+                    borderColor: 'var(--t-linen)',
+                  }}
+                />
+                <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Companions */}
@@ -271,12 +322,14 @@ function TripSeedForm({ onStart }: {
             name: effectiveName,
             destinations: destinationNames,
             geoDestinations: geoDestinations as GeoDestination[],
-            startDate: startDate || new Date().toISOString().split('T')[0],
-            endDate: endDate || (() => {
+            flexibleDates: flexibleDates || undefined,
+            numDays: flexibleDates ? Math.max(1, parseInt(numDays) || 5) : undefined,
+            startDate: flexibleDates ? '' : (startDate || new Date().toISOString().split('T')[0]),
+            endDate: flexibleDates ? '' : (endDate || (() => {
               const d = new Date();
               d.setDate(d.getDate() + 5);
               return d.toISOString().split('T')[0];
-            })(),
+            })()),
             companion: companion || 'solo',
             groupSize: groupSize ? parseInt(groupSize) : undefined,
             status,
@@ -312,10 +365,14 @@ function DestinationAllocationStep({
   onComplete: (allocation: Record<string, number>) => void;
   onBack: () => void;
 }) {
-  // Calculate total days from dates
-  const start = new Date(seed.startDate + 'T00:00:00');
-  const end = new Date(seed.endDate + 'T00:00:00');
-  const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  // Calculate total days from dates or numDays
+  const totalDays = seed.flexibleDates
+    ? (seed.numDays || 5)
+    : (() => {
+        const start = new Date(seed.startDate + 'T00:00:00');
+        const end = new Date(seed.endDate + 'T00:00:00');
+        return Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      })();
 
   // Initialize allocation: even split with remainder going to first destination
   const [allocation, setAllocation] = useState<Record<string, number>>(() => {
@@ -730,6 +787,8 @@ export default function NewTripPage() {
       name: seed.name,
       destinations: seed.destinations,
       geoDestinations: seed.geoDestinations,
+      flexibleDates: seed.flexibleDates,
+      numDays: seed.numDays,
       startDate: seed.startDate,
       endDate: seed.endDate,
       travelContext: seed.companion,
@@ -800,13 +859,16 @@ export default function NewTripPage() {
       ) : (
         <div style={{ maxWidth: 480, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Back button */}
-          <div className="flex items-center px-5 pt-3 pb-1">
+          <div className="flex items-center px-5 pt-4 pb-1">
             <button
               onClick={() => router.push('/trips')}
-              className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer"
-              style={{ color: 'var(--t-ink)' }}
+              className="flex items-center gap-1 bg-transparent border-none cursor-pointer"
+              style={{ color: INK['60'], fontFamily: FONT.sans, fontSize: 13, padding: 0 }}
             >
-              <PerriandIcon name="edit" size={20} color="var(--t-ink)" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 3L5 8L10 13" />
+              </svg>
+              Trips
             </button>
             {(step === 'conversation' || step === 'allocate') && (
               <span

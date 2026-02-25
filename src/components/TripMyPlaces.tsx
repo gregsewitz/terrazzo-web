@@ -208,7 +208,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         <div className="flex items-center gap-1.5 mb-2">
           <PerriandIcon name={SLOT_ICONS[item.slotId] as any || 'pin'} size={13} color="var(--t-ink)" />
           <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: INK['90'] }}>
-            {item.dayOfWeek?.slice(0, 3)} {item.date} · {item.slotTime}
+            {item.dayOfWeek ? `${item.dayOfWeek.slice(0, 3)} ${item.date}` : `Day ${item.dayNumber}`} · {item.slotTime}
           </span>
           {item.destination && (
             <span style={{ fontFamily: FONT.sans, fontSize: 10, color: destColor.accent }}>

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// Discover Feed — Hardcoded content for the "Terrazzo Knows Me" feed
+// Discover Feed — Editorial content for the Terrazzo discovery experience
 // ═══════════════════════════════════════════════════════════════════
 
 export interface BecauseYouCard {
@@ -39,7 +39,69 @@ export interface ContextRec {
   whyFits: string;
 }
 
-// ── Section 2: "Because You..." insight cards ──
+/** Editorial letter — a short, evocative note from Terrazzo's intelligence */
+export interface EditorialLetter {
+  headline: string;      // e.g. "You don't search for quiet — you listen for it."
+  body: string;          // 2-3 sentences, deeply personal, second-person
+  signalHighlight: string; // the specific signal that sparked this insight
+}
+
+/** A "signal thread" — connecting a micro-signal to 3 diverse place types */
+export interface SignalThread {
+  signal: string;        // e.g. "morning light (golden)"
+  domain: string;
+  thread: string;        // editorial sentence connecting the dots
+  places: {
+    name: string;
+    location: string;
+    type: string;        // hotel | restaurant | bar | cafe | neighborhood
+    connection: string;  // how this place embodies the signal
+    score: number;
+  }[];
+}
+
+/** A "taste tension" — editorial exploration of a contradiction in their profile */
+export interface TasteTension {
+  title: string;         // e.g. "The Minimalist Who Loves Chaos"
+  stated: string;
+  revealed: string;
+  editorial: string;     // 2-3 sentences exploring WHY this tension exists
+  resolvedBy: {
+    name: string;
+    location: string;
+    how: string;
+  };
+}
+
+/** A "mood board" — curated set of places for a specific mood/context */
+export interface MoodBoard {
+  mood: string;           // e.g. "When you need to disappear"
+  description: string;    // 1-sentence evocative description
+  color: string;          // accent color for the board
+  places: {
+    name: string;
+    location: string;
+    vibe: string;         // 3-5 word atmospheric description
+    score: number;
+  }[];
+}
+
+/** A "deep match" — why a specific property is an exceptional match, broken down */
+export interface DeepMatch {
+  name: string;
+  location: string;
+  score: number;
+  headline: string;       // e.g. "This place was made for the way you travel."
+  signalBreakdown: {
+    signal: string;
+    domain: string;
+    strength: number;     // 0-100
+    note: string;         // why this signal matches
+  }[];
+  tensionResolved: string;
+}
+
+// ── Section: "Because You..." insight cards ──
 export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
   {
     signal: "morning light (golden)",
@@ -70,7 +132,57 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
   },
 ];
 
-// ── Section 4: "This Week's Edit" collection ──
+// ── Editorial Letter ──
+export const EDITORIAL_LETTER: EditorialLetter = {
+  headline: "You don't search for quiet — you listen for it.",
+  body: "Most travelers say they want peace. You're after something more specific: the moment when a room stops performing and starts breathing. We've been watching your signals — the way you lingered on courtyard-centered properties, the speed with which you rejected marble lobbies — and we think we know what you're really looking for.",
+  signalHighlight: "Sleep-darkness-critical",
+};
+
+// ── Signal Thread ──
+export const SIGNAL_THREAD: SignalThread = {
+  signal: "Neo-rustic refined",
+  domain: "Design Language",
+  thread: "This single signal touches everything — how you eat, where you sleep, the neighborhoods you gravitate toward.",
+  places: [
+    {
+      name: "Forestis",
+      location: "Dolomites, Italy",
+      type: "hotel",
+      connection: "Larch wood walls and alpine stone — the building IS the landscape",
+      score: 94,
+    },
+    {
+      name: "Septime",
+      location: "11th, Paris",
+      type: "restaurant",
+      connection: "Bare tables, imperfect ceramics, wine in simple glasses — deliberate understatement",
+      score: 91,
+    },
+    {
+      name: "Södermalm",
+      location: "Stockholm, Sweden",
+      type: "neighborhood",
+      connection: "Where design-minded Stockholm actually lives — every cafe and shop reflects this signal",
+      score: 88,
+    },
+  ],
+};
+
+// ── Taste Tension ──
+export const TASTE_TENSION: TasteTension = {
+  title: "The Minimalist Who Loves Chaos",
+  stated: "Drawn to minimalism and restraint",
+  revealed: "Loved a maximalist masseria with layered ceramics",
+  editorial: "This contradiction runs deeper than aesthetics. You don't actually want less — you want intentional. The masseria ceramics worked because each piece was chosen by someone with a point of view. A marble lobby fails because nobody chose — they just specified.",
+  resolvedBy: {
+    name: "Ett Hem",
+    location: "Stockholm, Sweden",
+    how: "12 rooms, every surface layered — but nothing is accidental. Ilse Crawford designed a home, not a hotel.",
+  },
+};
+
+// ── This Week's Edit collection ──
 export const WEEKLY_COLLECTION = {
   title: "5 Design Hotels That Match Your Exact Frequency",
   subtitle: "Filtered for: neo-rustic refined · owner-operated · intimate-under-20",
@@ -118,7 +230,7 @@ export const WEEKLY_COLLECTION = {
   ] as CollectionPlace[],
 };
 
-// ── Section 5: Stretch Pick ──
+// ── Stretch Pick ──
 export const STRETCH_PICK = {
   name: "Asador Etxebarri",
   location: "Atxondo, Basque Country",
@@ -132,7 +244,7 @@ export const STRETCH_PICK = {
   tension: "It breaks your 'urban-walkable' signal (it's a 40-minute drive into the Basque hills) but the valley setting and zero pretension create the intimacy your profile craves.",
 };
 
-// ── Section 6: Context Mode recs ──
+// ── Context Mode recs ──
 export const SUMMER_RECS: ContextRec[] = [
   {
     name: "Can Ferrereta",
@@ -154,7 +266,47 @@ export const SUMMER_RECS: ContextRec[] = [
   },
 ];
 
-// ── Section 8: Friends saving ──
+// ── Mood Boards ──
+export const MOOD_BOARDS: MoodBoard[] = [
+  {
+    mood: "When you need to disappear",
+    description: "Total sensory retreat — no decisions, no noise, just air and light.",
+    color: "#4a6b8b",
+    places: [
+      { name: "Forestis", location: "Dolomites, Italy", vibe: "Alpine silence at 1,800m", score: 94 },
+      { name: "Hoshinoya Kyoto", location: "Kyoto, Japan", vibe: "River sounds, paper walls", score: 89 },
+      { name: "Amangiri", location: "Canyon Point, Utah", vibe: "Desert emptiness as design", score: 82 },
+    ],
+  },
+  {
+    mood: "When you want to eat your way through a city",
+    description: "Walkable neighborhoods with your kind of places on every corner.",
+    color: "#8b4a4a",
+    places: [
+      { name: "11th Arrondissement", location: "Paris, France", vibe: "Natural wine, no-choice menus", score: 91 },
+      { name: "Södermalm", location: "Stockholm, Sweden", vibe: "Third-wave coffee, open sandwiches", score: 88 },
+      { name: "Roma Norte", location: "Mexico City, Mexico", vibe: "Mezcal bars, street food, roof terraces", score: 85 },
+    ],
+  },
+];
+
+// ── Deep Match ──
+export const DEEP_MATCH: DeepMatch = {
+  name: "Masseria Moroseta",
+  location: "Puglia, Italy",
+  score: 97,
+  headline: "This place was made for the way you travel.",
+  signalBreakdown: [
+    { signal: "Vernacular modern", domain: "Design Language", strength: 98, note: "Local tufa stone, contemporary proportions — architecture rooted in place" },
+    { signal: "Communal dinner", domain: "Food & Drink", strength: 95, note: "One long table, farm-sourced menu, everyone eats together" },
+    { signal: "Morning light (golden)", domain: "Design Language", strength: 97, note: "East-facing rooms, the stone glows amber at breakfast" },
+    { signal: "Owner-operated", domain: "Service Philosophy", strength: 94, note: "The owner greets you. Staff are neighbors. Nothing is scripted." },
+    { signal: "Sleep-darkness-critical", domain: "Wellness & Body", strength: 90, note: "Heavy shutters, no light pollution — the Puglian countryside after dark" },
+  ],
+  tensionResolved: "Your contradiction of wanting quiet rooms AND lively dining? Here they're literally separated by architecture — stone walls for sleep, open-air courtyard for dinner.",
+};
+
+// ── Friends saving ──
 export const FRIEND_SAVES: FriendSave[] = [
   {
     friendName: "James K.",

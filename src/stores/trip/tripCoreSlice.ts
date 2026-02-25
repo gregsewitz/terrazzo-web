@@ -1,4 +1,4 @@
-import { Trip, ImportedPlace, TripDay, DEFAULT_TIME_SLOTS, TripCreationData } from '@/types';
+import { Trip, ImportedPlace, TripDay, DEFAULT_TIME_SLOTS, TripCreationData, GeoDestination, TravelContext } from '@/types';
 import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
 import { dbWrite } from './tripHelpers';
@@ -13,10 +13,12 @@ export interface DBTrip {
   name: string;
   location: string;
   destinations?: string[] | null;
+  geoDestinations?: GeoDestination[] | null;
   startDate?: string | null;
   endDate?: string | null;
   groupSize?: number | null;
   groupType?: string | null;
+  flexibleDates?: boolean | null;
   days: TripDay[];
   pool?: ImportedPlace[] | null;
   conversationHistory?: unknown;
@@ -62,7 +64,7 @@ export interface TripCoreState {
   createTrip: (data: TripCreationData) => string;
   /** Returns a promise that resolves to the real (server-assigned) trip ID */
   createTripAsync: (data: TripCreationData) => Promise<string>;
-  graduateToPlanning: (startDate: string, endDate: string, dayAllocation?: Record<string, number>) => void;
+  graduateToPlanning: (startDate: string, endDate: string, dayAllocation?: Record<string, number>, opts?: { flexibleDates?: boolean; numDays?: number }) => void;
   hydrateFromDB: (trips: DBTrip[]) => void;
 }
 
@@ -95,10 +97,16 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    // Calculate number of days from date range
-    const start = new Date(data.startDate + 'T00:00:00');
-    const end = new Date(data.endDate + 'T00:00:00');
-    const numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    // Calculate number of days from date range or numDays (flexible)
+    const isFlexible = data.flexibleDates === true;
+    const numDays = isFlexible
+      ? Math.max(1, data.numDays || 5)
+      : (() => {
+          const s = new Date(data.startDate + 'T00:00:00');
+          const e = new Date(data.endDate + 'T00:00:00');
+          return Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        })();
+    const start = isFlexible ? null : new Date(data.startDate + 'T00:00:00');
 
     // Build destination-to-day mapping
     // If dayAllocation provided, use it; otherwise distribute evenly
@@ -126,13 +134,8 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     const days: TripDay[] = isDreaming
       ? [] // dreaming trips start with no day structure — it's a collection/mood board
       : Array.from({ length: numDays }, (_, i) => {
-          const date = new Date(start);
-          date.setDate(date.getDate() + i);
-
-          return {
+          const day: TripDay = {
             dayNumber: i + 1,
-            date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
-            dayOfWeek: dayNames[date.getDay()],
             destination: destOrder[i],
             slots: DEFAULT_TIME_SLOTS.map(s => ({
               ...s,
@@ -140,14 +143,25 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
               ghostItems: [],
             })),
           };
+
+          // Only set date/dayOfWeek for trips with specific dates
+          if (!isFlexible && start) {
+            const date = new Date(start);
+            date.setDate(date.getDate() + i);
+            day.date = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+            day.dayOfWeek = dayNames[date.getDay()];
+          }
+
+          return day;
         });
 
     const newTrip: Trip = {
       id,
       name: data.name,
       location: data.destinations.join(', '),
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate: isFlexible ? undefined : data.startDate,
+      endDate: isFlexible ? undefined : data.endDate,
+      flexibleDates: isFlexible || undefined,
       destinations: data.destinations,
       geoDestinations: data.geoDestinations,
       travelContext: data.travelContext,
@@ -203,9 +217,15 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     const tempId = `trip-${Date.now()}`;
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const start = new Date(data.startDate + 'T00:00:00');
-    const end = new Date(data.endDate + 'T00:00:00');
-    const numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    const isFlexible = data.flexibleDates === true;
+    const numDays = isFlexible
+      ? Math.max(1, data.numDays || 5)
+      : (() => {
+          const s = new Date(data.startDate + 'T00:00:00');
+          const e = new Date(data.endDate + 'T00:00:00');
+          return Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        })();
+    const start = isFlexible ? null : new Date(data.startDate + 'T00:00:00');
 
     const destOrder: string[] = [];
     if (data.dayAllocation && data.destinations.length > 1) {
@@ -228,23 +248,27 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     const days: TripDay[] = isDreaming
       ? []
       : Array.from({ length: numDays }, (_, i) => {
-          const date = new Date(start);
-          date.setDate(date.getDate() + i);
-          return {
+          const day: TripDay = {
             dayNumber: i + 1,
-            date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
-            dayOfWeek: dayNames[date.getDay()],
             destination: destOrder[i],
             slots: DEFAULT_TIME_SLOTS.map(s => ({ ...s, places: [], ghostItems: [] })),
           };
+          if (!isFlexible && start) {
+            const date = new Date(start);
+            date.setDate(date.getDate() + i);
+            day.date = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+            day.dayOfWeek = dayNames[date.getDay()];
+          }
+          return day;
         });
 
     const newTrip: Trip = {
       id: tempId,
       name: data.name,
       location: data.destinations.join(', '),
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate: isFlexible ? undefined : data.startDate,
+      endDate: isFlexible ? undefined : data.endDate,
+      flexibleDates: isFlexible || undefined,
       destinations: data.destinations,
       geoDestinations: data.geoDestinations,
       travelContext: data.travelContext,
@@ -293,17 +317,23 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
   },
 
   // Graduate a dreaming trip to planning — generates day structure from dates
-  graduateToPlanning: (startDate, endDate, dayAllocation) => {
+  graduateToPlanning: (startDate, endDate, dayAllocation, opts) => {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const isFlexible = opts?.flexibleDates === true;
 
     set(state => {
       const trip = state.trips.find(t => t.id === state.currentTripId);
       if (!trip) return state;
 
-      const start = new Date(startDate + 'T00:00:00');
-      const end = new Date(endDate + 'T00:00:00');
-      const numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      const numDays = isFlexible
+        ? Math.max(1, opts?.numDays || 5)
+        : (() => {
+            const s = new Date(startDate + 'T00:00:00');
+            const e = new Date(endDate + 'T00:00:00');
+            return Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+          })();
+      const start = isFlexible ? null : new Date(startDate + 'T00:00:00');
       const dests = trip.destinations || [trip.location];
 
       // Build destination order
@@ -325,21 +355,31 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       }
 
       const days: TripDay[] = Array.from({ length: numDays }, (_, i) => {
-        const date = new Date(start);
-        date.setDate(date.getDate() + i);
-        return {
+        const day: TripDay = {
           dayNumber: i + 1,
-          date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
-          dayOfWeek: dayNames[date.getDay()],
           destination: destOrder[i],
           slots: DEFAULT_TIME_SLOTS.map(s => ({ ...s, places: [], ghostItems: [] })),
         };
+        if (!isFlexible && start) {
+          const date = new Date(start);
+          date.setDate(date.getDate() + i);
+          day.date = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+          day.dayOfWeek = dayNames[date.getDay()];
+        }
+        return day;
       });
 
       return {
         trips: state.trips.map(t =>
           t.id === trip.id
-            ? { ...t, status: 'planning' as const, startDate, endDate, days }
+            ? {
+                ...t,
+                status: 'planning' as const,
+                startDate: isFlexible ? undefined : startDate,
+                endDate: isFlexible ? undefined : endDate,
+                flexibleDates: isFlexible || undefined,
+                days,
+              }
             : t
         ),
       };
@@ -350,7 +390,7 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       const { debouncedTripSave } = require('./tripHelpers');
       debouncedTripSave(tripId, () => {
         const t = get().trips.find(tr => tr.id === tripId);
-        return t ? { days: t.days, status: t.status, startDate, endDate } : {};
+        return t ? { days: t.days, status: t.status, startDate: isFlexible ? undefined : startDate, endDate: isFlexible ? undefined : endDate, flexibleDates: isFlexible || undefined } : {};
       });
     }
   },
@@ -374,7 +414,10 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       startDate: toDateStr(dt.startDate),
       endDate: toDateStr(dt.endDate),
       destinations: Array.isArray(dt.destinations) ? dt.destinations : undefined,
+      geoDestinations: Array.isArray(dt.geoDestinations) ? dt.geoDestinations : undefined,
+      travelContext: (dt.groupType as TravelContext) || undefined,
       groupSize: dt.groupSize || undefined,
+      flexibleDates: dt.flexibleDates === true ? true : undefined,
       status: (dt.status as Trip['status']) || 'planning',
       days: Array.isArray(dt.days) ? dt.days : [],
       pool: Array.isArray(dt.pool) ? dt.pool : [],

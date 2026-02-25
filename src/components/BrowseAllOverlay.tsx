@@ -35,7 +35,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const [showAddPlace, setShowAddPlace] = useState(false);
-  const [sortBy, setSortBy] = useState<'match' | 'alpha' | 'type' | 'source'>('match');
+  const [sortBy, setSortBy] = useState<'match' | 'name' | 'type' | 'source'>('match');
 
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
@@ -65,7 +65,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
       const bStarred = b.isFavorited ? 1 : 0;
       if (bStarred !== aStarred) return bStarred - aStarred;
 
-      if (sortBy === 'alpha') return a.name.localeCompare(b.name);
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'type') return a.type.localeCompare(b.type) || b.matchScore - a.matchScore;
       if (sortBy === 'source') {
         const aSource = (a.ghostSource || 'manual');
@@ -139,12 +139,12 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
             }]}
             sortOptions={[
               { value: 'match', label: 'Match %' },
-              { value: 'alpha', label: 'A–Z' },
+              { value: 'name', label: 'A–Z' },
               { value: 'type', label: 'Type' },
               { value: 'source', label: 'Source' },
             ]}
             sortValue={sortBy}
-            onSortChange={(v) => setSortBy(v as 'match' | 'alpha' | 'type' | 'source')}
+            onSortChange={(v) => setSortBy(v as 'match' | 'name' | 'type' | 'source')}
             onResetAll={() => { setFilterType('all'); setSortBy('match'); }}
           />
         </div>

@@ -4,6 +4,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
+import ProfileAvatar from '@/components/ProfileAvatar';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
@@ -187,13 +188,16 @@ export default function TripsPage() {
           >
             Your Trips
           </h1>
-          <button
-            onClick={() => router.push('/trips/new')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-none cursor-pointer text-[12px] font-medium transition-all hover:opacity-80"
-            style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
-          >
-            <span className="text-sm">+</span> New Trip
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/trips/new')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-none cursor-pointer text-[12px] font-medium transition-all hover:opacity-80"
+              style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
+            >
+              <span className="text-sm">+</span> New Trip
+            </button>
+            <ProfileAvatar />
+          </div>
         </div>
         <p className="text-xs mb-6" style={{ color: INK['95'] }}>
           Plan and curate your bespoke travel itinerary

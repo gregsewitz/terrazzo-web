@@ -4,13 +4,12 @@ import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import { useSavedStore } from '@/stores/savedStore';
-import { REACTIONS, ImportedPlace, PlaceType } from '@/types';
+import { REACTIONS, ImportedPlace, PlaceType, SOURCE_STYLES } from '@/types';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
-import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import GoogleMapView from '@/components/GoogleMapView';
 import ShareSheet from '@/components/ShareSheet';
 import DesktopNav from '@/components/DesktopNav';
-import PlaceSearchBar from '@/components/PlaceSearchBar';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
@@ -50,9 +49,10 @@ function CollectionDetailContent() {
 
   // Filter & sort
   const [typeFilter, setTypeFilter] = useState<PlaceType | 'all'>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [collectionSearch, setCollectionSearch] = useState('');
-  const [detailSortBy, setDetailSortBy] = useState<'added' | 'name' | 'type' | 'rating'>('added');
+  const [detailSortBy, setDetailSortBy] = useState<'recent' | 'match' | 'name' | 'type' | 'source'>('recent');
 
   const collection = collections.find(s => s.id === collectionId);
 
@@ -82,11 +82,26 @@ function CollectionDetailContent() {
       .map(([city, count]) => ({ city, count }));
   }, [allPlacesInCollection]);
 
+  // Unique sources in this collection
+  const sourceOptions = useMemo(() => {
+    const srcCount: Record<string, number> = {};
+    allPlacesInCollection.forEach(p => {
+      const src = p.ghostSource || 'manual';
+      srcCount[src] = (srcCount[src] || 0) + 1;
+    });
+    return Object.entries(srcCount)
+      .sort((a, b) => b[1] - a[1])
+      .map(([value, count]) => ({ value, count }));
+  }, [allPlacesInCollection]);
+
   // Filtered + sorted
   const placesInCollection = useMemo(() => {
     let items = [...allPlacesInCollection];
     if (typeFilter !== 'all') {
       items = items.filter(p => p.type === typeFilter);
+    }
+    if (sourceFilter !== 'all') {
+      items = items.filter(p => (p.ghostSource || 'manual') === sourceFilter);
     }
     if (cityFilter !== 'all') {
       items = items.filter(p => {
@@ -105,13 +120,14 @@ function CollectionDetailContent() {
       );
     }
     switch (detailSortBy) {
+      case 'match': items.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': items.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'type': items.sort((a, b) => a.type.localeCompare(b.type)); break;
-      case 'rating': items.sort((a, b) => (b.google?.rating ?? 0) - (a.google?.rating ?? 0)); break;
-      // 'added' keeps original order (insertion order from placeIds)
+      case 'source': items.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
+      // 'recent' keeps original order (insertion order from placeIds = newest first)
     }
     return items;
-  }, [allPlacesInCollection, typeFilter, cityFilter, collectionSearch, detailSortBy]);
+  }, [allPlacesInCollection, typeFilter, sourceFilter, cityFilter, collectionSearch, detailSortBy]);
 
   if (!collection) {
     return (
@@ -356,83 +372,8 @@ function CollectionDetailContent() {
   );
 
   /* ── Search bar for adding places directly ── */
-  const searchBar = !collection.isSmartCollection && (
-    <div className="mb-3">
-      <PlaceSearchBar
-        placeholder={`Filter places in ${collection.name}...`}
-      />
-    </div>
-  );
-
-  /* ── Destination filter chips ── */
-  const destinationChips = cityOptions.length > 1 && (
-    <div
-      className="flex gap-1.5 mb-3"
-      style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
-    >
-      <button
-        onClick={() => setCityFilter('all')}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
-        style={{
-          background: cityFilter === 'all' ? 'var(--t-ink)' : 'white',
-          color: cityFilter === 'all' ? 'white' : INK['60'],
-          border: cityFilter === 'all' ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-          fontFamily: FONT.sans,
-          transition: 'all 150ms ease',
-        }}
-      >
-        <PerriandIcon name="discover" size={11} color={cityFilter === 'all' ? 'white' : INK['50']} />
-        All cities
-      </button>
-      {cityOptions.map(({ city, count }) => (
-        <button
-          key={city}
-          onClick={() => setCityFilter(city)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
-          style={{
-            background: cityFilter === city ? 'var(--t-ink)' : 'white',
-            color: cityFilter === city ? 'white' : INK['60'],
-            border: cityFilter === city ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-            fontFamily: FONT.sans,
-            transition: 'all 150ms ease',
-          }}
-        >
-          <PerriandIcon name="pin" size={11} color={cityFilter === city ? 'white' : INK['50']} />
-          {city}
-          <span style={{ fontFamily: FONT.mono, fontSize: 9, opacity: 0.7 }}>{count}</span>
-        </button>
-      ))}
-    </div>
-  );
-
-  /* ── Type filter chips ── */
-  const typeChips = typeOptions.length > 1 && (
-    <div
-      className="flex gap-1.5 mb-3"
-      style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
-    >
-      {TYPE_CHIPS_WITH_ALL.filter(c => c.value === 'all' || (typeOptions as string[]).includes(c.value)).map(chip => (
-        <button
-          key={chip.value}
-          onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
-          style={{
-            background: typeFilter === chip.value ? 'var(--t-ink)' : 'white',
-            color: typeFilter === chip.value ? 'white' : INK['60'],
-            border: typeFilter === chip.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-            fontFamily: FONT.sans,
-            transition: 'all 150ms ease',
-          }}
-        >
-          <PerriandIcon name={chip.icon} size={11} color={typeFilter === chip.value ? 'white' : INK['50']} />
-          {chip.label}
-        </button>
-      ))}
-    </div>
-  );
-
-  /* ── Inline search within collection ── */
-  const inlineSearch = allPlacesInCollection.length > 3 && (
+  /* ── Search within collection ── */
+  const collectionSearchBar = allPlacesInCollection.length > 3 && (
     <div className="mb-3">
       <div className="relative">
         <PerriandIcon
@@ -470,22 +411,66 @@ function CollectionDetailContent() {
     </div>
   );
 
-  /* ── Sort bar ── */
-  const sortBar = allPlacesInCollection.length > 1 && (
-    <div className="flex items-center justify-between mb-3">
-      <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'] }}>
-        {placesInCollection.length} {placesInCollection.length === 1 ? 'place' : 'places'}
-        {(typeFilter !== 'all' || cityFilter !== 'all' || collectionSearch) && ' (filtered)'}
-      </span>
+  /* ── Unified Filter + Sort bar ── */
+  const filterSortSection = allPlacesInCollection.length > 1 && (
+    <div className="mb-3">
       <FilterSortBar
+        filterGroups={[
+          ...(typeOptions.length > 1 ? [{
+            key: 'type',
+            label: 'Type',
+            options: TYPE_CHIPS_WITH_ALL
+              .filter(c => c.value === 'all' || (typeOptions as string[]).includes(c.value))
+              .map(c => ({
+                value: c.value,
+                label: c.label,
+                icon: c.icon as PerriandIconName,
+              })),
+            value: typeFilter,
+            onChange: (v: string) => setTypeFilter(v as PlaceType | 'all'),
+          }] : []),
+          ...(sourceOptions.length > 1 ? [{
+            key: 'source',
+            label: 'Source',
+            options: [
+              { value: 'all', label: 'All sources' },
+              ...sourceOptions.map(s => ({
+                value: s.value,
+                label: SOURCE_STYLES[s.value as keyof typeof SOURCE_STYLES]?.label || s.value,
+                icon: (SOURCE_STYLES[s.value as keyof typeof SOURCE_STYLES]?.icon || 'manual') as PerriandIconName,
+                count: s.count,
+              })),
+            ],
+            value: sourceFilter,
+            onChange: setSourceFilter,
+          }] : []),
+          ...(cityOptions.length > 1 ? [{
+            key: 'city',
+            label: 'Location',
+            options: [
+              { value: 'all', label: 'All cities' },
+              ...cityOptions.map(({ city, count }) => ({ value: city, label: `${city} (${count})` })),
+            ],
+            value: cityFilter,
+            onChange: setCityFilter,
+          }] : []),
+        ]}
         sortOptions={[
-          { value: 'added', label: 'Order added' },
+          { value: 'recent', label: 'Most recent' },
+          { value: 'match', label: 'Match %' },
           { value: 'name', label: 'A–Z' },
           { value: 'type', label: 'Type' },
-          { value: 'rating', label: 'Rating' },
+          { value: 'source', label: 'Source' },
         ]}
         sortValue={detailSortBy}
         onSortChange={(v) => setDetailSortBy(v as any)}
+        onResetAll={() => {
+          setTypeFilter('all');
+          setSourceFilter('all');
+          setCityFilter('all');
+          setCollectionSearch('');
+          setDetailSortBy('recent');
+        }}
         compact
       />
     </div>
@@ -535,11 +520,8 @@ function CollectionDetailContent() {
   /* ── Places list shared ── */
   const placesList = (
     <>
-      {searchBar}
-      {destinationChips}
-      {typeChips}
-      {inlineSearch}
-      {sortBar}
+      {collectionSearchBar}
+      {filterSortSection}
       {placesInCollection.length > 0 ? (
         <div className={isDesktop ? 'grid gap-3' : 'flex flex-col gap-2'} style={isDesktop ? { gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' } : undefined}>
           {placesInCollection.map(place => (
@@ -555,12 +537,12 @@ function CollectionDetailContent() {
         <div className="text-center py-12">
           <PerriandIcon name="discover" size={32} color={INK['15']} />
           <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
-            {collectionSearch || typeFilter !== 'all' || cityFilter !== 'all'
+            {collectionSearch || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all'
               ? 'No places match your filters'
               : 'No places in this collection yet'}
           </p>
           <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
-            {collectionSearch || typeFilter !== 'all' || cityFilter !== 'all'
+            {collectionSearch || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all'
               ? 'Try adjusting your search or filters'
               : 'Use the search bar above to find and add places'}
           </p>

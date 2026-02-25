@@ -101,14 +101,14 @@ function DayBoardView({
     >
       {trip.days.map(day => {
         const destColor = DEST_COLORS[day.destination || ''] || generateDestColor(day.destination || '');
-        const shortDay = day.dayOfWeek?.slice(0, 3) || '';
-        const dateNum = day.date?.replace(/\D/g, ' ').trim().split(' ').pop() || day.dayNumber;
-        // Extract month abbreviation from date string like "Jun 15"
-        const shortMonth = day.date?.match(/^([A-Za-z]+)/)?.[1] || '';
+        const isFlexible = trip.flexibleDates === true;
+        const shortDay = isFlexible ? '' : (day.dayOfWeek?.slice(0, 3) || '');
+        const dateNum = isFlexible ? day.dayNumber : (day.date?.replace(/\D/g, ' ').trim().split(' ').pop() || day.dayNumber);
+        const shortMonth = isFlexible ? '' : (day.date?.match(/^([A-Za-z]+)/)?.[1] || '');
         const dayIdx = trip.days.indexOf(day);
         const prevDay = dayIdx > 0 ? trip.days[dayIdx - 1] : null;
         const prevMonth = prevDay?.date?.match(/^([A-Za-z]+)/)?.[1] || '';
-        const showMonth = !prevDay || shortMonth !== prevMonth;
+        const showMonth = !isFlexible && (!prevDay || shortMonth !== prevMonth);
 
         return (
           <div
@@ -193,10 +193,10 @@ function DayBoardView({
                     opacity: 0.7,
                     visibility: showMonth ? 'visible' : 'hidden',
                   }}>
-                    {shortMonth || '\u00A0'}
+                    {isFlexible ? '\u00A0' : (shortMonth || '\u00A0')}
                   </div>
                   <div style={{ fontFamily: FONT.sans, fontSize: DAY_TITLE_SIZE, fontWeight: 700, color: destColor.text }}>
-                    {shortDay} {dateNum}
+                    {isFlexible ? `Day ${dateNum}` : `${shortDay} ${dateNum}`}
                   </div>
                   <div style={{ fontFamily: FONT.sans, fontSize: DAY_DEST_SIZE, fontWeight: 500, color: destColor.accent }}>
                     {day.destination || 'TBD'}
@@ -264,18 +264,18 @@ function DayBoardView({
                 {addingTransportDay !== day.dayNumber && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setAddingTransportDay(day.dayNumber); }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer nav-hover"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full cursor-pointer nav-hover"
                     style={{
-                      background: 'none',
-                      border: `1px dashed ${destColor.accent}40`,
+                      background: `${destColor.accent}15`,
+                      border: 'none',
                       fontFamily: FONT.sans,
-                      fontSize: 9,
-                      color: destColor.accent,
-                      opacity: 0.7,
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: destColor.text,
                     }}
                   >
-                    <PerriandIcon name="add" size={9} color={destColor.accent} />
-                    Transport
+                    <PerriandIcon name="transport" size={11} color={destColor.accent} />
+                    + Transportation
                   </button>
                 )}
               </div>

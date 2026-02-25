@@ -4,6 +4,7 @@ import { useMemo, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
+import ProfileAvatar from '@/components/ProfileAvatar';
 import CollectionCard from '@/components/CollectionCard';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
@@ -71,7 +72,8 @@ function SavedPageContent() {
   }, [collections, collectionSortBy]);
 
   // ─── Library filtering ───
-  const [sortBy, setSortBy] = useState<'match' | 'name' | 'type' | 'source'>('match');
+  const [sortBy, setSortBy] = useState<'recent' | 'match' | 'name' | 'type' | 'source'>('recent');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
 
   // Parse city from second segment, neighborhood from first
   const parseLocation = useCallback((loc: string) => {
@@ -83,10 +85,11 @@ function SavedPageContent() {
     return { neighborhood: '', city: parts[0] };
   }, []);
 
-  // Build city → neighborhoods map
-  const { allCities } = useMemo(() => {
+  // Build city → neighborhoods map + source counts
+  const { allCities, allSources } = useMemo(() => {
     const cityCount: Record<string, number> = {};
     const neighborhoods: Record<string, Set<string>> = {};
+    const sourceCount: Record<string, number> = {};
     myPlaces.forEach(p => {
       const { city, neighborhood } = parseLocation(p.location);
       if (city) {
@@ -94,6 +97,8 @@ function SavedPageContent() {
         if (!neighborhoods[city]) neighborhoods[city] = new Set();
         if (neighborhood) neighborhoods[city].add(neighborhood);
       }
+      const src = p.ghostSource || 'manual';
+      sourceCount[src] = (sourceCount[src] || 0) + 1;
     });
     // Sort by count descending, then alphabetically
     const sorted = Object.entries(cityCount)
@@ -103,7 +108,11 @@ function SavedPageContent() {
     for (const [city, set] of Object.entries(neighborhoods)) {
       nbMap[city] = Array.from(set).sort();
     }
-    return { allCities: sorted, cityNeighborhoods: nbMap };
+    // Sources sorted by count
+    const sources = Object.entries(sourceCount)
+      .sort((a, b) => b[1] - a[1])
+      .map(([src, count]) => ({ value: src, count }));
+    return { allCities: sorted, cityNeighborhoods: nbMap, allSources: sources };
   }, [myPlaces, parseLocation]);
 
   // Reset neighborhood when city changes
@@ -131,16 +140,24 @@ function SavedPageContent() {
         return city.toLowerCase() === cityFilter.toLowerCase();
       });
     }
+    if (sourceFilter !== 'all') {
+      places = places.filter(p => (p.ghostSource || 'manual') === sourceFilter);
+    }
     // Sort
     const sorted = [...places];
     switch (sortBy) {
+      case 'recent': sorted.sort((a, b) => {
+        const dateA = a.addedAt || '';
+        const dateB = b.addedAt || '';
+        return dateB.localeCompare(dateA); // newest first
+      }); break;
       case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'type': sorted.sort((a, b) => a.type.localeCompare(b.type)); break;
       case 'source': sorted.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
     }
     return sorted;
-  }, [myPlaces, searchQuery, typeFilter, cityFilter, sortBy, parseLocation]);
+  }, [myPlaces, searchQuery, typeFilter, cityFilter, sourceFilter, sortBy, parseLocation]);
 
 
   // ─── Uncollected places (not in any collection) ───
@@ -168,7 +185,7 @@ function SavedPageContent() {
                   lineHeight: 1.2,
                 }}
               >
-                Library
+                Collect
               </h1>
               <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
                 {myPlaces.length} places across {allCities.length} {allCities.length === 1 ? 'city' : 'cities'}
@@ -191,31 +208,6 @@ function SavedPageContent() {
                 <span>+</span> New Collection
               </button>
             </div>
-          </div>
-
-          {/* ═══ Type filter chips (always visible) ═══ */}
-          <div className="flex items-center gap-1.5 mb-7">
-            {TYPE_CHIPS_WITH_ALL.map(chip => (
-              <button
-                key={chip.value}
-                onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-medium cursor-pointer btn-hover"
-                style={{
-                  background: typeFilter === chip.value ? 'var(--t-ink)' : 'white',
-                  color: typeFilter === chip.value ? 'white' : INK['60'],
-                  border: typeFilter === chip.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                  fontFamily: FONT.sans,
-                  transition: 'all 150ms ease',
-                }}
-              >
-                <PerriandIcon
-                  name={chip.icon}
-                  size={13}
-                  color={typeFilter === chip.value ? 'white' : INK['50']}
-                />
-                {chip.label}
-              </button>
-            ))}
           </div>
 
           {/* ═══ Collections section ═══ */}
@@ -262,36 +254,63 @@ function SavedPageContent() {
                   {filteredPlaces.length}
                 </span>
               </h2>
-              <div className="flex items-center gap-3">
-                {allCities.length > 1 && (
-                  <select
-                    value={cityFilter}
-                    onChange={(e) => handleCityFilter(e.target.value)}
-                    className="rounded-lg px-3 py-1.5 text-[12px] cursor-pointer"
-                    style={{
-                      background: 'white',
-                      border: '1px solid var(--t-linen)',
-                      color: cityFilter !== 'all' ? 'var(--t-ink)' : INK['60'],
-                      fontFamily: FONT.sans,
-                      outline: 'none',
-                    }}
-                  >
-                    <option value="all">All cities</option>
-                    {allCities.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                )}
-                <FilterSortBar
-                  sortOptions={[
-                    { value: 'match', label: 'Match %' },
-                    { value: 'name', label: 'A–Z' },
-                    { value: 'type', label: 'Type' },
-                    { value: 'source', label: 'Source' },
-                  ]}
-                  sortValue={sortBy}
-                  onSortChange={(v) => setSortBy(v as any)}
-                  compact
-                />
-              </div>
+            </div>
+            <div className="mb-4">
+              <FilterSortBar
+                filterGroups={[
+                  {
+                    key: 'type',
+                    label: 'Type',
+                    options: TYPE_CHIPS_WITH_ALL.map(c => ({
+                      value: c.value,
+                      label: c.label,
+                      icon: c.icon as PerriandIconName,
+                    })),
+                    value: typeFilter,
+                    onChange: (v) => setTypeFilter(v as PlaceType | 'all'),
+                  },
+                  {
+                    key: 'source',
+                    label: 'Source',
+                    options: [
+                      { value: 'all', label: 'All sources' },
+                      ...allSources.map(s => ({
+                        value: s.value,
+                        label: SOURCE_STYLES[s.value as keyof typeof SOURCE_STYLES]?.label || s.value,
+                        icon: (SOURCE_STYLES[s.value as keyof typeof SOURCE_STYLES]?.icon || 'manual') as PerriandIconName,
+                        count: s.count,
+                      })),
+                    ],
+                    value: sourceFilter,
+                    onChange: setSourceFilter,
+                  },
+                  ...(allCities.length > 1 ? [{
+                    key: 'city',
+                    label: 'Location',
+                    options: [
+                      { value: 'all', label: 'All cities' },
+                      ...allCities.map(c => ({ value: c, label: c })),
+                    ],
+                    value: cityFilter,
+                    onChange: handleCityFilter,
+                  }] : []),
+                ]}
+                sortOptions={[
+                  { value: 'recent', label: 'Most recent' },
+                  { value: 'match', label: 'Match %' },
+                  { value: 'name', label: 'A–Z' },
+                  { value: 'type', label: 'Type' },
+                  { value: 'source', label: 'Source' },
+                ]}
+                sortValue={sortBy}
+                onSortChange={(v) => setSortBy(v as any)}
+                onResetAll={() => {
+                  setTypeFilter('all');
+                  setSourceFilter('all');
+                  setCityFilter('all');
+                  setSortBy('recent');
+                }}
+              />
             </div>
             {filteredPlaces.length > 0 ? (
               <div
@@ -399,44 +418,17 @@ function SavedPageContent() {
                 lineHeight: 1.2,
               }}
             >
-              Library
+              Collect
             </h1>
             <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
               {myPlaces.length} places
             </span>
           </div>
+          <ProfileAvatar />
         </div>
 
         {/* ═══ Search ═══ */}
         <div className="mb-3"><PlaceSearchBar /></div>
-
-        {/* ═══ Type filter chips (scrollable) ═══ */}
-        <div
-          className="flex gap-1.5 mb-5 -mx-4 px-4"
-          style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
-        >
-          {TYPE_CHIPS_WITH_ALL.map(chip => (
-            <button
-              key={chip.value}
-              onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
-              style={{
-                background: typeFilter === chip.value ? 'var(--t-ink)' : 'white',
-                color: typeFilter === chip.value ? 'white' : INK['60'],
-                border: typeFilter === chip.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
-                fontFamily: FONT.sans,
-                transition: 'all 150ms ease',
-              }}
-            >
-              <PerriandIcon
-                name={chip.icon}
-                size={11}
-                color={typeFilter === chip.value ? 'white' : INK['50']}
-              />
-              {chip.label}
-            </button>
-          ))}
-        </div>
 
         {/* ═══ Collections section ═══ */}
         {sortedCollections.length > 0 && (
@@ -480,8 +472,49 @@ function SavedPageContent() {
                 {filteredPlaces.length}
               </span>
             </h2>
+          </div>
+          <div className="mb-3">
             <FilterSortBar
+              filterGroups={[
+                {
+                  key: 'type',
+                  label: 'Type',
+                  options: TYPE_CHIPS_WITH_ALL.map(c => ({
+                    value: c.value,
+                    label: c.label,
+                    icon: c.icon as PerriandIconName,
+                  })),
+                  value: typeFilter,
+                  onChange: (v) => setTypeFilter(v as PlaceType | 'all'),
+                },
+                {
+                  key: 'source',
+                  label: 'Source',
+                  options: [
+                    { value: 'all', label: 'All sources' },
+                    ...allSources.map(s => ({
+                      value: s.value,
+                      label: SOURCE_STYLES[s.value as keyof typeof SOURCE_STYLES]?.label || s.value,
+                      icon: (SOURCE_STYLES[s.value as keyof typeof SOURCE_STYLES]?.icon || 'manual') as PerriandIconName,
+                      count: s.count,
+                    })),
+                  ],
+                  value: sourceFilter,
+                  onChange: setSourceFilter,
+                },
+                ...(allCities.length > 1 ? [{
+                  key: 'city',
+                  label: 'Location',
+                  options: [
+                    { value: 'all', label: 'All cities' },
+                    ...allCities.map(c => ({ value: c, label: c })),
+                  ],
+                  value: cityFilter,
+                  onChange: handleCityFilter,
+                }] : []),
+              ]}
               sortOptions={[
+                { value: 'recent', label: 'Most recent' },
                 { value: 'match', label: 'Match %' },
                 { value: 'name', label: 'A–Z' },
                 { value: 'type', label: 'Type' },
@@ -489,6 +522,12 @@ function SavedPageContent() {
               ]}
               sortValue={sortBy}
               onSortChange={(v) => setSortBy(v as any)}
+              onResetAll={() => {
+                setTypeFilter('all');
+                setSourceFilter('all');
+                setCityFilter('all');
+                setSortBy('recent');
+              }}
               compact
             />
           </div>
@@ -501,8 +540,8 @@ function SavedPageContent() {
           ) : (
             <div className="text-center py-16">
               <PerriandIcon name="discover" size={36} color={INK['15']} />
-              <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
-              <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
+              <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
+              <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
             </div>
           )}
         </div>

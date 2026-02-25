@@ -8,14 +8,16 @@ import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import TimeSlotCard from './TimeSlotCard';
 import OverviewItinerary from './OverviewItinerary';
+import TripBriefing from './TripBriefing';
 import DaySelector from './DaySelector';
 import DayContextBar from './DayContextBar';
 import { TransportBanner, TransportInput, getTransportsAfterSlot } from './TransportBanner';
 import { FONT, INK } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
+import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
-export type TripViewMode = 'planner' | 'overview' | 'featuredPlaces' | 'activity' | 'dreamBoard';
+export type TripViewMode = 'planner' | 'overview' | 'mapView' | 'featuredPlaces' | 'activity' | 'dreamBoard';
 
 export interface DropTarget {
   dayNumber: number;
@@ -84,6 +86,43 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
   // Check if the current day's destination has any saved places
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
+
+  // ─── Tier 2: Claude-powered contextual suggestions ───
+  const { suggestions: claudeSuggestions, isLoading: suggestionsLoading } = useTripSuggestions(
+    trip ?? null, currentDay,
+    { enabled: true, libraryPlaces: myPlaces }
+  );
+
+  // Inject Claude suggestions into slot.ghostItems when they arrive
+  const lastInjectedKeyRef = useRef<string>('');
+  useEffect(() => {
+    if (!claudeSuggestions.length || !myPlaces.length) return;
+
+    // Build a key to avoid re-injecting the same suggestions
+    const key = claudeSuggestions.map(s => s.placeId).sort().join(',');
+    if (key === lastInjectedKeyRef.current) return;
+    lastInjectedKeyRef.current = key;
+
+    // Enrich suggestion items with full place data + ghost metadata
+    const ghostPlaces = claudeSuggestions
+      .map(s => {
+        const place = myPlaces.find(p => p.id === s.placeId);
+        if (!place) return null;
+        return {
+          ...place,
+          id: `ghost-claude-${place.id}`,
+          ghostSource: 'terrazzo' as const,
+          ghostStatus: 'proposed' as const,
+          terrazzoReasoning: { rationale: s.rationale, confidence: s.confidence },
+        };
+      })
+      .filter(Boolean) as ImportedPlace[];
+
+    if (ghostPlaces.length > 0) {
+      injectGhostCandidates(ghostPlaces);
+    }
+  }, [claudeSuggestions, myPlaces, injectGhostCandidates]);
 
   if (!trip) return null;
 
@@ -130,7 +169,10 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               className="text-[10px]"
               style={{ color: INK['90'], fontFamily: FONT.mono }}
             >
-              {trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate)}
+              {trip.flexibleDates
+                ? `${trip.days.length} days · dates flexible`
+                : (trip.startDate && trip.endDate && formatDateRange(trip.startDate, trip.endDate))
+              }
             </span>
             {onShare && (
               <button
@@ -165,8 +207,8 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           style={{ background: 'var(--t-linen)' }}
         >
           {(myRole
-            ? (['overview', 'planner', 'dreamBoard', 'featuredPlaces', 'activity'] as const)
-            : (['overview', 'planner', 'dreamBoard', 'featuredPlaces'] as const)
+            ? (['overview', 'planner', 'mapView', 'dreamBoard', 'activity'] as const)
+            : (['overview', 'planner', 'mapView', 'dreamBoard'] as const)
           ).map(mode => (
             <button
               key={mode}
@@ -181,7 +223,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'featuredPlaces' ? 'Featured Places' : mode === 'activity' ? 'Activity' : mode === 'dreamBoard' ? 'Dream Board' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'mapView' ? 'Map' : mode === 'activity' ? 'Activity' : mode === 'dreamBoard' ? 'Dream Board' : 'Day Planner'}
             </button>
           ))}
         </div>
@@ -300,6 +342,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 onDragStartFromSlot={onDragStartFromSlot}
                 dragItemId={dragItemId}
                 onUnplace={onUnplace}
+                isLoadingSuggestions={suggestionsLoading}
                 suggestions={slotSuggestions}
                 reactions={slotReactions}
                 slotNoteItems={slotNoteItems}
@@ -337,9 +380,9 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
       </>}
 
-      {/* Overview mode: itinerary list grouped by day */}
+      {/* Overview mode: editorial trip briefing */}
       {viewMode === 'overview' && (
-        <OverviewItinerary trip={trip} onTapDay={(dayNum) => { setCurrentDay(dayNum); onSetViewMode('planner'); }} onTapDetail={onTapDetail} />
+        <TripBriefing trip={trip} onTapDay={(dayNum) => { setCurrentDay(dayNum); onSetViewMode('planner'); }} onTapDetail={onTapDetail} />
       )}
     </div>
   );

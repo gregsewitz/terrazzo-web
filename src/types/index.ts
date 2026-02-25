@@ -285,6 +285,7 @@ export interface Trip {
   travelContext?: TravelContext;
   groupSize?: number;
   status?: TripStatus;
+  flexibleDates?: boolean; // true = no specific dates, show "Day 1, Day 2" etc.
   days: TripDay[];
   pool: ImportedPlace[];
   dreamBoard?: DreamBoardEntry[];  // freeform notes, links, checklists, questions, vibes
@@ -334,8 +335,10 @@ export interface TripCreationData {
   name: string;
   destinations: string[];
   geoDestinations?: GeoDestination[]; // geocoded destination data
-  startDate: string; // ISO date
-  endDate: string;   // ISO date
+  startDate: string; // ISO date (empty string when flexibleDates)
+  endDate: string;   // ISO date (empty string when flexibleDates)
+  flexibleDates?: boolean; // true = dates undecided, use numDays instead
+  numDays?: number;        // trip length when flexibleDates is true
   travelContext: TravelContext;
   groupSize?: number; // for friends/family
   status: TripStatus;
@@ -347,6 +350,57 @@ export interface AISuggestion {
   rationale: string;
   alternativeCount: number;
   isStretch: boolean;
+}
+
+// ─── Suggestion Engine (Tier 2: Claude-powered contextual suggestions) ────────
+export interface SuggestionItem {
+  placeId: string;
+  targetSlot: string;          // 'breakfast' | 'morning' | ... | 'evening'
+  confidence: number;          // 0-1
+  rationale: string;           // personal, Terrazzo-voice reasoning
+  isStretchPick: boolean;
+}
+
+export interface SuggestionResponse {
+  suggestions: SuggestionItem[];
+  cacheKey: string;
+  generatedAt: string;
+}
+
+export interface DayWeather {
+  tempHighC: number;
+  tempLowC: number;
+  precipMm: number;
+  weatherCode: number;
+  description: string;
+}
+
+export interface DaySuggestionContext {
+  tripId: string;
+  tripName: string;
+  dayNumber: number;
+  dayDate?: string;
+  dayOfWeek?: string;
+  destination: string;
+  travelParty?: { context: TravelContext; groupSize?: number };
+  weather?: DayWeather;
+  slots: Array<{
+    id: string;
+    label: string;
+    time: string;
+    confirmedPlaces: Array<{ name: string; type: string; location: string }>;
+  }>;
+  tasteProfile: TasteProfile;
+  topAxes: string[];
+  candidates: Array<{
+    id: string;
+    name: string;
+    type: string;
+    location: string;
+    matchScore: number;
+    topAxes: string[];
+    tasteNote?: string;
+  }>;
 }
 
 // Default time slots for a day — updated to match Enhanced Slot Grid
@@ -500,6 +554,47 @@ export interface GeneratedTasteProfile {
   microTasteSignals: Record<string, string[]>;
   radarData: { axis: string; value: number }[];
   matchedProperties: MatchedProperty[];
+
+  // ─── Reveal Card Data (v3) ───
+  /** A direct quote from the user's onboarding conversation + insight */
+  bestQuote?: {
+    quote: string;
+    insight: string;
+  };
+  /** Design Language card — annotations for the ELO-derived spectrum axes */
+  designInsight?: {
+    headline: string;           // e.g. "You read a room before you feel it."
+    annotations: {              // one per spectrum axis, keyed by axis name
+      axis: string;             // e.g. "volume", "temperature", "time"
+      label: [string, string];  // pole labels e.g. ["Minimal", "Maximal"]
+      note: string;             // editorial annotation referencing their conversation
+    }[];
+  };
+  /** Synthesized ideal day on a trip */
+  perfectDay?: {
+    morning: string;
+    afternoon: string;
+    evening: string;
+  };
+  /** How taste shifts across travel companions */
+  howYouShift?: {
+    context: string;   // e.g. "With Sarah" or "Solo"
+    insight: string;   // editorial observation
+  }[];
+  /** Taste neighbor archetypes and rarity stat */
+  tasteNeighbors?: {
+    nearbyArchetypes: string[];    // 2-3 archetype names they overlap with
+    distinction: string;           // what makes them different from neighbors
+    rarityStat: string;            // e.g. "Only 4% of travelers pair X with Y"
+  };
+  /** Destinations that match their taste DNA */
+  destinations?: {
+    familiar: string[];            // 2-3 expected matches
+    surprise: {
+      name: string;
+      reason: string;              // one-line explanation
+    };
+  };
 }
 
 export interface ConversationMessage {
