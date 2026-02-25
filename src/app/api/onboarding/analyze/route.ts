@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
     if ('error' in validation) {
       return validation.error;
     }
-    const { userText, conversationHistory, phaseId, certainties, userMessageCount, crossPhaseContext } = validation.data;
+    const { userText, conversationHistory, phaseId, certainties, userMessageCount } = validation.data;
+    // crossPhaseContext is a loosely-typed bag from the client — cast for template access
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const crossPhaseContext = validation.data.crossPhaseContext as any;
 
     // Look up the phase definition so Claude knows the purpose and scripted follow-ups
     const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);
