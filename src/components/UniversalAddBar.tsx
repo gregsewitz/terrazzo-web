@@ -5,7 +5,7 @@ import { useAddBarStore } from '@/stores/addBarStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { streamImport } from '@/lib/importService';
 import { detectInputType, DEMO_IMPORT_RESULTS } from '@/lib/import-helpers';
-import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useTripStore } from '@/stores/tripStore';
@@ -487,7 +487,11 @@ export default function UniversalAddBar() {
                                     border: '1px solid var(--t-linen)',
                                   }}
                                 >
-                                  <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{sl.emoji}</span>
+                                  <span style={{ fontSize: 16, width: 22, textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {sl.emoji && isPerriandIconName(sl.emoji)
+                                      ? <PerriandIcon name={sl.emoji} size={18} color={INK['50']} />
+                                      : sl.emoji}
+                                  </span>
                                   <div className="flex-1 min-w-0">
                                     <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
                                       {sl.name}
@@ -671,7 +675,11 @@ export default function UniversalAddBar() {
                             >
                               {isSelected && <span style={{ color: 'white', fontSize: 9, fontWeight: 700 }}>&#10003;</span>}
                             </div>
-                            <span style={{ fontSize: 14, width: 18, textAlign: 'center' }}>{sl.emoji}</span>
+                            <span style={{ fontSize: 14, width: 18, textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {sl.emoji && isPerriandIconName(sl.emoji)
+                                ? <PerriandIcon name={sl.emoji} size={14} color={INK['50']} />
+                                : sl.emoji}
+                            </span>
                             <span style={{ fontFamily: FONT.sans, fontSize: 12, color: 'var(--t-ink)' }}>
                               {sl.name}
                             </span>
@@ -776,7 +784,11 @@ export default function UniversalAddBar() {
                           border: isIn ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
                         }}
                       >
-                        <span style={{ fontSize: 14, width: 20, textAlign: 'center' }}>{sl.emoji}</span>
+                        <span style={{ fontSize: 14, width: 20, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {sl.emoji && isPerriandIconName(sl.emoji)
+                            ? <PerriandIcon name={sl.emoji} size={16} color={INK['50']} />
+                            : sl.emoji}
+                        </span>
                         <div className="flex-1 text-left">
                           <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)' }}>
                             {sl.name}
