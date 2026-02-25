@@ -780,7 +780,7 @@ Generate a JSON object with this structure:
   "contextModifiers": [4-6 situational shifts with context/shifts],
   "microTasteSignals": { "category_name": ["term1", "term2", ...], ... } (6-8 categories, 4-6 terms each),
   "radarData": [{ "axis": "Sensory|Authenticity|Material|Social|Cultural|Spatial", "value": 0.0-1.0 }],
-  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved],
+  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved — MUST be places the user has NOT already visited or mentioned visiting],
 
   "bestQuote": {
     "quote": "A real line the user said during onboarding — the moment that revealed the most about their taste. Choose for emotional resonance, not information. Pick a moment where they described a FEELING or SCENE, not a factual statement.",
@@ -818,9 +818,9 @@ Generate a JSON object with this structure:
   },
 
   "destinations": {
-    "familiar": ["2-3 destination regions they'd expect to love"],
+    "familiar": ["2-3 destination regions they'd expect to love — must NOT include places they've already been"],
     "surprise": {
-      "name": "One unexpected destination that scores highly for their profile",
+      "name": "One unexpected destination that scores highly for their profile — must NOT be somewhere they've already visited",
       "reason": "One line explaining WHY, referencing their specific signals."
     }
   }
@@ -831,6 +831,7 @@ RULES:
 - Contradictions must have actionable matchRules that a scoring algorithm can use.
 - Micro-taste signals should include both positive and rejection signals.
 - Matched properties must be REAL hotels/properties the person would actually love.
+- CRITICAL: Never recommend places the user has already visited. If they mention staying at or visiting a specific hotel, restaurant, or destination during the conversation, do NOT include it in matchedProperties or destinations. These sections are for NEW discoveries. Use places they've been as EVIDENCE of their taste, not as recommendations.
 - Write like a well-traveled friend — warm, specific, never clinical.
 - bestQuote must be a REAL quote pulled verbatim from the conversation highlights. Do not fabricate quotes.
 - designInsight annotations should reference specific things the user said when possible.
