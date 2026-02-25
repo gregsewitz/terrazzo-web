@@ -193,24 +193,6 @@ function SavedPageContent() {
             <div className="flex items-center gap-3">
               <PlaceSearchBar />
               <button
-                onClick={() => importPatch({ isOpen: true })}
-                className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
-                style={{
-                  background: 'rgba(232,115,58,0.08)',
-                  border: '1px solid rgba(232,115,58,0.15)',
-                  color: '#c45020',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  fontFamily: FONT.mono,
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                  <path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                Import
-              </button>
-              <button
                 onClick={() => setShowCreateCollection(true)}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
                 style={{
@@ -442,13 +424,6 @@ function SavedPageContent() {
               {myPlaces.length} places
             </span>
           </div>
-          <button
-            onClick={() => importPatch({ isOpen: true })}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '9px 12px', borderRadius: 10, background: 'rgba(232,115,58,0.08)', border: '1px solid rgba(232,115,58,0.15)', color: '#c45020', fontSize: 10, fontWeight: 600, fontFamily: FONT.mono, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            Import
-          </button>
         </div>
 
         {/* ═══ Search ═══ */}

@@ -365,9 +365,7 @@ function CollectionDetailContent() {
   const searchBar = !collection.isSmartCollection && (
     <div className="mb-3">
       <PlaceSearchBar
-        onPlaceAdded={handlePlaceAdded}
-        skipCollectionPicker
-        placeholder={`Add a place to ${collection.name}...`}
+        placeholder={`Filter places in ${collection.name}...`}
       />
     </div>
   );
