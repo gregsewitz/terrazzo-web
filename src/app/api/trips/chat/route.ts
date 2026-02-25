@@ -38,7 +38,10 @@ export async function POST(req: NextRequest) {
     if ('error' in validation) {
       return validation.error;
     }
-    const { userMessage, conversationHistory, tripContext, userProfile } = validation.data;
+    const { userMessage } = validation.data;
+    // These are loosely-typed objects from the client — cast for template access
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { conversationHistory, tripContext, userProfile } = validation.data as any;
 
     const profileSummary = userProfile
       ? `USER'S TASTE PROFILE:

@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
     if ('error' in validation) {
       return validation.error;
     }
-    const { signals, messages, contradictions, certainties } = validation.data;
+    const { signals, contradictions, certainties } = validation.data;
+    // messages is a loosely-typed array from the client — cast for template access
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages = validation.data.messages as any[];
 
     const contextMessage = `
 Synthesize a complete taste profile from the following onboarding data:
