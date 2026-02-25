@@ -777,7 +777,7 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</span>
                   <span className="text-[10px]" style={{ color: INK['50'] }}>{place.location}</span>
-                  <span className="text-[10px] font-bold ml-auto" style={{ color: domainColor, fontFamily: FONT.mono }}>{place.score}</span>
+                  <span className="text-[10px] font-bold ml-auto" style={{ color: domainColor, fontFamily: FONT.mono }}>{place.score <= 1 ? Math.round(place.score * 100) : place.score}</span>
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.connection}</p>
               </div>
@@ -900,7 +900,7 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       </div>
                       <p className="text-[10px] italic" style={{ color: INK['70'] }}>{p.vibe}</p>
                     </div>
-                    <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score}</span>
+                    <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
                   </div>
                 );
               })}
@@ -1083,7 +1083,7 @@ function FriendsSavingSection() {
               </div>
               <div className="text-[10px] mb-1" style={{ color: INK['60'] }}>{save.location} · {save.type}</div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold" style={{ color: save.color, fontFamily: FONT.mono }}>{save.score}% match</span>
+                <span className="text-[10px] font-bold" style={{ color: save.color, fontFamily: FONT.mono }}>{save.score <= 1 ? Math.round(save.score * 100) : save.score}% match</span>
                 <span className="text-[10px]" style={{ color: INK['70'] }}>{save.whyMatches}</span>
               </div>
             </div>
