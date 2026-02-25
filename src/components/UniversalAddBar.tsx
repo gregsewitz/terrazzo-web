@@ -574,15 +574,13 @@ export default function UniversalAddBar() {
                           <QuickAction
                             icon="article"
                             label="Paste from clipboard"
+                            subtitle="Links, lists, or text from a friend"
                             onTap={async () => {
                               try {
                                 const text = await navigator.clipboard.readText();
                                 if (text) {
                                   setQuery(text);
-                                  const inputType = detectInputType(text.trim());
-                                  if (inputType === 'url' || inputType === 'google-maps') {
-                                    handleInputSubmit(text);
-                                  }
+                                  handleInputSubmit(text);
                                 }
                               } catch { /* clipboard permission denied */ }
                             }}
@@ -590,24 +588,10 @@ export default function UniversalAddBar() {
                           <QuickAction
                             icon="email"
                             label="Import from email"
+                            subtitle="Forward a newsletter or rec email"
                             onTap={() => {
                               close();
                               useImportStore.getState().patch({ isOpen: true });
-                            }}
-                          />
-                          <QuickAction
-                            icon="article"
-                            label="Paste a list"
-                            onTap={async () => {
-                              try {
-                                const text = await navigator.clipboard.readText();
-                                if (text && text.split('\n').filter(l => l.trim()).length >= 2) {
-                                  setQuery(text);
-                                  handleInputSubmit(text);
-                                } else if (text) {
-                                  setQuery(text);
-                                }
-                              } catch { /* clipboard permission denied */ }
                             }}
                           />
                         </div>
@@ -977,7 +961,7 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-function QuickAction({ icon, label, onTap }: { icon: PerriandIconName; label: string; onTap: () => void }) {
+function QuickAction({ icon, label, subtitle, onTap }: { icon: PerriandIconName; label: string; subtitle?: string; onTap: () => void }) {
   return (
     <button
       onClick={onTap}
@@ -989,9 +973,16 @@ function QuickAction({ icon, label, onTap }: { icon: PerriandIconName; label: st
       }}
     >
       <PerriandIcon name={icon} size={15} color={INK['50']} />
-      <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)' }}>
-        {label}
-      </span>
+      <div className="flex-1 min-w-0">
+        <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)', display: 'block' }}>
+          {label}
+        </span>
+        {subtitle && (
+          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['40'], display: 'block', marginTop: 1 }}>
+            {subtitle}
+          </span>
+        )}
+      </div>
     </button>
   );
 }
