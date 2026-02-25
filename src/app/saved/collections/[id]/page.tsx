@@ -419,7 +419,7 @@ function CollectionDetailContent() {
       className="flex gap-1.5 mb-3"
       style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
     >
-      {TYPE_CHIPS_WITH_ALL.filter(c => c.value === 'all' || typeOptions.includes(c.value)).map(chip => (
+      {TYPE_CHIPS_WITH_ALL.filter(c => c.value === 'all' || (typeOptions as string[]).includes(c.value)).map(chip => (
         <button
           key={chip.value}
           onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}

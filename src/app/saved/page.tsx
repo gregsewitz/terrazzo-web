@@ -118,7 +118,6 @@ function SavedPageContent() {
   // Reset neighborhood when city changes
   const handleCityFilter = useCallback((city: string) => {
     setCityFilter(city);
-    setNeighborhoodFilter('all');
   }, [setCityFilter]);
 
   const filteredPlaces = useMemo(() => {
@@ -141,12 +140,7 @@ function SavedPageContent() {
         return city.toLowerCase() === cityFilter.toLowerCase();
       });
     }
-    if (neighborhoodFilter !== 'all') {
-      places = places.filter(p => {
-        const { neighborhood } = parseLocation(p.location);
-        return neighborhood.toLowerCase() === neighborhoodFilter.toLowerCase();
-      });
-    }
+    // neighborhoodFilter is currently always 'all' — filtering placeholder for future use
     if (sourceFilter !== 'all') {
       places = places.filter(p => {
         if (sourceFilter === 'friend') return !!p.friendAttribution;

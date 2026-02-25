@@ -62,12 +62,16 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   // Build the import source entry for the provenance log
   const newSourceEntry: ImportSourceEntry | null = place.source
     ? {
-        type: place.source.type,
-        name: place.source.name,
-        url: place.source.url,
+        type: String(place.source.type ?? ''),
+        name: String(place.source.name ?? ''),
+        url: place.source.url ? String(place.source.url) : undefined,
         importedAt: new Date().toISOString(),
       }
     : null;
+
+  // Helper: cast ImportSourceEntry[] to Prisma-compatible JSON
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toJson = (v: ImportSourceEntry[]): any => v;
 
   if (place.googlePlaceId) {
     // Check if this place already exists in the user's library
@@ -80,7 +84,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
     if (existing) {
       // ── Re-import: preserve provenance, update enrichment, append source ──
-      const existingSources = (existing.importSources as ImportSourceEntry[]) || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const existingSources = (existing.importSources as any as ImportSourceEntry[]) || [];
 
       // Append new source if it's not already in the log (dedup by type+name)
       let updatedSources = existingSources;
@@ -101,7 +106,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
           // Provenance: preserved — NOT overwritten
           // User-editable: preserved — NOT overwritten
           // Append to provenance log
-          importSources: updatedSources,
+          importSources: toJson(updatedSources),
           // Clear soft-delete if re-importing a deleted place
           deletedAt: null,
         },
@@ -126,7 +131,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         ...provenanceData,
         ...enrichmentData,
         ...userEditableData,
-        importSources: newSourceEntry ? [newSourceEntry] : [],
+        importSources: toJson(newSourceEntry ? [newSourceEntry] : []),
       },
       // Fallback update (race condition safety) — same as re-import path
       update: {
@@ -145,7 +150,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
       ...provenanceData,
       ...enrichmentData,
       ...userEditableData,
-      importSources: newSourceEntry ? [newSourceEntry] : [],
+      importSources: toJson(newSourceEntry ? [newSourceEntry] : []),
     },
   });
 

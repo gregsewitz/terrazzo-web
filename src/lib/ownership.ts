@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import type { SavedPlace, Collection, Trip } from '@prisma/client';
+import type { SavedPlace, Shortlist, Trip } from '@prisma/client';
 
 /**
  * Verify ownership of a resource and return it if owned by the user.
@@ -9,7 +9,7 @@ export async function verifyOwnership(
   model: 'trip' | 'collection' | 'savedPlace',
   id: string,
   userId: string
-): Promise<SavedPlace | Collection | Trip | null> {
+): Promise<SavedPlace | Shortlist | Trip | null> {
   if (model === 'savedPlace') {
     return await prisma.savedPlace.findFirst({
       where: { id, userId, deletedAt: null },

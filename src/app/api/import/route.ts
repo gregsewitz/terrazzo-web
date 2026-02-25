@@ -157,12 +157,14 @@ export async function POST(request: NextRequest) {
         // ── 5. Cross-reference against user's library ─────────────────────
         // Tag each place with alreadyInLibrary + existing source info so the
         // frontend can show "Already in your library (from Infatuation)"
-        let finalPlaces = mergedPlaces;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let finalPlaces: any[] = mergedPlaces;
         const user = await getUser(request);
         if (user) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const googlePlaceIds = mergedPlaces
-            .map((p: { google?: { placeId?: string } }) => p.google?.placeId)
-            .filter((id): id is string => !!id);
+            .map((p: any) => p.google?.placeId)
+            .filter((id: any): id is string => !!id);
 
           if (googlePlaceIds.length > 0) {
             const existingPlaces = await prisma.savedPlace.findMany({
@@ -178,7 +180,8 @@ export async function POST(request: NextRequest) {
               existingPlaces.map((p) => [p.googlePlaceId, p]),
             );
 
-            finalPlaces = mergedPlaces.map((place: { google?: { placeId?: string }; [key: string]: unknown }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            finalPlaces = mergedPlaces.map((place: any) => {
               const gpId = place.google?.placeId;
               const existing = gpId ? existingByGoogleId.get(gpId) : null;
               if (existing) {
