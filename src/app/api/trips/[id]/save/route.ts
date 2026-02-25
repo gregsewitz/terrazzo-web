@@ -35,6 +35,22 @@ export const PATCH = apiHandler(async (req: NextRequest, { params }: { params: P
   return Response.json({ trip });
 });
 
+/**
+ * DELETE /api/trips/[id]
+ *
+ * Deletes a trip. This only removes slot references — all places
+ * stay in the user's library. This is "unplacing," not deleting.
+ *
+ * Prisma cascades automatically handle:
+ *   - Place records (trip-scoped) → deleted
+ *   - TripCollaborator records → deleted
+ *   - TripSuggestion records → deleted
+ *   - TripReaction records → deleted
+ *   - SlotNote records → deleted
+ *   - TripActivity records → deleted
+ *
+ * We also deactivate any active share links for this trip.
+ */
 export const DELETE = apiHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
@@ -48,6 +64,19 @@ export const DELETE = apiHandler(async (req: NextRequest, { params }: { params: 
     return Response.json({ error: 'Trip not found' }, { status: 404 });
   }
 
-  await prisma.trip.delete({ where: { id } });
+  // Deactivate share links + delete trip in a transaction
+  await prisma.$transaction([
+    prisma.shareLink.updateMany({
+      where: {
+        userId: user.id,
+        resourceType: 'trip',
+        resourceId: id,
+        isActive: true,
+      },
+      data: { isActive: false },
+    }),
+    prisma.trip.delete({ where: { id } }),
+  ]);
+
   return Response.json({ success: true });
 });

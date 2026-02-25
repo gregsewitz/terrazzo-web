@@ -7,9 +7,9 @@ export const GET = apiHandler(async (req: NextRequest) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
-  const [places, shortlists] = await Promise.all([
+  const [places, collections] = await Promise.all([
     prisma.savedPlace.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     }),
     prisma.shortlist.findMany({
@@ -18,5 +18,5 @@ export const GET = apiHandler(async (req: NextRequest) => {
     }),
   ]);
 
-  return Response.json({ places, shortlists });
+  return Response.json({ places, collections });
 });

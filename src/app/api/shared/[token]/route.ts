@@ -36,20 +36,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     'Cache-Control': 'public, max-age=300, s-maxage=600',
   };
 
-  if (shareLink.resourceType === 'shortlist') {
-    const shortlist = await prisma.shortlist.findUnique({
+  if (shareLink.resourceType === 'collection') {
+    const collection = await prisma.shortlist.findUnique({
       where: { id: shareLink.resourceId },
     });
 
-    if (!shortlist) {
-      return Response.json({ error: 'Shortlist no longer exists' }, { status: 404 });
+    if (!collection) {
+      return Response.json({ error: 'Collection no longer exists' }, { status: 404 });
     }
 
-    // Fetch the places in this shortlist
-    const placeIds = (shortlist.placeIds as string[]) || [];
+    // Fetch the places in this collection
+    const placeIds = (collection.placeIds as string[]) || [];
     const places = placeIds.length > 0
       ? await prisma.savedPlace.findMany({
-          where: { id: { in: placeIds } },
+          where: { id: { in: placeIds }, deletedAt: null },
           select: {
             id: true,
             name: true,
@@ -70,15 +70,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
       : [];
 
     return Response.json({
-      type: 'shortlist',
+      type: 'collection',
       ownerName,
       permission: shareLink.permission,
       data: {
-        shortlist: {
-          id: shortlist.id,
-          name: shortlist.name,
-          description: shortlist.description,
-          emoji: shortlist.emoji,
+        collection: {
+          id: collection.id,
+          name: collection.name,
+          description: collection.description,
+          emoji: collection.emoji,
           placeCount: placeIds.length,
         },
         places,

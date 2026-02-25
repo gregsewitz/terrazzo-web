@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { extractAndMatchPlaces } from '@/lib/anthropic';
 import { getUserTasteProfile } from '@/lib/user-profile';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+import { getUser } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
 import {
   detectInputType,
   extractFromGoogleMaps,
@@ -137,7 +139,7 @@ export async function POST(request: NextRequest) {
         send({ type: 'progress', stage: 'finalizing', label: 'Compiling your results…', percent: 95 });
 
         // ── 4. Merge taste data from combined call onto enriched places ────
-        const finalPlaces = enrichedPlaces.map((place, i) => {
+        const mergedPlaces = enrichedPlaces.map((place, i) => {
           // Find the matching extracted place by name to get taste data
           const source = limited[i];
           if (source && source.matchScore) {
@@ -151,6 +153,46 @@ export async function POST(request: NextRequest) {
           }
           return place;
         });
+
+        // ── 5. Cross-reference against user's library ─────────────────────
+        // Tag each place with alreadyInLibrary + existing source info so the
+        // frontend can show "Already in your library (from Infatuation)"
+        let finalPlaces = mergedPlaces;
+        const user = await getUser(request);
+        if (user) {
+          const googlePlaceIds = mergedPlaces
+            .map((p: { google?: { placeId?: string } }) => p.google?.placeId)
+            .filter((id): id is string => !!id);
+
+          if (googlePlaceIds.length > 0) {
+            const existingPlaces = await prisma.savedPlace.findMany({
+              where: {
+                userId: user.id,
+                googlePlaceId: { in: googlePlaceIds },
+                deletedAt: null,
+              },
+              select: { googlePlaceId: true, source: true, importSources: true },
+            });
+
+            const existingByGoogleId = new Map(
+              existingPlaces.map((p) => [p.googlePlaceId, p]),
+            );
+
+            finalPlaces = mergedPlaces.map((place: { google?: { placeId?: string }; [key: string]: unknown }) => {
+              const gpId = place.google?.placeId;
+              const existing = gpId ? existingByGoogleId.get(gpId) : null;
+              if (existing) {
+                return {
+                  ...place,
+                  alreadyInLibrary: true,
+                  existingSource: existing.source,
+                  existingImportSources: existing.importSources,
+                };
+              }
+              return place;
+            });
+          }
+        }
 
         // ── Done ────────────────────────────────────────────────────────────
         send({

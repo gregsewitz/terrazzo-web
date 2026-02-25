@@ -106,6 +106,14 @@ export interface ImportSource {
   url?: string;
 }
 
+/** Append-only provenance log entry — tracks every import that touched a place */
+export interface ImportSourceEntry {
+  type: string;
+  name: string;
+  url?: string;
+  importedAt: string; // ISO timestamp
+}
+
 export interface GooglePlaceData {
   placeId?: string;
   rating?: number;
@@ -175,12 +183,21 @@ export interface ImportedPlace {
   tips?: string[];         // e.g. ["⏰ Go early (can be a wait)", "🍺 Drink at the bar while waiting"]
   alsoKnownAs?: string;   // e.g. "El Sótano"
   importBatchId?: string;  // links places from same import for "Also from this guide"
-  isShortlisted?: boolean; // true = show in PicksStrip for day planner drag-drop
+  isFavorited?: boolean; // true = in Favorites collection, shows in PicksStrip for day planner
   // Personal context extracted from user's notes
   userContext?: string;     // e.g. "going in May", "planned for my 40th", "with my daughter (5)"
   travelWith?: string;      // e.g. "bestie", "daughter", "friends"
   timing?: string;          // e.g. "this fall", "May 2025", "when daughter graduates"
   intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching'; // how concrete this is
+  // Reference-based model — links trip places back to the canonical library entry
+  libraryPlaceId?: string;  // SavedPlace.id this was sourced from (present when placed from library)
+  // Import dedup — set by import pipeline when place already exists in library
+  alreadyInLibrary?: boolean;
+  existingSource?: ImportSource;       // the primary source from the existing library entry
+  existingImportSources?: ImportSourceEntry[]; // full provenance log from library
+  // Attribution — who added this place (relevant in shared trips)
+  addedByUserId?: string;   // null/undefined = trip owner
+  addedByName?: string;     // "Sarah" — denormalized for display
 }
 
 export interface TimeSlot {
@@ -354,22 +371,22 @@ export const SLOT_ICONS: Record<string, PerriandIconName> = {
 // Terrazzo voice — used across all prompts for consistent tone
 export const TERRAZZO_VOICE = `You write like a well-traveled friend who happens to have incredible taste — warm but not gushing, opinionated but never snobby. You use short, vivid descriptions. You notice the details that matter (the way light hits a courtyard, the specific dish to order, the hour when a place transforms). You're honest about trade-offs. You never say "hidden gem" or "must-visit." You speak like someone sharing a personal recommendation over wine, not writing a guidebook.`;
 
-// ─── Shortlist Types ───
+// ─── Collection Types ───
 
-export interface Shortlist {
+export interface Collection {
   id: string;
   name: string;
   description?: string;
   emoji?: string;
   placeIds: string[];       // references to library places by ID
   cities: string[];          // derived from member places
-  isDefault?: boolean;       // true for "Favorites" shortlist
+  isDefault?: boolean;       // true for "Favorites" collection
   isSmartCollection?: boolean;
   query?: string;            // natural language query (smart collections)
   filterTags?: string[];     // parsed filter tags (smart collections)
   createdAt: string;
   updatedAt: string;
-  // Future: sharing
+  // Sharing
   isPublic?: boolean;
   collaborators?: { userId: string; role: 'owner' | 'editor' | 'viewer' }[];
 }
@@ -525,6 +542,9 @@ export interface ExperienceItem {
   cluster: string;
   signals: string[];
   category: string; // TasteDomain
+  scene?: string; // short atmospheric description
+  pairWith?: string; // id of natural comparison partner (same dimension)
+  dimension?: string; // human-readable dimension label e.g. "Morning Ritual"
 }
 
 export interface DesignerItem {
@@ -623,6 +643,22 @@ export interface OnboardingLifeContext {
 }
 
 export type OnboardingDepth = 'act_1_only' | 'full_flow';
+
+// ─── Deletion Impact Types ───
+
+export interface DeletionImpact {
+  placeId: string;
+  placeName: string;
+  collectionCount: number;
+  collections: { id: string; name: string }[];
+  tripCount: number;
+  trips: {
+    tripId: string;
+    tripName: string;
+    dayNumber: number | null;
+    slotId: string | null;
+  }[];
+}
 
 export interface AnalysisResult {
   signals: TasteSignal[];

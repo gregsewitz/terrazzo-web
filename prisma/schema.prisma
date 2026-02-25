@@ -58,7 +58,7 @@ model NylasGrant {
 }
 
 // ──────────────────────────────────────────────
-// Saved Places & Shortlists (Collect tab)
+// Saved Places & Collections (Library tab)
 // ──────────────────────────────────────────────
 
 model SavedPlace {
@@ -72,8 +72,8 @@ model SavedPlace {
   type                String   // restaurant | hotel | bar | cafe | museum | activity | neighborhood | shop
   location            String?
 
-  // Import metadata
-  source              Json?    // { type, name, url } — ImportSource
+  // Import metadata (provenance — write-once, never overwritten by re-imports)
+  source              Json?    // { type, name, url } — ImportSource (primary/first source)
   ghostSource         String?  // friend | maps | article | email | ai | manual | instagram
   friendAttribution   Json?    // { name, platform, date }
   userContext          String?  // user's personal note about the place
@@ -82,10 +82,11 @@ model SavedPlace {
   intentStatus        String?  // booked | planning | dreaming | researching
   savedDate           String?  // e.g. "Saved Jun 2024"
   importBatchId       String?  // links places from same import
+  importSources       Json     @default("[]") // ImportSourceEntry[] — append-only provenance log
 
   // Ratings
   rating              Json?    // { reaction, tags, contextTags, returnIntent, personalNote }
-  isShortlisted       Boolean  @default(false)
+  isFavorited         Boolean  @default(false) @map("isShortlisted")
 
   // Enrichment data
   enrichment          Json?    // { closedDays, hours, seasonalNote, priceRange, description, confidence }
@@ -106,13 +107,28 @@ model SavedPlace {
   placeIntelligenceId String?
   intelligence        PlaceIntelligence? @relation("SavedPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
 
+  // Soft delete
+  deletedAt           DateTime?          // null = active; set = soft-deleted (30-day recovery)
+
+  // Relations
+  tripPlaceRefs       Place[]            @relation("LibraryPlaceRef")
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   @@unique([userId, googlePlaceId])
   @@index([userId])
   @@index([googlePlaceId])
+  @@index([deletedAt])
 }
+
+// Design notes:
+// - Collections with 0 places are valid — don't auto-delete. The user named it intentionally.
+// - Offline/conflict strategy for placeIds:
+//     Metadata (name, emoji, description): last-write-wins.
+//     Membership (placeIds): append-only merge — resolve conflicts by union of both arrays.
+//     This means a place added offline by the user will never be lost on sync, even if
+//     the server version diverged. Implement in the sync layer when offline support ships.
 
 model Shortlist {
   id                String   @id @default(cuid())
@@ -130,6 +146,7 @@ model Shortlist {
   filterTags        Json?    // string[]
 
   // Place membership (stored as SavedPlace IDs)
+  // See design notes above re: offline/conflict merge strategy
   placeIds          Json     @default("[]")     // string[]
 
   createdAt         DateTime @default(now())
@@ -195,12 +212,23 @@ model Place {
   enrichment     Json?    // PlaceEnrichment
   status         String   @default("available")
   placedIn       Json?    // { day: number; slot: string }
+
+  // Library reference — links this trip place back to the canonical SavedPlace
+  libraryPlaceId String?
+  libraryPlace   SavedPlace? @relation("LibraryPlaceRef", fields: [libraryPlaceId], references: [id], onDelete: SetNull)
+
+  // Attribution — who added this place to the trip
+  addedByUserId  String?  // null = trip owner; set when a collaborator adds it
+  addedByName    String?  // denormalized display name for "Added by Sarah"
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   // Link to global intelligence
   placeIntelligenceId String?
   intelligence        PlaceIntelligence? @relation("TripPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
+
+  @@index([libraryPlaceId])
 }
 
 // ──────────────────────────────────────────────
