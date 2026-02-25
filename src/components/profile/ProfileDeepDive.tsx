@@ -368,7 +368,7 @@ function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null }) {
 }
 
 // ═══════════════════════════════════════════
-// DIMENSIONS — 6 domain cards with signals
+// DIMENSIONS — 6 domain certainty overview
 // ═══════════════════════════════════════════
 const DIMENSION_CERTAINTIES: Record<string, number> = {
   "Design Language": 92, "Character & Identity": 85, "Service Philosophy": 88,
@@ -377,35 +377,29 @@ const DIMENSION_CERTAINTIES: Record<string, number> = {
 
 function DimensionsSection({ profile }: { profile: ProfileShape }) {
   const domains = Object.keys(profile.microTasteSignals).filter(k => k !== 'Rejection');
+  const totalSignals = Object.values(profile.microTasteSignals).flat().length;
   return (
     <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
       <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
         Taste Dimensions
       </div>
       <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-        Every signal we&apos;ve collected, organized by the six domains that shape your matches.
+        How confidently we can match you across {domains.length} domains, based on {totalSignals} signals.
       </p>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {domains.map(domain => {
           const color = DOMAIN_COLORS[domain] || '#8b6b4a';
           const certainty = DIMENSION_CERTAINTIES[domain] || 80;
-          const signals = profile.microTasteSignals[domain] || [];
+          const signalCount = (profile.microTasteSignals[domain] || []).length;
           return (
-            <div key={domain} className="p-4 rounded-xl" style={{ background: 'white', borderLeft: `3px solid ${color}` }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{domain}</span>
-                <span className="text-[10px] font-bold" style={{ color, fontFamily: FONT.mono }}>{certainty}% certain</span>
+            <div key={domain} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'white' }}>
+              <div className="flex-shrink-0 w-2 h-2 rounded-full" style={{ background: color }} />
+              <span className="text-[12px] font-semibold flex-1" style={{ color: 'var(--t-ink)' }}>{domain}</span>
+              <span className="text-[9px]" style={{ color: INK['55'], fontFamily: FONT.mono }}>{signalCount} signals</span>
+              <div className="w-16 h-1.5 rounded-full" style={{ background: INK['06'] }}>
+                <div className="h-1.5 rounded-full" style={{ width: `${certainty}%`, background: color }} />
               </div>
-              <div className="h-1 rounded-full mb-3" style={{ background: INK['06'] }}>
-                <div className="h-1 rounded-full" style={{ width: `${certainty}%`, background: color }} />
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {signals.map(signal => (
-                  <span key={signal} className="text-[10px] px-2 py-1 rounded-full" style={{ background: `${color}10`, color, fontFamily: FONT.sans }}>
-                    {signal}
-                  </span>
-                ))}
-              </div>
+              <span className="text-[10px] font-bold w-8 text-right" style={{ color, fontFamily: FONT.mono }}>{certainty}%</span>
             </div>
           );
         })}
@@ -415,40 +409,55 @@ function DimensionsSection({ profile }: { profile: ProfileShape }) {
 }
 
 // ═══════════════════════════════════════════
-// VOCABULARY — Full signal library with rejections
+// VOCABULARY — Flat word cloud of all signals + rejections
 // ═══════════════════════════════════════════
 function VocabularySection({ profile }: { profile: ProfileShape }) {
-  const categories = Object.entries(profile.microTasteSignals);
-  const totalTerms = categories.reduce((sum, [, terms]) => sum + terms.length, 0);
+  // Collect all positive signals as a flat list with domain color
+  const positiveTerms: Array<{ term: string; color: string }> = [];
+  const rejectionTerms: string[] = [];
+
+  for (const [category, terms] of Object.entries(profile.microTasteSignals)) {
+    if (category === 'Rejection') {
+      rejectionTerms.push(...terms);
+    } else {
+      const color = DOMAIN_COLORS[category] || '#8b6b4a';
+      terms.forEach(term => positiveTerms.push({ term, color }));
+    }
+  }
+
   return (
     <div className="px-5 py-6" style={{ background: '#f5f0e6' }}>
       <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
         Taste Vocabulary
       </div>
       <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-        {totalTerms} terms that describe how you see the world — including what you reject.
+        {positiveTerms.length + rejectionTerms.length} words that define what you love — and what you don&apos;t.
       </p>
-      <div className="flex flex-col gap-3">
-        {categories.map(([category, terms]) => {
-          const color = DOMAIN_COLORS[category] || '#8b6b4a';
-          const isRejection = category === 'Rejection';
-          return (
-            <div key={category} className="p-3 rounded-xl" style={{ background: 'white', borderLeft: `3px solid ${isRejection ? '#8b4a4a' : color}` }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold" style={{ color: isRejection ? '#8b4a4a' : 'var(--t-ink)' }}>{category}</span>
-                <span className="text-[9px]" style={{ color: INK['55'], fontFamily: FONT.mono }}>{terms.length} terms</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {terms.map(term => (
-                  <span key={term} className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}10`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}>
-                    {term}
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+
+      {/* Positive signals — flat, domain-colored word cloud */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {positiveTerms.map(({ term, color }) => (
+          <span key={term} className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: `${color}10`, color, fontFamily: FONT.sans }}>
+            {term}
+          </span>
+        ))}
       </div>
+
+      {/* Rejections — distinct visual treatment */}
+      {rejectionTerms.length > 0 && (
+        <div className="p-3 rounded-xl" style={{ background: 'rgba(139,74,74,0.04)', border: '1px dashed rgba(139,74,74,0.15)' }}>
+          <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: '#8b4a4a', fontFamily: FONT.mono }}>
+            What you reject
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {rejectionTerms.map(term => (
+              <span key={term} className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(139,74,74,0.08)', color: '#8b4a4a', fontFamily: FONT.sans }}>
+                {term}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
