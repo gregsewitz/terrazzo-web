@@ -8,8 +8,6 @@ import CollectionCard from '@/components/CollectionCard';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, SOURCE_STYLES } from '@/types';
-import ImportDrawer from '@/components/ImportDrawer';
-import { useImportStore } from '@/stores/importStore';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
@@ -55,10 +53,6 @@ function SavedPageContent() {
   const createCollectionAsync = useSavedStore(s => s.createCollectionAsync);
   const createSmartCollection = useSavedStore(s => s.createSmartCollection);
   const trips = useTripStore(s => s.trips);
-  const importOpen = useImportStore(s => s.isOpen);
-  const importPatch = useImportStore(s => s.patch);
-  const resetImport = useImportStore(s => s.reset);
-
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
 
@@ -77,9 +71,6 @@ function SavedPageContent() {
   }, [collections, collectionSortBy]);
 
   // ─── Library filtering ───
-  // Source and neighborhood filters removed from unified view — kept as constants for filteredPlaces compatibility
-  const sourceFilter = 'all';
-  const neighborhoodFilter = 'all';
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'type' | 'source'>('match');
 
   // Parse city from second segment, neighborhood from first
@@ -140,13 +131,6 @@ function SavedPageContent() {
         return city.toLowerCase() === cityFilter.toLowerCase();
       });
     }
-    // neighborhoodFilter is currently always 'all' — filtering placeholder for future use
-    if (sourceFilter !== 'all') {
-      places = places.filter(p => {
-        if (sourceFilter === 'friend') return !!p.friendAttribution;
-        return p.ghostSource === sourceFilter;
-      });
-    }
     // Sort
     const sorted = [...places];
     switch (sortBy) {
@@ -156,7 +140,7 @@ function SavedPageContent() {
       case 'source': sorted.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
     }
     return sorted;
-  }, [myPlaces, searchQuery, typeFilter, cityFilter, neighborhoodFilter, sourceFilter, sortBy, parseLocation]);
+  }, [myPlaces, searchQuery, typeFilter, cityFilter, sortBy, parseLocation]);
 
 
   // ─── Uncollected places (not in any collection) ───
@@ -394,9 +378,6 @@ function SavedPageContent() {
             }}
           />
         )}
-        {importOpen && (
-          <ImportDrawer onClose={() => { resetImport(); importPatch({ isOpen: false }); }} />
-        )}
       </div>
     );
   }
@@ -536,9 +517,6 @@ function SavedPageContent() {
       )}
       {addToTripItem && trips.length > 0 && (
         <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { if (!addToTripItem.isFavorited) { toggleStar(addToTripItem.id); } setAddToTripItem(null); }} />
-      )}
-      {importOpen && (
-        <ImportDrawer onClose={() => { resetImport(); importPatch({ isOpen: false }); }} />
       )}
       <TabBar />
     </div>

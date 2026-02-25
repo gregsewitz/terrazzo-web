@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import { useSavedStore } from '@/stores/savedStore';
-import { REACTIONS, ImportedPlace, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
+import { REACTIONS, ImportedPlace, PlaceType } from '@/types';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import GoogleMapView from '@/components/GoogleMapView';
@@ -38,14 +38,8 @@ function CollectionDetailContent() {
   const myPlaces = useSavedStore(s => s.myPlaces);
   const collections = useSavedStore(s => s.collections);
   const removePlaceFromCollection = useSavedStore(s => s.removePlaceFromCollection);
-  const addPlaceToCollection = useSavedStore(s => s.addPlaceToCollection);
   const deleteCollection = useSavedStore(s => s.deleteCollection);
   const updateCollection = useSavedStore(s => s.updateCollection);
-
-  // Auto-add newly searched places to this collection
-  const handlePlaceAdded = useCallback((place: ImportedPlace) => {
-    addPlaceToCollection(collectionId, place.id);
-  }, [addPlaceToCollection, collectionId]);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
