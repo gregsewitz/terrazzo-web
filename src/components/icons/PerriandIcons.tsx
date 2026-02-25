@@ -609,6 +609,11 @@ export function PerriandIcon({
   );
 }
 
+/** Check if a string is a valid Perriand icon name */
+export function isPerriandIconName(name: string): name is PerriandIconName {
+  return name in PATHS;
+}
+
 // ─── Convenience: icon name lookups for constants ────────────────────────────
 
 /** Place type → icon name mapping */

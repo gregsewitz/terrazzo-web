@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Collection, ImportedPlace } from '@/types';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
 interface CollectionCardProps {
@@ -17,7 +17,7 @@ function CollectionCardInner({
   onClick,
 }: CollectionCardProps) {
   const placeCount = collection.placeIds.length;
-  const isPerriandIcon = collection.emoji && !collection.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && collection.emoji.length > 2;
+  const isPerriandIcon = collection.emoji ? isPerriandIconName(collection.emoji) : false;
 
   return (
     <div

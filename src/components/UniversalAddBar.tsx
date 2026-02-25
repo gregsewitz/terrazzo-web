@@ -167,8 +167,8 @@ export default function UniversalAddBar() {
   }, [tripContext, collections, myPlaces]);
 
   // ─── Input detection + action ──────────────────────────────────────────
-  const handleInputSubmit = useCallback(async () => {
-    const trimmed = query.trim();
+  const handleInputSubmit = useCallback(async (overrideText?: string) => {
+    const trimmed = (overrideText ?? query).trim();
     if (!trimmed) return;
 
     const inputType = detectInputType(trimmed);
@@ -446,7 +446,7 @@ export default function UniversalAddBar() {
                       ))
                     ) : (
                       <button
-                        onClick={handleInputSubmit}
+                        onClick={() => handleInputSubmit()}
                         className="flex items-center gap-2.5 w-full px-3 py-3 rounded-xl cursor-pointer transition-all"
                         style={{
                           background: 'white',
@@ -556,7 +556,7 @@ export default function UniversalAddBar() {
                                   if (text) {
                                     setQuery(text);
                                     if (text.split('\n').filter(l => l.trim()).length >= 2) {
-                                      setTimeout(() => handleInputSubmit(), 50);
+                                      handleInputSubmit(text);
                                     }
                                   }
                                 } catch { /* clipboard permission denied */ }
@@ -577,7 +577,13 @@ export default function UniversalAddBar() {
                             onTap={async () => {
                               try {
                                 const text = await navigator.clipboard.readText();
-                                if (text) { setQuery(text); }
+                                if (text) {
+                                  setQuery(text);
+                                  const inputType = detectInputType(text.trim());
+                                  if (inputType === 'url' || inputType === 'google-maps') {
+                                    handleInputSubmit(text);
+                                  }
+                                }
                               } catch { /* clipboard permission denied */ }
                             }}
                           />
@@ -597,7 +603,7 @@ export default function UniversalAddBar() {
                                 const text = await navigator.clipboard.readText();
                                 if (text && text.split('\n').filter(l => l.trim()).length >= 2) {
                                   setQuery(text);
-                                  setTimeout(() => handleInputSubmit(), 50);
+                                  handleInputSubmit(text);
                                 } else if (text) {
                                   setQuery(text);
                                 }

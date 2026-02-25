@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
-import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 
@@ -182,7 +182,7 @@ export default function SharedViewPage() {
   // ─── Shared Collection View ───
   if (data.type === 'collection') {
     const { collection, places } = data.data;
-    const isPerriandIcon = collection.emoji && !collection.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && collection.emoji.length > 2;
+    const isPerriandIcon = collection.emoji ? isPerriandIconName(collection.emoji) : false;
 
     return (
       <div className="min-h-screen pb-24" style={{ background: 'var(--t-cream)', maxWidth: 640, margin: '0 auto' }}>

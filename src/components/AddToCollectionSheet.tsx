@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace } from '@/types';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
 export default function AddToCollectionSheet({
@@ -77,7 +77,7 @@ export default function AddToCollectionSheet({
         <div className="flex flex-col gap-1.5 mb-4 flex-1 min-h-0 overflow-y-auto">
           {collections.map(sl => {
             const isIn = sl.placeIds.includes(place.id);
-            const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
+            const isIcon = sl.emoji ? isPerriandIconName(sl.emoji) : false;
 
             return (
               <button
@@ -90,8 +90,8 @@ export default function AddToCollectionSheet({
                 }}
               >
                 {/* Emoji */}
-                <span style={{ fontSize: isPerriandIcon ? 14 : 16, width: 20, textAlign: 'center' }}>
-                  {isPerriandIcon ? (
+                <span style={{ fontSize: isIcon ? 14 : 16, width: 20, textAlign: 'center' }}>
+                  {isIcon ? (
                     <PerriandIcon name={sl.emoji as any} size={14} color="var(--t-ink)" />
                   ) : (
                     sl.emoji

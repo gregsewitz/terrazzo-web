@@ -6,7 +6,7 @@ import TabBar from '@/components/TabBar';
 import { useSavedStore } from '@/stores/savedStore';
 import { REACTIONS, ImportedPlace, SOURCE_STYLES, PlaceType, GhostSourceType } from '@/types';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import GoogleMapView from '@/components/GoogleMapView';
 import ShareSheet from '@/components/ShareSheet';
 import DesktopNav from '@/components/DesktopNav';
@@ -138,7 +138,7 @@ function CollectionDetailContent() {
     );
   }
 
-  const isPerriandIcon = collection.emoji && !collection.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && collection.emoji.length > 2;
+  const isPerriandIcon = collection.emoji ? isPerriandIconName(collection.emoji) : false;
 
 
   const startEditing = () => {

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { ImportedPlace, PlaceType } from '@/types';
 import { FONT, INK } from '@/constants/theme';
 
@@ -418,7 +418,7 @@ export default function PlaceSearchBar({ onPlaceAdded, skipCollectionPicker, pla
           <div style={{ maxHeight: 200, overflowY: 'auto' }}>
             {collections.map((sl) => {
               const isIn = sl.placeIds.includes(justAddedPlace.id);
-              const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
+              const isPerriandIcon = sl.emoji ? isPerriandIconName(sl.emoji) : false;
               return (
                 <button
                   key={sl.id}
