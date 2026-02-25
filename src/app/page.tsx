@@ -1,14 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
 
+// Hero images — one chosen at random per visit
+const HERO_IMAGES = [
+  '/onboarding/designers/AmanTokyo/AmanTokyo1.jpg',
+  '/onboarding/designers/CommodorePerryEstate/CommodorePerryEstate1.jpg',
+  '/onboarding/designers/TheNoMad/TheNoMad1.jpg',
+  '/onboarding/designers/RosewoodChancery/RosewoodChancery2.jpg',
+  '/onboarding/designers/LeGrandMazarin/LeGrandMazarin1.jpg',
+  '/onboarding/designers/ClivedenHouse/ClivedenHouse1.jpg',
+];
+
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Pick a random hero image on mount
+  const heroImage = useMemo(
+    () => HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)],
+    []
+  );
 
   // ─── Authenticated users: redirect straight to app ───
   const [hydrated, setHydrated] = useState(false);
@@ -65,7 +81,7 @@ export default function Home() {
   };
 
   // While checking auth, show brief loading
-  if (authLoading) {
+  if (authLoading || isAuthenticated) {
     return (
       <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
         <h1 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 32, color: 'var(--t-ink)' }} className="animate-pulse">
@@ -75,165 +91,235 @@ export default function Home() {
     );
   }
 
-  // If authenticated, show loading while redirect happens
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
-        <h1 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 32, color: 'var(--t-ink)' }} className="animate-pulse">
-          Terrazzo
-        </h1>
-      </div>
-    );
-  }
-
-  // ─── Splash page for unauthenticated visitors ───
+  // ─── Editorial landing page ───
   return (
-    <div
-      className="min-h-dvh flex flex-col items-center justify-center px-6"
-      style={{ background: 'var(--t-cream)' }}
-    >
-      {/* Hero */}
-      <div className="w-full max-w-[520px] text-center mb-10">
-        <h1
-          className="mb-3"
-          style={{
-            fontFamily: FONT.serif,
-            fontStyle: 'italic',
-            fontSize: 48,
-            color: 'var(--t-ink)',
-            lineHeight: 1.1,
-          }}
-        >
-          Terrazzo
-        </h1>
-        <p
-          className="mb-6"
-          style={{
-            fontFamily: FONT.sans,
-            fontSize: 17,
-            color: INK['60'],
-            letterSpacing: '-0.01em',
-          }}
-        >
-          Your bespoke travel concierge
-        </p>
-        <p
-          style={{
-            fontFamily: FONT.sans,
-            fontSize: 15,
-            color: INK['50'],
-            lineHeight: 1.6,
-            maxWidth: 420,
-            margin: '0 auto',
-          }}
-        >
-          Terrazzo learns your taste — the textures, the light, the details that make a place unforgettable — and helps you collect, curate, and plan trips that actually feel like you.
-        </p>
-      </div>
+    <div className="min-h-dvh flex flex-col lg:flex-row" style={{ background: 'var(--t-cream)' }}>
 
-      {/* Waitlist card */}
+      {/* ═══ LEFT: Content ═══ */}
       <div
-        className="w-full max-w-[400px] rounded-2xl p-8"
-        style={{
-          background: 'white',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
-          border: '1px solid var(--t-linen)',
-        }}
+        className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-20 py-16 lg:py-0"
+        style={{ minHeight: '60dvh' }}
       >
-        {status === 'success' ? (
-          <div className="text-center">
-            <div className="text-[28px] mb-4">&#x2728;</div>
-            <h2
-              className="text-[18px] font-semibold mb-2"
-              style={{ fontFamily: FONT.sans, color: 'var(--t-ink)' }}
-            >
-              You&apos;re on the list
-            </h2>
-            <p
-              className="text-[13px]"
-              style={{ color: INK['55'], fontFamily: FONT.sans, lineHeight: 1.5 }}
-            >
-              We&apos;ll be in touch when it&apos;s your turn. In the meantime, we&apos;re building something we think you&apos;ll love.
-            </p>
-          </div>
-        ) : (
-          <>
-            <p
-              className="text-center mb-5"
-              style={{
-                fontFamily: FONT.sans,
-                fontSize: 13,
-                color: INK['55'],
-                lineHeight: 1.5,
-              }}
-            >
-              Terrazzo is currently available by invitation only. Request an invitation and we&apos;ll let you know when a spot opens up.
-            </p>
+        <div style={{ maxWidth: 520 }}>
+          {/* EST. 2026 */}
+          <p
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 11,
+              fontWeight: 400,
+              letterSpacing: '0.25em',
+              color: INK['40'],
+              margin: '0 0 32px',
+              textTransform: 'uppercase',
+            }}
+          >
+            Est. 2026
+          </p>
 
-            <form onSubmit={handleSubmit}>
+          {/* Terrazzo */}
+          <h1
+            style={{
+              fontFamily: FONT.serif,
+              fontSize: 'clamp(56px, 8vw, 96px)',
+              fontWeight: 400,
+              color: 'var(--t-ink)',
+              lineHeight: 0.95,
+              margin: '0 0 28px',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Terrazzo
+          </h1>
+
+          {/* Tagline */}
+          <p
+            style={{
+              fontFamily: FONT.sans,
+              fontSize: 16,
+              color: INK['55'],
+              lineHeight: 1.6,
+              margin: '0 0 40px',
+              maxWidth: 400,
+            }}
+          >
+            Travel that understands you. We learn your taste and curate places that feel unmistakably yours.
+          </p>
+
+          {/* Waitlist form or success */}
+          {status === 'success' ? (
+            <div>
+              <div
+                className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl"
+                style={{
+                  background: 'rgba(42,122,86,0.06)',
+                  border: '1px solid rgba(42,122,86,0.12)',
+                }}
+              >
+                <span style={{ fontSize: 18 }}>&#10003;</span>
+                <div>
+                  <p style={{
+                    fontFamily: FONT.sans,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--t-ink)',
+                    margin: 0,
+                  }}>
+                    You&apos;re on the list
+                  </p>
+                  <p style={{
+                    fontFamily: FONT.sans,
+                    fontSize: 12,
+                    color: INK['50'],
+                    margin: '2px 0 0',
+                  }}>
+                    We&apos;ll be in touch when it&apos;s your turn.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3" style={{ maxWidth: 420 }}>
               <input
                 type="email"
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl py-3 px-4 mb-3"
                 style={{
+                  flex: 1,
+                  padding: '14px 18px',
                   fontSize: 16,
-                  background: 'var(--t-cream)',
+                  borderRadius: 12,
+                  background: 'white',
                   border: '1px solid var(--t-linen)',
                   color: 'var(--t-ink)',
                   fontFamily: FONT.sans,
                   outline: 'none',
                   boxSizing: 'border-box',
+                  minWidth: 0,
                 }}
               />
-
-              {status === 'error' && (
-                <p className="text-[11px] mb-2" style={{ color: '#c44', fontFamily: FONT.sans }}>
-                  {errorMsg}
-                </p>
-              )}
-
               <button
                 type="submit"
                 disabled={!email.trim() || status === 'sending'}
-                className="w-full py-3 rounded-xl text-[14px] font-semibold cursor-pointer"
                 style={{
+                  padding: '14px 28px',
+                  borderRadius: 100,
                   background: email.trim() ? 'var(--t-ink)' : INK['10'],
                   color: email.trim() ? 'white' : INK['30'],
                   border: 'none',
-                  fontFamily: FONT.sans,
+                  fontFamily: FONT.mono,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  cursor: email.trim() ? 'pointer' : 'default',
                   opacity: status === 'sending' ? 0.6 : 1,
-                  transition: 'all 150ms ease',
+                  transition: 'all 200ms ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
-                {status === 'sending' ? 'Requesting...' : 'Request an invitation'}
+                {status === 'sending' ? 'Sending...' : 'Request Access'}
               </button>
             </form>
-          </>
-        )}
+          )}
+
+          {status === 'error' && (
+            <p style={{
+              fontFamily: FONT.sans,
+              fontSize: 12,
+              color: 'var(--t-signal-red)',
+              margin: '10px 0 0',
+            }}>
+              {errorMsg}
+            </p>
+          )}
+
+          {/* Sign in + footer */}
+          <div className="mt-12 flex items-center gap-6">
+            <a
+              href="/login"
+              style={{
+                fontFamily: FONT.sans,
+                fontSize: 12,
+                color: INK['40'],
+                textDecoration: 'none',
+              }}
+            >
+              Already have an invitation? <span style={{ color: 'var(--t-ink)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Sign in</span>
+            </a>
+          </div>
+
+          <p
+            className="mt-16 lg:mt-24"
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 10,
+              color: INK['30'],
+              letterSpacing: '0.05em',
+            }}
+          >
+            &copy; 2026 Terrazzo
+          </p>
+        </div>
       </div>
 
-      {/* Sign in link */}
-      <a
-        href="/login"
-        className="mt-6 text-[12px]"
+      {/* ═══ RIGHT: Hero image ═══ */}
+      <div
+        className="hidden lg:block lg:w-[48%] xl:w-[50%]"
         style={{
-          color: INK['40'],
-          fontFamily: FONT.sans,
-          textDecoration: 'none',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        Already have an invitation? <span style={{ color: 'var(--t-verde)', textDecoration: 'underline' }}>Sign in</span>
-      </a>
+        <img
+          src={heroImage}
+          alt=""
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+      </div>
 
-      {/* Footer */}
-      <p
-        className="mt-16 text-[11px]"
-        style={{ color: INK['30'], fontFamily: FONT.sans }}
+      {/* ═══ MOBILE: Hero image (top strip) ═══ */}
+      <div
+        className="block lg:hidden order-first"
+        style={{
+          height: '35dvh',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
       >
-        &copy; 2026 Terrazzo
-      </p>
+        <img
+          src={heroImage}
+          alt=""
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 30%',
+          }}
+        />
+        {/* Gradient fade into cream */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 80,
+            background: 'linear-gradient(to top, var(--t-cream), transparent)',
+          }}
+        />
+      </div>
+
     </div>
   );
 }
