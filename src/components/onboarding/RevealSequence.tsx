@@ -148,7 +148,7 @@ function SurprisingSignals({ profile }: { profile: GeneratedTasteProfile }) {
         Things most people wouldn&apos;t guess
       </h2>
 
-      <div className="space-y-4 max-w-sm">
+      <div className="space-y-4 max-w-lg">
         {surprisingItems.map((item, i) => (
           <div
             key={i}
@@ -178,7 +178,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
         Here&apos;s something interesting
       </p>
 
-      <div className="max-w-sm space-y-4">
+      <div className="max-w-lg space-y-4">
         <div className="p-5 rounded-xl border border-[var(--t-travertine)]">
           <div className="flex items-start gap-3 mb-3">
             <div className="flex flex-col items-center gap-1">
@@ -274,7 +274,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
         </p>
       </div>
 
-      <div className="space-y-3 max-w-sm mx-auto">
+      <div className="space-y-3 max-w-lg mx-auto">
         {seedTrips.map((trip, i) => (
           <div
             key={i}

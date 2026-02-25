@@ -10,10 +10,10 @@ import type { User } from '@prisma/client';
 export const POST = authHandler(async (req: NextRequest, { params }: { params: Promise<{ token: string }> }, user: User) => {
 
   const { token } = await params;
-  const { placeIds, saveAll, createShortlist } = await req.json() as {
+  const { placeIds, saveAll, createCollection } = await req.json() as {
     placeIds?: string[];
     saveAll?: boolean;
-    createShortlist?: boolean;
+    createCollection?: boolean;
   };
 
   // Validate share link
@@ -25,21 +25,21 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     return Response.json({ error: 'Share link not found' }, { status: 404 });
   }
 
-  if (shareLink.resourceType !== 'shortlist') {
-    return Response.json({ error: 'Can only save from shared shortlists' }, { status: 400 });
+  if (shareLink.resourceType !== 'collection') {
+    return Response.json({ error: 'Can only save from shared collections' }, { status: 400 });
   }
 
-  // Get the shortlist
-  const shortlist = await prisma.shortlist.findUnique({
+  // Get the collection
+  const collection = await prisma.shortlist.findUnique({
     where: { id: shareLink.resourceId },
   });
 
-  if (!shortlist) {
-    return Response.json({ error: 'Shortlist no longer exists' }, { status: 404 });
+  if (!collection) {
+    return Response.json({ error: 'Collection no longer exists' }, { status: 404 });
   }
 
   // Determine which place IDs to save
-  const allPlaceIds = (shortlist.placeIds as string[]) || [];
+  const allPlaceIds = (collection.placeIds as string[]) || [];
   const targetIds = saveAll ? allPlaceIds : (placeIds || []);
 
   if (targetIds.length === 0) {
@@ -73,7 +73,7 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
       name: p.name,
       type: p.type,
       location: p.location || '',
-      source: { type: 'shared', name: shortlist.name } as Record<string, string>,
+      source: { type: 'shared', name: collection.name } as Record<string, string>,
       ghostSource: 'friend',
       matchScore: p.matchScore,
       matchBreakdown: toJson(p.matchBreakdown),
@@ -84,7 +84,7 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
       googleData: toJson(p.googleData),
       terrazzoInsight: toJson(p.terrazzoInsight),
       placeIntelligenceId: p.placeIntelligenceId,
-      isShortlisted: false,
+      isFavorited: false,
     }));
 
   let savedCount = 0;
@@ -99,21 +99,21 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     newPlaceIds.push(...created.map(p => p.id));
   }
 
-  // Optionally create a shortlist with these places
-  let newShortlist = null;
-  if (createShortlist && newPlaceIds.length > 0) {
+  // Optionally create a collection with these places
+  let newCollection = null;
+  if (createCollection && newPlaceIds.length > 0) {
     const ownerName = (await prisma.user.findUnique({
       where: { id: shareLink.userId },
       select: { name: true, email: true },
     }));
     const fromName = ownerName?.name || ownerName?.email?.split('@')[0] || 'a friend';
 
-    newShortlist = await prisma.shortlist.create({
+    newCollection = await prisma.shortlist.create({
       data: {
         userId: user.id,
-        name: `${shortlist.name} (from ${fromName})`,
-        description: shortlist.description,
-        emoji: shortlist.emoji,
+        name: `${collection.name} (from ${fromName})`,
+        description: collection.description,
+        emoji: collection.emoji,
         placeIds: newPlaceIds,
       },
     });
@@ -122,6 +122,6 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
   return Response.json({
     savedCount,
     skippedCount: sourcePlaces.length - newPlaces.length,
-    shortlist: newShortlist,
+    collection: newCollection,
   });
 });

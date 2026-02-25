@@ -41,7 +41,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
   }, [trip]);
 
   const allPicks = useMemo(() => {
-    return myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+    return myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
   }, [myPlaces, placedIds]);
 
   const filteredPicks = useMemo(() => {

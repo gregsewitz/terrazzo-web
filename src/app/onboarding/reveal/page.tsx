@@ -34,7 +34,7 @@ export default function RevealPage() {
     // Fallback: if no profile was generated (API failure), skip reveal
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
-        <div className="max-w-sm w-full text-center">
+        <div className="max-w-lg w-full text-center">
           <h2 className="font-serif text-[28px] text-[var(--t-ink)] mb-3">
             You&apos;re all set
           </h2>
@@ -56,7 +56,7 @@ export default function RevealPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--t-cream)] max-w-lg mx-auto">
+    <div className="min-h-dvh bg-[var(--t-cream)]">
       <RevealSequence profile={generatedProfile} onComplete={handleComplete} />
     </div>
   );

@@ -21,27 +21,27 @@ interface GoogleResult {
 }
 
 interface PlaceSearchBarProps {
-  /** Called after a place is added to the library — use to auto-add to a shortlist */
+  /** Called after a place is added to the library — use to auto-add to a collection */
   onPlaceAdded?: (place: ImportedPlace) => void;
-  /** If true, skip the shortlist picker after adding (used when inside a shortlist detail) */
-  skipShortlistPicker?: boolean;
+  /** If true, skip the collection picker after adding (used when inside a collection detail) */
+  skipCollectionPicker?: boolean;
   /** Placeholder text override */
   placeholder?: string;
 }
 
-export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, placeholder }: PlaceSearchBarProps = {}) {
+export default function PlaceSearchBar({ onPlaceAdded, skipCollectionPicker, placeholder }: PlaceSearchBarProps = {}) {
   const searchQuery = useSavedStore(s => s.searchQuery);
   const setSearchQuery = useSavedStore(s => s.setSearchQuery);
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
-  const shortlists = useSavedStore(s => s.shortlists);
-  const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
+  const collections = useSavedStore(s => s.collections);
+  const addPlaceToCollection = useSavedStore(s => s.addPlaceToCollection);
 
   const [googleResults, setGoogleResults] = useState<GoogleResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-  const [showShortlistPicker, setShowShortlistPicker] = useState(false);
+  const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const [justAddedPlace, setJustAddedPlace] = useState<ImportedPlace | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -91,12 +91,12 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
-        if (showShortlistPicker) dismissShortlistPicker();
+        if (showCollectionPicker) dismissCollectionPicker();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showShortlistPicker]);
+  }, [showCollectionPicker]);
 
   // Handle Escape
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -132,13 +132,13 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
     addPlace(newPlace);
     setAddedIds(prev => new Set(prev).add(result.id));
 
-    // Call the onPlaceAdded callback (e.g. auto-add to current shortlist)
+    // Call the onPlaceAdded callback (e.g. auto-add to current collection)
     onPlaceAdded?.(newPlace);
 
-    // Show shortlist picker unless told to skip
-    if (!skipShortlistPicker && shortlists.length > 0) {
+    // Show collection picker unless told to skip
+    if (!skipCollectionPicker && collections.length > 0) {
       setJustAddedPlace(newPlace);
-      setShowShortlistPicker(true);
+      setShowCollectionPicker(true);
       // Close the Google dropdown
       setShowDropdown(false);
       setGoogleResults([]);
@@ -154,13 +154,13 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
     }
   }
 
-  function handleShortlistToggle(shortlistId: string) {
+  function handleCollectionToggle(collectionId: string) {
     if (!justAddedPlace) return;
-    addPlaceToShortlist(shortlistId, justAddedPlace.id);
+    addPlaceToCollection(collectionId, justAddedPlace.id);
   }
 
-  function dismissShortlistPicker() {
-    setShowShortlistPicker(false);
+  function dismissCollectionPicker() {
+    setShowCollectionPicker(false);
     setJustAddedPlace(null);
     setAddedIds(new Set());
   }
@@ -358,8 +358,8 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
         </div>
       )}
 
-      {/* Quick add to shortlist picker */}
-      {showShortlistPicker && justAddedPlace && (
+      {/* Quick add to collection picker */}
+      {showCollectionPicker && justAddedPlace && (
         <div style={{
           position: 'absolute',
           top: '100%',
@@ -398,11 +398,11 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
                 color: INK['70'],
                 marginLeft: 8,
               }}>
-                Add to a shortlist?
+                Add to a collection?
               </span>
             </div>
             <button
-              onClick={dismissShortlistPicker}
+              onClick={dismissCollectionPicker}
               style={{
                 background: 'none',
                 border: 'none',
@@ -414,15 +414,15 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
             </button>
           </div>
 
-          {/* Shortlist options */}
+          {/* Collection options */}
           <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-            {shortlists.map((sl) => {
+            {collections.map((sl) => {
               const isIn = sl.placeIds.includes(justAddedPlace.id);
               const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
               return (
                 <button
                   key={sl.id}
-                  onClick={() => handleShortlistToggle(sl.id)}
+                  onClick={() => handleCollectionToggle(sl.id)}
                   disabled={isIn}
                   style={{
                     display: 'flex',
@@ -465,7 +465,7 @@ export default function PlaceSearchBar({ onPlaceAdded, skipShortlistPicker, plac
           {/* Done button */}
           <div style={{ padding: '8px 12px', borderTop: '1px solid var(--t-linen)' }}>
             <button
-              onClick={dismissShortlistPicker}
+              onClick={dismissCollectionPicker}
               style={{
                 width: '100%',
                 padding: '8px 0',

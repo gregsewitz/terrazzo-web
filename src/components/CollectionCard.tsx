@@ -1,23 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Shortlist, ImportedPlace } from '@/types';
+import { Collection, ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
-interface ShortlistCardProps {
-  shortlist: Shortlist;
+interface CollectionCardProps {
+  collection: Collection;
   places: ImportedPlace[];
   onClick: () => void;
 }
 
-function ShortlistCardInner({
-  shortlist,
+function CollectionCardInner({
+  collection,
   places,
   onClick,
-}: ShortlistCardProps) {
-  const placeCount = shortlist.placeIds.length;
-  const isPerriandIcon = shortlist.emoji && !shortlist.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && shortlist.emoji.length > 2;
+}: CollectionCardProps) {
+  const placeCount = collection.placeIds.length;
+  const isPerriandIcon = collection.emoji && !collection.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && collection.emoji.length > 2;
 
   return (
     <div
@@ -25,7 +25,7 @@ function ShortlistCardInner({
       className="rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
       style={{
         background: 'white',
-        border: shortlist.isDefault ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+        border: collection.isDefault ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
         boxSizing: 'border-box',
         padding: '10px 12px',
         overflow: 'hidden',
@@ -39,15 +39,15 @@ function ShortlistCardInner({
             width: 28,
             height: 28,
             borderRadius: 7,
-            background: shortlist.isDefault ? 'rgba(42,122,86,0.08)' : INK['04'],
+            background: collection.isDefault ? 'rgba(42,122,86,0.08)' : INK['04'],
           }}
         >
-          {shortlist.emoji && (
+          {collection.emoji && (
             <span style={{ fontSize: isPerriandIcon ? 13 : 15 }}>
               {isPerriandIcon ? (
-                <PerriandIcon name={shortlist.emoji as any} size={13} color={shortlist.isDefault ? 'var(--t-verde)' : INK['70']} />
+                <PerriandIcon name={collection.emoji as any} size={13} color={collection.isDefault ? 'var(--t-verde)' : INK['70']} />
               ) : (
-                shortlist.emoji
+                collection.emoji
               )}
             </span>
           )}
@@ -57,13 +57,13 @@ function ShortlistCardInner({
             className="text-[12px] font-semibold truncate"
             style={{ fontFamily: FONT.sans, color: 'var(--t-ink)', lineHeight: 1.3 }}
           >
-            {shortlist.name}
+            {collection.name}
           </div>
           <div className="flex items-center gap-1.5" style={{ marginTop: 2 }}>
             <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], whiteSpace: 'nowrap' }}>
               {placeCount} {placeCount === 1 ? 'place' : 'places'}
             </span>
-            {shortlist.isSmartCollection && (
+            {collection.isSmartCollection && (
               <>
                 <span style={{ color: INK['15'], fontSize: 8 }}>·</span>
                 <span style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-verde)', whiteSpace: 'nowrap' }}>
@@ -78,6 +78,6 @@ function ShortlistCardInner({
   );
 }
 
-const ShortlistCard = React.memo(ShortlistCardInner);
-ShortlistCard.displayName = 'ShortlistCard';
-export default ShortlistCard;
+const CollectionCard = React.memo(CollectionCardInner);
+CollectionCard.displayName = 'CollectionCard';
+export default CollectionCard;

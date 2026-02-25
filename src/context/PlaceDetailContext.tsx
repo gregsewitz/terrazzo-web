@@ -5,7 +5,7 @@ import { ImportedPlace, PlaceRating } from '@/types';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import BriefingView from '@/components/BriefingView';
-import AddToShortlistSheet from '@/components/AddToShortlistSheet';
+import AddToCollectionSheet from '@/components/AddToCollectionSheet';
 
 // ─── Config: each page provides its own callbacks ───
 
@@ -30,8 +30,8 @@ interface PlaceDetailAPI {
   closeDetail: () => void;
   /** Currently open detail item (for pages that need to reference it) */
   detailItem: ImportedPlace | null;
-  /** Open the "Add to Shortlist" picker for a place (can be called from cards, etc.) */
-  openShortlistPicker: (place: ImportedPlace) => void;
+  /** Open the "Add to Collection" picker for a place (can be called from cards, etc.) */
+  openCollectionPicker: (place: ImportedPlace) => void;
 }
 
 const PlaceDetailContext = createContext<PlaceDetailAPI | null>(null);
@@ -56,7 +56,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
   const [ratingItem, setRatingItem] = useState<ImportedPlace | null>(null);
   const [ratingInitialStep, setRatingInitialStep] = useState<'gut' | 'details' | 'note'>('gut');
   const [briefingPlace, setBriefingPlace] = useState<{ id: string; name: string; matchScore?: number; place?: ImportedPlace } | null>(null);
-  const [shortlistPickerItem, setShortlistPickerItem] = useState<ImportedPlace | null>(null);
+  const [collectionPickerItem, setCollectionPickerItem] = useState<ImportedPlace | null>(null);
 
   // ─── Public API ───
   const openDetail = useCallback((place: ImportedPlace) => {
@@ -95,12 +95,12 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     }
   }, [detailItem]);
 
-  const handleShortlistTap = useCallback(() => {
-    if (detailItem) setShortlistPickerItem(detailItem);
+  const handleCollectionTap = useCallback(() => {
+    if (detailItem) setCollectionPickerItem(detailItem);
   }, [detailItem]);
 
-  const openShortlistPicker = useCallback((place: ImportedPlace) => {
-    setShortlistPickerItem(place);
+  const openCollectionPicker = useCallback((place: ImportedPlace) => {
+    setCollectionPickerItem(place);
   }, []);
 
   const handleSaveFromPreview = useCallback(() => {
@@ -123,7 +123,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     ? config.getSiblingPlaces(detailItem)
     : undefined;
 
-  const api: PlaceDetailAPI = { openDetail, openPreview, closeDetail, detailItem, openShortlistPicker };
+  const api: PlaceDetailAPI = { openDetail, openPreview, closeDetail, detailItem, openCollectionPicker };
 
   return (
     <PlaceDetailContext.Provider value={api}>
@@ -136,7 +136,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           onClose={closeDetail}
           onRate={isDetailPreview ? undefined : handleRate}
           onEditRating={isDetailPreview ? undefined : handleEditRating}
-          onShortlistTap={isDetailPreview ? undefined : handleShortlistTap}
+          onCollectionTap={isDetailPreview ? undefined : handleCollectionTap}
           onViewBriefing={isDetailPreview ? undefined : handleViewBriefing}
           siblingPlaces={siblingPlaces}
         />
@@ -163,11 +163,11 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
         />
       )}
 
-      {/* ═══ Add to Shortlist Sheet ═══ */}
-      {shortlistPickerItem && (
-        <AddToShortlistSheet
-          place={shortlistPickerItem}
-          onClose={() => setShortlistPickerItem(null)}
+      {/* ═══ Add to Collection Sheet ═══ */}
+      {collectionPickerItem && (
+        <AddToCollectionSheet
+          place={collectionPickerItem}
+          onClose={() => setCollectionPickerItem(null)}
         />
       )}
     </PlaceDetailContext.Provider>

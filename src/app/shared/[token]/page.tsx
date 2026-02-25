@@ -27,12 +27,12 @@ interface SharedPlace {
   terrazzoInsight: { why?: string; caveat?: string } | null;
 }
 
-interface SharedShortlistData {
-  type: 'shortlist';
+interface SharedCollectionData {
+  type: 'collection';
   ownerName: string;
   permission: string;
   data: {
-    shortlist: {
+    collection: {
       id: string;
       name: string;
       description: string | null;
@@ -72,7 +72,7 @@ interface SharedTripData {
   };
 }
 
-type SharedData = SharedShortlistData | SharedTripData;
+type SharedData = SharedCollectionData | SharedTripData;
 
 export default function SharedViewPage() {
   const params = useParams();
@@ -116,7 +116,7 @@ export default function SharedViewPage() {
     try {
       await apiFetch(`/api/shared/${token}/save`, {
         method: 'POST',
-        body: JSON.stringify({ saveAll: true, createShortlist: true }),
+        body: JSON.stringify({ saveAll: true, createCollection: true }),
       });
       setSaved(true);
     } catch {
@@ -179,10 +179,10 @@ export default function SharedViewPage() {
 
   if (!data) return null;
 
-  // ─── Shared Shortlist View ───
-  if (data.type === 'shortlist') {
-    const { shortlist, places } = data.data;
-    const isPerriandIcon = shortlist.emoji && !shortlist.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && shortlist.emoji.length > 2;
+  // ─── Shared Collection View ───
+  if (data.type === 'collection') {
+    const { collection, places } = data.data;
+    const isPerriandIcon = collection.emoji && !collection.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && collection.emoji.length > 2;
 
     return (
       <div className="min-h-screen pb-24" style={{ background: 'var(--t-cream)', maxWidth: 640, margin: '0 auto' }}>
@@ -200,22 +200,22 @@ export default function SharedViewPage() {
           <div className="text-center mb-6">
             <div className="mb-2">
               {isPerriandIcon ? (
-                <PerriandIcon name={shortlist.emoji as PerriandIconName} size={28} color={INK['50']} />
+                <PerriandIcon name={collection.emoji as PerriandIconName} size={28} color={INK['50']} />
               ) : (
-                <span style={{ fontSize: 28 }}>{shortlist.emoji || '✨'}</span>
+                <span style={{ fontSize: 28 }}>{collection.emoji || '✨'}</span>
               )}
             </div>
             <h1
               style={{ fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic', color: 'var(--t-ink)', marginBottom: 4 }}
             >
-              {shortlist.name}
+              {collection.name}
             </h1>
             <p className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
               Shared by {data.ownerName} · {places.length} place{places.length !== 1 ? 's' : ''}
             </p>
-            {shortlist.description && (
+            {collection.description && (
               <p className="text-[12px] mt-2 mx-4" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-                {shortlist.description}
+                {collection.description}
               </p>
             )}
           </div>

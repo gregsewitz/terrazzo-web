@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchPlace, priceLevelToString } from '@/lib/places';
+import { searchPlace, searchPlaces, priceLevelToString, mapGoogleTypeToPlaceType, getPhotoUrl } from '@/lib/places';
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, locationBias } = await request.json();
+    const { query, locationBias, multi } = await request.json();
 
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, {
@@ -19,6 +19,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Multi-result mode for Add Bar blended search
+    if (multi) {
+      const results = await searchPlaces(query, 5);
+      const mapped = results.map(r => ({
+        name: r.displayName?.text || '',
+        placeId: r.id,
+        address: r.formattedAddress,
+        type: mapGoogleTypeToPlaceType(r.primaryType),
+        lat: r.location?.latitude,
+        lng: r.location?.longitude,
+        photoUrl: r.photos?.[0]?.name ? getPhotoUrl(r.photos[0].name, 200) : undefined,
+      }));
+      return NextResponse.json(mapped, {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
+      });
+    }
+
+    // Single-result mode (existing behavior)
     const result = await searchPlace(query, locationBias);
 
     if (!result) {

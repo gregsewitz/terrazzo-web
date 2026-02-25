@@ -6,27 +6,27 @@ import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
-export default function AddToShortlistSheet({
+export default function AddToCollectionSheet({
   place,
   onClose,
 }: {
   place: ImportedPlace;
   onClose: () => void;
 }) {
-  const shortlists = useSavedStore(s => s.shortlists);
-  const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
-  const removePlaceFromShortlist = useSavedStore(s => s.removePlaceFromShortlist);
-  const createShortlistAsync = useSavedStore(s => s.createShortlistAsync);
+  const collections = useSavedStore(s => s.collections);
+  const addPlaceToCollection = useSavedStore(s => s.addPlaceToCollection);
+  const removePlaceFromCollection = useSavedStore(s => s.removePlaceFromCollection);
+  const createCollectionAsync = useSavedStore(s => s.createCollectionAsync);
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const toggleMembership = (shortlistId: string, isIn: boolean) => {
+  const toggleMembership = (collectionId: string, isIn: boolean) => {
     if (isIn) {
-      removePlaceFromShortlist(shortlistId, place.id);
+      removePlaceFromCollection(collectionId, place.id);
     } else {
-      addPlaceToShortlist(shortlistId, place.id);
+      addPlaceToCollection(collectionId, place.id);
     }
   };
 
@@ -34,8 +34,8 @@ export default function AddToShortlistSheet({
     if (!newName.trim() || creating) return;
     setCreating(true);
     try {
-      const realId = await createShortlistAsync(newName.trim(), 'pin');
-      addPlaceToShortlist(realId, place.id);
+      const realId = await createCollectionAsync(newName.trim(), 'pin');
+      addPlaceToCollection(realId, place.id);
       setNewName('');
       setShowCreate(false);
     } finally {
@@ -60,7 +60,7 @@ export default function AddToShortlistSheet({
           <span
             style={{ fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
           >
-            Add to Shortlist
+            Add to Collection
           </span>
           <button
             onClick={onClose}
@@ -73,9 +73,9 @@ export default function AddToShortlistSheet({
           {place.name}
         </div>
 
-        {/* Shortlist list */}
+        {/* Collection list */}
         <div className="flex flex-col gap-1.5 mb-4 flex-1 min-h-0 overflow-y-auto">
-          {shortlists.map(sl => {
+          {collections.map(sl => {
             const isIn = sl.placeIds.includes(place.id);
             const isPerriandIcon = sl.emoji && !sl.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && sl.emoji.length > 2;
 
@@ -124,13 +124,13 @@ export default function AddToShortlistSheet({
           })}
         </div>
 
-        {/* Create new shortlist inline */}
+        {/* Create new collection inline */}
         <div className="flex-shrink-0">
         {showCreate ? (
           <div className="flex gap-2 items-center">
             <input
               type="text"
-              placeholder="New shortlist name..."
+              placeholder="New collection name..."
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               autoFocus
@@ -172,7 +172,7 @@ export default function AddToShortlistSheet({
             }}
           >
             <span style={{ fontSize: 13 }}>+</span>
-            New Shortlist
+            New Collection
           </button>
         )}
         </div>

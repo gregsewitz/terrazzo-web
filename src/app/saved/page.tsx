@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
-import ShortlistCard from '@/components/ShortlistCard';
+import CollectionCard from '@/components/CollectionCard';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { REACTIONS, PlaceType, ImportedPlace, SOURCE_STYLES } from '@/types';
@@ -15,7 +15,7 @@ import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
-import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
+import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -43,45 +43,43 @@ export default function SavedPage() {
 function SavedPageContent() {
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const { openDetail, openShortlistPicker } = usePlaceDetail();
+  const { openDetail, openCollectionPicker } = usePlaceDetail();
   const myPlaces = useSavedStore(s => s.myPlaces);
-  const shortlists = useSavedStore(s => s.shortlists);
-  const activeView = useSavedStore(s => s.activeView);
-  const setActiveView = useSavedStore(s => s.setActiveView);
+  const collections = useSavedStore(s => s.collections);
   const searchQuery = useSavedStore(s => s.searchQuery);
-  const setSearchQuery = useSavedStore(s => s.setSearchQuery);
   const typeFilter = useSavedStore(s => s.typeFilter);
   const setTypeFilter = useSavedStore(s => s.setTypeFilter);
   const cityFilter = useSavedStore(s => s.cityFilter);
   const setCityFilter = useSavedStore(s => s.setCityFilter);
   const toggleStar = useSavedStore(s => s.toggleStar);
-  const createShortlistAsync = useSavedStore(s => s.createShortlistAsync);
-  const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
+  const createCollectionAsync = useSavedStore(s => s.createCollectionAsync);
+  const createSmartCollection = useSavedStore(s => s.createSmartCollection);
   const trips = useTripStore(s => s.trips);
   const importOpen = useImportStore(s => s.isOpen);
   const importPatch = useImportStore(s => s.patch);
   const resetImport = useImportStore(s => s.reset);
 
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
-  const [showCreateShortlist, setShowCreateShortlist] = useState(false);
+  const [showCreateCollection, setShowCreateCollection] = useState(false);
 
-  // ─── Shortlist sorting ───
-  const [shortlistSortBy, setShortlistSortBy] = useState<'recent' | 'name' | 'places' | 'updated'>('recent');
+  // ─── Collection sorting ───
+  const [collectionSortBy, setCollectionSortBy] = useState<'recent' | 'name' | 'places' | 'updated'>('recent');
 
-  const sortedShortlists = useMemo(() => {
-    const sorted = [...shortlists];
-    switch (shortlistSortBy) {
+  const sortedCollections = useMemo(() => {
+    const sorted = [...collections];
+    switch (collectionSortBy) {
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'places': sorted.sort((a, b) => b.placeIds.length - a.placeIds.length); break;
       case 'updated': sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()); break;
       default: sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
     }
     return sorted;
-  }, [shortlists, shortlistSortBy]);
+  }, [collections, collectionSortBy]);
 
   // ─── Library filtering ───
-  const [sourceFilter, setSourceFilter] = useState<string>('all');
-  const [neighborhoodFilter, setNeighborhoodFilter] = useState<string>('all');
+  // Source and neighborhood filters removed from unified view — kept as constants for filteredPlaces compatibility
+  const sourceFilter = 'all';
+  const neighborhoodFilter = 'all';
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'type' | 'source'>('match');
 
   // Parse city from second segment, neighborhood from first
@@ -95,7 +93,7 @@ function SavedPageContent() {
   }, []);
 
   // Build city → neighborhoods map
-  const { allCities, cityNeighborhoods } = useMemo(() => {
+  const { allCities } = useMemo(() => {
     const cityCount: Record<string, number> = {};
     const neighborhoods: Record<string, Set<string>> = {};
     myPlaces.forEach(p => {
@@ -167,14 +165,20 @@ function SavedPageContent() {
   }, [myPlaces, searchQuery, typeFilter, cityFilter, neighborhoodFilter, sourceFilter, sortBy, parseLocation]);
 
 
-  /* ─── Desktop Collect layout ─── */
+  // ─── Uncollected places (not in any collection) ───
+  const uncollectedPlaces = useMemo(() => {
+    const collectedIds = new Set(collections.flatMap(sl => sl.placeIds));
+    return filteredPlaces.filter(p => !collectedIds.has(p.id));
+  }, [filteredPlaces, collections]);
+
+  /* ─── Desktop Library layout (unified) ─── */
   if (isDesktop) {
     return (
       <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 48px 48px' }}>
           {/* ═══ Header row ═══ */}
-          <div className="flex items-end justify-between mb-8">
+          <div className="flex items-end justify-between mb-6">
             <div>
               <h1
                 style={{
@@ -186,13 +190,14 @@ function SavedPageContent() {
                   lineHeight: 1.2,
                 }}
               >
-                Collect
+                Library
               </h1>
               <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
                 {myPlaces.length} places across {allCities.length} {allCities.length === 1 ? 'city' : 'cities'}
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <PlaceSearchBar />
               <button
                 onClick={() => importPatch({ isOpen: true })}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
@@ -212,7 +217,7 @@ function SavedPageContent() {
                 Import
               </button>
               <button
-                onClick={() => setShowCreateShortlist(true)}
+                onClick={() => setShowCreateCollection(true)}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
                 style={{
                   background: 'var(--t-ink)',
@@ -223,38 +228,43 @@ function SavedPageContent() {
                   fontFamily: FONT.sans,
                 }}
               >
-                <span>+</span> New Shortlist
+                <span>+</span> New Collection
               </button>
             </div>
           </div>
 
-          {/* ═══ View toggle ═══ */}
+          {/* ═══ Type filter chips (always visible) ═══ */}
           <div className="flex items-center gap-1.5 mb-7">
-            {(['shortlists', 'library'] as const).map(view => (
+            {TYPE_CHIPS_WITH_ALL.map(chip => (
               <button
-                key={view}
-                onClick={() => setActiveView(view)}
-                className="px-5 py-2.5 rounded-full text-[13px] font-medium cursor-pointer btn-hover"
+                key={chip.value}
+                onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-medium cursor-pointer btn-hover"
                 style={{
-                  background: activeView === view ? 'var(--t-ink)' : 'transparent',
-                  color: activeView === view ? 'white' : INK['60'],
-                  border: activeView === view ? 'none' : '1px solid var(--t-linen)',
+                  background: typeFilter === chip.value ? 'var(--t-ink)' : 'white',
+                  color: typeFilter === chip.value ? 'white' : INK['60'],
+                  border: typeFilter === chip.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
                   fontFamily: FONT.sans,
                   transition: 'all 150ms ease',
                 }}
               >
-                {view === 'shortlists' ? `Shortlists (${shortlists.length})` : `Library (${filteredPlaces.length})`}
+                <PerriandIcon
+                  name={chip.icon}
+                  size={13}
+                  color={typeFilter === chip.value ? 'white' : INK['50']}
+                />
+                {chip.label}
               </button>
             ))}
           </div>
 
-          {/* ═══ Shortlists — Desktop grid ═══ */}
-          {activeView === 'shortlists' && (
-            <>
-              <div className="flex items-center gap-4 mb-5">
-                <div style={{ maxWidth: 400, flex: 1 }}>
-                  <PlaceSearchBar />
-                </div>
+          {/* ═══ Collections section ═══ */}
+          {sortedCollections.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
+                  Collections
+                </h2>
                 <FilterSortBar
                   sortOptions={[
                     { value: 'recent', label: 'Recently created' },
@@ -262,94 +272,55 @@ function SavedPageContent() {
                     { value: 'name', label: 'A–Z' },
                     { value: 'places', label: 'Most places' },
                   ]}
-                  sortValue={shortlistSortBy}
-                  onSortChange={(v) => setShortlistSortBy(v as any)}
+                  sortValue={collectionSortBy}
+                  onSortChange={(v) => setCollectionSortBy(v as any)}
                   compact
                 />
               </div>
-              {sortedShortlists.length > 0 ? (
-                <div
-                  className="grid gap-3"
-                  style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
-                >
-                  {sortedShortlists.map(sl => (
-                    <ShortlistCard
-                      key={sl.id}
-                      shortlist={sl}
-                      places={myPlaces}
-                      onClick={() => router.push(`/saved/shortlists/${sl.id}`)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <PerriandIcon name="saved" size={36} color={INK['15']} />
-                  <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>No shortlists yet</p>
-                </div>
-              )}
-            </>
+              <div
+                className="grid gap-3"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+              >
+                {sortedCollections.map(sl => (
+                  <CollectionCard
+                    key={sl.id}
+                    collection={sl}
+                    places={myPlaces}
+                    onClick={() => router.push(`/saved/collections/${sl.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
           )}
 
-          {/* ═══ Library — Desktop sidebar filters + grid ═══ */}
-          {activeView === 'library' && (
-            <div className="flex gap-8">
-              {/* Left sidebar: filters */}
-              <div className="flex-shrink-0" style={{ width: 220 }}>
-                <div className="mb-5">
-                  <PlaceSearchBar />
-                </div>
-
+          {/* ═══ All Places grid ═══ */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
+                {typeFilter !== 'all' ? `${TYPE_CHIPS_WITH_ALL.find(c => c.value === typeFilter)?.label || 'Filtered'} places` : 'All places'}
+                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['50'], fontStyle: 'normal', marginLeft: 8 }}>
+                  {filteredPlaces.length}
+                </span>
+              </h2>
+              <div className="flex items-center gap-3">
+                {allCities.length > 1 && (
+                  <select
+                    value={cityFilter}
+                    onChange={(e) => handleCityFilter(e.target.value)}
+                    className="rounded-lg px-3 py-1.5 text-[12px] cursor-pointer"
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--t-linen)',
+                      color: cityFilter !== 'all' ? 'var(--t-ink)' : INK['60'],
+                      fontFamily: FONT.sans,
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="all">All cities</option>
+                    {allCities.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                )}
                 <FilterSortBar
-                  filterGroups={[
-                    {
-                      key: 'type',
-                      label: 'Type',
-                      options: [
-                        { value: 'all', label: 'All types' },
-                        { value: 'restaurant', label: 'Restaurant' },
-                        { value: 'bar', label: 'Bar' },
-                        { value: 'cafe', label: 'Café' },
-                        { value: 'hotel', label: 'Hotel' },
-                        { value: 'museum', label: 'Museum' },
-                        { value: 'activity', label: 'Activity' },
-                      ],
-                      value: typeFilter,
-                      onChange: (v) => setTypeFilter(v as any),
-                    },
-                    ...(allCities.length > 1 ? [{
-                      key: 'city',
-                      label: 'City',
-                      options: [
-                        { value: 'all', label: 'All cities' },
-                        ...allCities.map(c => ({ value: c, label: c })),
-                      ],
-                      value: cityFilter,
-                      onChange: (v: string) => handleCityFilter(v),
-                    }] : []),
-                    ...(cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 ? [{
-                      key: 'neighborhood',
-                      label: 'Neighborhood',
-                      options: [
-                        { value: 'all', label: 'All areas' },
-                        ...cityNeighborhoods[cityFilter].map(nb => ({ value: nb, label: nb })),
-                      ],
-                      value: neighborhoodFilter,
-                      onChange: (v: string) => setNeighborhoodFilter(v),
-                    }] : []),
-                    {
-                      key: 'source',
-                      label: 'Source',
-                      options: [
-                        { value: 'all', label: 'All sources' },
-                        { value: 'friend', label: 'Friends' },
-                        { value: 'article', label: 'Articles' },
-                        { value: 'maps', label: 'Maps' },
-                        { value: 'email', label: 'Email' },
-                      ],
-                      value: sourceFilter,
-                      onChange: (v) => setSourceFilter(v),
-                    },
-                  ]}
                   sortOptions={[
                     { value: 'match', label: 'Match %' },
                     { value: 'name', label: 'A–Z' },
@@ -358,54 +329,79 @@ function SavedPageContent() {
                   ]}
                   sortValue={sortBy}
                   onSortChange={(v) => setSortBy(v as any)}
-                  onResetAll={() => { setTypeFilter('all'); handleCityFilter('all'); setSourceFilter('all'); setSortBy('match'); }}
+                  compact
                 />
               </div>
+            </div>
+            {filteredPlaces.length > 0 ? (
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
+              >
+                {filteredPlaces.map(place => (
+                  <PlaceCard
+                    key={place.id}
+                    place={place}
+                    onTap={() => openDetail(place)}
+                    onToggleStar={() => openCollectionPicker(place)}
+                    onLongPress={() => setAddToTripItem(place)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <PerriandIcon name="discover" size={36} color={INK['15']} />
+                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
+                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
+                    ? 'No places match your filters'
+                    : 'No saved places yet'}
+                </p>
+              </div>
+            )}
+          </div>
 
-              {/* Right: place grid */}
-              <div className="flex-1 min-w-0">
-                {filteredPlaces.length > 0 ? (
-                  <div
-                    className="grid gap-4"
-                    style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
-                  >
-                    {filteredPlaces.map(place => (
-                      <PlaceCard
-                        key={place.id}
-                        place={place}
-                        onTap={() => openDetail(place)}
-                        onToggleStar={() => openShortlistPicker(place)}
-                        onLongPress={() => setAddToTripItem(place)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-16">
-                    <PerriandIcon name="discover" size={36} color={INK['15']} />
-                    <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
-                      {searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all'
-                        ? 'No places match your filters'
-                        : 'No saved places yet'}
-                    </p>
-                  </div>
-                )}
+          {/* ═══ Uncollected section ═══ */}
+          {uncollectedPlaces.length > 0 && uncollectedPlaces.length < filteredPlaces.length && typeFilter === 'all' && (
+            <div className="mt-10 pt-8" style={{ borderTop: '1px solid var(--t-linen)' }}>
+              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 18, color: INK['70'], margin: '0 0 12px' }}>
+                Uncollected
+                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['40'], fontStyle: 'normal', marginLeft: 8 }}>
+                  {uncollectedPlaces.length}
+                </span>
+              </h2>
+              <p style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'], margin: '0 0 16px' }}>
+                These places aren&apos;t in any collection yet
+              </p>
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
+              >
+                {uncollectedPlaces.map(place => (
+                  <PlaceCard
+                    key={place.id}
+                    place={place}
+                    onTap={() => openDetail(place)}
+                    onToggleStar={() => openCollectionPicker(place)}
+                    onLongPress={() => setAddToTripItem(place)}
+                  />
+                ))}
               </div>
             </div>
           )}
         </div>
 
         {/* ═══ Shared overlays ═══ */}
-        {showCreateShortlist && (
-          <CreateShortlistModal
-            onClose={() => setShowCreateShortlist(false)}
+        {showCreateCollection && (
+          <CreateCollectionModal
+            onClose={() => setShowCreateCollection(false)}
             onCreate={async (name, emoji) => {
-              setShowCreateShortlist(false);
-              const realId = await createShortlistAsync(name, emoji);
-              router.push(`/saved/shortlists/${realId}`);
+              setShowCreateCollection(false);
+              const realId = await createCollectionAsync(name, emoji);
+              router.push(`/saved/collections/${realId}`);
             }}
             onCreateSmart={(name, emoji, query, filterTags, placeIds) => {
-              createSmartShortlist(name, emoji, query, filterTags, placeIds);
-              setShowCreateShortlist(false);
+              createSmartCollection(name, emoji, query, filterTags, placeIds);
+              setShowCreateCollection(false);
             }}
           />
         )}
@@ -415,7 +411,7 @@ function SavedPageContent() {
             trips={trips}
             onClose={() => setAddToTripItem(null)}
             onAdd={(tripId) => {
-              if (!addToTripItem.isShortlisted) {
+              if (!addToTripItem.isFavorited) {
                 toggleStar(addToTripItem.id);
               }
               setAddToTripItem(null);
@@ -429,196 +425,148 @@ function SavedPageContent() {
     );
   }
 
-  /* ─── Mobile Collect layout (unchanged) ─── */
+  /* ─── Mobile Library layout (unified) ─── */
   return (
     <div className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64, overflowX: 'hidden', boxSizing: 'border-box' }}>
       <div className="px-4 pt-5">
         {/* ═══ Header ═══ */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span
-              onClick={() => setActiveView('shortlists')}
-              className="cursor-pointer transition-all"
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1
               style={{
                 fontFamily: FONT.serif,
                 fontStyle: 'italic',
-                fontSize: activeView === 'shortlists' ? 22 : 14,
-                color: activeView === 'shortlists' ? 'var(--t-ink)' : INK['70'],
-                lineHeight: 1.2,
-              }}
-            >
-              Shortlists
-            </span>
-            <span style={{ color: INK['12'], fontSize: 16, fontWeight: 300 }}>|</span>
-            <span
-              onClick={() => setActiveView('library')}
-              className="cursor-pointer transition-all"
-              style={{
-                fontFamily: FONT.serif,
-                fontStyle: 'italic',
-                fontSize: activeView === 'library' ? 22 : 14,
-                color: activeView === 'library' ? 'var(--t-ink)' : INK['70'],
+                fontSize: 22,
+                color: 'var(--t-ink)',
+                margin: 0,
                 lineHeight: 1.2,
               }}
             >
               Library
-            </span>
-            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['70'] }}>
-              {activeView === 'library' ? filteredPlaces.length : shortlists.length}
+            </h1>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
+              {myPlaces.length} places
             </span>
           </div>
+          <button
+            onClick={() => importPatch({ isOpen: true })}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '9px 12px', borderRadius: 10, background: 'rgba(232,115,58,0.08)', border: '1px solid rgba(232,115,58,0.15)', color: '#c45020', fontSize: 10, fontWeight: 600, fontFamily: FONT.mono, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+            Import
+          </button>
         </div>
 
-        {/* Shortlists */}
-        {activeView === 'shortlists' && (
-          <div>
-            <div className="mb-3"><PlaceSearchBar /></div>
-            <div className="flex items-center gap-2 mb-4">
+        {/* ═══ Search ═══ */}
+        <div className="mb-3"><PlaceSearchBar /></div>
+
+        {/* ═══ Type filter chips (scrollable) ═══ */}
+        <div
+          className="flex gap-1.5 mb-5 -mx-4 px-4"
+          style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
+          {TYPE_CHIPS_WITH_ALL.map(chip => (
+            <button
+              key={chip.value}
+              onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
+              style={{
+                background: typeFilter === chip.value ? 'var(--t-ink)' : 'white',
+                color: typeFilter === chip.value ? 'white' : INK['60'],
+                border: typeFilter === chip.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+                fontFamily: FONT.sans,
+                transition: 'all 150ms ease',
+              }}
+            >
+              <PerriandIcon
+                name={chip.icon}
+                size={11}
+                color={typeFilter === chip.value ? 'white' : INK['50']}
+              />
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ═══ Collections section ═══ */}
+        {sortedCollections.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: 'var(--t-ink)', margin: 0 }}>
+                Collections
+                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontStyle: 'normal', marginLeft: 6 }}>
+                  {collections.length}
+                </span>
+              </h2>
               <button
-                onClick={() => setShowCreateShortlist(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer transition-all hover:opacity-90"
+                onClick={() => setShowCreateCollection(true)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer"
                 style={{
                   background: 'var(--t-ink)',
                   color: 'white',
                   border: 'none',
                   fontFamily: FONT.sans,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: 600,
-                  whiteSpace: 'nowrap',
                 }}
               >
-                <span style={{ fontSize: 15, lineHeight: 1, fontWeight: 400 }}>+</span> New Shortlist
+                <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>+</span> New
               </button>
-              <FilterSortBar
-                sortOptions={[
-                  { value: 'recent', label: 'Recently created' },
-                  { value: 'updated', label: 'Recently updated' },
-                  { value: 'name', label: 'A–Z' },
-                  { value: 'places', label: 'Most places' },
-                ]}
-                sortValue={shortlistSortBy}
-                onSortChange={(v) => setShortlistSortBy(v as any)}
-                compact
-              />
             </div>
-            {sortedShortlists.length > 0 ? (
-              <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                {sortedShortlists.map(sl => (
-                  <ShortlistCard key={sl.id} shortlist={sl} places={myPlaces} onClick={() => router.push(`/saved/shortlists/${sl.id}`)} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <PerriandIcon name="saved" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>No shortlists yet</p>
-                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>Create one to start curating your places</p>
-              </div>
-            )}
+            <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              {sortedCollections.map(sl => (
+                <CollectionCard key={sl.id} collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Library */}
-        {activeView === 'library' && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <PlaceSearchBar />
-              <button
-                onClick={() => importPatch({ isOpen: true })}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '9px 12px', borderRadius: 10, background: 'rgba(232,115,58,0.08)', border: '1px solid rgba(232,115,58,0.15)', color: '#c45020', fontSize: 10, fontWeight: 600, fontFamily: FONT.mono, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
-              >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12L8 3L14 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 8.5H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                Import
-              </button>
-            </div>
-            <div className="mb-4">
-              <FilterSortBar
-                filterGroups={[
-                  {
-                    key: 'type',
-                    label: 'Type',
-                    options: [
-                      { value: 'all', label: 'All types' },
-                      { value: 'restaurant', label: 'Restaurant' },
-                      { value: 'bar', label: 'Bar' },
-                      { value: 'cafe', label: 'Café' },
-                      { value: 'hotel', label: 'Hotel' },
-                      { value: 'museum', label: 'Museum' },
-                      { value: 'activity', label: 'Activity' },
-                    ],
-                    value: typeFilter,
-                    onChange: (v) => setTypeFilter(v as any),
-                  },
-                  ...(allCities.length > 1 ? [{
-                    key: 'city',
-                    label: 'City',
-                    options: [
-                      { value: 'all', label: 'All cities' },
-                      ...allCities.map(c => ({ value: c, label: c })),
-                    ],
-                    value: cityFilter,
-                    onChange: (v: string) => handleCityFilter(v),
-                  }] : []),
-                  ...(cityFilter !== 'all' && cityNeighborhoods[cityFilter] && cityNeighborhoods[cityFilter].length > 1 ? [{
-                    key: 'neighborhood',
-                    label: 'Neighborhood',
-                    options: [
-                      { value: 'all', label: 'All areas' },
-                      ...cityNeighborhoods[cityFilter].map(nb => ({ value: nb, label: nb })),
-                    ],
-                    value: neighborhoodFilter,
-                    onChange: (v: string) => setNeighborhoodFilter(v),
-                  }] : []),
-                  {
-                    key: 'source',
-                    label: 'Source',
-                    options: [
-                      { value: 'all', label: 'All sources' },
-                      { value: 'friend', label: 'Friends' },
-                      { value: 'article', label: 'Articles' },
-                      { value: 'maps', label: 'Maps' },
-                      { value: 'email', label: 'Email' },
-                    ],
-                    value: sourceFilter,
-                    onChange: (v) => setSourceFilter(v),
-                  },
-                ]}
-                sortOptions={[
-                  { value: 'match', label: 'Match %' },
-                  { value: 'name', label: 'A–Z' },
-                  { value: 'type', label: 'Type' },
-                  { value: 'source', label: 'Source' },
-                ]}
-                sortValue={sortBy}
-                onSortChange={(v) => setSortBy(v as any)}
-                onResetAll={() => { setTypeFilter('all'); handleCityFilter('all'); setSourceFilter('all'); setSortBy('match'); }}
-              />
-            </div>
-            {filteredPlaces.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                {filteredPlaces.map(place => (
-                  <PlaceCard key={place.id} place={place} onTap={() => openDetail(place)} onToggleStar={() => openShortlistPicker(place)} onLongPress={() => setAddToTripItem(place)} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <PerriandIcon name="discover" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
-                <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' || sourceFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
-              </div>
-            )}
+        {/* ═══ All Places ═══ */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: 'var(--t-ink)', margin: 0 }}>
+              {typeFilter !== 'all' ? `${TYPE_CHIPS_WITH_ALL.find(c => c.value === typeFilter)?.label || 'Filtered'}` : 'All places'}
+              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontStyle: 'normal', marginLeft: 6 }}>
+                {filteredPlaces.length}
+              </span>
+            </h2>
+            <FilterSortBar
+              sortOptions={[
+                { value: 'match', label: 'Match %' },
+                { value: 'name', label: 'A–Z' },
+                { value: 'type', label: 'Type' },
+                { value: 'source', label: 'Source' },
+              ]}
+              sortValue={sortBy}
+              onSortChange={(v) => setSortBy(v as any)}
+              compact
+            />
           </div>
-        )}
+          {filteredPlaces.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {filteredPlaces.map(place => (
+                <PlaceCard key={place.id} place={place} onTap={() => openDetail(place)} onToggleStar={() => openCollectionPicker(place)} onLongPress={() => setAddToTripItem(place)} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <PerriandIcon name="discover" size={36} color={INK['15']} />
+              <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
+              <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || cityFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {showCreateShortlist && (
-        <CreateShortlistModal
-          onClose={() => setShowCreateShortlist(false)}
-          onCreate={async (name, emoji) => { setShowCreateShortlist(false); const realId = await createShortlistAsync(name, emoji); router.push(`/saved/shortlists/${realId}`); }}
-          onCreateSmart={(name, emoji, query, filterTags, placeIds) => { createSmartShortlist(name, emoji, query, filterTags, placeIds); setShowCreateShortlist(false); }}
+      {showCreateCollection && (
+        <CreateCollectionModal
+          onClose={() => setShowCreateCollection(false)}
+          onCreate={async (name, emoji) => { setShowCreateCollection(false); const realId = await createCollectionAsync(name, emoji); router.push(`/saved/collections/${realId}`); }}
+          onCreateSmart={(name, emoji, query, filterTags, placeIds) => { createSmartCollection(name, emoji, query, filterTags, placeIds); setShowCreateCollection(false); }}
         />
       )}
       {addToTripItem && trips.length > 0 && (
-        <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { if (!addToTripItem.isShortlisted) { toggleStar(addToTripItem.id); } setAddToTripItem(null); }} />
+        <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { if (!addToTripItem.isFavorited) { toggleStar(addToTripItem.id); } setAddToTripItem(null); }} />
       )}
       {importOpen && (
         <ImportDrawer onClose={() => { resetImport(); importPatch({ isOpen: false }); }} />
@@ -639,7 +587,7 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
   onToggleStar: () => void;
   onLongPress: () => void;
 }) {
-  const isStarred = !!place.isShortlisted;
+  const isStarred = !!place.isFavorited;
   const typeIcon = TYPE_ICONS[place.type] || 'location';
   const google = place.google;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
@@ -774,7 +722,7 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
 
 
 // ═══════════════════════════════════════════
-// Create Shortlist Modal
+// Create Collection Modal
 // ═══════════════════════════════════════════
 
 const ICON_OPTIONS: { name: PerriandIconName; label: string }[] = [
@@ -820,7 +768,7 @@ const SMART_EXAMPLE_PROMPTS = [
   'High-match cafés',
 ];
 
-function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
+function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
   onClose: () => void;
   onCreate: (name: string, emoji: string) => void;
   onCreateSmart: (name: string, emoji: string, query: string, filterTags: string[], placeIds: string[]) => void;
@@ -990,7 +938,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
           <span
             style={{ fontFamily: FONT.serif, fontSize: isDesktop ? 19 : 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
           >
-            New Shortlist
+            New Collection
           </span>
           <button
             onClick={onClose}
@@ -1066,7 +1014,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             {/* Name input — 16px font prevents iOS zoom */}
             <input
               type="text"
-              placeholder="Shortlist name..."
+              placeholder="Collection name..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -1095,7 +1043,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
                 boxSizing: 'border-box',
               }}
             >
-              Create Shortlist
+              Create Collection
             </button>
           </>
         )}
@@ -1106,7 +1054,7 @@ function CreateShortlistModal({ onClose, onCreate, onCreateSmart }: {
             {/* Description input — 16px font prevents iOS zoom */}
             <input
               type="text"
-              placeholder="Describe your shortlist..."
+              placeholder="Describe your collection..."
               value={smartQuery}
               onChange={(e) => setSmartQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}

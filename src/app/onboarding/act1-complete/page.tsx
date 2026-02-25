@@ -8,19 +8,18 @@ import { ACT_1_PHASE_IDS, ACT_2_PHASE_IDS, ALL_PHASE_IDS } from '@/constants/onb
 const MILESTONE_STATS = [
   { label: 'Phases complete', value: `${ACT_1_PHASE_IDS.length} of ${ALL_PHASE_IDS.length}` },
   { label: 'Taste signals captured', accessor: 'signals' as const },
-  { label: 'Conversations', accessor: 'conversations' as const },
+  { label: 'Dimensions covered', accessor: 'dimensions' as const },
 ];
 
 export default function Act1CompletePage() {
   const router = useRouter();
-  const { setPhaseIndex, allSignals, completedPhaseIds } = useOnboardingStore();
+  const { setPhaseIndex, allSignals, certainties } = useOnboardingStore();
   const [stage, setStage] = useState(0); // 0=entering, 1=stats visible, 2=message visible, 3=button visible
 
   // Count unique signal tags
   const signalCount = new Set(allSignals.map((s) => s.tag)).size;
-  const conversationCount = completedPhaseIds.filter((id) =>
-    ['welcome', 'memorable-stays', 'anti-stay', 'companion-context', 'trusted-sources', 'go-back-place'].includes(id)
-  ).length;
+  // Count how many of the 6 taste dimensions have meaningful certainty (> 0)
+  const dimensionsCovered = Object.values(certainties).filter((v) => v > 0).length;
 
   // Staggered reveal animation
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function Act1CompletePage() {
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
-      <div className="max-w-sm w-full flex flex-col items-center">
+      <div className="max-w-lg w-full flex flex-col items-center">
 
         {/* Animated progress ring with checkmark */}
         <div className="relative w-28 h-28 mb-8">
@@ -109,7 +108,7 @@ export default function Act1CompletePage() {
         `}>
           {MILESTONE_STATS.map((stat, i) => {
             const value = stat.value
-              ?? (stat.accessor === 'signals' ? signalCount : conversationCount);
+              ?? (stat.accessor === 'signals' ? signalCount : `${dimensionsCovered} of 6`);
             return (
               <div
                 key={stat.label}

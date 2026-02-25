@@ -207,7 +207,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Messages — scrollable area between fixed header and fixed input */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-6 space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-6 space-y-4 max-w-2xl mx-auto w-full">
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -269,7 +269,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
       </div>
 
       {/* Input Area — anchored to bottom */}
-      <div className="flex-shrink-0 border-t border-[var(--t-travertine)] px-4 py-3 bg-[var(--t-cream)]">
+      <div className="flex-shrink-0 border-t border-[var(--t-travertine)] px-4 py-3 bg-[var(--t-cream)] max-w-2xl mx-auto w-full">
         {isPhaseComplete ? (
           <button
             onClick={() => {

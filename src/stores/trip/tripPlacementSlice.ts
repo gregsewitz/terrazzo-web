@@ -96,8 +96,13 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   addToPool: (items) => {
+    // Tag each item with a library reference if it came from saved places
+    const taggedItems = items.map(item => ({
+      ...item,
+      libraryPlaceId: item.libraryPlaceId || item.id,
+    }));
     set(state =>
-      updateCurrentTrip(state, trip => ({ ...trip, pool: [...trip.pool, ...items] }))
+      updateCurrentTrip(state, trip => ({ ...trip, pool: [...trip.pool, ...taggedItems] }))
     );
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
@@ -109,7 +114,12 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   placeFromSaved: (place, dayNumber, slotId) => {
     set(state =>
       updateCurrentTrip(state, trip => {
-        const placedItem = { ...place, status: 'placed' as const, placedIn: { day: dayNumber, slot: slotId } };
+        const placedItem = {
+          ...place,
+          status: 'placed' as const,
+          placedIn: { day: dayNumber, slot: slotId },
+          libraryPlaceId: place.libraryPlaceId || place.id, // reference back to canonical library entry
+        };
         return {
           ...trip,
           days: mapDaySlots(trip.days, dayNumber, s =>

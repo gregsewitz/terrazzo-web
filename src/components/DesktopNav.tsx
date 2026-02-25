@@ -6,7 +6,7 @@ import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons
 import { FONT, INK } from '@/constants/theme';
 
 const NAV_ITEMS = [
-  { id: 'saved', label: 'Collect', icon: 'saved' as PerriandIconName, path: '/saved' },
+  { id: 'saved', label: 'Library', icon: 'saved' as PerriandIconName, path: '/saved' },
   { id: 'trips', label: 'Plan', icon: 'trips' as PerriandIconName, path: '/trips' },
   { id: 'profile', label: 'Profile', icon: 'profile' as PerriandIconName, path: '/profile' },
 ];

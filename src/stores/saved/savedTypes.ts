@@ -1,4 +1,4 @@
-import type { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData, Shortlist } from '@/types';
+import type { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData, Collection } from '@/types';
 
 // ═══════════════════════════════════════════
 // DB types (shapes returned by API routes)
@@ -20,7 +20,7 @@ export interface DBSavedPlace {
   savedDate?: string | null;
   importBatchId?: string | null;
   rating?: Record<string, unknown> | null;
-  isShortlisted: boolean;
+  isFavorited: boolean;
   matchScore?: number | null;
   matchBreakdown?: Record<string, number> | null;
   tasteNote?: string | null;
@@ -35,7 +35,7 @@ export interface DBSavedPlace {
   updatedAt?: string | null;
 }
 
-export interface DBShortlist {
+export interface DBCollection {
   id: string;
   name: string;
   description?: string | null;
@@ -75,18 +75,18 @@ export interface SavedState {
   // Core data
   myPlaces: ImportedPlace[];
   history: HistoryItem[];
-  shortlists: Shortlist[];
+  collections: Collection[];
 
   // UI state
   viewMode: ViewMode;
-  activeView: 'shortlists' | 'library';
+  activeView: 'collections' | 'library';
   typeFilter: PlaceType | 'all';
   searchQuery: string;
   cityFilter: string | 'all';
 
   // Library actions
   setViewMode: (mode: ViewMode) => void;
-  setActiveView: (view: 'shortlists' | 'library') => void;
+  setActiveView: (view: 'collections' | 'library') => void;
   setTypeFilter: (filter: PlaceType | 'all') => void;
   setSearchQuery: (query: string) => void;
   setCityFilter: (city: string | 'all') => void;
@@ -94,15 +94,15 @@ export interface SavedState {
   removePlace: (id: string) => void;
   ratePlace: (id: string, rating: PlaceRating) => void;
 
-  // Shortlist actions
+  // Collection actions
   toggleStar: (id: string) => void;
-  createShortlist: (name: string, emoji?: string, description?: string) => string;
-  createShortlistAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
-  deleteShortlist: (id: string) => void;
-  updateShortlist: (id: string, updates: Partial<Pick<Shortlist, 'name' | 'emoji' | 'description'>>) => void;
-  addPlaceToShortlist: (shortlistId: string, placeId: string) => void;
-  removePlaceFromShortlist: (shortlistId: string, placeId: string) => void;
-  createSmartShortlist: (name: string, emoji: string, query: string, filterTags: string[], placeIds?: string[]) => string;
+  createCollection: (name: string, emoji?: string, description?: string) => string;
+  createCollectionAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
+  deleteCollection: (id: string) => void;
+  updateCollection: (id: string, updates: Partial<Pick<Collection, 'name' | 'emoji' | 'description'>>) => void;
+  addPlaceToCollection: (collectionId: string, placeId: string) => void;
+  removePlaceFromCollection: (collectionId: string, placeId: string) => void;
+  createSmartCollection: (name: string, emoji: string, query: string, filterTags: string[], placeIds?: string[]) => string;
 
   // History actions
   promoteFromHistory: (id: string) => void;
@@ -110,5 +110,5 @@ export interface SavedState {
   addHistoryItems: (items: HistoryItem[]) => void;
 
   // DB hydration
-  hydrateFromDB: (places: DBSavedPlace[], shortlists: DBShortlist[]) => void;
+  hydrateFromDB: (places: DBSavedPlace[], collections: DBCollection[]) => void;
 }

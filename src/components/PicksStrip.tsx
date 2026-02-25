@@ -104,7 +104,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
 
   // Match places to the current day's destination using geo-proximity + string matching
   const allStripPlaces = useMemo(() => {
-    const unplaced = myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+    const unplaced = myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
     if (unplaced.length === 0) return [];
 
     const { names, geo } = currentDayInfo;
@@ -138,9 +138,9 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
     return matched;
   }, [myPlaces, currentDayInfo, placedIds]);
 
-  // All unplaced shortlisted picks (no destination filter) — used when searching
+  // All unplaced saved picks (no destination filter) — used when searching
   const allUnplaced = useMemo(() => {
-    return myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+    return myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
   }, [myPlaces, placedIds]);
 
   const filteredPlaces = useMemo(() => {
@@ -567,7 +567,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
                     matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
                     tasteNote: '',
                     status: 'available',
-                    isShortlisted: true,
+                    isFavorited: true,
                     ...(result.placeId && {
                       google: {
                         placeId: result.placeId,

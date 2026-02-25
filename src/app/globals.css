@@ -78,6 +78,15 @@ body {
   border-radius: 2px;
 }
 
+/* Hide scrollbar for gallery swipe */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Ghost card shimmer animation */
 @keyframes ghostShimmer {
   0%, 100% { opacity: 0.92; }

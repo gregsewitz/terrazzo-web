@@ -12,7 +12,7 @@ interface PlaceDetailSheetProps {
   onSave?: () => void;
   onEditRating?: () => void;
   onViewBriefing?: () => void;
-  onShortlistTap?: () => void;
+  onCollectionTap?: () => void;
   isPreview?: boolean;
   siblingPlaces?: ImportedPlace[]; // other places from the same import batch
 }

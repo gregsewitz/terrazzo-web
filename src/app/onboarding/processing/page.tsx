@@ -82,7 +82,7 @@ export default function ProcessingPage() {
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
-      <div className="max-w-sm w-full">
+      <div className="max-w-lg w-full">
         {/* Animated brand mark */}
         <div className="text-center mb-10">
           <h1 className="font-serif text-[32px] text-[var(--t-ink)]">

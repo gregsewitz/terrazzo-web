@@ -67,7 +67,7 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
       importBatchId: place.importBatchId,
       savedDate: place.savedDate,
       travelWith: place.travelWith,
-      isShortlisted: place.isShortlisted || false,
+      isFavorited: place.isFavorited || false,
       userContext: place.userContext,
       timing: place.timing,
       intentStatus: place.intentStatus,
@@ -77,7 +77,7 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
   removePlace: (id) => {
     set((state) => ({
       myPlaces: state.myPlaces.filter((p) => p.id !== id),
-      shortlists: state.shortlists.map(sl => ({
+      collections: state.collections.map(sl => ({
         ...sl,
         placeIds: sl.placeIds.filter(pid => pid !== id),
       })),

@@ -14,38 +14,38 @@ import PlaceSearchBar from '@/components/PlaceSearchBar';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
-import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS } from '@/constants/placeTypes';
+import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 
-export default function ShortlistDetailPage() {
+export default function CollectionDetailPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
 
   return (
     <PlaceDetailProvider config={{
       onRate: (place, rating) => ratePlace(place.id, rating),
     }}>
-      <ShortlistDetailContent />
+      <CollectionDetailContent />
     </PlaceDetailProvider>
   );
 }
 
-function ShortlistDetailContent() {
+function CollectionDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { openDetail } = usePlaceDetail();
-  const shortlistId = params.id as string;
+  const collectionId = params.id as string;
   const isDesktop = useIsDesktop();
 
   const myPlaces = useSavedStore(s => s.myPlaces);
-  const shortlists = useSavedStore(s => s.shortlists);
-  const removePlaceFromShortlist = useSavedStore(s => s.removePlaceFromShortlist);
-  const addPlaceToShortlist = useSavedStore(s => s.addPlaceToShortlist);
-  const deleteShortlist = useSavedStore(s => s.deleteShortlist);
-  const updateShortlist = useSavedStore(s => s.updateShortlist);
+  const collections = useSavedStore(s => s.collections);
+  const removePlaceFromCollection = useSavedStore(s => s.removePlaceFromCollection);
+  const addPlaceToCollection = useSavedStore(s => s.addPlaceToCollection);
+  const deleteCollection = useSavedStore(s => s.deleteCollection);
+  const updateCollection = useSavedStore(s => s.updateCollection);
 
-  // Auto-add newly searched places to this shortlist
+  // Auto-add newly searched places to this collection
   const handlePlaceAdded = useCallback((place: ImportedPlace) => {
-    addPlaceToShortlist(shortlistId, place.id);
-  }, [addPlaceToShortlist, shortlistId]);
+    addPlaceToCollection(collectionId, place.id);
+  }, [addPlaceToCollection, collectionId]);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -56,28 +56,60 @@ function ShortlistDetailContent() {
 
   // Filter & sort
   const [typeFilter, setTypeFilter] = useState<PlaceType | 'all'>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
+  const [collectionSearch, setCollectionSearch] = useState('');
   const [detailSortBy, setDetailSortBy] = useState<'added' | 'name' | 'type' | 'rating'>('added');
 
-  const shortlist = shortlists.find(s => s.id === shortlistId);
+  const collection = collections.find(s => s.id === collectionId);
 
-  const allPlacesInShortlist = useMemo(() => {
-    if (!shortlist) return [];
-    return shortlist.placeIds
+  const allPlacesInCollection = useMemo(() => {
+    if (!collection) return [];
+    return collection.placeIds
       .map(id => myPlaces.find(p => p.id === id))
       .filter(Boolean) as ImportedPlace[];
-  }, [shortlist, myPlaces]);
+  }, [collection, myPlaces]);
 
-  // Unique types present in this shortlist (for filter options)
+  // Unique types present in this collection (for filter options)
   const typeOptions = useMemo(() => {
-    const types = new Set(allPlacesInShortlist.map(p => p.type));
+    const types = new Set(allPlacesInCollection.map(p => p.type));
     return Array.from(types).sort();
-  }, [allPlacesInShortlist]);
+  }, [allPlacesInCollection]);
+
+  // Unique cities in this collection (for destination filter chips)
+  const cityOptions = useMemo(() => {
+    const cityCount: Record<string, number> = {};
+    allPlacesInCollection.forEach(p => {
+      const parts = p.location.split(',').map(s => s.trim());
+      const city = parts.length >= 2 ? parts[1] : parts[0];
+      if (city) cityCount[city] = (cityCount[city] || 0) + 1;
+    });
+    return Object.entries(cityCount)
+      .sort((a, b) => b[1] - a[1])
+      .map(([city, count]) => ({ city, count }));
+  }, [allPlacesInCollection]);
 
   // Filtered + sorted
-  const placesInShortlist = useMemo(() => {
-    let items = typeFilter === 'all'
-      ? [...allPlacesInShortlist]
-      : allPlacesInShortlist.filter(p => p.type === typeFilter);
+  const placesInCollection = useMemo(() => {
+    let items = [...allPlacesInCollection];
+    if (typeFilter !== 'all') {
+      items = items.filter(p => p.type === typeFilter);
+    }
+    if (cityFilter !== 'all') {
+      items = items.filter(p => {
+        const parts = p.location.split(',').map(s => s.trim());
+        const city = parts.length >= 2 ? parts[1] : parts[0];
+        return city.toLowerCase() === cityFilter.toLowerCase();
+      });
+    }
+    if (collectionSearch.trim()) {
+      const q = collectionSearch.toLowerCase();
+      items = items.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.location.toLowerCase().includes(q) ||
+        p.tasteNote?.toLowerCase().includes(q) ||
+        p.type.includes(q)
+      );
+    }
     switch (detailSortBy) {
       case 'name': items.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'type': items.sort((a, b) => a.type.localeCompare(b.type)); break;
@@ -85,14 +117,14 @@ function ShortlistDetailContent() {
       // 'added' keeps original order (insertion order from placeIds)
     }
     return items;
-  }, [allPlacesInShortlist, typeFilter, detailSortBy]);
+  }, [allPlacesInCollection, typeFilter, cityFilter, collectionSearch, detailSortBy]);
 
-  if (!shortlist) {
+  if (!collection) {
     return (
       <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: isDesktop ? undefined : 480, margin: '0 auto', overflowX: 'hidden' }}>
         {isDesktop && <DesktopNav />}
         <div className="px-4 pt-5 text-center">
-          <p style={{ color: INK['70'] }}>Shortlist not found</p>
+          <p style={{ color: INK['70'] }}>Collection not found</p>
           <button
             onClick={() => router.back()}
             className="mt-4 text-[12px] cursor-pointer"
@@ -106,18 +138,18 @@ function ShortlistDetailContent() {
     );
   }
 
-  const isPerriandIcon = shortlist.emoji && !shortlist.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && shortlist.emoji.length > 2;
+  const isPerriandIcon = collection.emoji && !collection.emoji.match(/[\u{1F000}-\u{1FFFF}]/u) && collection.emoji.length > 2;
 
 
   const startEditing = () => {
-    setEditName(shortlist.name);
-    setEditDescription(shortlist.description || '');
+    setEditName(collection.name);
+    setEditDescription(collection.description || '');
     setIsEditing(true);
   };
 
   const saveEditing = () => {
-    updateShortlist(shortlist.id, {
-      name: editName.trim() || shortlist.name,
+    updateCollection(collection.id, {
+      name: editName.trim() || collection.name,
       description: editDescription.trim() || undefined,
     });
     setIsEditing(false);
@@ -126,7 +158,7 @@ function ShortlistDetailContent() {
   /* ── Action buttons shared between layouts ── */
   const actionButtons = (
     <div className="flex items-center gap-2">
-      {placesInShortlist.length > 0 && (
+      {placesInCollection.length > 0 && (
         <>
           <button
             onClick={() => setShowShareSheet(true)}
@@ -162,7 +194,7 @@ function ShortlistDetailContent() {
           )}
         </>
       )}
-      {!shortlist.isDefault && (
+      {!collection.isDefault && (
         <>
           <button
             onClick={startEditing}
@@ -193,15 +225,15 @@ function ShortlistDetailContent() {
     </div>
   );
 
-  /* ── Shortlist info block shared between layouts ── */
-  const shortlistInfo = (
+  /* ── Collection info block shared between layouts ── */
+  const collectionInfo = (
     <div className="mb-6 pb-4 border-b" style={{ borderColor: 'var(--t-linen)' }}>
       <div className="flex items-start gap-3">
         <span style={{ fontSize: isPerriandIcon ? 28 : 36 }}>
           {isPerriandIcon ? (
-            <PerriandIcon name={shortlist.emoji as any} size={28} color="var(--t-ink)" />
+            <PerriandIcon name={collection.emoji as any} size={28} color="var(--t-ink)" />
           ) : (
-            shortlist.emoji
+            collection.emoji
           )}
         </span>
         <div className="flex-1">
@@ -261,11 +293,11 @@ function ShortlistDetailContent() {
                 className="text-[22px] mb-1"
                 style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
               >
-                {shortlist.name}
+                {collection.name}
               </h1>
-              {shortlist.description && (
+              {collection.description && (
                 <p className="text-[11px] mb-2" style={{ color: INK['70'], fontFamily: FONT.sans }}>
-                  {shortlist.description}
+                  {collection.description}
                 </p>
               )}
             </>
@@ -273,13 +305,13 @@ function ShortlistDetailContent() {
 
           <div className="flex items-center gap-2 mt-1">
             <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['70'] }}>
-              {placesInShortlist.length} {placesInShortlist.length === 1 ? 'place' : 'places'}
+              {placesInCollection.length} {placesInCollection.length === 1 ? 'place' : 'places'}
             </span>
-            {shortlist.cities.length > 0 && (
+            {collection.cities.length > 0 && (
               <>
                 <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
                 <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
-                  {shortlist.cities.slice(0, 3).join(', ')}
+                  {collection.cities.slice(0, 3).join(', ')}
                 </span>
               </>
             )}
@@ -288,7 +320,7 @@ function ShortlistDetailContent() {
       </div>
 
       {/* Smart collection badge */}
-      {shortlist.isSmartCollection && (
+      {collection.isSmartCollection && (
         <div className="mt-3">
           <span
             className="text-[9px] px-2 py-1 rounded-full"
@@ -300,18 +332,18 @@ function ShortlistDetailContent() {
           >
             Auto-updating · Curated Collection
           </span>
-          {shortlist.query && (
+          {collection.query && (
             <p className="text-[10px] mt-2" style={{ color: INK['70'], fontFamily: FONT.mono }}>
-              Query: &ldquo;{shortlist.query}&rdquo;
+              Query: &ldquo;{collection.query}&rdquo;
             </p>
           )}
         </div>
       )}
 
       {/* Filter tags */}
-      {shortlist.filterTags && shortlist.filterTags.length > 0 && (
+      {collection.filterTags && collection.filterTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-3">
-          {shortlist.filterTags.map(tag => (
+          {collection.filterTags.map(tag => (
             <span
               key={tag}
               className="px-2 py-1 rounded-full text-[9px]"
@@ -330,30 +362,130 @@ function ShortlistDetailContent() {
   );
 
   /* ── Search bar for adding places directly ── */
-  const searchBar = !shortlist.isSmartCollection && (
+  const searchBar = !collection.isSmartCollection && (
     <div className="mb-3">
       <PlaceSearchBar
         onPlaceAdded={handlePlaceAdded}
-        skipShortlistPicker
-        placeholder={`Add a place to ${shortlist.name}...`}
+        skipCollectionPicker
+        placeholder={`Add a place to ${collection.name}...`}
       />
     </div>
   );
 
-  /* ── Filter + Sort bar ── */
-  const filterSortBar = allPlacesInShortlist.length > 1 && (
-    <div className="mb-4">
+  /* ── Destination filter chips ── */
+  const destinationChips = cityOptions.length > 1 && (
+    <div
+      className="flex gap-1.5 mb-3"
+      style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+    >
+      <button
+        onClick={() => setCityFilter('all')}
+        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
+        style={{
+          background: cityFilter === 'all' ? 'var(--t-ink)' : 'white',
+          color: cityFilter === 'all' ? 'white' : INK['60'],
+          border: cityFilter === 'all' ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+          fontFamily: FONT.sans,
+          transition: 'all 150ms ease',
+        }}
+      >
+        <PerriandIcon name="discover" size={11} color={cityFilter === 'all' ? 'white' : INK['50']} />
+        All cities
+      </button>
+      {cityOptions.map(({ city, count }) => (
+        <button
+          key={city}
+          onClick={() => setCityFilter(city)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
+          style={{
+            background: cityFilter === city ? 'var(--t-ink)' : 'white',
+            color: cityFilter === city ? 'white' : INK['60'],
+            border: cityFilter === city ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+            fontFamily: FONT.sans,
+            transition: 'all 150ms ease',
+          }}
+        >
+          <PerriandIcon name="pin" size={11} color={cityFilter === city ? 'white' : INK['50']} />
+          {city}
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, opacity: 0.7 }}>{count}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  /* ── Type filter chips ── */
+  const typeChips = typeOptions.length > 1 && (
+    <div
+      className="flex gap-1.5 mb-3"
+      style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+    >
+      {TYPE_CHIPS_WITH_ALL.filter(c => c.value === 'all' || typeOptions.includes(c.value)).map(chip => (
+        <button
+          key={chip.value}
+          onClick={() => setTypeFilter(chip.value as PlaceType | 'all')}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer flex-shrink-0"
+          style={{
+            background: typeFilter === chip.value ? 'var(--t-ink)' : 'white',
+            color: typeFilter === chip.value ? 'white' : INK['60'],
+            border: typeFilter === chip.value ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+            fontFamily: FONT.sans,
+            transition: 'all 150ms ease',
+          }}
+        >
+          <PerriandIcon name={chip.icon} size={11} color={typeFilter === chip.value ? 'white' : INK['50']} />
+          {chip.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  /* ── Inline search within collection ── */
+  const inlineSearch = allPlacesInCollection.length > 3 && (
+    <div className="mb-3">
+      <div className="relative">
+        <PerriandIcon
+          name="discover"
+          size={13}
+          color={INK['40']}
+          style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
+        />
+        <input
+          type="text"
+          placeholder={`Search ${allPlacesInCollection.length} places...`}
+          value={collectionSearch}
+          onChange={(e) => setCollectionSearch(e.target.value)}
+          className="w-full rounded-lg py-2 pr-3 text-[13px]"
+          style={{
+            paddingLeft: 30,
+            background: 'white',
+            border: '1px solid var(--t-linen)',
+            color: 'var(--t-ink)',
+            fontFamily: FONT.sans,
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
+        />
+        {collectionSearch && (
+          <button
+            onClick={() => setCollectionSearch('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ background: INK['06'], border: 'none', cursor: 'pointer' }}
+          >
+            <PerriandIcon name="close" size={8} color={INK['40']} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ── Sort bar ── */
+  const sortBar = allPlacesInCollection.length > 1 && (
+    <div className="flex items-center justify-between mb-3">
+      <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'] }}>
+        {placesInCollection.length} {placesInCollection.length === 1 ? 'place' : 'places'}
+        {(typeFilter !== 'all' || cityFilter !== 'all' || collectionSearch) && ' (filtered)'}
+      </span>
       <FilterSortBar
-        filterGroups={typeOptions.length > 1 ? [{
-          key: 'type',
-          label: 'Type',
-          options: [
-            { value: 'all', label: 'All types' },
-            ...typeOptions.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })),
-          ],
-          value: typeFilter,
-          onChange: (v) => setTypeFilter(v as any),
-        }] : undefined}
         sortOptions={[
           { value: 'added', label: 'Order added' },
           { value: 'name', label: 'A–Z' },
@@ -362,9 +494,49 @@ function ShortlistDetailContent() {
         ]}
         sortValue={detailSortBy}
         onSortChange={(v) => setDetailSortBy(v as any)}
-        onResetAll={() => { setTypeFilter('all'); setDetailSortBy('added'); }}
         compact
       />
+    </div>
+  );
+
+  /* ── "Plan a trip" CTA ── */
+  const planTripCta = allPlacesInCollection.length >= 2 && (
+    <div
+      className="mt-6 p-4 rounded-xl flex items-center justify-between"
+      style={{
+        background: 'rgba(200,146,58,0.06)',
+        border: '1px solid rgba(200,146,58,0.12)',
+      }}
+    >
+      <div>
+        <div className="text-[13px] font-semibold" style={{ fontFamily: FONT.sans, color: 'var(--t-ink)' }}>
+          Plan a trip with these places
+        </div>
+        <div className="text-[11px] mt-0.5" style={{ fontFamily: FONT.sans, color: INK['60'] }}>
+          {cityOptions.length === 1
+            ? `${allPlacesInCollection.length} places in ${cityOptions[0].city}`
+            : `${allPlacesInCollection.length} places across ${cityOptions.length} cities`}
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          // Navigate to trips — in the future this would pre-populate a new trip
+          router.push('/trips');
+        }}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover"
+        style={{
+          background: 'var(--t-ink)',
+          color: 'white',
+          border: 'none',
+          fontSize: 12,
+          fontWeight: 600,
+          fontFamily: FONT.sans,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <PerriandIcon name="trips" size={13} color="white" />
+        Plan trip
+      </button>
     </div>
   );
 
@@ -372,15 +544,18 @@ function ShortlistDetailContent() {
   const placesList = (
     <>
       {searchBar}
-      {filterSortBar}
-      {placesInShortlist.length > 0 ? (
+      {destinationChips}
+      {typeChips}
+      {inlineSearch}
+      {sortBar}
+      {placesInCollection.length > 0 ? (
         <div className={isDesktop ? 'grid gap-3' : 'flex flex-col gap-2'} style={isDesktop ? { gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' } : undefined}>
-          {placesInShortlist.map(place => (
-            <ShortlistPlaceCard
+          {placesInCollection.map(place => (
+            <CollectionPlaceCard
               key={place.id}
               place={place}
               onTap={() => openDetail(place)}
-              onRemove={!shortlist.isSmartCollection ? () => removePlaceFromShortlist(shortlist.id, place.id) : undefined}
+              onRemove={!collection.isSmartCollection ? () => removePlaceFromCollection(collection.id, place.id) : undefined}
             />
           ))}
         </div>
@@ -388,13 +563,18 @@ function ShortlistDetailContent() {
         <div className="text-center py-12">
           <PerriandIcon name="discover" size={32} color={INK['15']} />
           <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
-            No places in this shortlist yet
+            {collectionSearch || typeFilter !== 'all' || cityFilter !== 'all'
+              ? 'No places match your filters'
+              : 'No places in this collection yet'}
           </p>
           <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
-            Use the search bar above to find and add places
+            {collectionSearch || typeFilter !== 'all' || cityFilter !== 'all'
+              ? 'Try adjusting your search or filters'
+              : 'Use the search bar above to find and add places'}
           </p>
         </div>
       )}
+      {planTripCta}
     </>
   );
 
@@ -413,7 +593,7 @@ function ShortlistDetailContent() {
               className="cursor-pointer flex items-center gap-1.5 link-hover"
               style={{ color: 'var(--t-verde)', background: 'none', border: 'none', fontSize: 13, fontFamily: FONT.sans }}
             >
-              ← Back to Shortlists
+              ← Back to Library
             </button>
             <div className="flex-1" />
             {actionButtons}
@@ -423,12 +603,12 @@ function ShortlistDetailContent() {
           <div className="flex gap-8" style={{ alignItems: 'flex-start' }}>
             {/* Left column — info + places */}
             <div className="flex-1 min-w-0">
-              {shortlistInfo}
+              {collectionInfo}
               {placesList}
             </div>
 
             {/* Right column — persistent full-height map */}
-            {placesInShortlist.length > 0 && (
+            {placesInCollection.length > 0 && (
               <div
                 className="flex-shrink-0 rounded-2xl overflow-hidden"
                 style={{
@@ -441,7 +621,7 @@ function ShortlistDetailContent() {
                 }}
               >
                 <GoogleMapView
-                  markers={placesInShortlist.map(p => ({
+                  markers={placesInCollection.map(p => ({
                     id: p.id,
                     name: p.name,
                     location: p.location,
@@ -452,7 +632,7 @@ function ShortlistDetailContent() {
                     lng: p.google?.lng,
                   }))}
                   height={800}
-                  fallbackDestination={shortlist.cities[0]}
+                  fallbackDestination={collection.cities[0]}
                 />
               </div>
             )}
@@ -472,7 +652,7 @@ function ShortlistDetailContent() {
               style={{ maxWidth: 320, background: 'var(--t-cream)' }}
             >
               <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
-                Delete &ldquo;{shortlist.name}&rdquo;?
+                Delete &ldquo;{collection.name}&rdquo;?
               </p>
               <p className="text-[11px] mb-5" style={{ color: INK['70'] }}>
                 This won&apos;t remove the places from your library.
@@ -480,7 +660,7 @@ function ShortlistDetailContent() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    deleteShortlist(shortlist.id);
+                    deleteCollection(collection.id);
                     router.back();
                   }}
                   className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer"
@@ -500,11 +680,11 @@ function ShortlistDetailContent() {
           </div>
         )}
 
-        {showShareSheet && shortlist && (
+        {showShareSheet && collection && (
           <ShareSheet
-            resourceType="shortlist"
-            resourceId={shortlist.id}
-            resourceName={shortlist.name}
+            resourceType="collection"
+            resourceId={collection.id}
+            resourceName={collection.name}
             onClose={() => setShowShareSheet(false)}
           />
         )}
@@ -531,7 +711,7 @@ function ShortlistDetailContent() {
           {actionButtons}
         </div>
 
-        {shortlistInfo}
+        {collectionInfo}
         {placesList}
       </div>
 
@@ -548,7 +728,7 @@ function ShortlistDetailContent() {
             style={{ maxWidth: 320, background: 'var(--t-cream)' }}
           >
             <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
-              Delete "{shortlist.name}"?
+              Delete "{collection.name}"?
             </p>
             <p className="text-[11px] mb-5" style={{ color: INK['70'] }}>
               This won't remove the places from your library.
@@ -556,7 +736,7 @@ function ShortlistDetailContent() {
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  deleteShortlist(shortlist.id);
+                  deleteCollection(collection.id);
                   router.back();
                 }}
                 className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer"
@@ -608,11 +788,11 @@ function ShortlistDetailContent() {
             </button>
             <div className="flex-1 min-w-0">
               <div className="text-[14px] font-semibold truncate" style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}>
-                {shortlist.name}
+                {collection.name}
               </div>
               <div className="text-[10px]" style={{ fontFamily: FONT.mono, color: INK['70'] }}>
-                {placesInShortlist.length} {placesInShortlist.length === 1 ? 'place' : 'places'}
-                {shortlist.cities.length > 0 && ` · ${shortlist.cities.slice(0, 3).join(', ')}`}
+                {placesInCollection.length} {placesInCollection.length === 1 ? 'place' : 'places'}
+                {collection.cities.length > 0 && ` · ${collection.cities.slice(0, 3).join(', ')}`}
               </div>
             </div>
           </div>
@@ -620,7 +800,7 @@ function ShortlistDetailContent() {
           {/* Map fills remaining space */}
           <div className="relative" style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden' }}>
             <GoogleMapView
-              markers={placesInShortlist.map(p => ({
+              markers={placesInCollection.map(p => ({
                 id: p.id,
                 name: p.name,
                 location: p.location,
@@ -631,7 +811,7 @@ function ShortlistDetailContent() {
                 lng: p.google?.lng,
               }))}
               height={typeof window !== 'undefined' ? window.innerHeight - 56 : 600}
-              fallbackDestination={shortlist.cities[0]}
+              fallbackDestination={collection.cities[0]}
             />
 
             {/* Floating legend */}
@@ -647,12 +827,12 @@ function ShortlistDetailContent() {
             >
               <div className="flex items-center gap-2">
                 {(() => {
-                  const types = new Set(placesInShortlist.map(p => p.type));
+                  const types = new Set(placesInCollection.map(p => p.type));
                   return Array.from(types).slice(0, 4).map(type => (
                     <div key={type} className="flex items-center gap-1">
                       <PerriandIcon name={type as any} size={11} color={TYPE_COLORS_VIBRANT[type as PlaceType] || INK['60']} />
                       <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
-                        {placesInShortlist.filter(p => p.type === type).length}
+                        {placesInCollection.filter(p => p.type === type).length}
                       </span>
                     </div>
                   ));
@@ -666,15 +846,15 @@ function ShortlistDetailContent() {
         </div>
       )}
 
-      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToShortlistSheet
+      {/* PlaceDetailSheet, RatingSheet, BriefingView, AddToCollectionSheet
            are all rendered by PlaceDetailProvider — no duplication needed */}
 
       {/* Share Sheet */}
-      {showShareSheet && shortlist && (
+      {showShareSheet && collection && (
         <ShareSheet
-          resourceType="shortlist"
-          resourceId={shortlist.id}
-          resourceName={shortlist.name}
+          resourceType="collection"
+          resourceId={collection.id}
+          resourceName={collection.name}
           onClose={() => setShowShareSheet(false)}
         />
       )}
@@ -686,10 +866,10 @@ function ShortlistDetailContent() {
 
 
 // ═══════════════════════════════════════════
-// Shortlist Place Card
+// Collection Place Card
 // ═══════════════════════════════════════════
 
-function ShortlistPlaceCard({ place, onTap, onRemove }: {
+function CollectionPlaceCard({ place, onTap, onRemove }: {
   place: ImportedPlace;
   onTap: () => void;
   onRemove?: () => void;

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { initSavedDemoData, useSavedStore, DBSavedPlace, DBShortlist } from '@/stores/savedStore';
+import { initSavedDemoData, useSavedStore, DBSavedPlace, DBCollection } from '@/stores/savedStore';
 import { initTripDemoData, useTripStore, DBTrip } from '@/stores/tripStore';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
@@ -43,9 +43,9 @@ export default function StoreHydration() {
 
 async function loadUserData() {
   try {
-    // Load saved places + shortlists
-    const data = await apiFetch<{ places: DBSavedPlace[]; shortlists: DBShortlist[] }>('/api/places/mine');
-    useSavedStore.getState().hydrateFromDB(data.places || [], data.shortlists || []);
+    // Load saved places + collections
+    const data = await apiFetch<{ places: DBSavedPlace[]; collections: DBCollection[] }>('/api/places/mine');
+    useSavedStore.getState().hydrateFromDB(data.places || [], data.collections || []);
 
     // Load trips
     const tripsData = await apiFetch<{ trips: DBTrip[] }>('/api/trips/mine');

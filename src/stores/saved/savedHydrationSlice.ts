@@ -1,7 +1,7 @@
-import type { ImportedPlace, PlaceRating, GhostSourceType, Shortlist } from '@/types';
+import type { ImportedPlace, PlaceRating, GhostSourceType, Collection } from '@/types';
 import { StateCreator } from 'zustand';
-import { createDefaultShortlist, deriveCities } from './savedHelpers';
-import type { SavedState, DBSavedPlace, DBShortlist } from './savedTypes';
+import { createDefaultCollection, deriveCities } from './savedHelpers';
+import type { SavedState, DBSavedPlace, DBCollection } from './savedTypes';
 
 // ═══════════════════════════════════════════
 // Hydration slice state
@@ -9,7 +9,7 @@ import type { SavedState, DBSavedPlace, DBShortlist } from './savedTypes';
 
 export interface SavedHydrationState {
   // DB hydration
-  hydrateFromDB: (places: DBSavedPlace[], shortlists: DBShortlist[]) => void;
+  hydrateFromDB: (places: DBSavedPlace[], collections: DBCollection[]) => void;
 }
 
 // ═══════════════════════════════════════════
@@ -17,7 +17,7 @@ export interface SavedHydrationState {
 // ═══════════════════════════════════════════
 
 export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrationState> = (set, get) => ({
-  hydrateFromDB: (dbPlaces, dbShortlists) => {
+  hydrateFromDB: (dbPlaces, dbCollections) => {
     // Map DB places → store ImportedPlace format
     const places: ImportedPlace[] = dbPlaces.map(dp => ({
       id: dp.id,
@@ -32,7 +32,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       tasteNote: dp.tasteNote || '',
       status: 'available' as const,
       ghostSource: (dp.ghostSource || 'manual') as GhostSourceType,
-      isShortlisted: dp.isShortlisted,
+      isFavorited: dp.isFavorited,
       rating: dp.rating as PlaceRating | undefined,
       friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
@@ -50,8 +50,8 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       alsoKnownAs: dp.alsoKnownAs || undefined,
     }));
 
-    // Map DB shortlists → store Shortlist format
-    const shortlists: Shortlist[] = dbShortlists.map(ds => ({
+    // Map DB collections → store Collection format
+    const collections: Collection[] = dbCollections.map(ds => ({
       id: ds.id,
       name: ds.name,
       description: ds.description || undefined,
@@ -66,12 +66,12 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       updatedAt: ds.updatedAt,
     }));
 
-    // Ensure there's always a default Favorites shortlist
-    if (!shortlists.some(s => s.isDefault)) {
-      const favoritePlaceIds = places.filter(p => p.isShortlisted).map(p => p.id);
-      shortlists.unshift(createDefaultShortlist(favoritePlaceIds));
+    // Ensure there's always a default Favorites collection
+    if (!collections.some(s => s.isDefault)) {
+      const favoritePlaceIds = places.filter(p => p.isFavorited).map(p => p.id);
+      collections.unshift(createDefaultCollection(favoritePlaceIds));
     }
 
-    set({ myPlaces: places, shortlists, history: [] });
+    set({ myPlaces: places, collections, history: [] });
   },
 });

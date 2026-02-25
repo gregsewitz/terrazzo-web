@@ -49,7 +49,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
   const [exported, setExported] = useState(false);
 
   const starredPlaces = useMemo(() =>
-    places.filter(p => p.isShortlisted || p.rating?.reaction === 'enjoyed'),
+    places.filter(p => p.isFavorited || p.rating?.reaction === 'enjoyed'),
     [places]
   );
 

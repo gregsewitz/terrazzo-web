@@ -674,7 +674,7 @@ function TripComplete({ seed, onDone }: {
         <div className="flex flex-col gap-1.5">
           {[
             'Places scored against your trip-adjusted profile',
-            'Each destination gets its own curated shortlist',
+            'Each destination gets its own curated collection',
             'Stretch picks that push your boundaries thoughtfully',
           ].map((item, i) => (
             <div key={i} className="text-[12px] leading-relaxed" style={{ color: INK['95'] }}>

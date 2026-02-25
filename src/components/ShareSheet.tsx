@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import { useCollaborationStore } from '@/stores/collaborationStore';
 
 interface ShareSheetProps {
-  resourceType: 'shortlist' | 'trip';
+  resourceType: 'collection' | 'trip';
   resourceId: string;
   resourceName: string;
   onClose: () => void;
@@ -46,8 +46,8 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const endpoint = resourceType === 'shortlist'
-          ? `/api/shortlists/${resourceId}/share`
+        const endpoint = resourceType === 'collection'
+          ? `/api/collections/${resourceId}/share`
           : `/api/trips/${resourceId}/share`;
         const data = await apiFetch<{ isShared: boolean; shareLink: { token: string; viewCount: number } | null; url: string | null }>(endpoint);
         setState({
@@ -68,8 +68,8 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
     setState(s => ({ ...s, loading: true }));
     setError(null);
     try {
-      const endpoint = resourceType === 'shortlist'
-        ? `/api/shortlists/${resourceId}/share`
+      const endpoint = resourceType === 'collection'
+        ? `/api/collections/${resourceId}/share`
         : `/api/trips/${resourceId}/share`;
       const data = await apiFetch<{ shareLink: { token: string; viewCount: number }; url: string }>(endpoint, { method: 'POST' });
       setState({
@@ -90,8 +90,8 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
   const revokeLink = useCallback(async () => {
     setRevoking(true);
     try {
-      const endpoint = resourceType === 'shortlist'
-        ? `/api/shortlists/${resourceId}/share`
+      const endpoint = resourceType === 'collection'
+        ? `/api/collections/${resourceId}/share`
         : `/api/trips/${resourceId}/share`;
       await apiFetch(endpoint, { method: 'DELETE' });
       setState({ isShared: false, token: null, url: null, viewCount: 0, loading: false });
@@ -127,7 +127,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
       try {
         await navigator.share({
           title: resourceName,
-          text: `Check out my ${resourceType === 'shortlist' ? 'collection' : 'trip'}: ${resourceName}`,
+          text: `Check out my ${resourceType === 'collection' ? 'collection' : 'trip'}: ${resourceName}`,
           url: fullUrl,
         });
       } catch {
@@ -185,7 +185,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
               <div
                 style={{ fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
               >
-                Share {resourceType === 'shortlist' ? 'collection' : 'trip'}
+                Share {resourceType === 'collection' ? 'collection' : 'trip'}
               </div>
               <div className="text-[11px] mt-0.5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
                 {resourceName}
@@ -317,7 +317,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
                 className="text-[12px] leading-relaxed mb-4"
                 style={{ color: INK['60'], fontFamily: FONT.sans }}
               >
-                Create a link that anyone can use to view this {resourceType === 'shortlist' ? 'collection and its places' : 'trip itinerary'}.
+                Create a link that anyone can use to view this {resourceType === 'collection' ? 'collection and its places' : 'trip itinerary'}.
                 They can save places to their own library if they have an account.
               </div>
               <button

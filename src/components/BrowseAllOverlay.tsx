@@ -61,8 +61,8 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
   const sortedPlaces = useMemo(() => {
     return [...filteredPlaces].sort((a, b) => {
       // Starred always float to top
-      const aStarred = a.isShortlisted ? 1 : 0;
-      const bStarred = b.isShortlisted ? 1 : 0;
+      const aStarred = a.isFavorited ? 1 : 0;
+      const bStarred = b.isFavorited ? 1 : 0;
       if (bStarred !== aStarred) return bStarred - aStarred;
 
       if (sortBy === 'alpha') return a.name.localeCompare(b.name);
@@ -78,7 +78,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
   }, [filteredPlaces, sortBy]);
 
   const starredCount = useMemo(() =>
-    destinationPlaces.filter(p => p.isShortlisted).length,
+    destinationPlaces.filter(p => p.isFavorited).length,
     [destinationPlaces]
   );
 
@@ -172,7 +172,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
                     matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
                     tasteNote: '',
                     status: 'available',
-                    isShortlisted: true,
+                    isFavorited: true,
                     ...(result.placeId && {
                       google: {
                         placeId: result.placeId,
@@ -207,7 +207,7 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
           )}
 
           {sortedPlaces.map(place => {
-            const isStarred = place.isShortlisted;
+            const isStarred = place.isFavorited;
             const typeIcon = TYPE_ICONS[place.type] || 'location';
             const sourceStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
 

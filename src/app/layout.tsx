@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
+import UniversalAddBar from "@/components/UniversalAddBar";
 import StoreHydration from "@/components/StoreHydration";
 import SaveIndicator from "@/components/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
@@ -48,6 +49,7 @@ export default function RootLayout({
           <StoreHydration />
           {children}
           <GlobalImportUI />
+          <UniversalAddBar />
           <SaveIndicator />
         </AuthProvider>
       </body>

@@ -326,6 +326,14 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                   >
                     <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
                   </span>
+                  {p.addedByName && (
+                    <span
+                      className="text-[8px] font-medium px-1.5 py-px rounded flex-shrink-0"
+                      style={{ background: INK['04'], color: INK['50'] }}
+                    >
+                      Added by {p.addedByName}
+                    </span>
+                  )}
                 </div>
                 {subtitle && (
                   <div

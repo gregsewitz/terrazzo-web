@@ -79,18 +79,24 @@ function pairShown(history: EloState['history'], idA: string, idB: string): bool
 /**
  * Pick the next pair to show. Strategy varies by phase:
  *
+ * For EXPERIENCE items (Phase 8): Uses `pairWith` metadata to always pair items
+ * from the same dimension (e.g. "room service" vs "local café"). This ensures
+ * coherent A/B comparisons. The algorithm shuffles dimension order and may
+ * re-pair dimensions from different angles in later rounds.
+ *
+ * For DESIGNER items (Phase 9): Uses cluster distance for cross-aesthetic
+ * comparisons (no pairWith metadata).
+ *
  * Phase 1 (rounds 0-2): Cross-cluster — maximize cluster distance
- *   → Picks the two items from the most different clusters that haven't been paired
- *
  * Phase 2 (rounds 3-6): Refinement — pick items with closest ratings
- *   → Narrows in on the user's preferred zone
- *
  * Phase 3 (rounds 7+): Coverage — pick items with fewest comparisons
- *   → Ensures every item gets at least some exposure
  */
 export function pickNextPair(state: EloState, totalRounds: number = 10): [EloItem, EloItem] | null {
   const { items, history, round } = state;
   if (items.length < 2) return null;
+
+  // Check if items have pairWith metadata (experience pool) vs not (designer pool)
+  const hasPairWith = items.some(i => i.metadata?.pairWith);
 
   // Build all valid pairs (not yet shown)
   type Pair = [EloItem, EloItem];
@@ -105,6 +111,45 @@ export function pickNextPair(state: EloState, totalRounds: number = 10): [EloIte
 
   if (validPairs.length === 0) return null; // All pairs exhausted
 
+  // ── Experience Pool (pairWith): prefer natural dimension pairs ──
+  if (hasPairWith) {
+    // Separate natural pairs (same dimension) from cross-dimension pairs
+    const naturalPairs = validPairs.filter(
+      ([a, b]) => a.metadata?.pairWith === b.id || b.metadata?.pairWith === a.id
+    );
+    const crossPairs = validPairs.filter(
+      ([a, b]) => a.metadata?.pairWith !== b.id && b.metadata?.pairWith !== a.id
+    );
+
+    // Always prefer natural pairs first (covers all 8 dimensions in ~8 rounds)
+    if (naturalPairs.length > 0) {
+      // Score by fewest comparisons (ensure coverage) + some randomness
+      const scored = naturalPairs.map(([a, b]) => ({
+        pair: [a, b] as Pair,
+        score: -(a.comparisons + b.comparisons) + Math.random() * 0.5,
+      }));
+      scored.sort((x, y) => y.score - x.score);
+      return scored[0].pair;
+    }
+
+    // If all natural pairs shown, use cross-dimension pairs for refinement
+    if (crossPairs.length > 0) {
+      // Prefer items with close ratings from different dimensions
+      const scored = crossPairs.map(([a, b]) => ({
+        pair: [a, b] as Pair,
+        score: -Math.abs(a.rating - b.rating) * 0.5
+          + (1 / (1 + a.comparisons + b.comparisons)) * 30
+          + (a.cluster !== b.cluster ? 5 : 0), // prefer cross-cluster
+      }));
+      scored.sort((x, y) => y.score - x.score);
+      const topN = Math.min(3, scored.length);
+      return scored[Math.floor(Math.random() * topN)].pair;
+    }
+
+    return null;
+  }
+
+  // ── Designer Pool (no pairWith): original cluster-distance strategy ──
   const phase = round < 3 ? 'cross-cluster' : round < 7 ? 'refine' : 'coverage';
 
   let scoredPairs: { pair: Pair; score: number }[];

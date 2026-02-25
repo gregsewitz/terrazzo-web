@@ -58,14 +58,14 @@ export const placeSchema = z.object({
   importBatchId: z.string().optional(),
   savedDate: z.string().optional(),
   travelWith: z.string().optional(),
-  isShortlisted: z.boolean().optional(),
+  isFavorited: z.boolean().optional(),
   userContext: z.string().optional(),
   timing: z.string().optional(),
   intentStatus: z.string().optional(),
   rating: z.number().optional(),
 });
 
-export const shortlistCreateSchema = z.object({
+export const collectionCreateSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   emoji: z.string().optional(),
   description: z.string().optional(),
@@ -75,7 +75,7 @@ export const shortlistCreateSchema = z.object({
   placeIds: z.array(z.string()).nullable().optional(),
 });
 
-export const shortlistUpdateSchema = z.object({
+export const collectionUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   emoji: z.string().optional(),
   description: z.string().optional(),

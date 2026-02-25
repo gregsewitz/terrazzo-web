@@ -74,6 +74,11 @@ export function useConversationPhase({
       const priorUserSummaries = priorPhaseMessages.length > 0
         ? priorPhaseMessages.slice(-15).map((m) => m.text) // last 15 user messages from prior phases
         : undefined;
+      // Also include AI questions from prior phases so Claude knows what was already asked
+      const priorAiMessages = storedMessages.filter((m) => m.phaseId !== phaseId && m.role === 'ai');
+      const priorAiQuestions = priorAiMessages.length > 0
+        ? priorAiMessages.filter((m) => m.text.includes('?')).slice(-10).map((m) => m.text)
+        : undefined;
 
       const crossPhaseContext = {
         completedPhases: completedPhaseIds,
@@ -87,6 +92,7 @@ export function useConversationPhase({
         trustedSources: trustedSources.length > 0 ? trustedSources.map((s) => s.name) : undefined,
         goBackPlace: goBackPlace?.placeName || undefined,
         priorUserMessages: priorUserSummaries,
+        priorAiQuestions,
       };
 
       const res = await fetch('/api/onboarding/analyze', {
@@ -187,7 +193,21 @@ export function useConversationPhase({
       let nextText: string;
       if (result.phaseComplete) {
         setIsPhaseComplete(true);
-        nextText = result.followUp || "That's really wonderful — I feel like I'm getting to know you. Let me take all of that in and we'll keep going.";
+        // The transition message should NEVER contain a question — the next phase's
+        // opening prompt will serve as the first question. If Claude included a question
+        // (e.g. forced-complete via MAX_EXCHANGES, or Claude ignored the prompt rule),
+        // strip the question sentence(s) to avoid showing a question + Continue button.
+        let transitionText = result.followUp || "That's really wonderful — I feel like I'm getting to know you. Let me take all of that in and we'll keep going.";
+        // Split into sentences, drop any that end with '?'
+        const sentences = transitionText.match(/[^.!?]+[.!?]+/g) || [transitionText];
+        const nonQuestions = sentences.filter(s => !s.trim().endsWith('?'));
+        if (nonQuestions.length > 0) {
+          transitionText = nonQuestions.join('').trim();
+        } else {
+          // Entire message was questions — replace with a warm generic wrap
+          transitionText = "That's really helpful — I'm picking up a lot from what you've shared.";
+        }
+        nextText = transitionText;
       } else if (result.followUp) {
         nextText = result.followUp;
       } else if (followUpIndex.current < followUps.length) {

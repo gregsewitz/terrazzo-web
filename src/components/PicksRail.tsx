@@ -83,7 +83,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
   }, [trip]);
 
   const allPicks = useMemo(() => {
-    return myPlaces.filter(p => p.isShortlisted && !placedIds.has(p.id));
+    return myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
   }, [myPlaces, placedIds]);
 
   const filteredPicks = useMemo(() => {
@@ -446,7 +446,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
               destination={activeDestination || trip?.location}
               placeholder="Search for a place…"
               onSelect={(result: PlaceSearchResult) => {
-                // Create an ImportedPlace and add to library + shortlist
+                // Create an ImportedPlace and add to library + collection
                 const newPlace: ImportedPlace = {
                   id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
                   name: result.name,
@@ -457,7 +457,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
                   matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
                   tasteNote: '',
                   status: 'available',
-                  isShortlisted: true,
+                  isFavorited: true,
                   ...(result.placeId && {
                     google: {
                       placeId: result.placeId,

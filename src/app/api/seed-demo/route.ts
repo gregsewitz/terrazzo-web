@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         friendAttribution: toJson(p.friendAttribution),
         savedDate: p.savedDate || null,
         rating: toJson(p.rating),
-        isShortlisted: p.isShortlisted || false,
+        isFavorited: p.isFavorited || false,
         matchScore: p.matchScore || null,
         matchBreakdown: toJson(p.matchBreakdown),
         tasteNote: p.tasteNote || null,
@@ -109,15 +109,15 @@ export async function POST(req: NextRequest) {
   createdPlaces.forEach(p => idMap.set(p.demoId, p.id));
 
   // ═══════════════════════════════════════════
-  // 2. Seed Shortlists (using buildShortlists logic)
+  // 2. Seed Collections (using buildCollections logic)
   // ═══════════════════════════════════════════
 
   await prisma.shortlist.deleteMany({ where: { userId: user.id } });
 
-  // Rebuild shortlists from the same logic used in savedStore
-  const favoritePlaceIds = DEMO_ALL_PLACES.filter(p => p.isShortlisted).map(p => p.id);
+  // Rebuild collections from the same logic used in savedStore
+  const favoritePlaceIds = DEMO_ALL_PLACES.filter(p => p.isFavorited).map(p => p.id);
 
-  interface ShortlistDef {
+  interface CollectionDef {
     name: string;
     description: string;
     emoji: string;
@@ -128,8 +128,8 @@ export async function POST(req: NextRequest) {
     demoPlaceIds: string[];
   }
 
-  const shortlistDefs: ShortlistDef[] = [
-    // Default "Favorites" shortlist
+  const collectionDefs: CollectionDef[] = [
+    // Default "Favorites" collection
     {
       name: 'Favorites',
       description: 'Your saved favorites',
@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
     },
   ];
 
-  const shortlistCreateOps = shortlistDefs.map(sl =>
+  const collectionCreateOps = collectionDefs.map(sl =>
     prisma.shortlist.create({
       data: {
         userId: user.id,
@@ -243,7 +243,7 @@ export async function POST(req: NextRequest) {
     })
   );
 
-  const createdShortlists = await prisma.$transaction(shortlistCreateOps);
+  const createdCollections = await prisma.$transaction(collectionCreateOps);
 
   // ═══════════════════════════════════════════
   // 3. Seed Trips
@@ -295,11 +295,11 @@ export async function POST(req: NextRequest) {
     userId: user.id,
     email: user.email,
     places: createdPlaces.length,
-    shortlists: createdShortlists.length,
+    collections: createdCollections.length,
     trips: createdTrips.length,
     summary: {
       places: createdPlaces.map(p => p.name).slice(0, 10).join(', ') + (createdPlaces.length > 10 ? '...' : ''),
-      shortlists: createdShortlists.map(s => s.name),
+      collections: createdCollections.map(s => s.name),
       trips: createdTrips.map(t => t.name),
     },
   });

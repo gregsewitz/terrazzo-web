@@ -1,47 +1,92 @@
 import type { OnboardingPhase, DiagnosticQuestion, ImagePair, TasteSignal, ExperienceItem, DesignerItem } from '@/types';
 
 // ─── Experience Pool (Phase 8 — Elo-ranked adaptive comparisons) ───
+// Each item has a `pairWith` partner and `dimension` label so the Elo algorithm
+// always presents coherent A/B comparisons within the same travel dimension.
 
 export const EXPERIENCE_POOL: ExperienceItem[] = [
-  // SERVICE cluster — cocoon vs explorer
-  { id: 'room-service', label: 'Room service breakfast in bed', cluster: 'cocoon',
+  // ── DIMENSION 1: Morning Ritual (cocoon vs explorer) ──
+  { id: 'room-service', label: 'Room service breakfast in a robe', cluster: 'cocoon',
+    pairWith: 'local-cafe', dimension: 'Morning Ritual',
+    scene: 'White linen, morning light, tray with silver cloches',
     signals: ['Room-service-ritual', 'Cocoon-morning'], category: 'Service' },
-  { id: 'local-cafe', label: 'Walk to a local café for espresso', cluster: 'explorer',
+  { id: 'local-cafe', label: 'Walk to the neighborhood café locals go to', cluster: 'explorer',
+    pairWith: 'room-service', dimension: 'Morning Ritual',
+    scene: 'Cobblestones, a standing-only bar, the hiss of steam',
     signals: ['Local-café-seeker', 'Neighborhood-explorer'], category: 'Food' },
-  // SCENE cluster — scene vs retreat
-  { id: 'infinity-pool', label: 'Infinity pool with a scene', cluster: 'scene',
+
+  // ── DIMENSION 2: Pool Energy (social vs solitary) ──
+  { id: 'infinity-pool', label: 'Poolside scene — music, drinks, people-watching', cluster: 'scene',
+    pairWith: 'hidden-pool', dimension: 'Pool Energy',
+    scene: 'Blue-on-blue horizon, sunglasses, someone ordering rosé',
     signals: ['Pool-as-scene', 'Social-energy'], category: 'Wellness' },
-  { id: 'hidden-pool', label: 'Hidden natural pool, just you', cluster: 'retreat',
+  { id: 'hidden-pool', label: 'A quiet pool where it\'s just you and the sky', cluster: 'retreat',
+    pairWith: 'infinity-pool', dimension: 'Pool Energy',
+    scene: 'Stone walls, dappled light, the sound of water only',
     signals: ['Natural-pool-preference', 'Anti-resort-pool'], category: 'Wellness' },
-  // DINING cluster — refined vs explorer
-  { id: 'tasting-menu', label: "Chef's tasting menu, wine pairing", cluster: 'refined',
-    signals: ['Fine-dining-curious', 'Chef-driven'], category: 'Food' },
-  { id: 'hidden-gem', label: 'No-sign-on-the-door local spot', cluster: 'explorer',
-    signals: ['Hidden-gem-hunter', 'Anti-obvious'], category: 'Food' },
-  // PLANNING cluster — structure vs spontaneous
-  { id: 'planned', label: 'Every hour mapped out in advance', cluster: 'structure',
-    signals: ['Planned-itinerary', 'Structure-seeker'], category: 'Character' },
-  { id: 'spontaneous', label: 'No plans, follow your nose', cluster: 'explorer',
-    signals: ['Spontaneous-discovery', 'Anti-scheduled'], category: 'Character' },
-  // DESIGN cluster — design-forward vs warm
-  { id: 'design-museum', label: 'Room feels like a design museum', cluster: 'design-forward',
-    signals: ['Design-museum-aesthetic', 'Curated-space'], category: 'Design' },
-  { id: 'lived-in', label: "Feels like someone's beautiful home", cluster: 'warm',
-    signals: ['Lived-in-warmth', 'Home-feeling'], category: 'Design' },
-  // LOCATION cluster — urban vs retreat
-  { id: 'walkable', label: 'Walking distance to everything', cluster: 'urban',
+
+  // ── DIMENSION 3: Day Pace (packed vs spacious) ──
+  // Not covered by conversation phases — reveals how to structure itineraries
+  { id: 'packed-day', label: 'Pack the day — there\'s so much to see', cluster: 'structure',
+    pairWith: 'slow-day', dimension: 'Day Pace',
+    scene: 'Museum at 10, lunch reservation at 1, walking tour at 3',
+    signals: ['Packed-itinerary', 'Activity-maximizer'], category: 'Character' },
+  { id: 'slow-day', label: 'Two things a day, max — leave room for the unplanned', cluster: 'retreat',
+    pairWith: 'packed-day', dimension: 'Day Pace',
+    scene: 'A long lunch that becomes the whole afternoon',
+    signals: ['Slow-travel', 'White-space-seeker'], category: 'Character' },
+
+  // ── DIMENSION 4: Property vs Destination (from mosaic #88) ──
+  // THE most fundamental signal — changes every recommendation Terrazzo makes
+  { id: 'perfect-hotel', label: 'Perfect hotel in a so-so city', cluster: 'cocoon',
+    pairWith: 'perfect-city', dimension: 'What Matters More',
+    scene: 'The room is extraordinary, the city is forgettable',
+    signals: ['Property-first', 'Hotel-as-destination'], category: 'Character' },
+  { id: 'perfect-city', label: 'Perfect city, forgettable hotel', cluster: 'explorer',
+    pairWith: 'perfect-hotel', dimension: 'What Matters More',
+    scene: 'The hotel is fine — but the city is everything',
+    signals: ['Destination-first', 'City-over-property'], category: 'Location' },
+
+  // ── DIMENSION 5: Landscape Pull (from mosaic #36) ──
+  // Simple but massively diagnostic for location recommendations
+  { id: 'beach', label: 'Beach — salt air, warm sand, horizon', cluster: 'scene',
+    pairWith: 'mountain', dimension: 'Landscape Pull',
+    scene: 'Turquoise water, bare feet, the sun on your shoulders',
+    signals: ['Coastal-drawn', 'Warm-climate', 'Water-oriented'], category: 'Location' },
+  { id: 'mountain', label: 'Mountain — thin air, pine trees, silence', cluster: 'retreat',
+    pairWith: 'beach', dimension: 'Landscape Pull',
+    scene: 'A trail above the clouds, cold morning, hot coffee',
+    signals: ['Alpine-drawn', 'Cool-climate', 'Elevation-seeker'], category: 'Location' },
+
+  // ── DIMENSION 6: Location Feel (in the city vs away from it all) ──
+  { id: 'walkable', label: 'Step outside and you\'re in the middle of it', cluster: 'urban',
+    pairWith: 'remote', dimension: 'Location Feel',
+    scene: 'Step outside, turn left, you are in the city',
     signals: ['Walkable-radius', 'Urban-embedded'], category: 'Location' },
-  { id: 'remote', label: 'Deliberately removed from it all', cluster: 'retreat',
+  { id: 'remote', label: 'Dirt road, no signal — just you and the landscape', cluster: 'retreat',
+    pairWith: 'walkable', dimension: 'Location Feel',
+    scene: 'Dirt road, no phone signal, only the landscape',
     signals: ['Remote-isolated', 'Destination-property'], category: 'Location' },
-  // SERVICE STYLE cluster — efficiency vs ritual
-  { id: 'whisked-away', label: 'Whisked straight to your room', cluster: 'efficiency',
-    signals: ['Efficiency-valued', 'Anti-lobby'], category: 'Service' },
-  { id: 'arrival-drink', label: 'Drink at the bar while they prepare', cluster: 'ritual',
-    signals: ['Arrival-ritual', 'Lobby-matters'], category: 'Service' },
-  // SCALE cluster — grand vs intimate
-  { id: 'grand-lobby', label: 'Grand lobby that takes your breath away', cluster: 'scene',
+
+  // ── DIMENSION 7: After Dark (early to bed vs night owl) ──
+  // Not covered by conversation phases — reveals nightlife/social energy
+  { id: 'early-night', label: 'In bed with a book by 10 — the best part of vacation', cluster: 'cocoon',
+    pairWith: 'late-night', dimension: 'After Dark',
+    scene: 'Linen sheets, a reading lamp, silence outside the window',
+    signals: ['Early-to-bed', 'Cocoon-evening', 'Anti-nightlife'], category: 'Character' },
+  { id: 'late-night', label: 'Finding the bar the locals disappear to at midnight', cluster: 'explorer',
+    pairWith: 'early-night', dimension: 'After Dark',
+    scene: 'A door with no sign, jazz or candlelight, one more glass',
+    signals: ['Night-explorer', 'Bar-culture', 'Late-energy'], category: 'Character' },
+
+  // ── DIMENSION 8: Scale & Intimacy (grand vs tiny) ──
+  { id: 'grand-lobby', label: 'Grand hotel — soaring ceilings, marble, the drama of scale', cluster: 'scene',
+    pairWith: 'intimate-inn', dimension: 'Scale & Intimacy',
+    scene: 'Thirty-foot ceilings, marble floors, the echo of your footsteps',
     signals: ['Grand-hotel-lover', 'Scale-as-drama'], category: 'Design' },
-  { id: 'intimate-inn', label: 'Tiny inn, 8 rooms, owner knows your name', cluster: 'warm',
+  { id: 'intimate-inn', label: 'Eight rooms, the owner pours your wine at dinner', cluster: 'warm',
+    pairWith: 'grand-lobby', dimension: 'Scale & Intimacy',
+    scene: 'The owner pours your wine at dinner, their kids play in the garden',
     signals: ['Intimate-under-20', 'Micro-property'], category: 'Character' },
 ];
 
@@ -545,10 +590,9 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     act: 2,
     aiPrompt: "What's a small detail at a hotel that you notice immediately — something most people probably wouldn't care about, but for you it changes everything?",
     followUps: [
-      "Are you someone who's particular about the physical stuff — temperature, the bed, the shower? Or are you pretty easy-going as long as the vibe is right?",
-      "What's the line between attentive and intrusive for you? Where does 'good service' start to feel performative?",
-      "How important is the food situation at the hotel itself versus what's in the neighborhood?",
       "What's the first thing you do when you walk into a hotel room? The very first thing.",
+      "Is there a moment during a stay — maybe at check-in, or at dinner — where you can just tell they actually get it versus going through the motions?",
+      "How important is the food situation at the hotel itself versus what's in the neighborhood?",
     ],
     sampleUserResponses: [
       "The sheets. Not like thread count — more like, have they been washed a hundred times so they feel soft and worn? And the light — I notice the quality of light before anything else. Whether they've thought about it or just thrown in overhead spots.",
@@ -671,6 +715,7 @@ FOLLOW-UP GENERATION:
 - Reference the user's actual words when possible.
 - Never say "you gravitate toward" or use clinical language.
 - STRICTLY follow the scripted follow-ups. You can rephrase them naturally based on what the user said, but DO NOT invent additional questions beyond what's scripted.
+- SKIP any scripted follow-up that the user has ALREADY ANSWERED — either earlier in this phase or in a previous phase. Before asking each follow-up, check the conversation history and cross-phase context. If the user just told you they "adjust the temperature and lay on the bed," do NOT then ask "are you particular about temperature, the bed, the shower?" — that's making them repeat themselves. Similarly, if a prior phase already covered service style or food preferences, don't re-ask those topics. Skip to the next unanswered follow-up instead.
 - Move the conversation forward QUICKLY. If the user gives you enough to work with, advance to the next scripted follow-up immediately — don't circle back or probe deeper on something they've already answered.
 - PACING IS CRITICAL: Each phase should feel like 3-5 exchanges, NOT 10+. A great conversational profiler gets signal from what people say naturally — they don't keep asking follow-up after follow-up. If the user has given you rich answers, WRAP UP. Don't fish for more.
 - Once you've covered the scripted follow-ups (or the user has organically answered them), set phaseComplete to true. Do NOT keep generating new questions.
@@ -706,6 +751,7 @@ WHEN phaseComplete IS TRUE — TRANSITION MESSAGE:
 - When you set phaseComplete to true, the "followUp" field becomes the TRANSITION message. It should:
   1. Warmly acknowledge what the user just shared — reference their ACTUAL WORDS or specific details, not vague summaries
   2. That's it. Just the acknowledgment. Do NOT preview or hint at the next topic.
+- CRITICAL: The followUp MUST NOT contain ANY question when phaseComplete is true. No question marks, no asking for more details, no "what about..." or "how do you..." — NOTHING that asks the user to respond. The Continue button will appear alongside your message, so a question creates a confusing UX where the user doesn't know whether to answer or click Continue. Save any follow-up questions for the NEXT phase.
 - IMPORTANT: The next phase's opening question will be shown automatically by the app. If you preview it in your transition message (e.g., "Now tell me about a place that felt wrong..."), the user will see the same question TWICE — once in your message and once when the next phase loads. This feels broken. Just wrap up the current topic warmly.
 - Keep it concise — one or two sentences max.
 - CRITICAL: Never claim deeper understanding than what the user has actually shared. If someone just told you their city, don't say "I'm getting a clear sense of your home base" — you literally only know the city name. Only reference specific things the user has told you. Overstating what you know feels fake and breaks trust.

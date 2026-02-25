@@ -18,7 +18,7 @@ export interface PlaceDetailContentProps {
   onSave?: () => void;
   onEditRating?: () => void;
   onViewBriefing?: () => void;
-  onShortlistTap?: () => void;
+  onCollectionTap?: () => void;
   isPreview?: boolean;
   siblingPlaces?: ImportedPlace[]; // other places from the same import batch
   variant: 'desktop' | 'mobile';
@@ -33,7 +33,7 @@ function PlaceDetailContent({
   onSave,
   onEditRating,
   onViewBriefing,
-  onShortlistTap,
+  onCollectionTap,
   isPreview,
   siblingPlaces,
   variant,
@@ -43,10 +43,10 @@ function PlaceDetailContent({
   const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
-  const shortlists = useSavedStore(s => s.shortlists);
+  const collections = useSavedStore(s => s.collections);
   const [saved, setSaved] = useState(myPlaces.some(p => p.name === item.name));
-  const isShortlisted = item.isShortlisted || false;
-  const memberShortlists = shortlists.filter(sl => sl.placeIds.includes(item.id));
+  const isFavorited = item.isFavorited || false;
+  const memberCollections = collections.filter(sl => sl.placeIds.includes(item.id));
 
   // Briefing polling for inline progress
   const googlePlaceId = (item.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
@@ -86,13 +86,13 @@ function PlaceDetailContent({
 
   const ratingBadgeIconSize = isDesktop ? 14 : 13;
   const ratingBadgeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
-  const shortlistBadgeIconSize = isDesktop ? 12 : 11;
-  const shortlistBadgeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
+  const collectionBadgeIconSize = isDesktop ? 12 : 11;
+  const collectionBadgeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
   const closeButtonHoverClass = isDesktop ? 'btn-hover' : '';
   const saveButtonHoverClass = isDesktop ? 'transition-all btn-hover' : 'transition-all hover:opacity-90';
   const rateButtonHoverClass = isDesktop ? 'btn-hover' : 'transition-all hover:opacity-90';
   const ratingBadgeHoverClass = isDesktop ? 'btn-hover' : 'transition-all hover:scale-[1.02]';
-  const shortlistBadgeHoverClass = isDesktop ? 'btn-hover' : 'transition-all hover:scale-[1.02]';
+  const collectionBadgeHoverClass = isDesktop ? 'btn-hover' : 'transition-all hover:scale-[1.02]';
 
   return (
     <>
@@ -194,21 +194,21 @@ function PlaceDetailContent({
                 </span>
               </button>
             ) : null}
-            {!isPreview && onShortlistTap && (
+            {!isPreview && onCollectionTap && (
               <button
-                onClick={onShortlistTap}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${shortlistBadgeHoverClass}`}
+                onClick={onCollectionTap}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${collectionBadgeHoverClass}`}
                 style={{
-                  background: isShortlisted ? 'rgba(42,122,86,0.06)' : INK['03'],
-                  border: isShortlisted ? '1.5px solid rgba(42,122,86,0.2)' : `1.5px solid ${INK['08']}`,
+                  background: isFavorited ? 'rgba(42,122,86,0.06)' : INK['03'],
+                  border: isFavorited ? '1.5px solid rgba(42,122,86,0.2)' : `1.5px solid ${INK['08']}`,
                 }}
               >
-                <PerriandIcon name="bookmark" size={shortlistBadgeIconSize} color={isShortlisted ? 'var(--t-verde)' : INK['70']} />
-                <span className={`${shortlistBadgeFontSize} font-semibold`} style={{
-                  color: isShortlisted ? 'var(--t-verde)' : INK['70'],
+                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isFavorited ? 'var(--t-verde)' : INK['70']} />
+                <span className={`${collectionBadgeFontSize} font-semibold`} style={{
+                  color: isFavorited ? 'var(--t-verde)' : INK['70'],
                   fontFamily: FONT.mono,
                 }}>
-                  {isShortlisted ? `${memberShortlists.length} list${memberShortlists.length > 1 ? 's' : ''}` : 'Save'}
+                  {isFavorited ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
                 </span>
               </button>
             )}

@@ -33,7 +33,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
   const isDesktop = useIsDesktop();
   const addPlace = useSavedStore(s => s.addPlace);
-  const createSmartShortlist = useSavedStore(s => s.createSmartShortlist);
+  const createSmartCollection = useSavedStore(s => s.createSmartCollection);
 
   // Local-only UI state (not needed across pages)
   const [step, setStep] = useState<ImportStep>('input');
@@ -161,13 +161,13 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
     selected.forEach(place => addPlace(place));
     setSavedPlaces(selected);
 
-    // Auto-create a shortlist for the import
+    // Auto-create a collection for the import
     const dest = detectedDestination || 'Import';
     const collectionName = sourceName
       ? `${sourceName}: ${dest}`
       : `Imported: ${dest}`;
     setCreatedCollectionName(collectionName);
-    createSmartShortlist(
+    createSmartCollection(
       collectionName,
       'discover',
       collectionName,

@@ -268,7 +268,7 @@ function TripDetailContent() {
   useEffect(() => {
     if (trip && !ghostsInjected) {
       const starredPlaces = myPlaces.filter(p =>
-        p.isShortlisted || p.rating?.reaction === 'enjoyed'
+        p.isFavorited || p.rating?.reaction === 'enjoyed'
       );
       if (starredPlaces.length > 0) {
         injectGhostCandidates(starredPlaces);
@@ -505,7 +505,7 @@ function TripDetailContent() {
         )}
         {exportOpen && (
           <ExportToMaps
-            places={myPlaces.filter(p => p.isShortlisted)}
+            places={myPlaces.filter(p => p.isFavorited)}
             collectionName={trip.name}
             onClose={() => setExportOpen(false)}
           />
@@ -732,7 +732,7 @@ function TripDetailContent() {
       {/* Export to Maps */}
       {exportOpen && (
         <ExportToMaps
-          places={myPlaces.filter(p => p.isShortlisted)}
+          places={myPlaces.filter(p => p.isFavorited)}
           collectionName={trip.name}
           onClose={() => setExportOpen(false)}
         />

@@ -1,58 +1,58 @@
-import type { Shortlist } from '@/types';
+import type { Collection } from '@/types';
 import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
-import { dbWrite, DEFAULT_SHORTLIST_ID, deriveCities } from './savedHelpers';
+import { dbWrite, DEFAULT_COLLECTION_ID, deriveCities } from './savedHelpers';
 import type { SavedState } from './savedTypes';
 
 // ═══════════════════════════════════════════
-// Shortlist slice state
+// Collection slice state
 // ═══════════════════════════════════════════
 
-export interface SavedShortlistState {
+export interface SavedCollectionState {
   // Core data
-  shortlists: Shortlist[];
+  collections: Collection[];
 
   // UI state
-  activeView: 'shortlists' | 'library';
+  activeView: 'collections' | 'library';
 
   // Actions
-  setActiveView: (view: 'shortlists' | 'library') => void;
+  setActiveView: (view: 'collections' | 'library') => void;
   toggleStar: (id: string) => void;
-  createShortlist: (name: string, emoji?: string, description?: string) => string;
-  /** Returns a promise that resolves to the real (server-assigned) shortlist ID */
-  createShortlistAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
-  deleteShortlist: (id: string) => void;
-  updateShortlist: (id: string, updates: Partial<Pick<Shortlist, 'name' | 'emoji' | 'description'>>) => void;
-  addPlaceToShortlist: (shortlistId: string, placeId: string) => void;
-  removePlaceFromShortlist: (shortlistId: string, placeId: string) => void;
-  createSmartShortlist: (name: string, emoji: string, query: string, filterTags: string[], placeIds?: string[]) => string;
+  createCollection: (name: string, emoji?: string, description?: string) => string;
+  /** Returns a promise that resolves to the real (server-assigned) collection ID */
+  createCollectionAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
+  deleteCollection: (id: string) => void;
+  updateCollection: (id: string, updates: Partial<Pick<Collection, 'name' | 'emoji' | 'description'>>) => void;
+  addPlaceToCollection: (collectionId: string, placeId: string) => void;
+  removePlaceFromCollection: (collectionId: string, placeId: string) => void;
+  createSmartCollection: (name: string, emoji: string, query: string, filterTags: string[], placeIds?: string[]) => string;
 }
 
 // ═══════════════════════════════════════════
-// Shortlist slice factory
+// Collection slice factory
 // ═══════════════════════════════════════════
 
-export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortlistState> = (set, get) => ({
-  shortlists: [],
-  activeView: 'shortlists',
+export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollectionState> = (set, get) => ({
+  collections: [],
+  activeView: 'collections',
 
   setActiveView: (view) => set({ activeView: view }),
 
   toggleStar: (id) => {
     const state = get();
-    const favShortlist = state.shortlists.find(s => s.isDefault);
-    if (!favShortlist) return;
+    const favCollection = state.collections.find(s => s.isDefault);
+    if (!favCollection) return;
 
-    const isCurrentlyFavorited = favShortlist.placeIds.includes(id);
+    const isCurrentlyFavorited = favCollection.placeIds.includes(id);
     const newPlaceIds = isCurrentlyFavorited
-      ? favShortlist.placeIds.filter(pid => pid !== id)
-      : [...favShortlist.placeIds, id];
+      ? favCollection.placeIds.filter(pid => pid !== id)
+      : [...favCollection.placeIds, id];
 
     set({
       myPlaces: state.myPlaces.map((p) =>
-        p.id === id ? { ...p, isShortlisted: !isCurrentlyFavorited } : p
+        p.id === id ? { ...p, isFavorited: !isCurrentlyFavorited } : p
       ),
-      shortlists: state.shortlists.map(sl =>
+      collections: state.collections.map(sl =>
         sl.isDefault
           ? {
               ...sl,
@@ -64,19 +64,19 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
       ),
     });
 
-    // Write-through: update place + favorites shortlist
-    dbWrite(`/api/places/${id}`, 'PATCH', { isShortlisted: !isCurrentlyFavorited });
-    if (favShortlist.id !== DEFAULT_SHORTLIST_ID) {
-      dbWrite(`/api/shortlists/${favShortlist.id}`, 'PATCH', { placeIds: newPlaceIds });
+    // Write-through: update place + favorites collection
+    dbWrite(`/api/places/${id}`, 'PATCH', { isFavorited: !isCurrentlyFavorited });
+    if (favCollection.id !== DEFAULT_COLLECTION_ID) {
+      dbWrite(`/api/collections/${favCollection.id}`, 'PATCH', { placeIds: newPlaceIds });
     }
   },
 
-  createShortlist: (name, emoji, description) => {
-    const newId = `shortlist-${Date.now()}`;
+  createCollection: (name, emoji, description) => {
+    const newId = `collection-${Date.now()}`;
     const now = new Date().toISOString();
     set((state) => ({
-      shortlists: [
-        ...state.shortlists,
+      collections: [
+        ...state.collections,
         {
           id: newId,
           name,
@@ -94,31 +94,31 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
     // Create in DB and sync the real ID back to the store
     (async () => {
       try {
-        const res = await apiFetch<{ shortlist?: { id: string } }>('/api/shortlists', {
+        const res = await apiFetch<{ collection?: { id: string } }>('/api/collections', {
           method: 'POST',
           body: JSON.stringify({ name, emoji: emoji || 'pin', description }),
         });
-        const realId = res?.shortlist?.id;
+        const realId = res?.collection?.id;
         if (realId && realId !== newId) {
           set((state) => ({
-            shortlists: state.shortlists.map(sl =>
+            collections: state.collections.map(sl =>
               sl.id === newId ? { ...sl, id: realId } : sl
             ),
           }));
         }
       } catch (err) {
-        console.error('[createShortlist] Failed to create on server:', err);
+        console.error('[createCollection] Failed to create on server:', err);
       }
     })();
     return newId;
   },
 
-  createShortlistAsync: async (name, emoji, description) => {
-    const tempId = `shortlist-${Date.now()}`;
+  createCollectionAsync: async (name, emoji, description) => {
+    const tempId = `collection-${Date.now()}`;
     const now = new Date().toISOString();
     set((state) => ({
-      shortlists: [
-        ...state.shortlists,
+      collections: [
+        ...state.collections,
         {
           id: tempId,
           name,
@@ -134,14 +134,14 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
       ],
     }));
     try {
-      const res = await apiFetch<{ shortlist?: { id: string } }>('/api/shortlists', {
+      const res = await apiFetch<{ collection?: { id: string } }>('/api/collections', {
         method: 'POST',
         body: JSON.stringify({ name, emoji: emoji || 'pin', description }),
       });
-      const realId = res?.shortlist?.id;
+      const realId = res?.collection?.id;
       if (realId && realId !== tempId) {
         set((state) => ({
-          shortlists: state.shortlists.map(sl =>
+          collections: state.collections.map(sl =>
             sl.id === tempId ? { ...sl, id: realId } : sl
           ),
         }));
@@ -149,35 +149,35 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
       }
       return tempId;
     } catch (err) {
-      console.error('[createShortlistAsync] Failed to create on server:', err);
+      console.error('[createCollectionAsync] Failed to create on server:', err);
       return tempId;
     }
   },
 
-  deleteShortlist: (id) => {
+  deleteCollection: (id) => {
     const state = get();
-    const sl = state.shortlists.find(s => s.id === id);
+    const sl = state.collections.find(s => s.id === id);
     if (sl?.isDefault) return; // Prevent deleting Favorites
-    set({ shortlists: state.shortlists.filter(s => s.id !== id) });
-    dbWrite(`/api/shortlists/${id}`, 'DELETE');
+    set({ collections: state.collections.filter(s => s.id !== id) });
+    dbWrite(`/api/collections/${id}`, 'DELETE');
   },
 
-  updateShortlist: (id, updates) => {
+  updateCollection: (id, updates) => {
     set((state) => ({
-      shortlists: state.shortlists.map(sl =>
+      collections: state.collections.map(sl =>
         sl.id === id
           ? { ...sl, ...updates, updatedAt: new Date().toISOString() }
           : sl
       ),
     }));
-    dbWrite(`/api/shortlists/${id}`, 'PATCH', updates);
+    dbWrite(`/api/collections/${id}`, 'PATCH', updates);
   },
 
-  addPlaceToShortlist: (shortlistId, placeId) => {
+  addPlaceToCollection: (collectionId, placeId) => {
     set((state) => {
       return {
-        shortlists: state.shortlists.map(sl => {
-          if (sl.id !== shortlistId) return sl;
+        collections: state.collections.map(sl => {
+          if (sl.id !== collectionId) return sl;
           if (sl.placeIds.includes(placeId)) return sl;
           const newPlaceIds = [...sl.placeIds, placeId];
           return {
@@ -187,24 +187,24 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
             updatedAt: new Date().toISOString(),
           };
         }),
-        myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
-          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: true } : p)
+        myPlaces: collectionId === DEFAULT_COLLECTION_ID
+          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isFavorited: true } : p)
           : state.myPlaces,
       };
     });
     // Write-through
-    const sl = get().shortlists.find(s => s.id === shortlistId);
-    if (sl) dbWrite(`/api/shortlists/${shortlistId}`, 'PATCH', { placeIds: sl.placeIds });
-    if (shortlistId === DEFAULT_SHORTLIST_ID) {
-      dbWrite(`/api/places/${placeId}`, 'PATCH', { isShortlisted: true });
+    const sl = get().collections.find(s => s.id === collectionId);
+    if (sl) dbWrite(`/api/collections/${collectionId}`, 'PATCH', { placeIds: sl.placeIds });
+    if (collectionId === DEFAULT_COLLECTION_ID) {
+      dbWrite(`/api/places/${placeId}`, 'PATCH', { isFavorited: true });
     }
   },
 
-  removePlaceFromShortlist: (shortlistId, placeId) => {
+  removePlaceFromCollection: (collectionId, placeId) => {
     set((state) => {
       return {
-        shortlists: state.shortlists.map(sl => {
-          if (sl.id !== shortlistId) return sl;
+        collections: state.collections.map(sl => {
+          if (sl.id !== collectionId) return sl;
           const newPlaceIds = sl.placeIds.filter(pid => pid !== placeId);
           return {
             ...sl,
@@ -213,21 +213,21 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
             updatedAt: new Date().toISOString(),
           };
         }),
-        myPlaces: shortlistId === DEFAULT_SHORTLIST_ID
-          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isShortlisted: false } : p)
+        myPlaces: collectionId === DEFAULT_COLLECTION_ID
+          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isFavorited: false } : p)
           : state.myPlaces,
       };
     });
     // Write-through
-    const sl = get().shortlists.find(s => s.id === shortlistId);
-    if (sl) dbWrite(`/api/shortlists/${shortlistId}`, 'PATCH', { placeIds: sl.placeIds });
-    if (shortlistId === DEFAULT_SHORTLIST_ID) {
-      dbWrite(`/api/places/${placeId}`, 'PATCH', { isShortlisted: false });
+    const sl = get().collections.find(s => s.id === collectionId);
+    if (sl) dbWrite(`/api/collections/${collectionId}`, 'PATCH', { placeIds: sl.placeIds });
+    if (collectionId === DEFAULT_COLLECTION_ID) {
+      dbWrite(`/api/places/${placeId}`, 'PATCH', { isFavorited: false });
     }
   },
 
-  createSmartShortlist: (name, emoji, query, filterTags, placeIds) => {
-    const newId = `shortlist-smart-${Date.now()}`;
+  createSmartCollection: (name, emoji, query, filterTags, placeIds) => {
+    const newId = `collection-smart-${Date.now()}`;
     const now = new Date().toISOString();
     const state = get();
 
@@ -242,15 +242,15 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
               if (key === 'type') return p.type === val;
               if (key === 'source' && val === 'friend') return !!p.friendAttribution;
               if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
-              if (key === 'reaction' && val === 'saved') return p.isShortlisted;
+              if (key === 'reaction' && val === 'saved') return p.isFavorited;
               return false;
             });
           })
           .map(p => p.id);
 
     set((state) => ({
-      shortlists: [
-        ...state.shortlists,
+      collections: [
+        ...state.collections,
         {
           id: newId,
           name,
@@ -269,7 +269,7 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
     // Create in DB and sync the real ID back to the store
     (async () => {
       try {
-        const res = await apiFetch<{ shortlist?: { id: string } }>('/api/shortlists', {
+        const res = await apiFetch<{ collection?: { id: string } }>('/api/collections', {
           method: 'POST',
           body: JSON.stringify({
             name,
@@ -280,16 +280,16 @@ export const createShortlistSlice: StateCreator<SavedState, [], [], SavedShortli
             placeIds: resolvedIds,
           }),
         });
-        const realId = res?.shortlist?.id;
+        const realId = res?.collection?.id;
         if (realId && realId !== newId) {
           set((state) => ({
-            shortlists: state.shortlists.map(sl =>
+            collections: state.collections.map(sl =>
               sl.id === newId ? { ...sl, id: realId } : sl
             ),
           }));
         }
       } catch (err) {
-        console.error('[createSmartShortlist] Failed to create on server:', err);
+        console.error('[createSmartCollection] Failed to create on server:', err);
       }
     })();
     return newId;

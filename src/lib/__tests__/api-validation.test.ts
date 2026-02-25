@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   validateBody,
   placeSchema,
-  shortlistCreateSchema,
-  shortlistUpdateSchema,
+  collectionCreateSchema,
+  collectionUpdateSchema,
   tripCreateSchema,
   waitlistSchema,
 } from '../api-validation';
@@ -99,19 +99,19 @@ describe('placeSchema', () => {
   });
 });
 
-describe('shortlistCreateSchema', () => {
-  it('accepts valid shortlist', () => {
-    const result = shortlistCreateSchema.safeParse({ name: 'Best of Tokyo' });
+describe('collectionCreateSchema', () => {
+  it('accepts valid collection', () => {
+    const result = collectionCreateSchema.safeParse({ name: 'Best of Tokyo' });
     expect(result.success).toBe(true);
   });
 
   it('rejects empty name', () => {
-    const result = shortlistCreateSchema.safeParse({ name: '' });
+    const result = collectionCreateSchema.safeParse({ name: '' });
     expect(result.success).toBe(false);
   });
 
   it('accepts optional emoji and placeIds', () => {
-    const result = shortlistCreateSchema.safeParse({
+    const result = collectionCreateSchema.safeParse({
       name: 'My List',
       emoji: '🗼',
       placeIds: ['abc', 'def'],
@@ -120,14 +120,14 @@ describe('shortlistCreateSchema', () => {
   });
 });
 
-describe('shortlistUpdateSchema', () => {
+describe('collectionUpdateSchema', () => {
   it('accepts partial updates', () => {
-    const result = shortlistUpdateSchema.safeParse({ emoji: '🏖' });
+    const result = collectionUpdateSchema.safeParse({ emoji: '🏖' });
     expect(result.success).toBe(true);
   });
 
   it('accepts empty object (all fields optional)', () => {
-    const result = shortlistUpdateSchema.safeParse({});
+    const result = collectionUpdateSchema.safeParse({});
     expect(result.success).toBe(true);
   });
 });

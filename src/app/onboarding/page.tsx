@@ -71,7 +71,7 @@ export default function OnboardingIntro() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
       <div
-        className={`max-w-sm w-full text-center transition-all duration-500 ${isStarting ? 'opacity-0 translate-y-4' : 'opacity-100'}`}
+        className={`max-w-lg w-full text-center transition-all duration-500 ${isStarting ? 'opacity-0 translate-y-4' : 'opacity-100'}`}
       >
         {/* Logo / brand mark */}
         <div className="mb-10">

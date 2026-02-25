@@ -76,9 +76,9 @@ export default function PhasePage() {
   }
 
   return (
-    <div className="h-dvh flex flex-col bg-[var(--t-cream)] max-w-lg mx-auto overflow-hidden">
-      {/* Phase header — fixed at top */}
-      <div className="flex-shrink-0 px-5 pt-5 pb-3">
+    <div className="h-dvh flex flex-col bg-[var(--t-cream)] overflow-hidden">
+      {/* Phase header — fixed at top, content centered on wide screens */}
+      <div className="flex-shrink-0 px-5 pt-5 pb-3 w-full max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
