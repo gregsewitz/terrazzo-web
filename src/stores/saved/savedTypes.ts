@@ -97,6 +97,7 @@ export interface SavedState {
   // Shortlist actions
   toggleStar: (id: string) => void;
   createShortlist: (name: string, emoji?: string, description?: string) => string;
+  createShortlistAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
   deleteShortlist: (id: string) => void;
   updateShortlist: (id: string, updates: Partial<Pick<Shortlist, 'name' | 'emoji' | 'description'>>) => void;
   addPlaceToShortlist: (shortlistId: string, placeId: string) => void;
