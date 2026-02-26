@@ -20,6 +20,7 @@ export interface DBSavedPlace {
   savedDate?: string | null;
   importBatchId?: string | null;
   rating?: Record<string, unknown> | null;
+  /** @deprecated Curation now happens at import time */
   isFavorited: boolean;
   matchScore?: number | null;
   matchBreakdown?: Record<string, number> | null;

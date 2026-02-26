@@ -56,7 +56,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     travelWith: toNull(place.travelWith),
     intentStatus: toNull(place.intentStatus),
     rating: toNull(place.rating),
-    isFavorited: place.isFavorited || false,
+    /** @deprecated isFavorited — curation now happens at import time */
+    isFavorited: false,
   };
 
   // Build the import source entry for the provenance log

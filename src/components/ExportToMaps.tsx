@@ -48,12 +48,12 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
   const [scope, setScope] = useState<ExportScope>('all');
   const [exported, setExported] = useState(false);
 
-  const starredPlaces = useMemo(() =>
-    places.filter(p => p.isFavorited || p.rating?.reaction === 'enjoyed'),
+  const ratedPlaces = useMemo(() =>
+    places.filter(p => p.rating?.reaction === 'myPlace' || p.rating?.reaction === 'enjoyed'),
     [places]
   );
 
-  const exportPlaces = scope === 'starred' ? starredPlaces : places;
+  const exportPlaces = scope === 'starred' ? ratedPlaces : places;
 
   const handleDownloadKML = () => {
     const kml = generateKML(exportPlaces, collectionName);
@@ -118,7 +118,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
                 fontFamily: FONT.sans,
               }}
             >
-              <PerriandIcon name="star" size={12} color={scope === 'starred' ? 'white' : 'var(--t-ink)'} /> Starred ({starredPlaces.length})
+              <PerriandIcon name="star" size={12} color={scope === 'starred' ? 'white' : 'var(--t-ink)'} /> Rated ({ratedPlaces.length})
             </button>
           </div>
         </div>

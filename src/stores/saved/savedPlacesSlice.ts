@@ -67,7 +67,6 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
       importBatchId: place.importBatchId,
       savedDate: place.savedDate,
       travelWith: place.travelWith,
-      isFavorited: place.isFavorited || false,
       userContext: place.userContext,
       timing: place.timing,
       intentStatus: place.intentStatus,

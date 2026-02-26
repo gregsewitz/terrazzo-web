@@ -17,6 +17,7 @@ export interface SavedCollectionState {
 
   // Actions
   setActiveView: (view: 'collections' | 'library') => void;
+  /** @deprecated isFavorited is no longer used — curation happens at import time */
   toggleStar: (id: string) => void;
   createCollection: (name: string, emoji?: string, description?: string) => string;
   /** Returns a promise that resolves to the real (server-assigned) collection ID */
@@ -187,17 +188,11 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
             updatedAt: new Date().toISOString(),
           };
         }),
-        myPlaces: collectionId === DEFAULT_COLLECTION_ID
-          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isFavorited: true } : p)
-          : state.myPlaces,
       };
     });
     // Write-through
     const sl = get().collections.find(s => s.id === collectionId);
     if (sl) dbWrite(`/api/collections/${collectionId}`, 'PATCH', { placeIds: sl.placeIds });
-    if (collectionId === DEFAULT_COLLECTION_ID) {
-      dbWrite(`/api/places/${placeId}`, 'PATCH', { isFavorited: true });
-    }
   },
 
   removePlaceFromCollection: (collectionId, placeId) => {
@@ -213,17 +208,11 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
             updatedAt: new Date().toISOString(),
           };
         }),
-        myPlaces: collectionId === DEFAULT_COLLECTION_ID
-          ? state.myPlaces.map(p => p.id === placeId ? { ...p, isFavorited: false } : p)
-          : state.myPlaces,
       };
     });
     // Write-through
     const sl = get().collections.find(s => s.id === collectionId);
     if (sl) dbWrite(`/api/collections/${collectionId}`, 'PATCH', { placeIds: sl.placeIds });
-    if (collectionId === DEFAULT_COLLECTION_ID) {
-      dbWrite(`/api/places/${placeId}`, 'PATCH', { isFavorited: false });
-    }
   },
 
   createSmartCollection: (name, emoji, query, filterTags, placeIds) => {
@@ -242,7 +231,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
               if (key === 'type') return p.type === val;
               if (key === 'source' && val === 'friend') return !!p.friendAttribution;
               if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
-              if (key === 'reaction' && val === 'saved') return p.isFavorited;
+              if (key === 'reaction' && val === 'saved') return true; // all library places are now "saved"
               return false;
             });
           })

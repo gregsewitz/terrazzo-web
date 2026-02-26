@@ -51,13 +51,12 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'source'>('match');
 
-  // Starred places from savedStore, geo-filtered to trip destinations
+  // Library places geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
   const starredPlaces = useMemo(() => {
     if (!tripDestinations || tripDestinations.length === 0) return [];
     const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
     return myPlaces.filter(place => {
-      if (!place.isFavorited) return false;
       return destLower.some(dest => place.location.toLowerCase().includes(dest));
     });
   }, [myPlaces, tripDestinations]);

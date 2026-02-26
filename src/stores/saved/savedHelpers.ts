@@ -47,9 +47,9 @@ export function createDefaultCollection(placeIds: string[]): Collection {
 
 export function buildCollections(allPlaces: ImportedPlace[]): Collection[] {
   const now = new Date().toISOString();
-  const favoritePlaceIds = allPlaces.filter(p => p.isFavorited).map(p => p.id);
-  const defaultCollection = createDefaultCollection(favoritePlaceIds);
-  defaultCollection.cities = deriveCities(favoritePlaceIds, allPlaces);
+  // All library places are prescreened (curation at import time), so
+  // the default Favorites collection starts empty — users add explicitly.
+  const defaultCollection = createDefaultCollection([]);
 
   const curated: Collection[] = [
     { id: 'col-scandi-design-hotels', name: 'Scandi design hotels', description: 'The best design-forward stays in Scandinavia', emoji: 'hotel', placeIds: ['sc-1', 'sc-8', 'sc-19'], cities: deriveCities(['sc-1', 'sc-8', 'sc-19'], allPlaces), isSmartCollection: false, createdAt: now, updatedAt: now },

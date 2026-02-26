@@ -183,7 +183,8 @@ export interface ImportedPlace {
   tips?: string[];         // e.g. ["⏰ Go early (can be a wait)", "🍺 Drink at the bar while waiting"]
   alsoKnownAs?: string;   // e.g. "El Sótano"
   importBatchId?: string;  // links places from same import for "Also from this guide"
-  isFavorited?: boolean; // true = in Favorites collection, shows in PicksStrip for day planner
+  /** @deprecated Curation now happens at import time — all library places are prescreened. */
+  isFavorited?: boolean;
   // Personal context extracted from user's notes
   userContext?: string;     // e.g. "going in May", "planned for my 40th", "with my daughter (5)"
   travelWith?: string;      // e.g. "bestie", "daughter", "friends"

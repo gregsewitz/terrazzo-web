@@ -22,6 +22,7 @@ export const PATCH = apiHandler(async (req: NextRequest, { params }: { params: P
     where: { id },
     data: {
       ...(updates.rating !== undefined && { rating: updates.rating }),
+      /** @deprecated isFavorited — curation now happens at import time */
       ...(updates.isFavorited !== undefined && { isFavorited: updates.isFavorited }),
       ...(updates.userContext !== undefined && { userContext: updates.userContext }),
       ...(updates.matchScore !== undefined && { matchScore: updates.matchScore }),

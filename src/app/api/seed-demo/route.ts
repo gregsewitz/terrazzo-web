@@ -76,7 +76,8 @@ export async function POST(req: NextRequest) {
         friendAttribution: toJson(p.friendAttribution),
         savedDate: p.savedDate || null,
         rating: toJson(p.rating),
-        isFavorited: p.isFavorited || false,
+        /** @deprecated isFavorited — curation now happens at import time */
+        isFavorited: false,
         matchScore: p.matchScore || null,
         matchBreakdown: toJson(p.matchBreakdown),
         tasteNote: p.tasteNote || null,
@@ -115,7 +116,8 @@ export async function POST(req: NextRequest) {
   await prisma.shortlist.deleteMany({ where: { userId: user.id } });
 
   // Rebuild collections from the same logic used in savedStore
-  const favoritePlaceIds = DEMO_ALL_PLACES.filter(p => p.isFavorited).map(p => p.id);
+  // Legacy: isFavorited deprecated — default Favorites collection starts empty
+  const favoritePlaceIds: string[] = [];
 
   interface CollectionDef {
     name: string;

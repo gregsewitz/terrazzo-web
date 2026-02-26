@@ -58,6 +58,7 @@ export const placeSchema = z.object({
   importBatchId: z.string().optional(),
   savedDate: z.string().optional(),
   travelWith: z.string().optional(),
+  /** @deprecated Curation now happens at import time */
   isFavorited: z.boolean().optional(),
   userContext: z.string().optional(),
   timing: z.string().optional(),

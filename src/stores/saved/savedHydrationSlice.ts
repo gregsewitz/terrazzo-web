@@ -68,8 +68,9 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
 
     // Ensure there's always a default Favorites collection
     if (!collections.some(s => s.isDefault)) {
-      const favoritePlaceIds = places.filter(p => p.isFavorited).map(p => p.id);
-      collections.unshift(createDefaultCollection(favoritePlaceIds));
+      // Legacy: previously used isFavorited to seed this, but curation now
+      // happens at import time — start with an empty default collection.
+      collections.unshift(createDefaultCollection([]));
     }
 
     set({ myPlaces: places, collections, history: [] });

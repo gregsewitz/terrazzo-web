@@ -92,8 +92,7 @@ export interface PicksFilterOptions {
   searchQuery: string;
   /**
    * Optional override for the place pool to match against.
-   * Defaults to: favorited + unplaced picks from savedStore.
-   * Pass a custom array (e.g. all myPlaces) for BrowseAllOverlay.
+   * Defaults to: all unplaced library places from savedStore.
    */
   placePool?: ImportedPlace[];
 }
@@ -107,7 +106,7 @@ export interface PicksFilterResult {
   activeGeoAnchors: GeoAnchor[];
   /** IDs of places already placed in slots (includes ghost items) */
   placedIds: Set<string>;
-  /** All unplaced, favorited picks (no destination filter) */
+  /** All unplaced library places (no destination filter) */
   allUnplacedPicks: ImportedPlace[];
   /** Picks filtered to trip/day destinations (before type/source/search) */
   destinationPicks: ImportedPlace[];
@@ -235,7 +234,7 @@ function placeIdMatches(
 // ─────────────────────────────────────────────────────────────────────
 
 /**
- * Shared filtering logic for PicksRail, PicksStrip, and BrowseAllOverlay.
+ * Shared filtering logic for PicksRail and PicksStrip.
  *
  * Scoring pipeline (first match wins):
  *  1. Google Place ID match → 1.0
@@ -345,9 +344,11 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     return ids;
   }, [trip]);
 
-  // ─── All unplaced, favorited picks ───
+  // ─── All unplaced library places ───
+  // Every place in the library is "prescreened" — curation happens at
+  // import time, so we no longer gate on isFavorited.
   const allUnplacedPicks = useMemo(() => {
-    return myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
+    return myPlaces.filter(p => !placedIds.has(p.id));
   }, [myPlaces, placedIds]);
 
   // ─── The pool of places to filter ───

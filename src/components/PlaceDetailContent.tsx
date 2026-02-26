@@ -48,8 +48,8 @@ function PlaceDetailContent({
   const myPlaces = useSavedStore(s => s.myPlaces);
   const collections = useSavedStore(s => s.collections);
   const [saved, setSaved] = useState(myPlaces.some(p => p.name === item.name));
-  const isFavorited = item.isFavorited || false;
   const memberCollections = collections.filter(sl => sl.placeIds.includes(item.id));
+  const isInCollections = memberCollections.length > 0;
 
   // Briefing polling for inline progress
   const googlePlaceId = (item.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
@@ -201,16 +201,16 @@ function PlaceDetailContent({
                 onClick={onCollectionTap}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${collectionBadgeHoverClass}`}
                 style={{
-                  background: isFavorited ? 'rgba(42,122,86,0.06)' : INK['03'],
-                  border: isFavorited ? '1.5px solid rgba(42,122,86,0.2)' : `1.5px solid ${INK['08']}`,
+                  background: isInCollections ? 'rgba(42,122,86,0.06)' : INK['03'],
+                  border: isInCollections ? '1.5px solid rgba(42,122,86,0.2)' : `1.5px solid ${INK['08']}`,
                 }}
               >
-                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isFavorited ? 'var(--t-verde)' : INK['70']} />
+                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isInCollections ? 'var(--t-verde)' : INK['70']} />
                 <span className={`${collectionBadgeFontSize} font-semibold`} style={{
-                  color: isFavorited ? 'var(--t-verde)' : INK['70'],
+                  color: isInCollections ? 'var(--t-verde)' : INK['70'],
                   fontFamily: FONT.mono,
                 }}>
-                  {isFavorited ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
+                  {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
                 </span>
               </button>
             )}

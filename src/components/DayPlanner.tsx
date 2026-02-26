@@ -357,7 +357,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         );
         if (hasPlacedOrGhost) return null;
         const hasSavedPlaces = myPlaces.some(p =>
-          p.isFavorited && p.location?.toLowerCase().includes(destLower)
+          p.location?.toLowerCase().includes(destLower)
         );
         if (hasSavedPlaces) return null;
         return (

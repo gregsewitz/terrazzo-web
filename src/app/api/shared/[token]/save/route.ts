@@ -84,6 +84,7 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
       googleData: toJson(p.googleData),
       terrazzoInsight: toJson(p.terrazzoInsight),
       placeIntelligenceId: p.placeIntelligenceId,
+      /** @deprecated isFavorited — curation now happens at import time */
       isFavorited: false,
     }));
 

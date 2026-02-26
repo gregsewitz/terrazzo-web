@@ -57,12 +57,20 @@ function SavedPageContent() {
   const setTypeFilter = useSavedStore(s => s.setTypeFilter);
   const cityFilter = useSavedStore(s => s.cityFilter);
   const setCityFilter = useSavedStore(s => s.setCityFilter);
-  const toggleStar = useSavedStore(s => s.toggleStar);
   const createCollectionAsync = useSavedStore(s => s.createCollectionAsync);
   const createSmartCollection = useSavedStore(s => s.createSmartCollection);
   const trips = useTripStore(s => s.trips);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
+
+  // ─── Collection count per place (excluding the default Favorites collection) ───
+  const collectionCountMap = useMemo(() => {
+    const counts: Record<string, number> = {};
+    collections
+      .filter(c => !c.isDefault)
+      .forEach(c => c.placeIds.forEach(pid => { counts[pid] = (counts[pid] || 0) + 1; }));
+    return counts;
+  }, [collections]);
 
   // ─── Collection sorting ───
   const [collectionSortBy, setCollectionSortBy] = useState<'recent' | 'name' | 'places' | 'updated'>('recent');
@@ -340,7 +348,8 @@ function SavedPageContent() {
                     <PlaceCard
                       place={place}
                       onTap={() => openDetail(place)}
-                      onToggleStar={() => openCollectionPicker(place)}
+                      onToggleCollections={() => openCollectionPicker(place)}
+                      collectionCount={collectionCountMap[place.id] || 0}
                       onLongPress={() => setAddToTripItem(place)}
                     />
                   </motion.div>
@@ -382,7 +391,8 @@ function SavedPageContent() {
                     <PlaceCard
                       place={place}
                       onTap={() => openDetail(place)}
-                      onToggleStar={() => openCollectionPicker(place)}
+                      onToggleCollections={() => openCollectionPicker(place)}
+                      collectionCount={collectionCountMap[place.id] || 0}
                       onLongPress={() => setAddToTripItem(place)}
                     />
                   </motion.div>
@@ -413,9 +423,6 @@ function SavedPageContent() {
             trips={trips}
             onClose={() => setAddToTripItem(null)}
             onAdd={(tripId) => {
-              if (!addToTripItem.isFavorited) {
-                toggleStar(addToTripItem.id);
-              }
               setAddToTripItem(null);
             }}
           />
@@ -560,7 +567,8 @@ function SavedPageContent() {
             <div className="flex flex-col gap-2">
               {filteredPlaces.map(place => (
                 <div key={place.id}>
-                  <PlaceCard place={place} onTap={() => openDetail(place)} onToggleStar={() => openCollectionPicker(place)} onLongPress={() => setAddToTripItem(place)} />
+                  <PlaceCard place={place} onTap={() => openDetail(place)} onToggleCollections={() => openCollectionPicker(place)}
+                      collectionCount={collectionCountMap[place.id] || 0} onLongPress={() => setAddToTripItem(place)} />
                 </div>
               ))}
             </div>
@@ -582,7 +590,7 @@ function SavedPageContent() {
         />
       )}
       {addToTripItem && trips.length > 0 && (
-        <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { if (!addToTripItem.isFavorited) { toggleStar(addToTripItem.id); } setAddToTripItem(null); }} />
+        <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { setAddToTripItem(null); }} />
       )}
       <TabBar />
     </div>
@@ -594,13 +602,14 @@ function SavedPageContent() {
 // Place Card — Library view card
 // ═══════════════════════════════════════════
 
-function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
+function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionCount }: {
   place: ImportedPlace;
   onTap: () => void;
-  onToggleStar: () => void;
+  onToggleCollections: () => void;
   onLongPress: () => void;
+  /** How many collections this place belongs to (excluding default Favorites) */
+  collectionCount: number;
 }) {
-  const isStarred = !!place.isFavorited;
   const typeIcon = TYPE_ICONS[place.type] || 'location';
   const google = place.google;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
@@ -637,8 +646,8 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
       onPointerLeave={handlePointerUp}
       className="rounded-xl cursor-pointer transition-all overflow-hidden card-hover"
       style={{
-        background: isStarred ? 'rgba(42,122,86,0.03)' : 'white',
-        border: isStarred ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+        background: 'white',
+        border: '1px solid var(--t-linen)',
       }}
     >
       <div className="flex gap-2.5 p-3 pb-0">
@@ -667,18 +676,27 @@ function PlaceCard({ place, onTap, onToggleStar, onLongPress }: {
               </div>
             </div>
 
-            {/* Star toggle */}
+            {/* Collection bookmark */}
             <button
-              onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-all flex-shrink-0"
+              onClick={(e) => { e.stopPropagation(); onToggleCollections(); }}
+              className="flex items-center gap-1 rounded-full px-2 py-1 transition-all flex-shrink-0"
               style={{
-                background: isStarred ? 'var(--t-verde)' : INK['06'],
-                color: isStarred ? 'white' : INK['50'],
+                background: collectionCount > 0 ? 'rgba(42,122,86,0.08)' : INK['06'],
                 border: 'none',
                 cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="star" size={12} color={isStarred ? 'white' : INK['50']} />
+              <PerriandIcon name="bookmark" size={12} color={collectionCount > 0 ? 'var(--t-verde)' : INK['40']} />
+              {collectionCount > 0 && (
+                <span style={{
+                  fontFamily: FONT.mono,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: 'var(--t-verde)',
+                }}>
+                  {collectionCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
