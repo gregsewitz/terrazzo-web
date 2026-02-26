@@ -768,6 +768,17 @@ function TripDetailContent() {
                 >
                   <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
                 </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
+                  style={{ background: INK['04'] }}
+                  title="Delete trip"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={INK['50']} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
               </div>
             </div>
             {/* Graduation banner */}
