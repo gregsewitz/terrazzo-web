@@ -330,46 +330,30 @@ function MapFitter({ coords, fallbackCenter }: {
       return;
     }
 
-    const bounds = new google.maps.LatLngBounds();
-    coords.forEach(c => bounds.extend(c));
-
     if (coords.length === 1) {
-      // Single marker — smooth pan + zoom
+      // Single marker — smooth pan, then gently adjust zoom
       map.panTo(coords[0]);
-      setTimeout(() => {
-        const currentZoom = map.getZoom() || 13;
-        const targetZoom = 15;
-        // Animate zoom step-by-step for smoothness
-        if (Math.abs(currentZoom - targetZoom) > 1) {
-          const step = currentZoom < targetZoom ? 0.5 : -0.5;
-          let z = currentZoom;
-          const interval = setInterval(() => {
-            z += step;
-            map.setZoom(z);
-            if ((step > 0 && z >= targetZoom) || (step < 0 && z <= targetZoom)) {
-              map.setZoom(targetZoom);
-              clearInterval(interval);
-            }
-          }, 40);
-        } else {
-          map.setZoom(targetZoom);
-        }
-      }, 100);
+      const currentZoom = map.getZoom() || 13;
+      const targetZoom = 15;
+      if (Math.abs(currentZoom - targetZoom) > 0.5) {
+        // Let the pan start, then smoothly set zoom once
+        setTimeout(() => map.setZoom(targetZoom), 300);
+      }
       return;
     }
 
-    // Multiple markers — use panToBounds for smooth animation, then fitBounds to finalize
+    // Multiple markers — compute target center & zoom from bounds,
+    // then use panTo + setZoom for a smooth single transition
+    // (fitBounds snaps instantly which causes the jarring jump on Safari)
+    const bounds = new google.maps.LatLngBounds();
+    coords.forEach(c => bounds.extend(c));
     map.panToBounds(bounds, padding);
-    // After the pan animation completes (~600ms), fit precisely
-    setTimeout(() => {
-      map.fitBounds(bounds, padding);
-      // Cap max zoom
-      const listener = map.addListener('idle', () => {
-        const z = map.getZoom();
-        if (z != null && z > 16) map.setZoom(16);
-        google.maps.event.removeListener(listener);
-      });
-    }, 500);
+    // Let panToBounds handle the smooth animation; only cap zoom after it settles
+    const listener = map.addListener('idle', () => {
+      const z = map.getZoom();
+      if (z != null && z > 16) map.setZoom(16);
+      google.maps.event.removeListener(listener);
+    });
   }, [map, coords, fallbackCenter]);
 
   return null;
