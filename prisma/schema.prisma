@@ -111,6 +111,7 @@ model SavedPlace {
   deletedAt           DateTime?          // null = active; set = soft-deleted (30-day recovery)
 
   // Relations
+  collections         CollectionPlace[]
   tripPlaceRefs       Place[]            @relation("LibraryPlaceRef")
 
   createdAt           DateTime @default(now())
@@ -120,6 +121,8 @@ model SavedPlace {
   @@index([userId])
   @@index([googlePlaceId])
   @@index([deletedAt])
+  @@index([type])
+  @@index([matchScore])
 }
 
 // Design notes:
@@ -145,14 +148,33 @@ model Shortlist {
   query             String?
   filterTags        Json?    // string[]
 
-  // Place membership (stored as SavedPlace IDs)
-  // See design notes above re: offline/conflict merge strategy
-  placeIds          Json     @default("[]")     // string[]
+  // Place membership — legacy JSON array kept as read cache for offline-first
+  // Source of truth is now CollectionPlace join table below
+  placeIds          Json     @default("[]")     // string[] (read cache)
+
+  places            CollectionPlace[]
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   @@index([userId])
+}
+
+// Join table: which SavedPlaces belong to which Shortlists (collections)
+// Replaces the denormalized placeIds JSON array as the source of truth.
+// Enables: "which collections is this place in?", referential integrity, addedAt tracking.
+model CollectionPlace {
+  id            String     @id @default(cuid())
+  collectionId  String
+  collection    Shortlist  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  placeId       String
+  place         SavedPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  addedAt       DateTime   @default(now())
+
+  @@unique([collectionId, placeId])
+  @@index([placeId])       // "which collections is this place in?"
+  @@index([collectionId])  // "which places are in this collection?"
 }
 
 // ──────────────────────────────────────────────
@@ -291,11 +313,12 @@ model TripSuggestion {
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Place data (self-contained, not linked to Place model)
+  // Place data
+  googlePlaceId String?   // Links to PlaceIntelligence for enrichment
   placeName     String
   placeType     String
   placeLocation String?
-  placeData     Json?     // Full ImportedPlace-like payload
+  placeData     Json?     // Full ImportedPlace-like payload (legacy; prefer googlePlaceId)
 
   // Target slot
   targetDay     Int

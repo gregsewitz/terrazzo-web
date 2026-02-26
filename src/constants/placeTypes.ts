@@ -1,4 +1,4 @@
-import type { PlaceType } from '@/types';
+import { T, type PlaceType } from '@/types';
 import type { PerriandIconName } from '@/components/icons/PerriandIcons';
 
 // ─── Icon mapping (unified: neighborhood → 'location') ───
@@ -56,14 +56,14 @@ export const TYPE_COLORS_MUTED: Record<PlaceType, string> = {
 // ─── Type colors: vibrant (for strong indicators) ───
 
 export const TYPE_COLORS_VIBRANT: Record<PlaceType, string> = {
-  restaurant: '#e87080',
-  hotel: '#c8923a',
-  bar: '#6844a0',
-  museum: '#2a7a56',
-  cafe: '#eeb420',
-  activity: '#e86830',
-  neighborhood: '#5a7a9a',
-  shop: '#a06c28',
+  restaurant: T.royerePink,
+  hotel: T.honey,
+  bar: T.pantonViolet,
+  museum: T.verde,
+  cafe: T.chromeYellow,
+  activity: T.pantonOrange,
+  neighborhood: T.ghost,
+  shop: T.amber,
 };
 
 // ─── Filter chip arrays ───

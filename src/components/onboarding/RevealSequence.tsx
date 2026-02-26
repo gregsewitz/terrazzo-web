@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { GeneratedTasteProfile, GoBackPlace, SeedTripInput } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
@@ -23,7 +24,30 @@ type RevealStage =
   | 'destinations'
   | 'trips';
 
-export default function RevealSequence({ profile, onComplete }: RevealSequenceProps) {
+// Animation constants
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
+const SPRING_GENTLE = { type: 'spring' as const, stiffness: 200, damping: 24 };
+const SPRING_BOUNCY = { type: 'spring' as const, stiffness: 300, damping: 20 };
+
+// Stage transition variants
+const stageVariants = {
+  enter: { opacity: 0, x: 50, scale: 0.97 },
+  center: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.5, ease: EASE_OUT_EXPO } },
+  exit: { opacity: 0, x: -50, scale: 0.97, transition: { duration: 0.25 } },
+};
+
+// Stagger variants for child items
+const containerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT_EXPO } },
+};
+
+const RevealSequence = memo(function RevealSequence({ profile, onComplete }: RevealSequenceProps) {
   const { goBackPlace, seedTrips, lifeContext, mosaicAxes } = useOnboardingStore();
 
   // Build dynamic stage list — skip stages with no data
@@ -42,7 +66,6 @@ export default function RevealSequence({ profile, onComplete }: RevealSequencePr
   }, [profile, mosaicAxes, seedTrips]);
 
   const [stageIndex, setStageIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const stage = stages[stageIndex];
 
   const advance = () => {
@@ -50,20 +73,19 @@ export default function RevealSequence({ profile, onComplete }: RevealSequencePr
       onComplete();
       return;
     }
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setStageIndex((i) => i + 1);
-      setIsTransitioning(false);
-    }, 300);
+    setStageIndex((i) => i + 1);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div
+      <motion.div
+        key={stage}
+        variants={stageVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
         style={{
           flex: 1, overflowY: 'auto', padding: '32px 24px',
-          opacity: isTransitioning ? 0 : 1,
-          transition: 'opacity 300ms ease',
         }}
       >
         {stage === 'archetype' && <ArchetypeReveal profile={profile} firstName={lifeContext.firstName} />}
@@ -76,96 +98,140 @@ export default function RevealSequence({ profile, onComplete }: RevealSequencePr
         {stage === 'neighbors' && <TasteNeighborsReveal profile={profile} />}
         {stage === 'destinations' && <DestinationsReveal profile={profile} />}
         {stage === 'trips' && <SeedTripsReveal seedTrips={seedTrips} />}
-      </div>
+      </motion.div>
 
       <div style={{
         padding: '16px 24px 20px',
         borderTop: '1px solid var(--t-linen)',
         flexShrink: 0,
       }}>
-        <button
+        <motion.button
           onClick={advance}
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
           style={{
             width: '100%', padding: '14px 0',
             borderRadius: 14, border: 'none',
             background: 'var(--t-ink)', color: 'var(--t-cream)',
             fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
             cursor: 'pointer',
-            transition: 'opacity 0.15s ease',
           }}
         >
           {stageIndex >= stages.length - 1 ? 'Dive in' : 'Continue'}
-        </button>
+        </motion.button>
 
         {/* Stage dots */}
         <div style={{
           display: 'flex', gap: 6, justifyContent: 'center', marginTop: 14,
         }}>
           {stages.map((_, i) => (
-            <div
+            <motion.div
               key={i}
+              layout
               style={{
-                width: i === stageIndex ? 18 : 6,
                 height: 6,
                 borderRadius: 3,
                 background: i === stageIndex ? T.honey : i < stageIndex ? INK['30'] : INK['12'],
-                transition: 'all 0.3s ease',
               }}
+              animate={{
+                width: i === stageIndex ? 18 : 6,
+              }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
             />
           ))}
         </div>
       </div>
     </div>
   );
-}
+});
+
+RevealSequence.displayName = 'RevealSequence';
+export default RevealSequence;
 
 
 // ─── Card 1: Archetype ───
 
 function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfile; firstName?: string }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 400); return () => clearTimeout(t); }, []);
-
   const greeting = firstName ? `${firstName}, you're` : "You're";
 
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVar = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: EASE_OUT_EXPO },
+    },
+  };
+
+  const badgeVar = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { type: 'spring' as const, stiffness: 200, damping: 20 },
+    },
+  };
+
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
-    }}>
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: T.honey, marginBottom: 20,
-      }}>
+    <motion.div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
+      }}
+      variants={containerVar}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: T.honey, marginBottom: 20,
+        }}
+        variants={itemVar}
+      >
         Your taste archetype
-      </div>
-      <h1 style={{
-        fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
-        fontWeight: 400, color: 'var(--t-ink)',
-        margin: 0, lineHeight: 1.15,
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0)' : 'translateY(16px)',
-        transition: 'all 1s ease',
-      }}>
+      </motion.div>
+
+      <motion.h1
+        style={{
+          fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--t-ink)',
+          margin: 0, lineHeight: 1.15,
+        }}
+        variants={itemVar}
+      >
         {greeting} {profile.overallArchetype}
-      </h1>
-      <p style={{
-        fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65,
-        color: INK['60'], maxWidth: 320, marginTop: 16,
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0)' : 'translateY(16px)',
-        transition: 'all 1s ease 0.3s',
-      }}>
+      </motion.h1>
+
+      <motion.p
+        style={{
+          fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65,
+          color: INK['60'], maxWidth: 320, marginTop: 16,
+        }}
+        variants={itemVar}
+      >
         {profile.archetypeDescription}
-      </p>
-      <div style={{
-        marginTop: 24, padding: '10px 20px',
-        borderRadius: 100,
-        border: '1px solid var(--t-linen)',
-        opacity: revealed ? 1 : 0,
-        transition: 'opacity 1s ease 0.7s',
-      }}>
+      </motion.p>
+
+      <motion.div
+        style={{
+          marginTop: 24, padding: '10px 20px',
+          borderRadius: 100,
+          border: '1px solid var(--t-linen)',
+        }}
+        variants={badgeVar}
+      >
         <span style={{
           fontFamily: FONT.sans, fontSize: 13, color: INK['50'],
         }}>
@@ -173,8 +239,8 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
           {' · '}
           <span>{profile.emotionalDriver.secondary}</span>
         </span>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -182,56 +248,105 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
 // ─── Card 2: The Quote ───
 
 function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 300); return () => clearTimeout(t); }, []);
-
   if (!profile.bestQuote) return null;
 
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-      padding: '0 4px',
-    }}>
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: INK['45'], marginBottom: 24,
-      }}>
-        The moment that told us the most
-      </div>
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.1,
+      },
+    },
+  };
 
-      <div style={{
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'all 0.8s ease',
-      }}>
-        {/* Large decorative quote mark */}
+  const labelVar = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const quoteMarkVar = {
+    hidden: { scale: 0, rotate: -10, opacity: 0 },
+    visible: {
+      scale: 1,
+      rotate: 0,
+      opacity: 0.5,
+      transition: { type: 'spring' as const, stiffness: 180, damping: 20, delay: 0.2 },
+    },
+  };
+
+  const quoteTextVar = {
+    hidden: { opacity: 0, y: 12 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.3 },
+    },
+  };
+
+  const insightVar = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.5, delay: 0.7 },
+    },
+  };
+
+  return (
+    <motion.div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
+        padding: '0 4px',
+      }}
+      variants={containerVar}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: INK['45'], marginBottom: 24,
+        }}
+        variants={labelVar}
+      >
+        The moment that told us the most
+      </motion.div>
+
+      <motion.div variants={quoteMarkVar}>
         <div style={{
           fontFamily: FONT.serif, fontSize: 64, color: T.honey,
-          lineHeight: 0.6, marginBottom: 8, opacity: 0.5,
+          lineHeight: 0.6, marginBottom: 8,
         }}>
           &ldquo;
         </div>
+      </motion.div>
 
-        <p style={{
+      <motion.p
+        style={{
           fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
           fontWeight: 400, color: 'var(--t-ink)',
           lineHeight: 1.5, maxWidth: 380, margin: '0 auto',
-        }}>
-          {profile.bestQuote.quote}
-        </p>
-      </div>
+        }}
+        variants={quoteTextVar}
+      >
+        {profile.bestQuote.quote}
+      </motion.p>
 
-      <p style={{
-        fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-        color: INK['55'], maxWidth: 340, marginTop: 28,
-        opacity: revealed ? 1 : 0,
-        transition: 'opacity 0.8s ease 0.5s',
-      }}>
+      <motion.p
+        style={{
+          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
+          color: INK['55'], maxWidth: 340, marginTop: 28,
+        }}
+        variants={insightVar}
+      >
         {profile.bestQuote.insight}
-      </p>
-    </div>
+      </motion.p>
+    </motion.div>
   );
 }
 
@@ -245,9 +360,6 @@ function DesignLanguageReveal({
   profile: GeneratedTasteProfile;
   mosaicAxes: Record<string, number>;
 }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 200); return () => clearTimeout(t); }, []);
-
   // Build spectrum data: merge ELO axes with profile annotations
   const spectrums = useMemo(() => {
     const axisOrder = ['volume', 'temperature', 'time', 'formality', 'culture', 'mood'];
@@ -272,6 +384,25 @@ function DesignLanguageReveal({
     });
   }, [mosaicAxes, profile.designInsight]);
 
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const spectrumVar = {
+    hidden: { opacity: 0, y: 8 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: EASE_OUT_EXPO },
+    },
+  };
+
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -291,15 +422,16 @@ function DesignLanguageReveal({
         </h2>
       </div>
 
-      <div style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {spectrums.map((spec, i) => (
-          <div
+      <motion.div
+        style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}
+        variants={containerVar}
+        initial="hidden"
+        animate="visible"
+      >
+        {spectrums.map((spec) => (
+          <motion.div
             key={spec.axis}
-            style={{
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateY(0)' : 'translateY(8px)',
-              transition: `all 0.5s ease ${i * 80}ms`,
-            }}
+            variants={spectrumVar}
           >
             {/* Labels */}
             <div style={{
@@ -327,13 +459,16 @@ function DesignLanguageReveal({
               background: 'var(--t-linen)',
               overflow: 'hidden',
             }}>
-              <div style={{
-                position: 'absolute', top: 0, left: 0,
-                height: '100%', borderRadius: 4,
-                background: T.honey,
-                width: revealed ? `${Math.round(spec.value * 100)}%` : '0%',
-                transition: `width 0.8s ease ${i * 80 + 200}ms`,
-              }} />
+              <motion.div
+                style={{
+                  position: 'absolute', top: 0, left: 0,
+                  height: '100%', borderRadius: 4,
+                  background: T.honey,
+                }}
+                initial={{ width: '0%' }}
+                animate={{ width: `${Math.round(spec.value * 100)}%` }}
+                transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
+              />
             </div>
 
             {/* Annotation */}
@@ -346,9 +481,9 @@ function DesignLanguageReveal({
                 {spec.note}
               </p>
             )}
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -357,9 +492,6 @@ function DesignLanguageReveal({
 // ─── Card 4: Taste Fingerprint ───
 
 function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 300); return () => clearTimeout(t); }, []);
-
   const radar = profile.radarData;
   if (!radar?.length) return null;
 
@@ -387,12 +519,45 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
   });
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+  const totalLength = 200; // Approximate path length for animation
+
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.5,
+      },
+    },
+  };
+
+  const dotVar = {
+    hidden: { scale: 0, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: SPRING_BOUNCY,
+    },
+  };
+
+  const insightVar = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.5, delay: 0.8 },
+    },
+  };
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-    }}>
+    <motion.div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+      }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.1 }}
+    >
       <div style={{
         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
         letterSpacing: '0.14em', textTransform: 'uppercase',
@@ -401,73 +566,81 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
         Your taste fingerprint
       </div>
 
-      <div style={{
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'scale(1)' : 'scale(0.9)',
-        transition: 'all 0.8s ease',
-      }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {/* Grid circles */}
-          {[0.33, 0.66, 1].map((r) => (
-            <circle
-              key={r}
-              cx={cx} cy={cy} r={maxR * r}
-              fill="none" stroke={INK['08']} strokeWidth={1}
-            />
-          ))}
-          {/* Grid lines */}
-          {points.map((p, i) => (
-            <line
-              key={i}
-              x1={cx} y1={cy}
-              x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-              y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-              stroke={INK['06']} strokeWidth={1}
-            />
-          ))}
-          {/* Shape */}
-          <path
-            d={pathD}
-            fill={`${T.honey}20`}
-            stroke={T.honey}
-            strokeWidth={2}
-            strokeLinejoin="round"
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Grid circles */}
+        {[0.33, 0.66, 1].map((r) => (
+          <circle
+            key={r}
+            cx={cx} cy={cy} r={maxR * r}
+            fill="none" stroke={INK['08']} strokeWidth={1}
           />
-          {/* Dots */}
+        ))}
+        {/* Grid lines */}
+        {points.map((p, i) => (
+          <line
+            key={i}
+            x1={cx} y1={cy}
+            x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
+            y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
+            stroke={INK['06']} strokeWidth={1}
+          />
+        ))}
+        {/* Shape with pathLength animation */}
+        <motion.path
+          d={pathD}
+          fill={`${T.honey}20`}
+          stroke={T.honey}
+          strokeWidth={2}
+          strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
+          style={{ originX: '50%', originY: '50%' }}
+        />
+        {/* Dots with stagger */}
+        <motion.g variants={containerVar} initial="hidden" animate="visible">
           {points.map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r={4} fill={T.honey} />
+            <motion.circle
+              key={i}
+              cx={p.x}
+              cy={p.y}
+              r={4}
+              fill={T.honey}
+              variants={dotVar}
+            />
           ))}
-        </svg>
+        </motion.g>
+      </svg>
 
-        {/* Axis labels */}
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-          gap: '6px 14px', marginTop: 16, maxWidth: 280,
-        }}>
-          {radar.map((d) => (
-            <span key={d.axis} style={{
-              fontFamily: FONT.sans, fontSize: 11,
-              fontWeight: top2.includes(d.axis) ? 700 : 400,
-              color: top2.includes(d.axis) ? T.honey : INK['45'],
-            }}>
-              {d.axis}
-            </span>
-          ))}
-        </div>
+      {/* Axis labels */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+        gap: '6px 14px', marginTop: 16, maxWidth: 280,
+      }}>
+        {radar.map((d) => (
+          <span key={d.axis} style={{
+            fontFamily: FONT.sans, fontSize: 11,
+            fontWeight: top2.includes(d.axis) ? 700 : 400,
+            color: top2.includes(d.axis) ? T.honey : INK['45'],
+          }}>
+            {d.axis}
+          </span>
+        ))}
       </div>
 
-      <p style={{
-        fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-        color: INK['55'], maxWidth: 320, marginTop: 20,
-        opacity: revealed ? 1 : 0,
-        transition: 'opacity 0.8s ease 0.5s',
-      }}>
+      <motion.p
+        style={{
+          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
+          color: INK['55'], maxWidth: 320, marginTop: 20,
+        }}
+        variants={insightVar}
+      >
         <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[0]}</span>
         {' and '}
         <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[1]}</span>
         {' drive you. Most travelers lead with other dimensions — you lead with these.'}
-      </p>
-    </div>
+      </motion.p>
+    </motion.div>
   );
 }
 
@@ -475,18 +648,55 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
 // ─── Card 5: Contradiction ───
 
 function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 300); return () => clearTimeout(t); }, []);
-
   const c = profile.contradictions[0];
   if (!c) return null;
 
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const poleVar = {
+    hidden: { opacity: 0, x: 0 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
+  };
+
+  const statedVar = {
+    hidden: { opacity: 0, x: -30 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
+  };
+
+  const revealedVar = {
+    hidden: { opacity: 0, x: 30 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
+  };
+
+  const resolutionVar = {
+    hidden: { opacity: 0, scale: 0.95, y: 12 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.3 },
+    },
+  };
+
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-      padding: '0 4px',
-    }}>
+    <motion.div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+        padding: '0 4px',
+      }}
+      variants={containerVar}
+      initial="hidden"
+      animate="visible"
+    >
       <div style={{
         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
         letterSpacing: '0.14em', textTransform: 'uppercase',
@@ -497,50 +707,54 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
       <div style={{
         maxWidth: 420, width: '100%',
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'all 0.7s ease',
       }}>
         {/* The two poles */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 12, marginBottom: 24,
         }}>
-          <span style={{
-            fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-            color: 'var(--t-ink)', textAlign: 'right', flex: 1,
-          }}>
+          <motion.span
+            style={{
+              fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
+              color: 'var(--t-ink)', textAlign: 'right', flex: 1,
+            }}
+            variants={statedVar}
+          >
             {c.stated}
-          </span>
+          </motion.span>
           <span style={{
             fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
             color: INK['30'],
           }}>
             ×
           </span>
-          <span style={{
-            fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-            color: 'var(--t-ink)', textAlign: 'left', flex: 1,
-          }}>
+          <motion.span
+            style={{
+              fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
+              color: 'var(--t-ink)', textAlign: 'left', flex: 1,
+            }}
+            variants={revealedVar}
+          >
             {c.revealed}
-          </span>
+          </motion.span>
         </div>
 
         {/* Resolution */}
-        <div style={{
-          padding: '20px 24px', borderRadius: 16,
-          background: 'white', border: '1px solid var(--t-linen)',
-          textAlign: 'left',
-          opacity: revealed ? 1 : 0,
-          transition: 'opacity 0.7s ease 0.4s',
-        }}>
+        <motion.div
+          style={{
+            padding: '20px 24px', borderRadius: 16,
+            background: 'white', border: '1px solid var(--t-linen)',
+            textAlign: 'left',
+          }}
+          variants={resolutionVar}
+        >
           <p style={{
             fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
             color: INK['70'], margin: 0,
           }}>
             {c.resolution}
           </p>
-        </div>
+        </motion.div>
 
         <p style={{
           fontFamily: FONT.sans, fontSize: 13, color: INK['40'],
@@ -549,7 +763,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
           We&apos;ll find places that understand both sides.
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -557,9 +771,6 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
 // ─── Card 6: Your Perfect Day ───
 
 function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 200); return () => clearTimeout(t); }, []);
-
   if (!profile.perfectDay) return null;
 
   const segments = [
@@ -567,6 +778,25 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
     { label: 'Afternoon', text: profile.perfectDay.afternoon, color: '#ddd5c4' },
     { label: 'Evening', text: profile.perfectDay.evening, color: '#d0c4ae' },
   ];
+
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVar = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { ...SPRING_GENTLE, delay: 0 },
+    },
+  };
 
   return (
     <div>
@@ -587,17 +817,20 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </h2>
       </div>
 
-      <div style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {segments.map((seg, i) => (
-          <div
+      <motion.div
+        style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
+        variants={containerVar}
+        initial="hidden"
+        animate="visible"
+      >
+        {segments.map((seg) => (
+          <motion.div
             key={seg.label}
             style={{
               padding: '20px 24px', borderRadius: 16,
               background: 'white', border: '1px solid var(--t-linen)',
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateY(0)' : 'translateY(12px)',
-              transition: `all 0.6s ease ${i * 150}ms`,
             }}
+            variants={cardVar}
           >
             <div style={{
               fontFamily: FONT.sans, fontSize: 11, fontWeight: 700,
@@ -612,9 +845,9 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
             }}>
               {seg.text}
             </p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -623,10 +856,26 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
 // ─── Card 7: How You Shift ───
 
 function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 200); return () => clearTimeout(t); }, []);
-
   if (!profile.howYouShift?.length) return null;
+
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVar = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { ...SPRING_GENTLE, delay: 0 },
+    },
+  };
 
   return (
     <div>
@@ -647,17 +896,20 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </h2>
       </div>
 
-      <div style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {profile.howYouShift.map((shift, i) => (
-          <div
+      <motion.div
+        style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
+        variants={containerVar}
+        initial="hidden"
+        animate="visible"
+      >
+        {profile.howYouShift.map((shift) => (
+          <motion.div
             key={shift.context}
             style={{
               padding: '20px 24px', borderRadius: 16,
               background: 'white', border: '1px solid var(--t-linen)',
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateY(0)' : 'translateY(12px)',
-              transition: `all 0.6s ease ${i * 150}ms`,
             }}
+            variants={cardVar}
           >
             <div style={{
               fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
@@ -671,9 +923,9 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
             }}>
               {shift.insight}
             </p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -682,18 +934,57 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
 // ─── Card 8: Taste Neighbors ───
 
 function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 300); return () => clearTimeout(t); }, []);
-
   if (!profile.tasteNeighbors) return null;
   const { nearbyArchetypes, distinction, rarityStat } = profile.tasteNeighbors;
 
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.15,
+      },
+    },
+  };
+
+  const tagVar = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: SPRING_BOUNCY,
+    },
+  };
+
+  const distinctionVar = {
+    hidden: { opacity: 0, y: 12 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.4 },
+    },
+  };
+
+  const rarityVar = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.6 },
+    },
+  };
+
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-      padding: '0 4px',
-    }}>
+    <motion.div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+        padding: '0 4px',
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <div style={{
         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
         letterSpacing: '0.14em', textTransform: 'uppercase',
@@ -702,57 +993,61 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         Your taste neighbors
       </div>
 
-      <div style={{
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'all 0.7s ease',
-      }}>
-        {/* Nearby archetypes */}
-        <div style={{
+      {/* Nearby archetypes */}
+      <motion.div
+        style={{
           display: 'flex', flexWrap: 'wrap', gap: 8,
           justifyContent: 'center', marginBottom: 20,
-        }}>
-          {nearbyArchetypes.map((name) => (
-            <span
-              key={name}
-              style={{
-                fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                color: 'var(--t-ink)',
-                padding: '8px 18px', borderRadius: 100,
-                border: '1px solid var(--t-linen)',
-                background: 'white',
-              }}
-            >
-              {name}
-            </span>
-          ))}
-        </div>
+        }}
+        variants={containerVar}
+        initial="hidden"
+        animate="visible"
+      >
+        {nearbyArchetypes.map((name) => (
+          <motion.span
+            key={name}
+            style={{
+              fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
+              color: 'var(--t-ink)',
+              padding: '8px 18px', borderRadius: 100,
+              border: '1px solid var(--t-linen)',
+              background: 'white',
+            }}
+            variants={tagVar}
+          >
+            {name}
+          </motion.span>
+        ))}
+      </motion.div>
 
-        {/* Distinction */}
-        <p style={{
+      {/* Distinction */}
+      <motion.p
+        style={{
           fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65,
           color: INK['70'], maxWidth: 340, marginBottom: 24,
-        }}>
-          {distinction}
-        </p>
-      </div>
+        }}
+        variants={distinctionVar}
+      >
+        {distinction}
+      </motion.p>
 
       {/* Rarity stat */}
-      <div style={{
-        padding: '16px 24px', borderRadius: 14,
-        background: 'white', border: '1px solid var(--t-linen)',
-        maxWidth: 380,
-        opacity: revealed ? 1 : 0,
-        transition: 'opacity 0.7s ease 0.5s',
-      }}>
+      <motion.div
+        style={{
+          padding: '16px 24px', borderRadius: 14,
+          background: 'white', border: '1px solid var(--t-linen)',
+          maxWidth: 380,
+        }}
+        variants={rarityVar}
+      >
         <p style={{
           fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
           color: INK['55'], margin: 0, fontStyle: 'italic',
         }}>
           {rarityStat}
         </p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -760,11 +1055,37 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 // ─── Card 9: Where You'd Thrive ───
 
 function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 200); return () => clearTimeout(t); }, []);
-
   if (!profile.destinations) return null;
   const { familiar, surprise } = profile.destinations;
+
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const familiarVar = {
+    hidden: { opacity: 0, y: 8 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: EASE_OUT_EXPO },
+    },
+  };
+
+  const surpriseVar = {
+    hidden: { opacity: 0, scale: 0.95, y: 12 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: { ...SPRING_BOUNCY, delay: Math.max(0, familiar.length * 120 - 100) / 1000 + 0.2 },
+    },
+  };
 
   return (
     <div style={{
@@ -787,38 +1108,43 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
       </h2>
 
       {/* Familiar destinations */}
-      <div style={{
-        display: 'flex', flexDirection: 'column', gap: 10,
-        marginBottom: 20, width: '100%', maxWidth: 360,
-      }}>
-        {familiar.map((dest, i) => (
-          <div
+      <motion.div
+        style={{
+          display: 'flex', flexDirection: 'column', gap: 10,
+          marginBottom: 20, width: '100%', maxWidth: 360,
+        }}
+        variants={containerVar}
+        initial="hidden"
+        animate="visible"
+      >
+        {familiar.map((dest) => (
+          <motion.div
             key={dest}
             style={{
               fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
               color: 'var(--t-ink)', padding: '14px 20px',
               borderRadius: 14, background: 'white',
               border: '1px solid var(--t-linen)',
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateY(0)' : 'translateY(8px)',
-              transition: `all 0.5s ease ${i * 120}ms`,
             }}
+            variants={familiarVar}
           >
             {dest}
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Surprise destination */}
-      <div style={{
-        width: '100%', maxWidth: 360,
-        padding: '18px 20px', borderRadius: 14,
-        background: `${T.honey}10`,
-        border: `1px solid ${T.honey}30`,
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0)' : 'translateY(8px)',
-        transition: `all 0.6s ease ${familiar.length * 120 + 100}ms`,
-      }}>
+      <motion.div
+        style={{
+          width: '100%', maxWidth: 360,
+          padding: '18px 20px', borderRadius: 14,
+          background: `${T.honey}10`,
+          border: `1px solid ${T.honey}30`,
+        }}
+        variants={surpriseVar}
+        initial="hidden"
+        animate="visible"
+      >
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -838,7 +1164,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         }}>
           {surprise.reason}
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -847,8 +1173,24 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 // ─── Final: Your Trips ───
 
 function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRevealed(true), 300); return () => clearTimeout(t); }, []);
+  const containerVar = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVar = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { ...SPRING_GENTLE, delay: 0 },
+    },
+  };
 
   return (
     <div>
@@ -875,17 +1217,20 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420, margin: '0 auto' }}>
+      <motion.div
+        style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420, margin: '0 auto' }}
+        variants={containerVar}
+        initial="hidden"
+        animate="visible"
+      >
         {seedTrips.map((trip, i) => (
-          <div
+          <motion.div
             key={i}
             style={{
               padding: '20px 24px', borderRadius: 16,
               background: 'white', border: '1px solid var(--t-linen)',
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateY(0)' : 'translateY(16px)',
-              transition: `all 0.7s ease ${i * 200}ms`,
             }}
+            variants={cardVar}
           >
             <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 8 }}>
               <div>
@@ -920,9 +1265,9 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
               <span>·</span>
               <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useMemo, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
@@ -38,6 +39,11 @@ export default function SavedPage() {
     </PlaceDetailProvider>
   );
 }
+
+/* ─── Animation constants ─── */
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
+const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT_EXPO } } };
 
 function SavedPageContent() {
   const router = useRouter();
@@ -175,26 +181,30 @@ function SavedPageContent() {
           {/* ═══ Header row ═══ */}
           <div className="flex items-end justify-between mb-6">
             <div>
-              <h1
-                style={{
-                  fontFamily: FONT.serif,
-                  fontStyle: 'italic',
-                  fontSize: 32,
-                  color: 'var(--t-ink)',
-                  margin: 0,
-                  lineHeight: 1.2,
-                }}
-              >
-                Collect
-              </h1>
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}>
+                <h1
+                  style={{
+                    fontFamily: FONT.serif,
+                    fontStyle: 'italic',
+                    fontSize: 32,
+                    color: 'var(--t-ink)',
+                    margin: 0,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Collect
+                </h1>
+              </motion.div>
               <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
                 {myPlaces.length} places across {allCities.length} {allCities.length === 1 ? 'city' : 'cities'}
               </p>
             </div>
             <div className="flex items-center gap-3">
               <PlaceSearchBar />
-              <button
+              <motion.button
                 onClick={() => setShowCreateCollection(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
                 style={{
                   background: 'var(--t-ink)',
@@ -206,7 +216,7 @@ function SavedPageContent() {
                 }}
               >
                 <span>+</span> New Collection
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -229,19 +239,23 @@ function SavedPageContent() {
                   compact
                 />
               </div>
-              <div
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
                 className="grid gap-3"
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
               >
                 {sortedCollections.map(sl => (
-                  <CollectionCard
-                    key={sl.id}
-                    collection={sl}
-                    places={myPlaces}
-                    onClick={() => router.push(`/saved/collections/${sl.id}`)}
-                  />
+                  <motion.div key={sl.id} variants={cardVariants}>
+                    <CollectionCard
+                      collection={sl}
+                      places={myPlaces}
+                      onClick={() => router.push(`/saved/collections/${sl.id}`)}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           )}
 
@@ -313,20 +327,24 @@ function SavedPageContent() {
               />
             </div>
             {filteredPlaces.length > 0 ? (
-              <div
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
                 className="grid gap-4"
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
               >
                 {filteredPlaces.map(place => (
-                  <PlaceCard
-                    key={place.id}
-                    place={place}
-                    onTap={() => openDetail(place)}
-                    onToggleStar={() => openCollectionPicker(place)}
-                    onLongPress={() => setAddToTripItem(place)}
-                  />
+                  <motion.div key={place.id} variants={cardVariants}>
+                    <PlaceCard
+                      place={place}
+                      onTap={() => openDetail(place)}
+                      onToggleStar={() => openCollectionPicker(place)}
+                      onLongPress={() => setAddToTripItem(place)}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             ) : (
               <div className="text-center py-16">
                 <PerriandIcon name="discover" size={36} color={INK['15']} />
@@ -351,20 +369,24 @@ function SavedPageContent() {
               <p style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'], margin: '0 0 16px' }}>
                 These places aren&apos;t in any collection yet
               </p>
-              <div
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
                 className="grid gap-4"
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
               >
                 {uncollectedPlaces.map(place => (
-                  <PlaceCard
-                    key={place.id}
-                    place={place}
-                    onTap={() => openDetail(place)}
-                    onToggleStar={() => openCollectionPicker(place)}
-                    onLongPress={() => setAddToTripItem(place)}
-                  />
+                  <motion.div key={place.id} variants={cardVariants}>
+                    <PlaceCard
+                      place={place}
+                      onTap={() => openDetail(place)}
+                      onToggleStar={() => openCollectionPicker(place)}
+                      onLongPress={() => setAddToTripItem(place)}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           )}
         </div>
@@ -440,8 +462,10 @@ function SavedPageContent() {
                   {collections.length}
                 </span>
               </h2>
-              <button
+              <motion.button
                 onClick={() => setShowCreateCollection(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer"
                 style={{
                   background: 'var(--t-ink)',
@@ -453,13 +477,15 @@ function SavedPageContent() {
                 }}
               >
                 <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>+</span> New
-              </button>
+              </motion.button>
             </div>
-            <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+            <motion.div initial="hidden" animate="visible" variants={containerVariants} className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
               {sortedCollections.map(sl => (
-                <CollectionCard key={sl.id} collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
+                <motion.div key={sl.id} variants={cardVariants}>
+                  <CollectionCard collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -532,11 +558,13 @@ function SavedPageContent() {
             />
           </div>
           {filteredPlaces.length > 0 ? (
-            <div className="flex flex-col gap-2">
+            <motion.div initial="hidden" animate="visible" variants={containerVariants} className="flex flex-col gap-2">
               {filteredPlaces.map(place => (
-                <PlaceCard key={place.id} place={place} onTap={() => openDetail(place)} onToggleStar={() => openCollectionPicker(place)} onLongPress={() => setAddToTripItem(place)} />
+                <motion.div key={place.id} variants={cardVariants}>
+                  <PlaceCard place={place} onTap={() => openDetail(place)} onToggleStar={() => openCollectionPicker(place)} onLongPress={() => setAddToTripItem(place)} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="text-center py-16">
               <PerriandIcon name="discover" size={36} color={INK['15']} />

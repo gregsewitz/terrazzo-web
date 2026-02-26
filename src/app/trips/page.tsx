@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
@@ -9,6 +10,11 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { DEST_COLORS } from '@/types';
+
+/* ─── Animation constants ─── */
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
+const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT_EXPO } } };
 
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
@@ -24,7 +30,10 @@ export default function TripsPage() {
           {/* Header */}
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h1
+              <motion.h1
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
                 style={{
                   fontFamily: FONT.serif,
                   fontStyle: 'italic',
@@ -35,22 +44,27 @@ export default function TripsPage() {
                 }}
               >
                 Your Trips
-              </h1>
+              </motion.h1>
               <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
                 {trips.length} {trips.length === 1 ? 'trip' : 'trips'} in progress
               </p>
             </div>
-            <button
+            <motion.button
               onClick={() => router.push('/trips/new')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className="flex items-center gap-1.5 px-6 py-3 rounded-full border-none cursor-pointer text-[13px] font-semibold btn-hover"
               style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
             >
               <span className="text-sm">+</span> New Trip
-            </button>
+            </motion.button>
           </div>
 
           {/* Trip cards grid */}
-          <div
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
             className="grid gap-5"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}
           >
@@ -61,8 +75,9 @@ export default function TripsPage() {
               const placedCount = trip.days.reduce((n, d) => n + d.slots.filter(s => s.places.length > 0).length, 0);
 
               return (
-                <button
+                <motion.button
                   key={trip.id}
+                  variants={cardVariants}
                   onClick={() => router.push(`/trips/${trip.id}`)}
                   className="rounded-2xl border-none cursor-pointer text-left overflow-hidden card-hover"
                   style={{
@@ -71,11 +86,15 @@ export default function TripsPage() {
                   }}
                 >
                   {/* Color accent bar */}
-                  <div
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
                     style={{
                       height: 6,
                       background: destColor?.accent || 'var(--t-honey)',
                       borderRadius: '14px 14px 0 0',
+                      originX: 0,
                     }}
                   />
                   <div className="p-5">
@@ -142,12 +161,13 @@ export default function TripsPage() {
                       )}
                     </div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
 
             {/* Create CTA */}
-            <button
+            <motion.button
+              variants={cardVariants}
               onClick={() => router.push('/trips/new')}
               className="flex flex-col items-center justify-center gap-3 rounded-2xl border-none cursor-pointer transition-all hover:scale-[1.01]"
               style={{
@@ -157,24 +177,26 @@ export default function TripsPage() {
                 color: INK['90'],
               }}
             >
-              <div
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ background: INK['06'] }}
               >
                 <span style={{ fontSize: 24, color: INK['40'] }}>+</span>
-              </div>
+              </motion.div>
               <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
               <span className="text-[11px]" style={{ color: INK['70'] }}>
                 Tell us where and when — we'll find your perfect places
               </span>
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
       </div>
     );
   }
 
-  /* ─── Mobile layout (unchanged) ─── */
+  /* ─── Mobile layout ─── */
   return (
     <div
       className="min-h-screen pb-16"
@@ -203,10 +225,16 @@ export default function TripsPage() {
           Plan and curate your bespoke travel itinerary
         </p>
 
-        <div className="flex flex-col gap-3">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="flex flex-col gap-3"
+        >
           {trips.map(trip => (
-            <button
+            <motion.button
               key={trip.id}
+              variants={cardVariants}
               onClick={() => router.push(`/trips/${trip.id}`)}
               className="flex items-center gap-3 p-4 rounded-xl border-none cursor-pointer text-left transition-all hover:scale-[1.01]"
               style={{ background: 'white', border: '1.5px solid var(--t-linen)' }}
@@ -234,19 +262,26 @@ export default function TripsPage() {
                 </div>
               </div>
               <span style={{ color: INK['95'] }}>→</span>
-            </button>
+            </motion.button>
           ))}
 
-          <button
+          <motion.button
+            variants={cardVariants}
             onClick={() => router.push('/trips/new')}
             className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
             style={{ background: INK['02'], border: '1.5px dashed var(--t-travertine)', color: INK['90'] }}
           >
-            <span className="text-2xl">+</span>
+            <motion.span
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-2xl"
+            >
+              +
+            </motion.span>
             <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
             <span className="text-[11px]" style={{ color: INK['90'] }}>Tell us where and when — we'll find your perfect places</span>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
       <TabBar />
     </div>

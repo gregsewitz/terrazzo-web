@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { TYPE_ICONS } from '@/constants/placeTypes';
@@ -454,36 +454,34 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
         : { height, border: '1px solid var(--t-linen)' }
       }
     >
-      <APIProvider apiKey={API_KEY}>
-        <Map
-          defaultCenter={fallbackCenter}
-          defaultZoom={13}
-          gestureHandling="greedy"
-          disableDefaultUI={false}
-          zoomControl={true}
-          mapTypeControl={false}
-          streetViewControl={false}
-          fullscreenControl={false}
-          mapId={MAP_ID}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <MapFitter coords={originalCoords} fallbackCenter={fallbackCenter} />
-          {resolved.map(m => (
-            <MarkerPin
-              key={m.id}
-              marker={m}
-              isExpanded={activeMarkerId === undefined && expandedId === m.id}
-              isHighlighted={activeMarkerId !== undefined && activeMarkerId === m.id}
-              onToggle={() => {
-                if (activeMarkerId === undefined) {
-                  setInternalExpandedId(prev => prev === m.id ? null : m.id);
-                }
-                if (onMarkerTap) onMarkerTap(m.id);
-              }}
-            />
-          ))}
-        </Map>
-      </APIProvider>
+      <Map
+        defaultCenter={fallbackCenter}
+        defaultZoom={13}
+        gestureHandling="greedy"
+        disableDefaultUI={false}
+        zoomControl={true}
+        mapTypeControl={false}
+        streetViewControl={false}
+        fullscreenControl={false}
+        mapId={MAP_ID}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <MapFitter coords={originalCoords} fallbackCenter={fallbackCenter} />
+        {resolved.map(m => (
+          <MarkerPin
+            key={m.id}
+            marker={m}
+            isExpanded={activeMarkerId === undefined && expandedId === m.id}
+            isHighlighted={activeMarkerId !== undefined && activeMarkerId === m.id}
+            onToggle={() => {
+              if (activeMarkerId === undefined) {
+                setInternalExpandedId(prev => prev === m.id ? null : m.id);
+              }
+              if (onMarkerTap) onMarkerTap(m.id);
+            }}
+          />
+        ))}
+      </Map>
     </div>
   );
 }

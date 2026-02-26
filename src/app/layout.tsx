@@ -6,6 +6,7 @@ import UniversalAddBar from "@/components/UniversalAddBar";
 import StoreHydration from "@/components/StoreHydration";
 import SaveIndicator from "@/components/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
+import MapsProvider from "@/components/MapsProvider";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -46,11 +47,13 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceMono.variable}`}>
       <body className="antialiased">
         <AuthProvider>
-          <StoreHydration />
-          {children}
-          <GlobalImportUI />
-          <UniversalAddBar />
-          <SaveIndicator />
+          <MapsProvider>
+            <StoreHydration />
+            {children}
+            <GlobalImportUI />
+            <UniversalAddBar />
+            <SaveIndicator />
+          </MapsProvider>
         </AuthProvider>
       </body>
     </html>

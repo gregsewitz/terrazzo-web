@@ -10,6 +10,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import PipelineProgress from '@/components/PipelineProgress';
 import { FONT, INK } from '@/constants/theme';
+import PlacePhoto from '@/components/PlacePhoto';
 
 export interface PlaceDetailContentProps {
   item: ImportedPlace;
@@ -105,13 +106,12 @@ function PlaceDetailContent({
         }}
       >
         {getPlaceImage(item.name) && (
-          <img
+          <PlacePhoto
             src={getPlaceImage(item.name)}
             alt={item.name}
-            width={isDesktop ? 440 : 480}
-            height={photoHeight}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            fill
+            sizes={isDesktop ? '440px' : '100vw'}
+            style={{ position: 'absolute', top: 0, left: 0 }}
           />
         )}
         {/* Close/back button — position and style varies */}

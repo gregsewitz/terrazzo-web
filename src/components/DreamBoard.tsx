@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, memo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { DreamBoardEntry, DreamBoardEntryType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
@@ -65,7 +65,7 @@ interface DreamBoardProps {
   compact?: boolean; // true for desktop right-panel mode (narrower)
 }
 
-export default function DreamBoard({ compact }: DreamBoardProps) {
+const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
@@ -350,7 +350,10 @@ export default function DreamBoard({ compact }: DreamBoardProps) {
       )}
     </div>
   );
-}
+});
+
+DreamBoard.displayName = 'DreamBoard';
+export default DreamBoard;
 
 // ═══════════════════════════════════════════════════════════════
 //  Individual entry card

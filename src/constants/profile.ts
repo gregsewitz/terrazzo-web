@@ -2,7 +2,7 @@
 // Taste Profile — Static demo data (ported from terrazzo-app)
 // ═══════════════════════════════════════════════════════════════════
 
-import { PerriandIconName } from '@/types';
+import { T, PerriandIconName } from '@/types';
 
 export interface TasteProfile {
   overallArchetype: string;
@@ -125,8 +125,11 @@ export const WRAPPED = {
   rarestPercent: 4,
 };
 
-// Domain color mapping used across profile components
-export const DOMAIN_COLORS: Record<string, string> = {
+// Dimension colors for profile deep-dive sections
+// NOTE: These are intentionally different from DOMAIN_COLORS in types/index.ts —
+// those map the 6 TasteDomain keys (Design, Character, etc.) to vibrant brand colors.
+// These map the full dimension names to muted earth-tone variants for profile UI.
+export const DIMENSION_COLORS: Record<string, string> = {
   "Design Language": "#8b6b4a",
   "Character & Identity": "#4a6741",
   "Service Philosophy": "#6b8b4a",
@@ -137,12 +140,12 @@ export const DOMAIN_COLORS: Record<string, string> = {
 };
 
 export const AXIS_COLORS: Record<string, string> = {
-  Sensory: "#c8923a",       // Honey — Chapo elmwood
-  Authenticity: "#d63020",  // Signal Red — Perriand panel
-  Material: "#eeb420",      // Chrome Yellow — Perriand panel
-  Social: "#e86830",        // Panton Orange — Panton Chair
-  Cultural: "#6844a0",      // Panton Violet — Panton interior
-  Spatial: "#2a7a56",       // Verde — Barcelona marble
+  Sensory: T.honey,
+  Authenticity: T.signalRed,
+  Material: T.chromeYellow,
+  Social: T.pantonOrange,
+  Cultural: T.pantonViolet,
+  Spatial: T.verde,
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {

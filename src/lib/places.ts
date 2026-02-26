@@ -1,4 +1,9 @@
+import { cachedPlacesCall } from '@/lib/places-cache';
+
 const PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || '';
+
+// Field mask — all fields needed across search and import flows
+const FIELD_MASK = 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.priceLevel,places.types,places.regularOpeningHours,places.location,places.photos,places.primaryType,places.primaryTypeDisplayName';
 
 export interface PlaceSearchResult {
   id: string;
@@ -24,7 +29,47 @@ export interface PlaceSearchResult {
   primaryTypeDisplayName?: { text: string };
 }
 
+/**
+ * Search for a single place — cached with 5-min TTL.
+ * Used for detailed lookups (import, save, enrichment).
+ */
 export async function searchPlace(
+  query: string,
+  locationBias?: string | { lat: number; lng: number; radiusMeters?: number }
+): Promise<PlaceSearchResult | null> {
+  const extras = locationBias
+    ? typeof locationBias === 'string'
+      ? { bias: locationBias }
+      : { lat: locationBias.lat, lng: locationBias.lng, r: locationBias.radiusMeters || 5000 }
+    : undefined;
+
+  return cachedPlacesCall(
+    'single',
+    query,
+    () => _fetchSinglePlace(query, locationBias),
+    extras,
+  );
+}
+
+/**
+ * Search for multiple places (up to 5) — cached with 5-min TTL.
+ * Used for autocomplete-style search in the Add Bar.
+ */
+export async function searchPlaces(
+  query: string,
+  maxResults: number = 5
+): Promise<PlaceSearchResult[]> {
+  return cachedPlacesCall(
+    'multi',
+    query,
+    () => _fetchMultiplePlaces(query, maxResults),
+    { max: maxResults },
+  );
+}
+
+// ─── Raw API calls (uncached) ────────────────────────────────────────────────
+
+async function _fetchSinglePlace(
   query: string,
   locationBias?: string | { lat: number; lng: number; radiusMeters?: number }
 ): Promise<PlaceSearchResult | null> {
@@ -51,7 +96,7 @@ export async function searchPlace(
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': PLACES_API_KEY,
-      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.priceLevel,places.types,places.regularOpeningHours,places.location,places.photos,places.primaryType,places.primaryTypeDisplayName',
+      'X-Goog-FieldMask': FIELD_MASK,
     },
     body: JSON.stringify(body),
   });
@@ -65,16 +110,9 @@ export async function searchPlace(
   return data.places?.[0] || null;
 }
 
-export function getPhotoUrl(photoName: string, maxWidth: number = 400): string {
-  return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=${maxWidth}&key=${PLACES_API_KEY}`;
-}
-
-/**
- * Search for multiple places (up to 5) — used for autocomplete-style search.
- */
-export async function searchPlaces(
+async function _fetchMultiplePlaces(
   query: string,
-  maxResults: number = 5
+  maxResults: number
 ): Promise<PlaceSearchResult[]> {
   const url = 'https://places.googleapis.com/v1/places:searchText';
 
@@ -89,7 +127,7 @@ export async function searchPlaces(
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': PLACES_API_KEY,
-      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.priceLevel,places.types,places.location,places.photos,places.primaryType,places.primaryTypeDisplayName',
+      'X-Goog-FieldMask': FIELD_MASK,
     },
     body: JSON.stringify(body),
   });
@@ -101,6 +139,12 @@ export async function searchPlaces(
 
   const data = await response.json();
   return data.places || [];
+}
+
+// ─── Utilities (unchanged) ───────────────────────────────────────────────────
+
+export function getPhotoUrl(photoName: string, maxWidth: number = 400): string {
+  return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=${maxWidth}&key=${PLACES_API_KEY}`;
 }
 
 /**

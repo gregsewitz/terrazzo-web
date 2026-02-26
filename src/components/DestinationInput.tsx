@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 
@@ -97,7 +97,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
           }
         },
       );
-    }, 250);
+    }, 300);
   }, []);
 
   // Get place details (lat/lng) after selection
@@ -311,19 +311,13 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
 }
 
 // ============================================================
-// Wrapper with APIProvider
+// Exported component — uses shared MapsProvider from layout
 // ============================================================
 export default function DestinationInput(props: DestinationInputProps) {
   if (!API_KEY) {
-    // Fallback — plain text input when no API key
     return <DestinationInputFallback {...props} />;
   }
-
-  return (
-    <APIProvider apiKey={API_KEY} libraries={['places']}>
-      <DestinationInputInner {...props} />
-    </APIProvider>
-  );
+  return <DestinationInputInner {...props} />;
 }
 
 // ============================================================

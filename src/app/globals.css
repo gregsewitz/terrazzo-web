@@ -236,3 +236,106 @@ body {
     border-radius: 8px;
   }
 }
+
+/* ─── Enhanced animations for polished UI ─── */
+
+/* Subtle floating animation for CTA buttons */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.float-subtle {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Breathing glow for interactive elements */
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  50% { box-shadow: 0 4px 20px rgba(200,146,58,0.12); }
+}
+
+.breathe-glow {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Gradient shimmer for premium surfaces */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease-in-out infinite;
+}
+
+/* Pulse ring for notification-style elements */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(200,146,58,0.3); }
+  70% { box-shadow: 0 0 0 8px rgba(200,146,58,0); }
+  100% { box-shadow: 0 0 0 0 rgba(200,146,58,0); }
+}
+
+.pulse-ring {
+  animation: pulseRing 2s ease-out infinite;
+}
+
+/* Smooth scale-in for badges and tags */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Draw-in animation for SVG lines */
+@keyframes drawLine {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+.draw-line {
+  stroke-dasharray: 1000;
+  animation: drawLine 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Typewriter cursor blink for editorial elements */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: '|';
+  animation: cursorBlink 1s step-end infinite;
+  color: var(--t-honey);
+  margin-left: 2px;
+}
+
+/* Smooth scroll snap with momentum */
+.snap-x-smooth {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

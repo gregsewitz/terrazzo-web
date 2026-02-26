@@ -13,7 +13,7 @@ export const T = {
   royerePink: '#e87080',
   warmWhite: '#f5f0e6',
   travertine: '#e8dcc8',
-  cream: '#f8f3ea',
+  cream: '#fdfaf3',
   signalRed: '#d63020',
   chromeYellow: '#eeb420',
   linen: '#ede6d8',
@@ -21,12 +21,12 @@ export const T = {
 } as const;
 
 export const DOMAIN_COLORS: Record<TasteDomain, string> = {
-  Design: '#d63020',
-  Character: '#6844a0',
-  Service: '#a06c28',
-  Food: '#e87080',
-  Location: '#2a7a56',
-  Wellness: '#eeb420',
+  Design: T.signalRed,
+  Character: T.pantonViolet,
+  Service: T.amber,
+  Food: T.royerePink,
+  Location: T.verde,
+  Wellness: T.chromeYellow,
 };
 
 export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
@@ -40,10 +40,10 @@ export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
 
 // Rating system
 export const RATING_COLORS = {
-  myPlace: '#2a7a56',
-  enjoyed: '#c8923a',
-  mixed: '#eeb420',
-  notMe: '#d63020',
+  myPlace: T.verde,
+  enjoyed: T.honey,
+  mixed: T.chromeYellow,
+  notMe: T.signalRed,
 } as const;
 
 export const REACTIONS = [
@@ -78,11 +78,11 @@ export const DEST_COLORS: Record<string, { bg: string; accent: string; text: str
 // Ghost card source types — each source gets its own visual treatment
 export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: PerriandIconName; label: string }> = {
   email: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'email', label: 'Email' },
-  friend: { color: '#2a7a56', bg: 'rgba(42,122,86,0.12)', icon: 'friend', label: 'Friend' },
+  friend: { color: T.verde, bg: 'rgba(42,122,86,0.12)', icon: 'friend', label: 'Friend' },
   terrazzo: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'terrazzo', label: 'Terrazzo pick' },
   maps: { color: '#a84018', bg: 'rgba(232,104,48,0.10)', icon: 'maps', label: 'Google Maps' },
   article: { color: '#7a5a20', bg: 'rgba(200,146,58,0.12)', icon: 'article', label: 'Article' },
-  manual: { color: '#1c1a17', bg: INK['06'], icon: 'manual', label: 'Added' },
+  manual: { color: T.ink, bg: INK['06'], icon: 'manual', label: 'Added' },
 };
 
 export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness';

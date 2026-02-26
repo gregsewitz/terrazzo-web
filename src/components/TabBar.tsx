@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT } from '@/constants/theme';
@@ -31,10 +32,11 @@ export default function TabBar() {
       }}
     >
       {/* Collect */}
-      <button
+      <motion.button
         onClick={() => router.push('/saved')}
-        className="flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
+        className="relative flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
         style={{ opacity: isCollect ? 1 : 0.4, flex: 1, padding: 0 }}
+        whileTap={{ scale: 0.92 }}
       >
         <div style={{ color: isCollect ? 'var(--t-signal-red)' : 'var(--t-ink)' }}>
           <PerriandIcon name={'saved' as PerriandIconName} size={20} />
@@ -49,16 +51,25 @@ export default function TabBar() {
         >
           Collect
         </span>
-      </button>
+        {isCollect && (
+          <motion.div
+            layoutId="tabIndicator"
+            className="absolute -bottom-1 left-1/2 w-1 h-1 rounded-full"
+            style={{ background: 'var(--t-signal-red)', transform: 'translateX(-50%)' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          />
+        )}
+      </motion.button>
 
       {/* Center: + Place */}
-      <button
+      <motion.button
         onClick={() => openAddBar()}
         className="flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer"
         style={{ flex: 1, padding: 0 }}
         aria-label="Add a place"
+        whileTap={{ scale: 0.92 }}
       >
-        <div
+        <motion.div
           className="flex items-center justify-center rounded-full"
           style={{
             width: 36,
@@ -67,9 +78,11 @@ export default function TabBar() {
             margin: '0 auto',
             marginTop: -2,
           }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           <PerriandIcon name="add" size={16} color="var(--t-cream)" />
-        </div>
+        </motion.div>
         <span
           className="text-[9px] uppercase tracking-wider"
           style={{
@@ -80,13 +93,14 @@ export default function TabBar() {
         >
           Place
         </span>
-      </button>
+      </motion.button>
 
       {/* Plan */}
-      <button
+      <motion.button
         onClick={() => router.push('/trips')}
-        className="flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
+        className="relative flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
         style={{ opacity: isPlan ? 1 : 0.4, flex: 1, padding: 0 }}
+        whileTap={{ scale: 0.92 }}
       >
         <div style={{ color: isPlan ? 'var(--t-signal-red)' : 'var(--t-ink)' }}>
           <PerriandIcon name={'trips' as PerriandIconName} size={20} />
@@ -101,7 +115,15 @@ export default function TabBar() {
         >
           Plan
         </span>
-      </button>
+        {isPlan && (
+          <motion.div
+            layoutId="tabIndicator"
+            className="absolute -bottom-1 left-1/2 w-1 h-1 rounded-full"
+            style={{ background: 'var(--t-signal-red)', transform: 'translateX(-50%)' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          />
+        )}
+      </motion.button>
     </nav>
   );
 }

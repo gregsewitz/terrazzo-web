@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
@@ -11,11 +12,12 @@ import WrappedExperience from '@/components/wrapped/WrappedExperience';
 import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
 import TasteStone from '@/components/profile/TasteStone';
 import ScoreArc from '@/components/profile/ScoreArc';
-import { TASTE_PROFILE, DOMAIN_COLORS } from '@/constants/profile';
+import { TASTE_PROFILE, DIMENSION_COLORS } from '@/constants/profile';
 import type { TasteProfile as NumericProfile } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
+import PlacePhoto from '@/components/PlacePhoto';
 import {
   BECAUSE_YOU_CARDS,
   WEEKLY_COLLECTION,
@@ -307,10 +309,21 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Wrapped CTA */}
-                <button
+                <motion.button
                   onClick={() => setShowWrapped(true)}
                   className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90"
                   style={{ background: '#2d3a2d' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  animate={{
+                    y: [0, -4, 0],
+                    opacity: [0.8, 1, 0.8],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  }}
                 >
                   <span className="text-[11px] font-semibold" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
                     Your Taste Dossier
@@ -318,13 +331,25 @@ export default function ProfilePage() {
                   <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(245,245,240,0.12)', color: '#f5f5f0', fontFamily: FONT.mono }}>
                     Replay →
                   </span>
-                </button>
+                </motion.button>
 
                 {/* Expand Your Mosaic CTA */}
-                <button
+                <motion.button
                   onClick={() => setShowMosaic(true)}
                   className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)', border: '1px solid rgba(200,146,58,0.12)' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  animate={{
+                    y: [0, -3, 0],
+                    opacity: [0.85, 1, 0.85],
+                  }}
+                  transition={{
+                    duration: 3.5,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                    delay: 0.3,
+                  }}
                 >
                   <div>
                     <span className="text-[11px] font-semibold block" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
@@ -337,7 +362,7 @@ export default function ProfilePage() {
                   <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(28,26,23,0.06)', color: 'var(--t-ink)', fontFamily: FONT.mono }}>
                     Play →
                   </span>
-                </button>
+                </motion.button>
 
                 {/* Settings links */}
                 <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
@@ -415,10 +440,21 @@ export default function ProfilePage() {
         <>
           {/* Action buttons */}
           <div className="px-5 pt-2 pb-4 flex flex-col gap-2.5">
-            <button
+            <motion.button
               onClick={() => setShowWrapped(true)}
               className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{ background: '#2d3a2d' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              animate={{
+                y: [0, -4, 0],
+                opacity: [0.8, 1, 0.8],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -444,14 +480,26 @@ export default function ProfilePage() {
               >
                 Replay →
               </span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={() => setShowMosaic(true)}
               className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
                 border: '1px solid rgba(200,146,58,0.12)',
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              animate={{
+                y: [0, -3, 0],
+                opacity: [0.85, 1, 0.85],
+              }}
+              transition={{
+                duration: 3.5,
+                repeat: Infinity,
+                repeatType: 'reverse',
+                delay: 0.3,
               }}
             >
               <div className="flex flex-col items-start gap-0.5">
@@ -478,7 +526,7 @@ export default function ProfilePage() {
               >
                 Play →
               </span>
-            </button>
+            </motion.button>
           </div>
 
           {/* Deep Dive */}
@@ -659,33 +707,67 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const l = letter || EDITORIAL_LETTER;
   return (
-    <div className="px-5 pt-5 pb-6">
+    <motion.div
+      className="px-5 pt-5 pb-6"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-5 h-[1px]" style={{ background: 'var(--t-honey)' }} />
-          <span className="text-[9px] uppercase tracking-[0.25em]" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}>
+          <motion.div
+            className="w-5 h-[1px]"
+            style={{ background: 'var(--t-honey)' }}
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
+          />
+          <motion.span
+            className="text-[9px] uppercase tracking-[0.25em]"
+            style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true, margin: '-100px' }}
+          >
             A note from Terrazzo
-          </span>
+          </motion.span>
         </div>
-        <h2
+        <motion.h2
           className="text-[20px] leading-snug mb-4"
           style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          viewport={{ once: true, margin: '-100px' }}
         >
           {l.headline}
-        </h2>
-        <p
+        </motion.h2>
+        <motion.p
           className="text-[13px] leading-relaxed"
           style={{ color: INK['70'], fontFamily: FONT.sans }}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          viewport={{ once: true, margin: '-100px' }}
         >
           {l.body}
-        </p>
+        </motion.p>
       </div>
-      <div className="flex items-center gap-2">
+      <motion.div
+        className="flex items-center gap-2"
+        initial={{ opacity: 0, scale: 0.8 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(200,146,58,0.08)', color: 'var(--t-honey)', fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -693,7 +775,13 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
 function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
   const displayCards = cards || BECAUSE_YOU_CARDS;
   return (
-    <div className="mb-7 px-5">
+    <motion.div
+      className="mb-7 px-5"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <div className="mb-3">
         <SectionLabel>Because you...</SectionLabel>
       </div>
@@ -701,13 +789,17 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
         className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5"
         style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}
       >
-        {displayCards.map((card) => {
-          const domainColor = DOMAIN_COLORS[card.signalDomain] || '#8b6b4a';
+        {displayCards.map((card, idx) => {
+          const domainColor = DIMENSION_COLORS[card.signalDomain] || '#8b6b4a';
           return (
-            <div
+            <motion.div
               key={card.place}
               className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
               style={{ background: card.bg, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
+              initial={{ opacity: 0, scale: 0.9, x: 20 }}
+              whileInView={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -733,24 +825,37 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.7)' }}>{card.why}</p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ── SIGNAL THREAD — One signal, many manifestations ──
 function SignalThreadSection({ thread }: { thread?: SignalThread }) {
   const t = thread || SIGNAL_THREAD;
-  const domainColor = DOMAIN_COLORS[t.domain] || '#8b6b4a';
+  const domainColor = DIMENSION_COLORS[t.domain] || '#8b6b4a';
   const TYPE_ICONS: Record<string, string> = { hotel: 'hotel', restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', neighborhood: 'neighborhood' };
 
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel>The thread</SectionLabel>
-      <div className="mt-3 p-5 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+      <motion.div
+        className="mt-3 p-5 rounded-2xl"
+        style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.mono }}>
             {t.signal}
@@ -762,11 +867,34 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
         {/* Vertical thread line connecting places */}
         <div className="flex flex-col gap-0">
           {t.places.map((place, i) => (
-            <div key={place.name} className="flex gap-3">
+            <motion.div
+              key={place.name}
+              className="flex gap-3"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
+            >
               {/* Thread line */}
               <div className="flex flex-col items-center" style={{ width: 20 }}>
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: domainColor, marginTop: 4 }} />
-                {i < t.places.length - 1 && <div className="w-[1px] flex-1" style={{ background: INK['10'] }} />}
+                <motion.div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: domainColor, marginTop: 4 }}
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                />
+                {i < t.places.length - 1 && (
+                  <motion.div
+                    className="w-[1px] flex-1"
+                    style={{ background: INK['10'] }}
+                    initial={{ scaleY: 0 }}
+                    whileInView={{ scaleY: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                    viewport={{ once: true, margin: '-100px' }}
+                  />
+                )}
               </div>
               {/* Place card */}
               <div className="flex-1 pb-4">
@@ -781,11 +909,11 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.connection}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -793,22 +921,49 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
 function TasteTensionSection({ tension }: { tension?: TasteTension }) {
   const t = tension || TASTE_TENSION;
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel color="var(--t-panton-violet)">Taste tension</SectionLabel>
-      <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: '#2a2535' }}>
+      <motion.div
+        className="mt-3 rounded-2xl overflow-hidden"
+        style={{ background: '#2a2535' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <div className="p-5">
           <h3 className="text-[18px] leading-snug mb-4" style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}>
             {t.title}
           </h3>
           <div className="flex gap-3 mb-4">
-            <div className="flex-1 p-3 rounded-xl" style={{ background: 'rgba(245,245,240,0.06)' }}>
+            <motion.div
+              className="flex-1 p-3 rounded-xl"
+              style={{ background: 'rgba(245,245,240,0.06)' }}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true, margin: '-100px' }}
+            >
               <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You think</div>
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.stated}&rdquo;</p>
-            </div>
-            <div className="flex-1 p-3 rounded-xl" style={{ background: 'rgba(245,245,240,0.06)' }}>
+            </motion.div>
+            <motion.div
+              className="flex-1 p-3 rounded-xl"
+              style={{ background: 'rgba(245,245,240,0.06)' }}
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true, margin: '-100px' }}
+            >
               <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You do</div>
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.revealed}&rdquo;</p>
-            </div>
+            </motion.div>
           </div>
           <p className="text-[12px] leading-relaxed mb-4" style={{ color: 'rgba(245,245,240,0.8)', fontFamily: FONT.sans }}>
             {t.editorial}
@@ -821,8 +976,8 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
           </div>
           <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{t.resolvedBy.how}</p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -830,21 +985,35 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
 function WeeklyEditSection({ collection: propCollection }: { collection?: { title: string; subtitle: string; places: CollectionPlace[] } }) {
   const collection = propCollection || WEEKLY_COLLECTION;
   return (
-    <div className="mb-7 px-5">
+    <motion.div
+      className="mb-7 px-5"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <div className="mb-1"><SectionLabel>This week&apos;s edit</SectionLabel></div>
       <div className="mb-3">
         <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>{collection.title}</h3>
         <p className="text-[11px]" style={{ color: INK['60'], fontFamily: FONT.mono }}>{collection.subtitle}</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
-        {collection.places.map((place) => {
-          const domainColor = DOMAIN_COLORS[place.signalDomain] || '#8b6b4a';
+        {collection.places.map((place, idx) => {
+          const domainColor = DIMENSION_COLORS[place.signalDomain] || '#8b6b4a';
           const imageUrl = getPlaceImage(place.name);
           return (
-            <div key={place.name} className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)', width: 240, scrollSnapAlign: 'start' }}>
+            <motion.div
+              key={place.name}
+              className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
+              style={{ background: 'white', border: '1px solid var(--t-linen)', width: 240, scrollSnapAlign: 'start' }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
+            >
               {imageUrl && (
-                <div style={{ height: 100, overflow: 'hidden' }}>
-                  <img src={imageUrl} alt={place.name} width={280} height={100} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ height: 100, overflow: 'hidden', position: 'relative' }}>
+                  <PlacePhoto src={imageUrl} alt={place.name} fill sizes="240px" />
                 </div>
               )}
               <div className="p-4 flex flex-col">
@@ -862,11 +1031,11 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.note}</p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -874,21 +1043,42 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
 function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
   const displayBoards = boards || MOOD_BOARDS;
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel>Travel moods</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
-        {displayBoards.map((board) => (
-          <div key={board.mood} className="p-4 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)', borderLeft: `3px solid ${board.color}` }}>
+        {displayBoards.map((board, idx) => (
+          <motion.div
+            key={board.mood}
+            className="p-4 rounded-2xl"
+            style={{ background: 'white', border: '1px solid var(--t-linen)', borderLeft: `3px solid ${board.color}` }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
+          >
             <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>{board.mood}</h4>
             <p className="text-[11px] mb-4" style={{ color: INK['70'], fontFamily: FONT.sans }}>{board.description}</p>
             <div className="flex flex-col gap-2">
-              {board.places.map((p) => {
+              {board.places.map((p, pIdx) => {
                 const imageUrl = getPlaceImage(p.name);
                 return (
-                  <div key={p.name} className="flex items-center gap-3">
+                  <motion.div
+                    key={p.name}
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 + pIdx * 0.05 }}
+                    viewport={{ once: true, margin: '-100px' }}
+                  >
                     {imageUrl ? (
-                      <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
-                        <img src={imageUrl} alt={p.name} width={40} height={40} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                        <PlacePhoto src={imageUrl} alt={p.name} fill sizes="40px" />
                       </div>
                     ) : (
                       <ScoreArc score={p.score} size={40} color={board.color} />
@@ -901,14 +1091,14 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       <p className="text-[10px] italic" style={{ color: INK['70'] }}>{p.vibe}</p>
                     </div>
                     <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -916,9 +1106,22 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
 function DeepMatchSection({ match }: { match?: DeepMatch }) {
   const m = match || DEEP_MATCH;
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel color="var(--t-verde)">Your deepest match</SectionLabel>
-      <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: '#1e2e24' }}>
+      <motion.div
+        className="mt-3 rounded-2xl overflow-hidden"
+        style={{ background: '#1e2e24' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <div className="p-5">
           <div className="flex items-center gap-3 mb-3">
             <ScoreArc score={m.score} size={48} color="#7aba6e" />
@@ -930,8 +1133,8 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
           <p className="text-[13px] italic leading-relaxed mb-5" style={{ fontFamily: FONT.serif, color: 'rgba(245,245,240,0.8)' }}>{m.headline}</p>
           {/* Signal breakdown bars */}
           <div className="flex flex-col gap-3">
-            {m.signalBreakdown.map((s) => {
-              const domainColor = DOMAIN_COLORS[s.domain] || '#8b6b4a';
+            {m.signalBreakdown.map((s, idx) => {
+              const domainColor = DIMENSION_COLORS[s.domain] || '#8b6b4a';
               return (
                 <div key={s.signal}>
                   <div className="flex items-center justify-between mb-1">
@@ -939,7 +1142,14 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
                     <span className="text-[10px] font-bold" style={{ color: domainColor, fontFamily: FONT.mono }}>{s.strength}%</span>
                   </div>
                   <div className="h-1 rounded-full mb-1.5" style={{ background: 'rgba(245,245,240,0.08)' }}>
-                    <div className="h-1 rounded-full" style={{ width: `${s.strength}%`, background: domainColor, opacity: 0.7 }} />
+                    <motion.div
+                      className="h-1 rounded-full"
+                      style={{ background: domainColor, opacity: 0.7 }}
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${s.strength}%` }}
+                      transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
+                      viewport={{ once: true, margin: '-100px' }}
+                    />
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: 'rgba(245,245,240,0.65)' }}>{s.note}</p>
                 </div>
@@ -951,8 +1161,8 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
           <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(42,122,86,0.6)', fontFamily: FONT.mono }}>Tension resolved</div>
           <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{m.tensionResolved}</p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -960,9 +1170,22 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
 function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
   const s = stretch || STRETCH_PICK;
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
-      <div className="p-4 rounded-xl mt-3" style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}>
+      <motion.div
+        className="p-4 rounded-xl mt-3"
+        style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.1, type: 'spring', stiffness: 200 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <div className="flex items-center gap-1.5 mb-3">
           <PerriandIcon name="discover" size={10} color="var(--t-panton-orange)" />
           <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#c45020', fontFamily: FONT.mono }}>
@@ -985,8 +1208,8 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
           <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{s.why}</p>
         </div>
         <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: INK['70'] }}>{s.tension}</p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -995,9 +1218,22 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
   const displayRecs = recs || SUMMER_RECS;
   const label = contextLabel || 'Summer';
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel>Context mode</SectionLabel>
-      <div className="p-4 rounded-xl mt-3" style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}>
+      <motion.div
+        className="p-4 rounded-xl mt-3"
+        style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <div className="flex items-center gap-2 mb-1">
           <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
           <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
@@ -1006,13 +1242,20 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
         </div>
         <p className="text-[11px] mb-4" style={{ color: INK['60'], fontFamily: FONT.mono }}>Indoor-outdoor flow · terrace dining · natural pool</p>
         <div className="flex flex-col gap-2.5">
-          {displayRecs.map((rec) => {
+          {displayRecs.map((rec, idx) => {
             const imageUrl = getPlaceImage(rec.name);
             return (
-              <div key={rec.name} className="flex items-center gap-3">
+              <motion.div
+                key={rec.name}
+                className="flex items-center gap-3"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 + idx * 0.05 }}
+                viewport={{ once: true, margin: '-100px' }}
+              >
                 {imageUrl ? (
-                  <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
-                    <img src={imageUrl} alt={rec.name} width={36} height={36} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                    <PlacePhoto src={imageUrl} alt={rec.name} fill sizes="36px" />
                   </div>
                 ) : (
                   <ScoreArc score={rec.score} size={36} color="#6b8b4a" />
@@ -1024,12 +1267,12 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: INK['70'] }}>{rec.whyFits}</p>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -1042,36 +1285,79 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
   rejections.forEach(term => allTerms.push({ term, domain: 'Rejection' }));
 
   return (
-    <div className="px-5 mb-7">
+    <motion.div
+      className="px-5 mb-7"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel>Your taste vocabulary</SectionLabel>
-      <div className="p-4 rounded-xl mt-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+      <motion.div
+        className="p-4 rounded-xl mt-3"
+        style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
+      >
         <div className="flex flex-wrap gap-1.5 mb-3">
-          {allTerms.map(({ term, domain }) => {
-            const color = DOMAIN_COLORS[domain] || '#8b6b4a';
+          {allTerms.map(({ term, domain }, idx) => {
+            const color = DIMENSION_COLORS[domain] || '#8b6b4a';
             const isRejection = domain === 'Rejection';
+            const randomDelay = Math.random() * 0.3;
             return (
-              <span key={term} className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}>
+              <motion.span
+                key={term}
+                className="text-[10px] px-2.5 py-1 rounded-full"
+                style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: randomDelay }}
+                viewport={{ once: true, margin: '-100px' }}
+              >
                 {term}
-              </span>
+              </motion.span>
             );
           })}
-          <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: INK['04'], color: INK['50'] }}>
+          <motion.span
+            className="text-[10px] px-2.5 py-1 rounded-full"
+            style={{ background: INK['04'], color: INK['50'] }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            viewport={{ once: true, margin: '-100px' }}
+          >
             +{Object.values(profile.microTasteSignals).flat().length - allTerms.length} more
-          </span>
+          </motion.span>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── FRIENDS SAVING ──
 function FriendsSavingSection() {
   return (
-    <div className="px-5 mb-8">
+    <motion.div
+      className="px-5 mb-8"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
       <SectionLabel>Friends are saving</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
-        {FRIEND_SAVES.map((save) => (
-          <div key={save.place} className="p-3.5 rounded-xl flex items-start gap-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+        {FRIEND_SAVES.map((save, idx) => (
+          <motion.div
+            key={save.place}
+            className="p-3.5 rounded-xl flex items-start gap-3"
+            style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
+          >
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: `${save.color}15`, color: save.color, fontFamily: FONT.mono }}>
               {save.friendInitial}
             </div>
@@ -1087,9 +1373,9 @@ function FriendsSavingSection() {
                 <span className="text-[10px]" style={{ color: INK['70'] }}>{save.whyMatches}</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

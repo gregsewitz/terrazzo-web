@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import type { HotelInfo } from '@/types';
@@ -91,7 +91,7 @@ function HotelInputInner({
             setShowDropdown(false);
           }
         });
-      }, 250);
+      }, 300);
     },
     [destination],
   );
@@ -409,16 +409,7 @@ function HotelInputInner({
   );
 }
 
-// ─── Wrapper with APIProvider ───
+// ─── Exported component — uses shared MapsProvider from layout ───
 export default function HotelInput(props: HotelInputProps) {
-  if (!API_KEY) {
-    // Fallback: plain text input if no API key
-    return <HotelInputInner {...props} />;
-  }
-
-  return (
-    <APIProvider apiKey={API_KEY} libraries={['places']}>
-      <HotelInputInner {...props} />
-    </APIProvider>
-  );
+  return <HotelInputInner {...props} />;
 }

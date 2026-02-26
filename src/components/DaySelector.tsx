@@ -68,9 +68,13 @@ const DaySelector = memo(({
         const showMonth = !isFlexible && (!prevDay || shortMonth !== prevMonth);
 
         return (
-          <button
+          <div
             key={d.dayNumber}
+            role="tab"
+            tabIndex={0}
+            aria-selected={isDayActive}
             onClick={() => setCurrentDay(d.dayNumber)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentDay(d.dayNumber); } }}
             className="flex-1 flex flex-col items-center py-1.5 px-1 cursor-pointer transition-all"
             style={{
               border: 'none',
@@ -112,11 +116,11 @@ const DaySelector = memo(({
                 fontSize: 9,
                 fontWeight: 500,
                 color: isDayActive ? dayDestColor.accent : INK['80'],
-                borderBottom: `1px dashed ${isDayActive ? dayDestColor.accent + '60' : INK['30']}`,
                 cursor: 'pointer',
                 position: 'relative',
                 background: 'none',
                 border: 'none',
+                borderBottom: `1px dashed ${isDayActive ? dayDestColor.accent + '60' : INK['30']}`,
                 padding: 0,
               }}
             >
@@ -250,7 +254,7 @@ const DaySelector = memo(({
                 )}
               </div>
             )}
-          </button>
+          </div>
         );
       })}
 

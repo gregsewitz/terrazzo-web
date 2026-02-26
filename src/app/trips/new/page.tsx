@@ -1,5 +1,6 @@
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
@@ -11,6 +12,25 @@ import DesktopNav from '@/components/DesktopNav';
 import DestinationAllocator from '@/components/DestinationAllocator';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
+
+
+// ============================================================
+// Framer Motion Animation Constants
+// ============================================================
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const stepVariants = {
+  enter: { opacity: 0, x: 40, scale: 0.98 },
+  center: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.45, ease: EASE_OUT_EXPO } },
+  exit: { opacity: 0, x: -40, scale: 0.98, transition: { duration: 0.25 } },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE_OUT_EXPO } },
+};
+const containerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+};
 
 // ============================================================
 // Companion options — matching the React Native app
@@ -87,18 +107,33 @@ function TripSeedForm({ onStart }: {
     >
       <div className="px-6 pt-6 pb-10 max-w-lg mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
-          <div className="text-5xl mb-4">✈</div>
-          <h1
+        <motion.div 
+          className="text-center mb-10"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div 
+            className="text-5xl mb-4"
+            variants={itemVariants}
+          >
+            ✈
+          </motion.div>
+          <motion.h1
             className="text-3xl mb-2"
+            variants={itemVariants}
             style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
           >
             New Trip
-          </h1>
-          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: INK['95'] }}>
+          </motion.h1>
+          <motion.p 
+            className="text-sm leading-relaxed max-w-xs mx-auto" 
+            variants={itemVariants}
+            style={{ color: INK['95'] }}
+          >
             Give us the basics, then we'll have a quick conversation to understand what you're really looking for.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Trip Name (optional) */}
         <div className="mb-6">
@@ -152,8 +187,9 @@ function TripSeedForm({ onStart }: {
               { key: false, label: 'Specific dates' },
               { key: true, label: 'Flexible / undecided' },
             ] as const).map(opt => (
-              <button
+              <motion.button
                 key={String(opt.key)}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setFlexibleDates(opt.key)}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border cursor-pointer transition-all text-[11px]"
                 style={{
@@ -165,7 +201,7 @@ function TripSeedForm({ onStart }: {
                 }}
               >
                 {opt.label}
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -236,8 +272,9 @@ function TripSeedForm({ onStart }: {
           </label>
           <div className="flex flex-wrap gap-2">
             {COMPANION_OPTIONS.map(opt => (
-              <button
+              <motion.button
                 key={opt.key}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setCompanion(opt.key)}
                 className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border cursor-pointer transition-all text-[12px]"
                 style={{
@@ -250,7 +287,7 @@ function TripSeedForm({ onStart }: {
               >
                 <PerriandIcon name={opt.iconName} size={16} color={companion === opt.key ? 'white' : 'var(--t-ink)'} />
                 {opt.label}
-              </button>
+              </motion.button>
             ))}
           </div>
           {(companion === 'friends' || companion === 'family') && (
@@ -317,7 +354,9 @@ function TripSeedForm({ onStart }: {
         </div>
 
         {/* CTA */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => canStart && onStart({
             name: effectiveName,
             destinations: destinationNames,
@@ -343,7 +382,7 @@ function TripSeedForm({ onStart }: {
           }}
         >
           Start Conversation
-        </button>
+        </motion.button>
 
         <p className="text-center text-[11px] mt-4" style={{ color: INK['95'] }}>
           ~3 minutes · text or voice · we'll use your taste profile
@@ -573,9 +612,12 @@ function TripConversation({
         style={{ scrollbarWidth: 'none' }}
       >
         {messages.map((msg, idx) => (
-          <div
+          <motion.div
             key={idx}
-            className={`mb-3 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            initial={{ opacity: 0, x: msg.role === "user" ? 20 : -20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+            className={`mb-3 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
               className="max-w-[85%] px-4 py-3 rounded-2xl text-[13px] leading-relaxed"
@@ -590,15 +632,21 @@ function TripConversation({
             >
               {msg.text}
             </div>
-          </div>
+          </motion.div>
         ))}
 
         {isTyping && (
           <div className="flex gap-2 items-center py-2 px-1">
             <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)' }} />
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)', animationDelay: '150ms' }} />
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--t-honey)', animationDelay: '300ms' }} />
+              {[0, 1, 2].map((i) => (
+                <motion.span 
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full"
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.15 }}
+                  style={{ background: 'var(--t-honey)' }}
+                />
+              ))}
             </div>
             <span className="text-[12px] italic" style={{ color: INK['90'] }}>Thinking...</span>
           </div>
@@ -606,7 +654,9 @@ function TripConversation({
 
         {/* Trip signals */}
         {signals.length > 0 && (
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
             className="mt-3 p-3 rounded-xl border-l-[3px]"
             style={{ background: 'rgba(42,122,86,0.04)', borderLeftColor: 'var(--t-verde)' }}
           >
@@ -616,18 +666,24 @@ function TripConversation({
             >
               {signals.length} trip signal{signals.length !== 1 ? 's' : ''}
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <motion.div 
+              className="flex flex-wrap gap-1.5"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {signals.map((signal, i) => (
-                <span
+                <motion.span
                   key={i}
+                  variants={itemVariants}
                   className="text-[10px] px-2 py-1 rounded-full"
                   style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
                 >
                   {signal}
-                </span>
+                </motion.span>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </div>
 
@@ -657,14 +713,15 @@ function TripConversation({
                 }}
               />
               {input.trim() && (
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleSend}
                   disabled={isTyping}
                   className="px-4 py-2.5 rounded-xl border-none cursor-pointer text-[13px] font-semibold disabled:opacity-50"
                   style={{ background: 'var(--t-ink)', color: 'white' }}
                 >
                   Send
-                </button>
+                </motion.button>
               )}
             </div>
             <button
@@ -676,13 +733,15 @@ function TripConversation({
             </button>
           </div>
         ) : (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onComplete}
             className="w-full py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold"
             style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
           >
             Build My Trip
-          </button>
+          </motion.button>
         )}
       </div>
     </div>
@@ -696,62 +755,86 @@ function TripComplete({ seed, onDone }: {
   seed: { name: string; destinations: string[] };
   onDone: () => void;
 }) {
-  const [showContent, setShowContent] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => setShowContent(true), 300);
-  }, []);
-
   return (
-    <div
-      className="flex-1 flex flex-col items-center justify-center px-8 transition-all duration-500"
-      style={{ opacity: showContent ? 1 : 0, transform: showContent ? 'translateY(0)' : 'translateY(20px)' }}
+    <motion.div
+      className="flex-1 flex flex-col items-center justify-center px-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: EASE_OUT_EXPO }}
     >
-      <div className="text-5xl mb-4 flex justify-center">
+      <motion.div 
+        className="text-5xl mb-4 flex justify-center"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, type: 'spring', stiffness: 100, damping: 12 }}
+      >
         <PerriandIcon name="check" size={48} color="var(--t-verde)" />
-      </div>
-      <h2
+      </motion.div>
+      <motion.h2
         className="text-3xl mb-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
         style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
       >
         Trip Profile Built
-      </h2>
-      <p className="text-sm text-center leading-relaxed mb-8 max-w-xs" style={{ color: INK['95'] }}>
+      </motion.h2>
+      <motion.p 
+        className="text-sm text-center leading-relaxed mb-8 max-w-xs" 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+        style={{ color: INK['95'] }}
+      >
         We've layered your trip context onto your base taste profile. Your {seed.destinations[0]} recommendations will
         reflect the specific energy, companions, and priorities for this journey.
-      </p>
+      </motion.p>
 
-      <div
+      <motion.div
         className="w-full max-w-sm p-5 rounded-2xl mb-8 border"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
         style={{ background: 'white', borderColor: 'var(--t-linen)' }}
       >
         <div className="text-[13px] font-semibold mb-3" style={{ color: 'var(--t-ink)' }}>
           What happens next
         </div>
-        <div className="flex flex-col gap-1.5">
+        <motion.div 
+          className="flex flex-col gap-1.5"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {[
             'Places scored against your trip-adjusted profile',
             'Each destination gets its own curated collection',
             'Stretch picks that push your boundaries thoughtfully',
           ].map((item, i) => (
-            <div key={i} className="text-[12px] leading-relaxed" style={{ color: INK['95'] }}>
+            <motion.div 
+              key={i}
+              variants={itemVariants}
+              className="text-[12px] leading-relaxed" 
+              style={{ color: INK['95'] }}
+            >
               • {item}
-            </div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <button
+      <motion.button
         onClick={onDone}
+        whileHover={{ scale: 1.02, y: -1 }}
+        whileTap={{ scale: 0.98 }}
         className="px-10 py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold"
         style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
       >
         Go to Trip
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 }
-
 // ============================================================
 // Main Page — steps: seed → [allocate] → conversation → complete
 // ============================================================
@@ -837,23 +920,35 @@ export default function NewTripPage() {
               )}
             </div>
 
-            {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
-            {step === 'allocate' && seed && (
-              <DestinationAllocationStep
-                seed={seed}
-                onComplete={handleAllocationComplete}
-                onBack={() => setStep('seed')}
-              />
-            )}
-            {step === 'conversation' && seed && (
-              <TripConversation
-                seed={seed}
-                onComplete={handleConversationComplete}
-              />
-            )}
-            {step === 'complete' && seed && (
-              <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
-            )}
+            <AnimatePresence mode="wait">
+              {step === 'seed' && (
+                <motion.div key="seed" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                  <TripSeedForm onStart={handleSeedComplete} />
+                </motion.div>
+              )}
+              {step === 'allocate' && seed && (
+                <motion.div key="allocate" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                  <DestinationAllocationStep
+                    seed={seed}
+                    onComplete={handleAllocationComplete}
+                    onBack={() => setStep('seed')}
+                  />
+                </motion.div>
+              )}
+              {step === 'conversation' && seed && (
+                <motion.div key="conversation" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                  <TripConversation
+                    seed={seed}
+                    onComplete={handleConversationComplete}
+                  />
+                </motion.div>
+              )}
+              {step === 'complete' && seed && (
+                <motion.div key="complete" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                  <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </>
       ) : (
@@ -880,23 +975,35 @@ export default function NewTripPage() {
             )}
           </div>
 
-          {step === 'seed' && <TripSeedForm onStart={handleSeedComplete} />}
-          {step === 'allocate' && seed && (
-            <DestinationAllocationStep
-              seed={seed}
-              onComplete={handleAllocationComplete}
-              onBack={() => setStep('seed')}
-            />
-          )}
-          {step === 'conversation' && seed && (
-            <TripConversation
-              seed={seed}
-              onComplete={handleConversationComplete}
-            />
-          )}
-          {step === 'complete' && seed && (
-            <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
-          )}
+          <AnimatePresence mode="wait">
+            {step === 'seed' && (
+              <motion.div key="seed" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                <TripSeedForm onStart={handleSeedComplete} />
+              </motion.div>
+            )}
+            {step === 'allocate' && seed && (
+              <motion.div key="allocate" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                <DestinationAllocationStep
+                  seed={seed}
+                  onComplete={handleAllocationComplete}
+                  onBack={() => setStep('seed')}
+                />
+              </motion.div>
+            )}
+            {step === 'conversation' && seed && (
+              <motion.div key="conversation" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                <TripConversation
+                  seed={seed}
+                  onComplete={handleConversationComplete}
+                />
+              </motion.div>
+            )}
+            {step === 'complete' && seed && (
+              <motion.div key="complete" variants={stepVariants} initial="enter" animate="center" exit="exit">
+                <TripComplete seed={{ name: seed.name, destinations: seed.destinations }} onDone={handleDone} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import type { ImportedPlace, PlaceType } from '@/types';
@@ -110,7 +110,7 @@ function PlaceSearchInputInner({
             setShowDropdown(false);
           }
         });
-      }, 250);
+      }, 300);
     },
     [destination, searchTypes],
   );
@@ -415,12 +415,7 @@ function PlaceSearchInputInner({
   );
 }
 
-// ─── Wrapper with APIProvider ───
+// ─── Exported component — uses shared MapsProvider from layout ───
 export default function PlaceSearchInput(props: PlaceSearchInputProps) {
-  if (!API_KEY) return <PlaceSearchInputInner {...props} />;
-  return (
-    <APIProvider apiKey={API_KEY} libraries={['places']}>
-      <PlaceSearchInputInner {...props} />
-    </APIProvider>
-  );
+  return <PlaceSearchInputInner {...props} />;
 }
