@@ -68,6 +68,13 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
     }));
   }, [trip]);
 
+  // All trip destinations (used for "All days" filtering)
+  const tripDestinations = useMemo(() => {
+    if (!trip) return [];
+    if (trip.destinations && trip.destinations.length > 0) return trip.destinations;
+    return trip.location ? [trip.location.split(',')[0]?.trim()].filter(Boolean) : [];
+  }, [trip]);
+
   // Current day's destination for filtering
   const activeDestination = useMemo(() => {
     if (selectedDay === null || !trip) return null;
@@ -88,6 +95,14 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
 
   const filteredPicks = useMemo(() => {
     let picks = allPicks;
+    // In "All days" mode, filter to only show places matching trip destinations
+    if (selectedDay === null && tripDestinations.length > 0 && !searchQuery.trim()) {
+      const dests = tripDestinations.map(d => d.toLowerCase());
+      picks = picks.filter(p => {
+        const loc = (p.location || '').toLowerCase();
+        return dests.some(dest => loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---'));
+      });
+    }
     if (activeFilter !== 'all') {
       picks = picks.filter(p => p.type === activeFilter);
     }
@@ -103,19 +118,29 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
       );
     }
     return picks;
-  }, [allPicks, activeFilter, sourceFilter, searchQuery]);
+  }, [allPicks, activeFilter, sourceFilter, searchQuery, selectedDay, tripDestinations]);
 
-  // Sort: if a day destination is selected, matching places float to top
+  // Check if a place matches destination(s) — used for sorting & dimming
   const matchesDestination = useCallback((place: ImportedPlace): boolean => {
+    const loc = (place.location || '').toLowerCase();
+    // "All days" mode: match against ALL trip destinations
+    if (selectedDay === null) {
+      if (tripDestinations.length === 0) return true;
+      return tripDestinations.some(dest => {
+        const d = dest.toLowerCase();
+        return loc.includes(d) || d.includes(loc.split(',')[0]?.trim() || '---');
+      });
+    }
+    // Specific day mode: match against that day's destination
     if (!activeDestination) return true;
     const dest = activeDestination.toLowerCase();
-    const loc = (place.location || '').toLowerCase();
     return loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---');
-  }, [activeDestination]);
+  }, [selectedDay, activeDestination, tripDestinations]);
 
   const sortedPicks = useMemo(() => {
+    const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
     return [...filteredPicks].sort((a, b) => {
-      if (activeDestination) {
+      if (hasDestFilter) {
         const aMatch = matchesDestination(a) ? 1 : 0;
         const bMatch = matchesDestination(b) ? 1 : 0;
         if (aMatch !== bMatch) return bMatch - aMatch;
@@ -124,7 +149,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
       if (sortBy === 'recent') return (b.addedAt || '').localeCompare(a.addedAt || '');
       return b.matchScore - a.matchScore;
     });
-  }, [filteredPicks, activeDestination, matchesDestination, sortBy]);
+  }, [filteredPicks, activeDestination, selectedDay, tripDestinations, matchesDestination, sortBy]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -309,7 +334,8 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
           const isHovered = hoveredId === place.id;
           const tasteNote = place.tasteNote;
           const location = place.location?.split(',')[0]?.trim() || '';
-          const isDimmed = activeDestination ? !matchesDestination(place) : false;
+          const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
+          const isDimmed = hasDestFilter ? !matchesDestination(place) : false;
 
           return (
             <button
