@@ -598,6 +598,77 @@ function TripDetailContent() {
             onClose={() => setShowShareSheet(false)}
           />
         )}
+        {showDeleteConfirm && trip && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.4)' }}
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <div
+              className="rounded-2xl p-6 mx-6"
+              style={{
+                background: 'white',
+                maxWidth: 340,
+                width: '100%',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 style={{
+                fontFamily: FONT.serif,
+                fontStyle: 'italic',
+                fontSize: 18,
+                color: 'var(--t-ink)',
+                margin: '0 0 8px',
+              }}>
+                Delete trip?
+              </h3>
+              <p style={{
+                fontFamily: FONT.sans,
+                fontSize: 13,
+                color: INK['70'],
+                lineHeight: 1.5,
+                margin: '0 0 20px',
+              }}>
+                <strong>{trip.name}</strong> will be permanently deleted. Your saved places will remain in your library.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-2.5 rounded-lg cursor-pointer"
+                  style={{
+                    fontFamily: FONT.sans,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: INK['04'],
+                    border: '1px solid var(--t-linen)',
+                    color: 'var(--t-ink)',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowDeleteConfirm(false);
+                    await deleteTrip(trip.id);
+                    router.push('/trips');
+                  }}
+                  className="flex-1 py-2.5 rounded-lg cursor-pointer"
+                  style={{
+                    fontFamily: FONT.sans,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: 'var(--t-signal-red, #d63020)',
+                    border: 'none',
+                    color: 'white',
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {showGraduateModal && (
           <GraduateModal onClose={() => setShowGraduateModal(false)} />
         )}
