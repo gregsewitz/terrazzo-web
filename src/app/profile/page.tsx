@@ -58,40 +58,10 @@ interface DiscoverContent {
   contextLabel?: string;
 }
 
-/** CSS-only reveal: once visible, always visible. Immune to React re-renders. */
+/** NUCLEAR TEST: always visible, no animation at all */
 function useRevealOnce() {
   const ref = useRef<HTMLDivElement>(null);
-  const seen = useRef(false);
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (seen.current) return;
-    const el = ref.current;
-    if (!el) return;
-
-    // Synchronous viewport check
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 100 && rect.bottom > -100) {
-      seen.current = true;
-      setShow(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !seen.current) {
-          seen.current = true;
-          setShow(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '-60px' },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, show: seen.current || show };
+  return { ref, show: true };
 }
 
 const SETTINGS_LINKS = [
@@ -130,11 +100,6 @@ export default function ProfilePage() {
   const allSignals = useOnboardingStore(s => s.allSignals);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
 
-  // ── DEBUG: track renders and state ──
-  const _rc = useRef(0);
-  _rc.current += 1;
-  console.log(`[ProfilePage] render #${_rc.current}`, { dbHydrated, hasProfile: !!generatedProfile, hasDiscover: !!discoverContent, activeTab, isDesktop });
-  useEffect(() => { console.log('[ProfilePage] MOUNTED'); return () => console.log('[ProfilePage] UNMOUNTED'); }, []);
 
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
@@ -712,24 +677,6 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 // ── EDITORIAL LETTER — The opening essay ──
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const { ref, show } = useRevealOnce();
-  // ── DEBUG ──
-  const _elrc = useRef(0); _elrc.current += 1;
-  console.log(`[EditorialLetter] render #${_elrc.current}`, { show, hasLetter: !!letter });
-  useEffect(() => {
-    console.log('[EditorialLetter] MOUNTED');
-    // Monitor this element's opacity
-    const el = ref.current;
-    if (el) {
-      let count = 0;
-      const interval = setInterval(() => {
-        count++;
-        console.log(`[EditorialLetter] opacity check #${count}: computed=${window.getComputedStyle(el).opacity}, inline=${el.style.opacity}`);
-        if (count >= 20) clearInterval(interval);
-      }, 100);
-      return () => { clearInterval(interval); console.log('[EditorialLetter] UNMOUNTED'); };
-    }
-    return () => console.log('[EditorialLetter] UNMOUNTED (no ref)');
-  }, []);
   const l = letter || EDITORIAL_LETTER;
   return (
     <div
