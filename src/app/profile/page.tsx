@@ -671,8 +671,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const l = letter || EDITORIAL_LETTER;
   return (
     <motion.div
-      className="px-5 pt-5 pb-6"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 pt-5 pb-6"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
@@ -680,17 +679,15 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-4">
           <motion.div
-            className="w-5 h-[1px]"
+            className="fm-fade w-5 h-[1px]"
             style={{ background: 'var(--t-honey)' }}
-            initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             transition={{ duration: 0.8, delay: 0.1 }}
             viewport={{ once: true, margin: '-100px' }}
           />
           <motion.span
-            className="text-[9px] uppercase tracking-[0.25em]"
+            className="fm-fade text-[9px] uppercase tracking-[0.25em]"
             style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
-            initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -699,9 +696,8 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
           </motion.span>
         </div>
         <motion.h2
-          className="text-[20px] leading-snug mb-4"
+          className="fm-fade text-[20px] leading-snug mb-4"
           style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
-          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -709,9 +705,8 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
           {l.headline}
         </motion.h2>
         <motion.p
-          className="text-[13px] leading-relaxed"
+          className="fm-fade text-[13px] leading-relaxed"
           style={{ color: INK['70'], fontFamily: FONT.sans }}
-          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -720,8 +715,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         </motion.p>
       </div>
       <motion.div
-        className="flex items-center gap-2"
-        initial={{ opacity: 0, scale: 0.8 }}
+        className="fm-fade flex items-center gap-2"
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.5 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -739,8 +733,7 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
   const displayCards = cards || BECAUSE_YOU_CARDS;
   return (
     <motion.div
-      className="mb-7 px-5"
-      initial={{ opacity: 0 }}
+      className="fm-fade mb-7 px-5"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
@@ -757,9 +750,8 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
           return (
             <motion.div
               key={card.place}
-              className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
+              className="fm-fade flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
               style={{ background: card.bg, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
-              initial={{ opacity: 0, scale: 0.9, x: 20 }}
               whileInView={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               viewport={{ once: true, margin: '-100px' }}
@@ -804,17 +796,15 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
 
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>The thread</SectionLabel>
       <motion.div
-        className="mt-3 p-5 rounded-2xl"
+        className="fm-fade mt-3 p-5 rounded-2xl"
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-        initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -832,8 +822,7 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
           {t.places.map((place, i) => (
             <motion.div
               key={place.name}
-              className="flex gap-3"
-              initial={{ opacity: 0, y: 10 }}
+              className="fm-fade flex gap-3"
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
               viewport={{ once: true, margin: '-100px' }}
@@ -841,18 +830,16 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
               {/* Thread line */}
               <div className="flex flex-col items-center" style={{ width: 20 }}>
                 <motion.div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  className="fm-fade w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: domainColor, marginTop: 4 }}
-                  initial={{ scale: 0 }}
                   whileInView={{ scale: 1 }}
                   transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
                   viewport={{ once: true, margin: '-100px' }}
                 />
                 {i < t.places.length - 1 && (
                   <motion.div
-                    className="w-[1px] flex-1"
+                    className="fm-fade w-[1px] flex-1"
                     style={{ background: INK['10'] }}
-                    initial={{ scaleY: 0 }}
                     whileInView={{ scaleY: 1 }}
                     transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
                     viewport={{ once: true, margin: '-100px' }}
@@ -885,17 +872,15 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
   const t = tension || TASTE_TENSION;
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-violet)">Taste tension</SectionLabel>
       <motion.div
-        className="mt-3 rounded-2xl overflow-hidden"
+        className="fm-fade mt-3 rounded-2xl overflow-hidden"
         style={{ background: '#2a2535' }}
-        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -906,9 +891,8 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
           </h3>
           <div className="flex gap-3 mb-4">
             <motion.div
-              className="flex-1 p-3 rounded-xl"
+              className="fm-fade flex-1 p-3 rounded-xl"
               style={{ background: 'rgba(245,245,240,0.06)' }}
-              initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true, margin: '-100px' }}
@@ -917,9 +901,8 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.stated}&rdquo;</p>
             </motion.div>
             <motion.div
-              className="flex-1 p-3 rounded-xl"
+              className="fm-fade flex-1 p-3 rounded-xl"
               style={{ background: 'rgba(245,245,240,0.06)' }}
-              initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               viewport={{ once: true, margin: '-100px' }}
@@ -949,8 +932,7 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
   const collection = propCollection || WEEKLY_COLLECTION;
   return (
     <motion.div
-      className="mb-7 px-5"
-      initial={{ opacity: 0 }}
+      className="fm-fade mb-7 px-5"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
@@ -967,9 +949,8 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
           return (
             <motion.div
               key={place.name}
-              className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
+              className="fm-fade flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
               style={{ background: 'white', border: '1px solid var(--t-linen)', width: 240, scrollSnapAlign: 'start' }}
-              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               viewport={{ once: true, margin: '-100px' }}
@@ -1007,8 +988,7 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
   const displayBoards = boards || MOOD_BOARDS;
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
@@ -1018,9 +998,8 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
         {displayBoards.map((board, idx) => (
           <motion.div
             key={board.mood}
-            className="p-4 rounded-2xl"
+            className="fm-fade p-4 rounded-2xl"
             style={{ background: 'white', border: '1px solid var(--t-linen)', borderLeft: `3px solid ${board.color}` }}
-            initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: idx * 0.1 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -1033,8 +1012,7 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                 return (
                   <motion.div
                     key={p.name}
-                    className="flex items-center gap-3"
-                    initial={{ opacity: 0, y: 10 }}
+                    className="fm-fade flex items-center gap-3"
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: idx * 0.1 + pIdx * 0.05 }}
                     viewport={{ once: true, margin: '-100px' }}
@@ -1070,17 +1048,15 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
   const m = match || DEEP_MATCH;
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-verde)">Your deepest match</SectionLabel>
       <motion.div
-        className="mt-3 rounded-2xl overflow-hidden"
+        className="fm-fade mt-3 rounded-2xl overflow-hidden"
         style={{ background: '#1e2e24' }}
-        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -1106,9 +1082,8 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
                   </div>
                   <div className="h-1 rounded-full mb-1.5" style={{ background: 'rgba(245,245,240,0.08)' }}>
                     <motion.div
-                      className="h-1 rounded-full"
+                      className="fm-fade h-1 rounded-full"
                       style={{ background: domainColor, opacity: 0.7 }}
-                      initial={{ width: 0 }}
                       whileInView={{ width: `${s.strength}%` }}
                       transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
                       viewport={{ once: true, margin: '-100px' }}
@@ -1134,17 +1109,15 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
   const s = stretch || STRETCH_PICK;
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
       <motion.div
-        className="p-4 rounded-xl mt-3"
+        className="fm-fade p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}
-        initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.1, type: 'spring', stiffness: 200 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -1182,17 +1155,15 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
   const label = contextLabel || 'Summer';
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Context mode</SectionLabel>
       <motion.div
-        className="p-4 rounded-xl mt-3"
+        className="fm-fade p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}
-        initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -1210,8 +1181,7 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
             return (
               <motion.div
                 key={rec.name}
-                className="flex items-center gap-3"
-                initial={{ opacity: 0, y: 10 }}
+                className="fm-fade flex items-center gap-3"
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.15 + idx * 0.05 }}
                 viewport={{ once: true, margin: '-100px' }}
@@ -1249,17 +1219,15 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
 
   return (
     <motion.div
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-7"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Your taste vocabulary</SectionLabel>
       <motion.div
-        className="p-4 rounded-xl mt-3"
+        className="fm-fade p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-        initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -1272,9 +1240,8 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
             return (
               <motion.span
                 key={term}
-                className="text-[10px] px-2.5 py-1 rounded-full"
+                className="fm-fade text-[10px] px-2.5 py-1 rounded-full"
                 style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}
-                initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: randomDelay }}
                 viewport={{ once: true, margin: '-100px' }}
@@ -1284,9 +1251,8 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
             );
           })}
           <motion.span
-            className="text-[10px] px-2.5 py-1 rounded-full"
+            className="fm-fade text-[10px] px-2.5 py-1 rounded-full"
             style={{ background: INK['04'], color: INK['50'] }}
-            initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -1303,8 +1269,7 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
 function FriendsSavingSection() {
   return (
     <motion.div
-      className="px-5 mb-8"
-      initial={{ opacity: 0 }}
+      className="fm-fade px-5 mb-8"
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
@@ -1314,9 +1279,8 @@ function FriendsSavingSection() {
         {FRIEND_SAVES.map((save, idx) => (
           <motion.div
             key={save.place}
-            className="p-3.5 rounded-xl flex items-start gap-3"
+            className="fm-fade p-3.5 rounded-xl flex items-start gap-3"
             style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: idx * 0.1 }}
             viewport={{ once: true, margin: '-100px' }}

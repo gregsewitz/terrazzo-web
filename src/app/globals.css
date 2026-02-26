@@ -329,6 +329,19 @@ body {
   scroll-behavior: smooth;
 }
 
+/*
+ * Fix framer-motion SSR hydration flash.
+ *
+ * Problem: Server renders content visible (opacity 1), then during
+ * hydration framer-motion applies initial={{ opacity: 0 }}, causing
+ * a visible→hidden→visible strobe/flicker.
+ *
+ * Fix: Elements with this class start hidden in SSR HTML, matching
+ * what framer-motion expects. No mismatch = no flash.
+ * framer-motion then overrides with inline styles when it animates.
+ */
+.fm-fade { opacity: 0; }
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
