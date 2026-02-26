@@ -17,22 +17,19 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     const el = ref.current;
     if (!el) return;
 
-    let rafId: number | null = null;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          // Double-RAF: the outer RAF fires before the next paint, the inner
-          // RAF fires after that paint has completed. This guarantees the
-          // browser has actually rendered the initial hidden state (opacity:0)
-          // before we flip to visible, so the CSS transition animates smoothly.
-          // A single RAF is not enough on Safari — it can batch the state
-          // change into the same paint, causing elements to "pop in".
-          rafId = requestAnimationFrame(() => {
-            rafId = requestAnimationFrame(() => {
-              setIsInView(true);
-            });
-          });
+          // Use a 50ms setTimeout to guarantee the browser has painted the
+          // initial hidden state before we trigger the CSS transition.
+          // RAF-based approaches (single or double) are unreliable on Safari
+          // mobile — Safari can batch them into the same paint, causing
+          // elements to "pop in" without animating.
+          timerId = setTimeout(() => {
+            setIsInView(true);
+          }, 50);
           if (once) observer.unobserve(el);
         } else if (!once) {
           setIsInView(false);
@@ -44,7 +41,7 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     observer.observe(el);
     return () => {
       observer.disconnect();
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      if (timerId !== null) clearTimeout(timerId);
     };
   }, [threshold, once, rootMargin]);
 
