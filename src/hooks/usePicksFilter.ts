@@ -285,12 +285,16 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
         if (g.lat && g.lng) anchors.push(makeAnchor(g.lat, g.lng, g));
       });
       // Hotel fallbacks (deduplicated within 10km)
+      // Infer radius from the day's destination — a hotel in the Cotswolds
+      // should cast a regional net, not an urban one.
       trip.days.forEach(day => {
         if (day.hotelInfo?.lat && day.hotelInfo?.lng) {
           const h = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
           if (!anchors.some(a => distKm(a.lat, a.lng, h.lat, h.lng) < 10)) {
-            // Hotels are always in urban context → tight radius
-            anchors.push({ lat: h.lat, lng: h.lng, coreKm: URBAN_CORE_KM, outerKm: URBAN_CORE_KM * TAPER_RATIO });
+            const dayGeo: GeoDestination | null = day.destination
+              ? (trip.geoDestinations?.find(g => g.name.toLowerCase() === day.destination!.toLowerCase()) ?? { name: day.destination })
+              : null;
+            anchors.push(makeAnchor(h.lat, h.lng, dayGeo));
           }
         }
       });
@@ -310,9 +314,15 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
         anchors.push(makeAnchor(matchedGeo.lat, matchedGeo.lng, matchedGeo));
       }
 
+      // Build a synthetic GeoDestination for radius inference when
+      // we only have hotel coords. This lets regional destinations like
+      // "Cotswolds" use the wider 55km radius even without a geocoded
+      // geoDestination entry.
+      const syntheticGeo: GeoDestination = matchedGeo ?? { name: destName };
+
       // 2. Fall back to THIS day's hotel coordinates
       if (anchors.length === 0 && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
-        anchors.push(makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, null));
+        anchors.push(makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, syntheticGeo));
       }
 
       // 3. Fall back to nearest same-destination day's hotel
@@ -323,7 +333,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
             Math.abs(a.dayNumber - selectedDay) - Math.abs(b.dayNumber - selectedDay)
           );
         if (sameDest.length > 0) {
-          anchors.push(makeAnchor(sameDest[0].hotelInfo!.lat!, sameDest[0].hotelInfo!.lng!, null));
+          anchors.push(makeAnchor(sameDest[0].hotelInfo!.lat!, sameDest[0].hotelInfo!.lng!, syntheticGeo));
         }
       }
     }
