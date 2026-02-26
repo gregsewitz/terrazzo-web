@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
-import { useInView } from '@/hooks/useAnimations';
+import { useInView, isMobileSafari } from '@/hooks/useAnimations';
 import { TASTE_PROFILE, WRAPPED, DIMENSION_COLORS, AXIS_COLORS, CONTEXT_ICONS, CONTEXT_COLORS } from '@/constants/profile';
 import type { TasteProfile as ProfileShape } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -126,12 +127,23 @@ function IdentitySection({ profile, signalCount, numericProfile }: { profile: Pr
           <div style={{ fontFamily: FONT.mono, fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'rgba(245,240,230,0.55)' }}>
             Your Terrazzo Mosaic
           </div>
-          <div
-            className="flex items-center gap-6"
-          >
-            <TerrazzoMosaic profile={numericProfile} size="lg" />
-            <MosaicLegend profile={numericProfile} dark style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
-          </div>
+          {isMobileSafari() ? (
+            <div className="flex items-center gap-6">
+              <TerrazzoMosaic profile={numericProfile} size="lg" />
+              <MosaicLegend profile={numericProfile} dark style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+            </div>
+          ) : (
+            <motion.div
+              className="flex items-center gap-6"
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: true }}
+            >
+              <TerrazzoMosaic profile={numericProfile} size="lg" />
+              <MosaicLegend profile={numericProfile} dark style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+            </motion.div>
+          )}
         </div>
       </FadeInSection>
     </div>
@@ -299,16 +311,25 @@ function PerfectDaySection({ gp }: { gp: GeneratedTasteProfile | null }) {
           <FadeInSection key={seg.time} delay={i * 0.2} direction="left" distance={20}>
             <div className="flex gap-3">
               <div className="flex flex-col items-center" style={{ width: 24 }}>
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: `${seg.color}15`,
-                    transform: 'scale(1)',
-                    transition: `transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.2}s`,
-                  }}
-                >
-                  <PerriandIcon name={seg.icon} size={12} color={seg.color} />
-                </div>
+                {isMobileSafari() ? (
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${seg.color}15` }}
+                  >
+                    <PerriandIcon name={seg.icon} size={12} color={seg.color} />
+                  </div>
+                ) : (
+                  <motion.div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${seg.color}15` }}
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    transition={{ duration: 0.4, delay: i * 0.2, type: 'spring', stiffness: 300 }}
+                    viewport={{ once: true }}
+                  >
+                    <PerriandIcon name={seg.icon} size={12} color={seg.color} />
+                  </motion.div>
+                )}
                 {i < segments.length - 1 && <div className="w-[1px] flex-1 my-1" style={{ background: INK['10'] }} />}
               </div>
               <div className="flex-1 pb-5">
@@ -428,21 +449,23 @@ const DIMENSION_CERTAINTIES: Record<string, number> = {
 
 function DimensionBar({ certainty, color }: { certainty: number; color: string }) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
 
-  useEffect(() => {
-    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
-  }, [isInView, hasBeenVisible]);
+  if (isMobileSafari()) {
+    return (
+      <div ref={ref} className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: INK['06'] }}>
+        <div className="h-1.5 rounded-full" style={{ background: color, width: `${certainty}%` }} />
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: INK['06'] }}>
-      <div
+      <motion.div
         className="h-1.5 rounded-full"
-        style={{
-          background: color,
-          width: hasBeenVisible ? `${certainty}%` : '0%',
-          transition: `width 0.8s cubic-bezier(0.16, 1, 0.3, 1)`,
-        }}
+        style={{ background: color }}
+        initial={{ width: 0 }}
+        animate={isInView ? { width: `${certainty}%` } : { width: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       />
     </div>
   );
@@ -571,19 +594,25 @@ function MatchesSection({ profile }: { profile: ProfileShape }) {
                     <div className="flex items-baseline gap-2">
                       <span className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>{prop.name}</span>
                       {i === 0 && (
-                        <span
-                          className="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                          style={{
-                            background: 'rgba(42,122,86,0.08)',
-                            color: 'var(--t-verde)',
-                            fontFamily: FONT.mono,
-                            display: 'inline-block',
-                            transform: 'scale(1)',
-                            transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s',
-                          }}
-                        >
-                          Best match
-                        </span>
+                        isMobileSafari() ? (
+                          <span
+                            className="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+                          >
+                            Best match
+                          </span>
+                        ) : (
+                          <motion.span
+                            className="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+                            initial={{ scale: 0 }}
+                            whileInView={{ scale: 1 }}
+                            transition={{ delay: 0.5, type: 'spring', stiffness: 400 }}
+                            viewport={{ once: true }}
+                          >
+                            Best match
+                          </motion.span>
+                        )
                       )}
                     </div>
                     <div className="text-[11px] mb-2" style={{ color: INK['60'] }}>{prop.location}</div>

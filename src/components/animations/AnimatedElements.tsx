@@ -1,20 +1,16 @@
 'use client';
 
 import { motion, AnimatePresence, type Variants, type Transition } from 'framer-motion';
-import { useInView, useCountUp } from '@/hooks/useAnimations';
+import { useInView, useCountUp, isMobileSafari } from '@/hooks/useAnimations';
 import { FONT } from '@/constants/theme';
 import type { ReactNode, CSSProperties } from 'react';
-import { useEffect, useState, createContext, useContext, useRef, useCallback } from 'react';
 
 // ─── Shared animation presets ───
 
 const EASE_OUT_EXPO: Transition['ease'] = [0.16, 1, 0.3, 1];
 const EASE_OUT_QUART: Transition['ease'] = [0.25, 1, 0.5, 1];
 
-// CSS easing equivalents for CSS transitions
-const CSS_EASE_OUT_EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
-
-// ─── Fade-in on scroll (Safari-safe CSS transition) ───
+// ─── Fade-in on scroll ───
 
 interface FadeInSectionProps {
   children: ReactNode;
@@ -31,42 +27,37 @@ export function FadeInSection({
   direction = 'up', distance = 24, duration = 0.7,
 }: FadeInSectionProps) {
   const [ref, isInView] = useInView({ threshold: 0.1 });
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
 
-  useEffect(() => {
-    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
-  }, [isInView, hasBeenVisible]);
+  // Safari mobile: render static (no animation, no flicker)
+  if (isMobileSafari()) {
+    return <div ref={ref} className={className} style={style}>{children}</div>;
+  }
 
-  const show = hasBeenVisible;
-
-  const getTranslate = () => {
+  const getInitial = () => {
     switch (direction) {
-      case 'up': return show ? 'translate3d(0,0,0)' : `translate3d(0,${distance}px,0)`;
-      case 'down': return show ? 'translate3d(0,0,0)' : `translate3d(0,${-distance}px,0)`;
-      case 'left': return show ? 'translate3d(0,0,0)' : `translate3d(${distance}px,0,0)`;
-      case 'right': return show ? 'translate3d(0,0,0)' : `translate3d(${-distance}px,0,0)`;
-      case 'none': return 'translate3d(0,0,0)';
+      case 'up': return { opacity: 0, y: distance };
+      case 'down': return { opacity: 0, y: -distance };
+      case 'left': return { opacity: 0, x: distance };
+      case 'right': return { opacity: 0, x: -distance };
+      case 'none': return { opacity: 0 };
     }
   };
 
   return (
-    <div
+    <motion.div
       ref={ref}
+      initial={getInitial()}
+      animate={isInView ? { opacity: 1, x: 0, y: 0 } : getInitial()}
+      transition={{ duration, delay, ease: EASE_OUT_EXPO }}
       className={className}
-      style={{
-        opacity: show ? 1 : 0,
-        transform: getTranslate(),
-        transition: `opacity ${duration}s ${CSS_EASE_OUT_EXPO} ${delay}s, transform ${duration}s ${CSS_EASE_OUT_EXPO} ${delay}s`,
-        willChange: show ? 'auto' : 'opacity, transform',
-        ...style,
-      }}
+      style={style}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
-// ─── Staggered children container (Safari-safe CSS transitions) ───
+// ─── Staggered children container ───
 
 interface StaggerContainerProps {
   children: ReactNode;
@@ -76,64 +67,55 @@ interface StaggerContainerProps {
   delayStart?: number;
 }
 
-interface StaggerContextValue {
-  isVisible: boolean;
-  getDelay: () => number;
-}
-
-const StaggerContext = createContext<StaggerContextValue>({
-  isVisible: false,
-  getDelay: () => 0,
-});
+const staggerItemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1, y: 0,
+    transition: { duration: 0.5, ease: EASE_OUT_EXPO },
+  },
+};
 
 export function StaggerContainer({
   children, className, style, staggerDelay = 0.08, delayStart = 0,
 }: StaggerContainerProps) {
   const [ref, isInView] = useInView({ threshold: 0.1 });
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
-  const indexRef = useRef(0);
 
-  useEffect(() => {
-    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
-  }, [isInView, hasBeenVisible]);
-
-  // Reset index counter on each render so children get consistent delays
-  indexRef.current = 0;
-
-  const getDelay = useCallback(() => {
-    const i = indexRef.current++;
-    return delayStart + i * staggerDelay;
-  }, [delayStart, staggerDelay]);
+  // Safari mobile: render static container
+  if (isMobileSafari()) {
+    return <div ref={ref} className={className} style={style}>{children}</div>;
+  }
 
   return (
-    <StaggerContext.Provider value={{ isVisible: hasBeenVisible, getDelay }}>
-      <div ref={ref} className={className} style={style}>
-        {children}
-      </div>
-    </StaggerContext.Provider>
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={isInView ? 'visible' : 'hidden'}
+      variants={{
+        hidden: {},
+        visible: {
+          transition: { staggerChildren: staggerDelay, delayChildren: delayStart },
+        },
+      }}
+      className={className}
+      style={style}
+    >
+      {children}
+    </motion.div>
   );
 }
 
 export function StaggerItem({
   children, className, style,
 }: { children: ReactNode; className?: string; style?: CSSProperties }) {
-  const { isVisible, getDelay } = useContext(StaggerContext);
-  // Capture delay on first render so it stays stable
-  const [delay] = useState(() => getDelay());
+  // Safari mobile: render static item
+  if (isMobileSafari()) {
+    return <div className={className} style={style}>{children}</div>;
+  }
 
   return (
-    <div
-      className={className}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translate3d(0,0,0)' : 'translate3d(0,16px,0)',
-        transition: `opacity 0.5s ${CSS_EASE_OUT_EXPO} ${delay}s, transform 0.5s ${CSS_EASE_OUT_EXPO} ${delay}s`,
-        willChange: isVisible ? 'auto' : 'opacity, transform',
-        ...style,
-      }}
-    >
+    <motion.div variants={staggerItemVariants} className={className} style={style}>
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -153,26 +135,32 @@ export function AnimatedBar({
   bgColor = 'rgba(28,26,23,0.06)', borderRadius = 999,
 }: AnimatedBarProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
 
-  useEffect(() => {
-    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
-  }, [isInView, hasBeenVisible]);
-
-  const show = hasBeenVisible;
+  // Safari mobile: render at full width, no animation
+  if (isMobileSafari()) {
+    return (
+      <div ref={ref} style={{ height, borderRadius, background: bgColor, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', borderRadius,
+          background: `linear-gradient(90deg, ${color}80, ${color})`,
+          width: `${percentage}%`,
+        }} />
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} style={{ height, borderRadius, background: bgColor, overflow: 'hidden' }}>
-      <div
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
+        transition={{ duration: 1, delay, ease: EASE_OUT_EXPO }}
         style={{
           height: '100%',
           borderRadius,
           background: `linear-gradient(90deg, ${color}80, ${color})`,
           width: `${percentage}%`,
-          transform: show ? 'scaleX(1)' : 'scaleX(0)',
           transformOrigin: 'left',
-          transition: `transform 1s ${CSS_EASE_OUT_EXPO} ${delay}s`,
-          willChange: show ? 'auto' : 'transform',
         }}
       />
     </div>
@@ -193,30 +181,40 @@ export function AnimatedSpectrum({
   bgGradient = 'linear-gradient(90deg, rgba(28,26,23,0.06), rgba(28,26,23,0.15))',
 }: AnimatedSpectrumProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
 
-  useEffect(() => {
-    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
-  }, [isInView, hasBeenVisible]);
-
-  const show = hasBeenVisible;
-  const CSS_EASE_QUART = 'cubic-bezier(0.25, 1, 0.5, 1)';
+  // Safari mobile: render marker at final position, no animation
+  if (isMobileSafari()) {
+    return (
+      <div ref={ref} className="relative h-2 rounded-full" style={{ background: bgGradient }}>
+        <div
+          className="absolute top-1/2 w-3 h-3 rounded-full border-2"
+          style={{
+            left: `${percentage}%`,
+            transform: 'translate(-50%, -50%)',
+            background: markerColor,
+            borderColor: 'white',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className="relative h-2 rounded-full" style={{ background: bgGradient }}>
-      <div
+      <motion.div
         className="absolute top-1/2 w-3 h-3 rounded-full border-2"
+        initial={{ left: '50%', opacity: 0, scale: 0 }}
+        animate={isInView
+          ? { left: `${percentage}%`, opacity: 1, scale: 1 }
+          : { left: '50%', opacity: 0, scale: 0 }
+        }
+        transition={{ duration: 0.8, delay, ease: EASE_OUT_QUART }}
         style={{
-          left: show ? `${percentage}%` : '50%',
-          opacity: show ? 1 : 0,
-          transform: show
-            ? 'translate(-50%, -50%) scale(1)'
-            : 'translate(-50%, -50%) scale(0)',
-          transition: `left 0.8s ${CSS_EASE_QUART} ${delay}s, opacity 0.8s ${CSS_EASE_QUART} ${delay}s, transform 0.8s ${CSS_EASE_QUART} ${delay}s`,
+          transform: 'translate(-50%, -50%)',
           background: markerColor,
           borderColor: 'white',
           boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-          willChange: show ? 'auto' : 'left, opacity, transform',
         }}
       />
     </div>
@@ -255,19 +253,30 @@ interface AnimatedScoreArcProps {
 
 export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 0 }: AnimatedScoreArcProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
-
-  useEffect(() => {
-    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
-  }, [isInView, hasBeenVisible]);
-
-  const show = hasBeenVisible;
   const pct = score <= 1 ? Math.round(score * 100) : Math.round(score);
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (pct / 100) * circumference;
   const count = useCountUp(pct, isInView, 1000);
+
+  // Safari mobile: render arc at final position, no animation
+  if (isMobileSafari()) {
+    return (
+      <div ref={ref} className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(28,26,23,0.08)" strokeWidth={strokeWidth} />
+          <circle
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none" stroke={color} strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={`${progress} ${circumference - progress}`}
+          />
+        </svg>
+        <span className="absolute text-[11px] font-bold" style={{ color, fontFamily: FONT.mono }}>{count}</span>
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -276,14 +285,16 @@ export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 
           cx={size / 2} cy={size / 2} r={radius}
           fill="none" stroke="rgba(28,26,23,0.08)" strokeWidth={strokeWidth}
         />
-        <circle
+        <motion.circle
           cx={size / 2} cy={size / 2} r={radius}
           fill="none" stroke={color} strokeWidth={strokeWidth}
           strokeLinecap="round"
-          strokeDasharray={show ? `${progress} ${circumference - progress}` : `0 ${circumference}`}
-          style={{
-            transition: `stroke-dasharray 1.2s ${CSS_EASE_OUT_EXPO} ${delay}s`,
-          }}
+          initial={{ strokeDasharray: `0 ${circumference}` }}
+          animate={isInView
+            ? { strokeDasharray: `${progress} ${circumference - progress}` }
+            : { strokeDasharray: `0 ${circumference}` }
+          }
+          transition={{ duration: 1.2, delay, ease: EASE_OUT_EXPO }}
         />
       </svg>
       <span
@@ -365,6 +376,53 @@ export function CardTransition({ children, cardKey, direction = 'forward' }: Car
       </motion.div>
     </AnimatePresence>
   );
+}
+
+// ─── Safe motion wrappers (Framer Motion on supported browsers, static on Safari mobile) ───
+// These are drop-in replacements for motion.div, motion.span, motion.button, motion.h2, motion.p
+// that render as plain elements on Safari mobile to prevent the WAAPI flicker bug.
+
+type MotionDivProps = React.ComponentProps<typeof motion.div>;
+type MotionSpanProps = React.ComponentProps<typeof motion.span>;
+type MotionButtonProps = React.ComponentProps<typeof motion.button>;
+type MotionH2Props = React.ComponentProps<typeof motion.h2>;
+type MotionPProps = React.ComponentProps<typeof motion.p>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function stripMotionProps(props: any) {
+  const {
+    initial, animate, whileInView, whileHover, whileTap, whileFocus, whileDrag,
+    transition, viewport, variants, custom, exit, layout, layoutId,
+    onAnimationStart, onAnimationComplete, onDragStart, onDragEnd, onDrag,
+    dragConstraints, drag, dragElastic, dragMomentum,
+    ...rest
+  } = props;
+  return rest;
+}
+
+export function SafeMotionDiv(props: MotionDivProps) {
+  if (isMobileSafari()) return <div {...stripMotionProps(props)} />;
+  return <motion.div {...props} />;
+}
+
+export function SafeMotionSpan(props: MotionSpanProps) {
+  if (isMobileSafari()) return <span {...stripMotionProps(props)} />;
+  return <motion.span {...props} />;
+}
+
+export function SafeMotionButton(props: MotionButtonProps) {
+  if (isMobileSafari()) return <button {...stripMotionProps(props)} />;
+  return <motion.button {...props} />;
+}
+
+export function SafeMotionH2(props: MotionH2Props) {
+  if (isMobileSafari()) return <h2 {...stripMotionProps(props)} />;
+  return <motion.h2 {...props} />;
+}
+
+export function SafeMotionP(props: MotionPProps) {
+  if (isMobileSafari()) return <p {...stripMotionProps(props)} />;
+  return <motion.p {...props} />;
 }
 
 // ─── Floating pulse animation for buttons ───

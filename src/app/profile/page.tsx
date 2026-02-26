@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import PageTransition from '@/components/PageTransition';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
-// Debug instrumentation removed — useFlickerDebug available in hooks/ if needed
+import { SafeMotionDiv, SafeMotionSpan, SafeMotionButton, SafeMotionH2, SafeMotionP } from '@/components/animations/AnimatedElements';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
@@ -77,6 +77,7 @@ function getGreeting() {
 type ProfileTab = 'discover' | 'profile';
 
 export default function ProfilePage() {
+
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const [showWrapped, setShowWrapped] = useState(false);
@@ -95,6 +96,31 @@ export default function ProfilePage() {
   const lifeContext = useOnboardingStore(s => s.lifeContext);
   const allSignals = useOnboardingStore(s => s.allSignals);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
+
+  // Debug: log every state change that could trigger a re-render
+  const prevDbHydrated = useRef(dbHydrated);
+  const prevActiveTab = useRef(activeTab);
+  const prevDiscoverContent = useRef(discoverContent);
+  useEffect(() => {
+    if (prevDbHydrated.current !== dbHydrated) {
+      console.log(`%c[PAGE ProfilePage] 💧 dbHydrated: ${prevDbHydrated.current} → ${dbHydrated} @ ${performance.now().toFixed(1)}ms`, 'color: #FF6F00; font-weight: bold; font-size: 13px');
+      prevDbHydrated.current = dbHydrated;
+    }
+  }, [dbHydrated]);
+  useEffect(() => {
+    if (prevActiveTab.current !== activeTab) {
+      console.log(`%c[PAGE ProfilePage] 🔄 activeTab: ${prevActiveTab.current} → ${activeTab} @ ${performance.now().toFixed(1)}ms`, 'color: #FF6F00; font-weight: bold');
+      prevActiveTab.current = activeTab;
+    }
+  }, [activeTab]);
+  useEffect(() => {
+    const had = prevDiscoverContent.current !== null;
+    const has = discoverContent !== null;
+    if (had !== has) {
+      console.log(`%c[PAGE ProfilePage] 📡 discoverContent: ${had ? 'loaded' : 'null'} → ${has ? 'loaded' : 'null'} @ ${performance.now().toFixed(1)}ms`, 'color: #FF6F00; font-weight: bold');
+      prevDiscoverContent.current = discoverContent;
+    }
+  }, [discoverContent]);
 
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
@@ -312,10 +338,12 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Wrapped CTA */}
-                <button
+                <SafeMotionButton
                   onClick={() => setShowWrapped(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90"
                   style={{ background: '#2d3a2d' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <span className="text-[11px] font-semibold" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
                     Your Taste Dossier
@@ -323,13 +351,15 @@ export default function ProfilePage() {
                   <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(245,245,240,0.12)', color: '#f5f5f0', fontFamily: FONT.mono }}>
                     Replay →
                   </span>
-                </button>
+                </SafeMotionButton>
 
                 {/* Expand Your Mosaic CTA */}
-                <button
+                <SafeMotionButton
                   onClick={() => setShowMosaic(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)', border: '1px solid rgba(200,146,58,0.12)' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <div>
                     <span className="text-[11px] font-semibold block" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
@@ -342,7 +372,7 @@ export default function ProfilePage() {
                   <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(28,26,23,0.06)', color: 'var(--t-ink)', fontFamily: FONT.mono }}>
                     Play →
                   </span>
-                </button>
+                </SafeMotionButton>
 
                 {/* Settings links */}
                 <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
@@ -420,10 +450,12 @@ export default function ProfilePage() {
         <>
           {/* Action buttons */}
           <div className="px-5 pt-2 pb-4 flex flex-col gap-2.5">
-            <button
+            <SafeMotionButton
               onClick={() => setShowWrapped(true)}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{ background: '#2d3a2d' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -449,15 +481,17 @@ export default function ProfilePage() {
               >
                 Replay →
               </span>
-            </button>
+            </SafeMotionButton>
 
-            <button
+            <SafeMotionButton
               onClick={() => setShowMosaic(true)}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
                 border: '1px solid rgba(200,146,58,0.12)',
               }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -483,7 +517,7 @@ export default function ProfilePage() {
               >
                 Play →
               </span>
-            </button>
+            </SafeMotionButton>
           </div>
 
           {/* Deep Dive */}
@@ -664,64 +698,68 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const l = letter || EDITORIAL_LETTER;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
+      
       className="px-5 pt-5 pb-6"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-4">
-          <div
+          <SafeMotionDiv
             className="w-5 h-[1px]"
-            style={{
-              background: 'var(--t-honey)',
-              transformOrigin: 'left',
-              transform: 'scaleX(1)',
-              transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
-            }}
+            style={{ background: 'var(--t-honey)' }}
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
           />
-          <SafeFadeIn
+          <SafeMotionSpan
             className="text-[9px] uppercase tracking-[0.25em]"
             style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
-            direction="left"
-            distance={20}
-            duration={0.5}
-            delay={0.2}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
-            <span>A note from Terrazzo</span>
-          </SafeFadeIn>
+            A note from Terrazzo
+          </SafeMotionSpan>
         </div>
-        <SafeFadeIn
+        <SafeMotionH2
           className="text-[20px] leading-snug mb-4"
           style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
-          direction="up"
-          distance={20}
-          duration={0.7}
-          delay={0.3}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          viewport={{ once: true, margin: '-100px' }}
         >
-          <h2>{l.headline}</h2>
-        </SafeFadeIn>
-        <SafeFadeIn
+          {l.headline}
+        </SafeMotionH2>
+        <SafeMotionP
           className="text-[13px] leading-relaxed"
           style={{ color: INK['70'], fontFamily: FONT.sans }}
-          direction="up"
-          distance={20}
-          duration={0.7}
-          delay={0.4}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          viewport={{ once: true, margin: '-100px' }}
         >
-          <p>{l.body}</p>
-        </SafeFadeIn>
+          {l.body}
+        </SafeMotionP>
       </div>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="flex items-center gap-2"
-        scale={0.95}
-        duration={0.5}
-        delay={0.5}
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(200,146,58,0.08)', color: 'var(--t-honey)', fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
@@ -729,9 +767,13 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
 function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
   const displayCards = cards || BECAUSE_YOU_CARDS;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
+      
       className="mb-7 px-5"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-3">
         <SectionLabel>Because you...</SectionLabel>
@@ -743,15 +785,14 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
         {displayCards.map((card, idx) => {
           const domainColor = DIMENSION_COLORS[card.signalDomain] || '#8b6b4a';
           return (
-            <SafeFadeIn
+            <SafeMotionDiv
               key={card.place}
               className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
               style={{ background: card.bg, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
-              direction="left"
-              distance={20}
-              scale={0.95}
-              duration={0.5}
-              delay={idx * 0.1}
+              initial={{ opacity: 0, x: -20, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -777,11 +818,11 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.7)' }}>{card.why}</p>
               </div>
-            </SafeFadeIn>
+            </SafeMotionDiv>
           );
         })}
       </div>
-    </SafeFadeIn>
+    </SafeMotionDiv>
   );
 }
 
@@ -792,18 +833,21 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
   const TYPE_ICONS: Record<string, string> = { hotel: 'hotel', restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', neighborhood: 'neighborhood' };
 
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>The thread</SectionLabel>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="mt-3 p-5 rounded-2xl"
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-        direction="up"
-        distance={20}
-        duration={0.6}
-        delay={0.1}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.mono }}>
@@ -816,34 +860,32 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
         {/* Vertical thread line connecting places */}
         <div className="flex flex-col gap-0">
           {t.places.map((place, i) => (
-            <SafeFadeIn
+            <SafeMotionDiv
               key={place.name}
               className="flex gap-3"
-              direction="up"
-              distance={20}
-              duration={0.5}
-              delay={0.2 + i * 0.1}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               {/* Thread line */}
               <div className="flex flex-col items-center" style={{ width: 20 }}>
-                <div
+                <SafeMotionDiv
                   className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{
-                    background: domainColor,
-                    marginTop: 4,
-                    transform: 'scale(1)',
-                    transition: `transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${0.2 + i * 0.1}s`,
-                  }}
+                  style={{ background: domainColor, marginTop: 4 }}
+                  initial={{ scale: 0.95 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
+                  viewport={{ once: true, margin: '-100px' }}
                 />
                 {i < t.places.length - 1 && (
-                  <div
+                  <SafeMotionDiv
                     className="w-[1px] flex-1"
-                    style={{
-                      background: INK['10'],
-                      transformOrigin: 'top',
-                      transform: 'scaleY(1)',
-                      transition: `transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${0.3 + i * 0.1}s`,
-                    }}
+                    style={{ background: INK['10'] }}
+                    initial={{ scaleY: 0 }}
+                    whileInView={{ scaleY: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                    viewport={{ once: true, margin: '-100px' }}
                   />
                 )}
               </div>
@@ -860,11 +902,11 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.connection}</p>
               </div>
-            </SafeFadeIn>
+            </SafeMotionDiv>
           ))}
         </div>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
@@ -872,46 +914,49 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
 function TasteTensionSection({ tension }: { tension?: TasteTension }) {
   const t = tension || TASTE_TENSION;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-violet)">Taste tension</SectionLabel>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="mt-3 rounded-2xl overflow-hidden"
         style={{ background: '#2a2535' }}
-        direction="up"
-        distance={20}
-        duration={0.7}
-        delay={0.1}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="p-5">
           <h3 className="text-[18px] leading-snug mb-4" style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}>
             {t.title}
           </h3>
           <div className="flex gap-3 mb-4">
-            <SafeFadeIn
+            <SafeMotionDiv
               className="flex-1 p-3 rounded-xl"
               style={{ background: 'rgba(245,245,240,0.06)' }}
-              direction="left"
-              distance={20}
-              duration={0.5}
-              delay={0.2}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You think</div>
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.stated}&rdquo;</p>
-            </SafeFadeIn>
-            <SafeFadeIn
+            </SafeMotionDiv>
+            <SafeMotionDiv
               className="flex-1 p-3 rounded-xl"
               style={{ background: 'rgba(245,245,240,0.06)' }}
-              direction="left"
-              distance={20}
-              duration={0.5}
-              delay={0.3}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You do</div>
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.revealed}&rdquo;</p>
-            </SafeFadeIn>
+            </SafeMotionDiv>
           </div>
           <p className="text-[12px] leading-relaxed mb-4" style={{ color: 'rgba(245,245,240,0.8)', fontFamily: FONT.sans }}>
             {t.editorial}
@@ -924,8 +969,8 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
           </div>
           <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{t.resolvedBy.how}</p>
         </div>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
@@ -933,9 +978,12 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
 function WeeklyEditSection({ collection: propCollection }: { collection?: { title: string; subtitle: string; places: CollectionPlace[] } }) {
   const collection = propCollection || WEEKLY_COLLECTION;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="mb-7 px-5"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-1"><SectionLabel>This week&apos;s edit</SectionLabel></div>
       <div className="mb-3">
@@ -947,14 +995,14 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
           const domainColor = DIMENSION_COLORS[place.signalDomain] || '#8b6b4a';
           const imageUrl = getPlaceImage(place.name);
           return (
-            <SafeFadeIn
+            <SafeMotionDiv
               key={place.name}
               className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
               style={{ background: 'white', border: '1px solid var(--t-linen)', width: 240, scrollSnapAlign: 'start' }}
-              direction="up"
-              distance={20}
-              duration={0.5}
-              delay={idx * 0.1}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               {imageUrl && (
                 <div style={{ height: 100, overflow: 'hidden', position: 'relative' }}>
@@ -976,11 +1024,11 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.note}</p>
               </div>
-            </SafeFadeIn>
+            </SafeMotionDiv>
           );
         })}
       </div>
-    </SafeFadeIn>
+    </SafeMotionDiv>
   );
 }
 
@@ -988,21 +1036,24 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
 function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
   const displayBoards = boards || MOOD_BOARDS;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Travel moods</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {displayBoards.map((board, idx) => (
-          <SafeFadeIn
+          <SafeMotionDiv
             key={board.mood}
             className="p-4 rounded-2xl"
             style={{ background: 'white', border: '1px solid var(--t-linen)', borderLeft: `3px solid ${board.color}` }}
-            direction="left"
-            distance={20}
-            duration={0.5}
-            delay={idx * 0.1}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
             <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>{board.mood}</h4>
             <p className="text-[11px] mb-4" style={{ color: INK['70'], fontFamily: FONT.sans }}>{board.description}</p>
@@ -1010,13 +1061,13 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
               {board.places.map((p, pIdx) => {
                 const imageUrl = getPlaceImage(p.name);
                 return (
-                  <SafeFadeIn
+                  <SafeMotionDiv
                     key={p.name}
                     className="flex items-center gap-3"
-                    direction="up"
-                    distance={20}
-                    duration={0.4}
-                    delay={idx * 0.1 + pIdx * 0.05}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 + pIdx * 0.05 }}
+                    viewport={{ once: true, margin: '-100px' }}
                   >
                     {imageUrl ? (
                       <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
@@ -1033,14 +1084,14 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       <p className="text-[10px] italic" style={{ color: INK['70'] }}>{p.vibe}</p>
                     </div>
                     <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
-                  </SafeFadeIn>
+                  </SafeMotionDiv>
                 );
               })}
             </div>
-          </SafeFadeIn>
+          </SafeMotionDiv>
         ))}
       </div>
-    </SafeFadeIn>
+    </SafeMotionDiv>
   );
 }
 
@@ -1048,18 +1099,21 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
 function DeepMatchSection({ match }: { match?: DeepMatch }) {
   const m = match || DEEP_MATCH;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-verde)">Your deepest match</SectionLabel>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="mt-3 rounded-2xl overflow-hidden"
         style={{ background: '#1e2e24' }}
-        direction="up"
-        distance={20}
-        duration={0.7}
-        delay={0.1}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="p-5">
           <div className="flex items-center gap-3 mb-3">
@@ -1081,14 +1135,12 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
                     <span className="text-[10px] font-bold" style={{ color: domainColor, fontFamily: FONT.mono }}>{s.strength}%</span>
                   </div>
                   <div className="h-1 rounded-full mb-1.5" style={{ background: 'rgba(245,245,240,0.08)' }}>
-                    <div
+                    <SafeMotionDiv
                       className="h-1 rounded-full"
-                      style={{
-                        background: domainColor,
-                        opacity: 0.7,
-                        width: `${s.strength}%`,
-                        transition: `width 1s cubic-bezier(0.16, 1, 0.3, 1) ${0.2 + idx * 0.1}s`,
-                      }}
+                      style={{ background: domainColor, opacity: 0.7 }}
+                      whileInView={{ width: `${s.strength}%` }}
+                      transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
+                      viewport={{ once: true, margin: '-100px' }}
                     />
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: 'rgba(245,245,240,0.65)' }}>{s.note}</p>
@@ -1101,8 +1153,8 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
           <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(42,122,86,0.6)', fontFamily: FONT.mono }}>Tension resolved</div>
           <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{m.tensionResolved}</p>
         </div>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
@@ -1110,17 +1162,21 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
 function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
   const s = stretch || STRETCH_PICK;
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}
-        scale={0.95}
-        duration={0.5}
-        delay={0.1}
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.1, type: 'spring', stiffness: 200 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-1.5 mb-3">
           <PerriandIcon name="discover" size={10} color="var(--t-panton-orange)" />
@@ -1144,8 +1200,8 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
           <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{s.why}</p>
         </div>
         <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: INK['70'] }}>{s.tension}</p>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
@@ -1154,18 +1210,21 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
   const displayRecs = recs || SUMMER_RECS;
   const label = contextLabel || 'Summer';
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Context mode</SectionLabel>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}
-        direction="up"
-        distance={20}
-        duration={0.6}
-        delay={0.1}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-1">
           <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
@@ -1178,13 +1237,13 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
           {displayRecs.map((rec, idx) => {
             const imageUrl = getPlaceImage(rec.name);
             return (
-              <SafeFadeIn
+              <SafeMotionDiv
                 key={rec.name}
                 className="flex items-center gap-3"
-                direction="up"
-                distance={20}
-                duration={0.4}
-                delay={0.15 + idx * 0.05}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 + idx * 0.05 }}
+                viewport={{ once: true, margin: '-100px' }}
               >
                 {imageUrl ? (
                   <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
@@ -1200,12 +1259,12 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: INK['70'] }}>{rec.whyFits}</p>
                 </div>
-              </SafeFadeIn>
+              </SafeMotionDiv>
             );
           })}
         </div>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
@@ -1218,18 +1277,21 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
   rejections.forEach(term => allTerms.push({ term, domain: 'Rejection' }));
 
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-7"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Your taste vocabulary</SectionLabel>
-      <SafeFadeIn
+      <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-        direction="up"
-        distance={20}
-        duration={0.6}
-        delay={0.1}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex flex-wrap gap-1.5 mb-3">
           {allTerms.map(({ term, domain }, idx) => {
@@ -1237,51 +1299,56 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
             const isRejection = domain === 'Rejection';
             const randomDelay = Math.random() * 0.3;
             return (
-              <SafeFadeIn
+              <SafeMotionSpan
                 key={term}
                 className="text-[10px] px-2.5 py-1 rounded-full"
-                style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans, display: 'inline-block' }}
-                scale={0.95}
-                duration={0.4}
-                delay={randomDelay}
+                style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: randomDelay }}
+                viewport={{ once: true, margin: '-100px' }}
               >
-                <span>{term}</span>
-              </SafeFadeIn>
+                {term}
+              </SafeMotionSpan>
             );
           })}
-          <SafeFadeIn
+          <SafeMotionSpan
             className="text-[10px] px-2.5 py-1 rounded-full"
-            style={{ background: INK['04'], color: INK['50'], display: 'inline-block' }}
-            scale={0.95}
-            duration={0.4}
-            delay={0.3}
+            style={{ background: INK['04'], color: INK['50'] }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
-            <span>+{Object.values(profile.microTasteSignals).flat().length - allTerms.length} more</span>
-          </SafeFadeIn>
+            +{Object.values(profile.microTasteSignals).flat().length - allTerms.length} more
+          </SafeMotionSpan>
         </div>
-      </SafeFadeIn>
-    </SafeFadeIn>
+      </SafeMotionDiv>
+    </SafeMotionDiv>
   );
 }
 
 // ── FRIENDS SAVING ──
 function FriendsSavingSection() {
   return (
-    <SafeFadeIn
+    <SafeMotionDiv
       className="px-5 mb-8"
-      duration={0.6}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Friends are saving</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {FRIEND_SAVES.map((save, idx) => (
-          <SafeFadeIn
+          <SafeMotionDiv
             key={save.place}
             className="p-3.5 rounded-xl flex items-start gap-3"
             style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-            direction="right"
-            distance={20}
-            duration={0.5}
-            delay={idx * 0.1}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: `${save.color}15`, color: save.color, fontFamily: FONT.mono }}>
               {save.friendInitial}
@@ -1298,9 +1365,9 @@ function FriendsSavingSection() {
                 <span className="text-[10px]" style={{ color: INK['70'] }}>{save.whyMatches}</span>
               </div>
             </div>
-          </SafeFadeIn>
+          </SafeMotionDiv>
         ))}
       </div>
-    </SafeFadeIn>
+    </SafeMotionDiv>
   );
 }

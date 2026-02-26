@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
  * by default and the client will correct on hydration if needed.
  */
 let _isMobileSafari: boolean | null = null;
-function isMobileSafari(): boolean {
+export function isMobileSafari(): boolean {
   if (_isMobileSafari !== null) return _isMobileSafari;
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
