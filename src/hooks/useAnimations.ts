@@ -22,12 +22,16 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          // Defer by one frame so the browser paints the initial hidden state
-          // before we trigger the CSS transition. Without this, elements already
-          // in the viewport at mount time can skip straight to opacity:1 because
-          // React commits the state change before a paint with opacity:0 occurs.
+          // Double-RAF: the outer RAF fires before the next paint, the inner
+          // RAF fires after that paint has completed. This guarantees the
+          // browser has actually rendered the initial hidden state (opacity:0)
+          // before we flip to visible, so the CSS transition animates smoothly.
+          // A single RAF is not enough on Safari — it can batch the state
+          // change into the same paint, causing elements to "pop in".
           rafId = requestAnimationFrame(() => {
-            setIsInView(true);
+            rafId = requestAnimationFrame(() => {
+              setIsInView(true);
+            });
           });
           if (once) observer.unobserve(el);
         } else if (!once) {
