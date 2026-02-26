@@ -55,6 +55,7 @@ function DayBoardView({
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
   const reorderDays = useTripStore(s => s.reorderDays);
+  const deleteDay = useTripStore(s => s.deleteDay);
   const setDayDestination = useTripStore(s => s.setDayDestination);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const isDesktop = useIsDesktop();
@@ -66,6 +67,7 @@ function DayBoardView({
   const [dayDropTarget, setDayDropTarget] = useState<number | null>(null);
   const [destPickerDay, setDestPickerDay] = useState<number | null>(null);
   const [destPickerAddMode, setDestPickerAddMode] = useState(false);
+  const [deleteDayConfirm, setDeleteDayConfirm] = useState<number | null>(null);
   const destPickerRef = useRef<HTMLDivElement>(null);
 
   // Close destination picker on click outside
@@ -342,6 +344,29 @@ function DayBoardView({
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1">
+                {/* Remove day button */}
+                {trip.days.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteDayConfirm(day.dayNumber); }}
+                    className="flex items-center gap-0.5 rounded-full cursor-pointer"
+                    style={{
+                      background: `${destColor.accent}10`,
+                      border: 'none',
+                      padding: '1px 6px 1px 4px',
+                      fontFamily: FONT.sans,
+                      fontSize: 9,
+                      fontWeight: 500,
+                      color: destColor.accent,
+                      opacity: 0.5,
+                      transition: 'opacity 150ms',
+                    }}
+                    onMouseEnter={(e) => { (e.target as HTMLElement).style.opacity = '0.9'; }}
+                    onMouseLeave={(e) => { (e.target as HTMLElement).style.opacity = '0.5'; }}
+                    title="Remove this day"
+                  >
+                    <span style={{ fontSize: 11, lineHeight: 1 }}>×</span>
+                  </button>
+                )}
                 {editingHotelDay === day.dayNumber ? (
                   <div style={{ maxWidth: 180, minWidth: 160 }} onClick={(e) => e.stopPropagation()}>
                     <HotelInput
@@ -737,6 +762,63 @@ function DayBoardView({
           </div>
         );
       })}
+      {/* Delete day confirmation dialog */}
+      {deleteDayConfirm !== null && (() => {
+        const dayToRemove = trip.days.find(d => d.dayNumber === deleteDayConfirm);
+        if (!dayToRemove) return null;
+        const placedCount = dayToRemove.slots.flatMap(s => s.places).length;
+        return (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.4)' }}
+            onClick={() => setDeleteDayConfirm(null)}
+          >
+            <div
+              className="rounded-2xl p-6 mx-6"
+              style={{ background: 'white', maxWidth: 340, width: '100%' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ fontFamily: FONT.serif, fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: 'var(--t-ink)' }}>
+                Remove {dayToRemove.dayOfWeek ? `${dayToRemove.dayOfWeek}` : `Day ${deleteDayConfirm}`}?
+              </h3>
+              <p style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['70'], margin: '0 0 20px', lineHeight: 1.5 }}>
+                {dayToRemove.destination && <>{dayToRemove.destination} · </>}
+                {placedCount > 0
+                  ? 'Placed items will return to your unsorted pool.'
+                  : 'This day has no placed items.'}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteDayConfirm(null)}
+                  className="flex-1 py-2.5 rounded-lg cursor-pointer"
+                  style={{
+                    fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
+                    background: INK['04'], color: 'var(--t-ink)',
+                    border: 'none',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const dn = deleteDayConfirm;
+                    setDeleteDayConfirm(null);
+                    deleteDay(dn);
+                  }}
+                  className="flex-1 py-2.5 rounded-lg cursor-pointer"
+                  style={{
+                    fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+                    background: '#c0392b', color: 'white',
+                    border: 'none',
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
