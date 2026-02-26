@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
@@ -8,6 +8,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import SlotNoteBubble from './SlotNoteBubble';
 import HotelInput from './HotelInput';
+import AddDestinationSearch from './AddDestinationSearch';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
@@ -54,6 +55,7 @@ function DayBoardView({
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
   const reorderDays = useTripStore(s => s.reorderDays);
+  const setDayDestination = useTripStore(s => s.setDayDestination);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const isDesktop = useIsDesktop();
   const [dropTarget, setDropTarget] = useState<string | null>(null); // "dayNum-slotId"
@@ -62,20 +64,41 @@ function DayBoardView({
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
   const [draggingDay, setDraggingDay] = useState<number | null>(null);
   const [dayDropTarget, setDayDropTarget] = useState<number | null>(null);
+  const [destPickerDay, setDestPickerDay] = useState<number | null>(null);
+  const [destPickerAddMode, setDestPickerAddMode] = useState(false);
+  const destPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close destination picker on click outside
+  useEffect(() => {
+    if (destPickerDay === null) return;
+    const handler = (e: MouseEvent) => {
+      if (destPickerRef.current && !destPickerRef.current.contains(e.target as Node)) {
+        setDestPickerDay(null);
+        setDestPickerAddMode(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [destPickerDay]);
 
   const handleHotelSave = useCallback((dayNumber: number, hotelInfo: HotelInfo | null) => {
-    if (!trip) return;
-    const dayObj = trip.days.find(d => d.dayNumber === dayNumber);
     setEditingHotelDay(null);
-    if (dayObj?.destination && hotelInfo) {
-      const sameDest = trip.days.filter(d => d.destination === dayObj.destination).map(d => d.dayNumber);
-      setMultipleDaysHotelInfo(sameDest, hotelInfo);
-    } else {
-      setDayHotelInfo(dayNumber, hotelInfo);
-    }
-  }, [trip, setDayHotelInfo, setMultipleDaysHotelInfo]);
+    setDayHotelInfo(dayNumber, hotelInfo);
+  }, [setDayHotelInfo]);
 
   if (!trip) return null;
+
+  // Unique destinations for picker (preserve order of first appearance)
+  const uniqueDestinations = useMemo(() => {
+    const seen = new Set<string>();
+    return trip.days
+      .map(d => d.destination || '')
+      .filter(d => d && !seen.has(d) && seen.add(d));
+  }, [trip.days]);
+
+  const getDestColor = useCallback((dest: string) => {
+    return DEST_COLORS[dest] || generateDestColor(dest);
+  }, []);
 
   // Desktop sizing
   const COL_WIDTH = isDesktop ? 280 : 240;
@@ -198,8 +221,123 @@ function DayBoardView({
                   <div style={{ fontFamily: FONT.sans, fontSize: DAY_TITLE_SIZE, fontWeight: 700, color: destColor.text }}>
                     {isFlexible ? `Day ${dateNum}` : `${shortDay} ${dateNum}`}
                   </div>
-                  <div style={{ fontFamily: FONT.sans, fontSize: DAY_DEST_SIZE, fontWeight: 500, color: destColor.accent }}>
-                    {day.destination || 'TBD'}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDestPickerDay(prev => prev === day.dayNumber ? null : day.dayNumber);
+                        setDestPickerAddMode(false);
+                      }}
+                      style={{
+                        fontFamily: FONT.sans,
+                        fontSize: DAY_DEST_SIZE,
+                        fontWeight: 500,
+                        color: destColor.accent,
+                        cursor: 'pointer',
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: `1px dashed ${destColor.accent}60`,
+                        padding: 0,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {day.destination || 'TBD'}
+                    </button>
+
+                    {/* Destination picker popover */}
+                    {destPickerDay === day.dayNumber && (
+                      <div
+                        ref={destPickerRef}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          marginTop: 4,
+                          background: 'white',
+                          borderRadius: 12,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                          border: '1px solid var(--t-linen)',
+                          padding: destPickerAddMode ? 0 : 8,
+                          zIndex: 50,
+                          minWidth: destPickerAddMode ? 240 : 160,
+                        }}
+                      >
+                        {destPickerAddMode ? (
+                          <AddDestinationSearch
+                            onAdded={() => {
+                              setDestPickerDay(null);
+                              setDestPickerAddMode(false);
+                            }}
+                            onCancel={() => {
+                              setDestPickerAddMode(false);
+                            }}
+                          />
+                        ) : (
+                          <>
+                            {uniqueDestinations.map(dest => {
+                              const isCurrent = dest === day.destination;
+                              const destC = getDestColor(dest);
+                              return (
+                                <button
+                                  key={dest}
+                                  onClick={() => {
+                                    if (!isCurrent) setDayDestination(day.dayNumber, dest);
+                                    setDestPickerDay(null);
+                                  }}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    width: '100%',
+                                    textAlign: 'left',
+                                    padding: '6px 10px',
+                                    borderRadius: 8,
+                                    border: 'none',
+                                    background: isCurrent ? destC.bg : 'transparent',
+                                    fontFamily: FONT.sans,
+                                    fontSize: 13,
+                                    color: 'var(--t-ink)',
+                                    cursor: isCurrent ? 'default' : 'pointer',
+                                    fontWeight: isCurrent ? 600 : 400,
+                                    opacity: isCurrent ? 0.6 : 1,
+                                  }}
+                                >
+                                  <span style={{
+                                    width: 8, height: 8, borderRadius: '50%',
+                                    background: destC.accent, flexShrink: 0,
+                                  }} />
+                                  {dest}
+                                </button>
+                              );
+                            })}
+                            <button
+                              onClick={() => setDestPickerAddMode(true)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '6px 10px',
+                                marginTop: 2,
+                                borderRadius: 8,
+                                border: 'none',
+                                borderTop: '1px solid var(--t-linen)',
+                                background: 'transparent',
+                                fontFamily: FONT.sans,
+                                fontSize: 12,
+                                color: INK['50'],
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
+                              Add destination
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

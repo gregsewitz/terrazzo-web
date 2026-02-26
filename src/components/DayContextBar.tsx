@@ -47,29 +47,9 @@ const DayContextBar = memo(({
   const [dayMapOpen, setDayMapOpen] = useState(false);
 
   const handleHotelSave = useCallback((hotelInfo: HotelInfo | null) => {
-    if (!trip) return;
-    const dayObj = trip.days.find(d => d.dayNumber === currentDay);
-    if (!dayObj) return;
-
     setEditingHotel(false);
-
-    // Auto-apply to ALL same-destination days
-    if (dayObj.destination) {
-      const dest = dayObj.destination;
-      const sameDest = trip.days
-        .filter(d => d.destination === dest)
-        .map(d => d.dayNumber);
-
-      if (hotelInfo) {
-        setMultipleDaysHotelInfo(sameDest, hotelInfo);
-      } else {
-        // Clearing: just clear current day
-        setDayHotelInfo(currentDay, null);
-      }
-    } else {
-      setDayHotelInfo(currentDay, hotelInfo);
-    }
-  }, [trip, currentDay, setDayHotelInfo, setMultipleDaysHotelInfo]);
+    setDayHotelInfo(currentDay, hotelInfo);
+  }, [currentDay, setDayHotelInfo]);
 
   // Build map markers
   const placedItems = day.slots.flatMap(s => s.places);
