@@ -26,6 +26,17 @@ const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[]
   { value: 'shop', label: 'Shop', icon: 'shop' },
 ];
 
+// Haversine distance in km (for geo-proximity filtering)
+function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+const GEO_RADIUS_KM = 60; // covers regional destinations like the Cotswolds
+
 const SOURCE_FILTERS = [
   { value: 'all', label: 'All sources' },
   { value: 'article', label: 'Articles' },
@@ -82,6 +93,24 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
     return day?.destination || trip.location || null;
   }, [selectedDay, trip]);
 
+  // Geo coordinates for active destination(s) — used for proximity matching
+  const activeGeoPoints = useMemo(() => {
+    if (!trip?.geoDestinations?.length) return [];
+    if (selectedDay === null) {
+      // "All days": all geo destinations
+      return trip.geoDestinations
+        .filter(g => g.lat && g.lng)
+        .map(g => ({ lat: g.lat!, lng: g.lng! }));
+    }
+    // Specific day: find the geo point for this day's destination
+    const day = trip.days.find(d => d.dayNumber === selectedDay);
+    const destName = day?.destination;
+    const geo = destName
+      ? trip.geoDestinations.find(g => g.name.toLowerCase() === destName.toLowerCase())
+      : trip.geoDestinations[0];
+    return geo?.lat && geo?.lng ? [{ lat: geo.lat, lng: geo.lng }] : [];
+  }, [trip, selectedDay]);
+
   const placedIds = useMemo(() => {
     if (!trip) return new Set<string>();
     const ids = new Set<string>();
@@ -96,9 +125,16 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
   const filteredPicks = useMemo(() => {
     let picks = allPicks;
     // In "All days" mode, filter to only show places matching trip destinations
-    if (selectedDay === null && tripDestinations.length > 0 && !searchQuery.trim()) {
+    if (selectedDay === null && (tripDestinations.length > 0 || activeGeoPoints.length > 0) && !searchQuery.trim()) {
       const dests = tripDestinations.map(d => d.toLowerCase());
       picks = picks.filter(p => {
+        // Geo-proximity check first
+        const pLat = p.google?.lat;
+        const pLng = p.google?.lng;
+        if (pLat && pLng && activeGeoPoints.length > 0) {
+          if (activeGeoPoints.some(geo => distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM)) return true;
+        }
+        // String match fallback
         const loc = (p.location || '').toLowerCase();
         return dests.some(dest => loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---'));
       });
@@ -118,12 +154,19 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
       );
     }
     return picks;
-  }, [allPicks, activeFilter, sourceFilter, searchQuery, selectedDay, tripDestinations]);
+  }, [allPicks, activeFilter, sourceFilter, searchQuery, selectedDay, tripDestinations, activeGeoPoints]);
 
-  // Check if a place matches destination(s) — used for sorting & dimming
+  // Check if a place matches destination(s) — geo-proximity + string fallback
   const matchesDestination = useCallback((place: ImportedPlace): boolean => {
+    // 1. Geo-proximity match (best — works for regions, villages, neighborhoods)
+    const pLat = place.google?.lat;
+    const pLng = place.google?.lng;
+    if (pLat && pLng && activeGeoPoints.length > 0) {
+      if (activeGeoPoints.some(geo => distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM)) return true;
+    }
+
+    // 2. String match fallback (for places without coordinates)
     const loc = (place.location || '').toLowerCase();
-    // "All days" mode: match against ALL trip destinations
     if (selectedDay === null) {
       if (tripDestinations.length === 0) return true;
       return tripDestinations.some(dest => {
@@ -131,11 +174,10 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
         return loc.includes(d) || d.includes(loc.split(',')[0]?.trim() || '---');
       });
     }
-    // Specific day mode: match against that day's destination
     if (!activeDestination) return true;
     const dest = activeDestination.toLowerCase();
     return loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---');
-  }, [selectedDay, activeDestination, tripDestinations]);
+  }, [selectedDay, activeDestination, tripDestinations, activeGeoPoints]);
 
   const sortedPicks = useMemo(() => {
     const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
