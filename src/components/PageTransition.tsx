@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -25,8 +25,41 @@ export default function PageTransition({
   className?: string;
   style?: React.CSSProperties;
 }) {
+  // ── DEBUG: track PageTransition renders and opacity ──
+  const _rc = useRef(0);
+  const divRef = useRef<HTMLDivElement>(null);
+  _rc.current += 1;
+  console.log(`[PageTransition] render #${_rc.current}`);
+
+  useEffect(() => {
+    console.log('[PageTransition] MOUNTED');
+    // Monitor opacity changes on this element
+    const el = divRef.current;
+    if (el) {
+      const observer = new MutationObserver(() => {
+        console.log('[PageTransition] style mutated, opacity:', el.style.opacity);
+      });
+      observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+      // Also log current computed opacity every 100ms for the first 2 seconds
+      let count = 0;
+      const interval = setInterval(() => {
+        count++;
+        const computed = window.getComputedStyle(el).opacity;
+        console.log(`[PageTransition] opacity check #${count}: ${computed}`);
+        if (count >= 20) clearInterval(interval);
+      }, 100);
+      return () => {
+        observer.disconnect();
+        clearInterval(interval);
+        console.log('[PageTransition] UNMOUNTED');
+      };
+    }
+    return () => console.log('[PageTransition] UNMOUNTED (no ref)');
+  }, []);
+
   return (
     <motion.div
+      ref={divRef}
       className={className}
       style={{ opacity: 0, overflowX: 'hidden', ...style }}
       animate={{ opacity: 1 }}

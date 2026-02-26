@@ -130,6 +130,12 @@ export default function ProfilePage() {
   const allSignals = useOnboardingStore(s => s.allSignals);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
 
+  // ── DEBUG: track renders and state ──
+  const _rc = useRef(0);
+  _rc.current += 1;
+  console.log(`[ProfilePage] render #${_rc.current}`, { dbHydrated, hasProfile: !!generatedProfile, hasDiscover: !!discoverContent, activeTab, isDesktop });
+  useEffect(() => { console.log('[ProfilePage] MOUNTED'); return () => console.log('[ProfilePage] UNMOUNTED'); }, []);
+
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
   const profile = generatedProfile || TASTE_PROFILE;
@@ -706,6 +712,24 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 // ── EDITORIAL LETTER — The opening essay ──
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const { ref, show } = useRevealOnce();
+  // ── DEBUG ──
+  const _elrc = useRef(0); _elrc.current += 1;
+  console.log(`[EditorialLetter] render #${_elrc.current}`, { show, hasLetter: !!letter });
+  useEffect(() => {
+    console.log('[EditorialLetter] MOUNTED');
+    // Monitor this element's opacity
+    const el = ref.current;
+    if (el) {
+      let count = 0;
+      const interval = setInterval(() => {
+        count++;
+        console.log(`[EditorialLetter] opacity check #${count}: computed=${window.getComputedStyle(el).opacity}, inline=${el.style.opacity}`);
+        if (count >= 20) clearInterval(interval);
+      }, 100);
+      return () => { clearInterval(interval); console.log('[EditorialLetter] UNMOUNTED'); };
+    }
+    return () => console.log('[EditorialLetter] UNMOUNTED (no ref)');
+  }, []);
   const l = letter || EDITORIAL_LETTER;
   return (
     <div
