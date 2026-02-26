@@ -1,5 +1,7 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
 import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
@@ -10,6 +12,11 @@ import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { DEST_COLORS } from '@/types';
 
+/* ─── Animation constants (desktop only) ─── */
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
+const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT_EXPO } } };
+
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
   const router = useRouter();
@@ -18,13 +25,16 @@ export default function TripsPage() {
   /* ─── Desktop Trips layout ─── */
   if (isDesktop) {
     return (
-      <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
+      <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 48px 48px' }}>
           {/* Header */}
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h1
+              <motion.h1
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
                 style={{
                   fontFamily: FONT.serif,
                   fontStyle: 'italic',
@@ -35,22 +45,27 @@ export default function TripsPage() {
                 }}
               >
                 Your Trips
-              </h1>
+              </motion.h1>
               <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
                 {trips.length} {trips.length === 1 ? 'trip' : 'trips'} in progress
               </p>
             </div>
-            <button
+            <motion.button
               onClick={() => router.push('/trips/new')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className="flex items-center gap-1.5 px-6 py-3 rounded-full border-none cursor-pointer text-[13px] font-semibold btn-hover"
               style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
             >
               <span className="text-sm">+</span> New Trip
-            </button>
+            </motion.button>
           </div>
 
           {/* Trip cards grid */}
-          <div
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
             className="grid gap-5"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}
           >
@@ -61,8 +76,9 @@ export default function TripsPage() {
               const placedCount = trip.days.reduce((n, d) => n + d.slots.filter(s => s.places.length > 0).length, 0);
 
               return (
-                <button
+                <motion.button
                   key={trip.id}
+                  variants={cardVariants}
                   onClick={() => router.push(`/trips/${trip.id}`)}
                   className="rounded-2xl border-none cursor-pointer text-left overflow-hidden card-hover"
                   style={{
@@ -71,11 +87,15 @@ export default function TripsPage() {
                   }}
                 >
                   {/* Color accent bar */}
-                  <div
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
                     style={{
                       height: 6,
                       background: destColor?.accent || 'var(--t-honey)',
                       borderRadius: '14px 14px 0 0',
+                      originX: 0,
                     }}
                   />
                   <div className="p-5">
@@ -142,12 +162,13 @@ export default function TripsPage() {
                       )}
                     </div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
 
             {/* Create CTA */}
-            <button
+            <motion.button
+              variants={cardVariants}
               onClick={() => router.push('/trips/new')}
               className="flex flex-col items-center justify-center gap-3 rounded-2xl border-none cursor-pointer transition-all hover:scale-[1.01]"
               style={{
@@ -167,10 +188,10 @@ export default function TripsPage() {
               <span className="text-[11px]" style={{ color: INK['70'] }}>
                 Tell us where and when — we'll find your perfect places
               </span>
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
