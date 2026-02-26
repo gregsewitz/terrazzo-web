@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
@@ -272,7 +273,7 @@ export default function ProfilePage() {
   /* ─── Desktop Profile layout ─── */
   if (isDesktop) {
     return (
-      <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
+      <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 48px 48px' }}>
           <div className="flex gap-10">
@@ -315,15 +316,6 @@ export default function ProfilePage() {
                   style={{ background: '#2d3a2d' }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  animate={{
-                    y: [0, -4, 0],
-                    opacity: [0.8, 1, 0.8],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  }}
                 >
                   <span className="text-[11px] font-semibold" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
                     Your Taste Dossier
@@ -340,16 +332,6 @@ export default function ProfilePage() {
                   style={{ background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)', border: '1px solid rgba(200,146,58,0.12)' }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  animate={{
-                    y: [0, -3, 0],
-                    opacity: [0.85, 1, 0.85],
-                  }}
-                  transition={{
-                    duration: 3.5,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    delay: 0.3,
-                  }}
                 >
                   <div>
                     <span className="text-[11px] font-semibold block" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
@@ -422,13 +404,13 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
   /* ─── Mobile Profile layout (unchanged) ─── */
   return (
-    <div className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64 }}>
+    <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64 }}>
       <div className="px-5 pt-6 pb-2">
         {headerBlock}
       </div>
@@ -446,15 +428,6 @@ export default function ProfilePage() {
               style={{ background: '#2d3a2d' }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              animate={{
-                y: [0, -4, 0],
-                opacity: [0.8, 1, 0.8],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -491,16 +464,6 @@ export default function ProfilePage() {
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              animate={{
-                y: [0, -3, 0],
-                opacity: [0.85, 1, 0.85],
-              }}
-              transition={{
-                duration: 3.5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-                delay: 0.3,
-              }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -683,7 +646,7 @@ export default function ProfilePage() {
       )}
 
       <TabBar />
-    </div>
+    </PageTransition>
   );
 }
 

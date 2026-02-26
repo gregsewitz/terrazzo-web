@@ -69,7 +69,7 @@ export default function TabBar() {
         aria-label="Add a place"
         whileTap={{ scale: 0.92 }}
       >
-        <motion.div
+        <div
           className="flex items-center justify-center rounded-full"
           style={{
             width: 36,
@@ -78,11 +78,9 @@ export default function TabBar() {
             margin: '0 auto',
             marginTop: -2,
           }}
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           <PerriandIcon name="add" size={16} color="var(--t-cream)" />
-        </motion.div>
+        </div>
         <span
           className="text-[9px] uppercase tracking-wider"
           style={{

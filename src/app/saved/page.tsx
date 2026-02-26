@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useMemo, useState, useRef, useCallback } from 'react';
+import PageTransition from '@/components/PageTransition';
 import { useRouter } from 'next/navigation';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
@@ -175,7 +176,7 @@ function SavedPageContent() {
   /* ─── Desktop Library layout (unified) ─── */
   if (isDesktop) {
     return (
-      <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
+      <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 48px 48px' }}>
           {/* ═══ Header row ═══ */}
@@ -419,13 +420,13 @@ function SavedPageContent() {
             }}
           />
         )}
-      </div>
+      </PageTransition>
     );
   }
 
   /* ─── Mobile Library layout (unified) ─── */
   return (
-    <div className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64, overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64, overflowX: 'hidden', boxSizing: 'border-box' }}>
       <div className="px-4 pt-5">
         {/* ═══ Header ═══ */}
         <div className="flex items-center justify-between mb-3">
@@ -586,7 +587,7 @@ function SavedPageContent() {
         <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { if (!addToTripItem.isFavorited) { toggleStar(addToTripItem.id); } setAddToTripItem(null); }} />
       )}
       <TabBar />
-    </div>
+    </PageTransition>
   );
 }
 

@@ -10,6 +10,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { DEST_COLORS } from '@/types';
+import PageTransition from '@/components/PageTransition';
 
 /* ─── Animation constants ─── */
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -24,7 +25,7 @@ export default function TripsPage() {
   /* ─── Desktop Trips layout ─── */
   if (isDesktop) {
     return (
-      <div className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
+      <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 48px 48px' }}>
           {/* Header */}
@@ -177,14 +178,12 @@ export default function TripsPage() {
                 color: INK['90'],
               }}
             >
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
+              <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ background: INK['06'] }}
               >
                 <span style={{ fontSize: 24, color: INK['40'] }}>+</span>
-              </motion.div>
+              </div>
               <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
               <span className="text-[11px]" style={{ color: INK['70'] }}>
                 Tell us where and when — we'll find your perfect places
@@ -192,13 +191,13 @@ export default function TripsPage() {
             </motion.button>
           </motion.div>
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
   /* ─── Mobile layout ─── */
   return (
-    <div
+    <PageTransition
       className="min-h-screen pb-16"
       style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
     >
@@ -271,19 +270,15 @@ export default function TripsPage() {
             className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
             style={{ background: INK['02'], border: '1.5px dashed var(--t-travertine)', color: INK['90'] }}
           >
-            <motion.span
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-2xl"
-            >
+            <span className="text-2xl">
               +
-            </motion.span>
+            </span>
             <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
             <span className="text-[11px]" style={{ color: INK['90'] }}>Tell us where and when — we'll find your perfect places</span>
           </motion.button>
         </motion.div>
       </div>
       <TabBar />
-    </div>
+    </PageTransition>
   );
 }
