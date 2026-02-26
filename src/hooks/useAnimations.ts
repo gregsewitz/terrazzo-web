@@ -3,8 +3,29 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
+ * Detect Safari on iOS/iPadOS. Cached after first call.
+ * On the server (SSR) this returns false — animations will be enabled
+ * by default and the client will correct on hydration if needed.
+ */
+let _isMobileSafari: boolean | null = null;
+function isMobileSafari(): boolean {
+  if (_isMobileSafari !== null) return _isMobileSafari;
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  // iOS Safari: contains "AppleWebKit" and "Mobile" but not "CriOS" (Chrome)
+  // or "FxiOS" (Firefox) or "EdgiOS" (Edge)
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /AppleWebKit/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  _isMobileSafari = isIOS && isSafari;
+  return _isMobileSafari;
+}
+
+/**
  * Hook that detects when an element enters the viewport.
  * Returns [ref, isInView] — attach the ref to the element you want to observe.
+ *
+ * On Safari mobile, animations are disabled (returns true immediately) to avoid
+ * a WAAPI compositor bug that causes elements to flicker/strobe after animating.
  */
 export function useInView<T extends HTMLElement = HTMLDivElement>(
   options: { threshold?: number; once?: boolean; rootMargin?: string } = {},
@@ -14,6 +35,14 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
   const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
+    // On Safari mobile, skip animations entirely — elements render immediately.
+    // This avoids the flicker/strobe bug with no visual downside on mobile
+    // where scroll-triggered animations are less impactful anyway.
+    if (isMobileSafari()) {
+      setIsInView(true);
+      return;
+    }
+
     const el = ref.current;
     if (!el) return;
 
@@ -24,9 +53,6 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
         if (entry.isIntersecting) {
           // Use a 50ms setTimeout to guarantee the browser has painted the
           // initial hidden state before we trigger the CSS transition.
-          // RAF-based approaches (single or double) are unreliable on Safari
-          // mobile — Safari can batch them into the same paint, causing
-          // elements to "pop in" without animating.
           timerId = setTimeout(() => {
             setIsInView(true);
           }, 50);
