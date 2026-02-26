@@ -130,15 +130,6 @@ export default function ProfilePage() {
   const allSignals = useOnboardingStore(s => s.allSignals);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
 
-  // ── DEBUG: track renders and state changes (remove after fixing flicker) ──
-  const _rc = useRef(0);
-  _rc.current += 1;
-  console.log(`[ProfilePage] render #${_rc.current}`, { dbHydrated, hasProfile: !!generatedProfile, hasDiscover: !!discoverContent, activeTab });
-  useEffect(() => { console.log('[ProfilePage] MOUNTED'); return () => console.log('[ProfilePage] UNMOUNTED'); }, []);
-  useEffect(() => { console.log('[ProfilePage] dbHydrated →', dbHydrated); }, [dbHydrated]);
-  useEffect(() => { console.log('[ProfilePage] generatedProfile →', !!generatedProfile); }, [generatedProfile]);
-  useEffect(() => { console.log('[ProfilePage] discoverContent →', !!discoverContent); }, [discoverContent]);
-
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
   const profile = generatedProfile || TASTE_PROFILE;
@@ -439,13 +430,14 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Right: content feed */}
+            {/* Right: content feed — both tabs always mounted, hidden via CSS */}
             <div className="flex-1 min-w-0">
-              {activeTab === 'discover' ? discoverFeed : (
-                <>
-                  <ProfileDeepDive />
-                </>
-              )}
+              <div style={{ display: activeTab === 'discover' ? 'block' : 'none' }}>
+                {discoverFeed}
+              </div>
+              <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
+                <ProfileDeepDive />
+              </div>
             </div>
           </div>
         </div>
@@ -460,11 +452,12 @@ export default function ProfilePage() {
         {headerBlock}
       </div>
 
-      {activeTab === 'discover' ? (
-        discoverFeed
-      ) : (
-        /* ═══════════ MY PROFILE ═══════════ */
-        <>
+      {/* Both tabs always mounted — hidden via CSS to prevent unmount/remount flicker */}
+      <div style={{ display: activeTab === 'discover' ? 'block' : 'none' }}>
+        {discoverFeed}
+      </div>
+      <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
+        {/* ═══════════ MY PROFILE ═══════════ */}
           {/* Action buttons */}
           <div className="px-5 pt-2 pb-4 flex flex-col gap-2.5">
             <motion.button
@@ -687,8 +680,7 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-        </>
-      )}
+      </div>
 
       <TabBar />
     </PageTransition>
@@ -714,9 +706,6 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 // ── EDITORIAL LETTER — The opening essay ──
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const { ref, show } = useRevealOnce();
-  const _rc = useRef(0); _rc.current += 1;
-  useEffect(() => { console.log('[EditorialLetter] MOUNTED'); return () => console.log('[EditorialLetter] UNMOUNTED'); }, []);
-  console.log(`[EditorialLetter] render #${_rc.current}`, { show, hasLetter: !!letter });
   const l = letter || EDITORIAL_LETTER;
   return (
     <div
