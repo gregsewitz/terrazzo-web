@@ -75,14 +75,16 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
   },
 
   removePlace: (id) => {
+    // Strip ghost-prefixed IDs (e.g. "ghost-claude-xxx" → "xxx")
+    const realId = id.replace(/^ghost-(?:claude|friend|maps)-/, '');
     set((state) => ({
-      myPlaces: state.myPlaces.filter((p) => p.id !== id),
+      myPlaces: state.myPlaces.filter((p) => p.id !== realId),
       collections: state.collections.map(sl => ({
         ...sl,
-        placeIds: sl.placeIds.filter(pid => pid !== id),
+        placeIds: sl.placeIds.filter(pid => pid !== realId),
       })),
     }));
-    dbWrite(`/api/places/${id}`, 'DELETE');
+    dbWrite(`/api/places/${realId}`, 'DELETE');
   },
 
   ratePlace: (id, rating) => {

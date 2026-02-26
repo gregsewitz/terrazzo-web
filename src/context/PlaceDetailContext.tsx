@@ -109,7 +109,9 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
 
   const confirmDeletePlace = useCallback(() => {
     if (!deleteConfirmItem) return;
-    removePlace(deleteConfirmItem.id);
+    // Ghost items have prefixed IDs like "ghost-claude-xxx" — strip to get the real library ID
+    const realId = deleteConfirmItem.id.replace(/^ghost-claude-/, '');
+    removePlace(realId);
     setDeleteConfirmItem(null);
     setDetailItem(null);
   }, [deleteConfirmItem, removePlace]);

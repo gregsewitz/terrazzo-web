@@ -97,6 +97,14 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
   setCurrentDay: (day) => set({ currentDay: day }),
 
   deleteTrip: async (id: string) => {
+    // Cancel any pending debounced saves to avoid PATCH-after-DELETE race
+    const { cancelTripSave } = require('./tripHelpers');
+    cancelTripSave(id);
+
+    // Snapshot for rollback
+    const snapshot = get().trips.find(t => t.id === id);
+    const prevCurrentTripId = get().currentTripId;
+
     // Optimistically remove from store
     set(state => ({
       trips: state.trips.filter(t => t.id !== id),
@@ -108,6 +116,13 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       return true;
     } catch (err) {
       console.error('[deleteTrip] Failed to delete on server:', err);
+      // Rollback: restore the trip so the UI stays consistent
+      if (snapshot) {
+        set(state => ({
+          trips: [...state.trips, snapshot],
+          currentTripId: prevCurrentTripId,
+        }));
+      }
       return false;
     }
   },

@@ -26,6 +26,15 @@ export function debouncedTripSave(tripId: string, getData: () => Partial<Trip>) 
   }, 2000));
 }
 
+/** Cancel any pending debounced save for a trip (call before deleting) */
+export function cancelTripSave(tripId: string) {
+  const existing = _tripSaveTimers.get(tripId);
+  if (existing) {
+    clearTimeout(existing);
+    _tripSaveTimers.delete(tripId);
+  }
+}
+
 // ═══════════════════════════════════════════
 // Immutable update helpers
 // ═══════════════════════════════════════════
