@@ -6,13 +6,13 @@ import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { useImportStore } from '@/stores/importStore';
 import type { SlotContext } from '@/stores/poolStore';
-import { ImportedPlace, PlaceRating, PlaceType } from '@/types';
+import { ImportedPlace, PlaceRating } from '@/types';
 import TabBar from '@/components/TabBar';
 import DayPlanner from '@/components/DayPlanner';
 import type { TripViewMode, DropTarget } from '@/components/DayPlanner';
 import TripMyPlaces from '@/components/TripMyPlaces';
 import PicksStrip from '@/components/PicksStrip';
-import BrowseAllOverlay from '@/components/BrowseAllOverlay';
+import type { FilterType } from '@/hooks/useTypeFilter';
 import ImportDrawer from '@/components/ImportDrawer';
 import ChatSidebar from '@/components/ChatSidebar';
 import ShareSheet from '@/components/ShareSheet';
@@ -76,8 +76,8 @@ function TripDetailContent() {
   const [chatOpen, setChatOpen] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [browseAllOpen, setBrowseAllOpen] = useState(false);
-  const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
+  // Imperative ref to expand the PicksStrip from DayPlanner callbacks
+  const expandStripRef = useRef<((filter?: FilterType) => void) | null>(null);
 
   // Auto-repair missing geoDestination coordinates (geocode destination names)
   useGeoDestinationRepair();
@@ -593,13 +593,6 @@ function TripDetailContent() {
         )}
 
         {/* Overlays shared between mobile/desktop */}
-        {browseAllOpen && (
-          <BrowseAllOverlay
-            onClose={() => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); }}
-            onTapDetail={(item) => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); openDetail(item); }}
-            initialFilter={browseAllFilter}
-          />
-        )}
         {importOpen && (
           <ImportDrawer onClose={() => { importPatch({ isOpen: false }); resetImport(); }} />
         )}
@@ -847,10 +840,9 @@ function TripDetailContent() {
             viewMode={viewMode}
             onSetViewMode={setViewMode}
             onTapDetail={openDetail}
-            onOpenUnsorted={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
+            onOpenUnsorted={() => { expandStripRef.current?.(); }}
             onOpenForSlot={(ctx: SlotContext) => {
-              setBrowseAllFilter(ctx.suggestedTypes?.[0] as PlaceType | undefined);
-              setBrowseAllOpen(true);
+              expandStripRef.current?.(ctx.suggestedTypes?.[0] as FilterType | undefined);
             }}
             dropTarget={dropTarget}
             onRegisterSlotRef={handleRegisterSlotRef}
@@ -885,12 +877,12 @@ function TripDetailContent() {
           <div className="flex-shrink-0" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', minWidth: 0, width: '100%' }}>
             <PicksStrip
               onTapDetail={openDetail}
-              onBrowseAll={() => { setBrowseAllFilter(undefined); setBrowseAllOpen(true); }}
               onDragStart={handleDragStart}
               dragItemId={dragItem?.id ?? null}
               isDropTarget={isOverStrip}
               onRegisterRect={handleRegisterStripRect}
               returningPlaceId={returningPlaceId}
+              expandRef={expandStripRef}
             />
           </div>
         )}
@@ -898,14 +890,7 @@ function TripDetailContent() {
         )}
       </div>
 
-      {/* Browse All Overlay — full list access from picks strip */}
-      {browseAllOpen && (
-        <BrowseAllOverlay
-          onClose={() => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); }}
-          onTapDetail={(item) => { setBrowseAllOpen(false); setBrowseAllFilter(undefined); openDetail(item); }}
-          initialFilter={browseAllFilter}
-        />
-      )}
+      {/* (BrowseAllOverlay removed — PicksStrip now expands inline) */}
 
       {/* Drag Overlay rendered in shared section above */}
 

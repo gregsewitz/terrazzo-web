@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
@@ -11,6 +11,10 @@ import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
 import AddPlaceInline from './AddPlaceInline';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPE CHIP + SOURCE FILTER CONSTANTS
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
   { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
@@ -34,24 +38,46 @@ const SOURCE_FILTERS = [
 type SortOption = 'match' | 'name' | 'source' | 'recent';
 type SourceFilter = typeof SOURCE_FILTERS[number]['value'];
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** Minimum swipe distance (px) to trigger expand/collapse */
+const SWIPE_THRESHOLD = 40;
+/** Grid column count */
+const GRID_COLS = 3;
+/** Expanded sheet takes this fraction of viewport height */
+const EXPANDED_VH = 0.6;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROPS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 interface PicksStripProps {
   onTapDetail: (item: ImportedPlace) => void;
-  onBrowseAll: () => void;
   onDragStart: (item: ImportedPlace, e: React.PointerEvent) => void;
   dragItemId: string | null;
-  /** When true, strip shows a "drop here" visual — items spread apart */
   isDropTarget?: boolean;
-  /** Callback so the parent page can hit-test the strip's bounding rect */
   onRegisterRect?: (rect: DOMRect | null) => void;
-  /** ID of a place that just returned — used for the "land" animation */
   returningPlaceId?: string | null;
+  /** Imperative expand with optional pre-set type filter (used by DayPlanner empty slot tap) */
+  expandRef?: React.MutableRefObject<((filter?: FilterType) => void) | null>;
 }
 
-function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropTarget, onRegisterRect, returningPlaceId }: PicksStripProps) {
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function PicksStrip({
+  onTapDetail, onDragStart, dragItemId,
+  isDropTarget, onRegisterRect, returningPlaceId,
+  expandRef,
+}: PicksStripProps) {
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expanded, setExpanded] = useState(false);
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const currentDay = useTripStore(s => s.currentDay);
@@ -79,7 +105,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
   } = useDragGesture({
     onDragActivate: onDragStart,
     onTap: onTapDetail,
-    layout: 'horizontal',
+    layout: expanded ? 'vertical' : 'horizontal',
     isDragging: !!dragItemId,
   });
 
@@ -118,8 +144,40 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
     };
   }, [onRegisterRect]);
 
+  // ─── Swipe-to-expand gesture on handle ───
+  const swipeRef = useRef<{ startY: number; active: boolean }>({ startY: 0, active: false });
+
+  const onHandleTouchStart = useCallback((e: React.TouchEvent) => {
+    swipeRef.current = { startY: e.touches[0].clientY, active: true };
+  }, []);
+
+  const onHandleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!swipeRef.current.active) return;
+    const deltaY = swipeRef.current.startY - e.changedTouches[0].clientY;
+    swipeRef.current.active = false;
+    if (deltaY > SWIPE_THRESHOLD) setExpanded(true);   // swipe up → expand
+    if (deltaY < -SWIPE_THRESHOLD) setExpanded(false);  // swipe down → collapse
+  }, []);
+
+  // ─── Imperative expand (used by DayPlanner empty-slot tap) ───
+  useEffect(() => {
+    if (expandRef) {
+      expandRef.current = (filter?: FilterType) => {
+        if (filter) setActiveFilter(filter);
+        setExpanded(true);
+      };
+      return () => { expandRef.current = null; };
+    }
+  }, [expandRef, setActiveFilter]);
+
+  // ─── Close expanded on drag start ───
+  useEffect(() => {
+    if (dragItemId && expanded) setExpanded(false);
+  }, [dragItemId, expanded]);
+
   const hasActiveFilters = activeFilter !== 'all' || sourceFilter !== 'all' || sortBy !== 'match' || searchQuery.trim() !== '';
 
+  // ─── Empty state ───
   if (destinationPicks.length === 0 && !searchQuery.trim()) {
     return (
       <div
@@ -127,28 +185,17 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
         style={{ background: 'white', borderTop: '1px solid var(--t-linen)' }}
       >
         <div className="flex items-center justify-between">
-          <span
-            className="text-[11px]"
-            style={{ color: INK['85'], fontFamily: FONT.sans }}
-          >
+          <span className="text-[11px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
             No picks for this destination yet
           </span>
-          <button
-            onClick={onBrowseAll}
-            className="text-[10px] font-semibold px-2.5 py-1 rounded-full cursor-pointer"
-            style={{
-              background: 'rgba(42,122,86,0.08)',
-              color: 'var(--t-verde)',
-              border: 'none',
-              fontFamily: FONT.mono,
-            }}
-          >
-            Browse all →
-          </button>
         </div>
       </div>
     );
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     RENDER — shared header + conditional body (strip vs grid)
+     ═══════════════════════════════════════════════════════════════════════════ */
 
   return (
     <div
@@ -162,11 +209,33 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
         minWidth: 0,
         maxWidth: '100%',
         overflow: 'hidden',
-        transition: 'background 0.2s, border-top 0.2s',
+        transition: 'background 0.2s, border-top 0.2s, max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+        maxHeight: expanded ? `${EXPANDED_VH * 100}vh` : 260,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {/* Header row: FilterSortBar + count + browse all */}
-      <div className="flex items-center gap-1.5 px-3 pt-2 pb-1">
+      {/* ── Swipe handle ── */}
+      <div
+        className="flex items-center justify-center pt-1.5 pb-0.5 cursor-grab"
+        onTouchStart={onHandleTouchStart}
+        onTouchEnd={onHandleTouchEnd}
+        onClick={() => setExpanded(prev => !prev)}
+        style={{ touchAction: 'none' }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            background: INK['15'],
+            transition: 'width 0.2s',
+          }}
+        />
+      </div>
+
+      {/* ── Header row: FilterSortBar + count + expand toggle ── */}
+      <div className="flex items-center gap-1.5 px-3 pt-0.5 pb-1">
         <div className="flex-1 min-w-0">
           <FilterSortBar
             compact
@@ -210,22 +279,38 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
           {activeFilter !== 'all' ? `${stripPlaces.length}/${destinationPicks.length}` : destinationPicks.length}
         </span>
 
-        {/* Browse all */}
+        {/* Expand/collapse toggle */}
         <button
-          onClick={onBrowseAll}
-          className="text-[9px] font-semibold px-2 py-0.5 rounded-full cursor-pointer flex-shrink-0"
+          onClick={() => setExpanded(prev => !prev)}
+          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
           style={{
-            background: 'transparent',
-            color: 'var(--t-verde)',
-            border: '1px solid rgba(42,122,86,0.2)',
-            fontFamily: FONT.mono,
+            background: expanded ? 'var(--t-verde)' : 'transparent',
+            border: expanded ? 'none' : '1px solid rgba(42,122,86,0.2)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
           }}
+          aria-label={expanded ? 'Collapse picks' : 'Expand picks'}
         >
-          All →
+          <svg
+            width={10} height={10} viewBox="0 0 10 10"
+            style={{
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+            }}
+          >
+            <path
+              d="M1 7 L5 3 L9 7"
+              fill="none"
+              stroke={expanded ? 'white' : 'var(--t-verde)'}
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       </div>
 
-      {/* Search bar */}
+      {/* ── Search bar ── */}
       <div className="px-3 pb-1">
         <div className="relative">
           <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
@@ -242,7 +327,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
               fontSize: 10,
               color: 'var(--t-ink)',
               background: INK['04'],
-              border: `1px solid var(--t-linen)`,
+              border: '1px solid var(--t-linen)',
               borderRadius: 6,
               padding: '4px 8px 4px 24px',
               outline: 'none',
@@ -259,7 +344,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
         </div>
       </div>
 
-      {/* Hint label */}
+      {/* ── Hint label ── */}
       <div className="px-3 pb-1">
         <span style={{
           fontFamily: FONT.mono,
@@ -269,125 +354,243 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
           fontWeight: isDropTarget ? 700 : undefined,
           transition: 'color 0.2s',
         }}>
-          {isDropTarget ? '↓ DROP HERE TO RETURN' : 'HOLD + DRAG UP TO PLAN · TAP FOR DETAILS'}
+          {isDropTarget
+            ? '↓ DROP HERE TO RETURN'
+            : expanded
+              ? 'TAP FOR DETAILS · SWIPE DOWN TO COLLAPSE'
+              : 'HOLD + DRAG UP TO PLAN · SWIPE UP FOR MORE'}
         </span>
       </div>
 
-      {/* Horizontal scroll strip — taller cards with better touch targets */}
-      <div
-        className="flex gap-2.5 px-3 pb-3 pt-0.5 overflow-x-auto"
-        style={{
-          scrollbarWidth: 'none',
-          WebkitOverflowScrolling: 'touch',
-          minWidth: 0,
-          touchAction: 'pan-x',
-        }}
-      >
-        {stripPlaces.length === 0 ? (
-          <div className="flex items-center justify-center w-full py-1">
-            <span className="text-[10px]" style={{ color: INK['80'] }}>
-              No picks match this filter
-            </span>
-          </div>
-        ) : (
-          <>
-          {stripPlaces.map((place) => {
-            const typeIcon = TYPE_ICONS[place.type] || 'location';
-            const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
-            const isDragging = dragItemId === place.id;
-            const isHolding = holdingId === place.id;
-            const isReturning = returningPlaceId === place.id;
+      {/* ═══════════════════════════════════════════════════════════════════════
+         BODY: horizontal strip (collapsed) or thumbnail grid (expanded)
+         ═══════════════════════════════════════════════════════════════════════ */}
 
-            return (
-              <div
-                key={place.id}
-                className="flex flex-col items-center flex-shrink-0 select-none"
-                style={{
-                  width: 68,
-                  opacity: isDragging ? 0.25 : 1,
-                  animation: isReturning ? 'stripLand 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards' : undefined,
-                  transform: isDragging
-                    ? 'scale(0.85)'
-                    : isHolding
-                      ? 'scale(0.92) translateY(-2px)'
-                      : 'none',
-                  transition: 'opacity 0.2s, transform 0.2s ease-out',
-                  touchAction: 'pan-x',
-                  cursor: 'grab',
-                }}
-                onPointerDown={(e) => handlePointerDown(place, e)}
-              >
-                {/* Drag grip dots — subtle affordance */}
-                <div
-                  className="flex gap-px mb-0.5"
-                  style={{ opacity: 0.2 }}
-                >
-                  {[0,1,2].map(i => (
-                    <div key={i} style={{ width: 2, height: 2, borderRadius: '50%', background: 'var(--t-ink)' }} />
-                  ))}
-                </div>
+      {expanded ? (
+        /* ── EXPANDED: thumbnail grid ── */
+        <div
+          className="flex-1 overflow-y-auto px-3 pb-3 pt-0.5"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+              gap: 10,
+            }}
+          >
+            {stripPlaces.map((place) => {
+              const typeIcon = TYPE_ICONS[place.type] || 'location';
+              const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
+              const isDragging = dragItemId === place.id;
+              const isHolding = holdingId === place.id;
+              const isReturning = returningPlaceId === place.id;
 
-                {/* Icon thumbnail — larger for better touch */}
+              return (
                 <div
-                  className="rounded-xl flex items-center justify-center relative"
+                  key={place.id}
+                  className="flex flex-col items-center select-none"
                   style={{
-                    width: 50,
-                    height: 50,
-                    background: `linear-gradient(135deg, ${typeColor}40, ${typeColor}25)`,
-                    border: isHolding
-                      ? `2px solid var(--t-verde)`
-                      : `1px solid ${typeColor}50`,
-                    boxShadow: isHolding
-                      ? '0 4px 12px rgba(42,122,86,0.2)'
-                      : '0 1px 3px rgba(0,0,0,0.04)',
-                    transition: 'border 0.15s, box-shadow 0.15s',
+                    opacity: isDragging ? 0.25 : 1,
+                    animation: isReturning ? 'stripLand 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards' : undefined,
+                    transform: isDragging ? 'scale(0.85)' : isHolding ? 'scale(0.95) translateY(-2px)' : 'none',
+                    transition: 'opacity 0.2s, transform 0.2s ease-out',
+                    touchAction: 'none',
+                    cursor: 'grab',
                   }}
+                  onPointerDown={(e) => handlePointerDown(place, e)}
                 >
-                  <PerriandIcon name={typeIcon} size={18} />
-                  {/* Match score pip */}
+                  {/* Icon thumbnail */}
                   <div
-                    className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
+                    className="rounded-xl flex items-center justify-center relative w-full"
                     style={{
-                      width: 18,
-                      height: 18,
-                      background: 'white',
-                      border: '1px solid var(--t-linen)',
-                      fontSize: 8,
-                      fontWeight: 700,
-                      color: 'var(--t-verde)',
-                      fontFamily: FONT.mono,
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                      aspectRatio: '1',
+                      background: `linear-gradient(135deg, ${typeColor}40, ${typeColor}25)`,
+                      border: isHolding ? '2px solid var(--t-verde)' : `1px solid ${typeColor}50`,
+                      boxShadow: isHolding ? '0 4px 12px rgba(42,122,86,0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
+                      transition: 'border 0.15s, box-shadow 0.15s',
                     }}
                   >
-                    {place.matchScore}
+                    <PerriandIcon name={typeIcon} size={22} />
+                    {/* Match score pip */}
+                    <div
+                      className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        background: 'white',
+                        border: '1px solid var(--t-linen)',
+                        fontSize: 8,
+                        fontWeight: 700,
+                        color: 'var(--t-verde)',
+                        fontFamily: FONT.mono,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      {place.matchScore}
+                    </div>
                   </div>
+
+                  {/* Name */}
+                  <span
+                    className="text-[10px] font-medium text-center leading-tight mt-1.5"
+                    style={{
+                      color: 'var(--t-ink)',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      fontFamily: FONT.sans,
+                      maxWidth: '100%',
+                      lineHeight: '1.2',
+                    }}
+                  >
+                    {place.name}
+                  </span>
+
+                  {/* Location hint */}
+                  <span
+                    className="text-[8px] text-center mt-0.5"
+                    style={{
+                      color: INK['50'],
+                      fontFamily: FONT.mono,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      maxWidth: '100%',
+                    }}
+                  >
+                    {place.location?.split(',')[0]?.trim() || ''}
+                  </span>
                 </div>
+              );
+            })}
 
-                {/* Name */}
-                <span
-                  className="text-[9px] font-medium text-center leading-tight mt-1"
-                  style={{
-                    color: 'var(--t-ink)',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    fontFamily: FONT.sans,
-                    maxWidth: '100%',
-                    lineHeight: '1.15',
-                  }}
-                >
-                  {place.name}
-                </span>
-              </div>
-            );
-          })}
+            {/* + Add place — grid cell */}
+            <div className="flex flex-col items-center justify-center">
+              <AddPlaceInline variant="strip" destination={activeDestination || undefined} />
+            </div>
+          </div>
 
-          {/* + Add place */}
-          <AddPlaceInline variant="strip" destination={activeDestination || undefined} />
-          </>
-        )}
-      </div>
+          {stripPlaces.length === 0 && (
+            <div className="flex items-center justify-center w-full py-6">
+              <span className="text-[10px]" style={{ color: INK['80'] }}>
+                No picks match this filter
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ── COLLAPSED: horizontal scroll strip ── */
+        <div
+          className="flex gap-2.5 px-3 pb-3 pt-0.5 overflow-x-auto"
+          style={{
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+            minWidth: 0,
+            touchAction: 'pan-x',
+          }}
+        >
+          {stripPlaces.length === 0 ? (
+            <div className="flex items-center justify-center w-full py-1">
+              <span className="text-[10px]" style={{ color: INK['80'] }}>
+                No picks match this filter
+              </span>
+            </div>
+          ) : (
+            <>
+              {stripPlaces.map((place) => {
+                const typeIcon = TYPE_ICONS[place.type] || 'location';
+                const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
+                const isDragging = dragItemId === place.id;
+                const isHolding = holdingId === place.id;
+                const isReturning = returningPlaceId === place.id;
+
+                return (
+                  <div
+                    key={place.id}
+                    className="flex flex-col items-center flex-shrink-0 select-none"
+                    style={{
+                      width: 68,
+                      opacity: isDragging ? 0.25 : 1,
+                      animation: isReturning ? 'stripLand 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards' : undefined,
+                      transform: isDragging
+                        ? 'scale(0.85)'
+                        : isHolding
+                          ? 'scale(0.92) translateY(-2px)'
+                          : 'none',
+                      transition: 'opacity 0.2s, transform 0.2s ease-out',
+                      touchAction: 'pan-x',
+                      cursor: 'grab',
+                    }}
+                    onPointerDown={(e) => handlePointerDown(place, e)}
+                  >
+                    {/* Drag grip dots */}
+                    <div className="flex gap-px mb-0.5" style={{ opacity: 0.2 }}>
+                      {[0, 1, 2].map(i => (
+                        <div key={i} style={{ width: 2, height: 2, borderRadius: '50%', background: 'var(--t-ink)' }} />
+                      ))}
+                    </div>
+
+                    {/* Icon thumbnail */}
+                    <div
+                      className="rounded-xl flex items-center justify-center relative"
+                      style={{
+                        width: 50,
+                        height: 50,
+                        background: `linear-gradient(135deg, ${typeColor}40, ${typeColor}25)`,
+                        border: isHolding ? '2px solid var(--t-verde)' : `1px solid ${typeColor}50`,
+                        boxShadow: isHolding ? '0 4px 12px rgba(42,122,86,0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
+                        transition: 'border 0.15s, box-shadow 0.15s',
+                      }}
+                    >
+                      <PerriandIcon name={typeIcon} size={18} />
+                      {/* Match score pip */}
+                      <div
+                        className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
+                        style={{
+                          width: 18,
+                          height: 18,
+                          background: 'white',
+                          border: '1px solid var(--t-linen)',
+                          fontSize: 8,
+                          fontWeight: 700,
+                          color: 'var(--t-verde)',
+                          fontFamily: FONT.mono,
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        {place.matchScore}
+                      </div>
+                    </div>
+
+                    {/* Name */}
+                    <span
+                      className="text-[9px] font-medium text-center leading-tight mt-1"
+                      style={{
+                        color: 'var(--t-ink)',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        fontFamily: FONT.sans,
+                        maxWidth: '100%',
+                        lineHeight: '1.15',
+                      }}
+                    >
+                      {place.name}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {/* + Add place */}
+              <AddPlaceInline variant="strip" destination={activeDestination || undefined} />
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
