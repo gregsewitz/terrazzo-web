@@ -35,6 +35,7 @@ import TripMapView from '@/components/TripMapView';
 import OverviewItinerary from '@/components/OverviewItinerary';
 import TripBriefing from '@/components/TripBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import EditableTripName from '@/components/EditableTripName';
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -65,6 +66,7 @@ function TripDetailContent() {
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const deleteTrip = useTripStore(s => s.deleteTrip);
+  const renameTrip = useTripStore(s => s.renameTrip);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const importOpen = useImportStore(s => s.isOpen);
@@ -341,9 +343,11 @@ function TripDetailContent() {
               Trips
             </button>
             <span style={{ color: INK['20'], fontSize: 12 }}>→</span>
-            <h1 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
-              {trip.name}
-            </h1>
+            <EditableTripName
+              name={trip.name}
+              onRename={(newName) => renameTrip(trip.id, newName)}
+              style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}
+            />
             {trip.status === 'dreaming' && (
               <span
                 className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[1px]"
@@ -734,12 +738,12 @@ function TripDetailContent() {
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
                 </button>
-                <h1
+                <EditableTripName
+                  name={trip.name}
+                  onRename={(newName) => renameTrip(trip.id, newName)}
                   className="text-[16px] truncate"
-                  style={{ fontFamily: FONT.serif, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}
-                >
-                  {trip.name}
-                </h1>
+                  style={{ fontFamily: FONT.serif, fontWeight: 600, color: 'var(--t-ink)', margin: 0, display: 'block' }}
+                />
                 <span
                   className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-[0.5px] flex-shrink-0"
                   style={{ background: 'rgba(200,146,58,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}

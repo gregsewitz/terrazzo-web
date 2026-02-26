@@ -66,6 +66,8 @@ export interface TripCoreState {
   createTripAsync: (data: TripCreationData) => Promise<string>;
   /** Delete a trip from the store and server */
   deleteTrip: (id: string) => Promise<boolean>;
+  /** Rename a trip and persist to server */
+  renameTrip: (id: string, name: string) => void;
   graduateToPlanning: (startDate: string, endDate: string, dayAllocation?: Record<string, number>, opts?: { flexibleDates?: boolean; numDays?: number }) => void;
   hydrateFromDB: (trips: DBTrip[]) => void;
 }
@@ -108,6 +110,20 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       console.error('[deleteTrip] Failed to delete on server:', err);
       return false;
     }
+  },
+
+  renameTrip: (id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    set(state => ({
+      trips: state.trips.map(t => t.id === id ? { ...t, name: trimmed } : t),
+    }));
+    // Debounce-save to server
+    const { debouncedTripSave } = require('./tripHelpers');
+    debouncedTripSave(id, () => {
+      const trip = get().trips.find(t => t.id === id);
+      return trip ? { name: trip.name } : {};
+    });
   },
 
   createTrip: (data: TripCreationData) => {

@@ -14,6 +14,7 @@ import DayContextBar from './DayContextBar';
 import { TransportBanner, TransportInput, getTransportsAfterSlot } from './TransportBanner';
 import { FONT, INK } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
+import EditableTripName from './EditableTripName';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
@@ -59,6 +60,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const setDayHotelInfo = useTripStore(s => s.setDayHotelInfo);
   const setMultipleDaysHotelInfo = useTripStore(s => s.setMultipleDaysHotelInfo);
   const setDayDestination = useTripStore(s => s.setDayDestination);
+  const renameTrip = useTripStore(s => s.renameTrip);
   const addTransport = useTripStore(s => s.addTransport);
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
@@ -167,17 +169,18 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 </svg>
               </button>
             )}
-            <h1
+            <EditableTripName
+              name={trip.name}
+              onRename={(newName) => renameTrip(trip.id, newName)}
               className="text-lg truncate"
               style={{
                 fontFamily: FONT.serif,
                 fontWeight: 600,
                 color: 'var(--t-ink)',
                 margin: 0,
+                display: 'block',
               }}
-            >
-              {trip.name}
-            </h1>
+            />
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <span
