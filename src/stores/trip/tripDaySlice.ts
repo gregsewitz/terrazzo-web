@@ -106,10 +106,19 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
       .filter(d => d.dayNumber !== dayNumber)
       .map((d, i) => ({ ...d, dayNumber: i + 1 }));
 
-    // Recalculate endDate for fixed-date trips
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Recalculate dates and endDate for fixed-date trips
     let newEndDate = trip.endDate;
-    if (!trip.flexibleDates && trip.endDate && trip.startDate) {
+    if (!trip.flexibleDates && trip.startDate) {
       const start = new Date(trip.startDate + 'T00:00:00');
+      remaining.forEach((d, i) => {
+        const dayDate = new Date(start);
+        dayDate.setDate(dayDate.getDate() + i);
+        d.date = `${monthNames[dayDate.getMonth()]} ${dayDate.getDate()}`;
+        d.dayOfWeek = dayNames[dayDate.getDay()];
+      });
       const end = new Date(start);
       end.setDate(end.getDate() + remaining.length - 1);
       newEndDate = end.toISOString().split('T')[0];
