@@ -36,6 +36,7 @@ import OverviewItinerary from '@/components/OverviewItinerary';
 import TripBriefing from '@/components/TripBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import EditableTripName from '@/components/EditableTripName';
+import { useGeoDestinationRepair } from '@/hooks/useGeoDestinationRepair';
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -77,6 +78,9 @@ function TripDetailContent() {
   const [exportOpen, setExportOpen] = useState(false);
   const [browseAllOpen, setBrowseAllOpen] = useState(false);
   const [browseAllFilter, setBrowseAllFilter] = useState<PlaceType | undefined>(undefined);
+
+  // Auto-repair missing geoDestination coordinates (geocode destination names)
+  useGeoDestinationRepair();
   const [ghostsInjected, setGhostsInjected] = useState(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
   const [showGraduateModal, setShowGraduateModal] = useState(false);
