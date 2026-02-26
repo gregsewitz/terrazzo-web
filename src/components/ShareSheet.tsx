@@ -141,7 +141,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
         style={{
           maxWidth: 480,
           background: 'var(--t-cream)',
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+          paddingBottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
           maxHeight: '85dvh',
           overflowY: 'auto',
         }}
