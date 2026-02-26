@@ -7,6 +7,7 @@ import { ImportedPlace, PlaceType } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import { usePicksFilter } from '@/hooks/usePicksFilter';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
@@ -61,124 +62,23 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const currentDay = useTripStore(s => s.currentDay);
-  const myPlaces = useSavedStore(s => s.myPlaces);
   const addPlace = useSavedStore(s => s.addPlace);
 
-  // Destination for biasing search results
-  const activeDestination = useMemo(() => {
-    if (!trip) return undefined;
-    const day = trip.days.find(d => d.dayNumber === currentDay);
-    return day?.destination || trip.location?.split(',')[0]?.trim() || undefined;
-  }, [trip, currentDay]);
-
-  // Get the current day's destination info for filtering
-  const currentDayInfo = useMemo(() => {
-    if (!trip) return { names: [] as string[], geo: null as { lat: number; lng: number } | null };
-    const day = trip.days.find(d => d.dayNumber === currentDay);
-    const destName = day?.destination;
-
-    // Try to get geo coordinates from geoDestinations
-    const geoDest = destName
-      ? trip.geoDestinations?.find(g => g.name.toLowerCase() === destName.toLowerCase())
-      : trip.geoDestinations?.[0];
-    let geo = geoDest?.lat && geoDest?.lng ? { lat: geoDest.lat, lng: geoDest.lng } : null;
-
-    // Fall back to hotel coordinates when geoDestinations unavailable
-    if (!geo && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
-      geo = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
-    }
-    // Fall back to any same-destination day's hotel
-    if (!geo && destName) {
-      for (const d of trip.days) {
-        if (d.destination === destName && d.hotelInfo?.lat && d.hotelInfo?.lng) {
-          geo = { lat: d.hotelInfo.lat, lng: d.hotelInfo.lng };
-          break;
-        }
-      }
-    }
-
-    // Name(s) for string matching
-    const names = destName
-      ? [destName.toLowerCase()]
-      : (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean) as string[]).map(d => d.toLowerCase());
-
-    return { names, geo };
-  }, [trip, currentDay]);
-
-  const placedIds = useMemo(() => {
-    if (!trip) return new Set<string>();
-    const ids = new Set<string>();
-    trip.days.forEach(day => {
-      day.slots.forEach(slot => {
-        slot.places.forEach(p => ids.add(p.id));
-      });
-    });
-    return ids;
-  }, [trip]);
-
-  // Match places to the current day's destination using geo-proximity + string matching
-  const allStripPlaces = useMemo(() => {
-    const unplaced = myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
-    if (unplaced.length === 0) return [];
-
-    const { names, geo } = currentDayInfo;
-    if (names.length === 0 && !geo) return [];
-
-    // Haversine distance in km (good enough for ~50km radius checks)
-    const distKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    };
-
-    const GEO_RADIUS_KM = 60; // covers regional destinations like the Cotswolds
-
-    const matched = unplaced.filter(place => {
-      // 1. Geo-proximity match (best — works for regions, neighborhoods, etc.)
-      const pLat = place.google?.lat;
-      const pLng = place.google?.lng;
-      if (geo && pLat && pLng) {
-        if (distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM) return true;
-      }
-      // 2. String match on location (fallback for places without coordinates)
-      if (names.some(dest => place.location.toLowerCase().includes(dest))) return true;
-      return false;
-    });
-
-    // 3. Only show what actually matches — don't flood with unrelated destinations
-    return matched;
-  }, [myPlaces, currentDayInfo, placedIds]);
-
-  // All unplaced saved picks (no destination filter) — used when searching
-  const allUnplaced = useMemo(() => {
-    return myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
-  }, [myPlaces, placedIds]);
-
-  const filteredPlaces = useMemo(() => {
-    // When searching, search across ALL library places, not just current destination
-    let result = searchQuery.trim() ? allUnplaced : allStripPlaces;
-    if (activeFilter !== 'all') {
-      result = result.filter(p => p.type === activeFilter);
-    }
-    if (sourceFilter !== 'all') {
-      result = result.filter(p => p.ghostSource === sourceFilter);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        (p.location || '').toLowerCase().includes(q) ||
-        (p.tasteNote || '').toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [allStripPlaces, allUnplaced, activeFilter, sourceFilter, searchQuery]);
+  // ─── Shared filtering logic ───
+  const {
+    activeDestination,
+    destinationPicks,
+    filteredPicks,
+    allUnplacedPicks,
+  } = usePicksFilter({
+    selectedDay: currentDay,
+    typeFilter: activeFilter,
+    sourceFilter,
+    searchQuery,
+  });
 
   const stripPlaces = useMemo(() => {
-    const sorted = [...filteredPlaces];
+    const sorted = [...filteredPicks];
     switch (sortBy) {
       case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
@@ -186,13 +86,13 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
       case 'recent': sorted.sort((a, b) => (b.addedAt || '').localeCompare(a.addedAt || '')); break;
     }
     return sorted;
-  }, [filteredPlaces, sortBy]);
+  }, [filteredPicks, sortBy]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allStripPlaces.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
+    destinationPicks.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
     return counts;
-  }, [allStripPlaces]);
+  }, [destinationPicks]);
 
   // ─── Drop target rect reporting ───
   const containerRef = useRef<HTMLDivElement>(null);
@@ -228,12 +128,10 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
   }, []);
 
   const handlePointerDown = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
-    // Record starting position for movement tracking
     pointerStart.current = { x: e.clientX, y: e.clientY };
     holdItem.current = item;
     gestureDecided.current = false;
 
-    // Start hold timer — only fires if pointer hasn't moved horizontally
     const pointerEvent = e;
     holdTimer.current = setTimeout(() => {
       if (holdItem.current && !gestureDecided.current) {
@@ -244,7 +142,6 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
       }
     }, HOLD_DELAY);
 
-    // Show visual hold feedback after a short delay (150ms)
     setTimeout(() => {
       if (holdItem.current?.id === item.id && !gestureDecided.current) {
         setHoldingId(item.id);
@@ -258,7 +155,6 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
     const dx = e.clientX - pointerStart.current.x;
     const dy = e.clientY - pointerStart.current.y;
 
-    // If horizontal movement exceeds threshold → this is a scroll, cancel drag
     if (Math.abs(dx) > SCROLL_THRESHOLD) {
       gestureDecided.current = true;
       if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
@@ -267,11 +163,9 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
       return;
     }
 
-    // If vertical movement is significant while held → activate drag immediately
     if (Math.abs(dy) > SCROLL_THRESHOLD && holdItem.current) {
       gestureDecided.current = true;
       if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
-      // Synthesize drag start with current position
       onDragStart(holdItem.current, e);
       holdItem.current = null;
       setHoldingId(null);
@@ -288,7 +182,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
 
   const hasActiveFilters = activeFilter !== 'all' || sourceFilter !== 'all' || sortBy !== 'match' || searchQuery.trim() !== '';
 
-  if (allStripPlaces.length === 0) {
+  if (destinationPicks.length === 0 && !searchQuery.trim()) {
     return (
       <div
         className="px-4 py-2"
@@ -372,7 +266,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
             fontFamily: FONT.mono,
           }}
         >
-          {activeFilter !== 'all' ? `${stripPlaces.length}/${allStripPlaces.length}` : allStripPlaces.length}
+          {activeFilter !== 'all' ? `${stripPlaces.length}/${destinationPicks.length}` : destinationPicks.length}
         </span>
 
         {/* Browse all */}
@@ -446,7 +340,6 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
           minWidth: 0,
-          // Allow horizontal pan on the strip container itself
           touchAction: 'pan-x',
         }}
       >
@@ -479,8 +372,6 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
                       ? 'scale(0.92) translateY(-2px)'
                       : 'none',
                   transition: 'opacity 0.2s, transform 0.2s ease-out',
-                  // Don't set touchAction:none — let browser handle scroll detection.
-                  // Our pointerMove handler decides scroll vs drag.
                   touchAction: 'pan-x',
                 }}
                 onPointerDown={(e) => handlePointerDown(place, e)}
@@ -568,7 +459,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
             >
               <PlaceSearchInput
                 compact
-                destination={activeDestination}
+                destination={activeDestination || undefined}
                 placeholder="Search place…"
                 onSelect={(result: PlaceSearchResult) => {
                   const newPlace: ImportedPlace = {

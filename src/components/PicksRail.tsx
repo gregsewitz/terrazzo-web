@@ -7,6 +7,7 @@ import { ImportedPlace, PlaceType } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
+import { usePicksFilter } from '@/hooks/usePicksFilter';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
@@ -25,17 +26,6 @@ const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[]
   { value: 'hotel', label: 'Stay', icon: 'hotel' },
   { value: 'shop', label: 'Shop', icon: 'shop' },
 ];
-
-// Haversine distance in km (for geo-proximity filtering)
-function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-const GEO_RADIUS_KM = 60; // covers regional destinations like the Cotswolds
 
 const SOURCE_FILTERS = [
   { value: 'all', label: 'All sources' },
@@ -66,8 +56,21 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
   const [searchQuery, setSearchQuery] = useState('');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
-  const myPlaces = useSavedStore(s => s.myPlaces);
   const addPlace = useSavedStore(s => s.addPlace);
+
+  // ─── Shared filtering logic ───
+  const {
+    tripDestinations,
+    activeDestination,
+    allUnplacedPicks,
+    filteredPicks: sharedFilteredPicks,
+    matchesDestination,
+  } = usePicksFilter({
+    selectedDay,
+    typeFilter: activeFilter,
+    sourceFilter,
+    searchQuery,
+  });
 
   // Day options for the selector
   const dayOptions = useMemo(() => {
@@ -79,146 +82,9 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
     }));
   }, [trip]);
 
-  // All trip destinations (used for "All days" filtering)
-  const tripDestinations = useMemo(() => {
-    if (!trip) return [];
-    if (trip.destinations && trip.destinations.length > 0) return trip.destinations;
-    return trip.location ? [trip.location.split(',')[0]?.trim()].filter(Boolean) : [];
-  }, [trip]);
-
-  // Current day's destination for filtering
-  const activeDestination = useMemo(() => {
-    if (selectedDay === null || !trip) return null;
-    const day = trip.days.find(d => d.dayNumber === selectedDay);
-    return day?.destination || trip.location || null;
-  }, [selectedDay, trip]);
-
-  // Geo coordinates for active destination(s) — used for proximity matching
-  // Falls back to hotel coordinates when geoDestinations are unavailable
-  const activeGeoPoints = useMemo(() => {
-    if (!trip) return [];
-    const points: { lat: number; lng: number }[] = [];
-
-    if (selectedDay === null) {
-      // "All days": collect geo points from geoDestinations + hotel fallbacks
-      if (trip.geoDestinations?.length) {
-        trip.geoDestinations.forEach(g => {
-          if (g.lat && g.lng) points.push({ lat: g.lat, lng: g.lng });
-        });
-      }
-      // Also add hotel coordinates as fallback geo centers
-      trip.days.forEach(day => {
-        if (day.hotelInfo?.lat && day.hotelInfo?.lng) {
-          // Only add if not already near an existing point
-          const h = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
-          if (!points.some(p => distKm(p.lat, p.lng, h.lat, h.lng) < 10)) {
-            points.push(h);
-          }
-        }
-      });
-    } else {
-      // Specific day: find the geo point for this day's destination
-      const day = trip.days.find(d => d.dayNumber === selectedDay);
-      const destName = day?.destination;
-
-      // Try geoDestinations first
-      if (trip.geoDestinations?.length) {
-        const geo = destName
-          ? trip.geoDestinations.find(g => g.name.toLowerCase() === destName.toLowerCase())
-          : trip.geoDestinations[0];
-        if (geo?.lat && geo?.lng) points.push({ lat: geo.lat, lng: geo.lng });
-      }
-
-      // Fall back to this day's hotel coordinates
-      if (points.length === 0 && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
-        points.push({ lat: day.hotelInfo.lat, lng: day.hotelInfo.lng });
-      }
-
-      // Fall back to any same-destination day's hotel
-      if (points.length === 0 && destName) {
-        for (const d of trip.days) {
-          if (d.destination === destName && d.hotelInfo?.lat && d.hotelInfo?.lng) {
-            points.push({ lat: d.hotelInfo.lat, lng: d.hotelInfo.lng });
-            break;
-          }
-        }
-      }
-    }
-
-    return points;
-  }, [trip, selectedDay]);
-
-  const placedIds = useMemo(() => {
-    if (!trip) return new Set<string>();
-    const ids = new Set<string>();
-    trip.days.forEach(day => day.slots.forEach(slot => slot.places.forEach(p => ids.add(p.id))));
-    return ids;
-  }, [trip]);
-
-  const allPicks = useMemo(() => {
-    return myPlaces.filter(p => p.isFavorited && !placedIds.has(p.id));
-  }, [myPlaces, placedIds]);
-
-  const filteredPicks = useMemo(() => {
-    let picks = allPicks;
-    // In "All days" mode, filter to only show places matching trip destinations
-    if (selectedDay === null && (tripDestinations.length > 0 || activeGeoPoints.length > 0) && !searchQuery.trim()) {
-      const dests = tripDestinations.map(d => d.toLowerCase());
-      picks = picks.filter(p => {
-        // Geo-proximity check first
-        const pLat = p.google?.lat;
-        const pLng = p.google?.lng;
-        if (pLat && pLng && activeGeoPoints.length > 0) {
-          if (activeGeoPoints.some(geo => distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM)) return true;
-        }
-        // String match fallback
-        const loc = (p.location || '').toLowerCase();
-        return dests.some(dest => loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---'));
-      });
-    }
-    if (activeFilter !== 'all') {
-      picks = picks.filter(p => p.type === activeFilter);
-    }
-    if (sourceFilter !== 'all') {
-      picks = picks.filter(p => p.ghostSource === sourceFilter);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      picks = picks.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        (p.location || '').toLowerCase().includes(q) ||
-        (p.tasteNote || '').toLowerCase().includes(q)
-      );
-    }
-    return picks;
-  }, [allPicks, activeFilter, sourceFilter, searchQuery, selectedDay, tripDestinations, activeGeoPoints]);
-
-  // Check if a place matches destination(s) — geo-proximity + string fallback
-  const matchesDestination = useCallback((place: ImportedPlace): boolean => {
-    // 1. Geo-proximity match (best — works for regions, villages, neighborhoods)
-    const pLat = place.google?.lat;
-    const pLng = place.google?.lng;
-    if (pLat && pLng && activeGeoPoints.length > 0) {
-      if (activeGeoPoints.some(geo => distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM)) return true;
-    }
-
-    // 2. String match fallback (for places without coordinates)
-    const loc = (place.location || '').toLowerCase();
-    if (selectedDay === null) {
-      if (tripDestinations.length === 0) return true;
-      return tripDestinations.some(dest => {
-        const d = dest.toLowerCase();
-        return loc.includes(d) || d.includes(loc.split(',')[0]?.trim() || '---');
-      });
-    }
-    if (!activeDestination) return true;
-    const dest = activeDestination.toLowerCase();
-    return loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---');
-  }, [selectedDay, activeDestination, tripDestinations, activeGeoPoints]);
-
   const sortedPicks = useMemo(() => {
     const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
-    return [...filteredPicks].sort((a, b) => {
+    return [...sharedFilteredPicks].sort((a, b) => {
       if (hasDestFilter) {
         const aMatch = matchesDestination(a) ? 1 : 0;
         const bMatch = matchesDestination(b) ? 1 : 0;
@@ -228,25 +94,23 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
       if (sortBy === 'recent') return (b.addedAt || '').localeCompare(a.addedAt || '');
       return b.matchScore - a.matchScore;
     });
-  }, [filteredPicks, activeDestination, selectedDay, tripDestinations, matchesDestination, sortBy]);
+  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, matchesDestination, sortBy]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allPicks.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
+    allUnplacedPicks.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
     return counts;
-  }, [allPicks]);
+  }, [allUnplacedPicks]);
 
   return (
     <div
       className="flex h-full relative"
       onDragOver={(e) => {
-        // Only accept drops that came from a slot (have from-day data)
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         setIsDropTarget(true);
       }}
       onDragLeave={(e) => {
-        // Only clear if leaving the rail entirely (not entering a child)
         if (!e.currentTarget.contains(e.relatedTarget as Node)) {
           setIsDropTarget(false);
         }
@@ -302,7 +166,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
                 color: 'var(--t-verde)',
               }}
             >
-              {allPicks.length}
+              {allUnplacedPicks.length}
             </span>
           </div>
         </div>
@@ -535,7 +399,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
               className="text-center mt-2"
               style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['35'], lineHeight: 1.4 }}
             >
-              {allPicks.length === 0 ? 'No unplaced picks' : 'No picks match this filter'}
+              {allUnplacedPicks.length === 0 ? 'No unplaced picks' : 'No picks match this filter'}
             </span>
           </div>
         )}
@@ -551,7 +415,6 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
               destination={activeDestination || trip?.location}
               placeholder="Search for a place…"
               onSelect={(result: PlaceSearchResult) => {
-                // Create an ImportedPlace and add to library + collection
                 const newPlace: ImportedPlace = {
                   id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
                   name: result.name,
