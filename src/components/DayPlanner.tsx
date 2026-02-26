@@ -15,6 +15,7 @@ import { TransportBanner, TransportInput, getTransportsAfterSlot } from './Trans
 import { FONT, INK } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import EditableTripName from './EditableTripName';
+import DayContextMenu from './DayContextMenu';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
@@ -62,6 +63,9 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const setDayDestination = useTripStore(s => s.setDayDestination);
   const renameTrip = useTripStore(s => s.renameTrip);
   const deleteDay = useTripStore(s => s.deleteDay);
+  const insertDay = useTripStore(s => s.insertDay);
+  const duplicateDay = useTripStore(s => s.duplicateDay);
+  const clearDay = useTripStore(s => s.clearDay);
   const addTransport = useTripStore(s => s.addTransport);
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
@@ -70,6 +74,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [showDeleteDayConfirm, setShowDeleteDayConfirm] = useState(false);
+  const [showDayContextMenu, setShowDayContextMenu] = useState(false);
   const headerMenuRef = useRef<HTMLDivElement>(null);
 
   // Reset editing state when switching days
@@ -306,30 +311,22 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         setDayDestination={setDayDestination}
         getDestColor={getDestColor}
         uniqueDestinations={uniqueDestinations}
+        onDayLongPress={(dayNum) => { setCurrentDay(dayNum); setShowDayContextMenu(true); }}
       />
 
-      {/* Remove day pill — top-right of day content area */}
-      {trip.days.length > 1 && (
-        <div className="flex justify-end px-3 pt-1.5" style={{ marginBottom: -4 }}>
-          <button
-            onClick={() => setShowDeleteDayConfirm(true)}
-            className="flex items-center gap-1 rounded-full cursor-pointer"
-            style={{
-              background: `${destColor.accent}10`,
-              border: 'none',
-              padding: '2px 8px 2px 5px',
-              fontFamily: FONT.sans,
-              fontSize: 10,
-              fontWeight: 500,
-              color: destColor.accent,
-              opacity: 0.7,
-            }}
-            title="Remove this day"
-          >
-            <span style={{ fontSize: 12, lineHeight: 1 }}>×</span>
-            Remove day
-          </button>
-        </div>
+      {/* Day context menu — triggered by long-press on DaySelector */}
+      {showDayContextMenu && (
+        <DayContextMenu
+          dayNumber={currentDay}
+          dayCount={trip.days.length}
+          variant="sheet"
+          onAddBefore={() => insertDay('before', currentDay)}
+          onAddAfter={() => insertDay('after', currentDay)}
+          onDuplicate={() => duplicateDay(currentDay)}
+          onClear={() => clearDay(currentDay)}
+          onDelete={() => { setShowDayContextMenu(false); setShowDeleteDayConfirm(true); }}
+          onClose={() => setShowDayContextMenu(false)}
+        />
       )}
 
       {/* Active day context bar — hotel + map toggle */}

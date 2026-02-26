@@ -8,6 +8,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import SlotNoteBubble from './SlotNoteBubble';
 import HotelInput from './HotelInput';
+import DayContextMenu from './DayContextMenu';
 import AddDestinationSearch from './AddDestinationSearch';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import { FONT, INK } from '@/constants/theme';
@@ -56,6 +57,9 @@ function DayBoardView({
   const updateTransport = useTripStore(s => s.updateTransport);
   const reorderDays = useTripStore(s => s.reorderDays);
   const deleteDay = useTripStore(s => s.deleteDay);
+  const insertDay = useTripStore(s => s.insertDay);
+  const duplicateDay = useTripStore(s => s.duplicateDay);
+  const clearDay = useTripStore(s => s.clearDay);
   const setDayDestination = useTripStore(s => s.setDayDestination);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const isDesktop = useIsDesktop();
@@ -68,7 +72,9 @@ function DayBoardView({
   const [destPickerDay, setDestPickerDay] = useState<number | null>(null);
   const [destPickerAddMode, setDestPickerAddMode] = useState(false);
   const [deleteDayConfirm, setDeleteDayConfirm] = useState<number | null>(null);
+  const [menuDayNumber, setMenuDayNumber] = useState<number | null>(null);
   const destPickerRef = useRef<HTMLDivElement>(null);
+  const dayMenuRef = useRef<HTMLDivElement>(null);
 
   // Close destination picker on click outside
   useEffect(() => {
@@ -82,6 +88,18 @@ function DayBoardView({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [destPickerDay]);
+
+  // Close day context menu on click outside
+  useEffect(() => {
+    if (menuDayNumber === null) return;
+    const handler = (e: MouseEvent) => {
+      if (dayMenuRef.current && !dayMenuRef.current.contains(e.target as Node)) {
+        setMenuDayNumber(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuDayNumber]);
 
   const handleHotelSave = useCallback((dayNumber: number, hotelInfo: HotelInfo | null) => {
     setEditingHotelDay(null);
@@ -124,7 +142,7 @@ function DayBoardView({
         height: '100%',
       }}
     >
-      <style>{`.day-col:hover .day-col-delete { opacity: 0.5 !important; } .day-col-delete:hover { opacity: 0.9 !important; }`}</style>
+      <style>{`.day-col:hover .day-col-menu-btn { opacity: 0.5 !important; } .day-col-menu-btn:hover { opacity: 0.9 !important; }`}</style>
       {trip.days.map(day => {
         const destColor = DEST_COLORS[day.destination || ''] || generateDestColor(day.destination || '');
         const isFlexible = trip.flexibleDates === true;
@@ -174,35 +192,52 @@ function DayBoardView({
               transition: 'background 150ms ease, opacity 150ms ease',
             }}
           >
-            {/* Remove day × — top-right corner, visible on column hover */}
-            {trip.days.length > 1 && (
+            {/* Day context menu — ⋯ button, top-right corner, visible on column hover */}
+            <div
+              ref={menuDayNumber === day.dayNumber ? dayMenuRef : undefined}
+              style={{ position: 'absolute', top: 2, right: 2, zIndex: menuDayNumber === day.dayNumber ? 50 : 10 }}
+            >
               <button
-                onClick={(e) => { e.stopPropagation(); setDeleteDayConfirm(day.dayNumber); }}
-                className="day-col-delete flex items-center justify-center cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuDayNumber(prev => prev === day.dayNumber ? null : day.dayNumber);
+                }}
+                className="day-col-menu-btn flex items-center justify-center cursor-pointer"
                 style={{
-                  position: 'absolute',
-                  top: 2,
-                  right: 2,
-                  zIndex: 10,
-                  width: 16,
-                  height: 16,
-                  background: '#ff5f57',
+                  width: 22,
+                  height: 18,
+                  background: `${destColor.accent}12`,
                   border: 'none',
-                  borderRadius: '50%',
+                  borderRadius: 5,
                   fontFamily: FONT.sans,
-                  fontSize: 10,
+                  fontSize: 14,
                   fontWeight: 700,
-                  color: 'white',
-                  opacity: 0,
+                  color: destColor.accent,
+                  opacity: menuDayNumber === day.dayNumber ? 0.9 : 0,
                   transition: 'opacity 150ms',
                   lineHeight: 1,
                   padding: 0,
+                  letterSpacing: 1,
                 }}
-                title="Remove this day"
+                title="Day options"
               >
-                ×
+                ⋯
               </button>
-            )}
+              {menuDayNumber === day.dayNumber && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4 }}>
+                  <DayContextMenu
+                    dayNumber={day.dayNumber}
+                    dayCount={trip.days.length}
+                    onAddBefore={() => insertDay('before', day.dayNumber)}
+                    onAddAfter={() => insertDay('after', day.dayNumber)}
+                    onDuplicate={() => duplicateDay(day.dayNumber)}
+                    onClear={() => clearDay(day.dayNumber)}
+                    onDelete={() => { setMenuDayNumber(null); setDeleteDayConfirm(day.dayNumber); }}
+                    onClose={() => setMenuDayNumber(null)}
+                  />
+                </div>
+              )}
+            </div>
             {/* Day column header — draggable for reordering, click selects day */}
             <div
               draggable

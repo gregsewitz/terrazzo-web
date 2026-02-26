@@ -12,6 +12,12 @@ export interface TripDayState {
   reorderDays: (fromDayNumber: number, toDayNumber: number) => void;
   /** Remove a day from the trip, moving its placed items back to the pool */
   deleteDay: (dayNumber: number) => void;
+  /** Insert a blank day before or after a given day */
+  insertDay: (position: 'before' | 'after', refDayNumber: number) => void;
+  /** Clone a day's structure (destination, hotel, transport) with empty slots, insert after */
+  duplicateDay: (dayNumber: number) => void;
+  /** Return all placed items to pool, keep destination/hotel/transport */
+  clearDay: (dayNumber: number) => void;
   addDestinationToTrip: (destination: string, maybePlace?: ImportedPlace) => void;
   setDayHotel: (dayNumber: number, hotel: string) => void;
   setMultipleDaysHotel: (dayNumbers: number[], hotel: string) => void;
@@ -133,6 +139,161 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
       return t ? { days: t.days, pool: t.pool, endDate: t.endDate, destinations: t.destinations } : {};
+    });
+  },
+
+  insertDay: (position, refDayNumber) => {
+    const state = get();
+    const trip = state.trips.find(t => t.id === state.currentTripId);
+    if (!trip) return;
+
+    const refIdx = trip.days.findIndex(d => d.dayNumber === refDayNumber);
+    if (refIdx === -1) return;
+
+    const insertIdx = position === 'before' ? refIdx : refIdx + 1;
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const newDay: TripDay = {
+      dayNumber: 0, // will be renumbered
+      slots: DEFAULT_TIME_SLOTS.map(s => ({ ...s, places: [], ghostItems: [] })),
+    };
+
+    const newDays = [...trip.days];
+    newDays.splice(insertIdx, 0, newDay);
+    const renumbered = newDays.map((d, i) => ({ ...d, dayNumber: i + 1 }));
+
+    // Recalculate dates for fixed-date trips
+    let newEndDate = trip.endDate;
+    if (!trip.flexibleDates && trip.startDate) {
+      const start = new Date(trip.startDate + 'T00:00:00');
+      renumbered.forEach((d, i) => {
+        const dayDate = new Date(start);
+        dayDate.setDate(dayDate.getDate() + i);
+        d.date = `${monthNames[dayDate.getMonth()]} ${dayDate.getDate()}`;
+        d.dayOfWeek = dayNames[dayDate.getDay()];
+      });
+      const end = new Date(start);
+      end.setDate(end.getDate() + renumbered.length - 1);
+      newEndDate = end.toISOString().split('T')[0];
+    }
+
+    const newDayNumber = insertIdx + 1;
+
+    set(state2 => ({
+      trips: state2.trips.map(t =>
+        t.id === state2.currentTripId
+          ? { ...t, days: renumbered, endDate: newEndDate }
+          : t
+      ),
+      currentDay: newDayNumber,
+    }));
+
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, endDate: t.endDate } : {};
+    });
+  },
+
+  duplicateDay: (dayNumber) => {
+    const state = get();
+    const trip = state.trips.find(t => t.id === state.currentTripId);
+    if (!trip) return;
+
+    const srcDay = trip.days.find(d => d.dayNumber === dayNumber);
+    if (!srcDay) return;
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Clone structure with empty slots
+    const cloned: TripDay = {
+      dayNumber: 0, // will be renumbered
+      destination: srcDay.destination,
+      hotel: srcDay.hotel,
+      hotelInfo: srcDay.hotelInfo ? { ...srcDay.hotelInfo } : undefined,
+      transport: srcDay.transport ? srcDay.transport.map(t => ({
+        ...t,
+        id: `tr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      })) : undefined,
+      slots: srcDay.slots.map(s => ({ ...s, places: [], ghostItems: [] })),
+    };
+
+    const srcIdx = trip.days.findIndex(d => d.dayNumber === dayNumber);
+    const newDays = [...trip.days];
+    newDays.splice(srcIdx + 1, 0, cloned);
+    const renumbered = newDays.map((d, i) => ({ ...d, dayNumber: i + 1 }));
+
+    // Recalculate dates for fixed-date trips
+    let newEndDate = trip.endDate;
+    if (!trip.flexibleDates && trip.startDate) {
+      const start = new Date(trip.startDate + 'T00:00:00');
+      renumbered.forEach((d, i) => {
+        const dayDate = new Date(start);
+        dayDate.setDate(dayDate.getDate() + i);
+        d.date = `${monthNames[dayDate.getMonth()]} ${dayDate.getDate()}`;
+        d.dayOfWeek = dayNames[dayDate.getDay()];
+      });
+      const end = new Date(start);
+      end.setDate(end.getDate() + renumbered.length - 1);
+      newEndDate = end.toISOString().split('T')[0];
+    }
+
+    const newDestinations = [...new Set(renumbered.map(d => d.destination).filter(Boolean))] as string[];
+
+    set(state2 => ({
+      trips: state2.trips.map(t =>
+        t.id === state2.currentTripId
+          ? { ...t, days: renumbered, endDate: newEndDate, destinations: newDestinations, location: newDestinations.join(', ') }
+          : t
+      ),
+      currentDay: srcIdx + 2, // navigate to the clone
+    }));
+
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, endDate: t.endDate, destinations: t.destinations } : {};
+    });
+  },
+
+  clearDay: (dayNumber) => {
+    const state = get();
+    const trip = state.trips.find(t => t.id === state.currentTripId);
+    if (!trip) return;
+
+    const targetDay = trip.days.find(d => d.dayNumber === dayNumber);
+    if (!targetDay) return;
+
+    // Collect all placed items → return to pool
+    const returnedItems = targetDay.slots
+      .flatMap(s => s.places)
+      .map(p => ({ ...p, status: 'available' as const }));
+
+    if (returnedItems.length === 0) return; // nothing to clear
+
+    set(state2 => ({
+      trips: state2.trips.map(t =>
+        t.id === state2.currentTripId
+          ? {
+              ...t,
+              days: t.days.map(d =>
+                d.dayNumber === dayNumber
+                  ? { ...d, slots: d.slots.map(s => ({ ...s, places: [], ghostItems: [] })) }
+                  : d
+              ),
+              pool: [...t.pool, ...returnedItems],
+            }
+          : t
+      ),
+    }));
+
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, pool: t.pool } : {};
     });
   },
 

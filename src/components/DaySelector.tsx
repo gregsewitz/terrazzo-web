@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, memo } from 'react';
+import { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { Trip, DEST_COLORS } from '@/types';
 import AddDestinationSearch from './AddDestinationSearch';
 import { FONT, INK } from '@/constants/theme';
@@ -14,6 +14,8 @@ export interface DaySelectorProps {
   setDayDestination: (day: number, dest: string) => void;
   getDestColor: (dest: string) => { accent: string; bg: string; text: string };
   uniqueDestinations: string[];
+  /** Called when user long-presses (500ms) on a day tab */
+  onDayLongPress?: (dayNumber: number) => void;
 }
 
 const DaySelector = memo(({
@@ -24,11 +26,38 @@ const DaySelector = memo(({
   setDayDestination,
   getDestColor,
   uniqueDestinations,
+  onDayLongPress,
 }: DaySelectorProps) => {
   const [destPickerDay, setDestPickerDay] = useState<number | 'add-new' | null>(null);
   const [destPickerAddMode, setDestPickerAddMode] = useState(false);
   const destPickerRef = useRef<HTMLDivElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  // Long-press handlers for day tabs
+  const handleTouchStart = useCallback((dayNumber: number) => {
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      try { navigator.vibrate?.(10); } catch { /* ignore */ }
+      onDayLongPress?.(dayNumber);
+    }, 500);
+  }, [onDayLongPress]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   // Close destination picker on click outside
   useEffect(() => {
@@ -73,8 +102,12 @@ const DaySelector = memo(({
             role="tab"
             tabIndex={0}
             aria-selected={isDayActive}
-            onClick={() => setCurrentDay(d.dayNumber)}
+            onClick={() => { if (!longPressFired.current) setCurrentDay(d.dayNumber); }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentDay(d.dayNumber); } }}
+            onTouchStart={() => handleTouchStart(d.dayNumber)}
+            onTouchEnd={handleTouchEnd}
+            onTouchMove={handleTouchMove}
+            onContextMenu={(e) => { e.preventDefault(); onDayLongPress?.(d.dayNumber); }}
             className="flex-1 flex flex-col items-center py-1.5 px-1 cursor-pointer transition-all"
             style={{
               border: 'none',
