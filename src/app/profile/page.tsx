@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import { useFlickerDebug, usePageFlickerDebug } from '@/hooks/useFlickerDebug';
 import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
@@ -75,6 +76,8 @@ function getGreeting() {
 type ProfileTab = 'discover' | 'profile';
 
 export default function ProfilePage() {
+  usePageFlickerDebug('ProfilePage');
+
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const [showWrapped, setShowWrapped] = useState(false);
@@ -93,6 +96,31 @@ export default function ProfilePage() {
   const lifeContext = useOnboardingStore(s => s.lifeContext);
   const allSignals = useOnboardingStore(s => s.allSignals);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
+
+  // Debug: log every state change that could trigger a re-render
+  const prevDbHydrated = useRef(dbHydrated);
+  const prevActiveTab = useRef(activeTab);
+  const prevDiscoverContent = useRef(discoverContent);
+  useEffect(() => {
+    if (prevDbHydrated.current !== dbHydrated) {
+      console.log(`%c[PAGE ProfilePage] 💧 dbHydrated: ${prevDbHydrated.current} → ${dbHydrated} @ ${performance.now().toFixed(1)}ms`, 'color: #FF6F00; font-weight: bold; font-size: 13px');
+      prevDbHydrated.current = dbHydrated;
+    }
+  }, [dbHydrated]);
+  useEffect(() => {
+    if (prevActiveTab.current !== activeTab) {
+      console.log(`%c[PAGE ProfilePage] 🔄 activeTab: ${prevActiveTab.current} → ${activeTab} @ ${performance.now().toFixed(1)}ms`, 'color: #FF6F00; font-weight: bold');
+      prevActiveTab.current = activeTab;
+    }
+  }, [activeTab]);
+  useEffect(() => {
+    const had = prevDiscoverContent.current !== null;
+    const has = discoverContent !== null;
+    if (had !== has) {
+      console.log(`%c[PAGE ProfilePage] 📡 discoverContent: ${had ? 'loaded' : 'null'} → ${has ? 'loaded' : 'null'} @ ${performance.now().toFixed(1)}ms`, 'color: #FF6F00; font-weight: bold');
+      prevDiscoverContent.current = discoverContent;
+    }
+  }, [discoverContent]);
 
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
@@ -668,9 +696,11 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 
 // ── EDITORIAL LETTER — The opening essay ──
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
+  const debugRef = useFlickerDebug('EditorialLetter');
   const l = letter || EDITORIAL_LETTER;
   return (
     <motion.div
+      ref={debugRef}
       className="px-5 pt-5 pb-6"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
@@ -736,9 +766,11 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
 
 // ── BECAUSE YOU — Signal-to-place insight cards ──
 function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
+  const debugRef = useFlickerDebug('BecauseYou');
   const displayCards = cards || BECAUSE_YOU_CARDS;
   return (
     <motion.div
+      ref={debugRef}
       className="mb-7 px-5"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
