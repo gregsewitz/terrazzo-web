@@ -94,21 +94,58 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
   }, [selectedDay, trip]);
 
   // Geo coordinates for active destination(s) — used for proximity matching
+  // Falls back to hotel coordinates when geoDestinations are unavailable
   const activeGeoPoints = useMemo(() => {
-    if (!trip?.geoDestinations?.length) return [];
+    if (!trip) return [];
+    const points: { lat: number; lng: number }[] = [];
+
     if (selectedDay === null) {
-      // "All days": all geo destinations
-      return trip.geoDestinations
-        .filter(g => g.lat && g.lng)
-        .map(g => ({ lat: g.lat!, lng: g.lng! }));
+      // "All days": collect geo points from geoDestinations + hotel fallbacks
+      if (trip.geoDestinations?.length) {
+        trip.geoDestinations.forEach(g => {
+          if (g.lat && g.lng) points.push({ lat: g.lat, lng: g.lng });
+        });
+      }
+      // Also add hotel coordinates as fallback geo centers
+      trip.days.forEach(day => {
+        if (day.hotelInfo?.lat && day.hotelInfo?.lng) {
+          // Only add if not already near an existing point
+          const h = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
+          if (!points.some(p => distKm(p.lat, p.lng, h.lat, h.lng) < 10)) {
+            points.push(h);
+          }
+        }
+      });
+    } else {
+      // Specific day: find the geo point for this day's destination
+      const day = trip.days.find(d => d.dayNumber === selectedDay);
+      const destName = day?.destination;
+
+      // Try geoDestinations first
+      if (trip.geoDestinations?.length) {
+        const geo = destName
+          ? trip.geoDestinations.find(g => g.name.toLowerCase() === destName.toLowerCase())
+          : trip.geoDestinations[0];
+        if (geo?.lat && geo?.lng) points.push({ lat: geo.lat, lng: geo.lng });
+      }
+
+      // Fall back to this day's hotel coordinates
+      if (points.length === 0 && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
+        points.push({ lat: day.hotelInfo.lat, lng: day.hotelInfo.lng });
+      }
+
+      // Fall back to any same-destination day's hotel
+      if (points.length === 0 && destName) {
+        for (const d of trip.days) {
+          if (d.destination === destName && d.hotelInfo?.lat && d.hotelInfo?.lng) {
+            points.push({ lat: d.hotelInfo.lat, lng: d.hotelInfo.lng });
+            break;
+          }
+        }
+      }
     }
-    // Specific day: find the geo point for this day's destination
-    const day = trip.days.find(d => d.dayNumber === selectedDay);
-    const destName = day?.destination;
-    const geo = destName
-      ? trip.geoDestinations.find(g => g.name.toLowerCase() === destName.toLowerCase())
-      : trip.geoDestinations[0];
-    return geo?.lat && geo?.lng ? [{ lat: geo.lat, lng: geo.lng }] : [];
+
+    return points;
   }, [trip, selectedDay]);
 
   const placedIds = useMemo(() => {

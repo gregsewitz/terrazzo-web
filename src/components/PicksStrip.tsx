@@ -81,7 +81,21 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
     const geoDest = destName
       ? trip.geoDestinations?.find(g => g.name.toLowerCase() === destName.toLowerCase())
       : trip.geoDestinations?.[0];
-    const geo = geoDest?.lat && geoDest?.lng ? { lat: geoDest.lat, lng: geoDest.lng } : null;
+    let geo = geoDest?.lat && geoDest?.lng ? { lat: geoDest.lat, lng: geoDest.lng } : null;
+
+    // Fall back to hotel coordinates when geoDestinations unavailable
+    if (!geo && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
+      geo = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
+    }
+    // Fall back to any same-destination day's hotel
+    if (!geo && destName) {
+      for (const d of trip.days) {
+        if (d.destination === destName && d.hotelInfo?.lat && d.hotelInfo?.lng) {
+          geo = { lat: d.hotelInfo.lat, lng: d.hotelInfo.lng };
+          break;
+        }
+      }
+    }
 
     // Name(s) for string matching
     const names = destName

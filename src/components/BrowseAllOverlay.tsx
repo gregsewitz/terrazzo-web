@@ -42,14 +42,55 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
     return trip?.destinations || [trip?.location?.split(',')[0]?.trim()].filter(Boolean);
   });
 
-  // All saved places filtered to trip destination
+  // Geo points for proximity matching (from geoDestinations + hotel fallbacks)
+  const tripGeoPoints = useTripStore(s => {
+    const trip = s.trips.find(t => t.id === s.currentTripId);
+    if (!trip) return [];
+    const points: { lat: number; lng: number }[] = [];
+    trip.geoDestinations?.forEach(g => {
+      if (g.lat && g.lng) points.push({ lat: g.lat, lng: g.lng });
+    });
+    // Add hotel coordinates as fallback geo centers
+    trip.days.forEach(day => {
+      if (day.hotelInfo?.lat && day.hotelInfo?.lng) {
+        const h = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
+        const R = 6371;
+        const near = points.some(p => {
+          const dLat = (p.lat - h.lat) * Math.PI / 180;
+          const dLng = (p.lng - h.lng) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(h.lat * Math.PI / 180) * Math.cos(p.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) < 10;
+        });
+        if (!near) points.push(h);
+      }
+    });
+    return points;
+  });
+
+  // All saved places filtered to trip destination (string match + geo-proximity)
   const destinationPlaces = useMemo(() => {
-    if (!tripDestinations || tripDestinations.length === 0) return myPlaces;
+    if ((!tripDestinations || tripDestinations.length === 0) && tripGeoPoints.length === 0) return myPlaces;
     const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
-    return myPlaces.filter(place =>
-      destLower.some(dest => place.location.toLowerCase().includes(dest))
-    );
-  }, [myPlaces, tripDestinations]);
+    const GEO_RADIUS_KM = 60;
+    return myPlaces.filter(place => {
+      // Geo-proximity check
+      const pLat = place.google?.lat;
+      const pLng = place.google?.lng;
+      if (pLat && pLng && tripGeoPoints.length > 0) {
+        for (const geo of tripGeoPoints) {
+          const R = 6371;
+          const dLat = (pLat - geo.lat) * Math.PI / 180;
+          const dLng = (pLng - geo.lng) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(geo.lat * Math.PI / 180) * Math.cos(pLat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+          if (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) <= GEO_RADIUS_KM) return true;
+        }
+      }
+      // String match fallback
+      return destLower.some(dest => place.location.toLowerCase().includes(dest));
+    });
+  }, [myPlaces, tripDestinations, tripGeoPoints]);
 
   // Apply type filter
   const filteredPlaces = useMemo(() => {
