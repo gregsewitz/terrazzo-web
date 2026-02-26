@@ -4,11 +4,38 @@ import { useEffect, useRef } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { GeoDestination } from '@/types';
 
+const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
 /**
- * Geocode a place name using Open-Meteo's free geocoding API (no key needed).
- * Falls back to Google Geocoding API if available.
+ * Geocode a place name, trying Google Geocoding API first (handles regions
+ * like "Cotswolds" well), then falling back to Open-Meteo (free, city-focused).
  */
-async function geocodeName(name: string): Promise<{ lat: number; lng: number } | null> {
+async function geocodeName(name: string): Promise<{ lat: number; lng: number; placeId?: string; formattedAddress?: string } | null> {
+  // 1. Try Google Geocoding API (best for regions, districts, areas)
+  if (GOOGLE_API_KEY) {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${GOOGLE_API_KEY}`,
+        { signal: AbortSignal.timeout(5000) }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const result = data.results?.[0];
+        if (result?.geometry?.location) {
+          return {
+            lat: result.geometry.location.lat,
+            lng: result.geometry.location.lng,
+            placeId: result.place_id,
+            formattedAddress: result.formatted_address,
+          };
+        }
+      }
+    } catch {
+      // Fall through to Open-Meteo
+    }
+  }
+
+  // 2. Fallback: Open-Meteo free geocoding (good for cities, may miss regions)
   try {
     const res = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=en`,
@@ -28,11 +55,11 @@ async function geocodeName(name: string): Promise<{ lat: number; lng: number } |
  * Hook that automatically repairs missing geoDestination coordinates.
  *
  * When a trip has `destinations` but `geoDestinations` is missing or has
- * entries without lat/lng, this hook geocodes them using the free
- * Open-Meteo API and updates the trip in the store + saves to server.
+ * entries without lat/lng, this hook geocodes them using Google Geocoding
+ * API (which handles regions like "Cotswolds") with Open-Meteo as fallback,
+ * then updates the trip in the store + saves to server.
  *
- * Runs once per trip load — a ref tracks which trip ID was last repaired
- * to avoid repeated calls.
+ * Runs once per trip load — a ref tracks which trip ID was last repaired.
  */
 export function useGeoDestinationRepair() {
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
@@ -74,9 +101,21 @@ export function useGeoDestinationRepair() {
         // Find existing entry to update, or create new one
         const idx = updates.findIndex(g => g.name.toLowerCase() === destName.toLowerCase());
         if (idx >= 0) {
-          updates[idx] = { ...updates[idx], lat: coords.lat, lng: coords.lng };
+          updates[idx] = {
+            ...updates[idx],
+            lat: coords.lat,
+            lng: coords.lng,
+            ...(coords.placeId && { placeId: coords.placeId }),
+            ...(coords.formattedAddress && { formattedAddress: coords.formattedAddress }),
+          };
         } else {
-          updates.push({ name: destName, lat: coords.lat, lng: coords.lng });
+          updates.push({
+            name: destName,
+            lat: coords.lat,
+            lng: coords.lng,
+            ...(coords.placeId && { placeId: coords.placeId }),
+            ...(coords.formattedAddress && { formattedAddress: coords.formattedAddress }),
+          });
         }
         changed = true;
       }
