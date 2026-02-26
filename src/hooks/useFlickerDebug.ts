@@ -30,6 +30,8 @@ export function useFlickerDebug(label: string) {
   const lastVisibility = useRef<string>('');
   const lastClassName = useRef<string>('');
   const lastRect = useRef<{ top: number; left: number; width: number; height: number } | null>(null);
+  const lastScrollY = useRef<number>(0);
+  const scrollSettledAt = useRef<number>(0);
 
   // Track renders
   renderCount.current += 1;
@@ -49,6 +51,13 @@ export function useFlickerDebug(label: string) {
       `%c[FLICKER ${label}] MOUNTED — starting monitors @ ${performance.now().toFixed(1)}ms`,
       'color: #4CAF50; font-weight: bold'
     );
+
+    // ─── 0. Track scroll to filter layout shifts caused by normal scrolling ───
+    const onScroll = () => {
+      lastScrollY.current = window.scrollY;
+      scrollSettledAt.current = performance.now();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     // ─── 1. RAF POLLING: opacity, display, visibility, position ───
     // This runs at ~60fps so we catch sub-frame changes the old 100ms polling missed
@@ -102,10 +111,18 @@ export function useFlickerDebug(label: string) {
       if (lastRect.current) {
         const lr = lastRect.current;
         if (r.top !== lr.top || r.left !== lr.left || r.width !== lr.width || r.height !== lr.height) {
-          console.log(
-            `%c[FLICKER ${label}] 📐 LAYOUT SHIFT: top ${lr.top}→${r.top}, left ${lr.left}→${r.left}, size ${lr.width}x${lr.height}→${r.width}x${r.height} @ ${performance.now().toFixed(1)}ms`,
-            'color: #9C27B0; font-weight: bold'
-          );
+          const now = performance.now();
+          const timeSinceScroll = now - scrollSettledAt.current;
+          const isScrollCaused = timeSinceScroll < 100 && r.width === lr.width && r.height === lr.height && r.left === lr.left;
+          if (!isScrollCaused) {
+            // NON-SCROLL layout shift — this is the interesting one
+            console.log(
+              `%c[FLICKER ${label}] 📐 REAL LAYOUT SHIFT: top ${lr.top}→${r.top}, left ${lr.left}→${r.left}, size ${lr.width}x${lr.height}→${r.width}x${r.height} @ ${now.toFixed(1)}ms (timeSinceScroll=${timeSinceScroll.toFixed(0)}ms)`,
+              'color: #9C27B0; font-weight: bold; font-size: 13px'
+            );
+          }
+          // Still log scroll-caused shifts but quietly (no bold, smaller)
+          // Uncomment if needed: else console.log(`[FLICKER ${label}] scroll-shift top ${lr.top}→${r.top}`);
         }
       }
       lastRect.current = r;
@@ -180,6 +197,7 @@ export function useFlickerDebug(label: string) {
         cancelAnimationFrame(rafId.current);
         mo.disconnect();
         parentMo.disconnect();
+        window.removeEventListener('scroll', onScroll);
         console.log(
           `%c[FLICKER ${label}] UNMOUNTED @ ${performance.now().toFixed(1)}ms`,
           'color: #f44336; font-weight: bold; font-size: 14px'
@@ -190,6 +208,7 @@ export function useFlickerDebug(label: string) {
     return () => {
       cancelAnimationFrame(rafId.current);
       mo.disconnect();
+      window.removeEventListener('scroll', onScroll);
     };
   }, [label]);
 

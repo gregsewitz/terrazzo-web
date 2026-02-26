@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType } from '@/types';
+import { ImportedPlace } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
-import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
+import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
+import AddPlaceInline from './AddPlaceInline';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -41,22 +41,34 @@ interface PicksRailProps {
   onTapDetail: (item: ImportedPlace) => void;
   width: number;
   onResizeStart: (e: React.PointerEvent) => void;
-  onUnplace?: (placeId: string, fromDay: number, fromSlot: string) => void;
-  selectedDay: number | null;
-  onSelectedDayChange: (day: number | null) => void;
+  /** Pointer-based drag activation — parent handles the drag overlay + hit-testing */
+  onDragStart: (item: ImportedPlace, e: React.PointerEvent) => void;
+  /** ID of item currently being dragged (to dim it in the list) */
+  dragItemId: string | null;
+  /** Whether the pointer is currently hovering over this rail (for drop-back visual) */
+  isDropTarget: boolean;
+  /** Register this rail's bounding rect with the parent for hit-testing */
+  onRegisterRect: (rect: DOMRect | null) => void;
+  /** ID of item that was just returned to pool (for animation) */
+  returningPlaceId: string | null;
 }
 
-function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selectedDay, onSelectedDayChange }: PicksRailProps) {
+function PicksRailInner({
+  onTapDetail, width, onResizeStart,
+  onDragStart, dragItemId, isDropTarget, onRegisterRect, returningPlaceId,
+}: PicksRailProps) {
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [isDropTarget, setIsDropTarget] = useState(false);
-  const [showAddPlace, setShowAddPlace] = useState(false);
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'recent'>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Read currentDay from store (no more day selector — syncs with DayBoardView)
+  const currentDay = useTripStore(s => s.currentDay);
+  const selectedDay = currentDay;
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
-  const addPlace = useSavedStore(s => s.addPlace);
 
   // ─── Shared filtering logic ───
   const {
@@ -64,6 +76,7 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
     activeDestination,
     allUnplacedPicks,
     filteredPicks: sharedFilteredPicks,
+    destinationScore,
     matchesDestination,
   } = usePicksFilter({
     selectedDay,
@@ -72,29 +85,49 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
     searchQuery,
   });
 
-  // Day options for the selector
-  const dayOptions = useMemo(() => {
-    if (!trip) return [];
-    return trip.days.map(d => ({
-      dayNumber: d.dayNumber,
-      destination: d.destination || trip.location,
-      label: `Day ${d.dayNumber}`,
-    }));
-  }, [trip]);
+  // ─── Rect registration for return-to-pool hit-testing ───
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const report = () => onRegisterRect(el.getBoundingClientRect());
+    report();
+    window.addEventListener('resize', report);
+    el.addEventListener('scroll', report, { passive: true });
+    return () => {
+      window.removeEventListener('resize', report);
+      el.removeEventListener('scroll', report);
+      onRegisterRect(null);
+    };
+  }, [onRegisterRect]);
+
+  // ─── Pointer drag gesture (shared hook) ───
+  const {
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+    holdingId,
+  } = useDragGesture({
+    onDragActivate: onDragStart,
+    onTap: onTapDetail,
+    layout: 'vertical',
+    isDragging: !!dragItemId,
+  });
 
   const sortedPicks = useMemo(() => {
     const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
     return [...sharedFilteredPicks].sort((a, b) => {
       if (hasDestFilter) {
-        const aMatch = matchesDestination(a) ? 1 : 0;
-        const bMatch = matchesDestination(b) ? 1 : 0;
-        if (aMatch !== bMatch) return bMatch - aMatch;
+        // Score-based: higher destination relevance sorts first
+        const aScore = destinationScore(a);
+        const bScore = destinationScore(b);
+        if (Math.abs(aScore - bScore) > 0.1) return bScore - aScore;
       }
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'recent') return (b.addedAt || '').localeCompare(a.addedAt || '');
       return b.matchScore - a.matchScore;
     });
-  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, matchesDestination, sortBy]);
+  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -104,27 +137,11 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
 
   return (
     <div
+      ref={containerRef}
       className="flex h-full relative"
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        setIsDropTarget(true);
-      }}
-      onDragLeave={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-          setIsDropTarget(false);
-        }
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        setIsDropTarget(false);
-        const placeId = e.dataTransfer.getData('text/place-id');
-        const fromDay = e.dataTransfer.getData('text/from-day');
-        const fromSlot = e.dataTransfer.getData('text/from-slot');
-        if (placeId && fromDay && fromSlot && onUnplace) {
-          onUnplace(placeId, Number(fromDay), fromSlot);
-        }
-      }}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       style={{
         width,
         background: isDropTarget ? 'rgba(42,122,86,0.06)' : 'white',
@@ -171,35 +188,16 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
           </div>
         </div>
 
-        {/* Day selector */}
-        {dayOptions.length > 1 && (
-          <select
-            value={selectedDay ?? ''}
-            onChange={(e) => onSelectedDayChange(e.target.value ? Number(e.target.value) : null)}
-            style={{
-              fontFamily: FONT.sans,
-              fontSize: 11,
-              fontWeight: 500,
-              color: 'var(--t-ink)',
-              background: INK['04'],
-              border: `1px solid var(--t-linen)`,
-              borderRadius: 8,
-              padding: '4px 8px',
-              cursor: 'pointer',
-              appearance: 'none' as const,
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 8px center',
-              paddingRight: 24,
-            }}
-          >
-            <option value="">All days</option>
-            {dayOptions.map(d => (
-              <option key={d.dayNumber} value={d.dayNumber}>
-                {d.label}{d.destination ? ` · ${d.destination}` : ''}
-              </option>
-            ))}
-          </select>
+        {/* Day indicator (read-only — syncs with DayBoardView clicks) */}
+        {selectedDay && activeDestination && (
+          <span style={{
+            fontFamily: FONT.sans,
+            fontSize: 10,
+            fontWeight: 500,
+            color: INK['50'],
+          }}>
+            Day {selectedDay} · {activeDestination}
+          </span>
         )}
       </div>
 
@@ -278,27 +276,29 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
           const tasteNote = place.tasteNote;
           const location = place.location?.split(',')[0]?.trim() || '';
           const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
-          const isDimmed = hasDestFilter ? !matchesDestination(place) : false;
+          // Score-based dimming: 1.0 = full opacity, 0.5 = slightly dimmed, 0 = heavily dimmed
+          const dScore = hasDestFilter ? destinationScore(place) : 1;
+          const isBeingDragged = dragItemId === place.id;
+          const isReturning = returningPlaceId === place.id;
+          const isHolding = holdingId === place.id;
 
           return (
-            <button
+            <div
               key={place.id}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('text/place-id', place.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onClick={() => onTapDetail(place)}
+              onPointerDown={(e) => handlePointerDown(place, e)}
               onMouseEnter={() => setHoveredId(place.id)}
               onMouseLeave={() => setHoveredId(null)}
-              className="flex items-start gap-2 cursor-grab transition-all flex-shrink-0 text-left w-full"
+              className="flex items-start gap-2 transition-all flex-shrink-0 text-left w-full"
               style={{
                 padding: '8px 8px',
                 borderRadius: 10,
-                background: isHovered ? `${typeColor}12` : 'transparent',
-                border: isHovered ? `1px solid ${typeColor}30` : '1px solid transparent',
-                transform: isHovered ? 'translateX(2px)' : 'translateX(0)',
-                opacity: isDimmed ? 0.4 : 1,
+                background: isHolding ? `${typeColor}18` : isHovered ? `${typeColor}12` : 'transparent',
+                border: isHolding ? `1.5px solid ${typeColor}50` : isHovered ? `1px solid ${typeColor}30` : '1px solid transparent',
+                transform: isHolding ? 'scale(1.02)' : isHovered ? 'translateX(2px)' : 'translateX(0)',
+                opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
+                cursor: 'grab',
+                touchAction: 'none',
+                userSelect: 'none',
               }}
             >
               {/* Type icon */}
@@ -388,11 +388,11 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
                   </span>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
 
-        {sortedPicks.length === 0 && !showAddPlace && (
+        {sortedPicks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 px-3">
             <PerriandIcon name="discover" size={20} color={INK['20']} />
             <span
@@ -404,67 +404,8 @@ function PicksRailInner({ onTapDetail, width, onResizeStart, onUnplace, selected
           </div>
         )}
 
-        {/* + Add place — inline search or button */}
-        {showAddPlace ? (
-          <div
-            className="flex-shrink-0 rounded-lg mx-1 mb-1"
-            style={{ background: INK['04'], border: `1px dashed ${INK['15']}` }}
-          >
-            <PlaceSearchInput
-              compact
-              destination={activeDestination || trip?.location}
-              placeholder="Search for a place…"
-              onSelect={(result: PlaceSearchResult) => {
-                const newPlace: ImportedPlace = {
-                  id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                  name: result.name,
-                  type: result.type,
-                  location: result.address || activeDestination || trip?.location || '',
-                  source: { type: 'text', name: 'Manual' },
-                  matchScore: 0,
-                  matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
-                  tasteNote: '',
-                  status: 'available',
-                  isFavorited: true,
-                  ...(result.placeId && {
-                    google: {
-                      placeId: result.placeId,
-                      lat: result.lat,
-                      lng: result.lng,
-                      address: result.address,
-                    },
-                  }),
-                };
-                addPlace(newPlace);
-                setShowAddPlace(false);
-              }}
-              onCancel={() => setShowAddPlace(false)}
-            />
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowAddPlace(true)}
-            className="flex items-center gap-2 flex-shrink-0 mx-1 mb-1 py-2.5 px-3 rounded-lg transition-all"
-            style={{
-              background: 'transparent',
-              border: `1px dashed ${INK['15']}`,
-              cursor: 'pointer',
-              width: 'calc(100% - 8px)',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = INK['04']; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-          >
-            <div
-              className="flex items-center justify-center flex-shrink-0"
-              style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--t-verde)12' }}
-            >
-              <PerriandIcon name="add" size={14} color="var(--t-verde)" />
-            </div>
-            <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: INK['40'] }}>
-              Add a place
-            </span>
-          </button>
-        )}
+        {/* + Add place */}
+        <AddPlaceInline variant="rail" destination={activeDestination || trip?.location} />
       </div>
     </div>
 

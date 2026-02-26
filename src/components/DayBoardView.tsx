@@ -11,6 +11,7 @@ import HotelInput from './HotelInput';
 import DayContextMenu from './DayContextMenu';
 import AddDestinationSearch from './AddDestinationSearch';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
+import { useDragGesture } from '@/hooks/useDragGesture';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
@@ -24,11 +25,169 @@ interface DayBoardViewProps {
   onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
   onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
   onAddSlotNote?: (dayNumber: number, slotId: string, content: string) => void;
-  onDropPlace?: (placeId: string, dayNumber: number, slotId: string) => void;
-  onMovePlace?: (placeId: string, fromDay: number, fromSlot: string, toDay: number, toSlot: string) => void;
-  onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
-  onDaySelect?: (dayNumber: number) => void;
-  selectedDay?: number | null;
+  /** Pointer-based: register each slot's bounding rect for hit-testing */
+  onRegisterSlotRef: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
+  /** Pointer-based: drag a placed card out of a slot */
+  onDragStartFromSlot: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
+  /** Which slot the drag pointer is currently over (from parent hit-testing) */
+  dropTarget: { dayNumber: number; slotId: string } | null;
+  /** ID of item currently being dragged (to dim it) */
+  dragItemId: string | null;
+}
+
+/**
+ * Inner component for a single placed card — uses useDragGesture for pointer-based drag.
+ */
+function PlacedCard({
+  place, dayNumber, slotId, isDesktop, onTapDetail, onDragStartFromSlot, dragItemId,
+  reactions, CARD_H, CARD_PX,
+}: {
+  place: ImportedPlace;
+  dayNumber: number;
+  slotId: string;
+  isDesktop: boolean;
+  onTapDetail: (item: ImportedPlace) => void;
+  onDragStartFromSlot: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
+  dragItemId: string | null;
+  reactions?: Reaction[];
+  CARD_H: number;
+  CARD_PX: number;
+}) {
+  const handleDragActivate = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
+    onDragStartFromSlot(item, dayNumber, slotId, e);
+  }, [onDragStartFromSlot, dayNumber, slotId]);
+
+  const { handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel, holdingId } = useDragGesture({
+    onDragActivate: handleDragActivate,
+    onTap: onTapDetail,
+    layout: 'vertical',
+    isDragging: !!dragItemId,
+  });
+
+  const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+  const context = place.friendAttribution?.note
+    ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
+    : place.whatToOrder?.[0]
+      ? `Order: ${place.whatToOrder[0]}`
+      : place.tips?.[0] || place.terrazzoReasoning?.rationale || place.tasteNote || '';
+  const placeKey = `${dayNumber}-${slotId}-${place.name}`;
+  const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
+  const loves = placeReactions.filter(r => r.reaction === 'love').length;
+  const nopes = placeReactions.filter(r => r.reaction === 'not_for_me').length;
+  const isBeingDragged = dragItemId === place.id;
+  const isHolding = holdingId === place.id;
+
+  return (
+    <div
+      onPointerDown={(e) => handlePointerDown(place, e)}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      className={`group/card mx-${CARD_PX} mb-1.5 rounded card-hover relative`}
+      style={{
+        height: CARD_H,
+        background: isHolding ? 'rgba(42,122,86,0.08)' : 'rgba(42,122,86,0.03)',
+        border: isHolding ? '1.5px solid rgba(42,122,86,0.3)' : '1px solid rgba(42,122,86,0.1)',
+        padding: isDesktop ? '6px 10px' : '4px 8px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        opacity: isBeingDragged ? 0.3 : 1,
+        transform: isHolding ? 'scale(1.02)' : 'none',
+        transition: 'opacity 150ms, transform 100ms, background 100ms, border 100ms',
+        cursor: 'grab',
+        touchAction: 'none',
+        userSelect: 'none',
+      }}
+    >
+      {/* Row 1: name + type + match% */}
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="font-semibold truncate flex-1" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans, fontSize: isDesktop ? 12 : 11, lineHeight: 1.2 }}>
+          {place.name}
+        </span>
+        <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['60'], textTransform: 'uppercase' }}>
+          {place.type}
+        </span>
+        {place.matchScore >= 70 && (
+          <span className="flex-shrink-0 px-1 rounded" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, fontWeight: 700, background: 'rgba(42,122,86,0.1)', color: 'var(--t-verde)' }}>
+            {place.matchScore}%
+          </span>
+        )}
+      </div>
+      {/* Row 2: context + reactions + source badge */}
+      <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 2 }}>
+        <span className="truncate flex-1" style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: INK['60'], fontStyle: context ? 'italic' : 'normal' }}>
+          {context || place.type}
+        </span>
+        {loves > 0 && (
+          <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: '#c93c3c' }}>
+            ♥ {loves}
+          </span>
+        )}
+        {nopes > 0 && (
+          <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['55'] }}>
+            ✗ {nopes}
+          </span>
+        )}
+        <span className="flex-shrink-0 px-1.5 py-px rounded font-bold" style={{ background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono, fontSize: isDesktop ? 8 : 7 }}>
+          {srcStyle.label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Wrapper that registers its bounding rect with the parent for hit-testing.
+ */
+function SlotContainer({
+  dayNumber, slotId, children, onRegisterSlotRef, isDropActive, minHeight, style,
+}: {
+  dayNumber: number;
+  slotId: string;
+  children: React.ReactNode;
+  onRegisterSlotRef: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
+  isDropActive: boolean;
+  minHeight: number;
+  style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const report = () => onRegisterSlotRef(dayNumber, slotId, el.getBoundingClientRect());
+    report();
+    // Re-register on resize & scroll (the parent board scrolls horizontally)
+    window.addEventListener('resize', report);
+    const scrollParent = el.closest('.overflow-x-auto') || el.closest('.overflow-y-auto');
+    if (scrollParent) {
+      scrollParent.addEventListener('scroll', report, { passive: true });
+    }
+    return () => {
+      window.removeEventListener('resize', report);
+      if (scrollParent) scrollParent.removeEventListener('scroll', report);
+      onRegisterSlotRef(dayNumber, slotId, null);
+    };
+  }, [dayNumber, slotId, onRegisterSlotRef]);
+
+  return (
+    <div
+      ref={ref}
+      className="flex flex-col"
+      style={{
+        borderBottom: '1px solid var(--t-linen)',
+        background: isDropActive ? 'rgba(42,122,86,0.06)' : undefined,
+        borderLeft: isDropActive ? '3px solid var(--t-verde)' : '3px solid transparent',
+        transition: 'all 150ms ease',
+        minHeight,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
 function DayBoardView({
@@ -40,14 +199,15 @@ function DayBoardView({
   onRespondSuggestion,
   onAddReaction,
   onAddSlotNote,
-  onDropPlace,
-  onMovePlace,
-  onUnplace,
-  onDaySelect,
-  selectedDay,
+  onRegisterSlotRef,
+  onDragStartFromSlot,
+  dropTarget,
+  dragItemId,
 }: DayBoardViewProps) {
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
+  const currentDay = useTripStore(s => s.currentDay);
+  const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const setDayHotelInfo = useTripStore(s => s.setDayHotelInfo);
@@ -61,14 +221,12 @@ function DayBoardView({
   const duplicateDay = useTripStore(s => s.duplicateDay);
   const clearDay = useTripStore(s => s.clearDay);
   const setDayDestination = useTripStore(s => s.setDayDestination);
+  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const isDesktop = useIsDesktop();
-  const [dropTarget, setDropTarget] = useState<string | null>(null); // "dayNum-slotId"
   const [editingHotelDay, setEditingHotelDay] = useState<number | null>(null);
   const [addingTransportDay, setAddingTransportDay] = useState<number | null>(null);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
-  const [draggingDay, setDraggingDay] = useState<number | null>(null);
-  const [dayDropTarget, setDayDropTarget] = useState<number | null>(null);
   const [destPickerDay, setDestPickerDay] = useState<number | null>(null);
   const [destPickerAddMode, setDestPickerAddMode] = useState(false);
   const [deleteDayConfirm, setDeleteDayConfirm] = useState<number | null>(null);
@@ -128,9 +286,7 @@ function DayBoardView({
   const DAY_TITLE_SIZE = isDesktop ? 14 : 13;
   const DAY_DEST_SIZE = isDesktop ? 11 : 10;
   const CARD_PX = isDesktop ? 3 : 2;
-  // Fixed card height shared by placed cards, ghost cards, and empty placeholders
   const CARD_H = isDesktop ? 50 : 42;
-  // MIN_SLOT_H = slot label + card + margin so all slots align
   const MIN_SLOT_H = SLOT_LABEL_H + CARD_H + 6;
 
   return (
@@ -158,38 +314,12 @@ function DayBoardView({
           <div
             key={day.dayNumber}
             className="flex flex-col flex-shrink-0 day-col"
-            onDragOver={(e) => {
-              // Accept day drops
-              if (e.dataTransfer.types.includes('text/day-number')) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                if (dayDropTarget !== day.dayNumber) setDayDropTarget(day.dayNumber);
-              }
-            }}
-            onDragLeave={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                if (dayDropTarget === day.dayNumber) setDayDropTarget(null);
-              }
-            }}
-            onDrop={(e) => {
-              const fromDay = e.dataTransfer.getData('text/day-number');
-              if (fromDay) {
-                e.preventDefault();
-                e.stopPropagation();
-                reorderDays(Number(fromDay), day.dayNumber);
-                setDayDropTarget(null);
-                setDraggingDay(null);
-              }
-            }}
             style={{
               width: COL_WIDTH,
               position: 'relative',
               borderRight: '1px solid var(--t-linen)',
-              background: dayDropTarget === day.dayNumber && draggingDay !== day.dayNumber
-                ? 'rgba(42,122,86,0.06)'
-                : selectedDay === day.dayNumber ? 'rgba(42,122,86,0.02)' : 'white',
-              opacity: draggingDay === day.dayNumber ? 0.4 : 1,
-              transition: 'background 150ms ease, opacity 150ms ease',
+              background: currentDay === day.dayNumber ? 'rgba(42,122,86,0.02)' : 'white',
+              transition: 'background 150ms ease',
             }}
           >
             {/* Day context menu — ⋯ button, top-right corner, visible on column hover */}
@@ -238,39 +368,21 @@ function DayBoardView({
                 </div>
               )}
             </div>
-            {/* Day column header — draggable for reordering, click selects day */}
+            {/* Day column header — click selects day */}
             <div
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('text/day-number', String(day.dayNumber));
-                e.dataTransfer.effectAllowed = 'move';
-                setDraggingDay(day.dayNumber);
-              }}
-              onDragEnd={() => { setDraggingDay(null); setDayDropTarget(null); }}
-              className="px-3 flex items-center justify-between cursor-grab active:cursor-grabbing"
-              onClick={() => onDaySelect?.(day.dayNumber)}
+              className="px-3 flex items-center justify-between cursor-pointer"
+              onClick={() => setCurrentDay(day.dayNumber)}
               style={{
                 paddingTop: isDesktop ? 10 : 8,
                 paddingBottom: isDesktop ? 10 : 8,
                 background: destColor.bg,
-                borderBottom: dayDropTarget === day.dayNumber && draggingDay !== day.dayNumber
+                borderBottom: currentDay === day.dayNumber
                   ? `2px solid var(--t-verde)`
-                  : selectedDay === day.dayNumber
-                    ? `2px solid var(--t-verde)`
-                    : `2px solid ${destColor.accent}30`,
+                  : `2px solid ${destColor.accent}30`,
                 transition: 'border-color 150ms ease',
               }}
             >
               <div className="flex items-start gap-1.5">
-                {/* Drag grip */}
-                <div className="flex flex-col gap-px mt-1.5" style={{ opacity: 0.3 }}>
-                  {[0, 1, 2].map(r => (
-                    <div key={r} className="flex gap-px">
-                      <div style={{ width: 2, height: 2, borderRadius: '50%', background: destColor.text }} />
-                      <div style={{ width: 2, height: 2, borderRadius: '50%', background: destColor.text }} />
-                    </div>
-                  ))}
-                </div>
                 <div>
                   <div style={{
                     fontFamily: FONT.mono,
@@ -533,34 +645,16 @@ function DayBoardView({
                 ) || [];
                 const slotNoteItems = slotNotes?.filter(n => n.dayNumber === day.dayNumber && n.slotId === slot.id) || [];
 
-                const slotDropKey = `${day.dayNumber}-${slot.id}`;
-                const isDropActive = dropTarget === slotDropKey;
+                const isDropActive = dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id;
 
                 return (
-                  <div
+                  <SlotContainer
                     key={slot.id}
-                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropTarget(slotDropKey); }}
-                    onDragLeave={() => { if (dropTarget === slotDropKey) setDropTarget(null); }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setDropTarget(null);
-                      const placeId = e.dataTransfer.getData('text/place-id');
-                      const fromDay = e.dataTransfer.getData('text/from-day');
-                      const fromSlot = e.dataTransfer.getData('text/from-slot');
-                      if (placeId && fromDay && fromSlot) {
-                        onMovePlace?.(placeId, Number(fromDay), fromSlot, day.dayNumber, slot.id);
-                      } else if (placeId) {
-                        onDropPlace?.(placeId, day.dayNumber, slot.id);
-                      }
-                    }}
-                    className="flex flex-col"
-                    style={{
-                      borderBottom: '1px solid var(--t-linen)',
-                      background: isDropActive ? 'rgba(42,122,86,0.06)' : undefined,
-                      borderLeft: isDropActive ? '3px solid var(--t-verde)' : '3px solid transparent',
-                      transition: 'all 150ms ease',
-                      minHeight: MIN_SLOT_H,
-                    }}
+                    dayNumber={day.dayNumber}
+                    slotId={slot.id}
+                    onRegisterSlotRef={onRegisterSlotRef}
+                    isDropActive={isDropActive}
+                    minHeight={MIN_SLOT_H}
                   >
                     {/* Slot label */}
                     <div
@@ -585,90 +679,22 @@ function DayBoardView({
                       )}
                     </div>
 
-                    {/* Placed items — two-row compact cards */}
-                    {slot.places.map(p => {
-                      const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-                      // Best context line: friend note > whatToOrder > tips > AI rationale > tasteNote
-                      const context = p.friendAttribution?.note
-                        ? `"${p.friendAttribution.note}" — ${p.friendAttribution.name || 'Friend'}`
-                        : p.whatToOrder?.[0]
-                          ? `Order: ${p.whatToOrder[0]}`
-                          : p.tips?.[0] || p.terrazzoReasoning?.rationale || p.tasteNote || '';
-                      const placeKey = `${day.dayNumber}-${slot.id}-${p.name}`;
-                      const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
-                      const loves = placeReactions.filter(r => r.reaction === 'love').length;
-                      const nopes = placeReactions.filter(r => r.reaction === 'not_for_me').length;
-
-                      return (
-                        <div
-                          key={p.id}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('text/place-id', p.id);
-                            e.dataTransfer.setData('text/from-day', String(day.dayNumber));
-                            e.dataTransfer.setData('text/from-slot', slot.id);
-                            e.dataTransfer.effectAllowed = 'move';
-                          }}
-                          onClick={() => onTapDetail(p)}
-                          className={`group/card mx-${CARD_PX} mb-1.5 rounded cursor-grab card-hover relative`}
-                          style={{
-                            height: CARD_H,
-                            background: 'rgba(42,122,86,0.03)',
-                            border: '1px solid rgba(42,122,86,0.1)',
-                            padding: isDesktop ? '6px 10px' : '4px 8px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          {/* × unplace — hover */}
-                          {onUnplace && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onUnplace(p.id, day.dayNumber, slot.id); }}
-                              className="absolute opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center nav-hover"
-                              style={{ top: 3, right: 3, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer', zIndex: 2 }}
-                              title="Remove from slot"
-                            >
-                              <PerriandIcon name="close" size={9} color={INK['50']} />
-                            </button>
-                          )}
-                          {/* Row 1: name + type + match% */}
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="font-semibold truncate flex-1" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans, fontSize: isDesktop ? 12 : 11, lineHeight: 1.2 }}>
-                              {p.name}
-                            </span>
-                            <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['60'], textTransform: 'uppercase' }}>
-                              {p.type}
-                            </span>
-                            {p.matchScore >= 70 && (
-                              <span className="flex-shrink-0 px-1 rounded" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, fontWeight: 700, background: 'rgba(42,122,86,0.1)', color: 'var(--t-verde)' }}>
-                                {p.matchScore}%
-                              </span>
-                            )}
-                          </div>
-                          {/* Row 2: context + reactions + source badge */}
-                          <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 2 }}>
-                            <span className="truncate flex-1" style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: INK['60'], fontStyle: context ? 'italic' : 'normal' }}>
-                              {context || p.type}
-                            </span>
-                            {loves > 0 && (
-                              <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: '#c93c3c' }}>
-                                ♥ {loves}
-                              </span>
-                            )}
-                            {nopes > 0 && (
-                              <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['55'] }}>
-                                ✗ {nopes}
-                              </span>
-                            )}
-                            <span className="flex-shrink-0 px-1.5 py-px rounded font-bold" style={{ background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono, fontSize: isDesktop ? 8 : 7 }}>
-                              {srcStyle.label}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {/* Placed items — pointer-based drag cards */}
+                    {slot.places.map(p => (
+                      <PlacedCard
+                        key={p.id}
+                        place={p}
+                        dayNumber={day.dayNumber}
+                        slotId={slot.id}
+                        isDesktop={isDesktop}
+                        onTapDetail={onTapDetail}
+                        onDragStartFromSlot={onDragStartFromSlot}
+                        dragItemId={dragItemId}
+                        reactions={reactions}
+                        CARD_H={CARD_H}
+                        CARD_PX={CARD_PX}
+                      />
+                    ))}
 
                     {/* Ghost items — same two-row height, dashed border */}
                     {hasGhosts && !hasPlaces && slot.ghostItems!.map(ghost => {
@@ -797,7 +823,7 @@ function DayBoardView({
                         />
                       )
                     ))}
-                  </div>
+                  </SlotContainer>
                 );
               })}
             </div>

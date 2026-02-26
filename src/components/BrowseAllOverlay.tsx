@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
@@ -11,7 +10,6 @@ import { usePicksFilter } from '@/hooks/usePicksFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 import { TYPE_ICONS } from '@/constants/placeTypes';
-import { distKm, GEO_RADIUS_KM } from '@/hooks/usePicksFilter';
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
   { value: 'all', label: 'All', icon: 'discover' },
@@ -32,53 +30,31 @@ interface BrowseAllOverlayProps {
 }
 
 export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }: BrowseAllOverlayProps) {
-  const { filter: filterType, setFilter: setFilterType, toggle: toggleFilter } = useTypeFilter(initialFilter || 'all');
+  const { filter: filterType, setFilter: setFilterType } = useTypeFilter(initialFilter || 'all');
   const toggleStar = useSavedStore(s => s.toggleStar);
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
   const [showAddPlace, setShowAddPlace] = useState(false);
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'type' | 'source'>('match');
 
-  // Use shared hook to get geo points and trip destinations (reuses all the resolution logic)
+  // Use shared hook with ALL myPlaces as the pool (not just favorited/unplaced).
+  // selectedDay=null → "all destinations" mode.
   const {
     tripDestinations,
-    activeGeoPoints,
+    destinationPicks: destinationPlaces,
+    filteredPicks,
+    destinationScore,
   } = usePicksFilter({
-    selectedDay: null, // BrowseAll = all destinations
-    typeFilter: 'all',
+    selectedDay: null,
+    typeFilter: filterType,
     sourceFilter: 'all',
     searchQuery: '',
+    placePool: myPlaces,
   });
 
-  // BrowseAll shows ALL myPlaces (including non-favorited), filtered to trip destinations
-  const destinationPlaces = useMemo(() => {
-    if (tripDestinations.length === 0 && activeGeoPoints.length === 0) return myPlaces;
-    const destLower = tripDestinations.map(d => d.toLowerCase());
-
-    return myPlaces.filter(place => {
-      // Geo-proximity check
-      const pLat = place.google?.lat;
-      const pLng = place.google?.lng;
-      if (pLat && pLng && activeGeoPoints.length > 0) {
-        if (activeGeoPoints.some(geo => distKm(geo.lat, geo.lng, pLat, pLng) <= GEO_RADIUS_KM)) {
-          return true;
-        }
-      }
-      // String match fallback
-      const loc = (place.location || '').toLowerCase();
-      return destLower.some(dest => loc.includes(dest) || dest.includes(loc.split(',')[0]?.trim() || '---'));
-    });
-  }, [myPlaces, tripDestinations, activeGeoPoints]);
-
-  // Apply type filter
-  const filteredPlaces = useMemo(() => {
-    if (filterType === 'all') return destinationPlaces;
-    return destinationPlaces.filter(p => p.type === filterType);
-  }, [destinationPlaces, filterType]);
-
-  // Sort: starred always first, then by selected sort
+  // Sort: starred first, then by selected sort, with destination score as tiebreaker
   const sortedPlaces = useMemo(() => {
-    return [...filteredPlaces].sort((a, b) => {
+    return [...filteredPicks].sort((a, b) => {
       // Starred always float to top
       const aStarred = a.isFavorited ? 1 : 0;
       const bStarred = b.isFavorited ? 1 : 0;
@@ -91,10 +67,13 @@ export default function BrowseAllOverlay({ onClose, onTapDetail, initialFilter }
         const bSource = (b.ghostSource || 'manual');
         return aSource.localeCompare(bSource) || b.matchScore - a.matchScore;
       }
-      // Default: match score descending
+      // Default: destination score as primary, then match score
+      const aDest = destinationScore(a);
+      const bDest = destinationScore(b);
+      if (Math.abs(aDest - bDest) > 0.1) return bDest - aDest;
       return b.matchScore - a.matchScore;
     });
-  }, [filteredPlaces, sortBy]);
+  }, [filteredPicks, sortBy, destinationScore]);
 
   const starredCount = useMemo(() =>
     destinationPlaces.filter(p => p.isFavorited).length,

@@ -97,9 +97,6 @@ function TripDetailContent() {
   const [railWidth, setRailWidth] = useState(250);
   const railResizing = useRef(false);
 
-  // Shared day selector state between PicksRail and DayBoardView
-  const [selectedRailDay, setSelectedRailDay] = useState<number | null>(null);
-
   const handleRailResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     railResizing.current = true;
@@ -135,17 +132,20 @@ function TripDetailContent() {
   // Start collaboration sync polling
   useCollaborationSync(tripId, true);
 
-  // ─── DRAG & DROP STATE (mobile only) ───
+  // ─── DRAG & DROP STATE (shared between mobile + desktop) ───
   const [dragItem, setDragItem] = useState<ImportedPlace | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [isOverStrip, setIsOverStrip] = useState(false);
+  const [isOverRail, setIsOverRail] = useState(false);
   const [returningPlaceId, setReturningPlaceId] = useState<string | null>(null);
   const slotRects = useRef<Map<string, { dayNumber: number; slotId: string; rect: DOMRect }>>(new Map());
   const stripRect = useRef<DOMRect | null>(null);
+  const railRect = useRef<DOMRect | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollRaf = useRef<number | null>(null);
   const latestDragY = useRef<number>(0);
+  const latestDragX = useRef<number>(0);
   const dragSource = useRef<{ dayNumber: number; slotId: string } | null>(null);
 
   const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null) => {
@@ -159,6 +159,10 @@ function TripDetailContent() {
 
   const handleRegisterStripRect = useCallback((rect: DOMRect | null) => {
     stripRect.current = rect;
+  }, []);
+
+  const handleRegisterRailRect = useCallback((rect: DOMRect | null) => {
+    railRect.current = rect;
   }, []);
 
   const hitTestSlots = useCallback((x: number, y: number): DropTarget | null => {
@@ -176,6 +180,7 @@ function TripDetailContent() {
     setDragItem(item);
     setDragPos({ x: e.clientX, y: e.clientY });
     latestDragY.current = e.clientY;
+    latestDragX.current = e.clientX;
     if (navigator.vibrate) navigator.vibrate(10);
   }, []);
 
@@ -184,6 +189,7 @@ function TripDetailContent() {
     setDragItem(item);
     setDragPos({ x: e.clientX, y: e.clientY });
     latestDragY.current = e.clientY;
+    latestDragX.current = e.clientX;
     if (navigator.vibrate) navigator.vibrate(10);
   }, []);
 
@@ -227,20 +233,27 @@ function TripDetailContent() {
       e.preventDefault();
       setDragPos({ x: e.clientX, y: e.clientY });
       latestDragY.current = e.clientY;
+      latestDragX.current = e.clientX;
       const target = hitTestSlots(e.clientX, e.clientY);
       setDropTarget(target);
-      const sr = stripRect.current;
-      if (sr && dragSource.current) {
-        const over = e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom;
-        setIsOverStrip(over && !target);
+      // Check if pointer is over the strip (mobile) or rail (desktop) — for return-to-pool
+      const src = dragSource.current;
+      if (src) {
+        const sr = stripRect.current;
+        const rr = railRect.current;
+        const overStrip = sr ? (e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom) : false;
+        const overRail = rr ? (e.clientX >= rr.left && e.clientX <= rr.right && e.clientY >= rr.top && e.clientY <= rr.bottom) : false;
+        setIsOverStrip(overStrip && !target);
+        setIsOverRail(overRail && !target);
       } else {
         setIsOverStrip(false);
+        setIsOverRail(false);
       }
     };
     const handleUp = () => {
       stopAutoScroll();
       const src = dragSource.current;
-      if (isOverStrip && src && dragItem) {
+      if ((isOverStrip || isOverRail) && src && dragItem) {
         unplaceFromSlot(src.dayNumber, src.slotId, dragItem.id);
         setReturningPlaceId(dragItem.id);
         setTimeout(() => setReturningPlaceId(null), 400);
@@ -258,6 +271,7 @@ function TripDetailContent() {
       setDragPos(null);
       setDropTarget(null);
       setIsOverStrip(false);
+      setIsOverRail(false);
     };
     window.addEventListener('pointermove', handleMove, { passive: false });
     window.addEventListener('pointerup', handleUp);
@@ -268,7 +282,7 @@ function TripDetailContent() {
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
     };
-  }, [dragItem, dropTarget, isOverStrip, hitTestSlots, placeFromSaved, moveToSlot, unplaceFromSlot, startAutoScroll, stopAutoScroll]);
+  }, [dragItem, dropTarget, isOverStrip, isOverRail, hitTestSlots, placeFromSaved, moveToSlot, unplaceFromSlot, startAutoScroll, stopAutoScroll]);
 
   useEffect(() => {
     if (params.id) {
@@ -543,9 +557,11 @@ function TripDetailContent() {
                 onTapDetail={openDetail}
                 width={railWidth}
                 onResizeStart={handleRailResizeStart}
-                onUnplace={(placeId, fromDay, fromSlot) => unplaceFromSlot(fromDay, fromSlot, placeId)}
-                selectedDay={selectedRailDay}
-                onSelectedDayChange={setSelectedRailDay}
+                onDragStart={handleDragStart}
+                dragItemId={dragItem?.id ?? null}
+                isDropTarget={isOverRail}
+                onRegisterRect={handleRegisterRailRect}
+                returningPlaceId={returningPlaceId}
               />
 
               {/* ── CENTER: ITINERARY BOARD ── */}
@@ -559,25 +575,21 @@ function TripDetailContent() {
                   onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
                   onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
                   onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
-                  onDropPlace={(placeId, dayNumber, slotId) => {
-                    const place = myPlaces.find(p => p.id === placeId);
-                    if (place) placeFromSaved(place, dayNumber, slotId);
-                  }}
-                  onMovePlace={(placeId, fromDay, fromSlot, toDay, toSlot) => {
-                    const place = myPlaces.find(p => p.id === placeId);
-                    if (place) moveToSlot(place, fromDay, fromSlot, toDay, toSlot);
-                  }}
-                  onUnplace={(placeId, dayNumber, slotId) => {
-                    unplaceFromSlot(dayNumber, slotId, placeId);
-                  }}
-                  onDaySelect={setSelectedRailDay}
-                  selectedDay={selectedRailDay}
+                  onRegisterSlotRef={handleRegisterSlotRef}
+                  onDragStartFromSlot={handleDragStartFromSlot}
+                  dropTarget={dropTarget}
+                  dragItemId={dragItem?.id ?? null}
                 />
               </div>
 
               {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
               <RightPanel activities={collabActivities} />
             </div>
+        )}
+
+        {/* Drag overlay — rendered on both desktop and mobile */}
+        {dragItem && dragPos && (
+          <DragOverlay item={dragItem} x={dragPos.x} y={dragPos.y} isOverTarget={!!dropTarget} />
         )}
 
         {/* Overlays shared between mobile/desktop */}
@@ -895,15 +907,7 @@ function TripDetailContent() {
         />
       )}
 
-      {/* Drag Overlay — floating card following pointer */}
-      {dragItem && dragPos && (
-        <DragOverlay
-          item={dragItem}
-          x={dragPos.x}
-          y={dragPos.y}
-          isOverTarget={!!dropTarget}
-        />
-      )}
+      {/* Drag Overlay rendered in shared section above */}
 
       {/* Tab Bar */}
       <TabBar />

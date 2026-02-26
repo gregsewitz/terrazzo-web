@@ -4,13 +4,17 @@ import { motion, AnimatePresence, type Variants, type Transition } from 'framer-
 import { useInView, useCountUp } from '@/hooks/useAnimations';
 import { FONT } from '@/constants/theme';
 import type { ReactNode, CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 
 // ─── Shared animation presets ───
 
 const EASE_OUT_EXPO: Transition['ease'] = [0.16, 1, 0.3, 1];
 const EASE_OUT_QUART: Transition['ease'] = [0.25, 1, 0.5, 1];
 
-// ─── Fade-in on scroll ───
+// CSS easing equivalents for CSS transitions
+const CSS_EASE_OUT_EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+// ─── Fade-in on scroll (Safari-safe CSS transition) ───
 
 interface FadeInSectionProps {
   children: ReactNode;
@@ -27,28 +31,38 @@ export function FadeInSection({
   direction = 'up', distance = 24, duration = 0.7,
 }: FadeInSectionProps) {
   const [ref, isInView] = useInView({ threshold: 0.1 });
+  const [hasBeenVisible, setHasBeenVisible] = useState(false);
 
-  const getInitial = () => {
+  useEffect(() => {
+    if (isInView && !hasBeenVisible) setHasBeenVisible(true);
+  }, [isInView, hasBeenVisible]);
+
+  const show = hasBeenVisible;
+
+  const getTranslate = () => {
     switch (direction) {
-      case 'up': return { opacity: 0, y: distance };
-      case 'down': return { opacity: 0, y: -distance };
-      case 'left': return { opacity: 0, x: distance };
-      case 'right': return { opacity: 0, x: -distance };
-      case 'none': return { opacity: 0 };
+      case 'up': return show ? 'translate3d(0,0,0)' : `translate3d(0,${distance}px,0)`;
+      case 'down': return show ? 'translate3d(0,0,0)' : `translate3d(0,${-distance}px,0)`;
+      case 'left': return show ? 'translate3d(0,0,0)' : `translate3d(${distance}px,0,0)`;
+      case 'right': return show ? 'translate3d(0,0,0)' : `translate3d(${-distance}px,0,0)`;
+      case 'none': return 'translate3d(0,0,0)';
     }
   };
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={getInitial()}
-      animate={isInView ? { opacity: 1, x: 0, y: 0 } : getInitial()}
-      transition={{ duration, delay, ease: EASE_OUT_EXPO }}
       className={className}
-      style={style}
+      style={{
+        opacity: show ? 1 : 0,
+        transform: getTranslate(),
+        transition: `opacity ${duration}s ${CSS_EASE_OUT_EXPO} ${delay}s, transform ${duration}s ${CSS_EASE_OUT_EXPO} ${delay}s`,
+        willChange: show ? 'auto' : 'opacity, transform',
+        ...style,
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 

@@ -11,11 +11,10 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { DEST_COLORS } from '@/types';
+import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 /* ─── Animation constants (desktop only) ─── */
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
-const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT_EXPO } } };
 
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
@@ -31,21 +30,20 @@ export default function TripsPage() {
           {/* Header */}
           <div className="flex items-end justify-between mb-8">
             <div>
-              <motion.h1
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
-                style={{
-                  fontFamily: FONT.serif,
-                  fontStyle: 'italic',
-                  fontSize: 32,
-                  color: 'var(--t-ink)',
-                  margin: 0,
-                  lineHeight: 1.2,
-                }}
-              >
-                Your Trips
-              </motion.h1>
+              <SafeFadeIn direction="up" distance={10} duration={0.5}>
+                <h1
+                  style={{
+                    fontFamily: FONT.serif,
+                    fontStyle: 'italic',
+                    fontSize: 32,
+                    color: 'var(--t-ink)',
+                    margin: 0,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Your Trips
+                </h1>
+              </SafeFadeIn>
               <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
                 {trips.length} {trips.length === 1 ? 'trip' : 'trips'} in progress
               </p>
@@ -62,30 +60,32 @@ export default function TripsPage() {
           </div>
 
           {/* Trip cards grid */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
+          <div
             className="grid gap-5"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}
           >
-            {trips.map(trip => {
+            {trips.map((trip, index) => {
               const destKey = trip.destinations?.[0];
               const destColor = destKey && DEST_COLORS[destKey] ? DEST_COLORS[destKey] : null;
               const dayCount = trip.days.length;
               const placedCount = trip.days.reduce((n, d) => n + d.slots.filter(s => s.places.length > 0).length, 0);
 
               return (
-                <motion.button
+                <SafeFadeIn
                   key={trip.id}
-                  variants={cardVariants}
-                  onClick={() => router.push(`/trips/${trip.id}`)}
-                  className="rounded-2xl border-none cursor-pointer text-left overflow-hidden card-hover"
-                  style={{
-                    background: 'white',
-                    border: '1.5px solid var(--t-linen)',
-                  }}
+                  direction="up"
+                  distance={20}
+                  duration={0.5}
+                  delay={0.1 + index * 0.06}
                 >
+                  <button
+                    onClick={() => router.push(`/trips/${trip.id}`)}
+                    className="rounded-2xl border-none cursor-pointer text-left overflow-hidden card-hover w-full"
+                    style={{
+                      background: 'white',
+                      border: '1.5px solid var(--t-linen)',
+                    }}
+                  >
                   {/* Color accent bar */}
                   <motion.div
                     initial={{ scaleX: 0 }}
@@ -162,22 +162,28 @@ export default function TripsPage() {
                       )}
                     </div>
                   </div>
-                </motion.button>
+                  </button>
+                </SafeFadeIn>
               );
             })}
 
             {/* Create CTA */}
-            <motion.button
-              variants={cardVariants}
-              onClick={() => router.push('/trips/new')}
-              className="flex flex-col items-center justify-center gap-3 rounded-2xl border-none cursor-pointer transition-all hover:scale-[1.01]"
-              style={{
-                minHeight: 180,
-                background: INK['02'],
-                border: '1.5px dashed var(--t-travertine)',
-                color: INK['90'],
-              }}
+            <SafeFadeIn
+              direction="up"
+              distance={20}
+              duration={0.5}
+              delay={0.1 + trips.length * 0.06}
             >
+              <button
+                onClick={() => router.push('/trips/new')}
+                className="flex flex-col items-center justify-center gap-3 rounded-2xl border-none cursor-pointer transition-all hover:scale-[1.01] w-full"
+                style={{
+                  minHeight: 180,
+                  background: INK['02'],
+                  border: '1.5px dashed var(--t-travertine)',
+                  color: INK['90'],
+                }}
+              >
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ background: INK['06'] }}
@@ -188,8 +194,9 @@ export default function TripsPage() {
               <span className="text-[11px]" style={{ color: INK['70'] }}>
                 Tell us where and when — we'll find your perfect places
               </span>
-            </motion.button>
-          </motion.div>
+              </button>
+            </SafeFadeIn>
+          </div>
         </div>
       </PageTransition>
     );

@@ -6,6 +6,7 @@ import type { GeneratedTasteProfile, GoBackPlace, SeedTripInput } from '@/types'
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
 import { T } from '@/types';
+import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 interface RevealSequenceProps {
   profile: GeneratedTasteProfile;
@@ -183,64 +184,65 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
   };
 
   return (
-    <motion.div
+    <div
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
       }}
-      variants={containerVar}
-      initial="hidden"
-      animate="visible"
     >
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 20,
-        }}
-        variants={itemVar}
-      >
-        Your taste archetype
-      </motion.div>
+      <SafeFadeIn delay={0.1} direction="up" distance={20} duration={0.6}>
+        <div
+          style={{
+            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: T.honey, marginBottom: 20,
+          }}
+        >
+          Your taste archetype
+        </div>
+      </SafeFadeIn>
 
-      <motion.h1
-        style={{
-          fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: 0, lineHeight: 1.15,
-        }}
-        variants={itemVar}
-      >
-        {greeting} {profile.overallArchetype}
-      </motion.h1>
+      <SafeFadeIn delay={0.25} direction="up" distance={20} duration={0.6}>
+        <h1
+          style={{
+            fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: 0, lineHeight: 1.15,
+          }}
+        >
+          {greeting} {profile.overallArchetype}
+        </h1>
+      </SafeFadeIn>
 
-      <motion.p
-        style={{
-          fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65,
-          color: INK['60'], maxWidth: 320, marginTop: 16,
-        }}
-        variants={itemVar}
-      >
-        {profile.archetypeDescription}
-      </motion.p>
+      <SafeFadeIn delay={0.4} direction="up" distance={20} duration={0.6}>
+        <p
+          style={{
+            fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65,
+            color: INK['60'], maxWidth: 320, marginTop: 16,
+          }}
+        >
+          {profile.archetypeDescription}
+        </p>
+      </SafeFadeIn>
 
-      <motion.div
-        style={{
-          marginTop: 24, padding: '10px 20px',
-          borderRadius: 100,
-          border: '1px solid var(--t-linen)',
-        }}
-        variants={badgeVar}
-      >
-        <span style={{
-          fontFamily: FONT.sans, fontSize: 13, color: INK['50'],
-        }}>
-          <span style={{ color: T.honey, fontWeight: 600 }}>{profile.emotionalDriver.primary}</span>
-          {' · '}
-          <span>{profile.emotionalDriver.secondary}</span>
-        </span>
-      </motion.div>
-    </motion.div>
+      <SafeFadeIn delay={0.55} direction="up" distance={20} scale={0.8} duration={0.6}>
+        <div
+          style={{
+            marginTop: 24, padding: '10px 20px',
+            borderRadius: 100,
+            border: '1px solid var(--t-linen)',
+          }}
+        >
+          <span style={{
+            fontFamily: FONT.sans, fontSize: 13, color: INK['50'],
+          }}>
+            <span style={{ color: T.honey, fontWeight: 600 }}>{profile.emotionalDriver.primary}</span>
+            {' · '}
+            <span>{profile.emotionalDriver.secondary}</span>
+          </span>
+        </div>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -549,22 +551,20 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
   };
 
   return (
-    <motion.div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-      }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.1 }}
-    >
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: INK['45'], marginBottom: 8,
-      }}>
-        Your taste fingerprint
-      </div>
+    <SafeFadeIn scale={0.9} delay={0.1} direction="none" duration={0.8}>
+      <div
+        style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+        }}
+      >
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: INK['45'], marginBottom: 8,
+        }}>
+          Your taste fingerprint
+        </div>
 
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {/* Grid circles */}
@@ -640,7 +640,8 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
         <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[1]}</span>
         {' drive you. Most travelers lead with other dimensions — you lead with these.'}
       </motion.p>
-    </motion.div>
+      </div>
+    </SafeFadeIn>
   );
 }
 
@@ -687,23 +688,22 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
   };
 
   return (
-    <motion.div
+    <div
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
         padding: '0 4px',
       }}
-      variants={containerVar}
-      initial="hidden"
-      animate="visible"
     >
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: '#6844a0', marginBottom: 24,
-      }}>
-        The interesting part
-      </div>
+      <SafeFadeIn delay={0.1} direction="up" distance={20} duration={0.6}>
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: '#6844a0', marginBottom: 24,
+        }}>
+          The interesting part
+        </div>
+      </SafeFadeIn>
 
       <div style={{
         maxWidth: 420, width: '100%',
@@ -713,48 +713,67 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 12, marginBottom: 24,
         }}>
-          <motion.span
-            style={{
-              fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-              color: 'var(--t-ink)', textAlign: 'right', flex: 1,
-            }}
-            variants={statedVar}
+          <SafeFadeIn
+            delay={0.25}
+            direction="left"
+            distance={30}
+            duration={0.6}
           >
-            {c.stated}
-          </motion.span>
+            <span
+              style={{
+                fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
+                color: 'var(--t-ink)', textAlign: 'right', flex: 1,
+              }}
+            >
+              {c.stated}
+            </span>
+          </SafeFadeIn>
           <span style={{
             fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
             color: INK['30'],
           }}>
             ×
           </span>
-          <motion.span
-            style={{
-              fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-              color: 'var(--t-ink)', textAlign: 'left', flex: 1,
-            }}
-            variants={revealedVar}
+          <SafeFadeIn
+            delay={0.25}
+            direction="right"
+            distance={30}
+            duration={0.6}
           >
-            {c.revealed}
-          </motion.span>
+            <span
+              style={{
+                fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
+                color: 'var(--t-ink)', textAlign: 'left', flex: 1,
+              }}
+            >
+              {c.revealed}
+            </span>
+          </SafeFadeIn>
         </div>
 
         {/* Resolution */}
-        <motion.div
-          style={{
-            padding: '20px 24px', borderRadius: 16,
-            background: 'white', border: '1px solid var(--t-linen)',
-            textAlign: 'left',
-          }}
-          variants={resolutionVar}
+        <SafeFadeIn
+          delay={0.4}
+          scale={0.95}
+          direction="up"
+          distance={12}
+          duration={0.6}
         >
-          <p style={{
-            fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-            color: INK['70'], margin: 0,
-          }}>
-            {c.resolution}
-          </p>
-        </motion.div>
+          <div
+            style={{
+              padding: '20px 24px', borderRadius: 16,
+              background: 'white', border: '1px solid var(--t-linen)',
+              textAlign: 'left',
+            }}
+          >
+            <p style={{
+              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
+              color: INK['70'], margin: 0,
+            }}>
+              {c.resolution}
+            </p>
+          </div>
+        </SafeFadeIn>
 
         <p style={{
           fontFamily: FONT.sans, fontSize: 13, color: INK['40'],
@@ -763,7 +782,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
           We&apos;ll find places that understand both sides.
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -817,21 +836,23 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </h2>
       </div>
 
-      <motion.div
+      <div
         style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
-        variants={containerVar}
-        initial="hidden"
-        animate="visible"
       >
-        {segments.map((seg) => (
-          <motion.div
+        {segments.map((seg, idx) => (
+          <SafeFadeIn
             key={seg.label}
-            style={{
-              padding: '20px 24px', borderRadius: 16,
-              background: 'white', border: '1px solid var(--t-linen)',
-            }}
-            variants={cardVar}
+            delay={0.2 + idx * 0.12}
+            direction="up"
+            distance={16}
+            duration={0.5}
           >
+            <div
+              style={{
+                padding: '20px 24px', borderRadius: 16,
+                background: 'white', border: '1px solid var(--t-linen)',
+              }}
+            >
             <div style={{
               fontFamily: FONT.sans, fontSize: 11, fontWeight: 700,
               textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -845,9 +866,10 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
             }}>
               {seg.text}
             </p>
-          </motion.div>
+            </div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -896,21 +918,23 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </h2>
       </div>
 
-      <motion.div
+      <div
         style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
-        variants={containerVar}
-        initial="hidden"
-        animate="visible"
       >
-        {profile.howYouShift.map((shift) => (
-          <motion.div
+        {profile.howYouShift.map((shift, idx) => (
+          <SafeFadeIn
             key={shift.context}
-            style={{
-              padding: '20px 24px', borderRadius: 16,
-              background: 'white', border: '1px solid var(--t-linen)',
-            }}
-            variants={cardVar}
+            delay={0.2 + idx * 0.12}
+            direction="up"
+            distance={16}
+            duration={0.5}
           >
+            <div
+              style={{
+                padding: '20px 24px', borderRadius: 16,
+                background: 'white', border: '1px solid var(--t-linen)',
+              }}
+            >
             <div style={{
               fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
               color: 'var(--t-ink)', marginBottom: 6,
@@ -923,9 +947,10 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
             }}>
               {shift.insight}
             </p>
-          </motion.div>
+            </div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -975,79 +1000,94 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
   };
 
   return (
-    <motion.div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-        padding: '0 4px',
-      }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: INK['45'], marginBottom: 24,
-      }}>
-        Your taste neighbors
-      </div>
-
-      {/* Nearby archetypes */}
-      <motion.div
+    <SafeFadeIn delay={0.15} direction="none" duration={0.4}>
+      <div
         style={{
-          display: 'flex', flexWrap: 'wrap', gap: 8,
-          justifyContent: 'center', marginBottom: 20,
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+          padding: '0 4px',
         }}
-        variants={containerVar}
-        initial="hidden"
-        animate="visible"
       >
-        {nearbyArchetypes.map((name) => (
-          <motion.span
-            key={name}
-            style={{
-              fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-              color: 'var(--t-ink)',
-              padding: '8px 18px', borderRadius: 100,
-              border: '1px solid var(--t-linen)',
-              background: 'white',
-            }}
-            variants={tagVar}
-          >
-            {name}
-          </motion.span>
-        ))}
-      </motion.div>
-
-      {/* Distinction */}
-      <motion.p
-        style={{
-          fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65,
-          color: INK['70'], maxWidth: 340, marginBottom: 24,
-        }}
-        variants={distinctionVar}
-      >
-        {distinction}
-      </motion.p>
-
-      {/* Rarity stat */}
-      <motion.div
-        style={{
-          padding: '16px 24px', borderRadius: 14,
-          background: 'white', border: '1px solid var(--t-linen)',
-          maxWidth: 380,
-        }}
-        variants={rarityVar}
-      >
-        <p style={{
-          fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-          color: INK['55'], margin: 0, fontStyle: 'italic',
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: INK['45'], marginBottom: 24,
         }}>
-          {rarityStat}
-        </p>
-      </motion.div>
-    </motion.div>
+          Your taste neighbors
+        </div>
+
+        {/* Nearby archetypes */}
+        <div
+          style={{
+            display: 'flex', flexWrap: 'wrap', gap: 8,
+            justifyContent: 'center', marginBottom: 20,
+          }}
+        >
+          {nearbyArchetypes.map((name, idx) => (
+            <SafeFadeIn
+              key={name}
+              delay={0.3 + idx * 0.08}
+              scale={0.8}
+              direction="none"
+              duration={0.5}
+            >
+              <span
+                style={{
+                  fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
+                  color: 'var(--t-ink)',
+                  padding: '8px 18px', borderRadius: 100,
+                  border: '1px solid var(--t-linen)',
+                  background: 'white',
+                }}
+              >
+                {name}
+              </span>
+            </SafeFadeIn>
+          ))}
+        </div>
+
+        {/* Distinction */}
+        <SafeFadeIn
+          delay={0.4}
+          direction="up"
+          distance={12}
+          duration={0.5}
+        >
+          <p
+            style={{
+              fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65,
+              color: INK['70'], maxWidth: 340, marginBottom: 24,
+            }}
+          >
+            {distinction}
+          </p>
+        </SafeFadeIn>
+
+        {/* Rarity stat */}
+        <SafeFadeIn
+          delay={0.5}
+          scale={0.95}
+          direction="up"
+          distance={12}
+          duration={0.5}
+        >
+          <div
+            style={{
+              padding: '16px 24px', borderRadius: 14,
+              background: 'white', border: '1px solid var(--t-linen)',
+              maxWidth: 380,
+            }}
+          >
+            <p style={{
+              fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
+              color: INK['55'], margin: 0, fontStyle: 'italic',
+            }}>
+              {rarityStat}
+            </p>
+          </div>
+        </SafeFadeIn>
+      </div>
+    </SafeFadeIn>
   );
 }
 
@@ -1108,43 +1148,50 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
       </h2>
 
       {/* Familiar destinations */}
-      <motion.div
+      <div
         style={{
           display: 'flex', flexDirection: 'column', gap: 10,
           marginBottom: 20, width: '100%', maxWidth: 360,
         }}
-        variants={containerVar}
-        initial="hidden"
-        animate="visible"
       >
-        {familiar.map((dest) => (
-          <motion.div
+        {familiar.map((dest, idx) => (
+          <SafeFadeIn
             key={dest}
-            style={{
-              fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-              color: 'var(--t-ink)', padding: '14px 20px',
-              borderRadius: 14, background: 'white',
-              border: '1px solid var(--t-linen)',
-            }}
-            variants={familiarVar}
+            delay={0.2 + idx * 0.12}
+            direction="up"
+            distance={8}
+            duration={0.5}
           >
-            {dest}
-          </motion.div>
+            <div
+              style={{
+                fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
+                color: 'var(--t-ink)', padding: '14px 20px',
+                borderRadius: 14, background: 'white',
+                border: '1px solid var(--t-linen)',
+              }}
+            >
+              {dest}
+            </div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
+      </div>
 
       {/* Surprise destination */}
-      <motion.div
-        style={{
-          width: '100%', maxWidth: 360,
-          padding: '18px 20px', borderRadius: 14,
-          background: `${T.honey}10`,
-          border: `1px solid ${T.honey}30`,
-        }}
-        variants={surpriseVar}
-        initial="hidden"
-        animate="visible"
+      <SafeFadeIn
+        scale={0.95}
+        delay={0.2 + Math.max(0, familiar.length * 120 - 100) / 1000}
+        direction="up"
+        distance={12}
+        duration={0.5}
       >
+        <div
+          style={{
+            width: '100%', maxWidth: 360,
+            padding: '18px 20px', borderRadius: 14,
+            background: `${T.honey}10`,
+            border: `1px solid ${T.honey}30`,
+          }}
+        >
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -1164,7 +1211,8 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         }}>
           {surprise.reason}
         </p>
-      </motion.div>
+        </div>
+      </SafeFadeIn>
     </div>
   );
 }
@@ -1217,21 +1265,23 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
         </p>
       </div>
 
-      <motion.div
+      <div
         style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420, margin: '0 auto' }}
-        variants={containerVar}
-        initial="hidden"
-        animate="visible"
       >
         {seedTrips.map((trip, i) => (
-          <motion.div
+          <SafeFadeIn
             key={i}
-            style={{
-              padding: '20px 24px', borderRadius: 16,
-              background: 'white', border: '1px solid var(--t-linen)',
-            }}
-            variants={cardVar}
+            delay={0.2 + i * 0.15}
+            direction="up"
+            distance={16}
+            duration={0.5}
           >
+            <div
+              style={{
+                padding: '20px 24px', borderRadius: 16,
+                background: 'white', border: '1px solid var(--t-linen)',
+              }}
+            >
             <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 8 }}>
               <div>
                 <div style={{
@@ -1265,9 +1315,10 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
               <span>·</span>
               <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
             </div>
-          </motion.div>
+            </div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }

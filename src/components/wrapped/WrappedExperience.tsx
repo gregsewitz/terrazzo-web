@@ -7,6 +7,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { T } from '@/types';
+import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 // ─── Props ───
 
@@ -141,59 +142,44 @@ function DossierCover({ firstName }: { firstName?: string }) {
   });
 
   return (
-    <motion.div
-      style={{ textAlign: 'center' }}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div style={{ textAlign: 'center' }}>
       {/* Terrazzo monogram */}
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: INK['55'], marginBottom: 48,
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        Terrazzo
-      </motion.div>
+      <SafeFadeIn delay={0.1} direction="up" distance={10}>
+        <div
+          style={{
+            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+            letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: INK['55'], marginBottom: 48,
+          }}
+        >
+          Terrazzo
+        </div>
+      </SafeFadeIn>
 
       {/* Title with typewriter-ish effect */}
-      <motion.h1
-        style={{
-          fontFamily: FONT.serif, fontSize: 44, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: { delay: 0.1, duration: 0.6 },
-          },
-        }}
-      >
-        {firstName ? `${firstName}'s` : 'Your'}<br />Taste Dossier
-      </motion.h1>
+      <SafeFadeIn delay={0.18} direction="up" distance={20}>
+        <h1
+          style={{
+            fontFamily: FONT.serif, fontSize: 44, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
+          }}
+        >
+          {firstName ? `${firstName}'s` : 'Your'}<br />Taste Dossier
+        </h1>
+      </SafeFadeIn>
 
       {/* Date line */}
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 13, color: INK['60'],
-          marginTop: 20,
-        }}
-        variants={{
-          hidden: { opacity: 0 },
-          visible: { opacity: 1 },
-        }}
-      >
-        Prepared {today}
-      </motion.div>
+      <SafeFadeIn delay={0.26}>
+        <div
+          style={{
+            fontFamily: FONT.sans, fontSize: 13, color: INK['60'],
+            marginTop: 20,
+          }}
+        >
+          Prepared {today}
+        </div>
+      </SafeFadeIn>
 
       {/* Decorative line with growth animation */}
       <motion.div
@@ -213,19 +199,17 @@ function DossierCover({ firstName }: { firstName?: string }) {
       />
 
       {/* Subtitle */}
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-          color: INK['70'], marginTop: 24, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto',
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        We spent some time getting to know how you travel. Here's what we found.
-      </motion.div>
-    </motion.div>
+      <SafeFadeIn delay={0.34} direction="up" distance={10}>
+        <div
+          style={{
+            fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+            color: INK['70'], marginTop: 24, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto',
+          }}
+        >
+          We spent some time getting to know how you travel. Here's what we found.
+        </div>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -253,20 +237,12 @@ function DossierArchetype({
   const pathLength = radarData.length * 50; // approximate
 
   return (
-    <motion.div
-      style={{ textAlign: 'center' }}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div style={{ textAlign: 'center' }}>
       {/* Decorative radar shape with draw animation */}
-      <motion.div
-        style={{ margin: '0 auto 32px', opacity: 0.12 }}
-        variants={{
-          hidden: { opacity: 0 },
-          visible: { opacity: 0.12 },
-        }}
-      >
+      <SafeFadeIn delay={0.1} direction="none">
+        <div
+          style={{ margin: '0 auto 32px', opacity: 0.12 }}
+        >
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <motion.polygon
             points={points}
@@ -278,57 +254,48 @@ function DossierArchetype({
             transition={{ delay: 0.15, duration: 0.8 }}
           />
         </svg>
-      </motion.div>
+        </div>
+      </SafeFadeIn>
 
       {/* Label */}
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.verde, marginBottom: 12,
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        Your archetype
-      </motion.div>
+      <SafeFadeIn delay={0.18} direction="up" distance={10}>
+        <div
+          style={{
+            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: T.verde, marginBottom: 12,
+          }}
+        >
+          Your archetype
+        </div>
+      </SafeFadeIn>
 
       {/* Archetype name with scale animation */}
-      <motion.h2
-        style={{
-          fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: 0, lineHeight: 1.15,
-        }}
-        variants={{
-          hidden: { opacity: 0, scale: 0.8 },
-          visible: {
-            opacity: 1,
-            scale: 1,
-            transition: { delay: 0.3, type: 'spring', stiffness: 150, damping: 12 },
-          },
-        }}
-      >
-        {archetype}
-      </motion.h2>
+      <SafeFadeIn delay={0.26} scale={0.8}>
+        <h2
+          style={{
+            fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: 0, lineHeight: 1.15,
+          }}
+        >
+          {archetype}
+        </h2>
+      </SafeFadeIn>
 
       {/* Description fade in */}
-      <motion.p
-        style={{
-          fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-          color: INK['75'], marginTop: 20, maxWidth: 380,
-          marginLeft: 'auto', marginRight: 'auto',
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        {description}
-      </motion.p>
-    </motion.div>
+      <SafeFadeIn delay={0.34} direction="up" distance={10}>
+        <p
+          style={{
+            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+            color: INK['75'], marginTop: 20, maxWidth: 380,
+            marginLeft: 'auto', marginRight: 'auto',
+          }}
+        >
+          {description}
+        </p>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -336,83 +303,61 @@ function DossierArchetype({
 
 function DossierObservations({ observations }: { observations: string[] }) {
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <motion.div
-          style={{
-            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: T.amber, marginBottom: 12,
-          }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-        >
-          What we noticed
-        </motion.div>
-        <motion.h2
-          style={{
-            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: 0, lineHeight: 1.2,
-          }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-        >
-          The details that define you
-        </motion.h2>
-      </div>
-
-      <motion.div
-        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              staggerChildren: 0.08,
-              delayChildren: 0.2,
-            },
-          },
-        }}
-      >
-        {observations.map((obs, i) => (
-          <motion.div
-            key={i}
+        <SafeFadeIn delay={0.1} direction="up" distance={10}>
+          <div
             style={{
-              padding: '20px 24px',
-              background: 'white',
-              borderRadius: 16,
-              border: '1px solid var(--t-linen)',
-            }}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: { type: 'spring', stiffness: 200, damping: 15 },
-              },
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: T.amber, marginBottom: 12,
             }}
           >
-            <p
+            What we noticed
+          </div>
+        </SafeFadeIn>
+        <SafeFadeIn delay={0.18} direction="up" distance={10}>
+          <h2
+            style={{
+              fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+              fontWeight: 400, color: 'var(--t-ink)',
+              margin: 0, lineHeight: 1.2,
+            }}
+          >
+            The details that define you
+          </h2>
+        </SafeFadeIn>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {observations.map((obs, i) => (
+          <SafeFadeIn
+            key={i}
+            delay={0.26 + i * 0.08}
+            direction="up"
+            distance={20}
+          >
+            <div
               style={{
-                fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-                color: INK['85'], margin: 0,
+                padding: '20px 24px',
+                background: 'white',
+                borderRadius: 16,
+                border: '1px solid var(--t-linen)',
               }}
             >
-              {obs}
-            </p>
-          </motion.div>
+              <p
+                style={{
+                  fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+                  color: INK['85'], margin: 0,
+                }}
+              >
+                {obs}
+              </p>
+            </div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -424,72 +369,53 @@ function DossierContradiction({
   contradiction: { stated: string; revealed: string; resolution: string };
 }) {
   return (
-    <motion.div
-      style={{ textAlign: 'center' }}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: '#6844a0', marginBottom: 12,
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        The interesting part
-      </motion.div>
-      <motion.h2
-        style={{
-          fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 32px', lineHeight: 1.2,
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        You contain multitudes
-      </motion.h2>
+    <div style={{ textAlign: 'center' }}>
+      <SafeFadeIn delay={0.1} direction="up" distance={10}>
+        <div
+          style={{
+            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: '#6844a0', marginBottom: 12,
+          }}
+        >
+          The interesting part
+        </div>
+      </SafeFadeIn>
+      <SafeFadeIn delay={0.18} direction="up" distance={10}>
+        <h2
+          style={{
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 32px', lineHeight: 1.2,
+          }}
+        >
+          You contain multitudes
+        </h2>
+      </SafeFadeIn>
 
       {/* The tension box */}
-      <motion.div
-        style={{
-          padding: '28px 24px',
-          background: 'white',
-          borderRadius: 16,
-          border: '1px solid var(--t-linen)',
-          textAlign: 'left',
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: { delay: 0.2, type: 'spring', stiffness: 200, damping: 15 },
-          },
-        }}
-      >
+      <SafeFadeIn delay={0.26} direction="up" distance={20}>
+        <div
+          style={{
+            padding: '28px 24px',
+            background: 'white',
+            borderRadius: 16,
+            border: '1px solid var(--t-linen)',
+            textAlign: 'left',
+          }}
+        >
         {/* Stated/Revealed sides with opposite slide animations */}
-        <motion.div
+        <div
           style={{
             fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6,
             color: INK['85'],
           }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
         >
           <motion.span
             style={{ display: 'inline', color: INK['55'] }}
             initial={{ x: -30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.35, duration: 0.4 }}
+            transition={{ delay: 0.34, duration: 0.4 }}
           >
             You said you love
           </motion.span>
@@ -497,7 +423,7 @@ function DossierContradiction({
           <motion.span
             initial={{ x: -30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
+            transition={{ delay: 0.39, duration: 0.4 }}
           >
             {contradiction.stated.toLowerCase()}
           </motion.span>
@@ -505,7 +431,7 @@ function DossierContradiction({
             style={{ display: 'inline', color: INK['55'] }}
             initial={{ x: -30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.45, duration: 0.4 }}
+            transition={{ delay: 0.44, duration: 0.4 }}
           >
             , but we noticed you
           </motion.span>
@@ -513,7 +439,7 @@ function DossierContradiction({
           <motion.span
             initial={{ x: 30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
+            transition={{ delay: 0.49, duration: 0.4 }}
           >
             {contradiction.revealed.toLowerCase()}
           </motion.span>
@@ -521,11 +447,11 @@ function DossierContradiction({
             style={{ display: 'inline', color: INK['55'] }}
             initial={{ x: 30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.55, duration: 0.4 }}
+            transition={{ delay: 0.54, duration: 0.4 }}
           >
             .
           </motion.span>
-        </motion.div>
+        </div>
 
         {/* Resolution section */}
         <motion.div
@@ -533,13 +459,9 @@ function DossierContradiction({
             marginTop: 20, paddingTop: 20,
             borderTop: '1px solid var(--t-linen)',
           }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.6 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.59 }}
         >
           <div
             style={{
@@ -559,8 +481,9 @@ function DossierContradiction({
             {contradiction.resolution}
           </p>
         </motion.div>
-      </motion.div>
-    </motion.div>
+        </div>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -580,102 +503,70 @@ function DossierContexts({
     .map(c => contextVignette(c.context, c.shifts, firstName, partnerName));
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <motion.div
-          style={{
-            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: T.honey, marginBottom: 12,
-          }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-        >
-          How we'll travel together
-        </motion.div>
-        <motion.h2
-          style={{
-            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: 0, lineHeight: 1.2,
-          }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-        >
-          Different trips, different you
-        </motion.h2>
+        <SafeFadeIn delay={0.1} direction="up" distance={10}>
+          <div
+            style={{
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: T.honey, marginBottom: 12,
+            }}
+          >
+            How we'll travel together
+          </div>
+        </SafeFadeIn>
+        <SafeFadeIn delay={0.18} direction="up" distance={10}>
+          <h2
+            style={{
+              fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+              fontWeight: 400, color: 'var(--t-ink)',
+              margin: 0, lineHeight: 1.2,
+            }}
+          >
+            Different trips, different you
+          </h2>
+        </SafeFadeIn>
       </div>
 
       {/* Vignettes with fan-in animation from bottom */}
-      <motion.div
-        style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              staggerChildren: 0.1,
-              delayChildren: 0.2,
-            },
-          },
-        }}
-      >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {vignettes.map((v, i) => (
-          <motion.div
+          <SafeFadeIn
             key={i}
-            style={{
-              padding: '20px 24px',
-              background: 'white',
-              borderRadius: 16,
-              border: '1px solid var(--t-linen)',
-            }}
-            variants={{
-              hidden: {
-                opacity: 0,
-                y: 40,
-                rotateZ: -2,
-              },
-              visible: {
-                opacity: 1,
-                y: 0,
-                rotateZ: 0,
-                transition: {
-                  type: 'spring',
-                  stiffness: 200,
-                  damping: 20,
-                  delay: i * 0.08,
-                },
-              },
-            }}
+            delay={0.26 + i * 0.1}
+            direction="up"
+            distance={40}
           >
             <div
               style={{
-                fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-                color: 'var(--t-ink)', marginBottom: 8,
+                padding: '20px 24px',
+                background: 'white',
+                borderRadius: 16,
+                border: '1px solid var(--t-linen)',
               }}
             >
-              {v.heading}
+              <div
+                style={{
+                  fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
+                  color: 'var(--t-ink)', marginBottom: 8,
+                }}
+              >
+                {v.heading}
+              </div>
+              <p
+                style={{
+                  fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+                  color: INK['70'], margin: 0,
+                }}
+              >
+                {v.body}
+              </p>
             </div>
-            <p
-              style={{
-                fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-                color: INK['70'], margin: 0,
-              }}
-            >
-              {v.body}
-            </p>
-          </motion.div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -692,134 +583,96 @@ function DossierMatches({
   }>;
 }) {
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <motion.div
-          style={{
-            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: T.verde, marginBottom: 12,
-          }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-        >
-          Already thinking ahead
-        </motion.div>
-        <motion.h2
-          style={{
-            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: 0, lineHeight: 1.2,
-          }}
-          variants={{
-            hidden: { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0 },
-          }}
-        >
-          Places we'd send you
-        </motion.h2>
-      </div>
-
-      <motion.div
-        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              staggerChildren: 0.08,
-              delayChildren: 0.2,
-            },
-          },
-        }}
-      >
-        {matches.slice(0, 3).map((m, i) => (
-          <motion.div
-            key={i}
+        <SafeFadeIn delay={0.1} direction="up" distance={10}>
+          <div
             style={{
-              padding: '24px',
-              background: 'white',
-              borderRadius: 16,
-              border: '1px solid var(--t-linen)',
-            }}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: { type: 'spring', stiffness: 200, damping: 15 },
-              },
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: T.verde, marginBottom: 12,
             }}
           >
-            {/* Property name */}
-            <motion.div
+            Already thinking ahead
+          </div>
+        </SafeFadeIn>
+        <SafeFadeIn delay={0.18} direction="up" distance={10}>
+          <h2
+            style={{
+              fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+              fontWeight: 400, color: 'var(--t-ink)',
+              margin: 0, lineHeight: 1.2,
+            }}
+          >
+            Places we'd send you
+          </h2>
+        </SafeFadeIn>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {matches.slice(0, 3).map((m, i) => (
+          <SafeFadeIn
+            key={i}
+            delay={0.26 + i * 0.08}
+            direction="up"
+            distance={20}
+          >
+            <div
               style={{
-                fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
-                color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.2,
-              }}
-              variants={{
-                hidden: { opacity: 0, x: -10 },
-                visible: { opacity: 1, x: 0 },
+                padding: '24px',
+                background: 'white',
+                borderRadius: 16,
+                border: '1px solid var(--t-linen)',
               }}
             >
-              {m.name}
-            </motion.div>
-
-            {/* Location */}
-            <motion.div
-              style={{
-                fontFamily: FONT.sans, fontSize: 12, color: INK['60'],
-                marginBottom: 14,
-              }}
-              variants={{
-                hidden: { opacity: 0, x: -10 },
-                visible: { opacity: 1, x: 0 },
-              }}
-            >
-              {m.location}
-            </motion.div>
-
-            {/* Match reasons */}
-            <motion.div
-              style={{
-                fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-                color: INK['80'],
-              }}
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1 },
-              }}
-            >
-              {m.matchReasons.slice(0, 2).join(' · ')}
-            </motion.div>
-
-            {/* Tension resolved */}
-            {m.tensionResolved && (
-              <motion.div
+              {/* Property name */}
+              <div
                 style={{
-                  marginTop: 12, paddingTop: 12,
-                  borderTop: '1px solid var(--t-linen)',
-                  fontFamily: FONT.sans, fontSize: 12,
-                  color: INK['60'], fontStyle: 'italic',
-                }}
-                variants={{
-                  hidden: { opacity: 0, y: 5 },
-                  visible: { opacity: 1, y: 0 },
+                  fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
+                  color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.2,
                 }}
               >
-                {m.tensionResolved}
-              </motion.div>
-            )}
-          </motion.div>
+                {m.name}
+              </div>
+
+              {/* Location */}
+              <div
+                style={{
+                  fontFamily: FONT.sans, fontSize: 12, color: INK['60'],
+                  marginBottom: 14,
+                }}
+              >
+                {m.location}
+              </div>
+
+              {/* Match reasons */}
+              <div
+                style={{
+                  fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
+                  color: INK['80'],
+                }}
+              >
+                {m.matchReasons.slice(0, 2).join(' · ')}
+              </div>
+
+              {/* Tension resolved */}
+              {m.tensionResolved && (
+                <div
+                  style={{
+                    marginTop: 12, paddingTop: 12,
+                    borderTop: '1px solid var(--t-linen)',
+                    fontFamily: FONT.sans, fontSize: 12,
+                    color: INK['60'], fontStyle: 'italic',
+                  }}
+                >
+                  {m.tensionResolved}
+                </div>
+              )}
+            </div>
+          </SafeFadeIn>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -835,12 +688,7 @@ function DossierShare({
   shareState: 'idle' | 'copied';
 }) {
   return (
-    <motion.div
-      style={{ textAlign: 'center' }}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div style={{ textAlign: 'center' }}>
       {/* Decorative line */}
       <motion.div
         style={{
@@ -848,46 +696,33 @@ function DossierShare({
           margin: '0 auto 32px',
           transformOrigin: 'center',
         }}
-        variants={{
-          hidden: { scaleX: 0, opacity: 0 },
-          visible: {
-            scaleX: 1,
-            opacity: 1,
-            transition: { duration: 0.5 },
-          },
-        }}
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
       />
 
-      <motion.h2
-        style={{
-          fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 12px', lineHeight: 1.15,
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: { delay: 0.1, duration: 0.6 },
-          },
-        }}
-      >
-        That's your dossier
-      </motion.h2>
-      <motion.p
-        style={{
-          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6,
-          color: INK['60'], marginBottom: 40,
-          maxWidth: 300, marginLeft: 'auto', marginRight: 'auto',
-        }}
-        variants={{
-          hidden: { opacity: 0, y: 10 },
-          visible: { opacity: 1, y: 0 },
-        }}
-      >
-        We'll keep learning as you plan. Your taste profile gets sharper with every trip.
-      </motion.p>
+      <SafeFadeIn delay={0.1} direction="up" distance={20}>
+        <h2
+          style={{
+            fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 12px', lineHeight: 1.15,
+          }}
+        >
+          That's your dossier
+        </h2>
+      </SafeFadeIn>
+      <SafeFadeIn delay={0.18} direction="up" distance={10}>
+        <p
+          style={{
+            fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6,
+            color: INK['60'], marginBottom: 40,
+            maxWidth: 300, marginLeft: 'auto', marginRight: 'auto',
+          }}
+        >
+          We'll keep learning as you plan. Your taste profile gets sharper with every trip.
+        </p>
+      </SafeFadeIn>
 
       {/* Share button with float animation */}
       <motion.button
@@ -905,14 +740,9 @@ function DossierShare({
           color: 'var(--t-ink)',
           transition: 'all 0.15s ease',
         }}
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: { delay: 0.25, type: 'spring', stiffness: 200, damping: 15 },
-          },
-        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.26, type: 'spring', stiffness: 200, damping: 15 }}
         whileHover={{
           y: -2,
           boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
@@ -939,14 +769,9 @@ function DossierShare({
           color: 'var(--t-cream)',
           transition: 'opacity 0.15s ease',
         }}
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: { delay: 0.35, type: 'spring', stiffness: 200, damping: 15 },
-          },
-        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.34, type: 'spring', stiffness: 200, damping: 15 }}
         whileHover={{
           y: -2,
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
@@ -982,7 +807,7 @@ function DossierShare({
       >
         Travel that matches your taste
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 

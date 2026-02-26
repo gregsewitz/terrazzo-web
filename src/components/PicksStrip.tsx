@@ -1,21 +1,16 @@
 'use client';
 
-import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType } from '@/types';
+import { ImportedPlace } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
-import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
+import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
+import AddPlaceInline from './AddPlaceInline';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
-
-// ─── Gesture thresholds ───
-const HOLD_DELAY = 300;            // ms before drag activates (longer = more forgiving for scrollers)
-const SCROLL_THRESHOLD = 8;        // px horizontal movement to cancel drag & allow scroll
-const DRAG_ACTIVATE_THRESHOLD = 4; // px total movement to ignore (jitter tolerance)
 
 const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
   { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
@@ -56,13 +51,10 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
-  const [holdingId, setHoldingId] = useState<string | null>(null); // visual "about to drag" feedback
-  const [showAddPlace, setShowAddPlace] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const currentDay = useTripStore(s => s.currentDay);
-  const addPlace = useSavedStore(s => s.addPlace);
 
   // ─── Shared filtering logic ───
   const {
@@ -75,6 +67,20 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
     typeFilter: activeFilter,
     sourceFilter,
     searchQuery,
+  });
+
+  // ─── Pointer drag gesture (shared hook) ───
+  const {
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+    holdingId,
+  } = useDragGesture({
+    onDragActivate: onDragStart,
+    onTap: onTapDetail,
+    layout: 'horizontal',
+    isDragging: !!dragItemId,
   });
 
   const stripPlaces = useMemo(() => {
@@ -112,74 +118,6 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
     };
   }, [onRegisterRect]);
 
-  // ─── Gesture detection refs ───
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const holdItem = useRef<ImportedPlace | null>(null);
-  const pointerStart = useRef<{ x: number; y: number } | null>(null);
-  const gestureDecided = useRef(false);
-  const stripScrollRef = useRef<HTMLDivElement>(null);
-
-  const clearHold = useCallback(() => {
-    if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
-    holdItem.current = null;
-    pointerStart.current = null;
-    gestureDecided.current = false;
-    setHoldingId(null);
-  }, []);
-
-  const handlePointerDown = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
-    pointerStart.current = { x: e.clientX, y: e.clientY };
-    holdItem.current = item;
-    gestureDecided.current = false;
-
-    const pointerEvent = e;
-    holdTimer.current = setTimeout(() => {
-      if (holdItem.current && !gestureDecided.current) {
-        gestureDecided.current = true;
-        onDragStart(holdItem.current, pointerEvent);
-        holdItem.current = null;
-        setHoldingId(null);
-      }
-    }, HOLD_DELAY);
-
-    setTimeout(() => {
-      if (holdItem.current?.id === item.id && !gestureDecided.current) {
-        setHoldingId(item.id);
-      }
-    }, 150);
-  }, [onDragStart]);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!pointerStart.current || gestureDecided.current) return;
-
-    const dx = e.clientX - pointerStart.current.x;
-    const dy = e.clientY - pointerStart.current.y;
-
-    if (Math.abs(dx) > SCROLL_THRESHOLD) {
-      gestureDecided.current = true;
-      if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
-      holdItem.current = null;
-      setHoldingId(null);
-      return;
-    }
-
-    if (Math.abs(dy) > SCROLL_THRESHOLD && holdItem.current) {
-      gestureDecided.current = true;
-      if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
-      onDragStart(holdItem.current, e);
-      holdItem.current = null;
-      setHoldingId(null);
-    }
-  }, [onDragStart]);
-
-  const handlePointerUp = useCallback(() => {
-    clearHold();
-  }, [clearHold]);
-
-  const handleTap = useCallback((item: ImportedPlace) => {
-    if (!dragItemId) onTapDetail(item);
-  }, [dragItemId, onTapDetail]);
-
   const hasActiveFilters = activeFilter !== 'all' || sourceFilter !== 'all' || sortBy !== 'match' || searchQuery.trim() !== '';
 
   if (destinationPicks.length === 0 && !searchQuery.trim()) {
@@ -215,6 +153,9 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
   return (
     <div
       ref={containerRef}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       style={{
         background: isDropTarget ? 'rgba(42,122,86,0.04)' : 'white',
         borderTop: isDropTarget ? '2px solid var(--t-verde)' : '1px solid var(--t-linen)',
@@ -334,7 +275,6 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
 
       {/* Horizontal scroll strip — taller cards with better touch targets */}
       <div
-        ref={stripScrollRef}
         className="flex gap-2.5 px-3 pb-3 pt-0.5 overflow-x-auto"
         style={{
           scrollbarWidth: 'none',
@@ -343,7 +283,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
           touchAction: 'pan-x',
         }}
       >
-        {stripPlaces.length === 0 && !showAddPlace ? (
+        {stripPlaces.length === 0 ? (
           <div className="flex items-center justify-center w-full py-1">
             <span className="text-[10px]" style={{ color: INK['80'] }}>
               No picks match this filter
@@ -351,7 +291,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
           </div>
         ) : (
           <>
-          {stripPlaces.map((place, idx) => {
+          {stripPlaces.map((place) => {
             const typeIcon = TYPE_ICONS[place.type] || 'location';
             const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
             const isDragging = dragItemId === place.id;
@@ -361,7 +301,7 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
             return (
               <div
                 key={place.id}
-                className="flex flex-col items-center flex-shrink-0 cursor-pointer select-none"
+                className="flex flex-col items-center flex-shrink-0 select-none"
                 style={{
                   width: 68,
                   opacity: isDragging ? 0.25 : 1,
@@ -373,12 +313,9 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
                       : 'none',
                   transition: 'opacity 0.2s, transform 0.2s ease-out',
                   touchAction: 'pan-x',
+                  cursor: 'grab',
                 }}
                 onPointerDown={(e) => handlePointerDown(place, e)}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onClick={() => handleTap(place)}
               >
                 {/* Drag grip dots — subtle affordance */}
                 <div
@@ -446,83 +383,8 @@ function PicksStrip({ onTapDetail, onBrowseAll, onDragStart, dragItemId, isDropT
             );
           })}
 
-          {/* + Add place card */}
-          {showAddPlace ? (
-            <div
-              className="flex-shrink-0 rounded-xl overflow-hidden"
-              style={{
-                minWidth: 220,
-                background: 'white',
-                border: '1.5px dashed var(--t-verde)',
-                boxShadow: '0 2px 8px rgba(42,122,86,0.1)',
-              }}
-            >
-              <PlaceSearchInput
-                compact
-                destination={activeDestination || undefined}
-                placeholder="Search place…"
-                onSelect={(result: PlaceSearchResult) => {
-                  const newPlace: ImportedPlace = {
-                    id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                    name: result.name,
-                    type: result.type,
-                    location: result.address || activeDestination || '',
-                    source: { type: 'text', name: 'Manual' },
-                    matchScore: 0,
-                    matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
-                    tasteNote: '',
-                    status: 'available',
-                    isFavorited: true,
-                    ...(result.placeId && {
-                      google: {
-                        placeId: result.placeId,
-                        lat: result.lat,
-                        lng: result.lng,
-                        address: result.address,
-                      },
-                    }),
-                  };
-                  addPlace(newPlace);
-                  setShowAddPlace(false);
-                }}
-                onCancel={() => setShowAddPlace(false)}
-              />
-            </div>
-          ) : (
-            <div
-              className="flex flex-col items-center flex-shrink-0 cursor-pointer select-none"
-              style={{ width: 68 }}
-              onClick={() => setShowAddPlace(true)}
-            >
-              {/* Spacer to align with grip dots */}
-              <div style={{ height: 7 }} />
-              {/* Icon */}
-              <div
-                className="rounded-xl flex items-center justify-center"
-                style={{
-                  width: 50,
-                  height: 50,
-                  border: `1.5px dashed ${INK['20']}`,
-                  background: INK['04'],
-                  transition: 'border-color 0.15s, background 0.15s',
-                }}
-              >
-                <PerriandIcon name="add" size={18} color={INK['35']} />
-              </div>
-              {/* Label */}
-              <span
-                className="text-[9px] font-medium text-center leading-tight mt-1"
-                style={{
-                  color: INK['35'],
-                  fontFamily: FONT.sans,
-                  maxWidth: '100%',
-                  lineHeight: '1.15',
-                }}
-              >
-                Add place
-              </span>
-            </div>
-          )}
+          {/* + Add place */}
+          <AddPlaceInline variant="strip" destination={activeDestination || undefined} />
           </>
         )}
       </div>

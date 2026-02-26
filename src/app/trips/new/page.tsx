@@ -12,6 +12,7 @@ import DesktopNav from '@/components/DesktopNav';
 import DestinationAllocator from '@/components/DestinationAllocator';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
+import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 
 // ============================================================
@@ -107,33 +108,29 @@ function TripSeedForm({ onStart }: {
     >
       <div className="px-6 pt-6 pb-10 max-w-lg mx-auto">
         {/* Header */}
-        <motion.div 
-          className="text-center mb-10"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div 
-            className="text-5xl mb-4"
-            variants={itemVariants}
-          >
-            ✈
-          </motion.div>
-          <motion.h1
-            className="text-3xl mb-2"
-            variants={itemVariants}
-            style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
-          >
-            New Trip
-          </motion.h1>
-          <motion.p 
-            className="text-sm leading-relaxed max-w-xs mx-auto" 
-            variants={itemVariants}
-            style={{ color: INK['95'] }}
-          >
-            Give us the basics, then we'll have a quick conversation to understand what you're really looking for.
-          </motion.p>
-        </motion.div>
+        <div className="text-center mb-10">
+          <SafeFadeIn delay={0.1} direction="up" distance={12}>
+            <div className="text-5xl mb-4">
+              ✈
+            </div>
+          </SafeFadeIn>
+          <SafeFadeIn delay={0.16} direction="up" distance={12}>
+            <h1
+              className="text-3xl mb-2"
+              style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
+            >
+              New Trip
+            </h1>
+          </SafeFadeIn>
+          <SafeFadeIn delay={0.22} direction="up" distance={12}>
+            <p
+              className="text-sm leading-relaxed max-w-xs mx-auto"
+              style={{ color: INK['95'] }}
+            >
+              Give us the basics, then we'll have a quick conversation to understand what you're really looking for.
+            </p>
+          </SafeFadeIn>
+        </div>
 
         {/* Trip Name (optional) */}
         <div className="mb-6">
@@ -612,11 +609,12 @@ function TripConversation({
         style={{ scrollbarWidth: 'none' }}
       >
         {messages.map((msg, idx) => (
-          <motion.div
+          <SafeFadeIn
             key={idx}
-            initial={{ opacity: 0, x: msg.role === "user" ? 20 : -20, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+            direction={msg.role === "user" ? "right" : "left"}
+            distance={msg.role === "user" ? 20 : 20}
+            scale={0.95}
+            duration={0.35}
             className={`mb-3 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
@@ -632,7 +630,7 @@ function TripConversation({
             >
               {msg.text}
             </div>
-          </motion.div>
+          </SafeFadeIn>
         ))}
 
         {isTyping && (
@@ -654,36 +652,37 @@ function TripConversation({
 
         {/* Trip signals */}
         {signals.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            className="mt-3 p-3 rounded-xl border-l-[3px]"
-            style={{ background: 'rgba(42,122,86,0.04)', borderLeftColor: 'var(--t-verde)' }}
-          >
+          <SafeFadeIn direction="up" distance={10} duration={0.45}>
             <div
-              className="text-[8px] font-bold uppercase tracking-[1.5px] mb-2"
-              style={{ fontFamily: FONT.mono, color: INK['90'] }}
+              className="mt-3 p-3 rounded-xl border-l-[3px]"
+              style={{ background: 'rgba(42,122,86,0.04)', borderLeftColor: 'var(--t-verde)' }}
             >
-              {signals.length} trip signal{signals.length !== 1 ? 's' : ''}
+              <div
+                className="text-[8px] font-bold uppercase tracking-[1.5px] mb-2"
+                style={{ fontFamily: FONT.mono, color: INK['90'] }}
+              >
+                {signals.length} trip signal{signals.length !== 1 ? 's' : ''}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {signals.map((signal, i) => (
+                  <SafeFadeIn
+                    key={i}
+                    delay={0.06 * i}
+                    direction="up"
+                    distance={8}
+                    duration={0.4}
+                  >
+                    <span
+                      className="text-[10px] px-2 py-1 rounded-full"
+                      style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
+                    >
+                      {signal}
+                    </span>
+                  </SafeFadeIn>
+                ))}
+              </div>
             </div>
-            <motion.div 
-              className="flex flex-wrap gap-1.5"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {signals.map((signal, i) => (
-                <motion.span
-                  key={i}
-                  variants={itemVariants}
-                  className="text-[10px] px-2 py-1 rounded-full"
-                  style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
-                >
-                  {signal}
-                </motion.span>
-              ))}
-            </motion.div>
-          </motion.div>
+          </SafeFadeIn>
         )}
       </div>
 
@@ -756,72 +755,69 @@ function TripComplete({ seed, onDone }: {
   onDone: () => void;
 }) {
   return (
-    <motion.div
-      className="flex-1 flex flex-col items-center justify-center px-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: EASE_OUT_EXPO }}
-    >
-      <motion.div 
+    <SafeFadeIn direction="up" distance={20} duration={0.45} className="flex-1 flex flex-col items-center justify-center px-8">
+      <SafeFadeIn
+        delay={0}
+        scale={0.8}
+        direction="none"
+        duration={0.5}
         className="text-5xl mb-4 flex justify-center"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, type: 'spring', stiffness: 100, damping: 12 }}
       >
         <PerriandIcon name="check" size={48} color="var(--t-verde)" />
-      </motion.div>
-      <motion.h2
+      </SafeFadeIn>
+      <SafeFadeIn
+        delay={0.1}
+        direction="up"
+        distance={10}
+        duration={0.4}
         className="text-3xl mb-3"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
         style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
       >
         Trip Profile Built
-      </motion.h2>
-      <motion.p 
-        className="text-sm text-center leading-relaxed mb-8 max-w-xs" 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.15 }}
+      </SafeFadeIn>
+      <SafeFadeIn
+        delay={0.15}
+        direction="up"
+        distance={10}
+        duration={0.4}
+        className="text-sm text-center leading-relaxed mb-8 max-w-xs"
         style={{ color: INK['95'] }}
       >
         We've layered your trip context onto your base taste profile. Your {seed.destinations[0]} recommendations will
         reflect the specific energy, companions, and priorities for this journey.
-      </motion.p>
+      </SafeFadeIn>
 
-      <motion.div
+      <SafeFadeIn
+        delay={0.2}
+        direction="up"
+        distance={10}
+        duration={0.4}
         className="w-full max-w-sm p-5 rounded-2xl mb-8 border"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
         style={{ background: 'white', borderColor: 'var(--t-linen)' }}
       >
         <div className="text-[13px] font-semibold mb-3" style={{ color: 'var(--t-ink)' }}>
           What happens next
         </div>
-        <motion.div 
-          className="flex flex-col gap-1.5"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <div className="flex flex-col gap-1.5">
           {[
             'Places scored against your trip-adjusted profile',
             'Each destination gets its own curated collection',
             'Stretch picks that push your boundaries thoughtfully',
           ].map((item, i) => (
-            <motion.div 
+            <SafeFadeIn
               key={i}
-              variants={itemVariants}
-              className="text-[12px] leading-relaxed" 
+              delay={0.2 + 0.06 * i}
+              direction="up"
+              distance={8}
+              duration={0.4}
+              className="text-[12px] leading-relaxed"
               style={{ color: INK['95'] }}
             >
               • {item}
-            </motion.div>
+            </SafeFadeIn>
           ))}
-        </motion.div>
-      </motion.div>
+        </div>
+      </SafeFadeIn>
 
       <motion.button
         onClick={onDone}
@@ -832,7 +828,7 @@ function TripComplete({ seed, onDone }: {
       >
         Go to Trip
       </motion.button>
-    </motion.div>
+    </SafeFadeIn>
   );
 }
 // ============================================================
