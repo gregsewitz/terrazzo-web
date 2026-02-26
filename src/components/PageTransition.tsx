@@ -28,7 +28,7 @@ export default function PageTransition({
   return (
     <motion.div
       className={className}
-      style={{ opacity: 0, ...style }}
+      style={{ opacity: 0, overflowX: 'hidden', ...style }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
     >

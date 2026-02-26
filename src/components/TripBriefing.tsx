@@ -500,7 +500,7 @@ function DayCard({
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
-    <div style={{ textAlign: 'center', minWidth: 60 }}>
+    <div style={{ textAlign: 'center', flex: '1 1 0', minWidth: 0 }}>
       <div style={{
         fontFamily: FONT.serif, fontSize: 36, fontStyle: 'italic',
         color: 'var(--t-ink)', lineHeight: 1, marginBottom: 4,
@@ -730,12 +730,13 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
       background: 'var(--t-cream)',
       minHeight: '100%',
       paddingBottom: 120,
+      overflowX: 'hidden',
     }}>
 
       {/* ════════════════════════════════════════════
           HERO
       ════════════════════════════════════════════ */}
-      <div style={{ padding: '48px 36px 40px' }}>
+      <div style={{ padding: '48px 24px 40px' }}>
         {/* Terrazzo kicker */}
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.16em',
@@ -794,8 +795,8 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
           AT A GLANCE
       ════════════════════════════════════════════ */}
       <div style={{
-        display: 'flex', justifyContent: 'flex-start', gap: 48,
-        padding: '32px 36px',
+        display: 'flex', justifyContent: 'space-evenly', gap: 16,
+        padding: '32px 20px',
         borderTop: '1px solid var(--t-linen)',
         borderBottom: '1px solid var(--t-linen)',
       }}>
@@ -818,10 +819,10 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
           DESTINATION HEROES
       ════════════════════════════════════════════ */}
       {data.destinations.length > 0 && (
-        <div style={{ padding: '40px 36px 0' }}>
+        <div style={{ padding: '40px 24px 0' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: data.destinations.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: data.destinations.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: 16,
           }}>
             {data.destinations.map(dest => {
