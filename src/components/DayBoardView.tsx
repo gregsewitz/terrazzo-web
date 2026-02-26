@@ -124,6 +124,7 @@ function DayBoardView({
         height: '100%',
       }}
     >
+      <style>{`.day-col:hover .day-col-delete { opacity: 0.5 !important; } .day-col-delete:hover { opacity: 0.9 !important; }`}</style>
       {trip.days.map(day => {
         const destColor = DEST_COLORS[day.destination || ''] || generateDestColor(day.destination || '');
         const isFlexible = trip.flexibleDates === true;
@@ -138,7 +139,7 @@ function DayBoardView({
         return (
           <div
             key={day.dayNumber}
-            className="flex flex-col flex-shrink-0"
+            className="flex flex-col flex-shrink-0 day-col"
             onDragOver={(e) => {
               // Accept day drops
               if (e.dataTransfer.types.includes('text/day-number')) {
@@ -173,31 +174,30 @@ function DayBoardView({
               transition: 'background 150ms ease, opacity 150ms ease',
             }}
           >
-            {/* Remove day × — top-right corner of column */}
+            {/* Remove day × — top-right corner, visible on column hover */}
             {trip.days.length > 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setDeleteDayConfirm(day.dayNumber); }}
-                className="flex items-center justify-center rounded-full cursor-pointer"
+                className="day-col-delete flex items-center justify-center cursor-pointer"
                 style={{
                   position: 'absolute',
-                  top: 6,
-                  right: 6,
+                  top: 2,
+                  right: 2,
                   zIndex: 10,
-                  width: 18,
-                  height: 18,
-                  background: `${destColor.accent}15`,
+                  width: 16,
+                  height: 16,
+                  background: `${destColor.accent}18`,
                   border: 'none',
+                  borderRadius: 4,
                   fontFamily: FONT.sans,
-                  fontSize: 12,
-                  fontWeight: 500,
+                  fontSize: 11,
+                  fontWeight: 600,
                   color: destColor.accent,
-                  opacity: 0.4,
+                  opacity: 0,
                   transition: 'opacity 150ms',
                   lineHeight: 1,
                   padding: 0,
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
                 title="Remove this day"
               >
                 ×
