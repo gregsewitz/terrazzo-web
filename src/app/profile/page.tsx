@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -58,12 +58,6 @@ interface DiscoverContent {
   contextLabel?: string;
 }
 
-/** NUCLEAR TEST: always visible, no animation at all */
-function useRevealOnce() {
-  const ref = useRef<HTMLDivElement>(null);
-  return { ref, show: true };
-}
-
 const SETTINGS_LINKS = [
   { label: 'Connected Accounts', action: 'accounts' },
   { label: 'Import History', action: 'history' },
@@ -99,7 +93,6 @@ export default function ProfilePage() {
   const lifeContext = useOnboardingStore(s => s.lifeContext);
   const allSignals = useOnboardingStore(s => s.allSignals);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
-
 
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
@@ -401,14 +394,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Right: content feed — both tabs always mounted, hidden via CSS */}
+            {/* Right: content feed */}
             <div className="flex-1 min-w-0">
-              <div style={{ display: activeTab === 'discover' ? 'block' : 'none' }}>
-                {discoverFeed}
-              </div>
-              <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
-                <ProfileDeepDive />
-              </div>
+              {activeTab === 'discover' ? discoverFeed : (
+                <>
+                  <ProfileDeepDive />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -423,12 +415,11 @@ export default function ProfilePage() {
         {headerBlock}
       </div>
 
-      {/* Both tabs always mounted — hidden via CSS to prevent unmount/remount flicker */}
-      <div style={{ display: activeTab === 'discover' ? 'block' : 'none' }}>
-        {discoverFeed}
-      </div>
-      <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
-        {/* ═══════════ MY PROFILE ═══════════ */}
+      {activeTab === 'discover' ? (
+        discoverFeed
+      ) : (
+        /* ═══════════ MY PROFILE ═══════════ */
+        <>
           {/* Action buttons */}
           <div className="px-5 pt-2 pb-4 flex flex-col gap-2.5">
             <motion.button
@@ -651,7 +642,8 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-      </div>
+        </>
+      )}
 
       <TabBar />
     </PageTransition>
@@ -676,60 +668,82 @@ function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.
 
 // ── EDITORIAL LETTER — The opening essay ──
 function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
-  const { ref, show } = useRevealOnce();
   const l = letter || EDITORIAL_LETTER;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 pt-5 pb-6"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-4">
-          <div
+          <motion.div
             className="w-5 h-[1px]"
             style={{ background: 'var(--t-honey)' }}
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
           />
-          <span
+          <motion.span
             className="text-[9px] uppercase tracking-[0.25em]"
             style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
             A note from Terrazzo
-          </span>
+          </motion.span>
         </div>
-        <h2
+        <motion.h2
           className="text-[20px] leading-snug mb-4"
           style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          viewport={{ once: true, margin: '-100px' }}
         >
           {l.headline}
-        </h2>
-        <p
+        </motion.h2>
+        <motion.p
           className="text-[13px] leading-relaxed"
           style={{ color: INK['70'], fontFamily: FONT.sans }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          viewport={{ once: true, margin: '-100px' }}
         >
           {l.body}
-        </p>
+        </motion.p>
       </div>
-      <div
+      <motion.div
         className="flex items-center gap-2"
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(200,146,58,0.08)', color: 'var(--t-honey)', fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── BECAUSE YOU — Signal-to-place insight cards ──
 function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
-  const { ref, show } = useRevealOnce();
   const displayCards = cards || BECAUSE_YOU_CARDS;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="mb-7 px-5"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-3">
         <SectionLabel>Because you...</SectionLabel>
@@ -741,10 +755,14 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
         {displayCards.map((card, idx) => {
           const domainColor = DIMENSION_COLORS[card.signalDomain] || '#8b6b4a';
           return (
-            <div
+            <motion.div
               key={card.place}
               className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
               style={{ background: card.bg, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
+              initial={{ opacity: 0, x: -20, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -770,31 +788,36 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.7)' }}>{card.why}</p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ── SIGNAL THREAD — One signal, many manifestations ──
 function SignalThreadSection({ thread }: { thread?: SignalThread }) {
-  const { ref, show } = useRevealOnce();
   const t = thread || SIGNAL_THREAD;
   const domainColor = DIMENSION_COLORS[t.domain] || '#8b6b4a';
   const TYPE_ICONS: Record<string, string> = { hotel: 'hotel', restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', neighborhood: 'neighborhood' };
 
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>The thread</SectionLabel>
-      <div
+      <motion.div
         className="mt-3 p-5 rounded-2xl"
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.mono }}>
@@ -807,20 +830,32 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
         {/* Vertical thread line connecting places */}
         <div className="flex flex-col gap-0">
           {t.places.map((place, i) => (
-            <div
+            <motion.div
               key={place.name}
               className="flex gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               {/* Thread line */}
               <div className="flex flex-col items-center" style={{ width: 20 }}>
-                <div
+                <motion.div
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: domainColor, marginTop: 4 }}
+                  initial={{ scale: 0.95 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
+                  viewport={{ once: true, margin: '-100px' }}
                 />
                 {i < t.places.length - 1 && (
-                  <div
+                  <motion.div
                     className="w-[1px] flex-1"
                     style={{ background: INK['10'] }}
+                    initial={{ scaleY: 0 }}
+                    whileInView={{ scaleY: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                    viewport={{ once: true, margin: '-100px' }}
                   />
                 )}
               </div>
@@ -837,48 +872,61 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.connection}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── TASTE TENSION — Editorial exploration of a contradiction ──
 function TasteTensionSection({ tension }: { tension?: TasteTension }) {
-  const { ref, show } = useRevealOnce();
   const t = tension || TASTE_TENSION;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-violet)">Taste tension</SectionLabel>
-      <div
+      <motion.div
         className="mt-3 rounded-2xl overflow-hidden"
         style={{ background: '#2a2535' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="p-5">
           <h3 className="text-[18px] leading-snug mb-4" style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}>
             {t.title}
           </h3>
           <div className="flex gap-3 mb-4">
-            <div
+            <motion.div
               className="flex-1 p-3 rounded-xl"
               style={{ background: 'rgba(245,245,240,0.06)' }}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You think</div>
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.stated}&rdquo;</p>
-            </div>
-            <div
+            </motion.div>
+            <motion.div
               className="flex-1 p-3 rounded-xl"
               style={{ background: 'rgba(245,245,240,0.06)' }}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You do</div>
               <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.revealed}&rdquo;</p>
-            </div>
+            </motion.div>
           </div>
           <p className="text-[12px] leading-relaxed mb-4" style={{ color: 'rgba(245,245,240,0.8)', fontFamily: FONT.sans }}>
             {t.editorial}
@@ -891,20 +939,21 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
           </div>
           <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{t.resolvedBy.how}</p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── THIS WEEK'S EDIT ──
 function WeeklyEditSection({ collection: propCollection }: { collection?: { title: string; subtitle: string; places: CollectionPlace[] } }) {
-  const { ref, show } = useRevealOnce();
   const collection = propCollection || WEEKLY_COLLECTION;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="mb-7 px-5"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-1"><SectionLabel>This week&apos;s edit</SectionLabel></div>
       <div className="mb-3">
@@ -916,10 +965,14 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
           const domainColor = DIMENSION_COLORS[place.signalDomain] || '#8b6b4a';
           const imageUrl = getPlaceImage(place.name);
           return (
-            <div
+            <motion.div
               key={place.name}
               className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
               style={{ background: 'white', border: '1px solid var(--t-linen)', width: 240, scrollSnapAlign: 'start' }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: '-100px' }}
             >
               {imageUrl && (
                 <div style={{ height: 100, overflow: 'hidden', position: 'relative' }}>
@@ -941,31 +994,36 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
                 </div>
                 <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.note}</p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ── MOOD BOARDS — Curated moods ──
 function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
-  const { ref, show } = useRevealOnce();
   const displayBoards = boards || MOOD_BOARDS;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Travel moods</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {displayBoards.map((board, idx) => (
-          <div
+          <motion.div
             key={board.mood}
             className="p-4 rounded-2xl"
             style={{ background: 'white', border: '1px solid var(--t-linen)', borderLeft: `3px solid ${board.color}` }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
             <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>{board.mood}</h4>
             <p className="text-[11px] mb-4" style={{ color: INK['70'], fontFamily: FONT.sans }}>{board.description}</p>
@@ -973,9 +1031,13 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
               {board.places.map((p, pIdx) => {
                 const imageUrl = getPlaceImage(p.name);
                 return (
-                  <div
+                  <motion.div
                     key={p.name}
                     className="flex items-center gap-3"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 + pIdx * 0.05 }}
+                    viewport={{ once: true, margin: '-100px' }}
                   >
                     {imageUrl ? (
                       <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
@@ -992,31 +1054,36 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       <p className="text-[10px] italic" style={{ color: INK['70'] }}>{p.vibe}</p>
                     </div>
                     <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ── DEEP MATCH — Signal-by-signal breakdown ──
 function DeepMatchSection({ match }: { match?: DeepMatch }) {
-  const { ref, show } = useRevealOnce();
   const m = match || DEEP_MATCH;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-verde)">Your deepest match</SectionLabel>
-      <div
+      <motion.div
         className="mt-3 rounded-2xl overflow-hidden"
         style={{ background: '#1e2e24' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="p-5">
           <div className="flex items-center gap-3 mb-3">
@@ -1038,9 +1105,12 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
                     <span className="text-[10px] font-bold" style={{ color: domainColor, fontFamily: FONT.mono }}>{s.strength}%</span>
                   </div>
                   <div className="h-1 rounded-full mb-1.5" style={{ background: 'rgba(245,245,240,0.08)' }}>
-                    <div
+                    <motion.div
                       className="h-1 rounded-full"
-                      style={{ background: domainColor, opacity: 0.7, width: `${s.strength}%` }}
+                      style={{ background: domainColor, opacity: 0.7 }}
+                      whileInView={{ width: `${s.strength}%` }}
+                      transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
+                      viewport={{ once: true, margin: '-100px' }}
                     />
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: 'rgba(245,245,240,0.65)' }}>{s.note}</p>
@@ -1053,25 +1123,30 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
           <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(42,122,86,0.6)', fontFamily: FONT.mono }}>Tension resolved</div>
           <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{m.tensionResolved}</p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── STRETCH PICK ──
 function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
-  const { ref, show } = useRevealOnce();
   const s = stretch || STRETCH_PICK;
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
-      <div
+      <motion.div
         className="p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.1, type: 'spring', stiffness: 200 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-1.5 mb-3">
           <PerriandIcon name="discover" size={10} color="var(--t-panton-orange)" />
@@ -1095,26 +1170,31 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
           <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{s.why}</p>
         </div>
         <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: INK['70'] }}>{s.tension}</p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── CONTEXT MODE ──
 function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; contextLabel?: string }) {
-  const { ref, show } = useRevealOnce();
   const displayRecs = recs || SUMMER_RECS;
   const label = contextLabel || 'Summer';
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Context mode</SectionLabel>
-      <div
+      <motion.div
         className="p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-1">
           <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
@@ -1127,9 +1207,13 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
           {displayRecs.map((rec, idx) => {
             const imageUrl = getPlaceImage(rec.name);
             return (
-              <div
+              <motion.div
                 key={rec.name}
                 className="flex items-center gap-3"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 + idx * 0.05 }}
+                viewport={{ once: true, margin: '-100px' }}
               >
                 {imageUrl ? (
                   <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
@@ -1145,18 +1229,17 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: INK['70'] }}>{rec.whyFits}</p>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── VOCAB TEASER ──
 function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
-  const { ref, show } = useRevealOnce();
   const domains = Object.entries(profile.microTasteSignals).slice(0, 4);
   const allTerms: Array<{ term: string; domain: string }> = [];
   domains.forEach(([domain, terms]) => { terms.slice(0, 2).forEach(term => allTerms.push({ term, domain })); });
@@ -1164,15 +1247,21 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
   rejections.forEach(term => allTerms.push({ term, domain: 'Rejection' }));
 
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-7"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Your taste vocabulary</SectionLabel>
-      <div
+      <motion.div
         className="p-4 rounded-xl mt-3"
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex flex-wrap gap-1.5 mb-3">
           {allTerms.map(({ term, domain }, idx) => {
@@ -1180,43 +1269,56 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
             const isRejection = domain === 'Rejection';
             const randomDelay = Math.random() * 0.3;
             return (
-              <span
+              <motion.span
                 key={term}
                 className="text-[10px] px-2.5 py-1 rounded-full"
                 style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: randomDelay }}
+                viewport={{ once: true, margin: '-100px' }}
               >
                 {term}
-              </span>
+              </motion.span>
             );
           })}
-          <span
+          <motion.span
             className="text-[10px] px-2.5 py-1 rounded-full"
             style={{ background: INK['04'], color: INK['50'] }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
             +{Object.values(profile.microTasteSignals).flat().length - allTerms.length} more
-          </span>
+          </motion.span>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── FRIENDS SAVING ──
 function FriendsSavingSection() {
-  const { ref, show } = useRevealOnce();
   return (
-    <div
-      ref={ref}
+    <motion.div
       className="px-5 mb-8"
-      style={{ opacity: show ? 1 : 0, transition: 'opacity 0.55s ease' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel>Friends are saving</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {FRIEND_SAVES.map((save, idx) => (
-          <div
+          <motion.div
             key={save.place}
             className="p-3.5 rounded-xl flex items-start gap-3"
             style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            viewport={{ once: true, margin: '-100px' }}
           >
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: `${save.color}15`, color: save.color, fontFamily: FONT.mono }}>
               {save.friendInitial}
@@ -1233,9 +1335,9 @@ function FriendsSavingSection() {
                 <span className="text-[10px]" style={{ color: INK['70'] }}>{save.whyMatches}</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

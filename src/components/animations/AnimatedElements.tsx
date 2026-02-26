@@ -1,6 +1,5 @@
 'use client';
 
-import { useRef } from 'react';
 import { motion, AnimatePresence, type Variants, type Transition } from 'framer-motion';
 import { useInView, useCountUp } from '@/hooks/useAnimations';
 import { FONT } from '@/constants/theme';
@@ -28,8 +27,6 @@ export function FadeInSection({
   direction = 'up', distance = 24, duration = 0.7,
 }: FadeInSectionProps) {
   const [ref, isInView] = useInView({ threshold: 0.1 });
-  const hasAnimated = useRef(false);
-  if (isInView) hasAnimated.current = true;
 
   const getInitial = () => {
     switch (direction) {
@@ -41,14 +38,11 @@ export function FadeInSection({
     }
   };
 
-  // Once animated in, NEVER go back to hidden — prevents flicker on re-render
-  const show = hasAnimated.current || isInView;
-
   return (
     <motion.div
       ref={ref}
       initial={getInitial()}
-      animate={show ? { opacity: 1, x: 0, y: 0 } : getInitial()}
+      animate={isInView ? { opacity: 1, x: 0, y: 0 } : getInitial()}
       transition={{ duration, delay, ease: EASE_OUT_EXPO }}
       className={className}
       style={style}
@@ -87,17 +81,12 @@ export function StaggerContainer({
   children, className, style, staggerDelay = 0.08, delayStart = 0,
 }: StaggerContainerProps) {
   const [ref, isInView] = useInView({ threshold: 0.1 });
-  const hasAnimated = useRef(false);
-  if (isInView) hasAnimated.current = true;
-
-  // Once animated in, NEVER go back to hidden — prevents flicker on re-render
-  const show = hasAnimated.current || isInView;
 
   return (
     <motion.div
       ref={ref}
       initial="hidden"
-      animate={show ? 'visible' : 'hidden'}
+      animate={isInView ? 'visible' : 'hidden'}
       variants={{
         hidden: {},
         visible: {
@@ -138,15 +127,12 @@ export function AnimatedBar({
   bgColor = 'rgba(28,26,23,0.06)', borderRadius = 999,
 }: AnimatedBarProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const hasAnimated = useRef(false);
-  if (isInView) hasAnimated.current = true;
-  const show = hasAnimated.current || isInView;
 
   return (
     <div ref={ref} style={{ height, borderRadius, background: bgColor, overflow: 'hidden' }}>
       <motion.div
         initial={{ scaleX: 0 }}
-        animate={show ? { scaleX: 1 } : { scaleX: 0 }}
+        animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
         transition={{ duration: 1, delay, ease: EASE_OUT_EXPO }}
         style={{
           height: '100%',
@@ -174,16 +160,13 @@ export function AnimatedSpectrum({
   bgGradient = 'linear-gradient(90deg, rgba(28,26,23,0.06), rgba(28,26,23,0.15))',
 }: AnimatedSpectrumProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const hasAnimated = useRef(false);
-  if (isInView) hasAnimated.current = true;
-  const show = hasAnimated.current || isInView;
 
   return (
     <div ref={ref} className="relative h-2 rounded-full" style={{ background: bgGradient }}>
       <motion.div
         className="absolute top-1/2 w-3 h-3 rounded-full border-2"
         initial={{ left: '50%', opacity: 0, scale: 0 }}
-        animate={show
+        animate={isInView
           ? { left: `${percentage}%`, opacity: 1, scale: 1 }
           : { left: '50%', opacity: 0, scale: 0 }
         }
@@ -231,15 +214,12 @@ interface AnimatedScoreArcProps {
 
 export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 0 }: AnimatedScoreArcProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const hasAnimated = useRef(false);
-  if (isInView) hasAnimated.current = true;
-  const show = hasAnimated.current || isInView;
   const pct = score <= 1 ? Math.round(score * 100) : Math.round(score);
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (pct / 100) * circumference;
-  const count = useCountUp(pct, show, 1000);
+  const count = useCountUp(pct, isInView, 1000);
 
   return (
     <div ref={ref} className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -253,7 +233,7 @@ export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 
           fill="none" stroke={color} strokeWidth={strokeWidth}
           strokeLinecap="round"
           initial={{ strokeDasharray: `0 ${circumference}` }}
-          animate={show
+          animate={isInView
             ? { strokeDasharray: `${progress} ${circumference - progress}` }
             : { strokeDasharray: `0 ${circumference}` }
           }

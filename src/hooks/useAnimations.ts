@@ -11,32 +11,15 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
 ): [React.RefObject<T | null>, boolean] {
   const { threshold = 0.15, once = true, rootMargin = '0px 0px -40px 0px' } = options;
   const ref = useRef<T | null>(null);
-  const seen = useRef(false);
   const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
-    // If already seen with once=true, no need to observe again
-    if (seen.current && once) return;
-
     const el = ref.current;
     if (!el) return;
-
-    // Synchronous viewport check — avoids the async IntersectionObserver
-    // gap that causes elements to flicker back to hidden on re-render
-    const rect = el.getBoundingClientRect();
-    if (
-      rect.top < window.innerHeight + 40 &&
-      rect.bottom > 0
-    ) {
-      seen.current = true;
-      setIsInView(true);
-      if (once) return; // Don't even set up the observer
-    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          seen.current = true;
           setIsInView(true);
           if (once) observer.unobserve(el);
         } else if (!once) {
@@ -50,8 +33,7 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     return () => observer.disconnect();
   }, [threshold, once, rootMargin]);
 
-  // Once seen with once=true, always return true regardless of state
-  return [ref, seen.current || isInView];
+  return [ref, isInView];
 }
 
 /**
