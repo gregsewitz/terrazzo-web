@@ -20,6 +20,7 @@ export interface PlaceDetailContentProps {
   onEditRating?: () => void;
   onViewBriefing?: () => void;
   onCollectionTap?: () => void;
+  onDelete?: () => void;
   isPreview?: boolean;
   siblingPlaces?: ImportedPlace[]; // other places from the same import batch
   variant: 'desktop' | 'mobile';
@@ -35,6 +36,7 @@ function PlaceDetailContent({
   onEditRating,
   onViewBriefing,
   onCollectionTap,
+  onDelete,
   isPreview,
   siblingPlaces,
   variant,
@@ -412,6 +414,23 @@ function PlaceDetailContent({
             }}
           >
             {existingRating ? 'Update your rating' : 'Rate this place'}
+          </button>
+        )}
+
+        {/* Delete from library */}
+        {onDelete && !isPreview && (
+          <button
+            onClick={onDelete}
+            className="w-full mt-3 py-2.5 rounded-xl cursor-pointer text-[12px]"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: INK['40'],
+              fontFamily: FONT.sans,
+              fontWeight: 500,
+            }}
+          >
+            Remove from library
           </button>
         )}
       </div>

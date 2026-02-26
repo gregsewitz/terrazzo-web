@@ -14,6 +14,7 @@ interface PlaceDetailSheetProps {
   onEditRating?: () => void;
   onViewBriefing?: () => void;
   onCollectionTap?: () => void;
+  onDelete?: () => void;
   isPreview?: boolean;
   siblingPlaces?: ImportedPlace[];
 }
