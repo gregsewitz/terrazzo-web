@@ -64,6 +64,8 @@ export interface TripCoreState {
   createTrip: (data: TripCreationData) => string;
   /** Returns a promise that resolves to the real (server-assigned) trip ID */
   createTripAsync: (data: TripCreationData) => Promise<string>;
+  /** Delete a trip from the store and server */
+  deleteTrip: (id: string) => Promise<boolean>;
   graduateToPlanning: (startDate: string, endDate: string, dayAllocation?: Record<string, number>, opts?: { flexibleDates?: boolean; numDays?: number }) => void;
   hydrateFromDB: (trips: DBTrip[]) => void;
 }
@@ -91,6 +93,22 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
 
   setCurrentTrip: (id) => set({ currentTripId: id }),
   setCurrentDay: (day) => set({ currentDay: day }),
+
+  deleteTrip: async (id: string) => {
+    // Optimistically remove from store
+    set(state => ({
+      trips: state.trips.filter(t => t.id !== id),
+      currentTripId: state.currentTripId === id ? null : state.currentTripId,
+    }));
+
+    try {
+      await apiFetch(`/api/trips/${id}/save`, { method: 'DELETE' });
+      return true;
+    } catch (err) {
+      console.error('[deleteTrip] Failed to delete on server:', err);
+      return false;
+    }
+  },
 
   createTrip: (data: TripCreationData) => {
     const id = `trip-${Date.now()}`;

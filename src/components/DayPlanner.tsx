@@ -17,7 +17,7 @@ import { generateDestColor } from '@/lib/destination-helpers';
 import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
-export type TripViewMode = 'planner' | 'overview' | 'mapView' | 'featuredPlaces' | 'activity' | 'dreamBoard';
+export type TripViewMode = 'planner' | 'overview' | 'mapView' | 'featuredPlaces' | 'dreamBoard';
 
 export interface DropTarget {
   dayNumber: number;
@@ -47,9 +47,10 @@ interface DayPlannerProps {
   onBack?: () => void;
   onShare?: () => void;
   onChat?: () => void;
+  onDelete?: () => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote, onBack, onShare, onChat }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote, onBack, onShare, onChat, onDelete }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const reorderDays = useTripStore(s => s.reorderDays);
@@ -64,12 +65,26 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const [addingTransport, setAddingTransport] = useState(false);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
 
   // Reset editing state when switching days
   useEffect(() => {
     setAddingTransport(false);
     setEditingTransportId(null);
   }, [currentDay]);
+
+  // Close header menu on outside click
+  useEffect(() => {
+    if (!showHeaderMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) {
+        setShowHeaderMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showHeaderMenu]);
 
   // Gather unique destinations for the picker
   const uniqueDestinations = useMemo(() => {
@@ -198,6 +213,54 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
               </button>
             )}
+            {/* Overflow menu */}
+            {onDelete && (
+              <div className="relative" ref={headerMenuRef}>
+                <button
+                  onClick={() => setShowHeaderMenu(!showHeaderMenu)}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
+                  style={{ background: INK['04'] }}
+                  title="More options"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={INK['50']}>
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                </button>
+                {showHeaderMenu && (
+                  <div
+                    className="absolute right-0 mt-1 py-1 rounded-lg shadow-lg z-50"
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--t-linen)',
+                      minWidth: 160,
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setShowHeaderMenu(false);
+                        onDelete();
+                      }}
+                      className="w-full text-left px-3 py-2 border-none cursor-pointer flex items-center gap-2"
+                      style={{
+                        background: 'none',
+                        fontFamily: FONT.sans,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        color: 'var(--t-signal-red, #d63020)',
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      Delete trip
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -206,10 +269,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           className="flex gap-1 mt-2.5 p-0.5 rounded-lg"
           style={{ background: 'var(--t-linen)' }}
         >
-          {(myRole
-            ? (['overview', 'planner', 'mapView', 'dreamBoard', 'activity'] as const)
-            : (['overview', 'planner', 'mapView', 'dreamBoard'] as const)
-          ).map(mode => (
+          {(['overview', 'planner', 'mapView', 'dreamBoard'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => onSetViewMode(mode)}
@@ -223,7 +283,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
               }}
             >
-              {mode === 'overview' ? 'Overview' : mode === 'mapView' ? 'Map' : mode === 'activity' ? 'Activity' : mode === 'dreamBoard' ? 'Dream Board' : 'Day Planner'}
+              {mode === 'overview' ? 'Overview' : mode === 'mapView' ? 'Map' : mode === 'dreamBoard' ? 'Dream Board' : 'Day\u00A0Planner'}
             </button>
           ))}
         </div>

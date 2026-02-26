@@ -122,12 +122,13 @@ const DayContextBar = memo(({
           ) : day.hotel || day.hotelInfo ? (
             <button
               onClick={() => setEditingHotel(true)}
-              className="flex flex-col items-start gap-0"
+              className="flex flex-col items-start gap-0 min-w-0"
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
                 padding: 0,
+                overflow: 'hidden',
               }}
             >
               <span className="flex items-center gap-1" style={{
@@ -136,6 +137,9 @@ const DayContextBar = memo(({
                 fontWeight: 600,
                 color: destColor.text,
                 whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%',
               }}>
                 <PerriandIcon name="hotel" size={12} color={destColor.text} />
                 {day.hotelInfo?.name || day.hotel}
@@ -191,7 +195,7 @@ const DayContextBar = memo(({
           {!addingTransport && !editingHotel && (
             <button
               onClick={() => setAddingTransport(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0"
               style={{
                 fontFamily: FONT.sans,
                 fontSize: 10,
