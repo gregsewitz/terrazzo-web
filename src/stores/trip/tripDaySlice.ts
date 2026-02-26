@@ -10,6 +10,8 @@ import type { TripState } from './types';
 export interface TripDayState {
   setDayDestination: (dayNumber: number, destination: string) => void;
   reorderDays: (fromDayNumber: number, toDayNumber: number) => void;
+  /** Remove a day from the trip, moving its placed items back to the pool */
+  deleteDay: (dayNumber: number) => void;
   addDestinationToTrip: (destination: string, maybePlace?: ImportedPlace) => void;
   setDayHotel: (dayNumber: number, hotel: string) => void;
   setMultipleDaysHotel: (dayNumbers: number[], hotel: string) => void;
@@ -77,6 +79,60 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
       return t ? { days: t.days } : {};
+    });
+  },
+
+  deleteDay: (dayNumber) => {
+    const state = get();
+    const trip = state.trips.find(t => t.id === state.currentTripId);
+    if (!trip || trip.days.length <= 1) return; // never delete the last day
+
+    const dayToDelete = trip.days.find(d => d.dayNumber === dayNumber);
+    if (!dayToDelete) return;
+
+    // Collect placed items from the deleted day → return to pool
+    const returnedItems = dayToDelete.slots
+      .flatMap(s => s.places)
+      .map(p => ({ ...p, status: 'available' as const }));
+
+    // Remove the day and renumber sequentially
+    const remaining = trip.days
+      .filter(d => d.dayNumber !== dayNumber)
+      .map((d, i) => ({ ...d, dayNumber: i + 1 }));
+
+    // Recalculate endDate for fixed-date trips
+    let newEndDate = trip.endDate;
+    if (!trip.flexibleDates && trip.endDate && trip.startDate) {
+      const start = new Date(trip.startDate + 'T00:00:00');
+      const end = new Date(start);
+      end.setDate(end.getDate() + remaining.length - 1);
+      newEndDate = end.toISOString().split('T')[0];
+    }
+
+    // Recalculate destinations from remaining days
+    const newDestinations = [...new Set(remaining.map(d => d.destination).filter(Boolean))] as string[];
+
+    set(state2 => ({
+      trips: state2.trips.map(t =>
+        t.id === state2.currentTripId
+          ? {
+              ...t,
+              days: remaining,
+              pool: [...t.pool, ...returnedItems],
+              endDate: newEndDate,
+              destinations: newDestinations,
+              location: newDestinations.join(', '),
+            }
+          : t
+      ),
+      // Navigate to adjacent day
+      currentDay: dayNumber > remaining.length ? remaining.length : dayNumber,
+    }));
+
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days, pool: t.pool, endDate: t.endDate, destinations: t.destinations } : {};
     });
   },
 
