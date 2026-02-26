@@ -17,10 +17,18 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     const el = ref.current;
     if (!el) return;
 
+    let rafId: number | null = null;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsInView(true);
+          // Defer by one frame so the browser paints the initial hidden state
+          // before we trigger the CSS transition. Without this, elements already
+          // in the viewport at mount time can skip straight to opacity:1 because
+          // React commits the state change before a paint with opacity:0 occurs.
+          rafId = requestAnimationFrame(() => {
+            setIsInView(true);
+          });
           if (once) observer.unobserve(el);
         } else if (!once) {
           setIsInView(false);
@@ -30,7 +38,10 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [threshold, once, rootMargin]);
 
   return [ref, isInView];

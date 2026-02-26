@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+
 import PageTransition from '@/components/PageTransition';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 // Debug instrumentation removed — useFlickerDebug available in hooks/ if needed
@@ -312,12 +312,10 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Wrapped CTA */}
-                <motion.button
+                <button
                   onClick={() => setShowWrapped(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90"
+                  className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: '#2d3a2d' }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   <span className="text-[11px] font-semibold" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
                     Your Taste Dossier
@@ -325,15 +323,13 @@ export default function ProfilePage() {
                   <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(245,245,240,0.12)', color: '#f5f5f0', fontFamily: FONT.mono }}>
                     Replay →
                   </span>
-                </motion.button>
+                </button>
 
                 {/* Expand Your Mosaic CTA */}
-                <motion.button
+                <button
                   onClick={() => setShowMosaic(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90"
+                  className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)', border: '1px solid rgba(200,146,58,0.12)' }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   <div>
                     <span className="text-[11px] font-semibold block" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
@@ -346,7 +342,7 @@ export default function ProfilePage() {
                   <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(28,26,23,0.06)', color: 'var(--t-ink)', fontFamily: FONT.mono }}>
                     Play →
                   </span>
-                </motion.button>
+                </button>
 
                 {/* Settings links */}
                 <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
@@ -424,12 +420,10 @@ export default function ProfilePage() {
         <>
           {/* Action buttons */}
           <div className="px-5 pt-2 pb-4 flex flex-col gap-2.5">
-            <motion.button
+            <button
               onClick={() => setShowWrapped(true)}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: '#2d3a2d' }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -455,17 +449,15 @@ export default function ProfilePage() {
               >
                 Replay →
               </span>
-            </motion.button>
+            </button>
 
-            <motion.button
+            <button
               onClick={() => setShowMosaic(true)}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
                 border: '1px solid rgba(200,146,58,0.12)',
               }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
@@ -491,7 +483,7 @@ export default function ProfilePage() {
               >
                 Play →
               </span>
-            </motion.button>
+            </button>
           </div>
 
           {/* Deep Dive */}
@@ -678,13 +670,14 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
     >
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-4">
-          <motion.div
+          <div
             className="w-5 h-[1px]"
-            style={{ background: 'var(--t-honey)' }}
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            viewport={{ once: true, margin: '-100px' }}
+            style={{
+              background: 'var(--t-honey)',
+              transformOrigin: 'left',
+              transform: 'scaleX(1)',
+              transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
+            }}
           />
           <SafeFadeIn
             className="text-[9px] uppercase tracking-[0.25em]"
@@ -833,22 +826,24 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
             >
               {/* Thread line */}
               <div className="flex flex-col items-center" style={{ width: 20 }}>
-                <motion.div
+                <div
                   className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: domainColor, marginTop: 4 }}
-                  initial={{ scale: 0.95 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                  viewport={{ once: true, margin: '-100px' }}
+                  style={{
+                    background: domainColor,
+                    marginTop: 4,
+                    transform: 'scale(1)',
+                    transition: `transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${0.2 + i * 0.1}s`,
+                  }}
                 />
                 {i < t.places.length - 1 && (
-                  <motion.div
+                  <div
                     className="w-[1px] flex-1"
-                    style={{ background: INK['10'] }}
-                    initial={{ scaleY: 0 }}
-                    whileInView={{ scaleY: 1 }}
-                    transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
-                    viewport={{ once: true, margin: '-100px' }}
+                    style={{
+                      background: INK['10'],
+                      transformOrigin: 'top',
+                      transform: 'scaleY(1)',
+                      transition: `transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${0.3 + i * 0.1}s`,
+                    }}
                   />
                 )}
               </div>
@@ -1086,12 +1081,14 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
                     <span className="text-[10px] font-bold" style={{ color: domainColor, fontFamily: FONT.mono }}>{s.strength}%</span>
                   </div>
                   <div className="h-1 rounded-full mb-1.5" style={{ background: 'rgba(245,245,240,0.08)' }}>
-                    <motion.div
+                    <div
                       className="h-1 rounded-full"
-                      style={{ background: domainColor, opacity: 0.7 }}
-                      whileInView={{ width: `${s.strength}%` }}
-                      transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
-                      viewport={{ once: true, margin: '-100px' }}
+                      style={{
+                        background: domainColor,
+                        opacity: 0.7,
+                        width: `${s.strength}%`,
+                        transition: `width 1s cubic-bezier(0.16, 1, 0.3, 1) ${0.2 + idx * 0.1}s`,
+                      }}
                     />
                   </div>
                   <p className="text-[10px] leading-snug" style={{ color: 'rgba(245,245,240,0.65)' }}>{s.note}</p>
