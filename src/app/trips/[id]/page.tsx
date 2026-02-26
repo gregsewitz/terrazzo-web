@@ -467,6 +467,24 @@ function TripDetailContent() {
               <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
               Ask Terrazzo
             </button>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer nav-hover"
+              style={{
+                background: 'rgba(214,48,32,0.06)',
+                border: '1px solid rgba(214,48,32,0.15)',
+                fontFamily: FONT.sans,
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--t-signal-red, #d63020)',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              Delete
+            </button>
           </div>
         </div>
 
