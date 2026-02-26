@@ -164,6 +164,7 @@ function DayBoardView({
             }}
             style={{
               width: COL_WIDTH,
+              position: 'relative',
               borderRight: '1px solid var(--t-linen)',
               background: dayDropTarget === day.dayNumber && draggingDay !== day.dayNumber
                 ? 'rgba(42,122,86,0.06)'
@@ -172,6 +173,36 @@ function DayBoardView({
               transition: 'background 150ms ease, opacity 150ms ease',
             }}
           >
+            {/* Remove day × — top-right corner of column */}
+            {trip.days.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setDeleteDayConfirm(day.dayNumber); }}
+                className="flex items-center justify-center rounded-full cursor-pointer"
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  right: 6,
+                  zIndex: 10,
+                  width: 18,
+                  height: 18,
+                  background: `${destColor.accent}15`,
+                  border: 'none',
+                  fontFamily: FONT.sans,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: destColor.accent,
+                  opacity: 0.4,
+                  transition: 'opacity 150ms',
+                  lineHeight: 1,
+                  padding: 0,
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
+                title="Remove this day"
+              >
+                ×
+              </button>
+            )}
             {/* Day column header — draggable for reordering, click selects day */}
             <div
               draggable
@@ -344,29 +375,6 @@ function DayBoardView({
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1">
-                {/* Remove day button */}
-                {trip.days.length > 1 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteDayConfirm(day.dayNumber); }}
-                    className="flex items-center gap-0.5 rounded-full cursor-pointer"
-                    style={{
-                      background: `${destColor.accent}10`,
-                      border: 'none',
-                      padding: '1px 6px 1px 4px',
-                      fontFamily: FONT.sans,
-                      fontSize: 9,
-                      fontWeight: 500,
-                      color: destColor.accent,
-                      opacity: 0.5,
-                      transition: 'opacity 150ms',
-                    }}
-                    onMouseEnter={(e) => { (e.target as HTMLElement).style.opacity = '0.9'; }}
-                    onMouseLeave={(e) => { (e.target as HTMLElement).style.opacity = '0.5'; }}
-                    title="Remove this day"
-                  >
-                    <span style={{ fontSize: 11, lineHeight: 1 }}>×</span>
-                  </button>
-                )}
                 {editingHotelDay === day.dayNumber ? (
                   <div style={{ maxWidth: 180, minWidth: 160 }} onClick={(e) => e.stopPropagation()}>
                     <HotelInput
