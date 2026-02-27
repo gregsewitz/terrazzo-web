@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api-client';
 
 /**
  * Client-side hook for the discover click → resolve → navigate flow.
@@ -23,18 +24,15 @@ export function usePlaceResolver() {
       setResolvingName(name);
 
       try {
-        const res = await fetch('/api/places/resolve', {
+        const data = await apiFetch<{
+          googlePlaceId: string;
+          name: string;
+          location: string;
+          [key: string]: unknown;
+        }>('/api/places/resolve', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, location }),
         });
-
-        if (!res.ok) {
-          console.error('Failed to resolve place:', name, location);
-          return;
-        }
-
-        const data = await res.json();
 
         // Cache in sessionStorage so the detail page can hydrate instantly
         sessionStorage.setItem(

@@ -28,10 +28,12 @@ export async function ensureEnrichment(
     if (existing) {
       // Already enriching or complete — just return the ID so we can link it
       if (existing.status === 'enriching' || existing.status === 'complete') {
+        console.log(`[ensureEnrichment] ${propertyName}: already ${existing.status}, skipping (id: ${existing.id})`);
         return existing.id;
       }
 
-      // Previous run failed — reset and re-trigger
+      // Previous run failed or pending — reset and re-trigger
+      console.log(`[ensureEnrichment] ${propertyName}: status=${existing.status}, re-triggering pipeline`);
       await prisma.placeIntelligence.update({
         where: { id: existing.id },
         data: {
@@ -41,7 +43,7 @@ export async function ensureEnrichment(
         },
       });
 
-      await inngest.send({
+      const sendResult = await inngest.send({
         name: 'pipeline/run',
         data: {
           googlePlaceId,
@@ -51,11 +53,13 @@ export async function ensureEnrichment(
           triggeredByUserId: userId,
         },
       });
+      console.log(`[ensureEnrichment] ${propertyName}: inngest.send result:`, JSON.stringify(sendResult));
 
       return existing.id;
     }
 
     // No intelligence record yet — create and trigger the pipeline
+    console.log(`[ensureEnrichment] ${propertyName}: no existing record, creating + triggering pipeline`);
     const intel = await prisma.placeIntelligence.create({
       data: {
         googlePlaceId,
@@ -66,7 +70,7 @@ export async function ensureEnrichment(
       },
     });
 
-    await inngest.send({
+    const sendResult = await inngest.send({
       name: 'pipeline/run',
       data: {
         googlePlaceId,
@@ -76,6 +80,7 @@ export async function ensureEnrichment(
         triggeredByUserId: userId,
       },
     });
+    console.log(`[ensureEnrichment] ${propertyName}: inngest.send result:`, JSON.stringify(sendResult));
 
     return intel.id;
   } catch (error) {

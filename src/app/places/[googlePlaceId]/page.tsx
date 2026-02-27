@@ -8,6 +8,7 @@ import DesktopNav from '@/components/DesktopNav';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useAuth } from '@/context/AuthContext';
+import { apiFetch } from '@/lib/api-client';
 import { FONT, INK } from '@/constants/theme';
 import type { ImportedPlace, PlaceType, GooglePlaceData } from '@/types';
 
@@ -107,18 +108,11 @@ export default function PlaceDetailPage() {
 
         // No cached data — resolve by searching with the googlePlaceId as the name
         // This handles direct links / refreshes
-        const res = await fetch('/api/places/resolve', {
+        const data = await apiFetch<ResolvedPlace>('/api/places/resolve', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: decodeURIComponent(googlePlaceId), location: '' }),
         });
-
-        if (!res.ok) {
-          setError('Place not found');
-          return;
-        }
-
-        setResolved(await res.json());
+        setResolved(data);
       } catch (err) {
         console.error('Failed to load place:', err);
         setError('Failed to load place details');
@@ -134,9 +128,8 @@ export default function PlaceDetailPage() {
     if (!resolved || saving) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/places/save', {
+      const { place: saved } = await apiFetch<{ place: { id: string } }>('/api/places/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           googlePlaceId: resolved.googlePlaceId,
           name: resolved.name,
@@ -146,12 +139,9 @@ export default function PlaceDetailPage() {
           source: { type: 'url', name: 'Discover Feed' },
         }),
       });
-      if (res.ok) {
-        const { place: saved } = await res.json();
-        setResolved(prev =>
-          prev ? { ...prev, savedPlaceId: saved.id, isInLibrary: true } : prev,
-        );
-      }
+      setResolved(prev =>
+        prev ? { ...prev, savedPlaceId: saved.id, isInLibrary: true } : prev,
+      );
     } catch (err) {
       console.error('Failed to save:', err);
     } finally {
