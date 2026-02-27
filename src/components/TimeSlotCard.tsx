@@ -326,6 +326,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                         specificTime={p.specificTime}
                         specificTimeLabel={p.specificTimeLabel}
                         placeType={p.type}
+                        slotId={slot.id}
                         onSave={(time, label) => setPlaceTime(dayNumber, slot.id, p.id, time, label)}
                       />
                     </div>

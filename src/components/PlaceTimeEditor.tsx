@@ -48,12 +48,23 @@ export function buildTimeDisplay(time24: string, placeType: PlaceType, label?: s
   return `${inferredLabel} at ${formatted}`;
 }
 
+/** Sensible default start time per slot (24h format) */
+const SLOT_DEFAULT_TIMES: Record<string, string> = {
+  breakfast: '08:00',
+  morning: '10:00',
+  lunch: '12:00',
+  afternoon: '14:00',
+  dinner: '19:00',
+  evening: '21:00',
+};
+
 // ─── Inline Time Editor Component ───
 
 interface PlaceTimeEditorProps {
   specificTime?: string;
   specificTimeLabel?: string;
   placeType: PlaceType;
+  slotId?: string;
   onSave: (time: string | undefined, label?: string) => void;
   compact?: boolean;
 }
@@ -62,6 +73,7 @@ export default function PlaceTimeEditor({
   specificTime,
   specificTimeLabel,
   placeType,
+  slotId,
   onSave,
   compact = false,
 }: PlaceTimeEditorProps) {
@@ -74,31 +86,29 @@ export default function PlaceTimeEditor({
   useEffect(() => {
     if (editing && inputRef.current) {
       inputRef.current.focus();
-      // On mobile, the click/showPicker triggers the native time picker
       try { inputRef.current.showPicker?.(); } catch {}
     }
   }, [editing]);
 
-  // Close on click outside
+  // Close on click outside (cancel without saving)
   useEffect(() => {
     if (!editing) return;
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        handleSave();
+        setEditing(false);
+        setTimeValue(specificTime || '');
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [editing, timeValue]);
+  }, [editing, specificTime]);
 
-  const handleSave = useCallback(() => {
+  const handleConfirm = useCallback(() => {
     setEditing(false);
-    if (timeValue && timeValue !== specificTime) {
+    if (timeValue) {
       onSave(timeValue, specificTimeLabel);
-    } else if (!timeValue && specificTime) {
-      onSave(undefined); // Clear time
     }
-  }, [timeValue, specificTime, specificTimeLabel, onSave]);
+  }, [timeValue, specificTimeLabel, onSave]);
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -109,9 +119,11 @@ export default function PlaceTimeEditor({
 
   const handleStartEdit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setTimeValue(specificTime || '');
+    // Pre-fill with existing time, or a sensible default for this slot
+    const defaultTime = specificTime || (slotId && SLOT_DEFAULT_TIMES[slotId]) || '';
+    setTimeValue(defaultTime);
     setEditing(true);
-  }, [specificTime]);
+  }, [specificTime, slotId]);
 
   // ─── Display mode: show time or "+ time" affordance ───
   if (!editing) {
@@ -157,7 +169,7 @@ export default function PlaceTimeEditor({
     );
   }
 
-  // ─── Edit mode: branded time input ───
+  // ─── Edit mode: branded time input with confirm ───
   return (
     <div
       ref={containerRef}
@@ -180,10 +192,9 @@ export default function PlaceTimeEditor({
           value={timeValue}
           onChange={(e) => setTimeValue(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSave();
+            if (e.key === 'Enter') handleConfirm();
             if (e.key === 'Escape') { setEditing(false); setTimeValue(specificTime || ''); }
           }}
-          onBlur={handleSave}
           style={{
             fontFamily: FONT.mono,
             fontSize: compact ? 10 : 11,
@@ -196,6 +207,27 @@ export default function PlaceTimeEditor({
           }}
         />
       </div>
+      {/* Confirm button */}
+      <button
+        onClick={handleConfirm}
+        disabled={!timeValue}
+        className="flex items-center justify-center rounded-md transition-opacity"
+        style={{
+          padding: '2px 8px',
+          background: timeValue ? 'var(--t-verde, rgba(42,122,86,1))' : INK['10'],
+          border: 'none',
+          cursor: timeValue ? 'pointer' : 'default',
+          fontFamily: FONT.sans,
+          fontSize: compact ? 9 : 10,
+          fontWeight: 500,
+          color: timeValue ? '#fff' : INK['35'],
+          letterSpacing: '0.01em',
+          lineHeight: '18px',
+        }}
+      >
+        Set
+      </button>
+      {/* Clear button — only when editing an existing time */}
       {specificTime && (
         <button
           onClick={handleClear}
