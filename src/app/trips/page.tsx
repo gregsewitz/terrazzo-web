@@ -267,17 +267,6 @@ export default function TripsPage() {
             </button>
           ))}
 
-          <button
-            onClick={() => router.push('/trips/new')}
-            className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-none cursor-pointer transition-all hover:scale-[1.01]"
-            style={{ background: INK['02'], border: '1.5px dashed var(--t-travertine)', color: INK['90'] }}
-          >
-            <span className="text-2xl">
-              +
-            </span>
-            <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
-            <span className="text-[11px]" style={{ color: INK['90'] }}>Tell us where and when — we'll find your perfect places</span>
-          </button>
         </div>
       </div>
       <TabBar />
