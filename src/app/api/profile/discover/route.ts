@@ -6,8 +6,29 @@ import { authHandler } from '@/lib/api-auth-handler';
 import { searchPlace } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
+import type {
+  TasteProfile,
+  TasteContradiction,
+  GeneratedTasteProfile,
+  OnboardingLifeContext,
+} from '@/types';
+import { DEFAULT_USER_PROFILE } from '@/lib/taste-match';
+
+// RAG-grounded discover modules
+import {
+  fetchCandidateProperties,
+  scoreAllCandidates,
+  scoreWithVectors,
+} from '@/lib/discover-candidates';
+import {
+  hasEnoughCandidates,
+  allocateSlots,
+} from '@/lib/discover-allocation';
+import { generateEditorialCopy } from '@/lib/discover-editorial';
 
 const anthropic = new Anthropic();
+
+// ─── Legacy LLM-only prompt (kept for fallback) ─────────────────────────────
 
 const DISCOVER_SYSTEM_PROMPT = `You are Terrazzo's editorial intelligence — a deeply tasteful, well-traveled curator who writes like the best travel magazines but thinks like a data scientist. Given a user's complete taste profile, generate a hyper-personalized discover feed that feels like a love letter from someone who truly understands how they travel.
 
@@ -136,9 +157,10 @@ RULES:
 - The tasteTension editorial should be genuinely psychologically insightful, not just restating the contradiction.
 - signalThread should pick their most interesting signal and show how it plays out across very different place types.`;
 
+// ─── Legacy helpers (for LLM-only fallback) ──────────────────────────────────
+
 /**
  * Extract all unique place name+location pairs from the AI-generated discover feed.
- * Used to pre-resolve and enrich places at generation time rather than on-click.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractPlaces(feed: any): Array<{ name: string; location: string }> {
@@ -153,34 +175,22 @@ function extractPlaces(feed: any): Array<{ name: string; location: string }> {
     places.push({ name, location: location || '' });
   }
 
-  // becauseYouCards
   for (const card of feed.becauseYouCards || []) add(card.place, card.location);
-  // signalThread.places
   for (const p of feed.signalThread?.places || []) add(p.name, p.location);
-  // tasteTension.resolvedBy
   add(feed.tasteTension?.resolvedBy?.name, feed.tasteTension?.resolvedBy?.location);
-  // weeklyCollection.places
   for (const p of feed.weeklyCollection?.places || []) add(p.name, p.location);
-  // moodBoards[].places[]
   for (const board of feed.moodBoards || []) {
     for (const p of board.places || []) add(p.name, p.location);
   }
-  // deepMatch
   add(feed.deepMatch?.name, feed.deepMatch?.location);
-  // stretchPick
   add(feed.stretchPick?.name, feed.stretchPick?.location);
-  // contextRecs
   for (const rec of feed.contextRecs || []) add(rec.name, rec.location);
 
   return places;
 }
 
 /**
- * Resolve all places via Google Places API concurrently, returning a lookup map
- * of name||location → googlePlaceId. Also triggers enrichment for each resolved place.
- *
- * Runs BEFORE the response is sent so we can attach googlePlaceIds to the feed.
- * Uses Promise.allSettled so one failure doesn't block the rest.
+ * Resolve all places via Google Places API concurrently (legacy flow).
  */
 async function resolveAllPlaces(
   places: Array<{ name: string; location: string }>,
@@ -197,7 +207,6 @@ async function resolveAllPlaces(
       const googlePlaceId = googleResult.id;
       const resolvedName = googleResult.displayName?.text || name;
 
-      // Fire-and-forget enrichment (don't wait for pipeline to complete)
       ensureEnrichment(googlePlaceId, resolvedName, userId).catch(() => {});
 
       return { name, location, googlePlaceId };
@@ -221,7 +230,7 @@ async function resolveAllPlaces(
 }
 
 /**
- * Walk the feed and attach googlePlaceId to every place object using the lookup map.
+ * Walk the feed and attach googlePlaceId to every place object (legacy flow).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function attachPlaceIds(feed: any, placeIdMap: Map<string, string>): void {
@@ -233,47 +242,33 @@ function attachPlaceIds(feed: any, placeIdMap: Map<string, string>): void {
     if (id) obj.googlePlaceId = id;
   }
 
-  // becauseYouCards (use "place" field instead of "name")
   for (const card of feed.becauseYouCards || []) attach(card);
-  // signalThread.places
   for (const p of feed.signalThread?.places || []) attach(p);
-  // tasteTension.resolvedBy
   attach(feed.tasteTension?.resolvedBy);
-  // weeklyCollection.places
   for (const p of feed.weeklyCollection?.places || []) attach(p);
-  // moodBoards[].places[]
   for (const board of feed.moodBoards || []) {
     for (const p of board.places || []) attach(p);
   }
-  // deepMatch
   attach(feed.deepMatch);
-  // stretchPick
   attach(feed.stretchPick);
-  // contextRecs
   for (const rec of feed.contextRecs || []) attach(rec);
 }
 
-export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
-  const ip = getClientIp(req.headers);
-  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
-  if (!rl.success) return rateLimitResponse();
+// ─── Legacy LLM-only flow ────────────────────────────────────────────────────
 
-  try {
-    const validation = await validateBody(req, profileDiscoverSchema);
-    if ('error' in validation) {
-      return validation.error;
-    }
-    // These are loosely-typed objects from the client — cast for template access
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { userProfile, lifeContext } = validation.data as any;
+async function generateLegacyFeed(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  userProfile: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lifeContext: any,
+  userId: string,
+) {
+  const month = new Date().getMonth();
+  const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
+  const companion = lifeContext?.primaryCompanions?.[0] || 'solo';
+  const contextLabel = companion !== 'solo' ? `With ${companion}` : season;
 
-    // Determine context based on season and life context
-    const month = new Date().getMonth();
-    const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
-    const companion = lifeContext?.primaryCompanions?.[0] || 'solo';
-    const contextLabel = companion !== 'solo' ? `With ${companion}` : season;
-
-    const contextMessage = `
+  const contextMessage = `
 USER'S TASTE PROFILE:
 - Archetype: ${userProfile.overallArchetype}
 - Description: ${userProfile.archetypeDescription || ''}
@@ -299,36 +294,145 @@ CONTEXT LABEL FOR RECS: "${contextLabel}"
 
 Generate the full discover feed. Return valid JSON only.`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system: [{ type: 'text', text: DISCOVER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: contextMessage }],
-    });
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    system: [{ type: 'text', text: DISCOVER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: contextMessage }],
+  });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return NextResponse.json({ error: 'Failed to parse discover content' }, { status: 500 });
+  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Failed to parse discover content from legacy flow');
+  }
+
+  const result = JSON.parse(jsonMatch[0]);
+
+  // Resolve places via Google API (legacy path — RAG path already has googlePlaceIds)
+  const places = extractPlaces(result);
+  if (places.length > 0) {
+    try {
+      const placeIdMap = await resolveAllPlaces(places, userId);
+      attachPlaceIds(result, placeIdMap);
+    } catch (err) {
+      console.error('[discover-resolve] Pre-resolution failed (non-blocking):', err);
     }
+  }
 
-    const result = JSON.parse(jsonMatch[0]);
+  return result;
+}
 
-    // Resolve all places via Google Places API and attach googlePlaceIds
-    // This runs BEFORE the response so the frontend can link directly to detail pages
-    // without a separate resolve step. Enrichment is triggered as a side effect.
-    const places = extractPlaces(result);
-    if (places.length > 0) {
-      try {
-        const placeIdMap = await resolveAllPlaces(places, user.id);
-        attachPlaceIds(result, placeIdMap);
-      } catch (err) {
-        // Non-fatal — feed still works without googlePlaceIds, just falls back to resolve-on-click
-        console.error('[discover-resolve] Pre-resolution failed (non-blocking):', err);
+// ─── RAG-grounded flow ───────────────────────────────────────────────────────
+
+async function generateGroundedFeed(
+  userProfile: GeneratedTasteProfile,
+  lifeContext: OnboardingLifeContext | null,
+  userId?: string,
+) {
+  // 1. Retrieve enriched candidates (cached)
+  const candidates = await fetchCandidateProperties();
+  console.log(`[discover-rag] ${candidates.length} enriched candidates available`);
+
+  // 2. Extract user signals for scoring
+  const userMicroSignals = userProfile.microTasteSignals || {};
+  const userContradictions: TasteContradiction[] = userProfile.contradictions || [];
+
+  // Build a TasteProfile (domain weights) from radarData
+  // Radar axes (Sensory, Material, etc.) map to domains (Design, Character, etc.)
+  const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
+    Sensory: 'Design',
+    Material: 'Design',
+    Authenticity: 'Character',
+    Social: 'Service',
+    Cultural: 'Location',
+    Spatial: 'Wellness',
+  };
+  const userTasteProfile: TasteProfile = { ...DEFAULT_USER_PROFILE };
+  for (const r of userProfile.radarData || []) {
+    const domain = RADAR_TO_DOMAIN[r.axis];
+    if (domain) {
+      userTasteProfile[domain] = Math.max(userTasteProfile[domain], r.value);
+    }
+  }
+
+  // 3. Score all candidates — use vector-enhanced scoring when available
+  let scored;
+  if (userId) {
+    const { results, vectorEnabled } = await scoreWithVectors(
+      userId,
+      candidates,
+      userTasteProfile,
+      userMicroSignals,
+      userContradictions,
+    );
+    scored = results;
+    if (vectorEnabled) {
+      console.log(`[discover-rag] Using vector-enhanced scoring for user ${userId}`);
+    }
+  } else {
+    scored = scoreAllCandidates(
+      candidates,
+      userTasteProfile,
+      userMicroSignals,
+      userContradictions,
+    );
+  }
+
+  // 4. Check if we have enough for a RAG-grounded feed
+  if (!hasEnoughCandidates(scored.length)) {
+    console.log(`[discover-rag] Only ${scored.length} candidates — falling back to legacy flow`);
+    return null; // Signal caller to use legacy flow
+  }
+
+  console.log(`[discover-rag] Scoring complete. Top score: ${scored[0]?.overallScore}, bottom: ${scored[scored.length - 1]?.overallScore}`);
+
+  // 5. Allocate to feed slots
+  const allocated = allocateSlots(scored, userMicroSignals, userContradictions, lifeContext);
+
+  // 6. Generate editorial copy (Claude writes about pre-selected properties)
+  const feed = await generateEditorialCopy(allocated, userProfile, lifeContext);
+
+  console.log(`[discover-rag] RAG-grounded feed generated successfully`);
+  return feed;
+}
+
+// ─── Route handler ───────────────────────────────────────────────────────────
+
+export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
+
+  try {
+    const validation = await validateBody(req, profileDiscoverSchema);
+    if ('error' in validation) {
+      return validation.error;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { userProfile, lifeContext } = validation.data as any;
+
+    // Try RAG-grounded flow first
+    try {
+      const ragFeed = await generateGroundedFeed(
+        userProfile as GeneratedTasteProfile,
+        lifeContext as OnboardingLifeContext | null,
+        user.id,
+      );
+
+      if (ragFeed) {
+        // RAG flow succeeded — googlePlaceIds are already attached
+        return NextResponse.json(ragFeed);
       }
+    } catch (ragError) {
+      console.error('[discover-rag] RAG flow failed, falling back to legacy:', ragError);
     }
 
-    return NextResponse.json(result);
+    // Fallback: legacy LLM-only flow
+    console.log('[discover] Using legacy LLM-only flow');
+    const legacyFeed = await generateLegacyFeed(userProfile, lifeContext, user.id);
+
+    return NextResponse.json(legacyFeed);
   } catch (error) {
     console.error('Discover generation error:', error);
     return NextResponse.json({ error: 'Failed to generate discover content' }, { status: 500 });

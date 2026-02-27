@@ -18,26 +18,31 @@ const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
 };
 
 /**
+ * Convert a raw tasteProfile JSON (with radarData) into a flat TasteProfile.
+ * Usable from any server context — no request/auth needed.
+ */
+export function parseTasteProfile(raw: unknown): TasteProfile {
+  const tp = raw as { radarData?: { axis: string; value: number }[] } | null;
+  if (!tp?.radarData?.length) return DEFAULT_USER_PROFILE;
+
+  const result: TasteProfile = { ...DEFAULT_USER_PROFILE };
+  for (const r of tp.radarData) {
+    const domain = RADAR_TO_DOMAIN[r.axis];
+    if (domain) {
+      result[domain] = Math.max(result[domain], r.value);
+    }
+  }
+  return result;
+}
+
+/**
  * Try to load the logged-in user's taste profile from DB.
  * Returns DEFAULT_USER_PROFILE if not authenticated or no profile saved.
  */
 export async function getUserTasteProfile(req: NextRequest): Promise<TasteProfile> {
   try {
     const user = await getUser(req);
-    if (!user?.tasteProfile) return DEFAULT_USER_PROFILE;
-
-    const tp = user.tasteProfile as { radarData?: { axis: string; value: number }[] };
-    if (!tp.radarData?.length) return DEFAULT_USER_PROFILE;
-
-    // Convert radar data to 6-domain numeric profile
-    const result: TasteProfile = { ...DEFAULT_USER_PROFILE };
-    for (const r of tp.radarData) {
-      const domain = RADAR_TO_DOMAIN[r.axis];
-      if (domain) {
-        result[domain] = Math.max(result[domain], r.value);
-      }
-    }
-    return result;
+    return parseTasteProfile(user?.tasteProfile);
   } catch {
     return DEFAULT_USER_PROFILE;
   }

@@ -41,6 +41,15 @@ model User {
   tripReactions        TripReaction[]
   slotNotes            SlotNote[]
 
+  // Taste Intelligence (Phase 1)
+  tasteVector          Unsupported("vector(32)")?
+  tasteVectorUpdatedAt DateTime?
+
+  // Taste graph relations
+  tasteNodes           TasteNode[]
+  contradictions       ContradictionNode[]
+  contextModifiers     ContextModifier[]
+
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
@@ -452,6 +461,10 @@ model PlaceIntelligence {
   lastEnrichedAt  DateTime?
   enrichmentTTL   Int      @default(90) // days
 
+  // Taste Intelligence (Phase 2: Property Embeddings)
+  embedding          Unsupported("vector(32)")?
+  embeddingUpdatedAt DateTime?
+
   // Relations
   pipelineRuns    PipelineRun[]
   tripPlaces      Place[]       @relation("TripPlaceIntelligence")
@@ -491,4 +504,69 @@ model PipelineRun {
 
   @@index([placeIntelligenceId])
   @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// Taste Intelligence Graph (Phase 1)
+// ──────────────────────────────────────────────
+
+model TasteNode {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain      String   // Design | Character | Service | Food | Location | Wellness
+  signal      String   // the signal text
+  confidence  Float    @default(0.5)
+  source      String   @default("onboarding") // onboarding | import | behavioral | pipeline
+  category    String?  // from TasteSignal.cat
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([domain])
+  @@index([userId, domain])
+}
+
+model TasteEdge {
+  id        String   @id @default(cuid())
+  edgeType  String   // user_signal | signal_similarity | user_similarity
+  sourceId  String
+  targetId  String
+  weight    Float    @default(1.0)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([edgeType])
+}
+
+model ContradictionNode {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stated     String
+  revealed   String
+  resolution String
+  matchRule  String
+  strength   Float    @default(0.5)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ContextModifier {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  context     String   // solo | partner | friends | family | kids
+  shifts      String   // description of how taste shifts
+  domainDeltas Json?   // { Design: +0.1, Wellness: -0.2, ... }
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
 }

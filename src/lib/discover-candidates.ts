@@ -7,15 +7,17 @@
 
 import { prisma } from '@/lib/prisma';
 import { computeMatchFromSignals } from '@/lib/taste-match';
+import {
+  findSimilarProperties,
+  sqlToVector,
+} from '@/lib/taste-intelligence';
 import type {
   TasteDomain,
   TasteProfile,
   TasteContradiction,
   BriefingSignal,
   BriefingAntiSignal,
-  GeneratedTasteProfile,
 } from '@/types';
-import { DIMENSION_TO_DOMAIN } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,10 @@ export interface ScoredCandidate extends CandidateProperty {
     contradiction: TasteContradiction;
     coversBothSides: boolean;
   } | null;
+  /** Vector cosine similarity score (0-100), present when vectors are available */
+  vectorScore?: number;
+  /** Blended score combining signal-based and vector-based matching */
+  blendedScore?: number;
 }
 
 // ─── In-memory cache (upgrade to Upstash Redis when traffic justifies it) ───
@@ -149,6 +155,85 @@ export function scoreAllCandidates(
   return candidates
     .map((c) => scoreCandidate(c, userProfile, userMicroSignals, userContradictions))
     .sort((a, b) => b.overallScore - a.overallScore);
+}
+
+// ─── Vector-Enhanced Scoring ─────────────────────────────────────────────────
+
+/**
+ * Score candidates using both signal-based matching AND vector similarity.
+ *
+ * When a user has a computed tasteVector:
+ * 1. Fetch top-K vector matches from pgvector (fast ANN via HNSW)
+ * 2. Run signal-based scoring on those candidates
+ * 3. Blend both scores: 60% vector + 40% signal (vector is more reliable)
+ *
+ * Falls back to pure signal-based scoring when vectors aren't available.
+ */
+export async function scoreWithVectors(
+  userId: string,
+  candidates: CandidateProperty[],
+  userProfile: TasteProfile,
+  userMicroSignals: Record<string, string[]>,
+  userContradictions: TasteContradiction[],
+): Promise<{ results: ScoredCandidate[]; vectorEnabled: boolean }> {
+  // Check if this user has a taste vector
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { tasteVector: true },
+  });
+
+  // tasteVector is stored as a Postgres vector type; Prisma returns it as a string
+  const tasteVectorRaw = user?.tasteVector as unknown as string | null;
+
+  if (!tasteVectorRaw) {
+    // No vector — fall back to signal-based scoring
+    console.log('[discover] No taste vector for user, using signal-only scoring');
+    const results = scoreAllCandidates(candidates, userProfile, userMicroSignals, userContradictions);
+    return { results, vectorEnabled: false };
+  }
+
+  const userVector = sqlToVector(tasteVectorRaw);
+
+  // Get vector-based rankings from pgvector (top 100 nearest)
+  const vectorMatches = await findSimilarProperties(userVector, 100);
+
+  // Build a lookup: googlePlaceId → vectorScore
+  const vectorScoreMap = new Map<string, number>();
+  for (const match of vectorMatches) {
+    vectorScoreMap.set(match.googlePlaceId, match.score);
+  }
+
+  // Score all candidates with signal-based approach + blend in vector scores
+  const scored = candidates.map((c) => {
+    const signalScored = scoreCandidate(c, userProfile, userMicroSignals, userContradictions);
+    const vectorScore = vectorScoreMap.get(c.googlePlaceId);
+
+    if (vectorScore !== undefined) {
+      // Blend: 60% vector, 40% signal
+      const blended = Math.round(vectorScore * 0.6 + signalScored.overallScore * 0.4);
+      return {
+        ...signalScored,
+        vectorScore,
+        blendedScore: blended,
+        overallScore: blended, // override overallScore with blended
+      };
+    }
+
+    // Property has no embedding — use signal score alone
+    return {
+      ...signalScored,
+      blendedScore: signalScored.overallScore,
+    };
+  });
+
+  scored.sort((a, b) => b.overallScore - a.overallScore);
+
+  console.log(
+    `[discover] Vector-enhanced scoring: ${vectorScoreMap.size} properties with embeddings, ` +
+    `${scored.filter(s => s.vectorScore !== undefined).length} candidates enriched`
+  );
+
+  return { results: scored, vectorEnabled: true };
 }
 
 // ─── Signal matching helpers ────────────────────────────────────────────────

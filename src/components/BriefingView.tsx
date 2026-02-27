@@ -121,7 +121,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
 
   // Group signals by domain
   const signalsByDomain = useMemo(() => {
-    if (!data?.signals) return {} as Record<TasteDomain, BriefingSignal[]>;
+    if (!data?.signals || !Array.isArray(data.signals)) return {} as Record<TasteDomain, BriefingSignal[]>;
     const grouped: Record<string, BriefingSignal[]> = {};
     data.signals.forEach(sig => {
       const domain = DIMENSION_TO_DOMAIN[sig.dimension] || sig.dimension;

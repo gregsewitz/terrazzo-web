@@ -9,6 +9,8 @@
 
 import { inngest } from './inngest';
 import { prisma } from './prisma';
+import { computeMatchFromSignals } from './taste-match';
+import { parseTasteProfile } from './user-profile';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
@@ -161,7 +163,38 @@ export const placeIntelligencePipeline = inngest.createFunction(
   {
     id: 'place-intelligence-pipeline',
     retries: 2,
-    concurrency: { limit: 25 },
+    concurrency: { limit: 10 },
+    onFailure: async ({ event, error }) => {
+      const data = event.data.event.data as PipelineEventData;
+      const errorMessage = error?.message || 'Unknown error (retries exhausted)';
+
+      console.error(
+        `[pipeline/onFailure] Pipeline failed for ${data.propertyName} (${data.googlePlaceId}): ${errorMessage}`
+      );
+
+      // Mark any "running" PipelineRun records for this intelligence ID as failed
+      await prisma.pipelineRun.updateMany({
+        where: {
+          placeIntelligenceId: data.placeIntelligenceId,
+          status: 'running',
+        },
+        data: {
+          status: 'failed',
+          completedAt: new Date(),
+        },
+      });
+
+      // Reset PlaceIntelligence so it can be re-triggered
+      await prisma.placeIntelligence.update({
+        where: { id: data.placeIntelligenceId },
+        data: {
+          status: 'failed',
+          lastError: errorMessage,
+          lastErrorAt: new Date(),
+          errorCount: { increment: 1 },
+        },
+      });
+    },
   },
   { event: 'pipeline/run' },
   async ({ event, step }) => {
@@ -245,6 +278,34 @@ export const placeIntelligencePipeline = inngest.createFunction(
           durationMs: Date.now() - run.startedAt,
         },
       });
+    });
+
+    // ── Compute & persist taste match for all linked SavedPlaces ──
+    await step.run('compute-taste-match', async () => {
+      // Find all users who have this place saved
+      const savedPlaces = await prisma.savedPlace.findMany({
+        where: { placeIntelligenceId, deletedAt: null },
+        select: { id: true, userId: true },
+      });
+
+      for (const sp of savedPlaces) {
+        const user = await prisma.user.findUnique({
+          where: { id: sp.userId },
+          select: { tasteProfile: true },
+        });
+
+        if (!user?.tasteProfile) continue;
+        const profile = parseTasteProfile(user.tasteProfile);
+        const match = computeMatchFromSignals(merged.signals, merged.antiSignals, profile);
+
+        await prisma.savedPlace.update({
+          where: { id: sp.id },
+          data: {
+            matchScore: match.overallScore,
+            matchBreakdown: match.breakdown as any,
+          },
+        });
+      }
     });
 
     return {

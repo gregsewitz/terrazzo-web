@@ -90,12 +90,6 @@ export function allocateSlots(
 ): AllocatedFeed {
   const used = new Set<string>(); // track used googlePlaceIds
 
-  function take(candidate: ScoredCandidate): boolean {
-    if (used.has(candidate.googlePlaceId)) return false;
-    used.add(candidate.googlePlaceId);
-    return true;
-  }
-
   function takeFirst(
     candidates: ScoredCandidate[],
     filter?: (c: ScoredCandidate) => boolean,

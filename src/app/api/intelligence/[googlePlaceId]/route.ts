@@ -62,8 +62,8 @@ export async function GET(
     return NextResponse.json({
       status: intel.status,
       propertyName: intel.propertyName,
-      signals: intel.signals,
-      antiSignals: intel.antiSignals ?? [],
+      signals: Array.isArray(intel.signals) ? intel.signals : [],
+      antiSignals: Array.isArray(intel.antiSignals) ? intel.antiSignals : [],
       reliability: intel.reliability ?? null,
       facts: intel.facts ?? null,
       signalCount: intel.signalCount,
