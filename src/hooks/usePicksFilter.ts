@@ -182,6 +182,12 @@ const RADIUS_OVERRIDES: Array<[RegExp, number]> = [
   [/\bcopenhagen\b/i, 25],
   // Berlin: Potsdam at 26km is a major day trip.
   [/\bberlin\b/i, 25],
+  // London: Windsor Castle (33km), Hampton Court (20km) are canonical day trips.
+  [/\blondon\b/i, 38],
+  // Dubai: desert resorts (Al Maha ~56km) are THE canonical activity.
+  [/\bdubai\b/i, 60],
+  // Phuket: Phi Phi Islands (45km) is the top day trip.
+  [/\bphuket\b/i, 50],
 
   // ── Oversized regions (bigger than default 55km) ──
   [/\bkruger|sabi sand|limpopo\b/i, 150],
@@ -192,6 +198,12 @@ const RADIUS_OVERRIDES: Array<[RegExp, number]> = [
   [/\bserengeti\b/i, 100],
   [/\brajasthan\b/i, 200],
   [/\bgreek islands\b/i, 200],
+  // Maldives: atolls span ~800km N-S; 300km covers main resort zone.
+  [/\bmaldives\b/i, 300],
+  // Maui: whole island is ~45km across.
+  [/\bmaui\b/i, 50],
+  // Hawaii (Big Island / generic): largest island is ~150km across.
+  [/\bhawaii\b/i, 160],
   [/\bsicily\b/i, 130],
   [/\bprovence\b/i, 80],
   [/\btuscany\b/i, 75],
