@@ -51,9 +51,23 @@ interface PipelineEventData {
   triggeredByUserId?: string;
 }
 
+interface PipelineSignal {
+  dimension: string;
+  confidence: number;
+  signal: string;
+  source_type?: string;
+  review_corroborated?: boolean;
+}
+
+interface PipelineAntiSignal {
+  dimension: string;
+  confidence: number;
+  signal: string;
+}
+
 interface PipelineResult {
-  signals: unknown[];
-  antiSignals: unknown[];
+  signals: PipelineSignal[];
+  antiSignals: PipelineAntiSignal[];
   reliability: { overall: number; categories: Record<string, unknown>; totalReviews: number };
   facts: Record<string, unknown>;
   reviewIntelSummary: Record<string, unknown>;
