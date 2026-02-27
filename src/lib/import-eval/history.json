@@ -21,5 +21,102 @@
     },
     "overall": 0.9149001436030422,
     "testCount": 15
+  },
+  {
+    "timestamp": "2026-02-27T20:38:46.440Z",
+    "label": "prompt-v2",
+    "results": {
+      "bucket-list-luxury": 0.9568783068783069,
+      "jose-ignacio-guide": 0.9000000000000001,
+      "friend-text-tokyo": 0.9875,
+      "minimal-comma-list": 1,
+      "mixed-marrakech": 0.9346153846153846,
+      "numbered-lisbon": 0.9833333333333334,
+      "duplicates-paris": 1,
+      "article-turkey-hotels": 1,
+      "slash-pairs": 1,
+      "email-forward": 1,
+      "url-mrs-smith": 0.8
+    },
+    "overall": 0.9602115477115478,
+    "testCount": 11
+  },
+  {
+    "timestamp": "2026-02-27T20:52:44.293Z",
+    "label": "prompt-v2-streaming",
+    "results": {
+      "bucket-list-luxury": 0.9068783068783068,
+      "jose-ignacio-guide": 0.9681818181818183,
+      "friend-text-tokyo": 0.9875,
+      "minimal-comma-list": 1,
+      "mixed-marrakech": 0.9192307692307692,
+      "numbered-lisbon": 0.9833333333333334,
+      "duplicates-paris": 0.9666666666666667,
+      "article-turkey-hotels": 1,
+      "paris-black-book": 1,
+      "slash-pairs": 1,
+      "email-forward": 1,
+      "url-mrs-smith": 0.8,
+      "tokyo-mega-guide": 0.9500000000000001,
+      "url-cn-hot-list-2025": 0.85,
+      "wishlist-hotels-blog": 0.6200000000000001
+    },
+    "overall": 0.9301193929527263,
+    "testCount": 15
+  },
+  {
+    "timestamp": "2026-02-27T21:13:07.382Z",
+    "label": "prompt-v2-streaming",
+    "results": {
+      "bucket-list-luxury": 0.9568783068783069,
+      "jose-ignacio-guide": 0.9681818181818183,
+      "friend-text-tokyo": 0.9750000000000001,
+      "minimal-comma-list": 1,
+      "mixed-marrakech": 0.9346153846153846,
+      "numbered-lisbon": 0.9833333333333334,
+      "duplicates-paris": 1,
+      "article-turkey-hotels": 1,
+      "paris-black-book": 1,
+      "slash-pairs": 1,
+      "email-forward": 1,
+      "url-mrs-smith": 0.8,
+      "tokyo-mega-guide": 0.9500000000000001,
+      "url-cn-hot-list-2025": 0.75,
+      "wishlist-hotels-blog": 0.6200000000000001
+    },
+    "overall": 0.929200589533923,
+    "testCount": 15
+  },
+  {
+    "timestamp": "2026-02-27T21:44:51.464Z",
+    "label": "prompt-v3-fixes",
+    "results": {
+      "bucket-list-luxury": 0.9068783068783068,
+      "jose-ignacio-guide": 0.9681818181818183,
+      "friend-text-tokyo": 0.9875,
+      "minimal-comma-list": 1,
+      "mixed-marrakech": 0.9846153846153847,
+      "numbered-lisbon": 0.9833333333333334,
+      "duplicates-paris": 1,
+      "article-turkey-hotels": 1,
+      "paris-black-book": 1,
+      "slash-pairs": 1,
+      "email-forward": 1,
+      "url-mrs-smith": 0.8,
+      "tokyo-mega-guide": 0.9500000000000001,
+      "url-cn-hot-list-2025": 0.85,
+      "wishlist-hotels-blog": 0.6700000000000002
+    },
+    "overall": 0.9400339228672562,
+    "testCount": 15
+  },
+  {
+    "timestamp": "2026-02-27T22:03:24.651Z",
+    "label": "prompt-v4-wishlist",
+    "results": {
+      "wishlist-hotels-blog": 0.85
+    },
+    "overall": 0.85,
+    "testCount": 1
   }
 ]

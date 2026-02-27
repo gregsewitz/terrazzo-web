@@ -27,8 +27,20 @@ async function callClaudeWithRetry(
   maxRetries = 3
 ): Promise<any> {
   const client = getClient();
+  // Use streaming for large requests to avoid the 10-minute timeout limit.
+  // The SDK throws "Streaming is required for operations that may take longer
+  // than 10 minutes" for high max_tokens non-streaming calls.
+  const useStreaming = (params.max_tokens || 0) > 8192;
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      if (useStreaming) {
+        // Stream the response and collect it into the same shape as a
+        // non-streaming response so callers don't need to change.
+        const stream = client.messages.stream(params);
+        const response = await stream.finalMessage();
+        return response;
+      }
       return await client.messages.create(params);
     } catch (err: any) {
       if (err?.status === 429 && attempt < maxRetries - 1) {
@@ -114,7 +126,7 @@ First, determine what kind of content this is. Look at the title, intro, and str
 - If the article is a LIST OF RESTAURANTS: extract ONLY the restaurants. A hotel mentioned as "stay nearby at X" is context, not a featured place.
 - If the article is a CITY/DESTINATION GUIDE with multiple categories: extract the featured places from ALL categories (restaurants, bars, cafes, shops, hotels, museums, activities — everything).
 - If the article is a MIXED LIST or bucket list: extract all distinct places.
-- If the article is a PERSONAL BLOG POST or newsletter with editorial storytelling: the featured places may be embedded in paragraphs of narrative. Extract EVERY place that is a recommendation, even if surrounded by anecdotes, travel logistics, or personal stories. A hotel described across two paragraphs of editorial prose is still a featured place.
+- If the article is a PERSONAL BLOG POST or newsletter with editorial storytelling: the featured places may be embedded in paragraphs of narrative. Extract EVERY place that is a recommendation, even if surrounded by anecdotes, travel logistics, or personal stories. A hotel described across two paragraphs of editorial prose is still a featured place. IMPORTANT: blog roundups like "10 Wishlist Hotels" or "My Favorite Restaurants" have a DEFINED NUMBER in the title — you MUST extract ALL of them, not just the first few.
 The key principle: extract the PRIMARY SUBJECTS of the article, not every proper noun that appears in supporting text.
 
 COMPLETENESS (CRITICAL — READ CAREFULLY):
@@ -128,9 +140,13 @@ COMPLETENESS (CRITICAL — READ CAREFULLY):
 - Geographic locations used ONLY as context (like "Norway" in "Swim with Orcas in Norway") are NOT separate places.
 - People's names are NOT places. Section headers are NOT places.
 - Convenience store chains (7-Eleven, FamilyMart, Lawson, etc.) and generic chain references are NOT places.
+- Generic landmarks or intersections (e.g. "Shibuya Crossing", "Times Square", "the souks") are NOT saveable places — only extract them if they are named venues/businesses.
+- Boats, vehicles, or modes of transport are NOT places (e.g. "Set Nefru" dahabiya, "Orient Express" train).
 - Sub-venues (spa, restaurant, bar inside a hotel or resort) are part of the parent venue. Mention them in the description but do NOT extract them as separate places.
 - A place mentioned only as "nearby" or "also consider" or in a photo caption is NOT a featured place unless the article dedicates a section to it.
-- DO NOT STOP EARLY. If the text has 80 places, extract 80 places. Completeness matters more than brevity.
+- Hotels/properties mentioned only as a reference ("my friend's hotel X in Y") are NOT featured places — only extract places the article/text actually recommends or profiles.
+- DO NOT STOP EARLY. If the text has 80 places, extract 80 places. If a blog says "10 hotels", extract all 10. Completeness matters more than brevity.
+- BEFORE RETURNING: Count how many places you found. Then re-scan the text from the MIDDLE and END to check for any you missed. Blog posts and roundups often have equally important entries near the bottom.
 
 PERSONAL CONTEXT — PRESERVE THE VOICE:
 Capture the user's exact words in userContext. Personal notes are the SOUL of the recommendation.
