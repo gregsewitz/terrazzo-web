@@ -79,6 +79,8 @@ interface GeoAnchor {
   lng: number;
   coreKm: number;
   outerKm: number;
+  /** Weight multiplier for scoring (1.0 = primary day, <1.0 = adjacent day bleed) */
+  weight: number;
 }
 
 export interface PicksFilterOptions {
@@ -201,8 +203,10 @@ function geoScore(pLat: number, pLng: number, anchors: GeoAnchor[]): number {
     } else {
       score = 0;
     }
+    // Apply anchor weight (adjacent-day anchors score lower)
+    score *= anchor.weight;
     if (score > best) best = score;
-    if (best === 1.0) return 1.0; // can't improve
+    if (best >= 1.0) return 1.0; // can't improve
   }
   return best;
 }
@@ -269,14 +273,30 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     return day.destination || null;
   }, [selectedDay, trip]);
 
+  // ─── Adjacent-day destination names (for string matching on transition/transit days) ───
+  const adjacentDestinations = useMemo((): string[] => {
+    if (selectedDay === null || !trip) return [];
+    const sorted = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
+    const prevDay = sorted.filter(d => d.dayNumber < selectedDay && d.destination).pop();
+    const nextDay = sorted.find(d => d.dayNumber > selectedDay && d.destination);
+    const adj: string[] = [];
+    if (prevDay?.destination && prevDay.destination.toLowerCase() !== (activeDestination || '').toLowerCase()) {
+      adj.push(prevDay.destination);
+    }
+    if (nextDay?.destination && nextDay.destination.toLowerCase() !== (activeDestination || '').toLowerCase()) {
+      adj.push(nextDay.destination);
+    }
+    return adj;
+  }, [selectedDay, trip, activeDestination]);
+
   // ─── Geo anchors (with adaptive radii) ───
   const activeGeoAnchors = useMemo((): GeoAnchor[] => {
     if (!trip) return [];
     const anchors: GeoAnchor[] = [];
 
-    const makeAnchor = (lat: number, lng: number, geo: GeoDestination | null): GeoAnchor => {
+    const makeAnchor = (lat: number, lng: number, geo: GeoDestination | null, weight = 1.0): GeoAnchor => {
       const core = coreRadiusForDestination(geo);
-      return { lat, lng, coreKm: core, outerKm: core * TAPER_RATIO };
+      return { lat, lng, coreKm: core, outerKm: core * TAPER_RATIO, weight };
     };
 
     if (selectedDay === null) {
@@ -299,43 +319,87 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
         }
       });
     } else {
-      // Specific day
+      // ── Specific day ──
       const day = trip.days.find(d => d.dayNumber === selectedDay);
       const destName = day?.destination;
 
-      // No destination → transit/unassigned day → empty anchors
-      if (!destName) return anchors;
-
-      // 1. Try geoDestinations by name
-      const matchedGeo = trip.geoDestinations?.find(
-        g => g.name.toLowerCase() === destName.toLowerCase()
-      );
-      if (matchedGeo?.lat && matchedGeo?.lng) {
-        anchors.push(makeAnchor(matchedGeo.lat, matchedGeo.lng, matchedGeo));
-      }
-
-      // Build a synthetic GeoDestination for radius inference when
-      // we only have hotel coords. This lets regional destinations like
-      // "Cotswolds" use the wider 55km radius even without a geocoded
-      // geoDestination entry.
-      const syntheticGeo: GeoDestination = matchedGeo ?? { name: destName };
-
-      // 2. Fall back to THIS day's hotel coordinates
-      if (anchors.length === 0 && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
-        anchors.push(makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, syntheticGeo));
-      }
-
-      // 3. Fall back to nearest same-destination day's hotel
-      if (anchors.length === 0 && destName) {
-        const sameDest = trip.days
-          .filter(d => d.destination === destName && d.hotelInfo?.lat && d.hotelInfo?.lng)
+      // Helper: resolve anchors for a destination name at a given weight.
+      // Tries geoDestinations first, then hotel coords for that dest.
+      const resolveDestAnchors = (dest: string, weight: number) => {
+        const geo = trip.geoDestinations?.find(
+          g => g.name.toLowerCase() === dest.toLowerCase()
+        );
+        if (geo?.lat && geo?.lng) {
+          anchors.push(makeAnchor(geo.lat, geo.lng, geo, weight));
+          return;
+        }
+        // Hotel fallback — find nearest day with this destination
+        const synth: GeoDestination = geo ?? { name: dest };
+        const daysWithHotel = trip.days
+          .filter(d => d.destination === dest && d.hotelInfo?.lat && d.hotelInfo?.lng)
           .sort((a, b) =>
             Math.abs(a.dayNumber - selectedDay) - Math.abs(b.dayNumber - selectedDay)
           );
-        if (sameDest.length > 0) {
-          anchors.push(makeAnchor(sameDest[0].hotelInfo!.lat!, sameDest[0].hotelInfo!.lng!, syntheticGeo));
+        if (daysWithHotel.length > 0) {
+          anchors.push(makeAnchor(
+            daysWithHotel[0].hotelInfo!.lat!,
+            daysWithHotel[0].hotelInfo!.lng!,
+            synth,
+            weight,
+          ));
+        }
+      };
+
+      // --- Primary anchors for this day's destination ---
+      if (destName) {
+        resolveDestAnchors(destName, 1.0);
+
+        // Also try THIS day's own hotel as a direct fallback
+        if (anchors.length === 0 && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
+          const synth: GeoDestination = trip.geoDestinations?.find(
+            g => g.name.toLowerCase() === destName.toLowerCase()
+          ) ?? { name: destName };
+          anchors.push(makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, synth, 1.0));
         }
       }
+
+      // --- Adjacent-day bleed ---
+      // On transition days (destination differs from neighbor), include the
+      // adjacent destination's anchors at reduced weight so those places
+      // appear further down the list but remain accessible.
+      const ADJACENT_WEIGHT = 0.55;
+      const sortedDays = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
+
+      // Find previous and next days with destinations
+      const prevDay = sortedDays
+        .filter(d => d.dayNumber < selectedDay && d.destination)
+        .pop(); // last one before selected
+      const nextDay = sortedDays
+        .find(d => d.dayNumber > selectedDay && d.destination);
+
+      // Bleed previous day's destination if it differs from current
+      if (prevDay?.destination) {
+        const prevDest = prevDay.destination;
+        const isDifferent = !destName || prevDest.toLowerCase() !== destName.toLowerCase();
+        if (isDifferent) {
+          resolveDestAnchors(prevDest, ADJACENT_WEIGHT);
+        }
+      }
+
+      // Bleed next day's destination if it differs from current
+      if (nextDay?.destination) {
+        const nextDest = nextDay.destination;
+        const isDifferent = !destName || nextDest.toLowerCase() !== destName.toLowerCase();
+        if (isDifferent) {
+          resolveDestAnchors(nextDest, ADJACENT_WEIGHT);
+        }
+      }
+
+      // --- Transit/unassigned day (no destination) ---
+      // If we still have no anchors at all (day has no destination and
+      // adjacent bleed produced nothing via resolveDestAnchors), the
+      // scoring fallback in destinationScore will handle it by matching
+      // against adjacent destination names via string matching.
     }
 
     return anchors;
@@ -365,22 +429,29 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   const pool = placePool ?? allUnplacedPicks;
 
   // ─── Active geoDestinations (for Place ID matching) ───
+  // Includes adjacent-day destinations so Place ID matching works on transition days
   const activeGeoDestinations = useMemo((): GeoDestination[] | undefined => {
     if (!trip?.geoDestinations) return undefined;
     if (selectedDay === null) return trip.geoDestinations;
-    const destName = activeDestination;
-    if (!destName) return undefined;
+    const names = new Set<string>();
+    if (activeDestination) names.add(activeDestination.toLowerCase());
+    adjacentDestinations.forEach(d => names.add(d.toLowerCase()));
+    if (names.size === 0) return undefined;
     return trip.geoDestinations.filter(
-      g => g.name.toLowerCase() === destName.toLowerCase()
+      g => names.has(g.name.toLowerCase())
     );
-  }, [trip, selectedDay, activeDestination]);
+  }, [trip, selectedDay, activeDestination, adjacentDestinations]);
 
   // ─── Destination scoring (0–1) ───
+  /** Weight applied to adjacent-day string matches (same as geo ADJACENT_WEIGHT) */
+  const ADJACENT_STRING_WEIGHT = 0.55;
+
   const destinationScore = useCallback((place: ImportedPlace): number => {
     // 1. Place ID match — highest confidence, instant 1.0
     if (placeIdMatches(place, activeGeoDestinations)) return 1.0;
 
     // 2. Geo-proximity score (adaptive radius per anchor)
+    //    Anchor weights (primary=1.0, adjacent=0.55) are applied inside geoScore.
     const pLat = place.google?.lat;
     const pLng = place.google?.lng;
     if (pLat && pLng && activeGeoAnchors.length > 0) {
@@ -393,6 +464,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     if (!loc) return 0;
 
     if (selectedDay === null) {
+      // "All days" mode
       if (tripDestinations.length === 0) return 1; // no destinations → everything matches
       let best = 0;
       for (const dest of tripDestinations) {
@@ -402,9 +474,27 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       return best;
     }
 
-    if (!activeDestination) return 1; // transit day → show everything
-    return tokenMatchScore(loc, activeDestination);
-  }, [selectedDay, activeDestination, tripDestinations, activeGeoAnchors, activeGeoDestinations]);
+    // Specific day: try primary destination first
+    if (activeDestination) {
+      const primary = tokenMatchScore(loc, activeDestination);
+      if (primary > 0) return primary;
+    }
+
+    // Try adjacent-day destinations at reduced weight
+    // (transition days: morning in prev city, evening in next city)
+    if (adjacentDestinations.length > 0) {
+      let best = 0;
+      for (const adj of adjacentDestinations) {
+        const s = tokenMatchScore(loc, adj);
+        if (s > best) best = s;
+      }
+      if (best > 0) return best * ADJACENT_STRING_WEIGHT;
+    }
+
+    // Transit day with no primary and no adjacent matches — score 0.
+    // (The geo anchors from adjacent days already handle coord-based places.)
+    return 0;
+  }, [selectedDay, activeDestination, adjacentDestinations, tripDestinations, activeGeoAnchors, activeGeoDestinations]);
 
   // Boolean convenience wrapper
   const matchesDestination = useCallback(
@@ -418,12 +508,12 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     if (searchQuery.trim()) return pool;
 
     // If we have geo anchors or destination names, filter
-    if (activeGeoAnchors.length > 0 || tripDestinations.length > 0 || activeDestination) {
+    if (activeGeoAnchors.length > 0 || tripDestinations.length > 0 || activeDestination || adjacentDestinations.length > 0) {
       return pool.filter(matchesDestination);
     }
 
     return pool;
-  }, [pool, matchesDestination, searchQuery, activeGeoAnchors, tripDestinations, activeDestination]);
+  }, [pool, matchesDestination, searchQuery, activeGeoAnchors, tripDestinations, activeDestination, adjacentDestinations]);
 
   // ─── Full filtering (type + source + search) ───
   const filteredPicks = useMemo(() => {
