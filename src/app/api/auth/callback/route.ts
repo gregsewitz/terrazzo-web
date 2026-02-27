@@ -25,20 +25,51 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // Ensure Prisma User exists
+    // Ensure Prisma User exists — check supabaseId first, then email fallback
+    // (handles users invited as collaborators before they signed up)
     let user = await prisma.user.findUnique({
       where: { supabaseId: authUser.id },
     });
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          supabaseId: authUser.id,
-          email: authUser.email!,
-          name: authUser.user_metadata?.full_name || null,
-          authProvider: authUser.app_metadata?.provider || 'email',
-        },
+    if (!user && authUser.email) {
+      // Check for a pending/invited record with this email
+      user = await prisma.user.findUnique({
+        where: { email: authUser.email },
       });
+
+      if (user) {
+        // Link the existing record to the real Supabase account
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            supabaseId: authUser.id,
+            name: user.name || authUser.user_metadata?.full_name || null,
+            authProvider: authUser.app_metadata?.provider || 'email',
+          },
+        });
+      }
+    }
+
+    if (!user) {
+      try {
+        user = await prisma.user.create({
+          data: {
+            supabaseId: authUser.id,
+            email: authUser.email!,
+            name: authUser.user_metadata?.full_name || null,
+            authProvider: authUser.app_metadata?.provider || 'email',
+          },
+        });
+      } catch (err: unknown) {
+        // Race condition: another request may have created the user
+        if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
+          user = await prisma.user.findUnique({ where: { supabaseId: authUser.id } })
+            ?? await prisma.user.findUnique({ where: { email: authUser.email! } });
+          if (!user) throw err;
+        } else {
+          throw err;
+        }
+      }
     }
 
     const redirectTo = user.isOnboardingComplete ? '/saved' : '/onboarding';
