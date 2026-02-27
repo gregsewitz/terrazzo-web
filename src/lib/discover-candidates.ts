@@ -177,13 +177,12 @@ export async function scoreWithVectors(
   userContradictions: TasteContradiction[],
 ): Promise<{ results: ScoredCandidate[]; vectorEnabled: boolean }> {
   // Check if this user has a taste vector
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { tasteVector: true },
-  });
-
-  // tasteVector is stored as a Postgres vector type; Prisma returns it as a string
-  const tasteVectorRaw = user?.tasteVector as unknown as string | null;
+  // Note: tasteVector uses Prisma's Unsupported("vector(32)") type, so we must
+  // query it via raw SQL instead of the typed client.
+  const vectorResult = await prisma.$queryRaw<{ tasteVector: string | null }[]>`
+    SELECT "tasteVector"::text FROM "User" WHERE id = ${userId} LIMIT 1
+  `;
+  const tasteVectorRaw = vectorResult[0]?.tasteVector ?? null;
 
   if (!tasteVectorRaw) {
     // No vector — fall back to signal-based scoring
