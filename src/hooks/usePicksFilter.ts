@@ -485,13 +485,22 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   const activeGeoAnchors = useMemo((): GeoAnchor[] => {
     if (!trip) return [];
     const anchors: GeoAnchor[] = [];
+    const _debug = selectedDay !== null; // log when day is selected
 
     const makeAnchor = (lat: number, lng: number, geo: GeoDestination | null, weight = 1.0): GeoAnchor | null => {
       const coords = validCoords(lat, lng);
-      if (!coords) return null;
+      if (!coords) { if (_debug) console.log('[PicksFilter] makeAnchor: validCoords rejected', lat, lng); return null; }
       const core = coreRadiusForDestination(geo);
+      if (_debug) console.log('[PicksFilter] makeAnchor: core=', core, 'geo=', geo?.name, 'isRegional=', geo ? isRegionalDestination(geo) : 'null');
       return { lat: coords[0], lng: coords[1], coreKm: core, outerKm: core * TAPER_RATIO, weight };
     };
+
+    if (_debug) {
+      console.log('[PicksFilter] selectedDay:', selectedDay, 'trip.geoDestinations:', trip.geoDestinations);
+      const _day = trip.days.find(d => d.dayNumber === selectedDay);
+      console.log('[PicksFilter] day found:', !!_day, 'dest:', _day?.destination, 'hotelInfo:', JSON.stringify(_day?.hotelInfo));
+      console.log('[PicksFilter] all days:', trip.days.map(d => ({ dn: d.dayNumber, dest: d.destination, hLat: d.hotelInfo?.lat, hLng: d.hotelInfo?.lng })));
+    }
 
     if (selectedDay === null) {
       trip.geoDestinations?.forEach(g => {
@@ -520,9 +529,11 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
         const geo = trip.geoDestinations?.find(
           g => g.name.toLowerCase() === dest.toLowerCase()
         );
+        if (_debug) console.log(`[PicksFilter] resolveDestAnchors("${dest}", ${weight}): geo=`, geo);
         if (geo?.lat && geo?.lng) {
           const a = makeAnchor(geo.lat, geo.lng, geo, weight);
           if (a) anchors.push(a);
+          if (_debug) console.log(`[PicksFilter] → used geoDestination coords:`, geo.lat, geo.lng);
           return;
         }
         const synth: GeoDestination = geo ?? { name: dest };
@@ -531,7 +542,9 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
           .sort((a, b) =>
             Math.abs(a.dayNumber - selectedDay) - Math.abs(b.dayNumber - selectedDay)
           );
+        if (_debug) console.log(`[PicksFilter] → hotel fallback: ${daysWithHotel.length} days found, synth=`, synth);
         if (daysWithHotel.length > 0) {
+          if (_debug) console.log(`[PicksFilter] → using hotel:`, daysWithHotel[0].hotelInfo!.lat!, daysWithHotel[0].hotelInfo!.lng!);
           const a = makeAnchor(
             daysWithHotel[0].hotelInfo!.lat!,
             daysWithHotel[0].hotelInfo!.lng!,
@@ -611,16 +624,19 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   const ADJACENT_STRING_WEIGHT = 0.55;
 
   const destinationScore = useCallback((place: ImportedPlace): number => {
+    const _dbg = selectedDay !== null && /bull|fox|woolpack/i.test(place.name);
     // 1. Place ID match
-    if (placeIdMatches(place, activeGeoDestinations)) return 1.0;
+    if (placeIdMatches(place, activeGeoDestinations)) { if (_dbg) console.log(`[PicksFilter] ${place.name}: placeIdMatch=true → 1.0`); return 1.0; }
 
     const rawCoords = validCoords(place.google?.lat, place.google?.lng);
     const hasValidGeo = rawCoords !== null && activeGeoAnchors.length > 0;
+    if (_dbg) console.log(`[PicksFilter] ${place.name}: rawCoords=`, rawCoords, 'hasValidGeo=', hasValidGeo, 'anchors=', activeGeoAnchors.length);
 
     // 2. Geo-proximity score
     let geo = 0;
     if (hasValidGeo) {
       geo = geoScore(rawCoords![0], rawCoords![1], activeGeoAnchors);
+      if (_dbg) console.log(`[PicksFilter] ${place.name}: geoScore=`, geo);
       if (geo > 0) return geo;
     }
 
@@ -680,10 +696,13 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   const destinationPicks = useMemo(() => {
     if (searchQuery.trim()) return pool;
     if (activeGeoAnchors.length > 0 || tripDestinations.length > 0 || activeDestination || adjacentDestinations.length > 0) {
-      return pool.filter(matchesDestination);
+      const result = pool.filter(matchesDestination);
+      if (selectedDay !== null) console.log(`[PicksFilter] destinationPicks: pool=${pool.length}, filtered=${result.length}, anchors=${activeGeoAnchors.length}, dest="${activeDestination}", adj=[${adjacentDestinations}]`);
+      return result;
     }
+    if (selectedDay !== null) console.log(`[PicksFilter] destinationPicks: no filters active, returning full pool (${pool.length})`);
     return pool;
-  }, [pool, matchesDestination, searchQuery, activeGeoAnchors, tripDestinations, activeDestination, adjacentDestinations]);
+  }, [pool, matchesDestination, searchQuery, activeGeoAnchors, tripDestinations, activeDestination, adjacentDestinations, selectedDay]);
 
   // ─── Full filtering ───
   const filteredPicks = useMemo(() => {
