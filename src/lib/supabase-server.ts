@@ -20,20 +20,48 @@ export async function getUser(req: NextRequest) {
 
   if (error || !authUser) return null;
 
-  // Find or create Prisma user
+  // Find or create Prisma user — check by supabaseId first, then email fallback.
+  // Email fallback handles cases where a user record was created by a collaboration
+  // invite before the user ever signed up (so supabaseId wasn't set yet).
   let user = await prisma.user.findUnique({
     where: { supabaseId: authUser.id },
   });
 
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        supabaseId: authUser.id,
-        email: authUser.email!,
-        name: authUser.user_metadata?.full_name || null,
-        authProvider: authUser.app_metadata?.provider || 'email',
-      },
+  if (!user && authUser.email) {
+    // Check if a record already exists with this email (e.g. from trip sharing)
+    user = await prisma.user.findUnique({
+      where: { email: authUser.email },
     });
+
+    if (user) {
+      // Link the existing email-only record to this Supabase account
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { supabaseId: authUser.id },
+      });
+    }
+  }
+
+  if (!user) {
+    try {
+      user = await prisma.user.create({
+        data: {
+          supabaseId: authUser.id,
+          email: authUser.email!,
+          name: authUser.user_metadata?.full_name || null,
+          authProvider: authUser.app_metadata?.provider || 'email',
+        },
+      });
+    } catch (err) {
+      // Handle race condition: another concurrent request already created this user
+      if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
+        user = await prisma.user.findUnique({ where: { supabaseId: authUser.id } })
+          ?? await prisma.user.findUnique({ where: { email: authUser.email! } });
+        if (!user) throw err; // truly unexpected — re-throw
+      } else {
+        throw err;
+      }
+    }
   }
 
   return user;

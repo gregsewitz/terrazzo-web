@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { PROCESSING_STEPS } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { apiFetch } from '@/lib/api-client';
 import type { GeneratedTasteProfile } from '@/types';
 
 export default function ProcessingPage() {
@@ -32,8 +31,9 @@ export default function ProcessingPage() {
   const runSynthesis = useCallback(async () => {
     setHasError(false);
     try {
-      const profile = await apiFetch<GeneratedTasteProfile>('/api/onboarding/synthesize', {
+      const res = await fetch('/api/onboarding/synthesize', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           signals: allSignals,
           messages: allMessages,
@@ -41,6 +41,10 @@ export default function ProcessingPage() {
           certainties,
         }),
       });
+
+      if (!res.ok) throw new Error(`Synthesis returned ${res.status}`);
+
+      const profile: GeneratedTasteProfile = await res.json();
       setGeneratedProfile(profile);
 
       // Wait for animation to finish before navigating

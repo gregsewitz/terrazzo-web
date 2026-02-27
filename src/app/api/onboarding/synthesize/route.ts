@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingSynthesizeSchema } from '@/lib/api-validation';
-import { authHandler } from '@/lib/api-auth-handler';
+import { getUser } from '@/lib/supabase-server';
 import { searchPlace } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { PROFILE_SYNTHESIS_PROMPT } from '@/constants/onboarding';
-import type { User } from '@prisma/client';
 
 const anthropic = new Anthropic();
 
@@ -48,10 +47,14 @@ async function enrichMatchedProperties(
   }
 }
 
-export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
+export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
   if (!rl.success) return rateLimitResponse();
+
+  // Optional auth — onboarding happens before sign-in, but re-synthesis
+  // from the profile page sends a token. Use it for enrichment if available.
+  const user = await getUser(req).catch(() => null);
 
   try {
     const validation = await validateBody(req, onboardingSynthesizeSchema);
@@ -97,12 +100,14 @@ Return valid JSON only matching the specified schema.`;
     const profile = JSON.parse(jsonMatch[0]);
 
     // Fire-and-forget: resolve matched properties + trigger enrichment pipeline
-    // This runs in the background so the profile is returned immediately
-    const matchedProps = profile.matchedProperties || [];
-    if (matchedProps.length > 0) {
-      enrichMatchedProperties(matchedProps, user.id).catch(err =>
-        console.error('[synthesis-enrichment] Background enrichment failed:', err)
-      );
+    // Only runs when authenticated (re-synthesis from profile page, not initial onboarding)
+    if (user) {
+      const matchedProps = profile.matchedProperties || [];
+      if (matchedProps.length > 0) {
+        enrichMatchedProperties(matchedProps, user.id).catch(err =>
+          console.error('[synthesis-enrichment] Background enrichment failed:', err)
+        );
+      }
     }
 
     return NextResponse.json(profile);
@@ -110,4 +115,4 @@ Return valid JSON only matching the specified schema.`;
     console.error('Profile synthesis error:', error);
     return NextResponse.json({ error: 'Synthesis failed' }, { status: 500 });
   }
-});
+}
