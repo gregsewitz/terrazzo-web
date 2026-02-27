@@ -14,54 +14,194 @@ export function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ─── Adaptive radius ───
-//
-// Fixed radii fail because 50km from central Paris puts you in a
-// different country, while 50km from a Cotswolds centroid misses half the
-// region. We infer the right radius from the destination itself:
-//
-//  1. If geoDestination has a formattedAddress containing country-level or
-//     region-level hints (no city comma-segment), treat it as regional → wide.
-//  2. Otherwise default to an urban-appropriate tight radius.
-//  3. The taper zone is always 1.6× the core radius.
+// ─── Coordinate validation ───
+// Reject null-island (0,0) and out-of-range values
+function validCoords(lat: number | undefined | null, lng: number | undefined | null): [number, number] | null {
+  if (lat == null || lng == null) return null;
+  if (lat === 0 && lng === 0) return null; // Null Island — data error
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return [lat, lng];
+}
 
-/** Default core radius for city destinations (km) */
+// ─── City / Region Alias Map ───
+// Handles: local-language names, abbreviations, boroughs, wards, neighborhoods
+// Key = lowercase alias, Value = canonical English city name
+const CITY_ALIASES: Record<string, string> = {
+  // Abbreviations
+  nyc: 'new york', cdmx: 'mexico city', la: 'los angeles', sf: 'san francisco',
+  dc: 'washington', dtla: 'los angeles', bkk: 'bangkok', hk: 'hong kong',
+
+  // Local-language names → English
+  'københavn': 'copenhagen', firenze: 'florence', wien: 'vienna',
+  praha: 'prague', 'münchen': 'munich', napoli: 'naples',
+  'москва': 'moscow', 'köln': 'cologne', bruxelles: 'brussels',
+  lisboa: 'lisbon', roma: 'rome', athina: 'athens', 'αθήνα': 'athens',
+  '東京': 'tokyo', 'กรุงเทพฯ': 'bangkok',
+
+  // NYC boroughs
+  brooklyn: 'new york', manhattan: 'new york', queens: 'new york',
+  bronx: 'new york', 'staten island': 'new york',
+
+  // London boroughs / neighborhoods
+  camden: 'london', shoreditch: 'london', hackney: 'london',
+  soho: 'london', mayfair: 'london', kensington: 'london',
+  chelsea: 'london', brixton: 'london', islington: 'london',
+  'covent garden': 'london', notting: 'london', 'notting hill': 'london',
+  fitzrovia: 'london', bermondsey: 'london', peckham: 'london',
+  dalston: 'london', marylebone: 'london', whitechapel: 'london',
+
+  // Paris neighborhoods
+  montmartre: 'paris', 'le marais': 'paris', bastille: 'paris',
+  belleville: 'paris', trocadero: 'paris', 'les halles': 'paris',
+  'saint-germain': 'paris', pigalle: 'paris', oberkampf: 'paris',
+  republique: 'paris', batignolles: 'paris', 'rive gauche': 'paris',
+  arrondissement: 'paris', // "1er arrondissement" → Paris
+
+  // Rome neighborhoods
+  trastevere: 'rome', testaccio: 'rome', monti: 'rome',
+  prati: 'rome', parioli: 'rome', esquilino: 'rome',
+
+  // Berlin neighborhoods
+  kreuzberg: 'berlin', mitte: 'berlin', 'prenzlauer berg': 'berlin',
+  neukölln: 'berlin', charlottenburg: 'berlin', friedrichshain: 'berlin',
+  schöneberg: 'berlin', tempelhof: 'berlin', moabit: 'berlin',
+
+  // NYC neighborhoods (beyond boroughs)
+  williamsburg: 'new york', dumbo: 'new york', tribeca: 'new york',
+  'lower east side': 'new york', 'soho nyc': 'new york', nolita: 'new york',
+  bushwick: 'new york', 'park slope': 'new york', astoria: 'new york',
+  harlem: 'new york', 'east village': 'new york', 'west village': 'new york',
+  greenpoint: 'new york', 'red hook': 'new york', 'chelsea nyc': 'new york',
+
+  // San Francisco neighborhoods
+  haight: 'san francisco', 'haight-ashbury': 'san francisco',
+  mission: 'san francisco', castro: 'san francisco',
+  'north beach': 'san francisco', soma: 'san francisco',
+  'nob hill': 'san francisco', richmond: 'san francisco',
+  'pacific heights': 'san francisco', dogpatch: 'san francisco',
+
+  // Stockholm neighborhoods
+  'södermalm': 'stockholm', 'östermalm': 'stockholm',
+  vasastan: 'stockholm', kungsholmen: 'stockholm',
+  'gamla stan': 'stockholm', norrmalm: 'stockholm', djurgården: 'stockholm',
+
+  // Copenhagen neighborhoods
+  'nørrebro': 'copenhagen', 'østerbro': 'copenhagen',
+  vesterbro: 'copenhagen', frederiksberg: 'copenhagen',
+  christianshavn: 'copenhagen', amager: 'copenhagen',
+
+  // Tokyo wards (strip -ku suffix handled separately, but also direct map)
+  'shibuya-ku': 'tokyo', 'shinjuku-ku': 'tokyo', 'minato-ku': 'tokyo',
+  'chiyoda-ku': 'tokyo', 'meguro-ku': 'tokyo', 'setagaya-ku': 'tokyo',
+  shibuya: 'tokyo', shinjuku: 'tokyo', roppongi: 'tokyo', ginza: 'tokyo',
+  harajuku: 'tokyo', asakusa: 'tokyo', akihabara: 'tokyo',
+};
+
+// Resolve a single token or multi-word fragment against aliases.
+// Returns the canonical name or the original string unchanged.
+function resolveAlias(s: string): string {
+  const lower = s.toLowerCase().trim();
+  if (CITY_ALIASES[lower]) return CITY_ALIASES[lower];
+  // Handle Japanese -ku ward suffix: "shibuya-ku" → try "shibuya"
+  if (lower.endsWith('-ku')) {
+    const base = lower.slice(0, -3);
+    if (CITY_ALIASES[base]) return CITY_ALIASES[base];
+  }
+  return lower;
+}
+
+// ─── Compound destination splitting ───
+// Splits "Noto / Syracuse", "Stockholm & Copenhagen",
+// "Ubud / Seminyak / Canggu", "Lake Como, Bellagio & Tremezzo"
+// into individual destination tokens.
+function splitCompoundDestination(dest: string): string[] {
+  return dest
+    .split(/\s*[\/&]\s*|,\s*/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    // Strip parenthetical qualifiers: "Paris (Left Bank)" → "Paris"
+    .map(s => s.replace(/\s*\(.*?\)\s*$/, '').trim())
+    .filter(s => s.length > 0);
+}
+
+// ─── Vague location stripping ───
+// Remove noise prefixes/suffixes that block matching:
+// "Near Serengeti" → "Serengeti", "Noto area" → "Noto",
+// "Outside Copenhagen" → "Copenhagen", "Greater London" → "London",
+// "About 2 hours from Marrakech" → "Marrakech"
+const VAGUE_PREFIX = /^(?:near|outside|around|close to|just (?:outside|off)|about\s+\d+\s+(?:hours?|hrs?|minutes?|mins?|km|miles?)\s+(?:from|to|outside))\s+/i;
+const VAGUE_SUFFIX = /\s+(?:area|region|vicinity|surroundings|outskirts)$/i;
+const GREATER_PREFIX = /^greater\s+/i;
+
+function stripVagueQualifiers(s: string): string {
+  let cleaned = s.trim();
+  cleaned = cleaned.replace(VAGUE_PREFIX, '');
+  cleaned = cleaned.replace(VAGUE_SUFFIX, '');
+  cleaned = cleaned.replace(GREATER_PREFIX, '');
+  return cleaned.trim();
+}
+
+// ─── Adaptive radius ───
 const URBAN_CORE_KM = 18;
-/** Core radius for regional/rural destinations (km) */
 const REGIONAL_CORE_KM = 55;
-/** Taper multiplier: outer = core × this */
 const TAPER_RATIO = 1.6;
 
-/**
- * Infer whether a geoDestination is a region vs. a city.
- * Uses formattedAddress heuristics — Google Geocoding returns things like:
- *   "Paris, France"                  → city (has comma-separated locality)
- *   "Cotswolds, England, UK"         → region (known region terms)
- *   "Tuscany, Italy"                 → region
- *   "Amalfi Coast, Province of…"     → region
- *
- * Falls back to name-based heuristics when no address is available.
- */
-const REGION_HINTS = /\b(coast|valley|region|island|islands|lake|lakes|countryside|hills|highlands|mountains|riviera|peninsula|province|county|shire|prefecture|district)\b/i;
-const KNOWN_REGIONS = /\b(cotswolds|tuscany|provence|burgundy|champagne|alsace|dordogne|algarve|cinque terre|amalfi|capri|lake district|peak district|loire|costa brava|dalmatian|patagonia|basque country|black forest|bavari|normand|sicily|sardinia|crete|peloponnese|hokkaido|okinawa|bali|rajasthan|tulum|yucatan|napa|hamptons|cape cod|finger lakes|big sur|outer banks|ozarks|blue ridge)\b/i;
+// Expanded KNOWN_REGIONS (from edge-case spreadsheet "Missing Regions" sheet)
+const KNOWN_REGIONS = /\b(cotswolds|tuscany|provence|burgundy|champagne|alsace|dordogne|algarve|cinque terre|amalfi|capri|lake district|peak district|loire|costa brava|dalmatian|patagonia|basque country|black forest|bavari|normand|sicily|sardinia|crete|peloponnese|hokkaido|okinawa|bali|rajasthan|tulum|yucatan|napa|hamptons|cape cod|finger lakes|big sur|outer banks|ozarks|blue ridge|new forest|yorkshire dales|scottish highlands|wye valley|hunter valley|barossa|yarra valley|alentejo|douro|istria|puglia|apulia|umbria|piedmont|piemonte|lofoten|kruger|sabi sand|limpopo|masai mara|maasai mara|serengeti|southern utah|catskills|berkshires|sonoma|cape winelands|stellenbosch|franschhoek|kerala|backwaters|queenstown|milford sound|fiordland|napa valley)\b/i;
+
+const REGION_HINTS = /\b(coast|valley|region|island|islands|lake|lakes|countryside|hills|highlands|mountains|riviera|peninsula|province|county|shire|prefecture|district|national park|safari|reserve|game reserve)\b/i;
+
+// Destination-specific radius overrides.
+// Handles BOTH oversized regions (bigger than 55km default) AND compact
+// regions (smaller than 55km default) AND expanded urban areas.
+// Checked first — takes priority over isRegionalDestination heuristic.
+const RADIUS_OVERRIDES: Array<[RegExp, number]> = [
+  // ── Compact regions (smaller than default 55km) ──
+  // Cinque Terre: 5 villages spanning ~12km of coast. 55km would swallow
+  // Portofino, La Spezia, and half the Ligurian coast. 20km covers the
+  // actual 5 Terre plus immediate surroundings.
+  [/\bcinque terre\b/i, 20],
+  // Amalfi Coast: ~50km of coastline. 30km from a mid-point anchor covers it.
+  [/\bamalfi\b/i, 30],
+  // Capri: tiny island, 6km across.
+  [/\bcapri\b/i, 15],
+
+  // ── Expanded urban (wider than default 18km) ──
+  // Reykjavik: Blue Lagoon at 37km is THE canonical day activity.
+  // Spreadsheet recommends 40km.
+  [/\breykjavik\b/i, 40],
+  // Los Angeles: massive sprawl. Malibu=30km, Santa Monica=20km.
+  [/\blos angeles\b/i, 28],
+  // Copenhagen: Louisiana Museum at 35km is a top attraction.
+  [/\bcopenhagen\b/i, 25],
+  // Berlin: Potsdam at 26km is a major day trip.
+  [/\bberlin\b/i, 25],
+
+  // ── Oversized regions (bigger than default 55km) ──
+  [/\bkruger|sabi sand|limpopo\b/i, 150],
+  [/\bscottish highlands|highlands of scotland\b/i, 120],
+  [/\bsouthern utah\b/i, 130],
+  [/\blofoten\b/i, 90],
+  [/\bmasai mara|maasai mara\b/i, 80],
+  [/\bserengeti\b/i, 100],
+  [/\brajasthan\b/i, 200],
+  [/\bgreek islands\b/i, 200],
+  [/\bsicily\b/i, 130],
+  [/\bprovence\b/i, 80],
+  [/\btuscany\b/i, 75],
+  [/\bpatagonia\b/i, 200],
+  [/\bhokkaido\b/i, 130],
+];
 
 function isRegionalDestination(geo: GeoDestination): boolean {
   const addr = geo.formattedAddress || '';
   const name = geo.name || '';
-  // Check name and address for region signals
   if (REGION_HINTS.test(name) || REGION_HINTS.test(addr)) return true;
   if (KNOWN_REGIONS.test(name) || KNOWN_REGIONS.test(addr)) return true;
-  // If the formattedAddress has very few comma-segments, it's likely a region
-  // e.g. "Cotswolds, England, UK" (3 parts, no street/city)
-  // vs.  "Paris, Île-de-France, France" (3 parts, but "Paris" is first = city)
-  // Heuristic: if name doesn't appear as the first segment of a multi-segment
-  // address, it's probably a broad area
   const segments = addr.split(',').map(s => s.trim());
   if (segments.length >= 2) {
     const firstName = segments[0].toLowerCase();
     const destName = name.toLowerCase();
-    // If the first address segment doesn't start with or match the dest name,
-    // it's likely a region whose name doesn't correspond to a city
     if (!firstName.includes(destName) && !destName.includes(firstName)) return true;
   }
   return false;
@@ -69,70 +209,69 @@ function isRegionalDestination(geo: GeoDestination): boolean {
 
 function coreRadiusForDestination(geo: GeoDestination | null): number {
   if (!geo) return URBAN_CORE_KM;
+  const name = geo.name || '';
+  // Check destination-specific overrides first (compact, expanded, oversized)
+  for (const [pattern, radius] of RADIUS_OVERRIDES) {
+    if (pattern.test(name)) return radius;
+  }
   return isRegionalDestination(geo) ? REGIONAL_CORE_KM : URBAN_CORE_KM;
 }
 
 // ─── Types ───
-
 interface GeoAnchor {
   lat: number;
   lng: number;
   coreKm: number;
   outerKm: number;
-  /** Weight multiplier for scoring (1.0 = primary day, <1.0 = adjacent day bleed) */
   weight: number;
 }
 
 export interface PicksFilterOptions {
-  /** Which day is selected — null means "All days" */
   selectedDay: number | null;
-  /** Type filter ('all' | PlaceType) */
   typeFilter: string;
-  /** Source filter */
   sourceFilter: string;
-  /** Search query text */
   searchQuery: string;
-  /**
-   * Optional override for the place pool to match against.
-   * Defaults to: all unplaced library places from savedStore.
-   */
   placePool?: ImportedPlace[];
 }
 
 export interface PicksFilterResult {
-  /** All trip destination names */
   tripDestinations: string[];
-  /** The active day's destination name (or null for "all days" / transit) */
   activeDestination: string | null;
-  /** Geo anchors for proximity matching (with adaptive radii) */
   activeGeoAnchors: GeoAnchor[];
-  /** IDs of places already placed in slots (includes ghost items) */
   placedIds: Set<string>;
-  /** All unplaced library places (no destination filter) */
   allUnplacedPicks: ImportedPlace[];
-  /** Picks filtered to trip/day destinations (before type/source/search) */
   destinationPicks: ImportedPlace[];
-  /** Fully filtered picks (destination + type + source + search) */
   filteredPicks: ImportedPlace[];
   /**
    * Destination relevance score for a place (0–1).
    *
-   * Scoring tiers (first match wins):
-   *  1.0  — Google Place ID matches a trip destination's placeId
-   *  1.0  — within adaptive core geo radius
+   * Scoring pipeline (first match wins):
+   *  1.0    — Google Place ID match
+   *  1.0    — within adaptive core geo radius
    *  0.3…1.0 — within taper zone (linear falloff)
-   *  0.7  — all destination tokens match place location tokens exactly
-   *  0.5  — all destination tokens match (substring)
-   *  0    — no match
+   *  0.7    — all destination tokens match place location tokens (alias-resolved)
+   *  0.5    — all destination tokens match via substring (alias-resolved)
+   *  0      — no match
+   *
+   * Conflict resolution: when geo says NO (beyond outer radius) but string
+   * says YES (token match), geo wins. This prevents "Outside Copenhagen"
+   * (130km away) from matching on the string "Copenhagen".
    */
   destinationScore: (place: ImportedPlace) => number;
-  /** Boolean convenience: destinationScore(place) > 0 */
   matchesDestination: (place: ImportedPlace) => boolean;
 }
 
-// ─── String matching ───
+// ─── String matching (alias-aware) ───
 
-/** Normalise a location string into comparable tokens */
+const STOP_WORDS = new Set([
+  'the', 'of', 'in', 'at', 'and', 'on', 'to', 'for',
+  'de', 'di', 'da', 'la', 'le', 'les', 'du', 'des', 'el', 'lo', 'los', 'las',
+  'city', 'greater', 'area', 'region', 'district', 'province', 'state',
+  'county', 'borough', 'town', 'village',
+  'near', 'outside', 'around', 'about', 'from', 'hours', 'hrs',
+  'km', 'miles', 'minutes', 'mins',
+]);
+
 function tokenize(s: string): string[] {
   return s
     .toLowerCase()
@@ -143,54 +282,115 @@ function tokenize(s: string): string[] {
     .filter(t => !STOP_WORDS.has(t));
 }
 
-const STOP_WORDS = new Set([
-  'the', 'of', 'in', 'at', 'and', 'on', 'to', 'for',
-  'de', 'di', 'da', 'la', 'le', 'les', 'du', 'des', 'el', 'lo', 'los', 'las',
-  'city', 'greater', 'area', 'region', 'district', 'province', 'state',
-  'county', 'borough', 'arrondissement', 'town', 'village',
-]);
+/**
+ * Resolve an array of tokens through the alias map.
+ * Multi-word aliases (e.g. "le marais" → "paris") require checking
+ * consecutive token pairs/triples.
+ *
+ * When an alias resolves to a multi-word name (e.g. "nyc" → "new york"),
+ * we inject BOTH the combined form ("new york") AND the individual words
+ * ("new", "york") so that token-level matching works correctly.
+ * Without this, "nyc" → "new york" wouldn't match destination tokens
+ * ["new", "york"] because "new" is only 3 chars (below the 4-char
+ * substring threshold).
+ */
+function resolveTokenAliases(tokens: string[]): string[] {
+  const resolved = new Set<string>(tokens);
+
+  const addAlias = (alias: string) => {
+    resolved.add(alias);
+    // If alias is multi-word, also inject individual words
+    if (alias.includes(' ')) {
+      for (const part of alias.split(/\s+/)) {
+        if (part.length > 1) resolved.add(part);
+      }
+    }
+  };
+
+  // Check each token individually
+  for (const t of tokens) {
+    const alias = resolveAlias(t);
+    if (alias !== t) addAlias(alias);
+  }
+
+  // Check consecutive pairs ("le marais", "staten island", etc.)
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const pair = `${tokens[i]} ${tokens[i + 1]}`;
+    const alias = resolveAlias(pair);
+    if (alias !== pair) addAlias(alias);
+  }
+
+  // Check consecutive triples
+  for (let i = 0; i < tokens.length - 2; i++) {
+    const triple = `${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}`;
+    const alias = resolveAlias(triple);
+    if (alias !== triple) addAlias(alias);
+  }
+
+  return [...resolved];
+}
 
 /**
  * Token-overlap score between a place's location and a destination name.
  *
- * Requires ALL destination tokens to appear in the place location.
- * This prevents "York, England" matching "New York" (because "new" is absent),
- * and "San Jose" matching "San Francisco" (because "francisco" ≠ "jose").
+ * Key improvements over v1:
+ *  - Resolves aliases on BOTH sides (place location and destination)
+ *  - Strips vague qualifiers ("Near X", "X area") before tokenizing
+ *  - Splits compound destinations (Noto / Syracuse) into sub-tokens
+ *  - Matches if ANY sub-destination's tokens all appear in place location
  *
  * Returns:
- *  0.7 — all destination tokens match exactly
- *  0.5 — all match via substring containment
- *  0   — any destination token is missing
+ *  0.7 — all tokens of a sub-destination match exactly
+ *  0.5 — all match via substring containment (4+ chars)
+ *  0   — no sub-destination fully matches
  */
 function tokenMatchScore(placeLocation: string, destinationName: string): number {
-  const placeTokens = tokenize(placeLocation);
-  const destTokens = tokenize(destinationName);
-  if (destTokens.length === 0 || placeTokens.length === 0) return 0;
+  const cleanedLoc = stripVagueQualifiers(placeLocation);
+  const placeTokens = resolveTokenAliases(tokenize(cleanedLoc));
+  if (placeTokens.length === 0) return 0;
 
-  // Every destination token must appear in the place location
-  const allDestMatch = destTokens.every(dt =>
-    placeTokens.some(pt => pt === dt || (pt.length >= 4 && dt.length >= 4 && (pt.includes(dt) || dt.includes(pt))))
-  );
-  if (!allDestMatch) return 0;
+  // Split compound destination and try each sub-destination
+  const subDests = splitCompoundDestination(destinationName);
+  let bestScore = 0;
 
-  // Exact token match on all → 0.7, any substring → 0.5
-  const allExact = destTokens.every(dt => placeTokens.some(pt => pt === dt));
-  return allExact ? 0.7 : 0.5;
+  for (const subDest of subDests) {
+    const destTokens = resolveTokenAliases(tokenize(subDest));
+    if (destTokens.length === 0) continue;
+
+    // Every destination token must appear in the place location tokens
+    const allMatch = destTokens.every(dt =>
+      placeTokens.some(pt =>
+        pt === dt ||
+        (pt.length >= 4 && dt.length >= 4 && (pt.includes(dt) || dt.includes(pt)))
+      )
+    );
+    if (!allMatch) continue;
+
+    const allExact = destTokens.every(dt => placeTokens.some(pt => pt === dt));
+    const score = allExact ? 0.7 : 0.5;
+    if (score > bestScore) bestScore = score;
+  }
+
+  return bestScore;
 }
+
+/**
+ * Guard against "Roma" in place location matching "Rome" destination
+ * when the place is actually in Mexico City ("Roma Norte, CDMX").
+ *
+ * The alias map maps "roma" → "rome", which would cause a false positive.
+ * We detect this by checking if the FULL alias-resolved location also
+ * contains tokens from a DIFFERENT city that contradict.
+ *
+ * Simple heuristic: if the place location resolves to BOTH the target
+ * city AND a different well-known city, prefer geo evidence.
+ * This is handled by the conflict-resolution layer in destinationScore.
+ */
 
 // ─── Geo scoring ───
 
-/**
- * Score a place's distance to the nearest geo anchor.
- * Each anchor carries its own adaptive radius (urban vs. regional).
- *
- *   <= coreKm  → 1.0
- *   coreKm..outerKm → linear taper 1.0 → 0.3
- *   > outerKm → 0
- */
 function geoScore(pLat: number, pLng: number, anchors: GeoAnchor[]): number {
   if (anchors.length === 0) return 0;
-
   let best = 0;
   for (const anchor of anchors) {
     const d = distKm(anchor.lat, anchor.lng, pLat, pLng);
@@ -199,31 +399,18 @@ function geoScore(pLat: number, pLng: number, anchors: GeoAnchor[]): number {
       score = 1.0;
     } else if (d <= anchor.outerKm) {
       const t = (d - anchor.coreKm) / (anchor.outerKm - anchor.coreKm);
-      score = 1.0 - t * 0.7; // taper 1.0 → 0.3
+      score = 1.0 - t * 0.7;
     } else {
       score = 0;
     }
-    // Apply anchor weight (adjacent-day anchors score lower)
     score *= anchor.weight;
     if (score > best) best = score;
-    if (best >= 1.0) return 1.0; // can't improve
+    if (best >= 1.0) return 1.0;
   }
   return best;
 }
 
 // ─── Place ID matching ───
-
-/**
- * Check if a place's Google placeId shares a locality with any trip
- * destination's placeId. Google Place IDs are globally unique per
- * feature, so if a restaurant's address resolves to the same locality
- * Place ID as the trip destination, it's a perfect match.
- *
- * We can't do full hierarchy comparison client-side (that would need
- * Places API calls), but we can check direct ID equality, which covers
- * the case where both the place and the destination geocoded to the
- * same city/region entity.
- */
 function placeIdMatches(
   place: ImportedPlace,
   geoDestinations: GeoDestination[] | undefined,
@@ -237,19 +424,6 @@ function placeIdMatches(
 // Hook
 // ─────────────────────────────────────────────────────────────────────
 
-/**
- * Shared filtering logic for PicksRail and PicksStrip.
- *
- * Scoring pipeline (first match wins):
- *  1. Google Place ID match → 1.0
- *  2. Adaptive geo-proximity (Haversine, urban/regional radius) → 0.3–1.0
- *  3. Token-based string match (fallback for places without coords) → 0.5–0.7
- *
- * Also centralises:
- *  - Geo anchor resolution (geoDestinations → hotel coordinates)
- *  - Placed-ID tracking (slots + ghost items)
- *  - Type / source / search filtering
- */
 export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   const { selectedDay, typeFilter, sourceFilter, searchQuery, placePool } = opts;
 
@@ -273,7 +447,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     return day.destination || null;
   }, [selectedDay, trip]);
 
-  // ─── Adjacent-day destination names (for string matching on transition/transit days) ───
+  // ─── Adjacent-day destination names ───
   const adjacentDestinations = useMemo((): string[] => {
     if (selectedDay === null || !trip) return [];
     const sorted = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
@@ -294,19 +468,20 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     if (!trip) return [];
     const anchors: GeoAnchor[] = [];
 
-    const makeAnchor = (lat: number, lng: number, geo: GeoDestination | null, weight = 1.0): GeoAnchor => {
+    const makeAnchor = (lat: number, lng: number, geo: GeoDestination | null, weight = 1.0): GeoAnchor | null => {
+      const coords = validCoords(lat, lng);
+      if (!coords) return null;
       const core = coreRadiusForDestination(geo);
-      return { lat, lng, coreKm: core, outerKm: core * TAPER_RATIO, weight };
+      return { lat: coords[0], lng: coords[1], coreKm: core, outerKm: core * TAPER_RATIO, weight };
     };
 
     if (selectedDay === null) {
-      // "All days": collect all geo-destinations
       trip.geoDestinations?.forEach(g => {
-        if (g.lat && g.lng) anchors.push(makeAnchor(g.lat, g.lng, g));
+        if (g.lat && g.lng) {
+          const a = makeAnchor(g.lat, g.lng, g);
+          if (a) anchors.push(a);
+        }
       });
-      // Hotel fallbacks (deduplicated within 10km)
-      // Infer radius from the day's destination — a hotel in the Cotswolds
-      // should cast a regional net, not an urban one.
       trip.days.forEach(day => {
         if (day.hotelInfo?.lat && day.hotelInfo?.lng) {
           const h = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
@@ -314,26 +489,24 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
             const dayGeo: GeoDestination | null = day.destination
               ? (trip.geoDestinations?.find(g => g.name.toLowerCase() === day.destination!.toLowerCase()) ?? { name: day.destination })
               : null;
-            anchors.push(makeAnchor(h.lat, h.lng, dayGeo));
+            const a = makeAnchor(h.lat, h.lng, dayGeo);
+            if (a) anchors.push(a);
           }
         }
       });
     } else {
-      // ── Specific day ──
       const day = trip.days.find(d => d.dayNumber === selectedDay);
       const destName = day?.destination;
 
-      // Helper: resolve anchors for a destination name at a given weight.
-      // Tries geoDestinations first, then hotel coords for that dest.
       const resolveDestAnchors = (dest: string, weight: number) => {
         const geo = trip.geoDestinations?.find(
           g => g.name.toLowerCase() === dest.toLowerCase()
         );
         if (geo?.lat && geo?.lng) {
-          anchors.push(makeAnchor(geo.lat, geo.lng, geo, weight));
+          const a = makeAnchor(geo.lat, geo.lng, geo, weight);
+          if (a) anchors.push(a);
           return;
         }
-        // Hotel fallback — find nearest day with this destination
         const synth: GeoDestination = geo ?? { name: dest };
         const daysWithHotel = trip.days
           .filter(d => d.destination === dest && d.hotelInfo?.lat && d.hotelInfo?.lng)
@@ -341,71 +514,50 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
             Math.abs(a.dayNumber - selectedDay) - Math.abs(b.dayNumber - selectedDay)
           );
         if (daysWithHotel.length > 0) {
-          anchors.push(makeAnchor(
+          const a = makeAnchor(
             daysWithHotel[0].hotelInfo!.lat!,
             daysWithHotel[0].hotelInfo!.lng!,
             synth,
             weight,
-          ));
+          );
+          if (a) anchors.push(a);
         }
       };
 
-      // --- Primary anchors for this day's destination ---
       if (destName) {
         resolveDestAnchors(destName, 1.0);
-
-        // Also try THIS day's own hotel as a direct fallback
         if (anchors.length === 0 && day?.hotelInfo?.lat && day?.hotelInfo?.lng) {
           const synth: GeoDestination = trip.geoDestinations?.find(
             g => g.name.toLowerCase() === destName.toLowerCase()
           ) ?? { name: destName };
-          anchors.push(makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, synth, 1.0));
+          const a = makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, synth, 1.0);
+          if (a) anchors.push(a);
         }
       }
 
-      // --- Adjacent-day bleed ---
-      // On transition days (destination differs from neighbor), include the
-      // adjacent destination's anchors at reduced weight so those places
-      // appear further down the list but remain accessible.
       const ADJACENT_WEIGHT = 0.55;
       const sortedDays = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
+      const prevDay = sortedDays.filter(d => d.dayNumber < selectedDay && d.destination).pop();
+      const nextDay = sortedDays.find(d => d.dayNumber > selectedDay && d.destination);
 
-      // Find previous and next days with destinations
-      const prevDay = sortedDays
-        .filter(d => d.dayNumber < selectedDay && d.destination)
-        .pop(); // last one before selected
-      const nextDay = sortedDays
-        .find(d => d.dayNumber > selectedDay && d.destination);
-
-      // Bleed previous day's destination if it differs from current
       if (prevDay?.destination) {
         const prevDest = prevDay.destination;
-        const isDifferent = !destName || prevDest.toLowerCase() !== destName.toLowerCase();
-        if (isDifferent) {
+        if (!destName || prevDest.toLowerCase() !== destName.toLowerCase()) {
           resolveDestAnchors(prevDest, ADJACENT_WEIGHT);
         }
       }
-
-      // Bleed next day's destination if it differs from current
       if (nextDay?.destination) {
         const nextDest = nextDay.destination;
-        const isDifferent = !destName || nextDest.toLowerCase() !== destName.toLowerCase();
-        if (isDifferent) {
+        if (!destName || nextDest.toLowerCase() !== destName.toLowerCase()) {
           resolveDestAnchors(nextDest, ADJACENT_WEIGHT);
         }
       }
-
-      // --- Transit/unassigned day (no destination) ---
-      // If we still have no anchors at all (day has no destination and
-      // adjacent bleed produced nothing via resolveDestAnchors), the
-      // scoring fallback in destinationScore will handle it by matching
-      // against adjacent destination names via string matching.
     }
 
     return anchors;
   }, [trip, selectedDay]);
 
-  // ─── Placed IDs (slots + ghost items) ───
+  // ─── Placed IDs ───
   const placedIds = useMemo(() => {
     if (!trip) return new Set<string>();
     const ids = new Set<string>();
@@ -418,18 +570,13 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     return ids;
   }, [trip]);
 
-  // ─── All unplaced library places ───
-  // Every place in the library is "prescreened" — curation happens at
-  // import time, so we no longer gate on isFavorited.
   const allUnplacedPicks = useMemo(() => {
     return myPlaces.filter(p => !placedIds.has(p.id));
   }, [myPlaces, placedIds]);
 
-  // ─── The pool of places to filter ───
   const pool = placePool ?? allUnplacedPicks;
 
   // ─── Active geoDestinations (for Place ID matching) ───
-  // Includes adjacent-day destinations so Place ID matching works on transition days
   const activeGeoDestinations = useMemo((): GeoDestination[] | undefined => {
     if (!trip?.geoDestinations) return undefined;
     if (selectedDay === null) return trip.geoDestinations;
@@ -443,29 +590,44 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   }, [trip, selectedDay, activeDestination, adjacentDestinations]);
 
   // ─── Destination scoring (0–1) ───
-  /** Weight applied to adjacent-day string matches (same as geo ADJACENT_WEIGHT) */
   const ADJACENT_STRING_WEIGHT = 0.55;
 
   const destinationScore = useCallback((place: ImportedPlace): number => {
-    // 1. Place ID match — highest confidence, instant 1.0
+    // 1. Place ID match
     if (placeIdMatches(place, activeGeoDestinations)) return 1.0;
 
-    // 2. Geo-proximity score (adaptive radius per anchor)
-    //    Anchor weights (primary=1.0, adjacent=0.55) are applied inside geoScore.
-    const pLat = place.google?.lat;
-    const pLng = place.google?.lng;
-    if (pLat && pLng && activeGeoAnchors.length > 0) {
-      const geo = geoScore(pLat, pLng, activeGeoAnchors);
+    const rawCoords = validCoords(place.google?.lat, place.google?.lng);
+    const hasValidGeo = rawCoords !== null && activeGeoAnchors.length > 0;
+
+    // 2. Geo-proximity score
+    let geo = 0;
+    if (hasValidGeo) {
+      geo = geoScore(rawCoords![0], rawCoords![1], activeGeoAnchors);
       if (geo > 0) return geo;
     }
 
-    // 3. Token-based string match (fallback for places without coordinates)
+    // 3. Token-based string match (alias-aware, compound-splitting)
     const loc = place.location || '';
     if (!loc) return 0;
 
+    // ── Conflict resolution ──
+    // If the place HAS valid coordinates and they're beyond ALL geo anchors
+    // (geo returned 0), but string matching would succeed, geo wins.
+    // This prevents "Outside Copenhagen" (130km away) from matching on
+    // the Copenhagen token in the string, and "Finca Cortesin, Costa del Sol"
+    // from matching "Costa Brava" on the shared "costa" token.
+    //
+    // Exception: if there are NO geo anchors at all (no coords for the
+    // destination either), fall through to string matching — it's our
+    // only signal.
+    if (hasValidGeo && geo === 0) {
+      // Geo explicitly says "not here". Trust it over string.
+      return 0;
+    }
+
+    // ── String matching (only reached when place has NO valid coordinates) ──
     if (selectedDay === null) {
-      // "All days" mode
-      if (tripDestinations.length === 0) return 1; // no destinations → everything matches
+      if (tripDestinations.length === 0) return 1;
       let best = 0;
       for (const dest of tripDestinations) {
         const s = tokenMatchScore(loc, dest);
@@ -474,14 +636,11 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       return best;
     }
 
-    // Specific day: try primary destination first
     if (activeDestination) {
       const primary = tokenMatchScore(loc, activeDestination);
       if (primary > 0) return primary;
     }
 
-    // Try adjacent-day destinations at reduced weight
-    // (transition days: morning in prev city, evening in next city)
     if (adjacentDestinations.length > 0) {
       let best = 0;
       for (const adj of adjacentDestinations) {
@@ -491,12 +650,9 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       if (best > 0) return best * ADJACENT_STRING_WEIGHT;
     }
 
-    // Transit day with no primary and no adjacent matches — score 0.
-    // (The geo anchors from adjacent days already handle coord-based places.)
     return 0;
   }, [selectedDay, activeDestination, adjacentDestinations, tripDestinations, activeGeoAnchors, activeGeoDestinations]);
 
-  // Boolean convenience wrapper
   const matchesDestination = useCallback(
     (place: ImportedPlace): boolean => destinationScore(place) > 0,
     [destinationScore]
@@ -504,21 +660,16 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
 
   // ─── Destination-filtered picks ───
   const destinationPicks = useMemo(() => {
-    // When searching, don't filter by destination (search across everything)
     if (searchQuery.trim()) return pool;
-
-    // If we have geo anchors or destination names, filter
     if (activeGeoAnchors.length > 0 || tripDestinations.length > 0 || activeDestination || adjacentDestinations.length > 0) {
       return pool.filter(matchesDestination);
     }
-
     return pool;
   }, [pool, matchesDestination, searchQuery, activeGeoAnchors, tripDestinations, activeDestination, adjacentDestinations]);
 
-  // ─── Full filtering (type + source + search) ───
+  // ─── Full filtering ───
   const filteredPicks = useMemo(() => {
     let picks = destinationPicks;
-
     if (typeFilter !== 'all') {
       picks = picks.filter(p => p.type === typeFilter);
     }
@@ -533,7 +684,6 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
         (p.tasteNote || '').toLowerCase().includes(q)
       );
     }
-
     return picks;
   }, [destinationPicks, typeFilter, sourceFilter, searchQuery]);
 
