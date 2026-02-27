@@ -118,6 +118,7 @@ function PlacedCard({
         )}
         {/* Remove button — returns place to pick pool */}
         <button
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             unplaceFromSlot(dayNumber, slotId, place.id);

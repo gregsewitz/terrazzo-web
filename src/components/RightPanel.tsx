@@ -65,22 +65,8 @@ export default function RightPanel({ activities }: RightPanelProps) {
   if (collapsed) {
     return (
       <>
-        {/* Bounce keyframes */}
-        <style>{`
-          @keyframes nudge-left {
-            0%, 100% { transform: translateX(0); }
-            30% { transform: translateX(-5px); }
-            60% { transform: translateX(2px); }
-          }
-          .right-panel-collapsed {
-            animation: nudge-left 1.8s ease-in-out 1.5s 2;
-          }
-          .right-panel-collapsed:hover {
-            animation: none;
-          }
-        `}</style>
         <div
-          className="right-panel-collapsed flex flex-col items-center h-full cursor-pointer"
+          className="flex flex-col items-center h-full cursor-pointer"
           style={{
             width: 48,
             flexShrink: 0,
