@@ -62,6 +62,33 @@ interface DiscoverContent {
   contextLabel?: string;
 }
 
+/**
+ * Collect all place names from the initial feed + any extra pages so the
+ * continuation API can avoid recommending duplicates.
+ */
+function collectAllPlaceNames(
+  initial: DiscoverContent | null,
+  extras: DiscoverContent[],
+): string[] {
+  const names = new Set<string>();
+  function addFrom(content: DiscoverContent | null) {
+    if (!content) return;
+    for (const c of content.becauseYouCards || []) if (c.place) names.add(c.place);
+    for (const p of content.signalThread?.places || []) if (p.name) names.add(p.name);
+    if (content.tasteTension?.resolvedBy?.name) names.add(content.tasteTension.resolvedBy.name);
+    for (const p of content.weeklyCollection?.places || []) if (p.name) names.add(p.name);
+    for (const b of content.moodBoards || []) {
+      for (const p of b.places || []) if (p.name) names.add(p.name);
+    }
+    if (content.deepMatch?.name) names.add(content.deepMatch.name);
+    if (content.stretchPick?.name) names.add(content.stretchPick.name);
+    for (const r of content.contextRecs || []) if (r.name) names.add(r.name);
+  }
+  addFrom(initial);
+  for (const page of extras) addFrom(page);
+  return Array.from(names);
+}
+
 const SETTINGS_LINKS = [
   { label: 'Connected Accounts', action: 'accounts' },
   { label: 'Import History', action: 'history' },
@@ -98,6 +125,14 @@ export default function ProfilePage() {
   const [discoverContent, setDiscoverContent] = useState<DiscoverContent | null>(null);
   const [isLoadingDiscover, setIsLoadingDiscover] = useState(false);
   const [isResynthesizing, setIsResynthesizing] = useState(false);
+
+  // Infinite scroll: extra feed pages loaded on demand
+  const [extraPages, setExtraPages] = useState<DiscoverContent[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [feedPageIndex, setFeedPageIndex] = useState(1);
+  const [hasMoreContent, setHasMoreContent] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
   const [resynthesisResult, setResynthesisResult] = useState<'success' | 'error' | null>(null);
 
   const { isAuthenticated, user, signOut } = useAuth();
@@ -207,6 +242,59 @@ export default function ProfilePage() {
     fetchDiscoverContent();
   }, [fetchDiscoverContent]);
 
+  // ─── Infinite scroll: fetch additional feed pages on demand ───
+
+  // Reset when base content changes (e.g. profile resynthesis)
+  useEffect(() => {
+    setExtraPages([]);
+    setFeedPageIndex(1);
+    setHasMoreContent(true);
+  }, [discoverContent]);
+
+  const fetchMoreContent = useCallback(async () => {
+    // Need either a real profile or at least existing discover content to continue from
+    const userProfile = generatedProfile || (discoverContent ? profile : null);
+    if (!userProfile || isLoadingMore || !hasMoreContent) return;
+
+    setIsLoadingMore(true);
+    try {
+      const data = await apiFetch<DiscoverContent>('/api/profile/discover/more', {
+        method: 'POST',
+        body: JSON.stringify({
+          userProfile,
+          lifeContext: lifeContext || undefined,
+          pageIndex: feedPageIndex,
+          excludePlaces: collectAllPlaceNames(discoverContent, extraPages),
+        }),
+      });
+      setExtraPages(prev => [...prev, data]);
+      setFeedPageIndex(prev => prev + 1);
+      if (feedPageIndex >= 5) setHasMoreContent(false);
+    } catch {
+      setHasMoreContent(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [generatedProfile, profile, discoverContent, lifeContext, isLoadingMore, hasMoreContent, feedPageIndex, extraPages]);
+
+  // IntersectionObserver triggers fetchMoreContent when user scrolls near feed bottom
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          fetchMoreContent();
+        }
+      },
+      { rootMargin: '600px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [fetchMoreContent]);
+
   const handleSettingTap = (action: string) => {
     if (action === 'history') {
       router.push('/saved');
@@ -303,6 +391,7 @@ export default function ProfilePage() {
 
   const discoverFeed = (
     <>
+      {/* Initial feed — all sections visible */}
       <EditorialLetterSection letter={discoverContent?.editorialLetter} />
       <BecauseYouSection cards={discoverContent?.becauseYouCards} />
       <SignalThreadSection thread={discoverContent?.signalThread} />
@@ -314,6 +403,56 @@ export default function ProfilePage() {
       <ContextModeSection recs={discoverContent?.contextRecs} contextLabel={discoverContent?.contextLabel} />
       <VocabTeaser profile={profile} />
       <FriendsSavingSection />
+
+      {/* Extra pages loaded via infinite scroll */}
+      {extraPages.map((page, i) => (
+        <div key={`extra-page-${i}`}>
+          {/* Subtle divider between pages */}
+          <div className="flex items-center gap-4 my-10 px-4">
+            <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+              More for you
+            </span>
+            <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
+          </div>
+
+          {/* Render whichever sections this page contains */}
+          {page.editorialLetter && <EditorialLetterSection letter={page.editorialLetter} />}
+          {page.becauseYouCards && <BecauseYouSection cards={page.becauseYouCards} />}
+          {page.signalThread && <SignalThreadSection thread={page.signalThread} />}
+          {page.tasteTension && <TasteTensionSection tension={page.tasteTension} />}
+          {page.weeklyCollection && <WeeklyEditSection collection={page.weeklyCollection} />}
+          {page.moodBoards && <MoodBoardSection boards={page.moodBoards} />}
+          {page.deepMatch && <DeepMatchSection match={page.deepMatch} />}
+          {page.stretchPick && <StretchPickSection stretch={page.stretchPick} />}
+          {page.contextRecs && <ContextModeSection recs={page.contextRecs} contextLabel={page.contextLabel} />}
+        </div>
+      ))}
+
+      {/* Sentinel + loading indicator for infinite scroll */}
+      {hasMoreContent && (
+        <div
+          ref={sentinelRef}
+          className="flex flex-col items-center justify-center py-10 gap-2"
+          style={{ minHeight: 80 }}
+        >
+          {isLoadingMore ? (
+            <>
+              <div className="animate-spin w-5 h-5 rounded-full border-2" style={{ borderColor: 'var(--t-linen)', borderTopColor: 'var(--t-honey)' }} />
+              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'], letterSpacing: '0.05em' }}>
+                Curating more…
+              </span>
+            </>
+          ) : (
+            <span
+              className="animate-pulse"
+              style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'], letterSpacing: '0.05em' }}
+            >
+              Scroll for more
+            </span>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -322,7 +461,7 @@ export default function ProfilePage() {
     return (
       <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 48px 48px' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 48px 48px' }}>
           <div className="flex gap-10">
             {/* Left: profile card (sticky) */}
             <div className="flex-shrink-0" style={{ width: 300 }}>
