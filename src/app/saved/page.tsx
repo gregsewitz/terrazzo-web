@@ -76,7 +76,9 @@ function SavedPageContent() {
   const [collectionSortBy, setCollectionSortBy] = useState<'recent' | 'name' | 'places' | 'updated'>('recent');
 
   const sortedCollections = useMemo(() => {
-    const sorted = [...collections];
+    // Hide the default Favorites collection from the grid — it's a legacy
+    // concept that's no longer surfaced in the UI.
+    const sorted = collections.filter(c => !c.isDefault);
     switch (collectionSortBy) {
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'places': sorted.sort((a, b) => b.placeIds.length - a.placeIds.length); break;
@@ -467,7 +469,7 @@ function SavedPageContent() {
               <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: 'var(--t-ink)', margin: 0 }}>
                 Collections
                 <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontStyle: 'normal', marginLeft: 6 }}>
-                  {collections.length}
+                  {sortedCollections.length}
                 </span>
               </h2>
               <button
