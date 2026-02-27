@@ -30,10 +30,12 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   const {
     isOpen, mode, query, tripContext,
     libraryResults, googleResults, importProgress, importLabel, importResults,
+    importSelectedIds,
     previewPlace, selectedCollectionIds,
     close, setQuery, setMode, setLibraryResults, setGoogleResults,
-    setImportProgress, setImportResults, setPreviewPlace,
-    toggleCollection,
+    setImportProgress, setImportResults,
+    toggleImportSelected, selectAllImports, deselectAllImports,
+    setPreviewPlace, toggleCollection,
   } = useAddBarStore();
 
   // Saved store
@@ -62,7 +64,8 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (mode === 'collections') setMode('search');
+        if (mode === 'collections') setMode('preview');
+        else if (mode === 'preview') { setImportResults([]); setMode('search'); }
         else close();
       }
     };
@@ -158,19 +161,20 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     }, 600);
   }, [previewPlace, selectedCollectionIds, tripContext, addPlace, addPlaceToCollection, placeFromSaved, addToPool, setPreviewPlace, setMode, setQuery]);
 
-  // ─── Save all import results ──────────────────────────────────────────
-  const handleSaveAll = useCallback((collectionIds: string[]) => {
-    importResults.forEach(place => addPlace(place));
+  // ─── Save selected import results ────────────────────────────────────
+  const handleSaveSelected = useCallback((collectionIds: string[]) => {
+    const selected = importResults.filter(p => importSelectedIds.has(p.id));
+    selected.forEach(place => addPlace(place));
     collectionIds.forEach(slId => {
-      importResults.forEach(place => addPlaceToCollection(slId, place.id));
+      selected.forEach(place => addPlaceToCollection(slId, place.id));
     });
     if (tripContext) {
-      addToPool(importResults.map(p => ({ ...p, status: 'available' as const })));
+      addToPool(selected.map(p => ({ ...p, status: 'available' as const })));
     }
     setImportResults([]);
     setMode('search');
     setQuery('');
-  }, [importResults, tripContext, addPlace, addPlaceToCollection, addToPool, setImportResults, setMode, setQuery]);
+  }, [importResults, importSelectedIds, tripContext, addPlace, addPlaceToCollection, addToPool, setImportResults, setMode, setQuery]);
 
   if (!isOpen) return null;
 
@@ -222,9 +226,12 @@ const UniversalAddBar = memo(function UniversalAddBar() {
               borderBottom: '1px solid var(--t-linen)',
             }}
           >
-            {mode === 'collections' ? (
+            {(mode === 'collections' || mode === 'preview') ? (
               <button
-                onClick={() => setMode('search')}
+                onClick={() => {
+                  if (mode === 'collections') setMode('preview');
+                  else { setImportResults([]); setMode('search'); }
+                }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t-ink)', padding: 0 }}
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -240,7 +247,13 @@ const UniversalAddBar = memo(function UniversalAddBar() {
               color: 'var(--t-ink)',
               flex: 1,
             }}>
-              {mode === 'collections' ? 'Add to Collection' : tripContext ? `Add to Day ${tripContext.dayIndex + 1}` : 'Save a place'}
+              {mode === 'collections'
+                ? 'Add to Collection'
+                : mode === 'preview'
+                  ? 'Review places'
+                  : tripContext
+                    ? `Add to Day ${tripContext.dayIndex + 1}`
+                    : 'Save a place'}
             </span>
 
             <button
@@ -334,10 +347,13 @@ const UniversalAddBar = memo(function UniversalAddBar() {
             {mode === 'preview' && (
               <AddBarPreview
                 importResults={importResults}
+                selectedIds={importSelectedIds}
                 collections={collections}
                 tripContext={tripContext}
-                onSavePlace={handleSavePlace}
-                onSaveAll={handleSaveAll}
+                onToggleSelect={toggleImportSelected}
+                onSelectAll={selectAllImports}
+                onDeselectAll={deselectAllImports}
+                onSaveSelected={handleSaveSelected}
               />
             )}
 

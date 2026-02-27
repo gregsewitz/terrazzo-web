@@ -6,6 +6,11 @@ import { inngest } from '@/lib/inngest';
  * the enrichment pipeline if it hasn't run yet. Returns the intelligence ID
  * so we can link it to the SavedPlace.
  *
+ * IMPORTANT: This function also auto-links any unlinked SavedPlace and Place
+ * records that share this googlePlaceId. This ensures every call site
+ * (save, resolve, discover, onboarding, backfill) consistently maintains the
+ * foreign-key relationship — even fire-and-forget callers.
+ *
  * This is fire-and-forget — pipeline runs in the background via Inngest.
  * Subsequent saves of the same place (by any user) will find the existing
  * record and skip re-triggering.
@@ -26,9 +31,10 @@ export async function ensureEnrichment(
     });
 
     if (existing) {
-      // Already enriching or complete — just return the ID so we can link it
+      // Already enriching or complete — link any unlinked places and return
       if (existing.status === 'enriching' || existing.status === 'complete') {
         console.log(`[ensureEnrichment] ${propertyName}: already ${existing.status}, skipping (id: ${existing.id})`);
+        await linkPlacesToIntelligence(googlePlaceId, existing.id);
         return existing.id;
       }
 
@@ -42,6 +48,8 @@ export async function ensureEnrichment(
           lastTriggeredBy: userId,
         },
       });
+
+      await linkPlacesToIntelligence(googlePlaceId, existing.id);
 
       const sendResult = await inngest.send({
         name: 'pipeline/run',
@@ -69,6 +77,8 @@ export async function ensureEnrichment(
         lastTriggeredBy: userId,
       },
     });
+
+    await linkPlacesToIntelligence(googlePlaceId, intel.id);
 
     const sendResult = await inngest.send({
       name: 'pipeline/run',
@@ -114,5 +124,39 @@ export async function ensureEnrichment(
 
     console.error(`[ensureEnrichment] Failed for ${propertyName} (${googlePlaceId}):`, errorMessage);
     return null;
+  }
+}
+
+/**
+ * Link all SavedPlace and Place records that share a googlePlaceId
+ * to the given PlaceIntelligence record. This is idempotent — only
+ * updates rows where placeIntelligenceId is currently null.
+ */
+async function linkPlacesToIntelligence(googlePlaceId: string, intelligenceId: string): Promise<void> {
+  try {
+    const [savedResult, placeResult] = await Promise.all([
+      prisma.savedPlace.updateMany({
+        where: {
+          googlePlaceId,
+          placeIntelligenceId: null,
+        },
+        data: { placeIntelligenceId: intelligenceId },
+      }),
+      prisma.place.updateMany({
+        where: {
+          googlePlaceId,
+          placeIntelligenceId: null,
+        },
+        data: { placeIntelligenceId: intelligenceId },
+      }),
+    ]);
+
+    const total = savedResult.count + placeResult.count;
+    if (total > 0) {
+      console.log(`[ensureEnrichment] Linked ${savedResult.count} SavedPlace(s) + ${placeResult.count} Place(s) to intelligence ${intelligenceId}`);
+    }
+  } catch (err) {
+    // Non-fatal — the intelligence record still exists, linking can be retried
+    console.error(`[ensureEnrichment] Failed to link places for ${googlePlaceId}:`, err);
   }
 }

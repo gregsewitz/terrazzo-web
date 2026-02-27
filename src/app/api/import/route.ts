@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
           const isUrl = detectedType === 'url';
 
           if (isUrl) {
-            send({ type: 'progress', stage: 'fetching', label: 'Fetching article content…', percent: 10 });
+            const hasFirecrawl = !!process.env.FIRECRAWL_API_KEY;
+            send({ type: 'progress', stage: 'fetching', label: hasFirecrawl ? 'Reading article with Firecrawl…' : 'Fetching article content…', percent: 10 });
             const articleText = await fetchAndClean(trimmed);
             if (!articleText) {
               send({ type: 'error', error: 'Could not fetch URL content' });

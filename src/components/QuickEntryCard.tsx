@@ -5,15 +5,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import type { QuickEntry, QUICK_ENTRY_CATEGORY_ICONS } from '@/types';
 import { QUICK_ENTRY_CATEGORY_ICONS as CATEGORY_ICONS } from '@/types';
-
-// ─── Helpers ────────────────────────────────────────────────────────────
-
-function formatTime12(time24: string): string {
-  const [h, m] = time24.split(':').map(Number);
-  const meridiem = h >= 12 ? 'PM' : 'AM';
-  const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return m === 0 ? `${displayH} ${meridiem}` : `${displayH}:${m.toString().padStart(2, '0')} ${meridiem}`;
-}
+import { formatTime12h } from './PlaceTimeEditor';
 
 // ─── Component ──────────────────────────────────────────────────────────
 
@@ -42,11 +34,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
     <div
       className="mb-1.5 rounded-lg overflow-hidden select-none group/qe"
       onClick={() => {
-        if (isTentative && onConfirm) {
-          onConfirm();
-        } else if (onTap) {
-          onTap();
-        }
+        if (onTap) onTap();
       }}
       style={{
         background: isTentative ? 'var(--t-cream)' : 'white',
@@ -54,7 +42,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
           ? '1.5px dashed rgba(28,26,23,0.18)'
           : `1px solid ${accentColor}22`,
         opacity: isTentative ? 0.85 : 1,
-        cursor: isTentative ? 'pointer' : 'default',
+        cursor: 'pointer',
         transition: 'opacity 0.15s, border-color 0.15s',
       }}
     >
@@ -109,23 +97,23 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
             )}
           </div>
 
-          {/* Time line */}
+          {/* Time line — matches PlaceTimeEditor format */}
           {entry.specificTime && (
-            <div
-              className="text-[10px] mt-px flex items-center gap-1"
+            <span
+              className="inline-flex items-center gap-1 mt-px"
               style={{
-                color: INK['80'],
-                fontFamily: FONT.mono,
-                fontSize: 9,
+                fontSize: 10,
+                fontFamily: FONT.sans,
+                color: INK['70'],
+                fontStyle: 'italic',
               }}
             >
-              {entry.specificTimeLabel && (
-                <span style={{ color: accentColor, fontWeight: 500 }}>
-                  {entry.specificTimeLabel}
-                </span>
-              )}
-              <span>{formatTime12(entry.specificTime)}</span>
-            </div>
+              <svg width={9} height={9} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                <circle cx="8" cy="8" r="6.5" stroke={INK['50']} strokeWidth="1.5" />
+                <path d="M8 4.5V8L10.5 9.5" stroke={INK['50']} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {entry.specificTimeLabel ? `${entry.specificTimeLabel} at ` : ''}{formatTime12h(entry.specificTime)}
+            </span>
           )}
         </div>
 

@@ -78,6 +78,16 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   // 3. Ensure intelligence exists (creates record + triggers pipeline if needed)
   const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, user.id);
 
+  // 3b. If SavedPlace exists but isn't linked to intelligence, link it now
+  if (intelligenceId && savedPlace && !savedPlace.placeIntelligenceId) {
+    await prisma.savedPlace.update({
+      where: { id: savedPlace.id },
+      data: { placeIntelligenceId: intelligenceId },
+    }).catch((err: unknown) => {
+      console.error(`[resolve] Failed to link intelligence to SavedPlace ${savedPlace.id}:`, err);
+    });
+  }
+
   // 4. Fetch intelligence status if we have an ID
   let intelligenceStatus: string | null = null;
   if (intelligenceId) {

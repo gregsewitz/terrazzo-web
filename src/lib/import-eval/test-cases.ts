@@ -17,15 +17,24 @@ export interface ExpectedPlace {
   travelWith?: string;
 }
 
+export interface ExpectedEnrichment {
+  name: string;                                 // fuzzy-matches to extracted place
+  googlePlaceId?: string;                       // exact Google Place ID expected (optional)
+  mustBeInCountry?: string;                     // geo fencing: Google address must contain this
+  expectedConfidence?: 'high' | 'low';          // soft geo-fence flag expected
+}
+
 export interface TestCase {
   id: string;
   name: string;
-  category: 'bucket-list' | 'city-guide' | 'article' | 'text-message' | 'mixed-format' | 'minimal' | 'edge-case';
+  category: 'bucket-list' | 'city-guide' | 'article' | 'text-message' | 'mixed-format' | 'minimal' | 'edge-case' | 'url-live';
   description: string;
   input: string;
+  sourceUrl?: string;                           // if set, fetches URL live (tests Firecrawl + extraction)
   isArticle?: boolean;                          // true = pass isArticleFromUrl=true to extractPlaces
   expectedRegion: string | null;                // expected region inference
   expectedPlaces: ExpectedPlace[];              // every place that MUST be extracted
+  expectedEnrichment?: ExpectedEnrichment[];    // optional: test Google Places resolution + geo fencing
   antiPatterns: string[];                       // things that should NOT appear as place names
   qualityCriteria: {
     minPlaceCount: number;                       // must find at least this many
@@ -653,6 +662,426 @@ Bistro Mee in the 1st. Scallion pancakes perfect to share. —Elizabeth Colling`
   },
 };
 
+// ─── TEST CASE 10: URL — CN Traveller Family Hotels in Europe ────────────────
+
+const ARTICLE_CN_EUROPE_HOTELS: TestCase = {
+  id: 'url-cn-europe-hotels',
+  name: 'CN Traveller — Best Family-Friendly Hotels in Europe (Live URL)',
+  category: 'url-live',
+  isArticle: true,
+  description: 'Live URL fetch via Firecrawl. Tests: only hotels extracted (not restaurants mentioned in reviews), geographic fencing resolves to European countries, no false positives from editorial padding.',
+  sourceUrl: 'https://www.cntraveller.com/gallery/best-family-friendly-hotels-europe',
+  input: '', // will be populated by Firecrawl at runtime
+  expectedRegion: 'Europe',
+  expectedPlaces: [
+    { name: 'Martinhal Sagres', type: 'hotel', city: 'Portugal' },
+    { name: 'Borgo Egnazia', type: 'hotel', city: 'Italy' },
+    { name: 'The Brando', type: 'hotel' },
+    { name: 'Cheval Blanc St-Tropez', type: 'hotel', city: 'France' },
+    { name: 'Verdura Resort', type: 'hotel', city: 'Sicily' },
+    { name: 'Forte Village', type: 'hotel', city: 'Sardinia' },
+    { name: 'Pine Cliffs', type: 'hotel', city: 'Portugal' },
+    { name: 'Sani Resort', type: 'hotel', city: 'Greece' },
+  ],
+  expectedEnrichment: [
+    { name: 'Martinhal Sagres', mustBeInCountry: 'Portugal', expectedConfidence: 'high' },
+    { name: 'Borgo Egnazia', mustBeInCountry: 'Italy', expectedConfidence: 'high' },
+    { name: 'Verdura Resort', mustBeInCountry: 'Italy', expectedConfidence: 'high' },
+    { name: 'Sani Resort', mustBeInCountry: 'Greece', expectedConfidence: 'high' },
+  ],
+  antiPatterns: [
+    // Restaurants mentioned inside hotel reviews should NOT be extracted
+    'Cala Masciola', 'Due Camini', 'La Frasca',
+    // Editorial padding / people
+    'Condé Nast', 'CN Traveller',
+  ],
+  qualityCriteria: {
+    minPlaceCount: 6,
+    personalContextRequired: false,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.95,
+  },
+};
+
+// ─── TEST CASE 11: Slash-Separated Pairs ────────────────────────────────────
+
+const SLASH_PAIRS: TestCase = {
+  id: 'slash-pairs',
+  name: 'Bucket List with Slash Pairs & Abbreviations',
+  category: 'edge-case',
+  description: 'Tests splitting of slash-separated venue pairs like "Soneva Secret/Kudadoo" into individual places, plus abbreviation expansion like "FS" → Four Seasons.',
+  input: `Dream list 2026:
+-Soneva Secret/Kudadoo (either one, both look incredible)
+-Aman Tokyo/Aman Kyoto (doing a Japan swing)
+-FS Bora Bora or Conrad Bora Bora (honeymoon vibes)
+-O&O Reethi Rah/St Regis Maldives (overwater villa required)
+-RMH Palazzo Danieli/Cipriani Venice (for our anniversary in Sept)
+-The Silo/Ellerman House in Cape Town
+-Chablé Yucatán or Rosewood Mayakobá (need a cenote fix)
+-Park Hyatt Kyoto for cherry blossom season!!`,
+  expectedRegion: null,
+  expectedPlaces: [
+    { name: 'Soneva Secret', type: 'hotel', city: 'Maldives' },
+    { name: 'Kudadoo', type: 'hotel', city: 'Maldives' },
+    { name: 'Aman Tokyo', type: 'hotel', city: 'Tokyo' },
+    { name: 'Aman Kyoto', type: 'hotel', city: 'Kyoto' },
+    { name: 'Four Seasons Bora Bora', type: 'hotel' },
+    { name: 'Conrad Bora Bora', type: 'hotel' },
+    { name: 'One&Only Reethi Rah', type: 'hotel', city: 'Maldives' },
+    { name: 'St Regis Maldives', type: 'hotel', city: 'Maldives' },
+    { name: 'The Silo', type: 'hotel', city: 'Cape Town' },
+    { name: 'Ellerman House', type: 'hotel', city: 'Cape Town' },
+    { name: 'Chablé Yucatán', type: 'hotel', city: 'Mexico' },
+    { name: 'Rosewood Mayakobá', type: 'hotel', city: 'Mexico' },
+    { name: 'Park Hyatt Kyoto', type: 'hotel', city: 'Kyoto', mustHaveUserContext: 'cherry blossom' },
+  ],
+  antiPatterns: ['Bora Bora', 'Venice', 'Japan', 'Cape Town', 'Maldives', 'Mexico'],
+  qualityCriteria: {
+    minPlaceCount: 12,
+    personalContextRequired: true,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.95,
+  },
+};
+
+// ─── TEST CASE 12: Email Forward with Mixed Intent ──────────────────────────
+
+const EMAIL_FORWARD: TestCase = {
+  id: 'email-forward',
+  name: 'Forwarded Email — Friends Bali Recs with Mixed Signals',
+  category: 'text-message',
+  description: 'A forwarded email chain with nested quotes, "don\'t bother" warnings, and conflicting opinions. Tests: negative signals are excluded, nested attribution is handled, types are correct for Bali venues.',
+  input: `---------- Forwarded message ---------
+From: Sarah K
+Subject: RE: RE: Bali recs??
+
+Ok here's everything from everyone:
+
+UBUD
+- Capella Ubud — glamping but make it fashion. Tents are INSANE. Book the jungle one.
+- Four Seasons Sayan — the infinity pool overlooking the gorge is unreal. Do the river blessing.
+- Locavore — MUST for fine dining. Like 2 month waitlist so book NOW. Farm-to-table, hyper-local.
+- Mozaic — also Michelin-level but more relaxed garden setting. Sarah says skip it but I disagree.
+- Room4Dessert — just desserts as a meal?! Will Goldfarb is a genius
+- Milk & Madu — great for breakfast, families love it
+- Yellow Flower café is a tourist trap DO NOT GO (sorry had to warn you lol)
+
+SEMINYAK/CANGGU
+- The Lawn Canggu — sunset drinks, bean bags on the grass, very instagram
+- Potato Head Beach Club — you've seen it everywhere but it's actually good
+- La Brisa — beach bar made from reclaimed boats, most photogenic spot in Bali
+- Shelter Bali cafe — don't bother, overpriced and rude staff (Sarah's opinion, I've never been)
+- Crate Cafe — hipster breakfast spot, actually amazing
+- Mason Jungle — cocktails in literal jungle, very cool at night
+- Single Fin — clifftop bar in Uluwatu, go for sunset. Gets wild later.
+
+NUSA ISLANDS
+- Le Pirate on Nusa Ceningan — cheapest coolest stay, bamboo huts over the water`,
+  expectedRegion: 'Bali, Indonesia',
+  expectedPlaces: [
+    { name: 'Capella Ubud', type: 'hotel', city: 'Ubud', mustHaveDescription: 'glamping' },
+    { name: 'Four Seasons Sayan', type: 'hotel', city: 'Ubud', mustHaveDescription: 'infinity pool' },
+    { name: 'Locavore', type: 'restaurant', city: 'Ubud', mustHaveDescription: 'farm-to-table' },
+    { name: 'Mozaic', type: 'restaurant', city: 'Ubud' },
+    { name: 'Room4Dessert', type: 'restaurant', city: 'Ubud', mustHaveDescription: 'Goldfarb' },
+    { name: 'Milk & Madu', type: 'cafe', city: 'Ubud' },
+    { name: 'The Lawn Canggu', type: 'bar', city: 'Canggu' },
+    { name: 'Potato Head Beach Club', type: 'bar', city: 'Seminyak' },
+    { name: 'La Brisa', type: 'bar', city: 'Canggu', mustHaveDescription: 'reclaimed boats' },
+    { name: 'Crate Cafe', type: 'cafe', city: 'Canggu' },
+    { name: 'Mason Jungle', type: 'bar' },
+    { name: 'Single Fin', type: 'bar', city: 'Uluwatu', mustHaveDescription: 'clifftop' },
+    { name: 'Le Pirate', type: 'hotel', city: 'Nusa Ceningan', mustHaveDescription: 'bamboo' },
+  ],
+  antiPatterns: [
+    'Yellow Flower', // explicitly warned against
+    'Shelter Bali',  // explicitly warned against
+    'Sarah K', 'Will Goldfarb', // people, not places
+    'Ubud', 'Seminyak', 'Canggu', 'Uluwatu', // locations, not venues
+  ],
+  qualityCriteria: {
+    minPlaceCount: 11,
+    personalContextRequired: false,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.75,
+  },
+};
+
+// ─── TEST CASE 13: URL — Mr & Mrs Smith Hotel Roundup ───────────────────────
+
+const ARTICLE_MRS_SMITH: TestCase = {
+  id: 'url-mrs-smith',
+  name: 'Mr & Mrs Smith — Best New Hotels 2025 (Live URL)',
+  category: 'url-live',
+  isArticle: true,
+  description: 'Live URL fetch. Tests: editorial hotel extraction from a different publication style, all-hotel type accuracy, international geographic resolution.',
+  sourceUrl: 'https://www.mrandmrssmith.com/travel-intel/best-new-hotels-2025',
+  input: '', // will be populated by Firecrawl at runtime
+  expectedRegion: null,
+  expectedPlaces: [
+    // We expect hotels — specifics depend on article content at runtime
+    // These are likely candidates but the test is mainly about type accuracy
+    // and anti-pattern filtering. Recall scoring will adapt to what's on the page.
+  ],
+  antiPatterns: [
+    'Mr & Mrs Smith', 'Smith', // publication name
+    'Travel Intel', // section name
+  ],
+  qualityCriteria: {
+    minPlaceCount: 3,
+    personalContextRequired: false,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.90,
+  },
+};
+
+// ─── TEST CASE 14: Mega Tokyo City Guide ────────────────────────────────────
+
+const TOKYO_MEGA_GUIDE: TestCase = {
+  id: 'tokyo-mega-guide',
+  name: 'Dense Tokyo City Guide with Bracketed Categories',
+  category: 'city-guide',
+  description: 'A massive, opinionated Tokyo guide with bracketed section headers, inline pipe-separated lists, parenthetical asides, "haven\'t been yet" signals, convenience store chains, nested recs within recs, shop names, museums, markets, and hotels. Tests: high volume extraction (60+ places), correct type assignment across categories, anti-pattern exclusion for non-venue items (products, people, movies), handling of "mentioned but not visited" places.',
+  input: `[restaurants ]
+Tenmo, Tempura | I can't recommend this 10-seat Edomae tempura spot in Nihonbashi more highly. Established in 1885, it's family-owned and the parsley tempura was possibly the best tempura of my life. The menu is coursed and you can choose between 8, 11 or 14 courses when you book your reservation. (If you go for lunch, grab a coffee at nexpect before / after)
+Sowado | a very special izakaya opened in 2020 by chef Hideaki Sakai with excellent sake + cocktails + natural wine. You can opt for omakase or à la carte — whichever route you take, make sure to book in advance, ask for a seat at the bar and order the whole fish. FYI there's no sign at the entrance but if you see a concrete wall + metal sliding door you're in the right spot
+Butagumi | go here for tonkatsu (breaded deep-fried pork cutlets) in a traditional two-story house in the Nishi-Azabu neighborhood. There are options on the menu to choose heirloom breeds from around Japan — we've tried a few and they're all delicious but the Submarine Himuro Pork from Genma + a Kagua blanc beer comes out on top for me. Other tonkatsu to check out: Tonki in Meguro, Kanda Ponchiken in Chiyoda, Ginza Bairin in Ginza and Katsukichi, a local chain with multiple locations — get the kaki-furai (deep-fried oysters) if they're in season
+Nodaiwa Azabu Iikura Honten | fifth generation-owned unagi (eel) restaurant. Another spot for unagi that I haven't yet been to but have heard excellent things about is Edogawa Ishibashi (the sake selection is supposed to be amazing here as well!)
+Sushi Mizukami | perhaps one of my personal favorite meals of life? Opened in 2018 by Chef Michinobu Mizukami (who trained under Sukiyabashi Jiro), there are nine counter seats and while it's not at all an inexpensive omakase, the whole experience from start to finish is magical
+Sushi Meino | opened in 2023 by Mei Kogo, one of only a few female sushi masters in Japan. (This is very high on my list for next trip — I'll report back!)
+Sushi Saito | one of the best sushi counters in the city (and priced to match). It's also nearly impossible to book…try your luck on the omakase website, I've seen things open up last minute
+Sushi Yuu | traditional Edomae sushi. Pricey but worth it
+Sawada | a six-seat sushi counter that is also incredibly hard to book. I haven't yet made it in but I always try
+One more sushi recommendation: if you have time on your travel day / are in Terminal 1 at Narita, Sushi Kyotatsu is a great option for sit down or a takeaway plane snack
+Shima | kobe beef sandos. Go for lunch or dinner
+Yakumo Saryo | tea house by the same team behind Ogata in Paris. Book the Japanese breakfast in advance and be certain to request a seat at the main table by the window (they also have a bar area and the experience isn't the same)
+Narukiyo | excellent izakaya in Shibuya with a lively atmosphere. Make a reservation in advance and keep in mind that there is no English menu (ask for your waiter's recommendations and/or get the wagyu + asparagus if they have + sashimi + whatever is fried)
+Tempura Fukamachi | very, very, very good tempura by a father-son team near Kyobashi Station
+Yakitori Imai | yakitori with an open kitchen + natural wine (make sure to order the chicken skewers)
+Yasubei of Ebisu | order gyoza + potato salad + beer
+Regarding ramen: I firmly believe that the best ramen in Tokyo is at the end of whatever long line you wait in when you get hungry. A few to seek out if you need a destination: Iruca Tokyo (two locations) | Kagari Ramen (main location is in Ginza and they have a second in Roppongi Hills) | Ichiran (in Shibuya; get the tonkotsu ramen) | Shinjiko Shijimi (get the shijimi shio ramen)
+Regarding pizza, I haven't found my personal favorite yet but here are the options: The Pizza Bar On 38th (at the Mandarin Oriental) | SAVOY (multiple locations + they do delivery if you need a night in at the hotel) | Pizza Studio Tamaki (PST) | Pizza Marumo (try the Japanese umami) | Seirinkan (two offerings only: Margherita and Marinara. I preferred the marinara!) | Pizza Strada | Pizzeria e Trattoria da ISA
+A trip to Japan is not complete without (daily) konbini (convenience store) stops. The top three: 7-Eleven, FamilyMart, and Lawson each have their own specialties though if it's your first time, I highly recommend getting an egg sando at each and doing a side by side taste test to find your personal favorite.
+[wine | cocktail | listening bars]
+Studio Mule | my favorite wine / listening bar in Tokyo. If I lived in the city, I would be here constantly. Say hi to Toshiya-san for me and take note of every vinyl he plays — they're all amazing. There are 11 counter seats and while the wine list skews European, he has a few extremely special Japanese wines if you're open to getting a bottle. I highly recommend arriving right at opening as it's a small space and it fills up quickly
+Ahiru Store | a very very good natural wine spot (with food as well). It can be hard to get into but it's worth the wait. (It's not too far of a walk to/from Studio Mule if you can't get in to one or get either or want to combine them.) Cash only!
+Winestand Waltz | very tiny stand-up wine bar (close to Yasubei of Ebisu if you want wine pre- or post-gyoza)
+Bunon | such a special, cozy spot with great natural wine (emphasis on Japanese bottles) + sake in a traditional renovated two-story home in Nishi-Azabu. Be sure to plan to come early / closer to opening if you're not planning to stay for dinner (Japanese-European small plates)
+Kasiki | for ice cream + wine
+Grandfather's | excellent cocktails + vinyl. Get the mini martini and order potato chips (and know that they do allow indoor smoking)
+Bar Martha | whiskey + listening bar emphasis on listening aka please don't try to have a loud conversation here
+Gen Yamamoto | 8-seat cocktail omakase — definitely book in advance!
+Bar Benfiddich | candlelit, 15-seat bar on the 9th floor of a high-rise near Shinjuku Station from bartender Hiroyasu Kayama. There's no menu, the drinks are seasonal / farm-to-glass and the experience is very very special. Book in advance for one of their seatings (19h / 21h / 23h) via IG / their site
+The SG Club | opened in 2018 by Shingo Gokan. There's Guzzle (more relaxed on the ground floor), Sip (intimate, elegant cocktail experience in the basement) and Savor (the upstairs, members-only cigar room). Definitely make a reservation / if you want to risk it, go on the earlier side
+New York Bar | in the recently revamped / reopened Park Hyatt Tokyo (don't worry they kept the bar the same so you can still lean into the Lost In Translation vibes)
+[coffee | bread | sweet]
+Fuglen | one of my favorite coffee shops in the world. I always bring beans home with me. There are multiple location but I especially like the Shibuya location (right around the corner from TRUNK(hotel) Yoyogi Park which is a coffee shop by day / cocktails by night
+Tokyo is absolutely not lacking in good coffee. Here are a few more to check out: nexpect | Nodoya no katte | Koffee Mameya | Glitch | Onibus | Paddlers Coffee | Switch | Little Nap
+Sunshine Juice | excellent juice shop
+I'm donut ? | get the classic (multiple locations)
+Bricolage Bread & Co | bakery meets café in Roppongi. Coffee from Fuglen and don't miss the breads made with Japanese grains
+Fukusaya | my personal favorite Castella (a delicate sponge cake) is from here and I always take an individual cube with me as a sweet plane snack for the way home.
+Toraya | Toraya has been making wagashi (traditional Japanese sweets) for the Imperial court since 1628. They have several locations across the city but the Akasaka flagship location designed by architect Hiroshi Naito is especially beautiful
+Higashiya Ginza | modern wagashi + tea (they do lunch too)
+[shop]
+N id Tokyo | Amomento Tokyo Flagship | Auralee | Center for Cosmic Wonder | 1LDK apartments | Beams | Onitsuka Tiger | Lemaire Flagship | Prada (specifically the Aoyama location designed by Herzog and De Meuron) | Laila Vintage | Jantiques | Ginza Natsuno | Yonoya Comb Store | Pejite | Hakujitsu | Daikanyama T-Site | Cow Books | Totodo | Shibuya Publishing & Booksellers | Honkichi | Ginza Itoya | Ebiya | Kamata Hakensha | Kiya Nihonbashi
+Some of the best food souvenirs (and snacks / lunches) are found in the depachikas (department store basement food halls). I especially love: Isetan Shinjuku | Takashimaya Nihonbashi | Nihonbashi Mitsukoshi | Ginza Mitsukoshi | Daimaru | Matsuya Ginza
+I also love to pop into a few antenna shops (regional food shops): Hokkaido Dosanko Plaza Yurakucho | Ginza Okinawan Washita Shop | Oishii Yamagata Plaza | Tau Hiroshima
+[visit]
+Kyu Asakura House | Sogetsu Foundation | Mingeikan (Japan Folk Crafts Museum) | Tokyo Metropolitan Teien Art Museum | Nezu Museum | 21-21 Design Sight | Yoyogi Park | Shinjuku Gyoen National Park | Shibuya Crossing
+Markets: Tsukiji Outer Market | Toyosu Market | Aoyama Farmers Market | Oedo Antique Market
+[stay]
+Trunk(Hotel) Yoyogi Park | K5 | Muji Hotel Ginza | The Okura | Aman Tokyo | Janu Tokyo | Park Hyatt Tokyo`,
+  expectedRegion: 'Tokyo',
+  expectedPlaces: [
+    // ── Restaurants (primary recs) ──
+    { name: 'Tenmo', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Sowado', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Butagumi', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Nodaiwa Azabu Iikura Honten', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Sushi Mizukami', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Sushi Meino', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Sushi Saito', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Sushi Yuu', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Shima', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Yakumo Saryo', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Narukiyo', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Tempura Fukamachi', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Yakitori Imai', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Yasubei of Ebisu', type: 'restaurant', city: 'Tokyo' },
+    // ── Inline restaurant recs (tonkatsu, ramen, pizza) ──
+    { name: 'Tonki', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Kagari Ramen', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Ichiran', type: 'restaurant', city: 'Tokyo' },
+    { name: 'The Pizza Bar On 38th', type: 'restaurant', city: 'Tokyo' },
+    { name: 'Seirinkan', type: 'restaurant', city: 'Tokyo' },
+    // ── Bars ──
+    { name: 'Studio Mule', type: 'bar', city: 'Tokyo' },
+    { name: 'Ahiru Store', type: 'bar', city: 'Tokyo' },
+    { name: 'Bar Benfiddich', type: 'bar', city: 'Tokyo' },
+    { name: 'The SG Club', type: 'bar', city: 'Tokyo' },
+    { name: 'Gen Yamamoto', type: 'bar', city: 'Tokyo' },
+    { name: 'New York Bar', type: 'bar', city: 'Tokyo' },
+    // ── Coffee / Bakery ──
+    { name: 'Fuglen', type: 'cafe', city: 'Tokyo' },
+    { name: 'Koffee Mameya', type: 'cafe', city: 'Tokyo' },
+    { name: 'Bricolage Bread & Co', type: 'cafe', city: 'Tokyo' },
+    // ── Shops ──
+    { name: 'Beams', type: 'shop', city: 'Tokyo' },
+    { name: 'Daikanyama T-Site', type: 'shop', city: 'Tokyo' },
+    { name: 'Ginza Itoya', type: 'shop', city: 'Tokyo' },
+    // ── Depachikas ──
+    { name: 'Isetan Shinjuku', type: 'shop', city: 'Tokyo' },
+    // ── Museums / Activities ──
+    { name: 'Nezu Museum', type: 'museum', city: 'Tokyo' },
+    { name: '21-21 Design Sight', type: 'museum', city: 'Tokyo' },
+    { name: 'Tokyo Metropolitan Teien Art Museum', type: 'museum', city: 'Tokyo' },
+    { name: 'Tsukiji Outer Market', type: 'activity', city: 'Tokyo' },
+    { name: 'Yoyogi Park', type: 'activity', city: 'Tokyo' },
+    // ── Hotels ──
+    { name: 'Trunk(Hotel) Yoyogi Park', type: 'hotel', city: 'Tokyo' },
+    { name: 'Aman Tokyo', type: 'hotel', city: 'Tokyo' },
+    { name: 'Park Hyatt Tokyo', type: 'hotel', city: 'Tokyo' },
+    { name: 'The Okura', type: 'hotel', city: 'Tokyo' },
+    { name: 'Janu Tokyo', type: 'hotel', city: 'Tokyo' },
+  ],
+  antiPatterns: [
+    'Sukiyabashi Jiro',           // reference to where a chef trained, not a recommendation
+    '7-Eleven',                   // convenience store chain
+    'FamilyMart',                 // convenience store chain
+    'Lawson',                     // convenience store chain
+    'Tokyo Banana',               // product, not a place
+    'Kit Kat',                    // product
+    'Pocari Sweat',               // product
+    'Perfect Days',               // movie
+    'Yukari',                     // person (guide), not a place
+    'Food Sake Tokyo',            // guide service, not a venue
+    'Ogata',                      // Paris reference, not a Tokyo rec
+    'Shibuya Crossing',           // landmark / intersection, not a saveable place
+  ],
+  qualityCriteria: {
+    minPlaceCount: 50,
+    personalContextRequired: true,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.80,
+  },
+};
+
+// ─── TEST CASE 15: CN Traveler Hot List 2025 (Live URL) ─────────────────────
+
+const CN_HOT_LIST_2025: TestCase = {
+  id: 'url-cn-hot-list-2025',
+  name: 'CN Traveler Hot List 2025 — Best New Hotels',
+  category: 'url-live',
+  description: 'Live URL fetch of CN Traveler Hot List 2025 winners. A multi-country hotel roundup article. Tests: Firecrawl extraction from CN Traveler (JS-heavy), all-hotel type assignment, global region handling (no single region), enrichment resolution to correct countries.',
+  input: '',
+  sourceUrl: 'https://www.cntraveler.com/story/hot-list-2025-winners',
+  isArticle: true,
+  expectedRegion: null,   // global roundup, no single region
+  expectedPlaces: [
+    // We know at least Nekajui (Costa Rica) is on the list from search results.
+    // The rest will be validated manually on first run and then backfilled.
+    { name: 'Nekajui', type: 'hotel' },
+  ],
+  expectedEnrichment: [
+    { name: 'Nekajui', mustBeInCountry: 'Costa Rica', expectedConfidence: 'high' },
+  ],
+  antiPatterns: [
+    'Conde Nast',            // publisher, not a hotel
+    'Traveler',              // magazine name
+    'Hot List',              // list title
+  ],
+  qualityCriteria: {
+    minPlaceCount: 10,
+    personalContextRequired: false,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.95,  // should all be hotels
+  },
+};
+
+// ─── TEST CASE 16: Wishlist Hotels Blog Post ────────────────────────────────
+
+const WISHLIST_HOTELS_BLOG: TestCase = {
+  id: 'wishlist-hotels-blog',
+  name: 'Wishlist Hotels Series — Multi-Country Boutique Roundup',
+  category: 'article',
+  description: 'A personal blog post about 10 wishlist hotels across the globe. Heavy editorial voice, "haven\'t been yet" framing throughout, how-to-get-there logistics, references to friends/publications/past trips, and one hotel with a sub-property (Uxua Praia). Tests: all-hotel extraction from editorial prose, correct country/region resolution for global spread, excluding people (Nausika, Sarah, Wilbert Das) and publications (Vogue, AD, Prior), handling mentioned-but-different properties (Skinopi Lodge in Milos).',
+  sourceUrl: 'https://sotheresthisplace.substack.com/p/10-wishlist-hotels-01',
+  input: `Welcome to my Wishlist Hotels series! This is where I'll be sharing a completely random batch of hotels around the world that have been on my mind lately. They aren't new hotels necessarily, though some might be. The idea is to give you a peek at the hotels high on my wishlist—the ones I'd consider booking a whole trip around. Sometimes the hotel is the destination; other times it's what's pulling me toward a destination I've been eager to visit (win, win). While these stays are definitely on my "bucket list", by no means will all the hotels in this series be luxury hotels only a small percentage of us can afford, because that wouldn't be any fun. Plus, you know I love a soulful boutique stay just as much, and sometimes even more. My hope is that you'll add some of these to your own wishlists and maybe even get inspired to book a stay. And if you have the chance to visit any of them before I do, you know I want to hear about it ;) This month, a few lust-worthy stays have been on my mind, sparking some pretty epic trip ideas: a foodie-forward inn for the cool kids in France's often-overlooked Auvergne region, a design-focused hideaway in my favorite Brazilian beach town, a family-run ranch in Cordoba's Sierras Chicas hills, an unexpectedly whimsical retreat high in the Dolomites, a former bishop's palace in a fairytale village just outside Rome, a secluded escape tucked into the mountains of Greece's Peloponnese, one of Kyoto's most storied ryokans, and more…
+Let's go!
+Uxua Casa Hotel & Spa
+UXUA Casa Hotel & Spa, Trancoso, (Bahia), Brazil
+The last time I was in Brazil was seven years ago. I went to Salvador first, then Trancoso for New Year's (hands down the best New Year's of my life). Trancoso is a tiny little beach town that I wrote about for Vogue here. I miss Brazil so much. I'm desperate to go back this year. While there are so many places I want to explore in Brazil, I've always dreamed of staying at UXUA in Trancoso, the gorgeous hotel founded by Wilbert Das, a Dutch designer and former creative director of Diesel. I snuck in and did a little walk through when I was there last time and it was just magical. Tucked behind the colorful houses of the quadrado, the main grassy square with all the restaurants and shops, it forms a collection of historic Portuguese colonial homes, each one restored with warm wood, handmade tiles, and local art.
+Berghoferin
+Berghoferin, South Tyrol, (Dolomites), Italy
+I'd love to get back to the Dolomites this year. The Berghoferin opened in the 1960s as a mountain lodge and was reimagined in 2023 as a 13-suite adults-only hideaway in Redagno, South Tyrol, under the Corno Bianco and Corno Nero peaks.
+Al Moudira Hotel
+Al Moudira Hotel, Luxor, Egypt
+The last time I visited Luxor was my senior year of college, passing through on a Nile cruise. When Al Moudira reopened under new ownership in 2022, it immediately put Luxor back on the map for me. Tucked slightly off the main city on the West Bank, the hotel is an oasis of courtyards, gardens, and glamorous old-world charm.
+Estancia los Potreros
+Estancia los Potreros, Cordoba, Argentina
+Lately I've been dying to do a gaucho trip, and for some reason I keep coming back to this family-run ranch tucked into Cordoba's Sierras Chicas hills. With only about 12 guests at a time, visitors are welcomed into the family's home.
+Corte della Maesta
+Corte della Maesta, Civita di Bagnoregio, Viterbo, Italy
+A short drive from Rome, the way the tiny hilltop village of Civita di Bagnoregio hovers above the valley is seriously straight out of a fairy tale. Inside the village, housed in a 14th-century bishop's palace, sits Corte della Maesta, an intimate property that features just five uniquely styled suites.
+Finca La Donaira
+Finca La Donaira, Malaga, Spain
+There's so much calling me back to Southern Spain, and Finca La Donaira in Montecorto is high on that list. Tucked into the rolling hills of the Sierra de Grazalema Natural Park, it's all about slow living, nature, and a kind of sustainable indulgence. The finca doubles as a working organic farm with just nine individually designed rooms.
+Auberge de Chassignolles
+Auberge de Chassignolles, Chassignolles, (Auvergne), France
+The reason it's taken me so long to get to this pretty little inn in the Auvergne region of France is because the region itself is sort of off the beaten path (even mine). Located in the village of Chassignolles, this intimate retreat offers a warm welcome, cozy accommodations, and a restaurant serving hearty local cuisine.
+Manna
+Manna, Arcadia, (Peloponnese), Greece
+My friend Nausika, who owns Skinopi Lodge in Milos, has been telling me about her friend's hotel Manna for years. Perched at 1,200 meters in Arcadia, it feels tucked away, surrounded by the untouched fir forest of Mount Mainalo. The building itself surprises you: once a 1929 sanatorium, its Neoclassical bones now meet a modern, earthy sophistication.
+Hiiragiya
+Hiiragiya, Kyoto, Japan
+The family-run inn Hiiragiya in Kyoto is my #1. It's been a haven for artists, writers, and royalty since its founding in 1818. One of Kyoto's most iconic ryokans.
+Sussurro
+Sussurro, Mozambique, Africa
+I first connected with Sussurro's co-owner Sarah years ago when I stumbled across her dreamy hotel on Instagram. With just a handful of thatched-roof bungalows tucked along a turquoise lagoon in southern Mozambique, Sussurro is exactly the kind of place I dream up when I picture escaping to Africa's coast.`,
+  expectedRegion: null,  // global spread
+  expectedPlaces: [
+    { name: 'Uxua Casa Hotel & Spa', type: 'hotel', city: 'Trancoso' },
+    { name: 'Berghoferin', type: 'hotel', city: 'South Tyrol' },
+    { name: 'Al Moudira Hotel', type: 'hotel', city: 'Luxor' },
+    { name: 'Estancia los Potreros', type: 'hotel', city: 'Cordoba' },
+    { name: 'Corte della Maesta', type: 'hotel', city: 'Civita di Bagnoregio' },
+    { name: 'Finca La Donaira', type: 'hotel', city: 'Malaga' },
+    { name: 'Auberge de Chassignolles', type: 'hotel', city: 'Chassignolles' },
+    { name: 'Manna', type: 'hotel', city: 'Arcadia' },
+    { name: 'Hiiragiya', type: 'hotel', city: 'Kyoto' },
+    { name: 'Sussurro', type: 'hotel', city: 'Mozambique' },
+  ],
+  expectedEnrichment: [
+    { name: 'Uxua Casa Hotel & Spa', mustBeInCountry: 'Brazil', expectedConfidence: 'high' },
+    { name: 'Berghoferin', mustBeInCountry: 'Italy', expectedConfidence: 'high' },
+    { name: 'Al Moudira Hotel', mustBeInCountry: 'Egypt', expectedConfidence: 'high' },
+    { name: 'Estancia los Potreros', mustBeInCountry: 'Argentina', expectedConfidence: 'high' },
+    { name: 'Hiiragiya', mustBeInCountry: 'Japan', expectedConfidence: 'high' },
+    { name: 'Sussurro', mustBeInCountry: 'Mozambique', expectedConfidence: 'high' },
+  ],
+  antiPatterns: [
+    'Wilbert Das',               // person (hotel founder)
+    'Nausika',                   // person (friend)
+    'Sarah',                     // person (hotel co-owner)
+    'Skinopi Lodge',             // mentioned as context, not a rec in this list
+    'Diesel',                    // brand
+    'Vogue',                     // publication
+    'Architectural Digest',      // publication
+    'Prior',                     // publication
+    'Charlie Chaplin',           // person
+    'Elizabeth Taylor',           // person
+    'Salvador',                  // city mentioned as past trip, not a hotel
+    'Set Nefru',                 // boat, not a hotel (debatable — could be kept)
+  ],
+  qualityCriteria: {
+    minPlaceCount: 9,
+    personalContextRequired: true,
+    deduplicationRequired: false,
+    typAccuracyThreshold: 0.95,  // should all be hotels
+  },
+};
+
 // ─── EXPORT ALL TEST CASES ──────────────────────────────────────────────────
 
 export const TEST_CASES: TestCase[] = [
@@ -665,4 +1094,11 @@ export const TEST_CASES: TestCase[] = [
   DUPLICATES,
   ARTICLE_TURKEY_HOTELS,
   PARIS_BLACK_BOOK,
+  ARTICLE_CN_EUROPE_HOTELS,
+  SLASH_PAIRS,
+  EMAIL_FORWARD,
+  ARTICLE_MRS_SMITH,
+  TOKYO_MEGA_GUIDE,
+  CN_HOT_LIST_2025,
+  WISHLIST_HOTELS_BLOG,
 ];

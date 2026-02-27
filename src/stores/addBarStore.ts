@@ -28,6 +28,9 @@ export interface AddBarState {
   importLabel: string;
   importResults: ImportedPlace[];
 
+  // Import curation (select which imported places to save)
+  importSelectedIds: Set<string>;
+
   // Preview (single place before save)
   previewPlace: ImportedPlace | null;
 
@@ -50,6 +53,9 @@ export interface AddBarState {
   setGoogleResults: (results: AddBarState['googleResults']) => void;
   setImportProgress: (percent: number, label: string) => void;
   setImportResults: (results: ImportedPlace[]) => void;
+  toggleImportSelected: (id: string) => void;
+  selectAllImports: () => void;
+  deselectAllImports: () => void;
   setPreviewPlace: (place: ImportedPlace | null) => void;
   toggleCollection: (id: string) => void;
   setSelectedCollections: (ids: string[]) => void;
@@ -67,6 +73,7 @@ const DEFAULTS = {
   importProgress: 0,
   importLabel: '',
   importResults: [] as ImportedPlace[],
+  importSelectedIds: new Set<string>() as Set<string>,
   previewPlace: null as ImportedPlace | null,
   selectedCollectionIds: [] as string[],
   tripContext: null as AddBarState['tripContext'],
@@ -95,7 +102,24 @@ export const useAddBarStore = create<AddBarState>((set) => ({
     importLabel: label,
   }),
 
-  setImportResults: (importResults) => set({ importResults }),
+  setImportResults: (importResults) => set({
+    importResults,
+    // Auto-select all on new import results
+    importSelectedIds: new Set(importResults.map(p => p.id)),
+  }),
+
+  toggleImportSelected: (id) => set((s) => {
+    const next = new Set(s.importSelectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return { importSelectedIds: next };
+  }),
+
+  selectAllImports: () => set((s) => ({
+    importSelectedIds: new Set(s.importResults.map(p => p.id)),
+  })),
+
+  deselectAllImports: () => set({ importSelectedIds: new Set() }),
+
   setPreviewPlace: (previewPlace) => set({ previewPlace }),
 
   toggleCollection: (id) => set((s) => {

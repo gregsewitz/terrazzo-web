@@ -78,11 +78,61 @@ export async function extractFromGoogleMaps(url: string): Promise<Array<{ name: 
   }
 }
 
-// ─── URL fetching + HTML stripping ──────────────────────────────────────────────
+// ─── URL fetching via Firecrawl (with raw fallback) ─────────────────────────────
 
+/**
+ * Fetch article content using Firecrawl for clean, structured markdown.
+ * Falls back to raw HTML stripping if Firecrawl is unavailable or fails.
+ * Firecrawl preserves headings, lists, and semantic structure — critical for
+ * Claude to distinguish featured places from supporting text.
+ */
 export async function fetchAndClean(url: string): Promise<string | null> {
+  const fullUrl = url.startsWith('www.') ? `https://${url}` : url;
+
+  // Try Firecrawl first (produces clean markdown with preserved structure)
+  const firecrawlKey = process.env.FIRECRAWL_API_KEY;
+  if (firecrawlKey) {
+    // Attempt 1: standard scrape with JS rendering wait
+    for (const waitMs of [3000, 8000]) {
+      try {
+        const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${firecrawlKey}`,
+          },
+          body: JSON.stringify({
+            url: fullUrl,
+            formats: ['markdown'],
+            onlyMainContent: true,
+            waitFor: waitMs,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const markdown = data?.data?.markdown;
+          if (markdown && markdown.length > 500) {
+            // Firecrawl returns clean markdown — pass up to 30k chars to Claude
+            return markdown.slice(0, 30000);
+          }
+        }
+        // If first attempt returned too little content, try again with longer wait
+        if (waitMs === 3000) {
+          console.warn(`[fetchAndClean] Firecrawl returned insufficient content with ${waitMs}ms wait, retrying with longer wait...`);
+          continue;
+        }
+      } catch (err) {
+        if (waitMs === 8000) {
+          console.warn('[fetchAndClean] Firecrawl failed, falling back to raw fetch:', err);
+        }
+      }
+    }
+    console.warn('[fetchAndClean] Firecrawl returned insufficient content after retries, falling back to raw fetch');
+  }
+
+  // Fallback: raw fetch + HTML stripping
   try {
-    const fullUrl = url.startsWith('www.') ? `https://${url}` : url;
     const res = await fetch(fullUrl, {
       headers: { 'User-Agent': 'Terrazzo/1.0 (travel recommendation parser)' },
       redirect: 'follow',
@@ -95,7 +145,7 @@ export async function fetchAndClean(url: string): Promise<string | null> {
       .replace(/<[^>]*>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .slice(0, 12000);
+      .slice(0, 25000);
     return text;
   } catch {
     return null;
@@ -145,7 +195,44 @@ export async function enrichWithGooglePlaces(
         // Build search query with location context for Google Places accuracy
         const locationHint = place.city || inferredRegion || '';
         const query = locationHint ? `${place.name} ${locationHint}` : place.name;
-        const googleResult = await cachedSearchPlace(query);
+        let googleResult = await cachedSearchPlace(query);
+
+        // ── Geographic fencing (soft) ─────────────────────────────────────
+        // If the article has a regional context (e.g., "Europe") and Google
+        // resolved to a completely different region, the match is likely wrong.
+        // Try once more with a tighter query. If that also misses, KEEP the
+        // original result but flag it as low-confidence so the user can still
+        // see it in the curation UI and decide for themselves.
+        let geoConfidence: 'high' | 'low' = 'high';
+        if (googleResult && inferredRegion && place.city) {
+          const address = (googleResult.formattedAddress || '').toLowerCase();
+          const cityLower = place.city.toLowerCase();
+          const regionLower = inferredRegion.toLowerCase();
+          // Split compound cities like "Brockenhurst, Hampshire" and check each part
+          const cityParts = cityLower.split(/[,/]/).map(s => s.trim()).filter(Boolean);
+          const addressMatchesContext =
+            cityParts.some(part => address.includes(part)) ||
+            address.includes(regionLower) ||
+            // Also check country-level: if region is "Europe" check common European country names
+            (regionLower === 'europe' && /\b(france|italy|spain|germany|uk|united kingdom|portugal|greece|austria|switzerland|netherlands|belgium|sweden|norway|denmark|croatia|ireland|czech|poland|hungary|romania|turkey)\b/.test(address)) ||
+            (regionLower === 'asia' && /\b(japan|china|thailand|vietnam|indonesia|india|malaysia|singapore|south korea|taiwan|philippines|cambodia|sri lanka|nepal)\b/.test(address));
+          if (!addressMatchesContext) {
+            // Retry with a more specific query: "Name, City, Region"
+            const tighterQuery = `${place.name}, ${place.city}, ${inferredRegion}`;
+            const retry = await cachedSearchPlace(tighterQuery);
+            if (retry) {
+              const retryAddress = (retry.formattedAddress || '').toLowerCase();
+              if (cityParts.some(part => retryAddress.includes(part)) || retryAddress.includes(regionLower)) {
+                googleResult = retry;
+              } else {
+                // Both attempts missed — keep original but flag as low-confidence
+                // so the curation UI can surface this to the user
+                geoConfidence = 'low';
+                console.warn(`[geo-fence] "${place.name}" in "${place.city}" — Google resolved to "${googleResult.formattedAddress}". Keeping with low confidence.`);
+              }
+            }
+          }
+        }
 
         done++;
         onProgress?.(done, total);
@@ -191,8 +278,11 @@ export async function enrichWithGooglePlaces(
           };
         }
 
-        if (place.description) {
-          enriched.enrichment = { description: place.description, confidence: 0.8 };
+        if (place.description || geoConfidence === 'low') {
+          enriched.enrichment = {
+            description: place.description || '',
+            confidence: geoConfidence === 'low' ? 0.4 : 0.8,
+          };
         }
 
         return enriched;

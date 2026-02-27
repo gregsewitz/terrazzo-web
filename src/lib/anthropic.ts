@@ -80,7 +80,13 @@ export async function extractAndMatchPlaces(
   isArticleFromUrl: boolean,
   userProfile?: Record<string, number>
 ): Promise<ExtractAndMatchResult> {
-  const maxPlaces = isArticleFromUrl ? 50 : 30;
+  // Estimate place density: count likely separators to size the cap.
+  // Dense guides can easily have 80-100+ places.
+  const separatorCount = (content.match(/\n|[|•·–—]|\d+\./g) || []).length;
+  const estimatedPlaces = Math.max(separatorCount, content.length / 200);
+  const maxPlaces = isArticleFromUrl
+    ? Math.min(Math.max(50, Math.ceil(estimatedPlaces * 1.2)), 120)
+    : Math.min(Math.max(30, Math.ceil(estimatedPlaces * 1.2)), 120);
   const includeTasteMatch = !!userProfile;
 
   const tasteMatchBlock = includeTasteMatch ? `
@@ -100,24 +106,44 @@ For each place, also score:
 
   const extractSystemPrompt = `You are Terrazzo's smart place extractor${includeTasteMatch ? ' AND taste concierge' : ''}. The user will paste content that contains travel places — a bucket list, article, newsletter, messy notes, Google Maps export, or a mix.
 
-Your job: identify EVERY distinct place mentioned, up to ${maxPlaces} places max.
+Your job: identify EVERY distinct FEATURED place mentioned, up to ${maxPlaces} places max.
 
-COMPLETENESS IS YOUR #1 PRIORITY:
-- Go through the ENTIRE text from start to finish. Extract up to ${maxPlaces}.
-- ENSURE COVERAGE ACROSS ALL SECTIONS. Scan the ENTIRE text for section headers, then extract proportionally from each.
-- Every named venue is a place: restaurants, hotels, bars, cafes, yoga studios, museums, art installations, wineries, bookstores, neighborhoods, beaches.
-- If a place appears under a section header like "BARS" or "THINGS TO DO" — it's a place.
-- Two names together ("La Huella and Ferona") = TWO places. Slashes too ("Soneva Secret/Kudadoo").
-- Neighborhoods, villages, and areas mentioned as destinations count.
+ARTICLE-TYPE AWARENESS (CRITICAL):
+First, determine what kind of content this is. Look at the title, intro, and structure:
+- If the article is a LIST OF HOTELS (e.g., "Best Hotels in Europe", "Top 10 Resorts"): extract ONLY the hotels being featured/reviewed. Restaurants, spas, bars, and activities mentioned WITHIN a hotel review are amenities of that hotel — capture them in the hotel's description, NOT as separate places.
+- If the article is a LIST OF RESTAURANTS: extract ONLY the restaurants. A hotel mentioned as "stay nearby at X" is context, not a featured place.
+- If the article is a CITY/DESTINATION GUIDE with multiple categories: extract the featured places from ALL categories (restaurants, bars, cafes, shops, hotels, museums, activities — everything).
+- If the article is a MIXED LIST or bucket list: extract all distinct places.
+- If the article is a PERSONAL BLOG POST or newsletter with editorial storytelling: the featured places may be embedded in paragraphs of narrative. Extract EVERY place that is a recommendation, even if surrounded by anecdotes, travel logistics, or personal stories. A hotel described across two paragraphs of editorial prose is still a featured place.
+The key principle: extract the PRIMARY SUBJECTS of the article, not every proper noun that appears in supporting text.
+
+COMPLETENESS (CRITICAL — READ CAREFULLY):
+- Go through the ENTIRE text from start to finish, section by section.
+- Extract up to ${maxPlaces} FEATURED places.
+- ENSURE COVERAGE ACROSS ALL SECTIONS. Scan the ENTIRE text for section headers, then extract from EVERY section.
+- INLINE LISTS ARE PLACES TOO: Text like "A | B | C" or "Check out: X, Y, and Z" or "Options include X / Y / Z" contains MULTIPLE places. Extract EACH ONE as its own entry.
+- "Also try: X in neighborhood, Y in neighborhood" — extract X and Y separately.
+- Two names together ("La Huella and Ferona") = TWO places. Slashes too ("Soneva Secret/Kudadoo"). Pipes too ("Iruca Tokyo | Kagari Ramen | Ichiran").
+- Neighborhoods, villages, and areas mentioned as destinations count IF they are featured, not just used as location context.
 - Geographic locations used ONLY as context (like "Norway" in "Swim with Orcas in Norway") are NOT separate places.
 - People's names are NOT places. Section headers are NOT places.
-- In hotel reviews, sub-venues (spa, restaurant inside a hotel) are part of that hotel, not separate places.
+- Convenience store chains (7-Eleven, FamilyMart, Lawson, etc.) and generic chain references are NOT places.
+- Sub-venues (spa, restaurant, bar inside a hotel or resort) are part of the parent venue. Mention them in the description but do NOT extract them as separate places.
+- A place mentioned only as "nearby" or "also consider" or in a photo caption is NOT a featured place unless the article dedicates a section to it.
+- DO NOT STOP EARLY. If the text has 80 places, extract 80 places. Completeness matters more than brevity.
 
 PERSONAL CONTEXT — PRESERVE THE VOICE:
 Capture the user's exact words in userContext. Personal notes are the SOUL of the recommendation.
 
 TYPE CLASSIFICATION:
 hotel | restaurant | bar | cafe | shop | museum | activity | neighborhood
+Use these guidelines:
+- "cafe" = primarily coffee, tea, juice, bakeries, pastry shops, bread shops, donut shops. If a place is mainly about drinks/pastries/light bites and the vibe is casual/daytime, use "cafe".
+- "restaurant" = primarily sit-down meals (lunch/dinner). A place known for ramen, sushi, tempura, pizza, tonkatsu, etc. is a "restaurant" even if casual.
+- "bar" = primarily drinks (wine bars, cocktail bars, listening bars, izakayas focused on drinks). If a place is described mainly for its drinks, cocktails, wine, or nightlife atmosphere, use "bar".
+- "shop" = retail stores, bookshops, clothing stores, department stores, markets, vintage shops, knife shops, stationery stores, food halls/depachikas.
+- "museum" = museums, galleries, art spaces, design museums, cultural foundations, historic houses open to visitors.
+- "activity" = parks, markets (when visited as an experience rather than shopping), outdoor activities, tours, experiences, landmarks.
 
 LOCATION:
 - Use the most specific location. If the whole text is about one area, every place gets that location unless stated otherwise.
@@ -149,11 +175,16 @@ Return a JSON object:
 
 Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
 
+  // Scale max_tokens based on expected output size.
+  // Each place is ~150 tokens of JSON. Add headroom for the wrapper.
+  const baseTokens = includeTasteMatch ? 16384 : 8192;
+  const scaledTokens = Math.min(Math.max(baseTokens, maxPlaces * 200), 32000);
+
   const response = await callClaudeWithRetry({
     model: MODEL,
-    max_tokens: includeTasteMatch ? 16384 : 8192,
+    max_tokens: scaledTokens,
     system: [{ type: 'text', text: extractSystemPrompt, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: content.slice(0, 25000) }],
+    messages: [{ role: 'user', content: content.slice(0, 30000) }],
   });
 
   try {

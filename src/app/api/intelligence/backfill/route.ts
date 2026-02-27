@@ -76,6 +76,15 @@ export async function POST(req: NextRequest) {
       const existing = intelByGoogleId.get(place.googlePlaceId);
 
       if (existing?.status === 'complete') {
+        // Always ensure the SavedPlace is linked, even when skipping re-enrichment
+        await prisma.savedPlace.updateMany({
+          where: {
+            googlePlaceId: place.googlePlaceId,
+            placeIntelligenceId: null,
+          },
+          data: { placeIntelligenceId: existing.id },
+        });
+
         // In force mode, re-run places whose signals array is empty despite having a signalCount
         const signalsEmpty = !existing.signals || (Array.isArray(existing.signals) && existing.signals.length === 0);
         if (force && signalsEmpty && existing.signalCount > 0) {
@@ -93,6 +102,14 @@ export async function POST(req: NextRequest) {
       }
 
       if (existing?.status === 'enriching') {
+        // Ensure link even for in-progress records
+        await prisma.savedPlace.updateMany({
+          where: {
+            googlePlaceId: place.googlePlaceId,
+            placeIntelligenceId: null,
+          },
+          data: { placeIntelligenceId: existing.id },
+        });
         skipped.push({ googlePlaceId: place.googlePlaceId, name: place.name, status: 'enriching' });
         continue;
       }
@@ -139,6 +156,15 @@ export async function POST(req: NextRequest) {
               signals: '[]',
             },
           });
+
+      // Link ALL SavedPlaces with this googlePlaceId to the intelligence record
+      await prisma.savedPlace.updateMany({
+        where: {
+          googlePlaceId: place.googlePlaceId,
+          placeIntelligenceId: null,
+        },
+        data: { placeIntelligenceId: intel.id },
+      });
 
       // Fire the Inngest event
       await inngest.send({

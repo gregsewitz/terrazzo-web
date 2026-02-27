@@ -12,7 +12,7 @@ import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsB
 import { useDragGesture } from '@/hooks/useDragGesture';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import { formatTime12h, inferTimeLabel } from './PlaceTimeEditor';
+import PlaceTimeEditor from './PlaceTimeEditor';
 import QuickEntryCard from './QuickEntryCard';
 import QuickEntryInput from './QuickEntryInput';
 import type { QuickEntry } from '@/types';
@@ -54,6 +54,7 @@ function PlacedCard({
   CARD_PX: number;
 }) {
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
+  const setPlaceTime = useTripStore(s => s.setPlaceTime);
   const handleDragActivate = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
     onDragStartFromSlot(item, dayNumber, slotId, e);
   }, [onDragStartFromSlot, dayNumber, slotId]);
@@ -66,18 +67,11 @@ function PlacedCard({
   });
 
   const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-  const baseContext = place.friendAttribution?.note
+  const context = place.friendAttribution?.note
     ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
     : place.whatToOrder?.[0]
       ? `Order: ${place.whatToOrder[0]}`
       : place.tips?.[0] || place.terrazzoReasoning?.rationale || place.tasteNote || '';
-  // Prepend specific time if set (e.g. "Reservation at 8:15 PM · Order: Puntillas")
-  const timePrefix = place.specificTime
-    ? `${inferTimeLabel(place.type, place.specificTimeLabel)} at ${formatTime12h(place.specificTime)}`
-    : '';
-  const context = timePrefix
-    ? (baseContext ? `${timePrefix} · ${baseContext}` : timePrefix)
-    : baseContext;
   const placeKey = `${dayNumber}-${slotId}-${place.name}`;
   const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
   const loves = placeReactions.filter(r => r.reaction === 'love').length;
@@ -93,7 +87,7 @@ function PlacedCard({
       onPointerCancel={handlePointerCancel}
       className={`group/card mx-${CARD_PX} mb-1.5 rounded card-hover relative`}
       style={{
-        height: CARD_H,
+        minHeight: CARD_H,
         background: isHolding ? 'rgba(42,122,86,0.08)' : 'rgba(42,122,86,0.03)',
         border: isHolding ? '1.5px solid rgba(42,122,86,0.3)' : '1px solid rgba(42,122,86,0.1)',
         padding: isDesktop ? '6px 10px' : '4px 8px',
@@ -140,25 +134,40 @@ function PlacedCard({
           <PerriandIcon name="close" size={8} color={INK['55']} />
         </button>
       </div>
-      {/* Row 2: context + reactions + source badge */}
-      <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 2 }}>
-        <span className="truncate flex-1" style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: INK['60'], fontStyle: context ? 'italic' : 'normal' }}>
-          {context || place.type}
-        </span>
-        {loves > 0 && (
-          <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: '#c93c3c' }}>
-            ♥ {loves}
-          </span>
-        )}
-        {nopes > 0 && (
-          <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['55'] }}>
-            ✗ {nopes}
-          </span>
-        )}
-        <span className="flex-shrink-0 px-1.5 py-px rounded font-bold" style={{ background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono, fontSize: isDesktop ? 8 : 7 }}>
-          {srcStyle.label}
-        </span>
+      {/* Row 2: time editor (shared format with mobile) */}
+      <div style={{ marginTop: 2 }}>
+        <PlaceTimeEditor
+          specificTime={place.specificTime}
+          specificTimeLabel={place.specificTimeLabel}
+          placeType={place.type}
+          slotId={slotId}
+          onSave={(time, label) => setPlaceTime(dayNumber, slotId, place.id, time, label)}
+          compact
+        />
       </div>
+      {/* Row 3: context + reactions + source badge */}
+      {(context || loves > 0 || nopes > 0) && (
+        <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 1 }}>
+          {context && (
+            <span className="truncate flex-1" style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: INK['60'], fontStyle: 'italic' }}>
+              {context}
+            </span>
+          )}
+          {loves > 0 && (
+            <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: '#c93c3c' }}>
+              ♥ {loves}
+            </span>
+          )}
+          {nopes > 0 && (
+            <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['55'] }}>
+              ✗ {nopes}
+            </span>
+          )}
+          <span className="flex-shrink-0 px-1.5 py-px rounded font-bold" style={{ background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono, fontSize: isDesktop ? 8 : 7 }}>
+            {srcStyle.label}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -248,10 +257,13 @@ function DayBoardView({
   const addQuickEntry = useTripStore(s => s.addQuickEntry);
   const removeQuickEntry = useTripStore(s => s.removeQuickEntry);
   const confirmQuickEntry = useTripStore(s => s.confirmQuickEntry);
+  const updateQuickEntry = useTripStore(s => s.updateQuickEntry);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const isDesktop = useIsDesktop();
   // Track which slot currently has the quick entry input open — "dayNumber-slotId"
   const [activeQuickInput, setActiveQuickInput] = useState<string | null>(null);
+  // Track which quick entry is being edited — "dayNumber-slotId-entryId"
+  const [editingEntryKey, setEditingEntryKey] = useState<string | null>(null);
   const [editingHotelDay, setEditingHotelDay] = useState<number | null>(null);
   const [addingTransportDay, setAddingTransportDay] = useState<number | null>(null);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
@@ -717,14 +729,33 @@ function DayBoardView({
                     {/* Quick entries */}
                     {slot.quickEntries && slot.quickEntries.length > 0 && (
                       <div className={`px-${CARD_PX} pb-0.5`}>
-                        {slot.quickEntries.map(qe => (
-                          <QuickEntryCard
-                            key={qe.id}
-                            entry={qe}
-                            onRemove={() => removeQuickEntry(day.dayNumber, slot.id, qe.id)}
-                            onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(day.dayNumber, slot.id, qe.id) : undefined}
-                          />
-                        ))}
+                        {slot.quickEntries.map(qe => {
+                          const entryKey = `${day.dayNumber}-${slot.id}-${qe.id}`;
+                          return editingEntryKey === entryKey ? (
+                            <QuickEntryInput
+                              key={qe.id}
+                              slotLabel={slot.label}
+                              initialValue={qe.text}
+                              onSubmit={(updated) => {
+                                updateQuickEntry(day.dayNumber, slot.id, qe.id, {
+                                  ...updated,
+                                  id: qe.id,
+                                  createdAt: qe.createdAt,
+                                });
+                                setEditingEntryKey(null);
+                              }}
+                              onCancel={() => setEditingEntryKey(null)}
+                            />
+                          ) : (
+                            <QuickEntryCard
+                              key={qe.id}
+                              entry={qe}
+                              onRemove={() => removeQuickEntry(day.dayNumber, slot.id, qe.id)}
+                              onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(day.dayNumber, slot.id, qe.id) : undefined}
+                              onTap={() => setEditingEntryKey(entryKey)}
+                            />
+                          );
+                        })}
                       </div>
                     )}
 

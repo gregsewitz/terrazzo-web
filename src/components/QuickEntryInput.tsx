@@ -11,10 +11,12 @@ interface QuickEntryInputProps {
   onCancel: () => void;
   /** Auto-focus the input on mount (mobile: true after tap, desktop: true) */
   autoFocus?: boolean;
+  /** Pre-fill with existing text for editing an entry */
+  initialValue?: string;
 }
 
-function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true }: QuickEntryInputProps) {
-  const [value, setValue] = useState('');
+function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, initialValue }: QuickEntryInputProps) {
+  const [value, setValue] = useState(initialValue || '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus on mount

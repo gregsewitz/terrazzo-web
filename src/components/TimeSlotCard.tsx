@@ -52,6 +52,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   const addQuickEntry = useTripStore(s => s.addQuickEntry);
   const removeQuickEntry = useTripStore(s => s.removeQuickEntry);
   const confirmQuickEntry = useTripStore(s => s.confirmQuickEntry);
+  const updateQuickEntry = useTripStore(s => s.updateQuickEntry);
   const icon = SLOT_ICONS[slot.id] || 'pin';
   const slotRef = useRef<HTMLDivElement>(null);
   const hasPlaces = slot.places.length > 0;
@@ -62,6 +63,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
 
   // ─── Quick entry inline input state ───
   const [showQuickInput, setShowQuickInput] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
 
   // ─── Drag-from-slot gesture handling ───
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -211,14 +213,32 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     if (!slot.quickEntries?.length) return null;
     return (
       <>
-        {slot.quickEntries.map(qe => (
-          <QuickEntryCard
-            key={qe.id}
-            entry={qe}
-            onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
-            onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
-          />
-        ))}
+        {slot.quickEntries.map(qe =>
+          editingEntryId === qe.id ? (
+            <QuickEntryInput
+              key={qe.id}
+              slotLabel={slot.label}
+              initialValue={qe.text}
+              onSubmit={(updated) => {
+                updateQuickEntry(dayNumber, slot.id, qe.id, {
+                  ...updated,
+                  id: qe.id,
+                  createdAt: qe.createdAt,
+                });
+                setEditingEntryId(null);
+              }}
+              onCancel={() => setEditingEntryId(null)}
+            />
+          ) : (
+            <QuickEntryCard
+              key={qe.id}
+              entry={qe}
+              onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
+              onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
+              onTap={() => setEditingEntryId(qe.id)}
+            />
+          )
+        )}
       </>
     );
   };
