@@ -21,7 +21,7 @@ async function resolveMatchedProperties(
 ) {
   const results = await Promise.allSettled(
     properties.map(async (prop) => {
-      const query = prop.location ? `${prop.name} ${prop.location}` : prop.name;
+      const query = prop.location ? `${prop.name}, ${prop.location}` : prop.name;
       const googleResult = await searchPlace(query);
       if (!googleResult) return null;
 

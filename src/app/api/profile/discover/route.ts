@@ -190,7 +190,7 @@ async function resolveAllPlaces(
 
   const settled = await Promise.allSettled(
     places.map(async ({ name, location }) => {
-      const query = location ? `${name} ${location}` : name;
+      const query = location ? `${name}, ${location}` : name;
       const googleResult = await searchPlace(query);
       if (!googleResult) return { name, location, googlePlaceId: undefined };
 

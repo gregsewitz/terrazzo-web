@@ -109,36 +109,89 @@ async function _fetchSinglePlace(
   const data = await response.json();
   const places: PlaceSearchResult[] = data.places || [];
   if (places.length === 0) return null;
-  if (places.length === 1) return places[0];
 
-  // Pick the result whose displayName best matches the query.
-  // This prevents Google returning a nearby popular place instead of the one we asked for.
-  const queryLower = query.toLowerCase();
-  const queryWords = queryLower.split(/[\s,]+/).filter(Boolean);
+  // Extract the place name portion of the query (before the first comma = location)
+  const queryNamePart = query.split(',')[0].trim().toLowerCase();
+  // Separate "category" words from "proper name" words
+  const CATEGORY_WORDS = new Set(['hotel', 'restaurant', 'bar', 'cafe', 'café', 'resort', 'inn', 'hostel', 'bistro', 'pizzeria', 'trattoria', 'brasserie', 'tavern', 'pub', 'lodge', 'motel', 'spa', 'club', 'house', 'the']);
+  const allQueryWords = queryNamePart.split(/\s+/).filter(w => w.length > 1);
+  const properNameWords = allQueryWords.filter(w => !CATEGORY_WORDS.has(w));
+  // Use proper name words for matching (fall back to all words if everything is a category word)
+  const queryNameWords = properNameWords.length > 0 ? properNameWords : allQueryWords;
 
-  let best = places[0];
-  let bestScore = 0;
+  // Detect if the query implies a specific venue type
+  const queryImpliesLodging = allQueryWords.some(w => ['hotel', 'resort', 'inn', 'hostel', 'lodge', 'motel'].includes(w));
+  const queryImpliesFood = allQueryWords.some(w => ['restaurant', 'bistro', 'pizzeria', 'trattoria', 'brasserie', 'tavern', 'cafe', 'café'].includes(w));
+  const queryImpliesDrink = allQueryWords.some(w => ['bar', 'pub', 'club'].includes(w));
 
-  for (const place of places) {
+  // Google types that are NOT venues (used to reject wrong-type results)
+  const NON_VENUE_TYPES = new Set(['park', 'neighborhood', 'locality', 'sublocality', 'route', 'street_address', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'postal_code', 'natural_feature', 'political', 'premise']);
+
+  // Score each result by name similarity + type compatibility
+  const scored = places.map(place => {
     const name = (place.displayName?.text || '').toLowerCase();
-    // Score: count how many query words appear in the display name
-    let score = 0;
-    for (const word of queryWords) {
-      if (name.includes(word)) score++;
+    const resultWords = name.split(/\s+/).filter(w => w.length > 1);
+    const resultType = (place.primaryType || '').toLowerCase();
+
+    // Count how many proper-name query words appear in the result name
+    let queryWordsMatched = 0;
+    for (const word of queryNameWords) {
+      if (name.includes(word)) queryWordsMatched++;
     }
-    // Bonus for exact name containment
-    if (name.includes(queryLower.split(',')[0].trim())) score += 5;
-    if (score > bestScore) {
-      bestScore = score;
-      best = place;
+
+    // Calculate match ratio: what % of the proper-name words were found?
+    const matchRatio = queryNameWords.length > 0 ? queryWordsMatched / queryNameWords.length : 0;
+
+    // Base score from match ratio
+    let score = matchRatio * 10;
+
+    // Bonus: result name words that appear in query (bidirectional check)
+    for (const word of resultWords) {
+      if (word.length > 2 && !CATEGORY_WORDS.has(word) && queryNamePart.includes(word)) {
+        score += 0.5;
+      }
     }
+
+    // Big bonus for near-exact or containment matches
+    if (name.includes(queryNamePart)) score += 15;
+
+    // Penalty: result is a generic geo type when we searched for a venue
+    if (NON_VENUE_TYPES.has(resultType) && (queryImpliesLodging || queryImpliesFood || queryImpliesDrink)) {
+      score -= 8;
+    }
+
+    // Penalty: result type contradicts the queried type
+    const resultIsLodging = resultType.includes('hotel') || resultType.includes('lodging') || resultType.includes('resort');
+    const resultIsFood = resultType.includes('restaurant') || resultType.includes('food') || resultType.includes('cafe') || resultType.includes('bakery');
+    const resultIsDrink = resultType.includes('bar') || resultType.includes('night_club');
+    if (queryImpliesLodging && !resultIsLodging && (resultIsFood || resultIsDrink)) score -= 3;
+    if (queryImpliesFood && !resultIsFood && resultIsLodging) score -= 3;
+
+    return { place, score, matchRatio, resultType };
+  });
+
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+  const best = scored[0];
+
+  // Reject if the best result doesn't match enough of the proper name
+  // At least 50% of proper-name words must appear, OR score must be high from exact containment
+  if (best.matchRatio < 0.5 && best.score < 5) {
+    console.warn(`[places] Rejected results for "${query}" — low match ratio (${best.matchRatio.toFixed(2)}). Best: "${best.place.displayName?.text}" (type: ${best.resultType}, score: ${best.score.toFixed(1)})`);
+    return null;
   }
 
-  if (best !== places[0]) {
-    console.log(`[places] Reranked: query="${query}" → picked "${best.displayName?.text}" over "${places[0].displayName?.text}"`);
+  // Reject if result is a generic geo feature and we searched for a venue
+  if (best.score < 0 || (NON_VENUE_TYPES.has(best.resultType) && best.matchRatio < 1.0)) {
+    console.warn(`[places] Rejected "${best.place.displayName?.text}" (type: ${best.resultType}) for query "${query}" — wrong type`);
+    return null;
   }
 
-  return best;
+  if (best.place !== places[0]) {
+    console.log(`[places] Reranked: query="${query}" → picked "${best.place.displayName?.text}" (ratio=${best.matchRatio.toFixed(2)}, type=${best.resultType}, score=${best.score.toFixed(1)}) over "${places[0].displayName?.text}"`);
+  }
+
+  return best.place;
 }
 
 async function _fetchMultiplePlaces(

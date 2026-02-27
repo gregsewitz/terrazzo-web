@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const dryRun = body.dryRun === true;
+  const force = body.force === true; // Re-resolve even if googlePlaceId already exists
   const filterUserIds: string[] | undefined = body.userIds;
 
   // Fetch all users with a tasteProfile
@@ -81,15 +82,15 @@ export async function POST(req: NextRequest) {
     // Resolve concurrently
     await Promise.allSettled(
       matchedProps.map(async (prop) => {
-        // Skip if already has a googlePlaceId
-        if (prop.googlePlaceId) {
+        // Skip if already has a googlePlaceId (unless force=true)
+        if (prop.googlePlaceId && !force) {
           alreadyResolved++;
           return;
         }
 
         try {
           const query = prop.location
-            ? `${prop.name} ${prop.location}`
+            ? `${prop.name}, ${prop.location}`
             : prop.name;
           const googleResult = await searchPlace(query);
           if (!googleResult) {
