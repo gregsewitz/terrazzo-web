@@ -9,7 +9,6 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
-import AddPlaceInline from './AddPlaceInline';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -92,6 +91,7 @@ function PicksStrip({
     destinationPicks,
     filteredPicks,
     allUnplacedPicks,
+    placedIds,
   } = usePicksFilter({
     selectedDay: currentDay,
     typeFilter: activeFilter,
@@ -401,13 +401,14 @@ function PicksStrip({
               const isDragging = dragItemId === place.id;
               const isHolding = holdingId === place.id;
               const isReturning = returningPlaceId === place.id;
+              const isPlaced = placedIds.has(place.id);
 
               return (
                 <div
                   key={place.id}
                   className="flex flex-col items-center select-none"
                   style={{
-                    opacity: isDragging ? 0.25 : 1,
+                    opacity: isDragging ? 0.25 : isPlaced ? 0.45 : 1,
                     animation: isReturning ? 'stripLand 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards' : undefined,
                     transform: isDragging ? 'scale(0.85)' : isHolding ? 'scale(0.95) translateY(-2px)' : 'none',
                     transition: 'opacity 0.2s, transform 0.2s ease-out',
@@ -483,10 +484,6 @@ function PicksStrip({
               );
             })}
 
-            {/* + Add place — grid cell */}
-            <div className="flex flex-col items-center justify-center">
-              <AddPlaceInline variant="strip" destination={activeDestination || undefined} />
-            </div>
           </div>
 
           {stripPlaces.length === 0 && (
@@ -522,6 +519,7 @@ function PicksStrip({
                 const isDragging = dragItemId === place.id;
                 const isHolding = holdingId === place.id;
                 const isReturning = returningPlaceId === place.id;
+                const isPlaced = placedIds.has(place.id);
 
                 return (
                   <div
@@ -529,7 +527,7 @@ function PicksStrip({
                     className="flex flex-col items-center flex-shrink-0 select-none"
                     style={{
                       width: 68,
-                      opacity: isDragging ? 0.25 : 1,
+                      opacity: isDragging ? 0.25 : isPlaced ? 0.45 : 1,
                       animation: isReturning ? 'stripLand 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards' : undefined,
                       transform: isDragging
                         ? 'scale(0.85)'
@@ -601,8 +599,6 @@ function PicksStrip({
                 );
               })}
 
-              {/* + Add place */}
-              <AddPlaceInline variant="strip" destination={activeDestination || undefined} />
             </>
           )}
         </div>

@@ -267,9 +267,27 @@ function DayBoardView({
   const [editingHotelDay, setEditingHotelDay] = useState<number | null>(null);
   const [addingTransportDay, setAddingTransportDay] = useState<number | null>(null);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
+  // Track last-added transport to scroll it into view
+  const [lastAddedTransportId, setLastAddedTransportId] = useState<string | null>(null);
   const [deleteDayConfirm, setDeleteDayConfirm] = useState<number | null>(null);
   const [menuDayNumber, setMenuDayNumber] = useState<number | null>(null);
   const dayMenuRef = useRef<HTMLDivElement>(null);
+
+  // Scroll the newly added transport into view
+  useEffect(() => {
+    if (!lastAddedTransportId) return;
+    // lastAddedTransportId holds the afterSlot id — find the transport banner by data attribute
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-transport-slot="${lastAddedTransportId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Brief highlight flash
+        (el as HTMLElement).style.transition = 'background 300ms ease';
+        (el as HTMLElement).style.background = 'rgba(42,122,86,0.12)';
+        setTimeout(() => { (el as HTMLElement).style.background = ''; }, 1500);
+      }
+    });
+  }, [lastAddedTransportId]);
 
   // Close day context menu on click outside
   useEffect(() => {
@@ -324,6 +342,7 @@ function DayBoardView({
     >
       <style>{`.day-col:hover .day-col-menu-btn { opacity: 0.5 !important; } .day-col-menu-btn:hover { opacity: 0.9 !important; }`}</style>
       {trip.days.map(day => {
+        if (day.transport?.length) console.log('[DayBoard] Day', day.dayNumber, 'has', day.transport.length, 'transports:', day.transport.map(t => `${t.id} ${t.mode} afterSlot=${t.afterSlot}`));
         const destColor = DEST_COLORS[day.destination || ''] || generateDestColor(day.destination || '');
         const isFlexible = trip.flexibleDates === true;
         const shortDay = isFlexible ? '' : (day.dayOfWeek?.slice(0, 3) || '');
@@ -571,7 +590,16 @@ function DayBoardView({
             {addingTransportDay === day.dayNumber && (
               <div className="px-2 py-1.5" style={{ background: `${destColor.bg}`, borderBottom: '1px solid var(--t-linen)' }} onClick={e => e.stopPropagation()}>
                 <TransportInput
-                  onSave={(t) => { addTransport(day.dayNumber, t); setAddingTransportDay(null); }}
+                  onSave={(t) => {
+                    addTransport(day.dayNumber, t);
+                    setAddingTransportDay(null);
+                    // Track the afterSlot so we can scroll it into view
+                    if (t.afterSlot) {
+                      setLastAddedTransportId(t.afterSlot);
+                      // Clear after a short delay
+                      setTimeout(() => setLastAddedTransportId(null), 2000);
+                    }
+                  }}
                   onCancel={() => setAddingTransportDay(null)}
                   fromDefault={day.destination}
                   compact
@@ -797,7 +825,7 @@ function DayBoardView({
                             addQuickEntry(day.dayNumber, slot.id, entry);
                             setActiveQuickInput(null);
                           }}
-                          onCancel={() => setActiveQuickInput(null)}
+                          onCancel={() => setActiveQuickInput(prev => prev === `${day.dayNumber}-${slot.id}` ? null : prev)}
                         />
                       </div>
                     )}
@@ -848,13 +876,14 @@ function DayBoardView({
                           />
                         </div>
                       ) : (
-                        <TransportBanner
-                          key={t.id}
-                          transport={t}
-                          onEdit={() => setEditingTransportId(t.id)}
-                          onRemove={() => removeTransport(day.dayNumber, t.id)}
-                          compact
-                        />
+                        <div key={t.id} data-transport-slot={slot.id}>
+                          <TransportBanner
+                            transport={t}
+                            onEdit={() => setEditingTransportId(t.id)}
+                            onRemove={() => removeTransport(day.dayNumber, t.id)}
+                            compact
+                          />
+                        </div>
                       )
                     ))}
                   </SlotContainer>

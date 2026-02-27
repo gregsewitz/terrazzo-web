@@ -188,6 +188,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
   const day = trip.days.find(d => d.dayNumber === currentDay) || trip.days[0];
   if (!day) return null;
+  if (day.transport?.length) console.log('[DayPlanner] Day', day.dayNumber, 'has', day.transport.length, 'transports:', day.transport.map(t => `${t.mode} ${t.from}→${t.to} afterSlot=${t.afterSlot}`));
 
   const destColor = getDestColor(day.destination || '');
 
@@ -408,9 +409,8 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           // Notes module removed — collaboration mode not yet implemented
 
           // Transport banners that should appear AFTER this slot
-          const transportsAfter = !addingTransport
-            ? getTransportsAfterSlot(day.transport, slot.id)
-            : [];
+          // Always show existing transports, even while adding a new one
+          const transportsAfter = getTransportsAfterSlot(day.transport, slot.id);
 
           return (
             <div key={slot.id}>

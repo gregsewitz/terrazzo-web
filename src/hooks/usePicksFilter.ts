@@ -604,21 +604,32 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
   }, [trip, selectedDay]);
 
   // ─── Placed IDs ───
+  // Collects original IDs of items placed on the board.
+  // Multi-placed copies have IDs like "originalId-timestamp-random",
+  // so we extract the base ID to match against pool items.
   const placedIds = useMemo(() => {
     if (!trip) return new Set<string>();
     const ids = new Set<string>();
     trip.days.forEach(day =>
       day.slots.forEach(slot => {
-        slot.places.forEach(p => ids.add(p.id));
+        slot.places.forEach(p => {
+          ids.add(p.id);
+          // Also add the base ID for multi-placement copies (id format: "baseId-timestamp-random")
+          const dashIdx = p.id.indexOf('-', p.id.lastIndexOf('-') > 20 ? 0 : -1);
+          // Simpler: if the id contains a timestamp suffix pattern, extract base
+          const match = p.id.match(/^(.+)-\d{13,}-[a-z0-9]{4,}$/);
+          if (match) ids.add(match[1]);
+        });
         slot.ghostItems?.forEach(p => ids.add(p.id));
       })
     );
     return ids;
   }, [trip]);
 
+  // Show ALL picks including already-placed ones (they'll be greyed out in UI)
   const allUnplacedPicks = useMemo(() => {
-    return myPlaces.filter(p => !placedIds.has(p.id));
-  }, [myPlaces, placedIds]);
+    return myPlaces;
+  }, [myPlaces]);
 
   const pool = placePool ?? allUnplacedPicks;
 

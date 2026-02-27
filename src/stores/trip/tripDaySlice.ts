@@ -444,15 +444,18 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
       ...transport,
       id: `tr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     };
+    console.log('[addTransport] Adding to day', dayNumber, newTransport);
     set(state =>
-      updateCurrentTrip(state, trip => ({
-        ...trip,
-        days: trip.days.map(d =>
+      updateCurrentTrip(state, trip => {
+        const updatedDays = trip.days.map(d =>
           d.dayNumber === dayNumber
             ? { ...d, transport: [...(d.transport || []), newTransport] }
             : d
-        ),
-      }))
+        );
+        const targetDay = updatedDays.find(d => d.dayNumber === dayNumber);
+        console.log('[addTransport] Day transport array after add:', targetDay?.transport?.length, targetDay?.transport);
+        return { ...trip, days: updatedDays };
+      })
     );
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {

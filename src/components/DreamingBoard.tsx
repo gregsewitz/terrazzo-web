@@ -39,7 +39,7 @@ export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoard
   const currentTripId = useTripStore(s => s.currentTripId);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const poolItems = useMemo(
-    () => trip?.pool.filter(p => p.status === 'available') ?? [],
+    () => trip?.pool.filter(p => p.status !== 'rejected') ?? [],
     [trip],
   );
   const myPlaces = useSavedStore(s => s.myPlaces);

@@ -36,13 +36,21 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
   const placedIds = useMemo(() => {
     if (!trip) return new Set<string>();
     const ids = new Set<string>();
-    trip.days.forEach(day => day.slots.forEach(slot => slot.places.forEach(p => ids.add(p.id))));
+    trip.days.forEach(day => day.slots.forEach(slot => {
+      slot.places.forEach(p => {
+        ids.add(p.id);
+        // Also add the base ID for multi-placement copies
+        const match = p.id.match(/^(.+)-\d{13,}-[a-z0-9]{4,}$/);
+        if (match) ids.add(match[1]);
+      });
+    }));
     return ids;
   }, [trip]);
 
+  // Show ALL picks including placed ones (greyed out in UI)
   const allPicks = useMemo(() => {
-    return myPlaces.filter(p => !placedIds.has(p.id));
-  }, [myPlaces, placedIds]);
+    return myPlaces;
+  }, [myPlaces]);
 
   const filteredPicks = useMemo(() => {
     let result = allPicks;

@@ -239,7 +239,7 @@ export default function DayContextMenu({
           ) : (
             <>
               {/* Destination row — tappable to open dest picker */}
-              {onChangeDestination && currentDestination && getDestColor && (
+              {onChangeDestination && getDestColor && (
                 <>
                   <button
                     onClick={() => setShowDestPicker(true)}
@@ -270,11 +270,13 @@ export default function DayContextMenu({
                         width: 10,
                         height: 10,
                         borderRadius: '50%',
-                        background: getDestColor(currentDestination).accent,
+                        background: currentDestination ? getDestColor(currentDestination).accent : INK['30'],
                       }} />
                     </span>
-                    <span style={{ flex: 1 }}>{currentDestination}</span>
-                    <span style={{ fontSize: 12, color: INK['40'] }}>Change ›</span>
+                    <span style={{ flex: 1, color: currentDestination ? INK['85'] : INK['50'] }}>
+                      {currentDestination || 'No location set'}
+                    </span>
+                    <span style={{ fontSize: 12, color: INK['40'] }}>{currentDestination ? 'Change ›' : 'Set ›'}</span>
                   </button>
                   <div style={{ height: 1, background: 'var(--t-linen)', margin: '4px 16px' }} />
                 </>
@@ -365,7 +367,7 @@ export default function DayContextMenu({
       }}
     >
       {/* ── Location section ── */}
-      {onChangeDestination && currentDestination && getDestColor && (
+      {onChangeDestination && getDestColor && (
         <div style={{ padding: '8px 6px 6px' }}>
           <div style={{ padding: '2px 8px 6px' }}>
             <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>

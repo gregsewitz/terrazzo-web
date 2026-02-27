@@ -36,15 +36,29 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   placeItem: (itemId, day, slotId) => {
     set(state =>
       updateCurrentTrip(state, trip => {
+        // Look in pool first, then in saved places (myPlaces) via the picks list
         const item = trip.pool.find(p => p.id === itemId);
         if (!item) return trip;
+
+        // Check if this item is already placed somewhere on the board
+        const alreadyPlaced = trip.days.some(d =>
+          d.slots.some(s => s.places.some(p => p.id === itemId))
+        );
+
+        // Create the placed copy — if already placed, give it a unique ID
+        const placedCopy: ImportedPlace = {
+          ...item,
+          id: alreadyPlaced ? `${itemId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` : itemId,
+          status: 'placed' as const,
+          placedIn: { day, slot: slotId },
+        };
+
         return {
           ...trip,
-          pool: trip.pool.map(p =>
-            p.id === itemId ? { ...p, status: 'placed' as const, placedIn: { day, slot: slotId } } : p
-          ),
+          // Keep pool item as-is (don't change status) so it remains visible in picks
+          pool: trip.pool,
           days: mapDaySlots(trip.days, day, s =>
-            s.id === slotId ? { ...s, places: [...s.places, { ...item, status: 'placed' as const }] } : s
+            s.id === slotId ? { ...s, places: [...s.places, placedCopy] } : s
           ),
         };
       })
@@ -75,23 +89,14 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   unplaceFromSlot: (day, slotId, placeId) => {
     set(state =>
       updateCurrentTrip(state, trip => {
-        let removedPlace: ImportedPlace | null = null;
         const days = mapDaySlots(trip.days, day, s => {
           if (s.id !== slotId) return s;
-          const place = s.places.find(p => p.id === placeId);
-          if (place) removedPlace = place;
           return { ...s, places: s.places.filter(p => p.id !== placeId) };
         });
 
-        let pool = trip.pool;
-        if (removedPlace) {
-          const existsInPool = trip.pool.some(p => p.id === placeId);
-          pool = existsInPool
-            ? trip.pool.map(p => p.id === placeId ? { ...p, status: 'available' as const, placedIn: undefined } : p)
-            : [...trip.pool, { ...(removedPlace as ImportedPlace), status: 'available' as const, placedIn: undefined }];
-        }
-
-        return { ...trip, pool, days };
+        // Pool items stay as-is — they're always visible in picks now.
+        // No need to "return" items to pool since they were never removed.
+        return { ...trip, days };
       })
     );
     const tripId = get().currentTripId;
@@ -120,8 +125,14 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   placeFromSaved: (place, dayNumber, slotId) => {
     set(state =>
       updateCurrentTrip(state, trip => {
+        // Check if this item is already placed somewhere on the board
+        const alreadyPlaced = trip.days.some(d =>
+          d.slots.some(s => s.places.some(p => p.id === place.id))
+        );
         const placedItem = {
           ...place,
+          // Give a unique ID if already placed elsewhere so both copies can coexist
+          id: alreadyPlaced ? `${place.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` : place.id,
           status: 'placed' as const,
           placedIn: { day: dayNumber, slot: slotId },
           libraryPlaceId: place.libraryPlaceId || place.id, // reference back to canonical library entry

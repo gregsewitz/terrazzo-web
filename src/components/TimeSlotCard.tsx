@@ -155,26 +155,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     setShowQuickInput(false);
   }, []);
 
-  // Open pool for this slot (secondary action — "browse places" link)
-  const handleOpenPool = useCallback(() => {
-    if (onOpenForSlot && allSlots && slotIndex != null) {
-      const prevSlot = slotIndex > 0 ? allSlots[slotIndex - 1] : undefined;
-      const nextSlot = slotIndex < allSlots.length - 1 ? allSlots[slotIndex + 1] : undefined;
-      const prevPlace = prevSlot?.places[prevSlot.places.length - 1];
-      const nextPlace = nextSlot?.places[0];
-      const before = prevPlace ? { name: prevPlace.name, type: prevPlace.type, location: prevPlace.location } : undefined;
-      const after = nextPlace ? { name: nextPlace.name, type: nextPlace.type, location: nextPlace.location } : undefined;
-      onOpenForSlot({
-        slotId: slot.id,
-        slotLabel: slot.label,
-        dayNumber,
-        adjacentPlaces: { before, after },
-        suggestedTypes: SLOT_TYPE_AFFINITY[slot.id] || [],
-      });
-    } else {
-      onOpenUnsorted();
-    }
-  }, [onOpenForSlot, onOpenUnsorted, allSlots, slotIndex, slot.id, slot.label, dayNumber]);
 
   // ─── Rail + Content layout (horizontal flex) ───
 
@@ -243,7 +223,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     );
   };
 
-  // ─── Shared: Add more buttons (shown in filled slots below existing content) ───
+  // ─── Shared: Add more button (shown in filled slots below existing content) ───
   const AddMoreRow = () => (
     <div className="flex items-center gap-2 mt-1.5">
       <button
@@ -273,34 +253,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         }}
       >
         <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> add entry
-      </button>
-      <button
-        onClick={(e) => { e.stopPropagation(); handleOpenPool(); }}
-        className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
-        style={{
-          color: INK['80'],
-          fontFamily: FONT.sans,
-          fontWeight: 500,
-          background: INK['04'],
-          border: `1px solid ${INK['10']}`,
-          padding: '4px 8px',
-          transition: 'all 0.15s',
-          touchAction: 'manipulation',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget;
-          el.style.background = 'rgba(42,122,86,0.06)';
-          el.style.borderColor = 'rgba(42,122,86,0.2)';
-          el.style.color = 'var(--t-verde)';
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget;
-          el.style.background = INK['04'];
-          el.style.borderColor = INK['10'];
-          el.style.color = INK['80'];
-        }}
-      >
-        <PerriandIcon name="pin" size={9} color="currentColor" /> browse places
       </button>
     </div>
   );
@@ -580,22 +532,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             onSubmit={handleQuickEntrySubmit}
             onCancel={handleQuickInputCancel}
           />
-          {/* Secondary: browse places link */}
-          <div className="mt-1.5 mb-0.5">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleOpenPool(); }}
-              className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
-              style={{
-                color: INK['70'],
-                fontFamily: FONT.sans,
-                transition: 'color 0.15s',
-              }}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['70']; }}
-            >
-              or browse saved places
-            </button>
-          </div>
         </div>
       </div>
     );

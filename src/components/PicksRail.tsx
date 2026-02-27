@@ -9,7 +9,6 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
-import AddPlaceInline from './AddPlaceInline';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -75,6 +74,7 @@ function PicksRailInner({
     tripDestinations,
     activeDestination,
     allUnplacedPicks,
+    placedIds,
     filteredPicks: sharedFilteredPicks,
     destinationScore,
     matchesDestination,
@@ -281,6 +281,7 @@ function PicksRailInner({
           const isBeingDragged = dragItemId === place.id;
           const isReturning = returningPlaceId === place.id;
           const isHolding = holdingId === place.id;
+          const isPlaced = placedIds.has(place.id);
 
           return (
             <div
@@ -295,7 +296,7 @@ function PicksRailInner({
                 background: isHolding ? `${typeColor}18` : isHovered ? `${typeColor}12` : 'transparent',
                 border: isHolding ? `1.5px solid ${typeColor}50` : isHovered ? `1px solid ${typeColor}30` : '1px solid transparent',
                 transform: isHolding ? 'scale(1.02)' : isHovered ? 'translateX(2px)' : 'translateX(0)',
-                opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
+                opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.45 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
                 cursor: 'grab',
                 touchAction: 'none',
                 userSelect: 'none',
@@ -366,7 +367,7 @@ function PicksRailInner({
                     overflow: 'hidden',
                   }}
                 >
-                  {typeLabel}{location ? ` · ${location}` : ''}
+                    {typeLabel}{location ? ` · ${location}` : ''}{isPlaced ? ' · ✓ placed' : ''}
                 </span>
                 {/* Taste note preview */}
                 {tasteNote && (
@@ -404,8 +405,6 @@ function PicksRailInner({
           </div>
         )}
 
-        {/* + Add place */}
-        <AddPlaceInline variant="rail" destination={activeDestination || trip?.location} />
       </div>
     </div>
 

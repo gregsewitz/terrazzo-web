@@ -125,12 +125,16 @@ export default function PlaceTimeEditor({
     setEditing(true);
   }, [specificTime, slotId]);
 
+  /** Stop pointer events from reaching the parent card's drag/tap gesture handler */
+  const stopPointer = useCallback((e: React.PointerEvent) => { e.stopPropagation(); }, []);
+
   // ─── Display mode: show time or "+ time" affordance ───
   if (!editing) {
     if (specificTime) {
       return (
         <span
           onClick={handleStartEdit}
+          onPointerDown={stopPointer}
           className="inline-flex items-center gap-1 cursor-pointer group/time"
           style={{
             fontSize: compact ? 9 : 10,
@@ -156,6 +160,7 @@ export default function PlaceTimeEditor({
     return (
       <span
         onClick={handleStartEdit}
+        onPointerDown={stopPointer}
         className="inline-flex items-center gap-1 cursor-pointer hover:opacity-90 transition-opacity"
         style={{
           fontSize: compact ? 8 : 9,
@@ -169,12 +174,13 @@ export default function PlaceTimeEditor({
     );
   }
 
-  // ─── Edit mode: branded time input with confirm ───
+  // ─── Edit mode: auto-confirm when native picker selects a value ───
   return (
     <div
       ref={containerRef}
-      className="inline-flex items-center gap-1.5"
+      className="inline-flex items-center gap-1"
       onClick={(e) => e.stopPropagation()}
+      onPointerDown={stopPointer}
     >
       <div
         className="inline-flex items-center gap-1 rounded-md"
@@ -190,7 +196,25 @@ export default function PlaceTimeEditor({
           ref={inputRef}
           type="time"
           value={timeValue}
-          onChange={(e) => setTimeValue(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setTimeValue(v);
+            // Auto-save as soon as the native picker sets a value
+            if (v) {
+              setEditing(false);
+              onSave(v, specificTimeLabel);
+            }
+          }}
+          onBlur={() => {
+            // Save on blur if a value was picked, otherwise cancel
+            if (timeValue) {
+              setEditing(false);
+              onSave(timeValue, specificTimeLabel);
+            } else {
+              setEditing(false);
+              setTimeValue(specificTime || '');
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleConfirm();
             if (e.key === 'Escape') { setEditing(false); setTimeValue(specificTime || ''); }
@@ -207,26 +231,6 @@ export default function PlaceTimeEditor({
           }}
         />
       </div>
-      {/* Confirm button */}
-      <button
-        onClick={handleConfirm}
-        disabled={!timeValue}
-        className="flex items-center justify-center rounded-md transition-opacity"
-        style={{
-          padding: '2px 8px',
-          background: timeValue ? 'var(--t-verde, rgba(42,122,86,1))' : INK['10'],
-          border: 'none',
-          cursor: timeValue ? 'pointer' : 'default',
-          fontFamily: FONT.sans,
-          fontSize: compact ? 9 : 10,
-          fontWeight: 500,
-          color: timeValue ? '#fff' : INK['35'],
-          letterSpacing: '0.01em',
-          lineHeight: '18px',
-        }}
-      >
-        Set
-      </button>
       {/* Clear button — only when editing an existing time */}
       {specificTime && (
         <button
