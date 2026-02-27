@@ -9,6 +9,7 @@ import type { TasteProfile as ProfileShape } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import PlaceLink from '@/components/PlaceLink';
 import { FONT, INK } from '@/constants/theme';
 import type { TasteProfile as NumericProfile, GeneratedTasteProfile } from '@/types';
 import {
@@ -586,6 +587,7 @@ function MatchesSection({ profile }: { profile: ProfileShape }) {
       <StaggerContainer className="flex flex-col gap-3" staggerDelay={0.15}>
         {profile.matchedProperties.map((prop, i) => (
           <StaggerItem key={prop.name}>
+            <PlaceLink name={prop.name} location={prop.location}>
             <div className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
               <div className="p-4">
                 <div className="flex items-start gap-3">
@@ -628,6 +630,7 @@ function MatchesSection({ profile }: { profile: ProfileShape }) {
                 <p className="text-[10px] italic leading-snug" style={{ color: INK['70'] }}>{prop.tensionResolved}</p>
               </div>
             </div>
+            </PlaceLink>
           </StaggerItem>
         ))}
       </StaggerContainer>

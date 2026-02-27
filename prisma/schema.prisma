@@ -443,6 +443,12 @@ model PlaceIntelligence {
   // Sources processed
   sourcesProcessed Json?
 
+  // Error tracking
+  lastError       String?   // Last error message
+  errorCount      Int       @default(0) // Total failures
+  lastErrorAt     DateTime? // When the last error occurred
+  lastTriggeredBy String?   // userId who last triggered enrichment
+
   // Freshness
   lastEnrichedAt  DateTime?
   enrichmentTTL   Int      @default(90) // days

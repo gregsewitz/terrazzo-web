@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { validateBody, placeSchema } from '@/lib/api-validation';
-import { inngest } from '@/lib/inngest';
+import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
 
 interface ImportSourceEntry {
@@ -10,81 +10,6 @@ interface ImportSourceEntry {
   name: string;
   url?: string;
   importedAt: string;
-}
-
-/**
- * Ensure a PlaceIntelligence record exists for this googlePlaceId and trigger
- * the enrichment pipeline if it hasn't run yet. Returns the intelligence ID
- * so we can link it to the SavedPlace.
- *
- * This is fire-and-forget — pipeline runs in the background via Inngest.
- * Subsequent saves of the same place (by any user) will find the existing
- * record and skip re-triggering.
- */
-async function ensureEnrichment(
-  googlePlaceId: string,
-  propertyName: string,
-  userId: string,
-): Promise<string | null> {
-  try {
-    const existing = await prisma.placeIntelligence.findUnique({
-      where: { googlePlaceId },
-      select: { id: true, status: true, lastEnrichedAt: true, enrichmentTTL: true },
-    });
-
-    if (existing) {
-      // Already enriching or complete — just return the ID so we can link it
-      if (existing.status === 'enriching' || existing.status === 'complete') {
-        return existing.id;
-      }
-
-      // Previous run failed — reset and re-trigger
-      await prisma.placeIntelligence.update({
-        where: { id: existing.id },
-        data: { status: 'pending', propertyName },
-      });
-
-      await inngest.send({
-        name: 'pipeline/run',
-        data: {
-          googlePlaceId,
-          propertyName,
-          placeIntelligenceId: existing.id,
-          trigger: 'user_import',
-          triggeredByUserId: userId,
-        },
-      });
-
-      return existing.id;
-    }
-
-    // No intelligence record yet — create and trigger the pipeline
-    const intel = await prisma.placeIntelligence.create({
-      data: {
-        googlePlaceId,
-        propertyName,
-        status: 'pending',
-        signals: '[]',
-      },
-    });
-
-    await inngest.send({
-      name: 'pipeline/run',
-      data: {
-        googlePlaceId,
-        propertyName,
-        placeIntelligenceId: intel.id,
-        trigger: 'user_import',
-        triggeredByUserId: userId,
-      },
-    });
-
-    return intel.id;
-  } catch (error) {
-    // Enrichment is best-effort — never block the save
-    console.error('Auto-enrichment trigger failed (non-blocking):', error);
-    return null;
-  }
 }
 
 export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {

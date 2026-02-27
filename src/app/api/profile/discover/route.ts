@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, profileDiscoverSchema } from '@/lib/api-validation';
+import { authHandler } from '@/lib/api-auth-handler';
+import { searchPlace } from '@/lib/places';
+import { ensureEnrichment } from '@/lib/ensure-enrichment';
+import type { User } from '@prisma/client';
 
 const anthropic = new Anthropic();
 
@@ -132,7 +136,81 @@ RULES:
 - The tasteTension editorial should be genuinely psychologically insightful, not just restating the contradiction.
 - signalThread should pick their most interesting signal and show how it plays out across very different place types.`;
 
-export async function POST(req: NextRequest) {
+/**
+ * Extract all unique place name+location pairs from the AI-generated discover feed.
+ * Used to pre-resolve and enrich places at generation time rather than on-click.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractPlaces(feed: any): Array<{ name: string; location: string }> {
+  const seen = new Set<string>();
+  const places: Array<{ name: string; location: string }> = [];
+
+  function add(name?: string, location?: string) {
+    if (!name) return;
+    const key = `${name}||${location || ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    places.push({ name, location: location || '' });
+  }
+
+  // becauseYouCards
+  for (const card of feed.becauseYouCards || []) add(card.place, card.location);
+  // signalThread.places
+  for (const p of feed.signalThread?.places || []) add(p.name, p.location);
+  // tasteTension.resolvedBy
+  add(feed.tasteTension?.resolvedBy?.name, feed.tasteTension?.resolvedBy?.location);
+  // weeklyCollection.places
+  for (const p of feed.weeklyCollection?.places || []) add(p.name, p.location);
+  // moodBoards[].places[]
+  for (const board of feed.moodBoards || []) {
+    for (const p of board.places || []) add(p.name, p.location);
+  }
+  // deepMatch
+  add(feed.deepMatch?.name, feed.deepMatch?.location);
+  // stretchPick
+  add(feed.stretchPick?.name, feed.stretchPick?.location);
+  // contextRecs
+  for (const rec of feed.contextRecs || []) add(rec.name, rec.location);
+
+  return places;
+}
+
+/**
+ * Fire-and-forget: resolve each place via Google Places API and trigger enrichment.
+ * Runs after the response is sent — does not block the client.
+ */
+async function enrichAllPlaces(places: Array<{ name: string; location: string }>, userId: string) {
+  const results: Array<{ name: string; googlePlaceId?: string; intelligenceId?: string | null; error?: string }> = [];
+
+  for (const { name, location } of places) {
+    try {
+      const query = location ? `${name} ${location}` : name;
+      const googleResult = await searchPlace(query);
+      if (!googleResult) {
+        results.push({ name, error: 'Not found on Google Places' });
+        continue;
+      }
+      const googlePlaceId = googleResult.id;
+      const resolvedName = googleResult.displayName?.text || name;
+      const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, userId);
+      results.push({ name, googlePlaceId, intelligenceId });
+    } catch (err) {
+      results.push({ name, error: err instanceof Error ? err.message : 'Unknown error' });
+    }
+  }
+
+  // Log summary for observability
+  const enriched = results.filter(r => r.intelligenceId);
+  const failed = results.filter(r => r.error);
+  if (failed.length > 0) {
+    console.warn(`[discover-enrichment] ${enriched.length}/${results.length} places enriched, ${failed.length} failed:`,
+      failed.map(f => `${f.name}: ${f.error}`));
+  } else {
+    console.log(`[discover-enrichment] All ${enriched.length} places resolved and enrichment triggered`);
+  }
+}
+
+export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   const ip = getClientIp(req.headers);
   const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
   if (!rl.success) return rateLimitResponse();
@@ -192,9 +270,19 @@ Generate the full discover feed. Return valid JSON only.`;
     }
 
     const result = JSON.parse(jsonMatch[0]);
+
+    // Fire-and-forget: resolve all places + trigger enrichment pipeline
+    // This runs in the background — the client gets the response immediately
+    const places = extractPlaces(result);
+    if (places.length > 0) {
+      enrichAllPlaces(places, user.id).catch(err =>
+        console.error('[discover-enrichment] Background enrichment failed:', err)
+      );
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Discover generation error:', error);
     return NextResponse.json({ error: 'Failed to generate discover content' }, { status: 500 });
   }
-}
+});

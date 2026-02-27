@@ -2,11 +2,53 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingSynthesizeSchema } from '@/lib/api-validation';
+import { authHandler } from '@/lib/api-auth-handler';
+import { searchPlace } from '@/lib/places';
+import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { PROFILE_SYNTHESIS_PROMPT } from '@/constants/onboarding';
+import type { User } from '@prisma/client';
 
 const anthropic = new Anthropic();
 
-export async function POST(req: NextRequest) {
+/**
+ * Fire-and-forget: resolve each matched property via Google Places API
+ * and trigger the enrichment pipeline so data is ready when users click.
+ */
+async function enrichMatchedProperties(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  properties: Array<{ name: string; location: string; [key: string]: any }>,
+  userId: string,
+) {
+  const results: Array<{ name: string; googlePlaceId?: string; intelligenceId?: string | null; error?: string }> = [];
+
+  for (const prop of properties) {
+    try {
+      const query = prop.location ? `${prop.name} ${prop.location}` : prop.name;
+      const googleResult = await searchPlace(query);
+      if (!googleResult) {
+        results.push({ name: prop.name, error: 'Not found on Google Places' });
+        continue;
+      }
+      const googlePlaceId = googleResult.id;
+      const resolvedName = googleResult.displayName?.text || prop.name;
+      const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis');
+      results.push({ name: prop.name, googlePlaceId, intelligenceId });
+    } catch (err) {
+      results.push({ name: prop.name, error: err instanceof Error ? err.message : 'Unknown error' });
+    }
+  }
+
+  const enriched = results.filter(r => r.intelligenceId);
+  const failed = results.filter(r => r.error);
+  if (failed.length > 0) {
+    console.warn(`[synthesis-enrichment] ${enriched.length}/${results.length} matched properties enriched, ${failed.length} failed:`,
+      failed.map(f => `${f.name}: ${f.error}`));
+  } else {
+    console.log(`[synthesis-enrichment] All ${enriched.length} matched properties resolved and enrichment triggered`);
+  }
+}
+
+export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   const ip = getClientIp(req.headers);
   const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
   if (!rl.success) return rateLimitResponse();
@@ -53,9 +95,19 @@ Return valid JSON only matching the specified schema.`;
     }
 
     const profile = JSON.parse(jsonMatch[0]);
+
+    // Fire-and-forget: resolve matched properties + trigger enrichment pipeline
+    // This runs in the background so the profile is returned immediately
+    const matchedProps = profile.matchedProperties || [];
+    if (matchedProps.length > 0) {
+      enrichMatchedProperties(matchedProps, user.id).catch(err =>
+        console.error('[synthesis-enrichment] Background enrichment failed:', err)
+      );
+    }
+
     return NextResponse.json(profile);
   } catch (error) {
     console.error('Profile synthesis error:', error);
     return NextResponse.json({ error: 'Synthesis failed' }, { status: 500 });
   }
-}
+});
