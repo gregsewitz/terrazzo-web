@@ -181,7 +181,7 @@ function PicksStrip({
   if (destinationPicks.length === 0 && !searchQuery.trim()) {
     return (
       <div
-        className="px-4 pt-2 pb-1.5"
+        className="px-4 pt-2 pb-3"
         style={{ background: 'white', borderTop: '1px solid var(--t-linen)' }}
       >
         <span className="text-[11px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
