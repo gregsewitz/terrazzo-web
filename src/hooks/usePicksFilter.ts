@@ -26,7 +26,10 @@ function validCoords(lat: number | undefined | null, lng: number | undefined | n
 // ─── City / Region Alias Map ───
 // Handles: local-language names, abbreviations, boroughs, wards, neighborhoods
 // Key = lowercase alias, Value = canonical English city name
-const CITY_ALIASES: Record<string, string> = {
+// Values can be a single city string or an array when a neighborhood exists
+// in multiple cities (e.g. Soho is in both London and NYC). The resolver
+// injects all candidates and lets geo scoring pick the right one.
+const CITY_ALIASES: Record<string, string | string[]> = {
   // Abbreviations
   nyc: 'new york', cdmx: 'mexico city', la: 'los angeles', sf: 'san francisco',
   dc: 'washington', dtla: 'los angeles', bkk: 'bangkok', hk: 'hong kong',
@@ -44,11 +47,16 @@ const CITY_ALIASES: Record<string, string> = {
 
   // London boroughs / neighborhoods
   camden: 'london', shoreditch: 'london', hackney: 'london',
-  soho: 'london', mayfair: 'london', kensington: 'london',
-  chelsea: 'london', brixton: 'london', islington: 'london',
+  mayfair: 'london', kensington: 'london',
+  brixton: 'london', islington: 'london',
   'covent garden': 'london', notting: 'london', 'notting hill': 'london',
   fitzrovia: 'london', bermondsey: 'london', peckham: 'london',
   dalston: 'london', marylebone: 'london', whitechapel: 'london',
+
+  // Multi-city neighborhoods — geo scoring resolves which is relevant
+  soho: ['london', 'new york'],
+  chelsea: ['london', 'new york'],
+  richmond: ['london', 'san francisco'],
 
   // Paris neighborhoods
   montmartre: 'paris', 'le marais': 'paris', bastille: 'paris',
@@ -68,16 +76,16 @@ const CITY_ALIASES: Record<string, string> = {
 
   // NYC neighborhoods (beyond boroughs)
   williamsburg: 'new york', dumbo: 'new york', tribeca: 'new york',
-  'lower east side': 'new york', 'soho nyc': 'new york', nolita: 'new york',
+  'lower east side': 'new york', nolita: 'new york',
   bushwick: 'new york', 'park slope': 'new york', astoria: 'new york',
   harlem: 'new york', 'east village': 'new york', 'west village': 'new york',
-  greenpoint: 'new york', 'red hook': 'new york', 'chelsea nyc': 'new york',
+  greenpoint: 'new york', 'red hook': 'new york',
 
   // San Francisco neighborhoods
   haight: 'san francisco', 'haight-ashbury': 'san francisco',
   mission: 'san francisco', castro: 'san francisco',
   'north beach': 'san francisco', soma: 'san francisco',
-  'nob hill': 'san francisco', richmond: 'san francisco',
+  'nob hill': 'san francisco',
   'pacific heights': 'san francisco', dogpatch: 'san francisco',
 
   // Stockholm neighborhoods
@@ -98,16 +106,14 @@ const CITY_ALIASES: Record<string, string> = {
 };
 
 // Resolve a single token or multi-word fragment against aliases.
-// Returns the canonical name or the original string unchanged.
-function resolveAlias(s: string): string {
+// Returns an array of canonical names (may be >1 for multi-city neighborhoods).
+// If no alias is found, returns `[original]`.
+function resolveAlias(s: string): string[] {
   const lower = s.toLowerCase().trim();
-  if (CITY_ALIASES[lower]) return CITY_ALIASES[lower];
-  // Handle Japanese -ku ward suffix: "shibuya-ku" → try "shibuya"
-  if (lower.endsWith('-ku')) {
-    const base = lower.slice(0, -3);
-    if (CITY_ALIASES[base]) return CITY_ALIASES[base];
-  }
-  return lower;
+  const hit = CITY_ALIASES[lower]
+    ?? (lower.endsWith('-ku') ? CITY_ALIASES[lower.slice(0, -3)] : undefined);
+  if (!hit) return [lower];
+  return Array.isArray(hit) ? hit : [hit];
 }
 
 // ─── Compound destination splitting ───
@@ -307,24 +313,24 @@ function resolveTokenAliases(tokens: string[]): string[] {
     }
   };
 
+  const tryResolve = (input: string) => {
+    const aliases = resolveAlias(input);
+    // resolveAlias returns [input] unchanged when no alias exists
+    if (aliases.length === 1 && aliases[0] === input) return;
+    for (const a of aliases) addAlias(a);
+  };
+
   // Check each token individually
-  for (const t of tokens) {
-    const alias = resolveAlias(t);
-    if (alias !== t) addAlias(alias);
-  }
+  for (const t of tokens) tryResolve(t);
 
   // Check consecutive pairs ("le marais", "staten island", etc.)
   for (let i = 0; i < tokens.length - 1; i++) {
-    const pair = `${tokens[i]} ${tokens[i + 1]}`;
-    const alias = resolveAlias(pair);
-    if (alias !== pair) addAlias(alias);
+    tryResolve(`${tokens[i]} ${tokens[i + 1]}`);
   }
 
   // Check consecutive triples
   for (let i = 0; i < tokens.length - 2; i++) {
-    const triple = `${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}`;
-    const alias = resolveAlias(triple);
-    if (alias !== triple) addAlias(alias);
+    tryResolve(`${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}`);
   }
 
   return [...resolved];

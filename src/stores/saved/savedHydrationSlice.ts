@@ -1,6 +1,7 @@
 import type { ImportedPlace, PlaceRating, GhostSourceType, Collection } from '@/types';
 import { StateCreator } from 'zustand';
-import { createDefaultCollection, deriveCities } from './savedHelpers';
+import { createDefaultCollection, deriveCities, dbWrite } from './savedHelpers';
+import { isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { SavedState, DBSavedPlace, DBCollection } from './savedTypes';
 
 // ═══════════════════════════════════════════
@@ -50,21 +51,43 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       alsoKnownAs: dp.alsoKnownAs || undefined,
     }));
 
+    // Build a set of valid place IDs for fast lookup
+    const validPlaceIds = new Set(places.map(p => p.id));
+
     // Map DB collections → store Collection format
-    const collections: Collection[] = dbCollections.map(ds => ({
-      id: ds.id,
-      name: ds.name,
-      description: ds.description || undefined,
-      emoji: ds.emoji || 'pin',
-      placeIds: Array.isArray(ds.placeIds) ? ds.placeIds : [],
-      cities: deriveCities(Array.isArray(ds.placeIds) ? ds.placeIds : [], places),
-      isDefault: ds.isDefault,
-      isSmartCollection: ds.isSmartCollection,
-      query: ds.query || undefined,
-      filterTags: Array.isArray(ds.filterTags) ? ds.filterTags : undefined,
-      createdAt: ds.createdAt,
-      updatedAt: ds.updatedAt,
-    }));
+    // Filter placeIds to only include IDs that exist in myPlaces (prune orphans)
+    // Sanitize emoji to valid Perriand icon names only
+    const collections: Collection[] = dbCollections.map(ds => {
+      const rawIds: string[] = Array.isArray(ds.placeIds) ? ds.placeIds : [];
+      const prunedIds = rawIds.filter(pid => validPlaceIds.has(pid));
+      const hadOrphans = prunedIds.length !== rawIds.length;
+      const rawEmoji = ds.emoji || 'pin';
+      const emoji = isPerriandIconName(rawEmoji) ? rawEmoji : 'pin';
+      const emojiChanged = emoji !== rawEmoji;
+
+      // Write-back pruned placeIds and/or sanitized emoji to Supabase
+      if (hadOrphans || emojiChanged) {
+        const patch: Record<string, unknown> = {};
+        if (hadOrphans) patch.placeIds = prunedIds;
+        if (emojiChanged) patch.emoji = emoji;
+        dbWrite(`/api/collections/${ds.id}`, 'PATCH', patch);
+      }
+
+      return {
+        id: ds.id,
+        name: ds.name,
+        description: ds.description || undefined,
+        emoji,
+        placeIds: prunedIds,
+        cities: deriveCities(prunedIds, places),
+        isDefault: ds.isDefault,
+        isSmartCollection: ds.isSmartCollection,
+        query: ds.query || undefined,
+        filterTags: Array.isArray(ds.filterTags) ? ds.filterTags : undefined,
+        createdAt: ds.createdAt,
+        updatedAt: ds.updatedAt,
+      };
+    });
 
     // Ensure there's always a default Favorites collection
     if (!collections.some(s => s.isDefault)) {

@@ -2,7 +2,13 @@ import type { Collection } from '@/types';
 import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
 import { dbWrite, DEFAULT_COLLECTION_ID, deriveCities } from './savedHelpers';
+import { isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { SavedState } from './savedTypes';
+
+/** Sanitize emoji to a valid Perriand icon name, defaulting to 'pin' */
+function safeEmoji(raw?: string): string {
+  return raw && isPerriandIconName(raw) ? raw : 'pin';
+}
 
 // ═══════════════════════════════════════════
 // Collection slice state
@@ -73,6 +79,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   createCollection: (name, emoji, description) => {
+    const validEmoji = safeEmoji(emoji);
     const newId = `collection-${Date.now()}`;
     const now = new Date().toISOString();
     set((state) => ({
@@ -81,7 +88,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         {
           id: newId,
           name,
-          emoji: emoji || 'pin',
+          emoji: validEmoji,
           description,
           placeIds: [],
           cities: [],
@@ -97,7 +104,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
       try {
         const res = await apiFetch<{ collection?: { id: string } }>('/api/collections', {
           method: 'POST',
-          body: JSON.stringify({ name, emoji: emoji || 'pin', description }),
+          body: JSON.stringify({ name, emoji: validEmoji, description }),
         });
         const realId = res?.collection?.id;
         if (realId && realId !== newId) {
@@ -115,6 +122,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   createCollectionAsync: async (name, emoji, description) => {
+    const validEmoji = safeEmoji(emoji);
     const tempId = `collection-${Date.now()}`;
     const now = new Date().toISOString();
     set((state) => ({
@@ -123,7 +131,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         {
           id: tempId,
           name,
-          emoji: emoji || 'pin',
+          emoji: validEmoji,
           description,
           placeIds: [],
           cities: [],
@@ -137,7 +145,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
     try {
       const res = await apiFetch<{ collection?: { id: string } }>('/api/collections', {
         method: 'POST',
-        body: JSON.stringify({ name, emoji: emoji || 'pin', description }),
+        body: JSON.stringify({ name, emoji: validEmoji, description }),
       });
       const realId = res?.collection?.id;
       if (realId && realId !== tempId) {
@@ -164,14 +172,17 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   updateCollection: (id, updates) => {
+    const sanitized = updates.emoji !== undefined
+      ? { ...updates, emoji: safeEmoji(updates.emoji) }
+      : updates;
     set((state) => ({
       collections: state.collections.map(sl =>
         sl.id === id
-          ? { ...sl, ...updates, updatedAt: new Date().toISOString() }
+          ? { ...sl, ...sanitized, updatedAt: new Date().toISOString() }
           : sl
       ),
     }));
-    dbWrite(`/api/collections/${id}`, 'PATCH', updates);
+    dbWrite(`/api/collections/${id}`, 'PATCH', sanitized);
   },
 
   addPlaceToCollection: (collectionId, placeId) => {
@@ -216,6 +227,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   createSmartCollection: (name, emoji, query, filterTags, placeIds) => {
+    const validEmoji = safeEmoji(emoji);
     const newId = `collection-smart-${Date.now()}`;
     const now = new Date().toISOString();
     const state = get();
@@ -243,7 +255,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         {
           id: newId,
           name,
-          emoji,
+          emoji: validEmoji,
           placeIds: resolvedIds,
           cities: deriveCities(resolvedIds, state.myPlaces),
           isDefault: false,
@@ -262,7 +274,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
           method: 'POST',
           body: JSON.stringify({
             name,
-            emoji,
+            emoji: validEmoji,
             isSmartCollection: true,
             query,
             filterTags,
