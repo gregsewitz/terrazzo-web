@@ -204,34 +204,30 @@ function CollectionDetailContent() {
           )}
         </>
       )}
-      {!collection.isDefault && (
-        <>
-          <button
-            onClick={startEditing}
-            className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
-            style={{
-              background: INK['04'],
-              color: INK['70'],
-              border: 'none',
-              fontFamily: FONT.mono,
-            }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
-            style={{
-              background: 'rgba(214,48,32,0.06)',
-              color: 'var(--t-signal-red)',
-              border: 'none',
-              fontFamily: FONT.mono,
-            }}
-          >
-            Delete
-          </button>
-        </>
-      )}
+      <button
+        onClick={startEditing}
+        className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
+        style={{
+          background: INK['04'],
+          color: INK['70'],
+          border: 'none',
+          fontFamily: FONT.mono,
+        }}
+      >
+        Edit
+      </button>
+      <button
+        onClick={() => setShowDeleteConfirm(true)}
+        className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
+        style={{
+          background: 'rgba(214,48,32,0.06)',
+          color: 'var(--t-signal-red)',
+          border: 'none',
+          fontFamily: FONT.mono,
+        }}
+      >
+        Delete
+      </button>
     </div>
   );
 

@@ -1,7 +1,7 @@
 import type { Collection } from '@/types';
 import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
-import { dbWrite, DEFAULT_COLLECTION_ID, deriveCities } from './savedHelpers';
+import { dbWrite, deriveCities } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { SavedState } from './savedTypes';
 
@@ -23,8 +23,6 @@ export interface SavedCollectionState {
 
   // Actions
   setActiveView: (view: 'collections' | 'library') => void;
-  /** @deprecated isFavorited is no longer used — curation happens at import time */
-  toggleStar: (id: string) => void;
   createCollection: (name: string, emoji?: string, description?: string) => string;
   /** Returns a promise that resolves to the real (server-assigned) collection ID */
   createCollectionAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
@@ -45,39 +43,6 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
 
   setActiveView: (view) => set({ activeView: view }),
 
-  toggleStar: (id) => {
-    const state = get();
-    const favCollection = state.collections.find(s => s.isDefault);
-    if (!favCollection) return;
-
-    const isCurrentlyFavorited = favCollection.placeIds.includes(id);
-    const newPlaceIds = isCurrentlyFavorited
-      ? favCollection.placeIds.filter(pid => pid !== id)
-      : [...favCollection.placeIds, id];
-
-    set({
-      myPlaces: state.myPlaces.map((p) =>
-        p.id === id ? { ...p, isFavorited: !isCurrentlyFavorited } : p
-      ),
-      collections: state.collections.map(sl =>
-        sl.isDefault
-          ? {
-              ...sl,
-              placeIds: newPlaceIds,
-              cities: deriveCities(newPlaceIds, state.myPlaces),
-              updatedAt: new Date().toISOString(),
-            }
-          : sl
-      ),
-    });
-
-    // Write-through: update place + favorites collection
-    dbWrite(`/api/places/${id}`, 'PATCH', { isFavorited: !isCurrentlyFavorited });
-    if (favCollection.id !== DEFAULT_COLLECTION_ID) {
-      dbWrite(`/api/collections/${favCollection.id}`, 'PATCH', { placeIds: newPlaceIds });
-    }
-  },
-
   createCollection: (name, emoji, description) => {
     const validEmoji = safeEmoji(emoji);
     const newId = `collection-${Date.now()}`;
@@ -92,7 +57,6 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
           description,
           placeIds: [],
           cities: [],
-          isDefault: false,
           isSmartCollection: false,
           createdAt: now,
           updatedAt: now,
@@ -135,7 +99,6 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
           description,
           placeIds: [],
           cities: [],
-          isDefault: false,
           isSmartCollection: false,
           createdAt: now,
           updatedAt: now,
@@ -164,10 +127,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   deleteCollection: (id) => {
-    const state = get();
-    const sl = state.collections.find(s => s.id === id);
-    if (sl?.isDefault) return; // Prevent deleting Favorites
-    set({ collections: state.collections.filter(s => s.id !== id) });
+    set({ collections: get().collections.filter(s => s.id !== id) });
     dbWrite(`/api/collections/${id}`, 'DELETE');
   },
 
@@ -258,7 +218,6 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
           emoji: validEmoji,
           placeIds: resolvedIds,
           cities: deriveCities(resolvedIds, state.myPlaces),
-          isDefault: false,
           isSmartCollection: true,
           query,
           filterTags,

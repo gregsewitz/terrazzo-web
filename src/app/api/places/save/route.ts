@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { validateBody, placeSchema } from '@/lib/api-validation';
+import { inngest } from '@/lib/inngest';
 import type { User } from '@prisma/client';
 
 interface ImportSourceEntry {
@@ -9,6 +10,81 @@ interface ImportSourceEntry {
   name: string;
   url?: string;
   importedAt: string;
+}
+
+/**
+ * Ensure a PlaceIntelligence record exists for this googlePlaceId and trigger
+ * the enrichment pipeline if it hasn't run yet. Returns the intelligence ID
+ * so we can link it to the SavedPlace.
+ *
+ * This is fire-and-forget — pipeline runs in the background via Inngest.
+ * Subsequent saves of the same place (by any user) will find the existing
+ * record and skip re-triggering.
+ */
+async function ensureEnrichment(
+  googlePlaceId: string,
+  propertyName: string,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const existing = await prisma.placeIntelligence.findUnique({
+      where: { googlePlaceId },
+      select: { id: true, status: true, lastEnrichedAt: true, enrichmentTTL: true },
+    });
+
+    if (existing) {
+      // Already enriching or complete — just return the ID so we can link it
+      if (existing.status === 'enriching' || existing.status === 'complete') {
+        return existing.id;
+      }
+
+      // Previous run failed — reset and re-trigger
+      await prisma.placeIntelligence.update({
+        where: { id: existing.id },
+        data: { status: 'pending', propertyName },
+      });
+
+      await inngest.send({
+        name: 'pipeline/run',
+        data: {
+          googlePlaceId,
+          propertyName,
+          placeIntelligenceId: existing.id,
+          trigger: 'user_import',
+          triggeredByUserId: userId,
+        },
+      });
+
+      return existing.id;
+    }
+
+    // No intelligence record yet — create and trigger the pipeline
+    const intel = await prisma.placeIntelligence.create({
+      data: {
+        googlePlaceId,
+        propertyName,
+        status: 'pending',
+        signals: '[]',
+      },
+    });
+
+    await inngest.send({
+      name: 'pipeline/run',
+      data: {
+        googlePlaceId,
+        propertyName,
+        placeIntelligenceId: intel.id,
+        trigger: 'user_import',
+        triggeredByUserId: userId,
+      },
+    });
+
+    return intel.id;
+  } catch (error) {
+    // Enrichment is best-effort — never block the save
+    console.error('Auto-enrichment trigger failed (non-blocking):', error);
+    return null;
+  }
 }
 
 export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
@@ -56,8 +132,6 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     travelWith: toNull(place.travelWith),
     intentStatus: toNull(place.intentStatus),
     rating: toNull(place.rating),
-    /** @deprecated isFavorited — curation now happens at import time */
-    isFavorited: false,
   };
 
   // Build the import source entry for the provenance log
@@ -99,6 +173,9 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         }
       }
 
+      // Ensure intelligence exists and link it (fire-and-forget)
+      const intelligenceId = await ensureEnrichment(place.googlePlaceId, place.name, user.id);
+
       const savedPlace = await prisma.savedPlace.update({
         where: { id: existing.id },
         data: {
@@ -110,6 +187,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
           importSources: toJson(updatedSources),
           // Clear soft-delete if re-importing a deleted place
           deletedAt: null,
+          // Link to global intelligence (idempotent)
+          ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
         },
       });
 
@@ -122,6 +201,9 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     }
 
     // ── First import: create with everything ──
+    // Ensure intelligence exists and trigger pipeline (fire-and-forget)
+    const intelligenceId = await ensureEnrichment(place.googlePlaceId, place.name, user.id);
+
     const savedPlace = await prisma.savedPlace.upsert({
       where: {
         userId_googlePlaceId: { userId: user.id, googlePlaceId: place.googlePlaceId },
@@ -133,11 +215,14 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         ...enrichmentData,
         ...userEditableData,
         importSources: toJson(newSourceEntry ? [newSourceEntry] : []),
+        // Link to global intelligence
+        ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
       },
       // Fallback update (race condition safety) — same as re-import path
       update: {
         ...enrichmentData,
         deletedAt: null,
+        ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
       },
     });
 

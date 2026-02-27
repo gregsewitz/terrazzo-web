@@ -51,14 +51,6 @@ export const DELETE = apiHandler(async (req: NextRequest, { params }: { params: 
     return Response.json({ error: 'Collection not found' }, { status: 404 });
   }
 
-  // Prevent deleting the default "Favorites" collection
-  if (existing.isDefault) {
-    return Response.json(
-      { error: 'Cannot delete the default Favorites collection' },
-      { status: 400 },
-    );
-  }
-
   // Deactivate share links + delete collection in a transaction
   await prisma.$transaction([
     prisma.shareLink.updateMany({

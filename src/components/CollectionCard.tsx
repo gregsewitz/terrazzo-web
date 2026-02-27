@@ -25,7 +25,7 @@ function CollectionCardInner({
       className="rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
       style={{
         background: 'white',
-        border: collection.isDefault ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+        border: '1px solid var(--t-linen)',
         boxSizing: 'border-box',
         padding: '10px 12px',
         overflow: 'hidden',
@@ -39,13 +39,13 @@ function CollectionCardInner({
             width: 28,
             height: 28,
             borderRadius: 7,
-            background: collection.isDefault ? 'rgba(42,122,86,0.08)' : INK['04'],
+            background: INK['04'],
           }}
         >
           {collection.emoji && (
             <span style={{ fontSize: isPerriandIcon ? 13 : 15 }}>
               {isPerriandIcon ? (
-                <PerriandIcon name={collection.emoji as any} size={13} color={collection.isDefault ? 'var(--t-verde)' : INK['70']} />
+                <PerriandIcon name={collection.emoji as any} size={13} color={INK['70']} />
               ) : (
                 collection.emoji
               )}

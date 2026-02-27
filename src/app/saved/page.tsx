@@ -63,12 +63,10 @@ function SavedPageContent() {
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
 
-  // ─── Collection count per place (excluding the default Favorites collection) ───
+  // ─── Collection count per place ───
   const collectionCountMap = useMemo(() => {
     const counts: Record<string, number> = {};
-    collections
-      .filter(c => !c.isDefault)
-      .forEach(c => c.placeIds.forEach(pid => { counts[pid] = (counts[pid] || 0) + 1; }));
+    collections.forEach(c => c.placeIds.forEach(pid => { counts[pid] = (counts[pid] || 0) + 1; }));
     return counts;
   }, [collections]);
 
@@ -76,9 +74,7 @@ function SavedPageContent() {
   const [collectionSortBy, setCollectionSortBy] = useState<'recent' | 'name' | 'places' | 'updated'>('recent');
 
   const sortedCollections = useMemo(() => {
-    // Hide the default Favorites collection from the grid — it's a legacy
-    // concept that's no longer surfaced in the UI.
-    const sorted = collections.filter(c => !c.isDefault);
+    const sorted = [...collections];
     switch (collectionSortBy) {
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'places': sorted.sort((a, b) => b.placeIds.length - a.placeIds.length); break;
@@ -609,7 +605,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
   onTap: () => void;
   onToggleCollections: () => void;
   onLongPress: () => void;
-  /** How many collections this place belongs to (excluding default Favorites) */
+  /** How many collections this place belongs to */
   collectionCount: number;
 }) {
   const typeIcon = TYPE_ICONS[place.type] || 'location';

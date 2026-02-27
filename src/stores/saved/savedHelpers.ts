@@ -14,8 +14,6 @@ export function dbWrite(url: string, method: string, body?: unknown) {
 // Collection helpers
 // ═══════════════════════════════════════════
 
-export const DEFAULT_COLLECTION_ID = 'collection-favorites';
-
 export function deriveCities(placeIds: string[], allPlaces: ImportedPlace[]): string[] {
   const cities = new Set<string>();
   placeIds.forEach(id => {
@@ -29,27 +27,8 @@ export function deriveCities(placeIds: string[], allPlaces: ImportedPlace[]): st
   return Array.from(cities);
 }
 
-export function createDefaultCollection(placeIds: string[]): Collection {
-  const now = new Date().toISOString();
-  return {
-    id: DEFAULT_COLLECTION_ID,
-    name: 'Favorites',
-    description: 'Your personal picks',
-    emoji: 'star',
-    placeIds,
-    cities: [],
-    isDefault: true,
-    isSmartCollection: false,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
-
 export function buildCollections(allPlaces: ImportedPlace[]): Collection[] {
   const now = new Date().toISOString();
-  // All library places are prescreened (curation at import time), so
-  // the default Favorites collection starts empty — users add explicitly.
-  const defaultCollection = createDefaultCollection([]);
 
   const curated: Collection[] = [
     { id: 'col-scandi-design-hotels', name: 'Scandi design hotels', description: 'The best design-forward stays in Scandinavia', emoji: 'hotel', placeIds: ['sc-1', 'sc-8', 'sc-19'], cities: deriveCities(['sc-1', 'sc-8', 'sc-19'], allPlaces), isSmartCollection: false, createdAt: now, updatedAt: now },
@@ -64,5 +43,5 @@ export function buildCollections(allPlaces: ImportedPlace[]): Collection[] {
     { id: 'col-splurge-nights', name: 'Splurge nights', description: 'When you want the full experience', emoji: 'star', placeIds: ['saved-9', 'sc-2', 'saved-6', 'pa-8', 'mx-3', 'si-3', 'si-1', 'sc-1'], cities: deriveCities(['saved-9', 'sc-2', 'pa-8', 'mx-3', 'si-3'], allPlaces), isSmartCollection: false, createdAt: now, updatedAt: now },
   ];
 
-  return [defaultCollection, ...curated];
+  return curated;
 }

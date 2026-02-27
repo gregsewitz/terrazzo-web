@@ -290,14 +290,11 @@ function TripDetailContent() {
     }
   }, [params.id, setCurrentTrip]);
 
-  // On trip load, inject starred My Places as ghost candidates (once)
+  // On trip load, inject all saved places as ghost candidates (once)
   useEffect(() => {
     if (trip && !ghostsInjected) {
-      const starredPlaces = myPlaces.filter(p =>
-        p.isFavorited || p.rating?.reaction === 'enjoyed'
-      );
-      if (starredPlaces.length > 0) {
-        injectGhostCandidates(starredPlaces);
+      if (myPlaces.length > 0) {
+        injectGhostCandidates(myPlaces);
       }
       setGhostsInjected(true);
     }
@@ -598,7 +595,7 @@ function TripDetailContent() {
         )}
         {exportOpen && (
           <ExportToMaps
-            places={myPlaces.filter(p => p.isFavorited)}
+            places={trip.days.flatMap(d => d.slots.flatMap(s => s.places))}
             collectionName={trip.name}
             onClose={() => setExportOpen(false)}
           />
@@ -910,7 +907,7 @@ function TripDetailContent() {
       {/* Export to Maps */}
       {exportOpen && (
         <ExportToMaps
-          places={myPlaces.filter(p => p.isFavorited)}
+          places={trip.days.flatMap(d => d.slots.flatMap(s => s.places))}
           collectionName={trip.name}
           onClose={() => setExportOpen(false)}
         />

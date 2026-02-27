@@ -20,8 +20,6 @@ export interface DBSavedPlace {
   savedDate?: string | null;
   importBatchId?: string | null;
   rating?: Record<string, unknown> | null;
-  /** @deprecated Curation now happens at import time */
-  isFavorited: boolean;
   matchScore?: number | null;
   matchBreakdown?: Record<string, number> | null;
   tasteNote?: string | null;
@@ -41,7 +39,6 @@ export interface DBCollection {
   name: string;
   description?: string | null;
   emoji: string;
-  isDefault: boolean;
   isSmartCollection: boolean;
   query?: string | null;
   filterTags?: string[] | null;
@@ -96,7 +93,6 @@ export interface SavedState {
   ratePlace: (id: string, rating: PlaceRating) => void;
 
   // Collection actions
-  toggleStar: (id: string) => void;
   createCollection: (name: string, emoji?: string, description?: string) => string;
   createCollectionAsync: (name: string, emoji?: string, description?: string) => Promise<string>;
   deleteCollection: (id: string) => void;

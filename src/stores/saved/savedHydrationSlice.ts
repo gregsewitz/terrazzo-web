@@ -1,6 +1,6 @@
 import type { ImportedPlace, PlaceRating, GhostSourceType, Collection } from '@/types';
 import { StateCreator } from 'zustand';
-import { createDefaultCollection, deriveCities, dbWrite } from './savedHelpers';
+import { deriveCities, dbWrite } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { SavedState, DBSavedPlace, DBCollection } from './savedTypes';
 
@@ -33,7 +33,6 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       tasteNote: dp.tasteNote || '',
       status: 'available' as const,
       ghostSource: (dp.ghostSource || 'manual') as GhostSourceType,
-      isFavorited: dp.isFavorited,
       rating: dp.rating as PlaceRating | undefined,
       friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
@@ -80,7 +79,6 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
         emoji,
         placeIds: prunedIds,
         cities: deriveCities(prunedIds, places),
-        isDefault: ds.isDefault,
         isSmartCollection: ds.isSmartCollection,
         query: ds.query || undefined,
         filterTags: Array.isArray(ds.filterTags) ? ds.filterTags : undefined,
@@ -88,13 +86,6 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
         updatedAt: ds.updatedAt,
       };
     });
-
-    // Ensure there's always a default Favorites collection
-    if (!collections.some(s => s.isDefault)) {
-      // Legacy: previously used isFavorited to seed this, but curation now
-      // happens at import time — start with an empty default collection.
-      collections.unshift(createDefaultCollection([]));
-    }
 
     set({ myPlaces: places, collections, history: [] });
   },
