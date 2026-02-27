@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FONT, INK } from '@/constants/theme';
+import AddDestinationSearch from './AddDestinationSearch';
 
 export interface DayContextMenuProps {
   dayNumber: number;
@@ -14,6 +15,14 @@ export interface DayContextMenuProps {
   onClose: () => void;
   /** 'popover' for desktop dropdown, 'sheet' for mobile bottom sheet */
   variant?: 'popover' | 'sheet';
+  // Reorder support
+  onMoveEarlier?: () => void;
+  onMoveLater?: () => void;
+  // Destination change support
+  currentDestination?: string;
+  uniqueDestinations?: string[];
+  getDestColor?: (dest: string) => { accent: string; bg: string; text: string };
+  onChangeDestination?: (dest: string) => void;
 }
 
 interface MenuItem {
@@ -21,6 +30,7 @@ interface MenuItem {
   icon: string;
   action: () => void;
   destructive?: boolean;
+  disabled?: boolean;
 }
 
 export default function DayContextMenu({
@@ -33,13 +43,25 @@ export default function DayContextMenu({
   onDelete,
   onClose,
   variant = 'popover',
+  onMoveEarlier,
+  onMoveLater,
+  currentDestination,
+  uniqueDestinations,
+  getDestColor,
+  onChangeDestination,
 }: DayContextMenuProps) {
+  const [showDestPicker, setShowDestPicker] = useState(false);
+  const [showAddDest, setShowAddDest] = useState(false);
+
   const items: (MenuItem | 'divider')[] = [
+    ...(onMoveEarlier ? [{ label: 'Move earlier', icon: '←', action: onMoveEarlier, disabled: dayNumber <= 1 } as MenuItem] : []),
+    ...(onMoveLater ? [{ label: 'Move later', icon: '→', action: onMoveLater, disabled: dayNumber >= dayCount } as MenuItem] : []),
+    ...((onMoveEarlier || onMoveLater) ? ['divider' as const] : []),
     { label: 'Add day before', icon: '↑+', action: onAddBefore },
     { label: 'Add day after', icon: '↓+', action: onAddAfter },
     { label: 'Duplicate day', icon: '⧉', action: onDuplicate },
-    { label: 'Clear places', icon: '↩', action: onClear },
     'divider',
+    { label: 'Clear places', icon: '↩', action: onClear },
     ...(dayCount > 1
       ? [{ label: 'Delete day', icon: '×', action: onDelete, destructive: true } as MenuItem]
       : []),
@@ -51,13 +73,101 @@ export default function DayContextMenu({
   const isSheet = variant === 'sheet';
 
   const handleItemClick = (item: MenuItem) => {
-    // For delete, don't close — the confirmation dialog will handle it
+    if (item.disabled) return;
     if (item.destructive) {
       item.action();
     } else {
       item.action();
       onClose();
     }
+  };
+
+  // Destination picker sub-view (sheet only)
+  const renderDestPicker = () => {
+    if (!uniqueDestinations || !getDestColor || !onChangeDestination) return null;
+
+    if (showAddDest) {
+      return (
+        <div style={{ padding: '0 16px 16px' }}>
+          <AddDestinationSearch
+            onAdded={() => {
+              setShowAddDest(false);
+              setShowDestPicker(false);
+              onClose();
+            }}
+            onCancel={() => setShowAddDest(false)}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ padding: '0 16px 8px' }}>
+        {uniqueDestinations.map(dest => {
+          const isCurrent = dest === currentDestination;
+          const destC = getDestColor(dest);
+          return (
+            <button
+              key={dest}
+              onClick={() => {
+                if (!isCurrent) onChangeDestination(dest);
+                setShowDestPicker(false);
+                onClose();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                width: '100%',
+                textAlign: 'left',
+                padding: '12px 8px',
+                borderRadius: 10,
+                border: 'none',
+                background: isCurrent ? destC.bg : 'transparent',
+                fontFamily: FONT.sans,
+                fontSize: 15,
+                color: 'var(--t-ink)',
+                cursor: isCurrent ? 'default' : 'pointer',
+                fontWeight: isCurrent ? 600 : 400,
+                opacity: isCurrent ? 0.5 : 1,
+              }}
+            >
+              <span style={{
+                width: 10, height: 10, borderRadius: '50%',
+                background: destC.accent, flexShrink: 0,
+              }} />
+              {dest}
+              {isCurrent && (
+                <span style={{ marginLeft: 'auto', fontSize: 12, color: INK['40'] }}>current</span>
+              )}
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setShowAddDest(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            width: '100%',
+            textAlign: 'left',
+            padding: '12px 8px',
+            marginTop: 4,
+            borderRadius: 10,
+            border: 'none',
+            borderTop: '1px solid var(--t-linen)',
+            background: 'transparent',
+            fontFamily: FONT.sans,
+            fontSize: 14,
+            color: INK['50'],
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+          New destination
+        </button>
+      </div>
+    );
   };
 
   if (isSheet) {
@@ -102,44 +212,119 @@ export default function DayContextMenu({
           }}>
             Day {dayNumber}
           </div>
-          {/* Items */}
-          {items.map((item, i) => {
-            if (item === 'divider') {
-              return <div key={`div-${i}`} style={{ height: 1, background: 'var(--t-linen)', margin: '4px 16px' }} />;
-            }
-            return (
+
+          {showDestPicker ? (
+            <>
+              {/* Back button + dest picker */}
               <button
-                key={item.label}
-                onClick={() => handleItemClick(item)}
+                onClick={() => setShowDestPicker(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 12,
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '14px 20px',
+                  gap: 6,
+                  padding: '8px 20px 12px',
                   border: 'none',
                   background: 'none',
                   fontFamily: FONT.sans,
-                  fontSize: 15,
+                  fontSize: 13,
                   fontWeight: 500,
-                  color: item.destructive ? '#c0392b' : INK['85'],
+                  color: INK['50'],
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                <span style={{
-                  width: 24,
-                  textAlign: 'center',
-                  fontSize: item.destructive ? 18 : 16,
-                  opacity: item.destructive ? 1 : 0.6,
-                }}>
-                  {item.icon}
-                </span>
-                {item.label}
+                <span style={{ fontSize: 14 }}>‹</span> Back
               </button>
-            );
-          })}
+              {renderDestPicker()}
+            </>
+          ) : (
+            <>
+              {/* Destination row — tappable to open dest picker */}
+              {onChangeDestination && currentDestination && getDestColor && (
+                <>
+                  <button
+                    onClick={() => setShowDestPicker(true)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '14px 20px',
+                      border: 'none',
+                      background: 'none',
+                      fontFamily: FONT.sans,
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: INK['85'],
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{
+                      width: 24,
+                      textAlign: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <span style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        background: getDestColor(currentDestination).accent,
+                      }} />
+                    </span>
+                    <span style={{ flex: 1 }}>{currentDestination}</span>
+                    <span style={{ fontSize: 12, color: INK['40'] }}>Change ›</span>
+                  </button>
+                  <div style={{ height: 1, background: 'var(--t-linen)', margin: '4px 16px' }} />
+                </>
+              )}
+
+              {/* Menu items */}
+              {items.map((item, i) => {
+                if (item === 'divider') {
+                  return <div key={`div-${i}`} style={{ height: 1, background: 'var(--t-linen)', margin: '4px 16px' }} />;
+                }
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => handleItemClick(item)}
+                    disabled={item.disabled}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '14px 20px',
+                      border: 'none',
+                      background: 'none',
+                      fontFamily: FONT.sans,
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: item.disabled
+                        ? INK['30']
+                        : item.destructive ? '#c0392b' : INK['85'],
+                      cursor: item.disabled ? 'default' : 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                      opacity: item.disabled ? 0.5 : 1,
+                    }}
+                  >
+                    <span style={{
+                      width: 24,
+                      textAlign: 'center',
+                      fontSize: item.destructive ? 18 : 16,
+                      opacity: item.destructive ? 1 : 0.6,
+                    }}>
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </button>
+                );
+              })}
+            </>
+          )}
+
           {/* Cancel button */}
           <div style={{ padding: '4px 16px 8px' }}>
             <button
@@ -178,6 +363,49 @@ export default function DayContextMenu({
         zIndex: 50,
       }}
     >
+      {/* Destination row for popover */}
+      {onChangeDestination && currentDestination && getDestColor && (
+        <>
+          <div style={{ padding: '4px 12px 2px' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'], textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+              Location
+            </span>
+          </div>
+          {uniqueDestinations?.map(dest => {
+            const isCurrent = dest === currentDestination;
+            const destC = getDestColor(dest);
+            return (
+              <button
+                key={dest}
+                onClick={() => {
+                  if (!isCurrent) onChangeDestination(dest);
+                  onClose();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '5px 12px',
+                  border: 'none',
+                  background: isCurrent ? destC.bg : 'transparent',
+                  fontFamily: FONT.sans,
+                  fontSize: 12,
+                  color: 'var(--t-ink)',
+                  cursor: isCurrent ? 'default' : 'pointer',
+                  fontWeight: isCurrent ? 600 : 400,
+                  opacity: isCurrent ? 0.5 : 1,
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: destC.accent, flexShrink: 0 }} />
+                {dest}
+              </button>
+            );
+          })}
+          <div style={{ height: 1, background: 'var(--t-linen)', margin: '4px 0' }} />
+        </>
+      )}
       {items.map((item, i) => {
         if (item === 'divider') {
           return <div key={`div-${i}`} style={{ height: 1, background: 'var(--t-linen)', margin: '4px 0' }} />;
@@ -186,8 +414,9 @@ export default function DayContextMenu({
           <button
             key={item.label}
             onClick={() => handleItemClick(item)}
+            disabled={item.disabled}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = item.destructive ? '#fef2f2' : 'var(--t-linen)';
+              if (!item.disabled) (e.currentTarget as HTMLElement).style.background = item.destructive ? '#fef2f2' : 'var(--t-linen)';
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLElement).style.background = 'none';
@@ -204,10 +433,11 @@ export default function DayContextMenu({
               fontFamily: FONT.sans,
               fontSize: 12,
               fontWeight: 500,
-              color: item.destructive ? '#c0392b' : INK['80'],
-              cursor: 'pointer',
+              color: item.disabled ? INK['30'] : item.destructive ? '#c0392b' : INK['80'],
+              cursor: item.disabled ? 'default' : 'pointer',
               borderRadius: 0,
               transition: 'background 100ms',
+              opacity: item.disabled ? 0.5 : 1,
             }}
           >
             <span style={{

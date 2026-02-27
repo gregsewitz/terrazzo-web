@@ -15,6 +15,7 @@ import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationS
 
 const SLOT_HOLD_DELAY = 250;
 const SLOT_DRAG_THRESHOLD = 6;
+const RAIL_WIDTH = 36;
 
 interface TimeSlotCardProps {
   slot: TimeSlot;
@@ -148,311 +149,284 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     }
   };
 
-  // ─── Ghost slots get expanded GhostCard; confirmed/empty stay compact ───
+  // ─── Rail + Content layout (horizontal flex) ───
+
+  // Rail label component — vertical text, no icon
+  const RailLabel = ({ accent }: { accent: boolean }) => (
+    <div
+      className="flex-shrink-0 flex items-center justify-center"
+      style={{
+        width: RAIL_WIDTH,
+        minHeight: accent ? undefined : 44,
+        borderRight: accent ? `2px solid var(--t-verde)` : `1px solid var(--t-linen)`,
+        position: 'relative',
+      }}
+    >
+      <span
+        style={{
+          writingMode: 'vertical-lr',
+          transform: 'rotate(180deg)',
+          fontFamily: FONT.mono,
+          fontSize: 9,
+          fontWeight: accent ? 600 : 400,
+          color: accent ? 'var(--t-verde)' : INK['50'],
+          textTransform: 'uppercase' as const,
+          letterSpacing: 1.5,
+          whiteSpace: 'nowrap',
+          padding: '8px 0',
+        }}
+      >
+        {slot.label}
+      </span>
+    </div>
+  );
+
+  // ─── Ghost slots: rail + ghost cards ───
   if (hasGhosts && !hasPlaces) {
     return (
       <div
         ref={slotRef}
+        className="flex"
         style={{
           borderBottom: '1px solid var(--t-linen)',
           background: isDropTarget ? 'rgba(42,122,86,0.04)' : undefined,
           transition: 'background 0.15s ease-out',
         }}
       >
-        {/* Compact header row for the slot */}
-        <div
-          className="flex items-center gap-2 px-4"
-          style={{ height: 32 }}
-        >
-          <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-            <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
+        <RailLabel accent={false} />
+        <div className="flex-1 min-w-0 py-2 pr-3 pl-2.5">
+          <div className="flex flex-col gap-2">
+            {slot.ghostItems!.map(ghost => (
+              <GhostCard
+                key={ghost.id}
+                item={ghost}
+                variant="slot"
+                onConfirm={() => confirmGhost(dayNumber, slot.id, ghost.id)}
+                onDismiss={() => dismissGhost(dayNumber, slot.id, ghost.id)}
+                onTapDetail={() => onTapDetail(ghost)}
+              />
+            ))}
+            {/* Collaborator suggestions */}
+            {suggestions && suggestions.length > 0 && suggestions.map(sg => (
+              <CollaboratorGhostCard
+                key={sg.id}
+                suggestion={sg}
+                isOwner={myRole === 'owner'}
+                onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
+                onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
+              />
+            ))}
           </div>
-          <span
-            className="text-[11px]"
-            style={{
-              fontFamily: FONT.mono,
-              color: INK['85'],
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.5px',
-            }}
-          >
-            {slot.label}
-          </span>
-          {slot.ghostItems!.length > 1 && (
-            <span className="text-[9px]" style={{ color: INK['80'] }}>
-              {slot.ghostItems!.length} suggestions
-            </span>
+          {/* Slot notes */}
+          {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
+            <div className="mt-2">
+              <SlotNoteBubble
+                notes={slotNoteItems || []}
+                canAdd={myRole === 'suggester' || myRole === 'owner'}
+                onAddNote={onAddSlotNote}
+              />
+            </div>
           )}
         </div>
-
-        {/* Ghost cards */}
-        <div className="px-4 pb-2.5 flex flex-col gap-2">
-          {slot.ghostItems!.map(ghost => (
-            <GhostCard
-              key={ghost.id}
-              item={ghost}
-              variant="slot"
-              onConfirm={() => confirmGhost(dayNumber, slot.id, ghost.id)}
-              onDismiss={() => dismissGhost(dayNumber, slot.id, ghost.id)}
-              onTapDetail={() => onTapDetail(ghost)}
-            />
-          ))}
-          {/* Collaborator suggestions */}
-          {suggestions && suggestions.length > 0 && suggestions.map(sg => (
-            <CollaboratorGhostCard
-              key={sg.id}
-              suggestion={sg}
-              isOwner={myRole === 'owner'}
-              onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-              onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
-            />
-          ))}
-        </div>
-        {/* Slot notes */}
-        {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
-          <div className="px-4 pb-2">
-            <SlotNoteBubble
-              notes={slotNoteItems || []}
-              canAdd={myRole === 'suggester' || myRole === 'owner'}
-              onAddNote={onAddSlotNote}
-            />
-          </div>
-        )}
       </div>
     );
   }
 
-  // ─── Compact layout: one row per confirmed place + empty drop target ───
-  return (
-    <div
-      ref={slotRef}
-      style={{
-        borderBottom: '1px solid var(--t-linen)',
-        borderLeft: isDropTarget ? '3px solid var(--t-verde)' : '3px solid transparent',
-        background: isDropTarget
-          ? 'rgba(42,122,86,0.06)'
-          : hasPlaces
-            ? 'rgba(42,122,86,0.055)'
-            : undefined,
-        transition: 'background 0.2s ease-out, border-left 0.15s ease-out',
-      }}
-    >
-      {/* Slot label row */}
-      {hasPlaces && (
-        <div className="flex items-center gap-2 px-4" style={{ height: 28 }}>
-          <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-            <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
-          </div>
-          <span
-            className="text-[10px] flex-shrink-0"
-            style={{
-              fontFamily: FONT.mono,
-              color: INK['85'],
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.5px',
-            }}
-          >
-            {slot.label}
-          </span>
-          {slot.time && (
-            <span
-              className="text-[10px]"
-              style={{ color: INK['80'], fontFamily: FONT.mono }}
-            >
-              {slot.time}
-            </span>
+  // ─── Filled slots: rail + place cards ───
+  if (hasPlaces) {
+    return (
+      <div
+        ref={slotRef}
+        className="flex"
+        style={{
+          borderBottom: '1px solid var(--t-linen)',
+          borderLeft: isDropTarget ? '3px solid var(--t-verde)' : '3px solid transparent',
+          background: isDropTarget ? 'rgba(42,122,86,0.06)' : undefined,
+          transition: 'background 0.2s ease-out, border-left 0.15s ease-out',
+        }}
+      >
+        <RailLabel accent={true} />
+        <div className="flex-1 min-w-0 py-1.5 pr-3 pl-2.5">
+          {/* Confirmed places — draggable card style with source + insight */}
+          {slot.places.map((p, pIdx) => {
+            const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+            const isReservation = p.ghostSource === 'email';
+            const isDragging = dragItemId === p.id;
+            const isHolding = holdingPlaceId === p.id;
+            const subtitle = p.friendAttribution?.note
+              || p.terrazzoReasoning?.rationale
+              || p.tasteNote
+              || '';
+            return (
+              <div
+                key={p.id}
+                className="mb-1.5 rounded-lg cursor-pointer overflow-hidden select-none"
+                onClick={() => { if (!isDragging) onTapDetail(p); }}
+                onPointerDown={(e) => handlePlacePointerDown(p, e)}
+                onPointerMove={handlePlacePointerMove}
+                onPointerUp={handlePlacePointerUp}
+                onPointerCancel={handlePlacePointerUp}
+                style={{
+                  background: 'white',
+                  border: isHolding
+                    ? '1.5px solid var(--t-verde)'
+                    : '1px solid rgba(42,122,86,0.12)',
+                  opacity: isDragging ? 0.3 : 1,
+                  transform: isDragging
+                    ? 'scale(0.95)'
+                    : isHolding
+                      ? 'scale(0.97) translateY(-1px)'
+                      : 'none',
+                  boxShadow: isHolding
+                    ? '0 4px 12px rgba(42,122,86,0.15)'
+                    : 'none',
+                  transition: 'opacity 0.2s, transform 0.2s ease-out, border 0.15s, box-shadow 0.15s',
+                  touchAction: 'none',
+                }}
+              >
+                <div className="flex items-start gap-2 px-2.5 py-2">
+                  {/* Source bar — solid for reservations, regular for others */}
+                  <div
+                    className="flex-shrink-0 rounded-full mt-0.5"
+                    style={{
+                      width: isReservation ? 3 : 2,
+                      height: 30,
+                      background: isReservation ? srcStyle.color : 'var(--t-verde)',
+                      opacity: isReservation ? 1 : 0.5,
+                    }}
+                  />
+                  {/* Content — name + source on line 1, insight on line 2 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="text-[12px] font-medium truncate"
+                        style={{ color: 'var(--t-ink)' }}
+                      >
+                        {p.name}
+                      </span>
+                      <span
+                        className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
+                        style={{ background: srcStyle.bg, color: srcStyle.color }}
+                      >
+                        <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
+                      </span>
+                      {p.addedByName && (
+                        <span
+                          className="text-[8px] font-medium px-1.5 py-px rounded flex-shrink-0"
+                          style={{ background: INK['04'], color: INK['50'] }}
+                        >
+                          Added by {p.addedByName}
+                        </span>
+                      )}
+                    </div>
+                    {subtitle && (
+                      <div
+                        className="text-[10px] truncate mt-px"
+                        style={{
+                          color: INK['85'],
+                          fontStyle: 'italic',
+                          fontFamily: FONT.sans,
+                        }}
+                      >
+                        {subtitle}
+                      </div>
+                    )}
+                  </div>
+                  {/* Remove button — visible to owner or when not in collaboration mode */}
+                  {(myRole === 'owner' || !myRole) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onUnplace) {
+                          onUnplace(p.id, dayNumber, slot.id);
+                        } else {
+                          unplaceFromSlot(dayNumber, slot.id, p.id);
+                        }
+                      }}
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                      style={{
+                        background: INK['05'],
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                      aria-label="Remove place"
+                    >
+                      <PerriandIcon name="close" size={8} color={INK['55']} />
+                    </button>
+                  )}
+                </div>
+                {/* Reaction pills for this place */}
+                {(() => {
+                  const placeKey = `${dayNumber}-${slot.id}-${p.name}`;
+                  const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
+                  if (placeReactions.length === 0 && !myRole) return null;
+                  return (
+                    <div className="flex items-center gap-1.5 px-2.5 pb-1.5">
+                      <ReactionPills reactions={placeReactions} compact />
+                      {myRole && myRole !== 'owner' && onAddReaction && (
+                        <div className="flex gap-1 ml-auto">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'love'); }}
+                            className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(239,68,68,0.06)', border: 'none', cursor: 'pointer' }}
+                            aria-label="Love this place"
+                          ><PerriandIcon name="loveReaction" size={12} color="#dc2626" accent="#dc2626" /></button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'not_for_me'); }}
+                            className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
+                            style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
+                            aria-label="Not for me"
+                          ><PerriandIcon name="unsure" size={12} color={INK['60']} accent={INK['60']} /></button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })}
+
+          {/* Collaborator suggestions for this slot */}
+          {suggestions && suggestions.length > 0 && (
+            <div className="flex flex-col gap-1.5 mb-1">
+              {suggestions.map(sg => (
+                <CollaboratorGhostCard
+                  key={sg.id}
+                  suggestion={sg}
+                  isOwner={myRole === 'owner'}
+                  onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
+                  onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Slot notes */}
+          {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
+            <div className="mb-1">
+              <SlotNoteBubble
+                notes={slotNoteItems || []}
+                canAdd={myRole === 'suggester' || myRole === 'owner'}
+                onAddNote={onAddSlotNote}
+              />
+            </div>
           )}
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Confirmed places — draggable card style with source + insight */}
-      {slot.places.map((p, pIdx) => {
-        const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-        const isReservation = p.ghostSource === 'email';
-        const isDragging = dragItemId === p.id;
-        const isHolding = holdingPlaceId === p.id;
-        const subtitle = p.friendAttribution?.note
-          || p.terrazzoReasoning?.rationale
-          || p.tasteNote
-          || '';
-        return (
-          <div
-            key={p.id}
-            className="mx-3 mb-1.5 rounded-lg cursor-pointer overflow-hidden select-none"
-            onClick={() => { if (!isDragging) onTapDetail(p); }}
-            onPointerDown={(e) => handlePlacePointerDown(p, e)}
-            onPointerMove={handlePlacePointerMove}
-            onPointerUp={handlePlacePointerUp}
-            onPointerCancel={handlePlacePointerUp}
-            style={{
-              background: 'white',
-              border: isHolding
-                ? '1.5px solid var(--t-verde)'
-                : '1px solid rgba(42,122,86,0.12)',
-              opacity: isDragging ? 0.3 : 1,
-              transform: isDragging
-                ? 'scale(0.95)'
-                : isHolding
-                  ? 'scale(0.97) translateY(-1px)'
-                  : 'none',
-              boxShadow: isHolding
-                ? '0 4px 12px rgba(42,122,86,0.15)'
-                : 'none',
-              transition: 'opacity 0.2s, transform 0.2s ease-out, border 0.15s, box-shadow 0.15s',
-              touchAction: 'none',
-            }}
-          >
-            <div className="flex items-start gap-2 px-2.5 py-2">
-              {/* Source bar — solid for reservations, regular for others */}
-              <div
-                className="flex-shrink-0 rounded-full mt-0.5"
-                style={{
-                  width: isReservation ? 3 : 2,
-                  height: 30,
-                  background: isReservation ? srcStyle.color : 'var(--t-verde)',
-                  opacity: isReservation ? 1 : 0.5,
-                }}
-              />
-              {/* Content — name + source on line 1, insight on line 2 */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="text-[12px] font-medium truncate"
-                    style={{ color: 'var(--t-ink)' }}
-                  >
-                    {p.name}
-                  </span>
-                  <span
-                    className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
-                    style={{ background: srcStyle.bg, color: srcStyle.color }}
-                  >
-                    <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
-                  </span>
-                  {p.addedByName && (
-                    <span
-                      className="text-[8px] font-medium px-1.5 py-px rounded flex-shrink-0"
-                      style={{ background: INK['04'], color: INK['50'] }}
-                    >
-                      Added by {p.addedByName}
-                    </span>
-                  )}
-                </div>
-                {subtitle && (
-                  <div
-                    className="text-[10px] truncate mt-px"
-                    style={{
-                      color: INK['85'],
-                      fontStyle: 'italic',
-                      fontFamily: FONT.sans,
-                    }}
-                  >
-                    {subtitle}
-                  </div>
-                )}
-              </div>
-              {/* Remove button — visible to owner or when not in collaboration mode */}
-              {(myRole === 'owner' || !myRole) && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onUnplace) {
-                      onUnplace(p.id, dayNumber, slot.id);
-                    } else {
-                      unplaceFromSlot(dayNumber, slot.id, p.id);
-                    }
-                  }}
-                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                  style={{
-                    background: INK['05'],
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                  aria-label="Remove place"
-                >
-                  <PerriandIcon name="close" size={8} color={INK['55']} />
-                </button>
-              )}
-            </div>
-            {/* Reaction pills for this place */}
-            {(() => {
-              const placeKey = `${dayNumber}-${slot.id}-${p.name}`;
-              const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
-              if (placeReactions.length === 0 && !myRole) return null;
-              return (
-                <div className="flex items-center gap-1.5 px-2.5 pb-1.5">
-                  <ReactionPills reactions={placeReactions} compact />
-                  {myRole && myRole !== 'owner' && onAddReaction && (
-                    <div className="flex gap-1 ml-auto">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'love'); }}
-                        className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(239,68,68,0.06)', border: 'none', cursor: 'pointer' }}
-                        aria-label="Love this place"
-                      ><PerriandIcon name="loveReaction" size={12} color="#dc2626" accent="#dc2626" /></button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'not_for_me'); }}
-                        className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
-                        style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
-                        aria-label="Not for me"
-                      ><PerriandIcon name="unsure" size={12} color={INK['60']} accent={INK['60']} /></button>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
-        );
-      })}
-
-      {/* Collaborator suggestions for this slot */}
-      {suggestions && suggestions.length > 0 && (
-        <div className="px-3 pb-2 flex flex-col gap-1.5">
-          {suggestions.map(sg => (
-            <CollaboratorGhostCard
-              key={sg.id}
-              suggestion={sg}
-              isOwner={myRole === 'owner'}
-              onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-              onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Slot notes */}
-      {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
-        <div className="px-3 pb-2">
-          <SlotNoteBubble
-            notes={slotNoteItems || []}
-            canAdd={myRole === 'suggester' || myRole === 'owner'}
-            onAddNote={onAddSlotNote}
-          />
-        </div>
-      )}
-
-      {/* Add padding at bottom of filled slots */}
-      {hasPlaces && <div style={{ height: 4 }} />}
-
-      {/* Loading shimmer — shown in empty slots while AI suggestions are being fetched */}
-      {!hasPlaces && !hasGhosts && isLoadingSuggestions && (
-        <div style={{ borderBottom: '1px solid var(--t-linen)' }}>
-          <div className="flex items-center gap-2 px-4" style={{ height: 32 }}>
-            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-              <PerriandIcon name={icon as any} size={14} color="var(--t-ink)" />
-            </div>
-            <span
-              className="text-[11px]"
-              style={{
-                fontFamily: FONT.mono,
-                color: INK['85'],
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.5px',
-              }}
-            >
-              {slot.label}
-            </span>
-          </div>
-          <div className="px-4 pb-2.5 flex flex-col gap-2">
+  // ─── Loading shimmer — rail + shimmer content ───
+  if (!hasPlaces && !hasGhosts && isLoadingSuggestions) {
+    return (
+      <div
+        ref={slotRef}
+        className="flex"
+        style={{ borderBottom: '1px solid var(--t-linen)' }}
+      >
+        <RailLabel accent={false} />
+        <div className="flex-1 min-w-0 py-2 pr-3 pl-2.5">
+          <div className="flex flex-col gap-2">
             {[0, 1].map(i => (
               <div
                 key={i}
@@ -479,16 +453,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     />
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <div
-                    className="shimmer-pulse rounded-full"
-                    style={{ height: 16, width: 80, background: 'rgba(42,122,86,0.06)' }}
-                  />
-                  <div
-                    className="shimmer-pulse rounded"
-                    style={{ height: 10, width: 120, background: 'rgba(42,122,86,0.04)' }}
-                  />
-                </div>
               </div>
             ))}
           </div>
@@ -502,55 +466,39 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             }
           `}</style>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Empty slot — drop target / add row */}
-      {!hasPlaces && !isLoadingSuggestions && (
-        <div
-          className="flex items-center gap-2 px-4 cursor-pointer"
-          onClick={handleEmptyClick}
+  // ─── Empty slot: rail + add button ───
+  return (
+    <div
+      ref={slotRef}
+      className="flex cursor-pointer"
+      onClick={handleEmptyClick}
+      style={{
+        borderBottom: '1px solid var(--t-linen)',
+        background: isDropTarget ? 'rgba(42,122,86,0.06)' : 'transparent',
+        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+    >
+      <RailLabel accent={false} />
+      <div
+        className="flex-1 min-w-0 flex items-center pl-2.5"
+        style={{ minHeight: 44 }}
+      >
+        <span
+          className="text-[11px]"
           style={{
-            height: isDropTarget ? 56 : 48,
-            background: isDropTarget ? 'rgba(42,122,86,0.06)' : 'transparent',
-            borderLeft: isDropTarget ? '3px solid var(--t-verde)' : '3px solid transparent',
-            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            color: isDropTarget ? 'var(--t-verde)' : INK['40'],
+            fontWeight: isDropTarget ? 600 : 400,
+            fontFamily: FONT.sans,
+            transition: 'color 0.15s',
           }}
         >
-          <div
-            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md"
-            style={{
-              background: isDropTarget ? 'rgba(42,122,86,0.1)' : 'transparent',
-              transition: 'background 0.15s',
-            }}
-          >
-            <PerriandIcon name={icon as any} size={14} color={isDropTarget ? 'var(--t-verde)' : 'var(--t-ink)'} />
-          </div>
-          <span
-            className="text-[11px] flex-shrink-0"
-            style={{
-              width: 62,
-              fontFamily: FONT.mono,
-              color: isDropTarget ? 'var(--t-verde)' : INK['85'],
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.5px',
-              fontWeight: isDropTarget ? 600 : 400,
-              transition: 'color 0.15s, font-weight 0.15s',
-            }}
-          >
-            {slot.label}
-          </span>
-          <span
-            className="text-[11px]"
-            style={{
-              color: isDropTarget ? 'var(--t-verde)' : INK['75'],
-              fontWeight: isDropTarget ? 600 : 400,
-              transition: 'color 0.15s',
-            }}
-          >
-            {isDropTarget ? 'Drop here ↓' : '+ add'}
-          </span>
-        </div>
-      )}
+          {isDropTarget ? 'Drop here ↓' : '+ add'}
+        </span>
+      </div>
     </div>
   );
 }

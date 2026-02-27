@@ -70,6 +70,44 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
+
+  // ─── Swipe navigation between days ───
+  const swipeRef = useRef<HTMLDivElement>(null);
+  const swipeStart = useRef<{ x: number; y: number; time: number } | null>(null);
+  const swipeLocked = useRef<'x' | 'y' | null>(null);
+
+  const handleSwipeStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    swipeStart.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    swipeLocked.current = null;
+  }, []);
+
+  const handleSwipeMove = useCallback((e: React.TouchEvent) => {
+    if (!swipeStart.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - swipeStart.current.x;
+    const dy = touch.clientY - swipeStart.current.y;
+    if (!swipeLocked.current && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      swipeLocked.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+  }, []);
+
+  const handleSwipeEnd = useCallback((e: React.TouchEvent) => {
+    if (!swipeStart.current || !trip) { swipeStart.current = null; return; }
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - swipeStart.current.x;
+    const elapsed = Date.now() - swipeStart.current.time;
+    if (swipeLocked.current === 'x' && Math.abs(dx) > 50 && elapsed < 500) {
+      if (dx < 0 && currentDay < trip.days.length) {
+        setCurrentDay(currentDay + 1);
+      } else if (dx > 0 && currentDay > 1) {
+        setCurrentDay(currentDay - 1);
+      }
+    }
+    swipeStart.current = null;
+    swipeLocked.current = null;
+  }, [currentDay, setCurrentDay, trip]);
+
   const [addingTransport, setAddingTransport] = useState(false);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
@@ -307,14 +345,12 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         trip={trip}
         currentDay={currentDay}
         setCurrentDay={setCurrentDay}
-        reorderDays={reorderDays}
-        setDayDestination={setDayDestination}
         getDestColor={getDestColor}
-        uniqueDestinations={uniqueDestinations}
+        onOpenDayMenu={() => setShowDayContextMenu(true)}
         onDayLongPress={(dayNum) => { setCurrentDay(dayNum); setShowDayContextMenu(true); }}
       />
 
-      {/* Day context menu — triggered by long-press on DaySelector */}
+      {/* Day context menu — triggered by "..." button or long-press on DaySelector */}
       {showDayContextMenu && (
         <DayContextMenu
           dayNumber={currentDay}
@@ -326,6 +362,12 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           onClear={() => clearDay(currentDay)}
           onDelete={() => { setShowDayContextMenu(false); setShowDeleteDayConfirm(true); }}
           onClose={() => setShowDayContextMenu(false)}
+          onMoveEarlier={() => reorderDays(currentDay, currentDay - 1)}
+          onMoveLater={() => reorderDays(currentDay, currentDay + 1)}
+          currentDestination={day.destination}
+          uniqueDestinations={uniqueDestinations}
+          getDestColor={getDestColor}
+          onChangeDestination={(dest) => setDayDestination(currentDay, dest)}
         />
       )}
 
@@ -348,8 +390,14 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
       />
 
 
-      {/* Compact time slots with inter-slot transport banners */}
-      <div className="flex flex-col">
+      {/* Compact time slots with inter-slot transport banners — swipeable */}
+      <div
+        ref={swipeRef}
+        className="flex flex-col"
+        onTouchStart={handleSwipeStart}
+        onTouchMove={handleSwipeMove}
+        onTouchEnd={handleSwipeEnd}
+      >
         {day.slots.map((slot, idx) => {
           // Filter collaboration data for this slot
           const slotSuggestions = suggestions?.filter(

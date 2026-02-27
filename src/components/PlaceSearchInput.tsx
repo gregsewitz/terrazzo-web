@@ -213,14 +213,47 @@ function PlaceSearchInputInner({
     { value: 'neighborhood', label: 'Neighborhood' },
   ];
 
-  const fontSize = compact ? 11 : 12;
+  const accentColor = 'var(--t-verde)';
+
+  // Shared input style
+  const inputStyle: React.CSSProperties = {
+    fontFamily: FONT.sans,
+    fontSize: compact ? 13 : 14,
+    fontWeight: 500,
+    color: 'var(--t-ink)',
+    background: INK['04'],
+    border: `1px solid var(--t-linen)`,
+    borderRadius: 10,
+    outline: 'none',
+    padding: compact ? '8px 12px 8px 32px' : '10px 14px 10px 36px',
+    width: '100%',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+  };
+
+  const inputFocusBorder = `1.5px solid ${accentColor}`;
+  const inputFocusShadow = `0 0 0 3px rgba(42, 122, 86, 0.08)`;
 
   // ═══ CUSTOM MODE ═══
   if (mode === 'custom') {
     return (
-      <div className="flex flex-col gap-1.5" style={{ padding: compact ? '6px 8px' : '8px 12px' }}>
-        <div className="flex items-center gap-1.5">
-          <PerriandIcon name="add" size={compact ? 12 : 14} color="var(--t-verde)" />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        padding: compact ? '6px 8px' : '8px 12px',
+      }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            position: 'absolute',
+            left: compact ? 10 : 12,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            pointerEvents: 'none',
+          }}>
+            <PerriandIcon name="add" size={compact ? 13 : 15} color={accentColor} />
+          </div>
           <input
             ref={inputRef}
             type="text"
@@ -233,36 +266,40 @@ function PlaceSearchInputInner({
               }
             }}
             placeholder="Place name…"
+            onFocus={e => {
+              e.currentTarget.style.border = inputFocusBorder;
+              e.currentTarget.style.boxShadow = inputFocusShadow;
+            }}
+            onBlur={e => {
+              e.currentTarget.style.border = `1px solid var(--t-linen)`;
+              e.currentTarget.style.boxShadow = 'none';
+            }}
             style={{
-              fontFamily: FONT.sans,
-              fontSize,
+              ...inputStyle,
               fontWeight: 600,
-              color: 'var(--t-ink)',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: '1px solid var(--t-verde)',
-              outline: 'none',
-              padding: '0 2px 1px',
-              flex: 1,
-              minWidth: 0,
             }}
           />
         </div>
         {/* Type picker */}
-        <div className="flex flex-wrap gap-1 ml-5">
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 6,
+          paddingLeft: 4,
+        }}>
           {TYPE_OPTIONS.map(opt => (
             <button
               key={opt.value}
               onClick={() => setCustomType(opt.value)}
               style={{
                 fontFamily: FONT.mono,
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: customType === opt.value ? 700 : 500,
                 color: customType === opt.value ? 'white' : INK['50'],
-                background: customType === opt.value ? 'var(--t-verde)' : INK['06'],
+                background: customType === opt.value ? accentColor : INK['06'],
                 border: 'none',
-                borderRadius: 10,
-                padding: '2px 7px',
+                borderRadius: 12,
+                padding: '4px 10px',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
@@ -273,16 +310,16 @@ function PlaceSearchInputInner({
         </div>
         <button
           onMouseDown={e => { e.preventDefault(); switchToSearch(); }}
-          className="text-left ml-5 cursor-pointer"
           style={{
             fontFamily: FONT.sans,
-            fontSize: 9,
-            color: 'var(--t-verde)',
+            fontSize: 11,
+            color: accentColor,
             background: 'none',
             border: 'none',
-            padding: 0,
-            textDecoration: 'underline',
-            textUnderlineOffset: 2,
+            padding: '2px 4px 0',
+            cursor: 'pointer',
+            textAlign: 'left',
+            opacity: 0.8,
           }}
         >
           Search Google Places instead
@@ -294,8 +331,18 @@ function PlaceSearchInputInner({
   // ═══ SEARCH MODE ═══
   return (
     <div className="relative" style={{ padding: compact ? '6px 8px' : '8px 12px' }}>
-      <div className="flex items-center gap-1.5">
-        <PerriandIcon name="add" size={compact ? 12 : 14} color="var(--t-verde)" />
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          position: 'absolute',
+          left: compact ? 10 : 12,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          pointerEvents: 'none',
+        }}>
+          <PerriandIcon name="add" size={compact ? 13 : 15} color={accentColor} />
+        </div>
         <input
           ref={inputRef}
           type="text"
@@ -313,34 +360,31 @@ function PlaceSearchInputInner({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          style={{
-            fontFamily: FONT.sans,
-            fontSize,
-            fontWeight: 500,
-            color: 'var(--t-ink)',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: '1px solid var(--t-verde)',
-            outline: 'none',
-            padding: '0 2px 1px',
-            flex: 1,
-            minWidth: 0,
+          onFocus={e => {
+            e.currentTarget.style.border = inputFocusBorder;
+            e.currentTarget.style.boxShadow = inputFocusShadow;
           }}
+          style={inputStyle}
         />
       </div>
 
       {/* Autocomplete dropdown */}
       {showDropdown && predictions.length > 0 && (
         <div
-          className="absolute left-0 right-0 mt-1 rounded-lg overflow-hidden shadow-lg z-50"
           style={{
+            position: 'absolute',
+            left: compact ? 8 : 12,
+            right: compact ? 8 : 12,
+            top: '100%',
+            marginTop: 6,
             background: 'white',
             border: '1px solid var(--t-linen)',
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
             maxHeight: 260,
             overflowY: 'auto',
-            top: '100%',
-            marginLeft: compact ? 8 : 12,
-            marginRight: compact ? 8 : 12,
+            zIndex: 50,
           }}
         >
           {predictions.map((p, i) => (
@@ -351,21 +395,35 @@ function PlaceSearchInputInner({
                 selectPrediction(p);
               }}
               onMouseEnter={() => setActiveIndex(i)}
-              className="flex flex-col items-start w-full px-3 py-2 cursor-pointer text-left transition-colors"
               style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                width: '100%',
+                padding: '10px 14px',
+                cursor: 'pointer',
+                textAlign: 'left',
                 background: i === activeIndex ? INK['04'] : 'transparent',
                 border: 'none',
+                transition: 'background 0.1s ease',
               }}
             >
               <span
-                style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 500, color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: 'var(--t-ink)' }}
               >
                 {p.structured_formatting?.main_text || p.description}
               </span>
               {p.structured_formatting?.secondary_text && (
                 <span
-                  className="truncate w-full"
-                  style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}
+                  style={{
+                    fontFamily: FONT.sans,
+                    fontSize: 11,
+                    color: INK['50'],
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                  }}
                 >
                   {p.structured_formatting.secondary_text}
                 </span>
@@ -379,15 +437,21 @@ function PlaceSearchInputInner({
               e.preventDefault();
               switchToCustom();
             }}
-            className="flex items-center gap-2 w-full px-3 py-2 cursor-pointer text-left"
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              padding: '10px 14px',
+              cursor: 'pointer',
+              textAlign: 'left',
               background: 'transparent',
               border: 'none',
               borderTop: `1px solid var(--t-linen)`,
             }}
           >
-            <PerriandIcon name="edit" size={11} color={INK['40']} />
-            <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['50'] }}>
+            <PerriandIcon name="edit" size={12} color={INK['40']} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'] }}>
               Add custom place
             </span>
           </button>
@@ -398,14 +462,15 @@ function PlaceSearchInputInner({
       {!showDropdown && query.length === 0 && (
         <button
           onMouseDown={e => { e.preventDefault(); switchToCustom(); }}
-          className="text-left mt-1 ml-5 cursor-pointer"
           style={{
             fontFamily: FONT.sans,
-            fontSize: 9,
+            fontSize: 11,
             color: INK['40'],
             background: 'none',
             border: 'none',
-            padding: 0,
+            padding: '6px 0 0',
+            cursor: 'pointer',
+            textAlign: 'left',
           }}
         >
           or type a custom place

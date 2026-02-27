@@ -211,12 +211,40 @@ function HotelInputInner({
     }
   };
 
+  // Shared input style
+  const inputStyle: React.CSSProperties = {
+    fontFamily: FONT.sans,
+    fontSize: 13,
+    fontWeight: 500,
+    color: textColor,
+    background: INK['04'],
+    border: `1px solid var(--t-linen)`,
+    borderRadius: 10,
+    outline: 'none',
+    padding: '8px 12px',
+    width: '100%',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+  };
+
+  const inputFocusStyle = `1.5px solid ${accentColor}`;
+  const inputFocusShadow = `0 0 0 3px ${accentColor}18`;
+
   // ═══ CUSTOM MODE (Airbnb/Villa) ═══
   if (mode === 'custom') {
     return (
-      <div ref={containerRef} className="flex flex-col gap-1.5" style={{ minWidth: 200 }}>
-        <div className="flex items-center gap-1.5">
-          <PerriandIcon name="hotel" size={12} color={accentColor} />
+      <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 200 }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            position: 'absolute',
+            left: 10,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            pointerEvents: 'none',
+          }}>
+            <PerriandIcon name="hotel" size={14} color={accentColor} />
+          </div>
           <input
             ref={inputRef}
             type="text"
@@ -227,56 +255,54 @@ function HotelInputInner({
               if (e.key === 'Enter') handleCustomSave();
             }}
             placeholder="e.g. Airbnb in Shibuya…"
+            onFocus={e => {
+              e.currentTarget.style.border = inputFocusStyle;
+              e.currentTarget.style.boxShadow = inputFocusShadow;
+            }}
+            onBlur={e => {
+              e.currentTarget.style.border = `1px solid var(--t-linen)`;
+              e.currentTarget.style.boxShadow = 'none';
+            }}
             style={{
-              fontFamily: FONT.sans,
-              fontSize: 11,
+              ...inputStyle,
               fontWeight: 600,
-              color: textColor,
-              background: 'transparent',
-              border: 'none',
-              borderBottom: `1px solid ${accentColor}`,
-              outline: 'none',
-              padding: '0 2px 1px',
-              width: 140,
+              paddingLeft: 32,
             }}
           />
         </div>
-        <div className="flex items-center gap-1.5 ml-4">
-          <input
-            type="text"
-            value={customAddress}
-            onChange={e => setCustomAddress(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Escape') onCancel();
-              if (e.key === 'Enter') handleCustomSave();
-            }}
-            onBlur={handleCustomSave}
-            placeholder="Address (optional)"
-            style={{
-              fontFamily: FONT.sans,
-              fontSize: 10,
-              color: INK['60'],
-              background: 'transparent',
-              border: 'none',
-              borderBottom: `1px dashed ${INK['20']}`,
-              outline: 'none',
-              padding: '0 2px 1px',
-              width: 140,
-            }}
-          />
-        </div>
+        <input
+          type="text"
+          value={customAddress}
+          onChange={e => setCustomAddress(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Escape') onCancel();
+            if (e.key === 'Enter') handleCustomSave();
+          }}
+          onBlur={handleCustomSave}
+          placeholder="Address (optional)"
+          onFocus={e => {
+            e.currentTarget.style.border = inputFocusStyle;
+            e.currentTarget.style.boxShadow = inputFocusShadow;
+          }}
+          style={{
+            ...inputStyle,
+            fontSize: 12,
+            color: INK['60'],
+            padding: '6px 12px',
+          }}
+        />
         <button
           onMouseDown={e => { e.preventDefault(); switchToSearch(); }}
-          className="text-left ml-4 cursor-pointer"
           style={{
             fontFamily: FONT.sans,
-            fontSize: 9,
+            fontSize: 11,
             color: accentColor,
             background: 'none',
             border: 'none',
-            padding: 0,
-            textDecoration: 'underline',
-            textUnderlineOffset: 2,
+            padding: '2px 0',
+            cursor: 'pointer',
+            textAlign: 'left',
+            opacity: 0.8,
           }}
         >
           Search hotels instead
@@ -288,8 +314,18 @@ function HotelInputInner({
   // ═══ SEARCH MODE (Google Places Autocomplete) ═══
   return (
     <div ref={containerRef} className="relative" style={{ minWidth: 200 }}>
-      <div className="flex items-center gap-1">
-        <PerriandIcon name="hotel" size={12} color={accentColor} />
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          position: 'absolute',
+          left: 10,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          pointerEvents: 'none',
+        }}>
+          <PerriandIcon name="hotel" size={14} color={accentColor} />
+        </div>
         <input
           ref={inputRef}
           type="text"
@@ -306,17 +342,14 @@ function HotelInputInner({
           }}
           onKeyDown={handleKeyDown}
           placeholder="Search hotel…"
+          onFocus={e => {
+            e.currentTarget.style.border = inputFocusStyle;
+            e.currentTarget.style.boxShadow = inputFocusShadow;
+          }}
           style={{
-            fontFamily: FONT.sans,
-            fontSize: 11,
+            ...inputStyle,
             fontWeight: 600,
-            color: textColor,
-            background: 'transparent',
-            border: 'none',
-            borderBottom: `1px solid ${accentColor}`,
-            outline: 'none',
-            padding: '0 2px 1px',
-            width: 140,
+            paddingLeft: 32,
           }}
         />
       </div>
@@ -324,13 +357,20 @@ function HotelInputInner({
       {/* Autocomplete dropdown */}
       {showDropdown && predictions.length > 0 && (
         <div
-          className="absolute left-0 top-full mt-1 rounded-lg overflow-hidden shadow-lg z-50"
           style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: '100%',
+            marginTop: 6,
             background: 'white',
             border: '1px solid var(--t-linen)',
-            width: 280,
-            maxHeight: 240,
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+            maxHeight: 260,
             overflowY: 'auto',
+            zIndex: 50,
           }}
         >
           {predictions.map((p, i) => (
@@ -341,22 +381,35 @@ function HotelInputInner({
                 selectPrediction(p);
               }}
               onMouseEnter={() => setActiveIndex(i)}
-              className="flex flex-col items-start w-full px-3 py-2 cursor-pointer text-left transition-colors"
               style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                width: '100%',
+                padding: '10px 14px',
+                cursor: 'pointer',
+                textAlign: 'left',
                 background: i === activeIndex ? INK['04'] : 'transparent',
                 border: 'none',
+                transition: 'background 0.1s ease',
               }}
             >
               <span
-                className="text-[12px] font-medium"
-                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: 'var(--t-ink)' }}
               >
                 {p.structured_formatting?.main_text || p.description}
               </span>
               {p.structured_formatting?.secondary_text && (
                 <span
-                  className="text-[10px] truncate w-full"
-                  style={{ color: INK['50'], fontFamily: FONT.sans }}
+                  style={{
+                    fontFamily: FONT.sans,
+                    fontSize: 11,
+                    color: INK['50'],
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                  }}
                 >
                   {p.structured_formatting.secondary_text}
                 </span>
@@ -370,18 +423,21 @@ function HotelInputInner({
               e.preventDefault();
               switchToCustom();
             }}
-            className="flex items-center gap-2 w-full px-3 py-2 cursor-pointer text-left"
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              padding: '10px 14px',
+              cursor: 'pointer',
+              textAlign: 'left',
               background: 'transparent',
               border: 'none',
               borderTop: `1px solid var(--t-linen)`,
             }}
           >
-            <PerriandIcon name="add" size={11} color={INK['40']} />
-            <span
-              className="text-[11px]"
-              style={{ color: INK['50'], fontFamily: FONT.sans }}
-            >
+            <PerriandIcon name="add" size={12} color={INK['40']} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'] }}>
               Airbnb / Villa / Other
             </span>
           </button>
@@ -392,14 +448,15 @@ function HotelInputInner({
       {!showDropdown && query.length === 0 && (
         <button
           onMouseDown={e => { e.preventDefault(); switchToCustom(); }}
-          className="text-left mt-1 cursor-pointer"
           style={{
             fontFamily: FONT.sans,
-            fontSize: 9,
+            fontSize: 11,
             color: INK['40'],
             background: 'none',
             border: 'none',
-            padding: 0,
+            padding: '6px 0 0',
+            cursor: 'pointer',
+            textAlign: 'left',
           }}
         >
           or add Airbnb / Villa

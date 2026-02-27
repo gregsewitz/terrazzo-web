@@ -61,11 +61,11 @@ export default function AddDestinationSearch({ onAdded, onCancel }: AddDestinati
     <div>
       <div style={{
         fontFamily: FONT.sans,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 600,
-        color: INK['60'],
-        padding: '4px 12px 0',
-        letterSpacing: 0.3,
+        color: INK['70'],
+        padding: '4px 12px 2px',
+        letterSpacing: 0.2,
       }}>
         Add destination
       </div>
