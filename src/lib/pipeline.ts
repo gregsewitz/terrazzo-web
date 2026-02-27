@@ -161,7 +161,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
   {
     id: 'place-intelligence-pipeline',
     retries: 2,
-    concurrency: { limit: 5 },
+    concurrency: { limit: 25 },
   },
   { event: 'pipeline/run' },
   async ({ event, step }) => {
