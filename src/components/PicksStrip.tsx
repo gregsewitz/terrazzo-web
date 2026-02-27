@@ -181,14 +181,12 @@ function PicksStrip({
   if (destinationPicks.length === 0 && !searchQuery.trim()) {
     return (
       <div
-        className="px-4 py-2"
+        className="px-4 pt-2 pb-1.5"
         style={{ background: 'white', borderTop: '1px solid var(--t-linen)' }}
       >
-        <div className="flex items-center justify-between">
-          <span className="text-[11px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
-            No picks for this destination yet
-          </span>
-        </div>
+        <span className="text-[11px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
+          No picks for this destination yet
+        </span>
       </div>
     );
   }

@@ -347,48 +347,6 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         setEditingTransportId={setEditingTransportId}
       />
 
-      {/* Empty destination nudge — no saved places match this day */}
-      {(() => {
-        const dest = day.destination;
-        if (!dest) return null;
-        const destLower = dest.toLowerCase();
-        const hasPlacedOrGhost = day.slots.some(s =>
-          s.places.length > 0 || (s.ghostItems && s.ghostItems.length > 0)
-        );
-        if (hasPlacedOrGhost) return null;
-        const hasSavedPlaces = myPlaces.some(p =>
-          p.location?.toLowerCase().includes(destLower)
-        );
-        if (hasSavedPlaces) return null;
-        return (
-          <div
-            className="mx-3 my-2 px-4 py-3 flex flex-col items-center gap-1.5"
-            style={{
-              background: `${destColor.accent}08`,
-              borderRadius: 12,
-              border: `1px dashed ${destColor.accent}30`,
-            }}
-          >
-            <span style={{
-              fontFamily: FONT.sans,
-              fontSize: 13,
-              fontWeight: 500,
-              color: destColor.text || INK['70'],
-              textAlign: 'center',
-            }}>
-              No saved places in {dest} yet
-            </span>
-            <span style={{
-              fontFamily: FONT.sans,
-              fontSize: 11,
-              color: INK['50'],
-              textAlign: 'center',
-            }}>
-              Search and save places to start planning this day
-            </span>
-          </div>
-        );
-      })()}
 
       {/* Compact time slots with inter-slot transport banners */}
       <div className="flex flex-col">
