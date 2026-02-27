@@ -640,11 +640,7 @@ function DayBoardView({
                       }}>
                         {slot.label}
                       </span>
-                      {slot.time && (
-                        <span style={{ fontFamily: FONT.mono, fontSize: SLOT_LABEL_SIZE, color: INK['50'] }}>
-                          {slot.time}
-                        </span>
-                      )}
+                      {/* time removed from slot headers */}
                     </div>
 
                     {/* Placed items — pointer-based drag cards */}
