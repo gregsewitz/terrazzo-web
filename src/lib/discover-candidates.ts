@@ -74,8 +74,8 @@ export async function fetchCandidateProperties(): Promise<CandidateProperty[]> {
   const candidates: CandidateProperty[] = records.map((r) => ({
     googlePlaceId: r.googlePlaceId,
     propertyName: r.propertyName,
-    signals: (r.signals as BriefingSignal[]) || [],
-    antiSignals: (r.antiSignals as BriefingAntiSignal[]) || [],
+    signals: (r.signals as unknown as BriefingSignal[]) || [],
+    antiSignals: (r.antiSignals as unknown as BriefingAntiSignal[]) || [],
     facts: r.facts as Record<string, unknown> | null,
     signalCount: r.signalCount,
     reliabilityScore: r.reliabilityScore,
