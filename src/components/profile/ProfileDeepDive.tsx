@@ -58,6 +58,11 @@ export default function ProfileDeepDive() {
       <DimensionsSection profile={profile} />
       <VocabularySection profile={profile} />
       <MatchesSection profile={profile} />
+      <TasteRadarSection profile={profile} />
+      <TravelStatsSection />
+      <TravelTimelineSection />
+      <TasteEvolutionSection profile={profile} />
+      <BucketListSection />
     </div>
   );
 }
@@ -634,6 +639,640 @@ function MatchesSection({ profile }: { profile: ProfileShape }) {
           </StaggerItem>
         ))}
       </StaggerContainer>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// TASTE RADAR — Animated hexagonal radar chart
+// ═══════════════════════════════════════════
+
+function TasteRadarSection({ profile }: { profile: ProfileShape }) {
+  const axes = profile.radarData || [];
+  const [ref, isInView] = useInView({ threshold: 0.2 });
+  const size = 260;
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxRadius = (size / 2) * 0.68;
+  const n = axes.length;
+  const gridLevels = [0.25, 0.5, 0.75, 1.0];
+
+  const getPoint = (i: number, radius: number) => {
+    const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  };
+
+  const gridPolygons = gridLevels.map((level) =>
+    axes.map((_, i) => getPoint(i, maxRadius * level)).map(p => `${p.x},${p.y}`).join(' ')
+  );
+
+  const dataPoints = axes.map((d, i) => getPoint(i, maxRadius * d.value));
+  const dataPolygon = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
+  const zeroPolygon = axes.map((_, i) => getPoint(i, 0)).map(p => `${p.x},${p.y}`).join(' ');
+
+  return (
+    <div className="px-5 py-6" style={{ background: '#2d3a2d' }}>
+      <FadeInSection>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'rgba(200,146,58,0.7)', fontFamily: FONT.mono, fontWeight: 700 }}>
+          Taste Profile
+        </div>
+        <p className="text-[11px] mb-2" style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}>
+          Your six sensibility axes — the shape of how you experience places.
+        </p>
+      </FadeInSection>
+
+      <div ref={ref} className="flex flex-col items-center">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <defs>
+            <radialGradient id="radarAnimFill" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="var(--t-honey)" stopOpacity={0.2} />
+              <stop offset="100%" stopColor="var(--t-honey)" stopOpacity={0.05} />
+            </radialGradient>
+          </defs>
+
+          {/* Grid polygons */}
+          {gridPolygons.map((points, i) => (
+            <polygon key={`g-${i}`} points={points} fill="none" stroke="rgba(245,245,240,0.08)" strokeWidth={0.5} />
+          ))}
+
+          {/* Axis lines */}
+          {axes.map((d, i) => {
+            const outer = getPoint(i, maxRadius);
+            const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+            return <line key={`a-${i}`} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke={color} strokeOpacity={0.35} strokeWidth={0.8} />;
+          })}
+
+          {/* Animated data polygon */}
+          {isMobileSafari() ? (
+            <polygon points={dataPolygon} fill="url(#radarAnimFill)" stroke="var(--t-honey)" strokeWidth={1.5} strokeOpacity={0.7} />
+          ) : (
+            <motion.polygon
+              fill="url(#radarAnimFill)"
+              stroke="var(--t-honey)"
+              strokeWidth={1.5}
+              strokeOpacity={0.7}
+              initial={{ points: zeroPolygon, opacity: 0 }}
+              animate={isInView ? { points: dataPolygon, opacity: 1 } : { points: zeroPolygon, opacity: 0 }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            />
+          )}
+
+          {/* Data point dots */}
+          {dataPoints.map((p, i) => {
+            const color = AXIS_COLORS[axes[i].axis] || '#8b6b4a';
+            return isMobileSafari() ? (
+              <g key={`d-${i}`}>
+                <circle cx={p.x} cy={p.y} r={3.5} fill={color} />
+                <circle cx={p.x} cy={p.y} r={1.5} fill="white" />
+              </g>
+            ) : (
+              <motion.g key={`d-${i}`} initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : { opacity: 0 }} transition={{ duration: 0.4, delay: 0.8 + i * 0.08 }}>
+                <circle cx={p.x} cy={p.y} r={3.5} fill={color} />
+                <circle cx={p.x} cy={p.y} r={1.5} fill="white" />
+              </motion.g>
+            );
+          })}
+
+          {/* Labels */}
+          {axes.map((d, i) => {
+            const lp = getPoint(i, maxRadius * 1.25);
+            return (
+              <text key={`l-${i}`} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle" fill="#f5f5f0" fontSize={10} fontFamily={FONT.mono} opacity={0.7}>
+                {d.axis}
+              </text>
+            );
+          })}
+
+          {/* Numeric values */}
+          {axes.map((d, i) => {
+            const vp = getPoint(i, maxRadius * 1.42);
+            const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+            return (
+              <text key={`v-${i}`} x={vp.x} y={vp.y} textAnchor="middle" dominantBaseline="middle" fill={color} fontSize={9} fontFamily={FONT.mono} fontWeight={700} opacity={0.9}>
+                {Math.round(d.value * 100)}
+              </text>
+            );
+          })}
+        </svg>
+
+        {/* Legend row */}
+        <FadeInSection delay={0.6}>
+          <div className="flex flex-wrap justify-center gap-3 mt-2">
+            {axes.map(d => {
+              const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+              return (
+                <div key={d.axis} className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                  <span className="text-[9px]" style={{ color: 'rgba(245,245,240,0.55)', fontFamily: FONT.mono }}>{d.axis} {Math.round(d.value * 100)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </FadeInSection>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// TRAVEL STATS — Animated counters + continent heatmap
+// ═══════════════════════════════════════════
+
+const TRAVEL_STATS = {
+  countries: 14,
+  cities: 38,
+  continents: 4,
+  totalNights: 187,
+  longestTrip: 12,
+  placesRated: 94,
+  kmTraveled: 48200,
+};
+
+const CONTINENTS = [
+  { name: 'Europe', visits: 22, pct: 58, color: '#c8923a' },
+  { name: 'Asia', visits: 9, pct: 24, color: '#e86830' },
+  { name: 'North America', visits: 5, pct: 13, color: '#4a6741' },
+  { name: 'Africa', visits: 2, pct: 5, color: '#6844a0' },
+];
+
+const STAT_ICONS: Record<string, import('@/types').PerriandIconName> = {
+  Countries: 'location',
+  Cities: 'neighborhood',
+  'Nights away': 'evening',
+  'Places rated': 'star',
+};
+
+function AnimatedStatCard({ value, label, suffix, delay }: { value: number; label: string; suffix?: string; delay: number }) {
+  const iconName = STAT_ICONS[label] || 'discover';
+  return (
+    <FadeInSection delay={delay} direction="up" distance={20}>
+      <div className="text-center p-4 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+        <div className="flex justify-center mb-2">
+          <PerriandIcon name={iconName} size={18} color="var(--t-honey)" />
+        </div>
+        <AnimatedNumber value={value} suffix={suffix} style={{ fontFamily: FONT.mono, fontSize: 26, fontWeight: 700, color: 'var(--t-honey)' }} />
+        <div className="text-[9px] uppercase tracking-wider mt-1" style={{ color: INK['50'], fontFamily: FONT.mono }}>{label}</div>
+      </div>
+    </FadeInSection>
+  );
+}
+
+function ContinentBar({ name, visits, pct, color, delay }: { name: string; visits: number; pct: number; color: string; delay: number }) {
+  const [ref, isInView] = useInView({ threshold: 0.3 });
+
+  return (
+    <FadeInSection delay={delay} direction="left" distance={24}>
+      <div ref={ref} className="flex items-center gap-3 mb-3">
+        <span className="text-[11px] font-semibold w-28 shrink-0" style={{ color: 'rgba(245,245,240,0.8)' }}>{name}</span>
+        <div className="flex-1 h-5 rounded-full overflow-hidden relative" style={{ background: 'rgba(245,245,240,0.06)' }}>
+          {isMobileSafari() ? (
+            <div
+              className="h-full rounded-full flex items-center justify-end pr-2"
+              style={{ background: color, width: `${pct}%` }}
+            >
+              <span className="text-[9px] font-bold" style={{ color: 'rgba(255,255,255,0.9)', fontFamily: FONT.mono }}>{visits}</span>
+            </div>
+          ) : (
+            <motion.div
+              className="h-full rounded-full flex items-center justify-end pr-2"
+              style={{ background: color }}
+              initial={{ width: 0 }}
+              animate={isInView ? { width: `${pct}%` } : { width: 0 }}
+              transition={{ duration: 1, delay: delay + 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <motion.span
+                className="text-[9px] font-bold"
+                style={{ color: 'rgba(255,255,255,0.9)', fontFamily: FONT.mono }}
+                initial={{ opacity: 0 }}
+                animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.3, delay: delay + 0.8 }}
+              >
+                {visits}
+              </motion.span>
+            </motion.div>
+          )}
+        </div>
+        <span className="text-[10px] w-8 text-right" style={{ color: 'rgba(245,245,240,0.45)', fontFamily: FONT.mono }}>{pct}%</span>
+      </div>
+    </FadeInSection>
+  );
+}
+
+function TravelStatsSection() {
+  return (
+    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+      <FadeInSection>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}>
+          Your Travel Stats
+        </div>
+        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+          The numbers behind your journeys — and they&apos;re still growing.
+        </p>
+      </FadeInSection>
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <AnimatedStatCard value={TRAVEL_STATS.countries} label="Countries" delay={0.1} />
+        <AnimatedStatCard value={TRAVEL_STATS.cities} label="Cities" delay={0.15} />
+        <AnimatedStatCard value={TRAVEL_STATS.totalNights} label="Nights away" delay={0.2} />
+        <AnimatedStatCard value={TRAVEL_STATS.placesRated} label="Places rated" delay={0.25} />
+      </div>
+
+      {/* Highlight strip */}
+      <FadeInSection delay={0.3}>
+        <div className="flex gap-2 mb-6">
+          {[
+            { v: TRAVEL_STATS.longestTrip, l: 'Longest trip', s: ' days', icon: 'trips' as const },
+            { v: TRAVEL_STATS.continents, l: 'Continents', s: '', icon: 'discover' as const },
+            { v: Math.round(TRAVEL_STATS.kmTraveled / 1000), l: 'Distance', s: 'k km', icon: 'transport' as const },
+          ].map(({ v, l, s, icon }) => (
+            <div key={l} className="flex-1 text-center p-3 rounded-xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+              <div className="flex justify-center mb-1">
+                <PerriandIcon name={icon} size={12} color={INK['40']} />
+              </div>
+              <AnimatedNumber value={v} suffix={s} style={{ fontFamily: FONT.mono, fontSize: 16, fontWeight: 700, color: 'var(--t-ink)' }} />
+              <div className="text-[8px] uppercase tracking-wider mt-0.5" style={{ color: INK['45'], fontFamily: FONT.mono }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </FadeInSection>
+
+      {/* Continent breakdown */}
+      <FadeInSection delay={0.35}>
+        <div className="text-[9px] uppercase tracking-[0.2em] mb-3" style={{ color: INK['45'], fontFamily: FONT.mono }}>
+          Where you go most
+        </div>
+      </FadeInSection>
+      <div className="p-4 rounded-2xl" style={{ background: '#2d3a2d' }}>
+        {CONTINENTS.map((c, i) => (
+          <ContinentBar key={c.name} {...c} delay={0.4 + i * 0.1} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// TRAVEL TIMELINE — Animated vertical timeline
+// ═══════════════════════════════════════════
+
+const TRIPS: Array<{ title: string; dates: string; places: number; upcoming: boolean; color: string; icon: import('@/types').PerriandIconName }> = [
+  { title: 'Paris in Spring', dates: 'Apr 12\u201316, 2026', places: 7, upcoming: true, color: '#c8923a', icon: 'hotel' },
+  { title: 'Kyoto Autumn', dates: 'Nov 3\u201310, 2025', places: 12, upcoming: false, color: '#e86830', icon: 'morning' },
+  { title: 'Amalfi Coast', dates: 'Jun 18\u201325, 2025', places: 9, upcoming: false, color: '#4a6741', icon: 'summer' },
+  { title: 'Marrakech Weekend', dates: 'Mar 7\u20139, 2025', places: 5, upcoming: false, color: '#6844a0', icon: 'activity' },
+  { title: 'Stockholm Design Week', dates: 'Feb 8\u201313, 2025', places: 8, upcoming: false, color: '#4a6b8b', icon: 'design' },
+  { title: 'Puglia Slow Trip', dates: 'Sep 1\u201310, 2024', places: 11, upcoming: false, color: '#8b6b4a', icon: 'food' },
+];
+
+function TravelTimelineSection() {
+  return (
+    <div className="px-5 py-6" style={{ background: '#f5f0e6' }}>
+      <FadeInSection>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
+          Travel Timeline
+        </div>
+        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+          Your journeys, past and future — each one shaping your taste.
+        </p>
+      </FadeInSection>
+
+      <div className="relative">
+        {/* Animated timeline spine */}
+        {!isMobileSafari() ? (
+          <motion.div
+            className="absolute left-[15px] top-0 w-[1.5px]"
+            style={{ background: `linear-gradient(to bottom, var(--t-honey), ${INK['10']})` }}
+            initial={{ height: 0 }}
+            whileInView={{ height: '100%' }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true }}
+          />
+        ) : (
+          <div
+            className="absolute left-[15px] top-0 w-[1.5px] h-full"
+            style={{ background: `linear-gradient(to bottom, var(--t-honey), ${INK['10']})` }}
+          />
+        )}
+
+        <div className="flex flex-col gap-0">
+          {TRIPS.map((trip, i) => (
+            <FadeInSection key={trip.title} delay={i * 0.12} direction="left" distance={30}>
+              <div className="flex gap-4 pb-5">
+                {/* Timeline dot with icon */}
+                <div className="flex flex-col items-center shrink-0" style={{ width: 32 }}>
+                  {isMobileSafari() ? (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                      style={{
+                        background: trip.upcoming ? trip.color : 'white',
+                        border: trip.upcoming ? 'none' : `2px solid ${trip.color}`,
+                        boxShadow: trip.upcoming ? `0 2px 8px ${trip.color}30` : 'none',
+                      }}
+                    >
+                      <PerriandIcon name={trip.icon} size={14} color={trip.upcoming ? 'white' : trip.color} />
+                    </div>
+                  ) : (
+                    <motion.div
+                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                      style={{
+                        background: trip.upcoming ? trip.color : 'white',
+                        border: trip.upcoming ? 'none' : `2px solid ${trip.color}`,
+                        boxShadow: trip.upcoming ? `0 2px 8px ${trip.color}30` : 'none',
+                      }}
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
+                      transition={{ duration: 0.4, delay: i * 0.12, type: 'spring', stiffness: 300, damping: 20 }}
+                      viewport={{ once: true }}
+                    >
+                      <PerriandIcon name={trip.icon} size={14} color={trip.upcoming ? 'white' : trip.color} />
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Trip card */}
+                <div className="flex-1 p-4 rounded-xl" style={{ background: 'white', border: `1px solid ${trip.upcoming ? trip.color + '30' : 'var(--t-linen)'}` }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>{trip.title}</span>
+                    {trip.upcoming && (
+                      <span className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold" style={{ background: `${trip.color}12`, color: trip.color, fontFamily: FONT.mono }}>
+                        Upcoming
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] mb-1.5" style={{ color: INK['55'], fontFamily: FONT.mono }}>{trip.dates}</div>
+                  <div className="flex items-center gap-1.5">
+                    <PerriandIcon name="location" size={10} color={trip.color} />
+                    <span className="text-[10px]" style={{ color: trip.color, fontFamily: FONT.mono }}>{trip.places} places</span>
+                  </div>
+                </div>
+              </div>
+            </FadeInSection>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// TASTE EVOLUTION — How your taste has shifted over time
+// ═══════════════════════════════════════════
+
+const EVOLUTION_PHASES = [
+  {
+    period: '2022',
+    label: 'The Resort Phase',
+    description: 'Comfort-first. You chose places by star ratings and pool size. Chain hotels felt safe.',
+    shifts: { design: 35, character: 20, food: 45, service: 60 },
+    color: '#8b6b4a',
+  },
+  {
+    period: '2023',
+    label: 'The Awakening',
+    description: 'That one boutique hotel in Lisbon changed everything. You started noticing light, materials, the feel of a space.',
+    shifts: { design: 55, character: 45, food: 60, service: 50 },
+    color: '#e86830',
+  },
+  {
+    period: '2024',
+    label: 'The Deep Dive',
+    description: 'You became intentional. Farm-to-table wasn\u2019t a buzzword anymore \u2014 it was a requirement. You sought owner-operated places.',
+    shifts: { design: 78, character: 72, food: 85, service: 68 },
+    color: '#4a6741',
+  },
+  {
+    period: '2025\u201326',
+    label: 'The Aesthetic Pilgrim',
+    description: 'Now you travel to expand your sense of what\u2019s possible. Design, food, culture \u2014 everything is taste.',
+    shifts: { design: 92, character: 88, food: 90, service: 85 },
+    color: '#c8923a',
+  },
+];
+
+function EvolutionBar({ value, color, delay }: { value: number; color: string; delay: number }) {
+  const [ref, isInView] = useInView({ threshold: 0.3 });
+
+  if (isMobileSafari()) {
+    return (
+      <div ref={ref} className="h-1.5 rounded-full overflow-hidden" style={{ background: `${color}15` }}>
+        <div className="h-full rounded-full" style={{ background: color, width: `${value}%` }} />
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="h-1.5 rounded-full overflow-hidden" style={{ background: `${color}15` }}>
+      <motion.div
+        className="h-full rounded-full"
+        style={{ background: color }}
+        initial={{ width: 0 }}
+        animate={isInView ? { width: `${value}%` } : { width: 0 }}
+        transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+      />
+    </div>
+  );
+}
+
+function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
+  // Use current archetype as the final phase label
+  const currentArchetype = profile.overallArchetype || 'The Aesthetic Pilgrim';
+  const phases = EVOLUTION_PHASES.map((p, i) =>
+    i === EVOLUTION_PHASES.length - 1 ? { ...p, label: currentArchetype } : p
+  );
+
+  return (
+    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+      <FadeInSection>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
+          Taste Evolution
+        </div>
+        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+          How your palate has matured — from comfort zones to curious pilgrim.
+        </p>
+      </FadeInSection>
+
+      <div className="relative">
+        {/* Animated connecting line */}
+        {!isMobileSafari() ? (
+          <motion.div
+            className="absolute left-[7px] top-2 w-[1.5px]"
+            style={{ background: 'linear-gradient(to bottom, #8b6b4a, #c8923a)' }}
+            initial={{ height: 0 }}
+            whileInView={{ height: 'calc(100% - 16px)' }}
+            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true }}
+          />
+        ) : (
+          <div className="absolute left-[7px] top-2 w-[1.5px]" style={{ height: 'calc(100% - 16px)', background: 'linear-gradient(to bottom, #8b6b4a, #c8923a)' }} />
+        )}
+
+        <div className="flex flex-col gap-5">
+          {phases.map((phase, i) => {
+            const isCurrent = i === phases.length - 1;
+            return (
+              <FadeInSection key={phase.period} delay={i * 0.15} direction="left" distance={24}>
+                <div className="flex gap-4">
+                  {/* Dot */}
+                  <div className="shrink-0 mt-1">
+                    {isMobileSafari() ? (
+                      <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: phase.color, background: isCurrent ? phase.color : 'white' }} />
+                    ) : (
+                      <motion.div
+                        className="w-4 h-4 rounded-full border-2"
+                        style={{ borderColor: phase.color, background: isCurrent ? phase.color : 'white' }}
+                        initial={{ scale: 0 }}
+                        whileInView={{ scale: 1 }}
+                        transition={{ duration: 0.4, delay: i * 0.15, type: 'spring', stiffness: 300 }}
+                        viewport={{ once: true }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Card */}
+                  <div className="flex-1 p-4 rounded-xl" style={{ background: 'white', border: `1px solid ${isCurrent ? phase.color + '30' : 'var(--t-linen)'}` }}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${phase.color}12`, color: phase.color, fontFamily: FONT.mono }}>{phase.period}</span>
+                      <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{phase.label}</span>
+                      {isCurrent && <PerriandIcon name="sparkle" size={10} color={phase.color} />}
+                    </div>
+                    <p className="text-[11px] leading-relaxed mb-3" style={{ color: INK['70'], fontFamily: FONT.sans }}>{phase.description}</p>
+
+                    {/* Mini dimension bars */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      {Object.entries(phase.shifts).map(([key, val], j) => (
+                        <div key={key}>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[9px] capitalize" style={{ color: INK['50'], fontFamily: FONT.mono }}>{key}</span>
+                            <AnimatedNumber value={val} suffix="%" style={{ color: phase.color, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700 }} />
+                          </div>
+                          <EvolutionBar value={val} color={phase.color} delay={i * 0.15 + j * 0.05} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </FadeInSection>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// BUCKET LIST — Dream destinations with progress rings
+// ═══════════════════════════════════════════
+
+const BUCKET_LIST: Array<{
+  destination: string; reason: string; progress: number;
+  color: string; icon: import('@/types').PerriandIconName; status: string;
+}> = [
+  { destination: 'Oaxaca, Mexico', reason: 'The food culture you\u2019ve been circling for years', progress: 85, color: '#e86830', icon: 'food', status: 'Planning' },
+  { destination: 'Fogo Island, Canada', reason: 'Architecture at the edge of the world', progress: 40, color: '#4a6b8b', icon: 'design', status: 'Dreaming' },
+  { destination: 'Naoshima, Japan', reason: 'Art islands that blur gallery and landscape', progress: 65, color: '#6844a0', icon: 'museum', status: 'Researching' },
+  { destination: 'Pantelleria, Italy', reason: 'Volcanic gardens and dammusi architecture', progress: 30, color: '#4a6741', icon: 'activity', status: 'Dreaming' },
+  { destination: 'Bhutan', reason: 'Gross National Happiness — a country built on intention', progress: 20, color: '#c8923a', icon: 'wellness', status: 'Someday' },
+  { destination: 'Cape Town, South Africa', reason: 'Where wine, design, and landscape collide', progress: 55, color: '#8b4a4a', icon: 'bar', status: 'Researching' },
+];
+
+function ProgressRing({ progress, color, size = 48, delay = 0 }: { progress: number; color: string; size?: number; delay?: number }) {
+  const [ref, isInView] = useInView({ threshold: 0.3 });
+  const radius = (size - 6) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <div ref={ref} className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={`${color}15`} strokeWidth={3} />
+        {isMobileSafari() ? (
+          <circle
+            cx={size / 2} cy={size / 2} r={radius} fill="none"
+            stroke={color} strokeWidth={3} strokeLinecap="round"
+            strokeDasharray={circumference} strokeDashoffset={offset}
+          />
+        ) : (
+          <motion.circle
+            cx={size / 2} cy={size / 2} r={radius} fill="none"
+            stroke={color} strokeWidth={3} strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={isInView ? { strokeDashoffset: offset } : { strokeDashoffset: circumference }}
+            transition={{ duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] }}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <AnimatedNumber value={progress} suffix="%" style={{ fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, color }} />
+      </div>
+    </div>
+  );
+}
+
+function BucketListSection() {
+  const completedCount = BUCKET_LIST.filter(b => b.progress >= 80).length;
+  const totalProgress = Math.round(BUCKET_LIST.reduce((acc, b) => acc + b.progress, 0) / BUCKET_LIST.length);
+
+  return (
+    <div className="px-5 py-6 pb-8" style={{ background: '#f5f0e6' }}>
+      <FadeInSection>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-panton-orange)', fontFamily: FONT.mono, fontWeight: 700 }}>
+          The Bucket List
+        </div>
+        <p className="text-[11px] mb-2" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+          Dream destinations matched to your taste DNA — with readiness scores.
+        </p>
+      </FadeInSection>
+
+      {/* Overall progress header */}
+      <FadeInSection delay={0.15}>
+        <div className="flex items-center gap-4 p-4 rounded-2xl mb-5" style={{ background: '#2d3a2d' }}>
+          <ProgressRing progress={totalProgress} color="#c8923a" size={56} delay={0.2} />
+          <div className="flex-1">
+            <div className="text-[14px] font-semibold mb-0.5" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
+              {completedCount > 0 ? `${completedCount} nearly ready` : 'Building your list'}
+            </div>
+            <div className="text-[11px]" style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}>
+              {BUCKET_LIST.length} destinations · {totalProgress}% average readiness
+            </div>
+          </div>
+        </div>
+      </FadeInSection>
+
+      {/* Destination cards */}
+      <StaggerContainer className="flex flex-col gap-3" staggerDelay={0.1}>
+        {BUCKET_LIST.map((item, i) => (
+          <StaggerItem key={item.destination}>
+            <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+              <ProgressRing progress={item.progress} color={item.color} size={48} delay={i * 0.1} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <PerriandIcon name={item.icon} size={14} color={item.color} />
+                  <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.destination}</span>
+                </div>
+                <p className="text-[10px] leading-relaxed mb-1.5" style={{ color: INK['60'], fontFamily: FONT.sans }}>{item.reason}</p>
+                <span className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold" style={{ background: `${item.color}10`, color: item.color, fontFamily: FONT.mono }}>
+                  {item.status}
+                </span>
+              </div>
+            </div>
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
+
+      {/* Recommendation footer */}
+      <FadeInSection delay={0.6}>
+        <div className="mt-5 p-4 rounded-xl flex items-start gap-3" style={{ background: 'rgba(200,146,58,0.05)', border: '1px solid rgba(200,146,58,0.12)' }}>
+          <PerriandIcon name="sparkle" size={14} color="var(--t-honey)" />
+          <div>
+            <p className="text-[11px] leading-relaxed" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+              Your taste profile suggests <strong style={{ color: 'var(--t-ink)' }}>Oaxaca</strong> as your highest-readiness match —
+              93% alignment with your food and character signals.
+            </p>
+          </div>
+        </div>
+      </FadeInSection>
     </div>
   );
 }
