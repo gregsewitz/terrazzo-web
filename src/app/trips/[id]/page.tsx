@@ -567,11 +567,9 @@ function TripDetailContent() {
                   onTapDetail={openDetail}
                   suggestions={collabSuggestions}
                   reactions={collabReactions}
-                  slotNotes={collabSlotNotes}
                   myRole={collabMyRole}
                   onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
                   onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
-                  onAddSlotNote={(day, slot, content) => addSlotNote(tripId, day, slot, content)}
                   onRegisterSlotRef={handleRegisterSlotRef}
                   onDragStartFromSlot={handleDragStartFromSlot}
                   dropTarget={dropTarget}
@@ -848,11 +846,9 @@ function TripDetailContent() {
             onUnplace={handleUnplace}
             suggestions={collabSuggestions}
             reactions={collabReactions}
-            slotNotes={collabSlotNotes}
             myRole={collabMyRole}
             onRespondSuggestion={(suggestionId, status) => respondToSuggestion(tripId, suggestionId, status)}
             onAddReaction={(placeKey, reaction) => addReaction(tripId, placeKey, reaction)}
-            onAddSlotNote={(dayNumber, slotId, content) => addSlotNote(tripId, dayNumber, slotId, content)}
             onBack={() => router.push('/trips')}
             onShare={() => setShowShareSheet(true)}
             onChat={() => setChatOpen(true)}

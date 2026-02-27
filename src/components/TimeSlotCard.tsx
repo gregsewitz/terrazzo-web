@@ -8,10 +8,10 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from './GhostCard';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import ReactionPills from './ReactionPills';
-import SlotNoteBubble from './SlotNoteBubble';
 import { FONT, INK } from '@/constants/theme';
 import { hasGhostItems } from '@/utils/ghostFiltering';
-import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
+import PlaceTimeEditor from './PlaceTimeEditor';
+import type { Suggestion, Reaction } from '@/stores/collaborationStore';
 
 const SLOT_HOLD_DELAY = 250;
 const SLOT_DRAG_THRESHOLD = 6;
@@ -36,17 +36,16 @@ interface TimeSlotCardProps {
   // Collaboration
   suggestions?: Suggestion[];
   reactions?: Reaction[];
-  slotNoteItems?: SlotNoteItem[];
   myRole?: 'owner' | 'suggester' | 'viewer' | null;
   onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
   onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
-  onAddSlotNote?: (content: string) => void;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace, isLoadingSuggestions, suggestions, reactions, slotNoteItems, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace, isLoadingSuggestions, suggestions, reactions, myRole, onRespondSuggestion, onAddReaction }: TimeSlotCardProps) {
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
+  const setPlaceTime = useTripStore(s => s.setPlaceTime);
   const icon = SLOT_ICONS[slot.id] || 'pin';
   const slotRef = useRef<HTMLDivElement>(null);
   const hasPlaces = slot.places.length > 0;
@@ -217,16 +216,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
               />
             ))}
           </div>
-          {/* Slot notes */}
-          {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
-            <div className="mt-2">
-              <SlotNoteBubble
-                notes={slotNoteItems || []}
-                canAdd={myRole === 'suggester' || myRole === 'owner'}
-                onAddNote={onAddSlotNote}
-              />
-            </div>
-          )}
         </div>
       </div>
     );
@@ -260,7 +249,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             return (
               <div
                 key={p.id}
-                className="mb-1.5 rounded-lg cursor-pointer overflow-hidden select-none"
+                className="mb-1.5 rounded-lg cursor-pointer overflow-hidden select-none group/card"
                 onClick={() => { if (!isDragging) onTapDetail(p); }}
                 onPointerDown={(e) => handlePlacePointerDown(p, e)}
                 onPointerMove={handlePlacePointerMove}
@@ -331,6 +320,15 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                         {subtitle}
                       </div>
                     )}
+                    {/* Specific time — "Reservation at 8:15 PM" or "+ time" on hover */}
+                    <div className="mt-0.5">
+                      <PlaceTimeEditor
+                        specificTime={p.specificTime}
+                        specificTimeLabel={p.specificTimeLabel}
+                        placeType={p.type}
+                        onSave={(time, label) => setPlaceTime(dayNumber, slot.id, p.id, time, label)}
+                      />
+                    </div>
                   </div>
                   {/* Remove button — visible to owner or when not in collaboration mode */}
                   {(myRole === 'owner' || !myRole) && (
@@ -401,16 +399,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             </div>
           )}
 
-          {/* Slot notes */}
-          {((slotNoteItems && slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
-            <div className="mb-1">
-              <SlotNoteBubble
-                notes={slotNoteItems || []}
-                canAdd={myRole === 'suggester' || myRole === 'owner'}
-                onAddNote={onAddSlotNote}
-              />
-            </div>
-          )}
         </div>
       </div>
     );

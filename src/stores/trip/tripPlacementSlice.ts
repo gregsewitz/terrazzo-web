@@ -20,6 +20,7 @@ export interface TripPlacementState {
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
+  setPlaceTime: (dayNumber: number, slotId: string, placeId: string, specificTime: string | undefined, specificTimeLabel?: string) => void;
 }
 
 // ═══════════════════════════════════════════
@@ -237,6 +238,35 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);
       return t ? { days: t.days, pool: t.pool } : {};
+    });
+  },
+
+  setPlaceTime: (dayNumber, slotId, placeId, specificTime, specificTimeLabel) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s => {
+          if (s.id !== slotId) return s;
+          const updatedPlaces = s.places.map(p =>
+            p.id === placeId
+              ? { ...p, specificTime: specificTime || undefined, specificTimeLabel: specificTimeLabel || undefined }
+              : p
+          );
+          // Auto-sort: places with specificTime sort chronologically, others stay at end
+          updatedPlaces.sort((a, b) => {
+            if (a.specificTime && b.specificTime) return a.specificTime.localeCompare(b.specificTime);
+            if (a.specificTime && !b.specificTime) return -1;
+            if (!a.specificTime && b.specificTime) return 1;
+            return 0;
+          });
+          return { ...s, places: updatedPlaces };
+        }),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
     });
   },
 

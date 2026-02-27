@@ -6,7 +6,6 @@ import { ImportedPlace, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType,
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
-import SlotNoteBubble from './SlotNoteBubble';
 import HotelInput from './HotelInput';
 import DayContextMenu from './DayContextMenu';
 import AddDestinationSearch from './AddDestinationSearch';
@@ -14,17 +13,16 @@ import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsB
 import { useDragGesture } from '@/hooks/useDragGesture';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
+import { formatTime12h, inferTimeLabel } from './PlaceTimeEditor';
+import type { Suggestion, Reaction } from '@/stores/collaborationStore';
 
 interface DayBoardViewProps {
   onTapDetail: (item: ImportedPlace) => void;
   suggestions?: Suggestion[];
   reactions?: Reaction[];
-  slotNotes?: SlotNoteItem[];
   myRole?: 'owner' | 'suggester' | 'viewer' | null;
   onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
   onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
-  onAddSlotNote?: (dayNumber: number, slotId: string, content: string) => void;
   /** Pointer-based: register each slot's bounding rect for hit-testing */
   onRegisterSlotRef: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
   /** Pointer-based: drag a placed card out of a slot */
@@ -53,6 +51,7 @@ function PlacedCard({
   CARD_H: number;
   CARD_PX: number;
 }) {
+  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const handleDragActivate = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
     onDragStartFromSlot(item, dayNumber, slotId, e);
   }, [onDragStartFromSlot, dayNumber, slotId]);
@@ -65,11 +64,18 @@ function PlacedCard({
   });
 
   const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-  const context = place.friendAttribution?.note
+  const baseContext = place.friendAttribution?.note
     ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
     : place.whatToOrder?.[0]
       ? `Order: ${place.whatToOrder[0]}`
       : place.tips?.[0] || place.terrazzoReasoning?.rationale || place.tasteNote || '';
+  // Prepend specific time if set (e.g. "Reservation at 8:15 PM · Order: Puntillas")
+  const timePrefix = place.specificTime
+    ? `${inferTimeLabel(place.type, place.specificTimeLabel)} at ${formatTime12h(place.specificTime)}`
+    : '';
+  const context = timePrefix
+    ? (baseContext ? `${timePrefix} · ${baseContext}` : timePrefix)
+    : baseContext;
   const placeKey = `${dayNumber}-${slotId}-${place.name}`;
   const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
   const loves = placeReactions.filter(r => r.reaction === 'love').length;
@@ -114,6 +120,23 @@ function PlacedCard({
             {place.matchScore}%
           </span>
         )}
+        {/* Remove button — returns place to pick pool */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            unplaceFromSlot(dayNumber, slotId, place.id);
+          }}
+          className="flex-shrink-0 w-5 h-5 rounded-full items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity"
+          style={{
+            background: INK['08'],
+            border: 'none',
+            cursor: 'pointer',
+            display: isDesktop ? 'flex' : 'flex',
+          }}
+          aria-label="Remove place"
+        >
+          <PerriandIcon name="close" size={8} color={INK['55']} />
+        </button>
       </div>
       {/* Row 2: context + reactions + source badge */}
       <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 2 }}>
@@ -194,11 +217,9 @@ function DayBoardView({
   onTapDetail,
   suggestions,
   reactions,
-  slotNotes,
   myRole,
   onRespondSuggestion,
   onAddReaction,
-  onAddSlotNote,
   onRegisterSlotRef,
   onDragStartFromSlot,
   dropTarget,
@@ -643,7 +664,7 @@ function DayBoardView({
                 const slotSuggestions = suggestions?.filter(
                   s => s.targetDay === day.dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
                 ) || [];
-                const slotNoteItems = slotNotes?.filter(n => n.dayNumber === day.dayNumber && n.slotId === slot.id) || [];
+                // Notes module removed — collaboration mode not yet implemented
 
                 const isDropActive = dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id;
 
@@ -770,17 +791,6 @@ function DayBoardView({
                             onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
                           />
                         ))}
-                      </div>
-                    )}
-
-                    {/* Slot notes */}
-                    {((slotNoteItems.length > 0) || (myRole === 'suggester' || myRole === 'owner')) && (
-                      <div className={`px-${CARD_PX} pb-1.5`}>
-                        <SlotNoteBubble
-                          notes={slotNoteItems}
-                          canAdd={myRole === 'suggester' || myRole === 'owner'}
-                          onAddNote={onAddSlotNote ? (content: string) => onAddSlotNote(day.dayNumber, slot.id, content) : undefined}
-                        />
                       </div>
                     )}
 

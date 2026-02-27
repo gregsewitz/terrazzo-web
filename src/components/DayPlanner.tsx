@@ -16,7 +16,7 @@ import { FONT, INK } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import EditableTripName from './EditableTripName';
 import DayContextMenu from './DayContextMenu';
-import type { Suggestion, Reaction, SlotNoteItem } from '@/stores/collaborationStore';
+import type { Suggestion, Reaction } from '@/stores/collaborationStore';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
 export type TripViewMode = 'planner' | 'overview' | 'mapView' | 'featuredPlaces' | 'dreamBoard';
@@ -41,18 +41,16 @@ interface DayPlannerProps {
   // Collaboration props
   suggestions?: Suggestion[];
   reactions?: Reaction[];
-  slotNotes?: SlotNoteItem[];
   myRole?: 'owner' | 'suggester' | 'viewer' | null;
   onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
   onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
-  onAddSlotNote?: (dayNumber: number, slotId: string, content: string) => void;
   onBack?: () => void;
   onShare?: () => void;
   onChat?: () => void;
   onDelete?: () => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, slotNotes, myRole, onRespondSuggestion, onAddReaction, onAddSlotNote, onBack, onShare, onChat, onDelete }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, myRole, onRespondSuggestion, onAddReaction, onBack, onShare, onChat, onDelete }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const reorderDays = useTripStore(s => s.reorderDays);
@@ -407,9 +405,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             // placeKey format: "dayNumber-slotId-placeName"
             return r.placeKey.startsWith(`${day.dayNumber}-${slot.id}-`);
           }) || [];
-          const slotNoteItems = slotNotes?.filter(
-            n => n.dayNumber === day.dayNumber && n.slotId === slot.id
-          ) || [];
+          // Notes module removed — collaboration mode not yet implemented
 
           // Transport banners that should appear AFTER this slot
           const transportsAfter = !addingTransport
@@ -437,11 +433,9 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 isLoadingSuggestions={suggestionsLoading}
                 suggestions={slotSuggestions}
                 reactions={slotReactions}
-                slotNoteItems={slotNoteItems}
                 myRole={myRole}
                 onRespondSuggestion={onRespondSuggestion}
                 onAddReaction={onAddReaction}
-                onAddSlotNote={onAddSlotNote ? (content: string) => onAddSlotNote(day.dayNumber, slot.id, content) : undefined}
               />
               {/* Transport banners positioned after this slot based on departure time */}
               {transportsAfter.map(t => (

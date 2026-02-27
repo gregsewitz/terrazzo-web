@@ -187,6 +187,9 @@ export interface ImportedPlace {
   travelWith?: string;      // e.g. "bestie", "daughter", "friends"
   timing?: string;          // e.g. "this fall", "May 2025", "when daughter graduates"
   intentStatus?: 'booked' | 'planning' | 'dreaming' | 'researching'; // how concrete this is
+  // Specific time — optional precision within a broad day slot (e.g. "20:15" for an 8:15 PM reservation)
+  specificTime?: string;         // 24h format "HH:mm" — displayed contextually based on place type
+  specificTimeLabel?: string;    // optional context: "Reservation", "Show starts", "Check-in" — auto-inferred if absent
   // Reference-based model — links trip places back to the canonical library entry
   libraryPlaceId?: string;  // SavedPlace.id this was sourced from (present when placed from library)
   // Import dedup — set by import pipeline when place already exists in library
