@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     if (resolved > 0 && !dryRun) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { tasteProfile: { ...profile, matchedProperties: matchedProps } },
+        data: { tasteProfile: JSON.parse(JSON.stringify({ ...profile, matchedProperties: matchedProps })) },
       });
       updated = true;
     }

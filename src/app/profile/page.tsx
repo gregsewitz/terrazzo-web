@@ -1197,7 +1197,7 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
-      <PlaceLink name={s.name} location={s.location} googlePlaceId={s.googlePlaceId}>
+      <PlaceLink name={s.name} location={s.location} googlePlaceId={(s as Record<string, unknown>).googlePlaceId as string | undefined}>
         <SafeMotionDiv
           className="p-4 rounded-xl mt-3"
           style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}

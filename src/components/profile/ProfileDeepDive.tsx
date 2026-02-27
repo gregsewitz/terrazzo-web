@@ -587,7 +587,7 @@ function MatchesSection({ profile }: { profile: ProfileShape }) {
       <StaggerContainer className="flex flex-col gap-3" staggerDelay={0.15}>
         {profile.matchedProperties.map((prop, i) => (
           <StaggerItem key={prop.name}>
-            <PlaceLink name={prop.name} location={prop.location} googlePlaceId={prop.googlePlaceId}>
+            <PlaceLink name={prop.name} location={prop.location} googlePlaceId={(prop as Record<string, unknown>).googlePlaceId as string | undefined}>
             <div className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
               <div className="p-4">
                 <div className="flex items-start gap-3">

@@ -46,7 +46,9 @@ export type PerriandIconName =
   | 'transport'
   // Collaboration / Activity
   | 'invite' | 'wave' | 'lightbulb' | 'acceptCircle' | 'rejectCircle'
-  | 'chatBubble' | 'loveReaction' | 'unsure' | 'swap';
+  | 'chatBubble' | 'loveReaction' | 'unsure' | 'swap'
+  // Directional
+  | 'arrow-left' | 'arrow-right';
 
 interface PerriandIconProps {
   name: PerriandIconName;
@@ -596,6 +598,24 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
       <path d="M24,20 L8,20" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
       <path d="M12,16 L8,20 L12,24" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <circle cx="16" cy="16" r="1" fill={a} />
+    </>
+  ),
+
+  // ── Directional ──────────────────────────────────────────────────────────
+
+  'arrow-left': (s, a) => (
+    <>
+      <path d="M22,16 L10,16" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M15,10 L10,16 L15,22" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="10" cy="16" r="1" fill={a} />
+    </>
+  ),
+
+  'arrow-right': (s, a) => (
+    <>
+      <path d="M10,16 L22,16" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M17,10 L22,16 L17,22" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="22" cy="16" r="1" fill={a} />
     </>
   ),
 };
