@@ -45,7 +45,7 @@ export default function AddDestinationSearch({ onAdded, onCancel }: AddDestinati
           lat: result.lat,
           lng: result.lng,
         },
-        savedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        savedAt: new Date().toISOString(),
       };
 
       addPlace(placeToSave);

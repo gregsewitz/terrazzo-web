@@ -80,7 +80,6 @@ model SavedPlace {
   timing              String?
   travelWith          String?  // e.g. "bestie", "daughter", "friends"
   intentStatus        String?  // booked | planning | dreaming | researching
-  savedDate           String?  // e.g. "Saved Jun 2024"
   importBatchId       String?  // links places from same import
   importSources       Json     @default("[]") // ImportSourceEntry[] — append-only provenance log
 

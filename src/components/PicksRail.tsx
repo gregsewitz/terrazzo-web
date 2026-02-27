@@ -124,7 +124,7 @@ function PicksRailInner({
         if (Math.abs(aScore - bScore) > 0.1) return bScore - aScore;
       }
       if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'recent') return (b.addedAt || '').localeCompare(a.addedAt || '');
+      if (sortBy === 'recent') return (b.savedAt || '').localeCompare(a.savedAt || '');
       return b.matchScore - a.matchScore;
     });
   }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy]);

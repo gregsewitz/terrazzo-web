@@ -172,6 +172,46 @@ async function _fetchMultiplePlaces(
   return data.places || [];
 }
 
+/**
+ * Get a single place by its Google Place ID — no text search needed.
+ * Uses the Places API (New) `places/{id}` endpoint for a direct lookup.
+ * Cached with 5-min TTL via cachedPlacesCall.
+ */
+export async function getPlaceById(
+  googlePlaceId: string
+): Promise<PlaceSearchResult | null> {
+  return cachedPlacesCall(
+    'single',
+    `id:${googlePlaceId}`,
+    () => _fetchPlaceById(googlePlaceId),
+  );
+}
+
+async function _fetchPlaceById(
+  googlePlaceId: string
+): Promise<PlaceSearchResult | null> {
+  // The Places API (New) field mask for single-place lookup uses slightly different paths
+  const detailFieldMask = 'id,displayName,formattedAddress,rating,userRatingCount,priceLevel,types,regularOpeningHours,location,photos,primaryType,primaryTypeDisplayName';
+
+  const url = `https://places.googleapis.com/v1/places/${googlePlaceId}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'X-Goog-Api-Key': PLACES_API_KEY,
+      'X-Goog-FieldMask': detailFieldMask,
+    },
+  });
+
+  if (!response.ok) {
+    console.error(`[places] getPlaceById error for ${googlePlaceId}:`, response.status, await response.text());
+    return null;
+  }
+
+  const place = await response.json();
+  // The detail endpoint returns the place directly (not wrapped in { places: [] })
+  return place?.id ? place : null;
+}
+
 // ─── Utilities (unchanged) ───────────────────────────────────────────────────
 
 export function getPhotoUrl(photoName: string, maxWidth: number = 400): string {

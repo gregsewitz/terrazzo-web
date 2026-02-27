@@ -17,7 +17,6 @@ export interface DBSavedPlace {
   timing?: string | null;
   travelWith?: string | null;
   intentStatus?: string | null;
-  savedDate?: string | null;
   importBatchId?: string | null;
   rating?: Record<string, unknown> | null;
   matchScore?: number | null;

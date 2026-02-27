@@ -11,7 +11,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-1'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Mar 2024',
+    savedAt: '2024-03-01T00:00:00.000Z',
     whatToOrder: ['Insalata verde', 'Carciofi', 'Cacio e pepe', 'Any seasonal special'],
     rating: {
       reaction: 'myPlace',
@@ -26,7 +26,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-2'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
+    savedAt: '2025-01-01T00:00:00.000Z',
     whatToOrder: ['Rabbit keema', 'Champaran meat', 'Goat leg biryani (pre-order)'],
     rating: {
       reaction: 'enjoyed',
@@ -41,7 +41,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-3'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Sep 2024',
+    savedAt: '2024-09-01T00:00:00.000Z',
     rating: {
       reaction: 'myPlace',
       tags: ['Standout cocktails', 'Perfect service', 'Great atmosphere'],
@@ -55,7 +55,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-4'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Oct 2024',
+    savedAt: '2024-10-01T00:00:00.000Z',
     rating: {
       reaction: 'mixed',
       tags: ['Beautiful space', 'Perfect service'],
@@ -69,7 +69,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-5'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Nov 2024',
+    savedAt: '2024-11-01T00:00:00.000Z',
     rating: {
       reaction: 'enjoyed',
       tags: ['Beautiful space', 'Great atmosphere'],
@@ -108,7 +108,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-10'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
+    savedAt: '2025-01-01T00:00:00.000Z',
     rating: { reaction: 'myPlace', ratedAt: '2025-02-07' },
   },
     {
@@ -121,7 +121,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-12'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Dec 2024',
+    savedAt: '2024-12-01T00:00:00.000Z',
     rating: {
       reaction: 'myPlace',
       tags: ['Perfect atmosphere', 'Standout cocktails'],
@@ -135,7 +135,7 @@ export const DEMO_MY_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['saved-13'],
     status: 'available',
     ghostSource: 'article',
-    savedDate: 'Saved Feb 2025',
+    savedAt: '2025-02-01T00:00:00.000Z',
     rating: {
       reaction: 'enjoyed',
       tags: ['Perfect service', 'Beautiful space'],
@@ -157,21 +157,21 @@ export const DEMO_FRIEND_RECS: ImportedPlace[] = [
     ...PLACE_DIRECTORY['friend-1'],
     status: 'available',
     ghostSource: 'friend',
-    savedDate: 'Saved Jan 2026',
+    savedAt: '2026-01-01T00:00:00.000Z',
     friendAttribution: { name: 'Lizzie N.', note: 'The terrace is incredible. Go for lunch on a weekday.' },
   },
     {
     ...PLACE_DIRECTORY['friend-2'],
     status: 'available',
     ghostSource: 'friend',
-    savedDate: 'Saved Nov 2025',
+    savedAt: '2025-11-01T00:00:00.000Z',
     friendAttribution: { name: 'James K.', note: 'Best hotel I\'ve ever stayed at. The garden is unreal.' },
   },
     {
     ...PLACE_DIRECTORY['friend-3'],
     status: 'available',
     ghostSource: 'friend',
-    savedDate: 'Saved Dec 2025',
+    savedAt: '2025-12-01T00:00:00.000Z',
     friendAttribution: { name: 'Lizzie N.', note: 'Best natural wine bar in NY. The charcuterie board is insane.' },
   },
 ];
@@ -198,7 +198,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['sc-3'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Mar 2025',
+    savedAt: '2025-03-01T00:00:00.000Z',
     whatToOrder: ['Oysters', 'Toast Skagen', 'SOS (smör, ost, sill)'],
   },
     {
@@ -301,7 +301,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     status: 'placed',
     placedIn: { day: 2, slot: 'morning' },
     ghostSource: 'maps',
-    savedDate: 'Saved Nov 2024',
+    savedAt: '2024-11-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['mx-5'],
@@ -419,7 +419,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     status: 'placed',
     placedIn: { day: 1, slot: 'breakfast' },
     ghostSource: 'maps',
-    savedDate: 'Saved Sep 2024',
+    savedAt: '2024-09-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['pa-5'],
@@ -459,7 +459,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['pa-11'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Jul 2024',
+    savedAt: '2024-07-01T00:00:00.000Z',
     whatToOrder: ['The chocolate mousse (mandatory)', 'Any Provençal special'],
   },
     {
@@ -524,7 +524,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['si-4'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Feb 2025',
+    savedAt: '2025-02-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['si-5'],
@@ -564,7 +564,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['si-11'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
+    savedAt: '2025-01-01T00:00:00.000Z',
     tips: ['Book a guide for the upper craters', 'Bring warm layers — it\'s cold at the top even in summer', 'Stop at a winery on the way down'],
   },
     {
@@ -576,7 +576,7 @@ const TRIP_POOL_PLACES: ImportedPlace[] = [
     ...PLACE_DIRECTORY['si-13'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Dec 2024',
+    savedAt: '2024-12-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['si-14'],

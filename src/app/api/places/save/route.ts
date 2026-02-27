@@ -30,7 +30,6 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     source: toNull(place.source),
     ghostSource: toNull(place.ghostSource),
     friendAttribution: toNull(place.friendAttribution),
-    savedDate: toNull(place.savedDate),
     importBatchId: toNull(place.importBatchId),
   };
 

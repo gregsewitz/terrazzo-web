@@ -80,6 +80,11 @@ export function useConversationPhase({
         ? priorAiMessages.filter((m) => m.text.includes('?')).slice(-10).map((m) => m.text)
         : undefined;
 
+      // Also include AI questions from the CURRENT phase to prevent repeats within the same phase
+      const currentPhaseAiQuestions = allMessages
+        .filter((m) => m.role === 'ai' && m.text.includes('?'))
+        .map((m) => m.text);
+
       const crossPhaseContext = {
         completedPhases: completedPhaseIds,
         lifeContext: Object.keys(lifeContext).length > 1 ? lifeContext : undefined, // skip if only default
@@ -93,6 +98,7 @@ export function useConversationPhase({
         goBackPlace: goBackPlace?.placeName || undefined,
         priorUserMessages: priorUserSummaries,
         priorAiQuestions,
+        currentPhaseAiQuestions: currentPhaseAiQuestions.length > 0 ? currentPhaseAiQuestions : undefined,
       };
 
       const res = await fetch('/api/onboarding/analyze', {

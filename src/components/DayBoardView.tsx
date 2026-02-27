@@ -701,7 +701,7 @@ function DayBoardView({
                       const gSrc = SOURCE_STYLES[(ghost.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
                       const gNote = ghost.friendAttribution?.note
                         ? `"${ghost.friendAttribution.note}"`
-                        : ghost.terrazzoReasoning?.rationale || ghost.savedDate || '';
+                        : ghost.terrazzoReasoning?.rationale || ghost.savedAt || '';
 
                       return (
                         <div

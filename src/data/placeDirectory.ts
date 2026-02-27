@@ -3,7 +3,7 @@ import { ImportedPlace } from '@/types';
 // Canonical place data — the single source of truth for all place definitions.
 // Context-specific fields (status, placedIn, ghostSource, rating, etc.) live in the consuming files.
 
-export type PlaceData = Omit<ImportedPlace, 'status' | 'placedIn' | 'ghostSource' | 'ghostStatus' | 'savedDate' | 'rating' | 'importBatchId'>;
+export type PlaceData = Omit<ImportedPlace, 'status' | 'placedIn' | 'ghostSource' | 'ghostStatus' | 'savedAt' | 'rating' | 'importBatchId'>;
 
 export const PLACE_DIRECTORY: Record<string, PlaceData> = {
   // ── Friend Recommendations ──

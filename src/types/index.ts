@@ -175,8 +175,7 @@ export interface ImportedPlace {
   ghostStatus?: GhostStatus;
   friendAttribution?: FriendAttribution;
   terrazzoReasoning?: TerrazzoReasoning;
-  savedDate?: string; // for Maps imports: "Saved Jun 2024"
-  addedAt?: string; // ISO timestamp of when place was added to library
+  savedAt?: string; // ISO timestamp of when place was saved to library
   rating?: PlaceRating; // user's personal rating
   // Enriched card fields (from import briefing)
   whatToOrder?: string[];  // e.g. ["Puntillas ★", "Gambas de la santa"]
@@ -537,6 +536,7 @@ export interface MatchedProperty {
   score: number;
   matchReasons: string[];
   tensionResolved: string;
+  googlePlaceId?: string;
 }
 
 export interface GeneratedTasteProfile {

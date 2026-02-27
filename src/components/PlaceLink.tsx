@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { usePlaceResolver } from '@/hooks/usePlaceResolver';
-import { FONT, INK } from '@/constants/theme';
 
 interface PlaceLinkProps {
   name: string;
   location: string;
+  /** Pre-resolved Google Place ID — skips the resolve step entirely */
+  googlePlaceId?: string;
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -14,70 +15,35 @@ interface PlaceLinkProps {
 
 /**
  * Wraps any place name / card and makes it clickable.
- * On click: resolves the place via Google Places → caches → navigates to detail page.
- * Shows a subtle loading indicator while resolving.
+ * If googlePlaceId is provided (pre-resolved at discover generation time),
+ * navigates directly — no API call, no wrong-place risk.
+ * Otherwise falls back to name-based navigation with background resolve.
  */
 export default function PlaceLink({
   name,
   location,
+  googlePlaceId,
   children,
   className = '',
   style,
 }: PlaceLinkProps) {
-  const { navigateToPlace, isResolving, resolvingName } = usePlaceResolver();
-  const isThisResolving = isResolving && resolvingName === name;
+  const { navigateToPlace } = usePlaceResolver();
 
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
-        navigateToPlace(name, location);
+        navigateToPlace(name, location, googlePlaceId);
       }}
-      disabled={isResolving}
       className={`place-link ${className}`}
       style={{
         all: 'unset',
-        cursor: isResolving ? 'wait' : 'pointer',
+        cursor: 'pointer',
         display: 'contents',
         ...style,
       }}
     >
       {children}
-
-      {/* Tiny resolving indicator overlaid on the clicked item */}
-      {isThisResolving && (
-        <span
-          style={{
-            position: 'fixed',
-            bottom: 80,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 9999,
-            background: 'var(--t-ink)',
-            color: 'var(--t-cream)',
-            padding: '6px 16px',
-            borderRadius: 20,
-            fontSize: 13,
-            fontFamily: FONT.sans,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          }}
-        >
-          <span
-            style={{
-              width: 12,
-              height: 12,
-              border: '2px solid var(--t-honey)',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }}
-          />
-          Loading {name}…
-        </span>
-      )}
     </button>
   );
 }

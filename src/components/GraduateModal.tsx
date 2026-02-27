@@ -25,22 +25,22 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
   const destinations = trip?.destinations || [];
   const isMultiCity = destinations.length > 1;
 
-  // Calculate total days
-  const totalDays = useMemo(() => {
+  // Calculate total nights (Mar 1–3 = 2 nights)
+  const totalNights = useMemo(() => {
     if (flexibleDates) return Math.max(1, parseInt(numDays) || 5);
     if (!startDate || !endDate) return 0;
     const s = new Date(startDate + 'T00:00:00');
     const e = new Date(endDate + 'T00:00:00');
-    return Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    return Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)));
   }, [flexibleDates, numDays, startDate, endDate]);
 
   // Initialize allocation for multi-city
   const [allocation, setAllocation] = useState<Record<string, number>>({});
 
   const initAllocation = () => {
-    if (totalDays <= 0 || destinations.length === 0) return;
-    const perDest = Math.floor(totalDays / destinations.length);
-    const remainder = totalDays - perDest * destinations.length;
+    if (totalNights <= 0 || destinations.length === 0) return;
+    const perDest = Math.floor(totalNights / destinations.length);
+    const remainder = totalNights - perDest * destinations.length;
     const alloc: Record<string, number> = {};
     destinations.forEach((dest, i) => {
       alloc[dest] = perDest + (i < remainder ? 1 : 0);
@@ -48,9 +48,9 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
     setAllocation(alloc);
   };
 
-  const canProceed = flexibleDates ? totalDays > 0 : (startDate && endDate && totalDays > 0);
+  const canProceed = flexibleDates ? totalNights > 0 : (startDate && endDate && totalNights > 0);
 
-  const flexOpts = flexibleDates ? { flexibleDates: true, numDays: totalDays } : undefined;
+  const flexOpts = flexibleDates ? { flexibleDates: true, numDays: totalNights } : undefined;
 
   const handleDatesNext = () => {
     if (!canProceed) return;
@@ -90,7 +90,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
               className="text-lg"
               style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)', margin: 0 }}
             >
-              {step === 'dates' ? 'Set Your Dates' : 'Allocate Days'}
+              {step === 'dates' ? 'Set Your Dates' : 'Allocate Nights'}
             </h2>
           </div>
           <button
@@ -159,7 +159,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                       }}
                     />
                     <span className="text-[12px]" style={{ color: INK['90'], fontFamily: FONT.sans }}>
-                      days
+                      nights
                     </span>
                   </div>
                 ) : (
@@ -168,7 +168,15 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                       <input
                         type="date"
                         value={startDate}
-                        onChange={e => setStartDate(e.target.value)}
+                        onChange={e => {
+                          const newStart = e.target.value;
+                          setStartDate(newStart);
+                          if (newStart && (!endDate || endDate <= newStart)) {
+                            const next = new Date(newStart + 'T00:00:00');
+                            next.setDate(next.getDate() + 1);
+                            setEndDate(next.toISOString().split('T')[0]);
+                          }
+                        }}
                         className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                         style={{
                           fontFamily: FONT.sans,
@@ -197,12 +205,12 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                   </div>
                 )}
 
-                {totalDays > 0 && (
+                {totalNights > 0 && (
                   <div
                     className="mt-3 text-[12px] font-medium"
                     style={{ color: 'var(--t-verde)', fontFamily: FONT.sans }}
                   >
-                    {totalDays} day{totalDays !== 1 ? 's' : ''}
+                    {totalNights} night{totalNights !== 1 ? 's' : ''}
                     {isMultiCity && ` across ${destinations.length} destinations`}
                   </div>
                 )}
@@ -211,12 +219,12 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
           ) : (
             <>
               <p className="text-[13px] leading-relaxed mb-4" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-                Distribute your {totalDays} days across destinations. You can always adjust later.
+                Distribute your {totalNights} nights across destinations. You can always adjust later.
               </p>
 
               <DestinationAllocator
                 destinations={destinations}
-                totalDays={totalDays}
+                totalNights={totalNights}
                 allocation={allocation}
                 onChange={setAllocation}
               />
@@ -254,7 +262,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
             }}
           >
             {step === 'dates'
-              ? (isMultiCity ? 'Next: Allocate Days' : 'Build My Itinerary')
+              ? (isMultiCity ? 'Next: Allocate Nights' : 'Build My Itinerary')
               : 'Build My Itinerary'
             }
           </button>

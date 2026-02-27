@@ -33,7 +33,7 @@ function GhostCardInner({
       case 'terrazzo':
         return item.terrazzoReasoning?.rationale;
       case 'maps':
-        return item.savedDate;
+        return item.savedAt;
       default:
         return undefined;
     }

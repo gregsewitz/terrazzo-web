@@ -25,7 +25,7 @@ const STOCKHOLM_COPENHAGEN_POOL: ImportedPlace[] = [
     ...PLACE_DIRECTORY['sc-3'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Mar 2025',
+    savedAt: '2025-03-01T00:00:00.000Z',
     whatToOrder: ['Oysters', 'Toast Skagen', 'SOS (smör, ost, sill)'],
   },
     {
@@ -44,7 +44,7 @@ const STOCKHOLM_COPENHAGEN_POOL: ImportedPlace[] = [
     status: 'placed',
     placedIn: { day: 1, slot: 'afternoon' },
     ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
+    savedAt: '2025-01-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['sc-7'],
@@ -279,7 +279,7 @@ const MEXICO_CITY_POOL: ImportedPlace[] = [
     status: 'placed',
     placedIn: { day: 2, slot: 'morning' },
     ghostSource: 'maps',
-    savedDate: 'Saved Nov 2024',
+    savedAt: '2024-11-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['mx-5'],
@@ -514,7 +514,7 @@ const PARIS_POOL: ImportedPlace[] = [
     status: 'placed',
     placedIn: { day: 1, slot: 'breakfast' },
     ghostSource: 'maps',
-    savedDate: 'Saved Sep 2024',
+    savedAt: '2024-09-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['pa-5'],
@@ -554,7 +554,7 @@ const PARIS_POOL: ImportedPlace[] = [
     ...PLACE_DIRECTORY['pa-11'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Jul 2024',
+    savedAt: '2024-07-01T00:00:00.000Z',
     whatToOrder: ['The chocolate mousse (mandatory)', 'Any Provençal special'],
   },
     {
@@ -731,7 +731,7 @@ const SICILY_POOL: ImportedPlace[] = [
     ...PLACE_DIRECTORY['si-4'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Feb 2025',
+    savedAt: '2025-02-01T00:00:00.000Z',
   },
     {
     ...PLACE_DIRECTORY['si-5'],
@@ -771,7 +771,7 @@ const SICILY_POOL: ImportedPlace[] = [
     ...PLACE_DIRECTORY['si-11'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Jan 2025',
+    savedAt: '2025-01-01T00:00:00.000Z',
     tips: ['Book a guide for the upper craters', 'Bring warm layers — it\'s cold at the top even in summer', 'Stop at a winery on the way down'],
   },
     {
@@ -783,7 +783,7 @@ const SICILY_POOL: ImportedPlace[] = [
     ...PLACE_DIRECTORY['si-13'],
     status: 'available',
     ghostSource: 'maps',
-    savedDate: 'Saved Dec 2024',
+    savedAt: '2024-12-01T00:00:00.000Z',
   },
 
   // ── Pool Additions (Friend & Editorial Recs) ──

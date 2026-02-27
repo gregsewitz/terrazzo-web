@@ -47,8 +47,10 @@ ${crossPhaseContext.priorUserMessages?.length ? `- WHAT THE USER SAID IN EARLIER
 ${crossPhaseContext.priorUserMessages.map((m: string) => `  "${m}"`).join('\n')}` : ''}
 ${crossPhaseContext.priorAiQuestions?.length ? `- QUESTIONS ALREADY ASKED IN EARLIER PHASES (DO NOT re-ask these or ask similar questions — the user has already answered them):
 ${crossPhaseContext.priorAiQuestions.map((m: string) => `  "${m}"`).join('\n')}` : ''}
+${crossPhaseContext.currentPhaseAiQuestions?.length ? `- QUESTIONS YOU ALREADY ASKED IN THIS PHASE (DO NOT repeat these — each follow-up must be genuinely new):
+${crossPhaseContext.currentPhaseAiQuestions.map((m: string) => `  "${m}"`).join('\n')}` : ''}
 Use this context to make the conversation feel CONNECTED and CONTINUOUS. If the user mentions a hotel or place they've already discussed in a previous phase, acknowledge that you remember it — e.g., "Forestis again — that place clearly left an impression" or "You mentioned that one earlier." NEVER react to a previously discussed place as if hearing about it for the first time.` : ''}
-Conversation so far (this phase): ${JSON.stringify(conversationHistory.slice(-6))}
+Conversation so far (this phase): ${JSON.stringify(conversationHistory.slice(-10))}
 
 User's latest response: "${userText}"
 

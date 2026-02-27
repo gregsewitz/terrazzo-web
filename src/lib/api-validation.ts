@@ -56,7 +56,6 @@ export const placeSchema = z.object({
   tips: z.array(z.string()).nullable().optional(),
   alsoKnownAs: z.string().optional(),
   importBatchId: z.string().optional(),
-  savedDate: z.string().optional(),
   travelWith: z.string().optional(),
   userContext: z.string().optional(),
   timing: z.string().optional(),

@@ -382,7 +382,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
           {sortedItems.map(item => {
             const sourceStyle = SOURCE_STYLES[item.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
             const note = item.ghostSource === 'friend' ? item.friendAttribution?.note
-              : item.ghostSource === 'maps' ? item.savedDate
+              : item.ghostSource === 'maps' ? item.savedAt
               : undefined;
             const isDragging = dragItemId === item.id;
             const isSuggestedType = slotContext?.suggestedTypes.includes(item.type);

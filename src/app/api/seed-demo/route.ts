@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         source: toJson(p.source),
         ghostSource: p.ghostSource || null,
         friendAttribution: toJson(p.friendAttribution),
-        savedDate: p.savedDate || null,
+        // savedDate column removed — createdAt auto-set by Prisma
         rating: toJson(p.rating),
         matchScore: p.matchScore || null,
         matchBreakdown: toJson(p.matchBreakdown),

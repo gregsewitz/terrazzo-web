@@ -15,14 +15,14 @@ const DEST_COLORS = [
 
 interface DestinationAllocatorProps {
   destinations: string[];
-  totalDays: number;
+  totalNights: number;
   allocation: Record<string, number>;
   onChange: (allocation: Record<string, number>) => void;
 }
 
 function DestinationAllocator({
   destinations,
-  totalDays,
+  totalNights,
   allocation,
   onChange,
 }: DestinationAllocatorProps) {
@@ -52,43 +52,29 @@ function DestinationAllocator({
       const barRect = bar.getBoundingClientRect();
       const x = ev.clientX - barRect.left;
       const pct = Math.max(0, Math.min(1, x / barRect.width));
-      const rawDay = Math.round(pct * totalDays);
+      const rawDay = Math.round(pct * totalNights);
 
-      // This divider sits between destination[dividerIndex] and destination[dividerIndex+1]
-      // It sets how many days the left side gets
+      // This divider sits between destination[idx] and destination[idx+1]
       const idx = dragDivider.current;
       const leftDest = destinations[idx];
       const rightDest = destinations[idx + 1];
       if (!leftDest || !rightDest) return;
 
-      // Calculate bounds: sum of all destinations before leftDest
+      // Sum of days before leftDest
       let leftMin = 0;
       for (let i = 0; i < idx; i++) leftMin += allocation[destinations[i]] || 1;
-      // Sum of all destinations after rightDest
-      let rightMin = 0;
-      for (let i = idx + 2; i < destinations.length; i++) rightMin += allocation[destinations[i]] || 1;
 
-      // Min 1 day per destination
-      const minLeft = leftMin + 1;
-      const maxLeft = totalDays - rightMin - 1; // leave at least 1 for rightDest
-      const clampedDay = Math.max(minLeft, Math.min(maxLeft, rawDay));
-
-      // Update allocation
-      const leftDays = clampedDay - leftMin;
-      const rightDays = (idx + 2 < destinations.length
-        ? (cumulativeDays[idx + 1] || totalDays) - clampedDay
-        : totalDays - rightMin - clampedDay + (totalDays - cumulativeDays[cumulativeDays.length - 1]));
+      // The divider position determines how many days the left dest gets
+      const leftDays = Math.max(1, rawDay - leftMin);
+      // For right dest, just set what's implied by the divider position
+      // Sum of days after rightDest
+      let afterRight = 0;
+      for (let i = idx + 2; i < destinations.length; i++) afterRight += allocation[destinations[i]] || 1;
+      const rightDays = Math.max(1, totalNights - leftMin - leftDays - afterRight);
 
       const newAlloc = { ...allocation };
       newAlloc[leftDest] = leftDays;
-      // For rightDest, recalculate to fill remaining
-      let usedByOthers = 0;
-      for (let i = 0; i < destinations.length; i++) {
-        if (i !== idx && i !== idx + 1) usedByOthers += newAlloc[destinations[i]] || 1;
-      }
-      newAlloc[rightDest] = totalDays - usedByOthers - leftDays;
-      if (newAlloc[rightDest] < 1) newAlloc[rightDest] = 1;
-
+      newAlloc[rightDest] = rightDays;
       onChange(newAlloc);
     };
 
@@ -100,30 +86,22 @@ function DestinationAllocator({
 
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-  }, [allocation, cumulativeDays, destinations, onChange, totalDays]);
+  }, [allocation, cumulativeDays, destinations, onChange, totalNights]);
 
-  // ─── Button adjustments ───
+  // ─── Button adjustments (no auto-redistribution) ───
   const adjustDays = (dest: string, delta: number) => {
     const current = allocation[dest] || 1;
     const newVal = current + delta;
     if (newVal < 1) return;
 
-    // Find a neighbor to take from / give to
-    const idx = destinations.indexOf(dest);
-    const neighborIdx = delta > 0
-      ? (idx < destinations.length - 1 ? idx + 1 : idx - 1)
-      : (idx > 0 ? idx - 1 : idx + 1);
-    if (neighborIdx < 0 || neighborIdx >= destinations.length) return;
-
-    const neighbor = destinations[neighborIdx];
-    const neighborDays = allocation[neighbor] || 1;
-    if (delta > 0 && neighborDays <= 1) return; // can't take from neighbor
-
     const newAlloc = { ...allocation };
     newAlloc[dest] = newVal;
-    newAlloc[neighbor] = neighborDays - delta;
     onChange(newAlloc);
   };
+
+  // Compute current total for validation display
+  const currentTotal = destinations.reduce((sum, dest) => sum + (allocation[dest] || 1), 0);
+  const isBalanced = currentTotal === totalNights;
 
   return (
     <div className="mb-8">
@@ -131,11 +109,11 @@ function DestinationAllocator({
         className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-3"
         style={{ fontFamily: FONT.mono, color: INK['90'] }}
       >
-        DAYS PER DESTINATION
+        NIGHTS PER DESTINATION
       </label>
 
       <p className="text-[12px] mb-4 leading-relaxed" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-        Drag the dividers or use ± to adjust how many days you spend in each place.
+        Drag the dividers or use ± to adjust how many nights you spend in each place.
       </p>
 
       {/* Visual timeline bar */}
@@ -146,7 +124,7 @@ function DestinationAllocator({
       >
         {destinations.map((dest, i) => {
           const days = allocation[dest] || 1;
-          const pct = (days / totalDays) * 100;
+          const pct = (days / (currentTotal || 1)) * 100;
           const color = DEST_COLORS[i % DEST_COLORS.length];
           return (
             <div
@@ -169,7 +147,7 @@ function DestinationAllocator({
                 className="absolute bottom-1 text-[9px] font-bold"
                 style={{ color: color.text, fontFamily: FONT.mono, opacity: 0.7 }}
               >
-                {days}d
+                {days}n
               </span>
 
               {/* Divider handle — between this and next */}
@@ -246,14 +224,13 @@ function DestinationAllocator({
                 </span>
                 <button
                   onClick={() => adjustDays(dest, 1)}
-                  disabled={totalDays - days < destinations.length - 1}
                   className="w-6 h-6 rounded-full flex items-center justify-center border-none cursor-pointer disabled:opacity-20"
                   style={{ background: 'white', color: 'var(--t-ink)' }}
                 >
                   <span className="text-[13px] font-bold leading-none">+</span>
                 </button>
                 <span className="text-[10px] ml-0.5" style={{ color: INK['50'], fontFamily: FONT.sans }}>
-                  {days === 1 ? 'day' : 'days'}
+                  {days === 1 ? 'night' : 'nights'}
                 </span>
               </div>
             </div>
@@ -268,10 +245,20 @@ function DestinationAllocator({
         <span className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
           Total
         </span>
-        <span className="text-[12px] font-bold" style={{ color: 'var(--t-ink)', fontFamily: FONT.mono }}>
-          {totalDays} days
+        <span className="text-[12px] font-bold" style={{ color: isBalanced ? 'var(--t-ink)' : '#c04040', fontFamily: FONT.mono }}>
+          {currentTotal} / {totalNights} nights
         </span>
       </div>
+      {!isBalanced && (
+        <div
+          className="mt-2 px-3 py-2 rounded-lg text-[11px] leading-relaxed"
+          style={{ background: 'rgba(192,64,64,0.08)', color: '#8a3a3a', fontFamily: FONT.sans }}
+        >
+          {currentTotal < totalNights
+            ? `${totalNights - currentTotal} night${totalNights - currentTotal !== 1 ? 's' : ''} still to assign`
+            : `${currentTotal - totalNights} night${currentTotal - totalNights !== 1 ? 's' : ''} over — reduce to continue`}
+        </div>
+      )}
     </div>
   );
 }

@@ -160,8 +160,8 @@ function SavedPageContent() {
     const sorted = [...places];
     switch (sortBy) {
       case 'recent': sorted.sort((a, b) => {
-        const dateA = a.addedAt || '';
-        const dateB = b.addedAt || '';
+        const dateA = a.savedAt || '';
+        const dateB = b.savedAt || '';
         return dateB.localeCompare(dateA); // newest first
       }); break;
       case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;

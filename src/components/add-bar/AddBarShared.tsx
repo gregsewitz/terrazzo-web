@@ -41,9 +41,9 @@ export function searchLibraryByDestination(places: ImportedPlace[], destination:
 export function getRecentSaves(places: ImportedPlace[]): ImportedPlace[] {
   return [...places]
     .sort((a, b) => {
-      const da = a.savedDate ? new Date(a.savedDate).getTime() : 0;
-      const db = b.savedDate ? new Date(b.savedDate).getTime() : 0;
-      return db - da;
+      const da = a.savedAt || '';
+      const db = b.savedAt || '';
+      return db.localeCompare(da); // newest first by ISO timestamp
     })
     .slice(0, 5);
 }

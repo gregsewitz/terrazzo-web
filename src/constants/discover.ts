@@ -10,6 +10,7 @@ export interface BecauseYouCard {
   score: number;
   why: string;
   bg: string;
+  googlePlaceId?: string;
 }
 
 export interface CollectionPlace {
@@ -19,6 +20,7 @@ export interface CollectionPlace {
   signals: string[];
   signalDomain: string;
   note: string;
+  googlePlaceId?: string;
 }
 
 export interface FriendSave {
@@ -30,6 +32,7 @@ export interface FriendSave {
   type: string;
   whyMatches: string;
   color: string;
+  googlePlaceId?: string;
 }
 
 export interface ContextRec {
@@ -37,6 +40,7 @@ export interface ContextRec {
   location: string;
   score: number;
   whyFits: string;
+  googlePlaceId?: string;
 }
 
 /** Editorial letter — a short, evocative note from Terrazzo's intelligence */
@@ -57,6 +61,7 @@ export interface SignalThread {
     type: string;        // hotel | restaurant | bar | cafe | neighborhood
     connection: string;  // how this place embodies the signal
     score: number;
+    googlePlaceId?: string;
   }[];
 }
 
@@ -70,6 +75,7 @@ export interface TasteTension {
     name: string;
     location: string;
     how: string;
+    googlePlaceId?: string;
   };
 }
 
@@ -83,6 +89,7 @@ export interface MoodBoard {
     location: string;
     vibe: string;         // 3-5 word atmospheric description
     score: number;
+    googlePlaceId?: string;
   }[];
 }
 
@@ -99,6 +106,7 @@ export interface DeepMatch {
     note: string;         // why this signal matches
   }[];
   tensionResolved: string;
+  googlePlaceId?: string;
 }
 
 // ── Section: "Because You..." insight cards ──

@@ -82,18 +82,21 @@ interface SeedData {
   dayAllocation?: Record<string, number>;
 }
 
-function TripSeedForm({ onStart }: {
+function TripSeedForm({ onStart, initialSeed }: {
   onStart: (seed: SeedData) => void;
+  initialSeed?: SeedData | null;
 }) {
-  const [geoDestinations, setGeoDestinations] = useState<Destination[]>([]);
-  const [tripName, setTripName] = useState('');
-  const [flexibleDates, setFlexibleDates] = useState(false);
-  const [numDays, setNumDays] = useState('5');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [companion, setCompanion] = useState<TravelContext | null>(null);
-  const [groupSize, setGroupSize] = useState('');
-  const [status, setStatus] = useState<TripStatus>('planning');
+  const [geoDestinations, setGeoDestinations] = useState<Destination[]>(
+    initialSeed?.geoDestinations || []
+  );
+  const [tripName, setTripName] = useState(initialSeed?.name || '');
+  const [flexibleDates, setFlexibleDates] = useState(initialSeed?.flexibleDates || false);
+  const [numDays, setNumDays] = useState(String(initialSeed?.numDays || 5));
+  const [startDate, setStartDate] = useState(initialSeed?.startDate || '');
+  const [endDate, setEndDate] = useState(initialSeed?.endDate || '');
+  const [companion, setCompanion] = useState<TravelContext | null>(initialSeed?.companion || null);
+  const [groupSize, setGroupSize] = useState(initialSeed?.groupSize ? String(initialSeed.groupSize) : '');
+  const [status, setStatus] = useState<TripStatus>(initialSeed?.status || 'planning');
 
   const canStart = geoDestinations.length > 0;
 
@@ -203,7 +206,7 @@ function TripSeedForm({ onStart }: {
           </div>
 
           {flexibleDates ? (
-            /* Flexible: just ask how many days */
+            /* Flexible: just ask how many nights */
             <div className="flex items-center gap-3">
               <input
                 type="number"
@@ -219,7 +222,7 @@ function TripSeedForm({ onStart }: {
                 }}
               />
               <span className="text-[12px]" style={{ color: INK['90'], fontFamily: FONT.sans }}>
-                days
+                nights
               </span>
             </div>
           ) : (
@@ -229,7 +232,16 @@ function TripSeedForm({ onStart }: {
                 <input
                   type="date"
                   value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
+                  onChange={e => {
+                    const newStart = e.target.value;
+                    setStartDate(newStart);
+                    // Auto-set end date to day after start if end is empty or before new start
+                    if (newStart && (!endDate || endDate <= newStart)) {
+                      const next = new Date(newStart + 'T00:00:00');
+                      next.setDate(next.getDate() + 1);
+                      setEndDate(next.toISOString().split('T')[0]);
+                    }
+                  }}
                   className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                   style={{
                     fontFamily: FONT.sans,
@@ -401,19 +413,23 @@ function DestinationAllocationStep({
   onComplete: (allocation: Record<string, number>) => void;
   onBack: () => void;
 }) {
-  // Calculate total days from dates or numDays
-  const totalDays = seed.flexibleDates
+  // Calculate total nights from dates or numDays
+  // March 1–3 = 2 nights (check-in Mar 1, check-in Mar 2, depart Mar 3)
+  const totalNights = seed.flexibleDates
     ? (seed.numDays || 5)
     : (() => {
         const start = new Date(seed.startDate + 'T00:00:00');
         const end = new Date(seed.endDate + 'T00:00:00');
-        return Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        return Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
       })();
 
-  // Initialize allocation: even split with remainder going to first destination
+  // Initialize allocation: use existing if available, otherwise even split
   const [allocation, setAllocation] = useState<Record<string, number>>(() => {
-    const perDest = Math.floor(totalDays / seed.destinations.length);
-    const remainder = totalDays - perDest * seed.destinations.length;
+    if (seed.dayAllocation && Object.keys(seed.dayAllocation).length > 0) {
+      return seed.dayAllocation;
+    }
+    const perDest = Math.floor(totalNights / seed.destinations.length);
+    const remainder = totalNights - perDest * seed.destinations.length;
     const alloc: Record<string, number> = {};
     seed.destinations.forEach((dest, i) => {
       alloc[dest] = perDest + (i < remainder ? 1 : 0);
@@ -433,33 +449,40 @@ function DestinationAllocationStep({
             className="text-2xl mb-2"
             style={{ fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif", color: 'var(--t-ink)' }}
           >
-            How long in each place?
+            How many nights in each place?
           </h1>
           <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: INK['60'] }}>
-            You have {totalDays} days across {seed.destinations.length} destinations.
-            Adjust the split however you like — you can always change it later.
+            You have {totalNights} night{totalNights !== 1 ? 's' : ''} across {seed.destinations.length} destinations.
+            Your last destination includes your departure day.
           </p>
         </div>
 
         <DestinationAllocator
           destinations={seed.destinations}
-          totalDays={totalDays}
+          totalNights={totalNights}
           allocation={allocation}
           onChange={setAllocation}
         />
 
         {/* CTA */}
-        <button
-          onClick={() => onComplete(allocation)}
-          className="w-full py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold transition-all"
-          style={{
-            background: 'var(--t-ink)',
-            color: 'white',
-            fontFamily: FONT.sans,
-          }}
-        >
-          Looks Good
-        </button>
+        {(() => {
+          const currentTotal = seed.destinations.reduce((sum, dest) => sum + (allocation[dest] || 1), 0);
+          const isBalanced = currentTotal === totalNights;
+          return (
+            <button
+              onClick={() => isBalanced && onComplete(allocation)}
+              disabled={!isBalanced}
+              className="w-full py-4 rounded-full border-none cursor-pointer text-[15px] font-semibold transition-all disabled:opacity-30"
+              style={{
+                background: 'var(--t-ink)',
+                color: 'white',
+                fontFamily: FONT.sans,
+              }}
+            >
+              Looks Good
+            </button>
+          );
+        })()}
 
         <button
           onClick={onBack}
@@ -919,7 +942,7 @@ export default function NewTripPage() {
             <AnimatePresence mode="wait">
               {step === 'seed' && (
                 <motion.div key="seed" variants={stepVariants} initial="enter" animate="center" exit="exit">
-                  <TripSeedForm onStart={handleSeedComplete} />
+                  <TripSeedForm onStart={handleSeedComplete} initialSeed={seed} />
                 </motion.div>
               )}
               {step === 'allocate' && seed && (

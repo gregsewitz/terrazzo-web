@@ -10,40 +10,39 @@ import { PROFILE_SYNTHESIS_PROMPT } from '@/constants/onboarding';
 const anthropic = new Anthropic();
 
 /**
- * Fire-and-forget: resolve each matched property via Google Places API
- * and trigger the enrichment pipeline so data is ready when users click.
+ * Pre-resolve matched properties via Google Places API and attach googlePlaceIds.
+ * Also triggers enrichment pipeline as a side effect so data is ready when users click.
+ * Runs before response so the client gets usable googlePlaceIds immediately.
  */
-async function enrichMatchedProperties(
+async function resolveMatchedProperties(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  properties: Array<{ name: string; location: string; [key: string]: any }>,
-  userId: string,
+  properties: Array<{ name: string; location: string; googlePlaceId?: string; [key: string]: any }>,
+  userId: string | null,
 ) {
-  const results: Array<{ name: string; googlePlaceId?: string; intelligenceId?: string | null; error?: string }> = [];
-
-  for (const prop of properties) {
-    try {
+  const results = await Promise.allSettled(
+    properties.map(async (prop) => {
       const query = prop.location ? `${prop.name} ${prop.location}` : prop.name;
       const googleResult = await searchPlace(query);
-      if (!googleResult) {
-        results.push({ name: prop.name, error: 'Not found on Google Places' });
-        continue;
-      }
-      const googlePlaceId = googleResult.id;
-      const resolvedName = googleResult.displayName?.text || prop.name;
-      const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis');
-      results.push({ name: prop.name, googlePlaceId, intelligenceId });
-    } catch (err) {
-      results.push({ name: prop.name, error: err instanceof Error ? err.message : 'Unknown error' });
-    }
-  }
+      if (!googleResult) return null;
 
-  const enriched = results.filter(r => r.intelligenceId);
-  const failed = results.filter(r => r.error);
-  if (failed.length > 0) {
-    console.warn(`[synthesis-enrichment] ${enriched.length}/${results.length} matched properties enriched, ${failed.length} failed:`,
-      failed.map(f => `${f.name}: ${f.error}`));
+      const googlePlaceId = googleResult.id;
+      prop.googlePlaceId = googlePlaceId;
+
+      // Fire-and-forget enrichment (non-blocking)
+      if (userId) {
+        const resolvedName = googleResult.displayName?.text || prop.name;
+        ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis').catch(() => {});
+      }
+      return googlePlaceId;
+    })
+  );
+
+  const resolved = results.filter(r => r.status === 'fulfilled' && r.value).length;
+  const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value)).length;
+  if (failed > 0) {
+    console.warn(`[synthesis-resolve] ${resolved}/${properties.length} matched properties resolved, ${failed} failed`);
   } else {
-    console.log(`[synthesis-enrichment] All ${enriched.length} matched properties resolved and enrichment triggered`);
+    console.log(`[synthesis-resolve] All ${resolved} matched properties resolved`);
   }
 }
 
@@ -99,14 +98,14 @@ Return valid JSON only matching the specified schema.`;
 
     const profile = JSON.parse(jsonMatch[0]);
 
-    // Fire-and-forget: resolve matched properties + trigger enrichment pipeline
-    // Only runs when authenticated (re-synthesis from profile page, not initial onboarding)
-    if (user) {
-      const matchedProps = profile.matchedProperties || [];
-      if (matchedProps.length > 0) {
-        enrichMatchedProperties(matchedProps, user.id).catch(err =>
-          console.error('[synthesis-enrichment] Background enrichment failed:', err)
-        );
+    // Pre-resolve matched properties: attach googlePlaceIds before responding
+    // so the client can link directly to place detail pages.
+    const matchedProps = profile.matchedProperties || [];
+    if (matchedProps.length > 0) {
+      try {
+        await resolveMatchedProperties(matchedProps, user?.id || null);
+      } catch (err) {
+        console.error('[synthesis-resolve] Pre-resolution failed (non-blocking):', err);
       }
     }
 

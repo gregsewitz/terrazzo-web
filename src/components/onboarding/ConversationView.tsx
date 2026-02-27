@@ -14,12 +14,14 @@ interface ConversationViewProps {
 export default function ConversationView({ phase, onComplete }: ConversationViewProps) {
   const [inputText, setInputText] = useState('');
   const [voiceMode, setVoiceMode] = useState(true); // voice-first by default
-  const [autoAdvancing, setAutoAdvancing] = useState(false); // true once we start the auto-advance countdown
+  const [autoAdvancing, setAutoAdvancing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const spokenCountRef = useRef(0);
-  const sendingRef = useRef(false); // guard against double-send from silence detection
+  const sendingRef = useRef(false);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const holdingRef = useRef(false); // tracks whether user is actively holding the mic button
+  const mountedRef = useRef(true); // tracks if component is still mounted
 
   const {
     messages,
@@ -32,39 +34,39 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     followUps: phase.followUps,
   });
 
+  // Track mounted state for safe async operations
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   // Auto-advance after phase completion — triggered when TTS finishes speaking the transition message
   const triggerAutoAdvance = useCallback(() => {
-    if (autoAdvanceTimerRef.current) return; // already scheduled
+    if (autoAdvanceTimerRef.current) return;
     setAutoAdvancing(true);
     autoAdvanceTimerRef.current = setTimeout(() => {
-      onComplete();
-    }, 1800); // 1.8s pause after TTS ends (or after read-time) before auto-advancing
+      if (mountedRef.current) onComplete();
+    }, 1800);
   }, [onComplete]);
 
-  // Clean up auto-advance timer on unmount
+  // Clean up on unmount — stop TTS, cancel timers
   useEffect(() => {
     return () => {
       if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
     };
   }, []);
 
-  // Auto-start mic after TTS finishes speaking, OR auto-advance if phase is done
+  // After TTS finishes speaking: auto-advance if phase is done, otherwise just idle (hold-to-speak)
   const handleTTSDone = useCallback(() => {
     if (isPhaseComplete) {
-      // Phase is done and TTS just finished speaking the transition — auto-advance
       triggerAutoAdvance();
       return;
     }
-    if (voiceMode && !isAnalyzing) {
-      // Small delay so the audio system settles before mic activates
-      setTimeout(() => {
-        startListeningRef.current?.();
-      }, 300);
-    }
-  }, [voiceMode, isPhaseComplete, isAnalyzing, triggerAutoAdvance]);
+    // In hold-to-speak mode, we do NOT auto-start the mic. User initiates.
+  }, [isPhaseComplete, triggerAutoAdvance]);
 
-  // Handle silence detection — auto-send the transcript
-  const handleSilenceDetected = useCallback(async (text: string) => {
+  // Handle sending speech transcript (called when user releases hold-to-speak, or silence detection fires)
+  const handleSendTranscript = useCallback(async (text: string) => {
     if (sendingRef.current || isAnalyzing || isPhaseComplete) return;
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -75,7 +77,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     stopListeningRef.current?.();
     stopTTSRef.current?.();
     await sendMessage(trimmed);
-    sendingRef.current = false;
+    if (mountedRef.current) sendingRef.current = false;
   }, [isAnalyzing, isPhaseComplete, sendMessage]);
 
   const {
@@ -87,8 +89,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     resetTranscript,
     hasFailed: speechFailed,
   } = useSpeechRecognition({
-    silenceTimeout: voiceMode ? 1500 : 0, // 1.5s silence auto-sends in voice mode
-    onSilenceDetected: handleSilenceDetected,
+    // In hold-to-speak mode, we use a longer silence timeout as a safety net
+    // (user should release button, but if they hold and go silent, auto-send after 2s)
+    silenceTimeout: voiceMode ? 2000 : 0,
+    onSilenceDetected: handleSendTranscript,
   });
 
   // Store refs for callbacks (avoid stale closures)
@@ -107,21 +111,27 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   const stopTTSRef = useRef(stopTTS);
   stopTTSRef.current = stopTTS;
 
+  // Stop TTS on unmount (prevents audio bleeding into next phase)
+  useEffect(() => {
+    return () => {
+      stopTTSRef.current?.();
+    };
+  }, []);
+
   // Speak new AI messages automatically
   useEffect(() => {
     if (!ttsEnabled) {
-      // If TTS is off, handle auto-start mic or auto-advance with read-time delay
       const newMessages = messages.slice(spokenCountRef.current);
       const latestAI = [...newMessages].reverse().find((m) => m.role === 'ai');
       spokenCountRef.current = messages.length;
       if (latestAI) {
         if (isPhaseComplete) {
-          // No TTS — use a read-time delay before auto-advancing (roughly 40ms per word)
           const readTime = Math.max(2000, latestAI.text.split(/\s+/).length * 40);
-          setTimeout(() => triggerAutoAdvance(), readTime);
-        } else if (voiceMode && !isAnalyzing) {
-          setTimeout(() => startListeningRef.current?.(), 300);
+          setTimeout(() => {
+            if (mountedRef.current) triggerAutoAdvance();
+          }, readTime);
         }
+        // No auto-start mic — hold-to-speak mode
       }
       return;
     }
@@ -133,7 +143,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     }
   }, [messages, ttsEnabled, speak, voiceMode, isPhaseComplete, isAnalyzing, triggerAutoAdvance]);
 
-  // Stop TTS when user starts talking
+  // Stop TTS when user starts talking (holds mic button)
   useEffect(() => {
     if (isListening && isSpeaking) {
       stopTTS();
@@ -152,7 +162,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (transcript) setInputText(transcript);
   }, [transcript]);
 
-  // Auto-switch to text mode if speech recognition fails (e.g. mobile Safari, permissions denied)
+  // Auto-switch to text mode if speech recognition fails
   useEffect(() => {
     if (speechFailed && voiceMode) {
       setVoiceMode(false);
@@ -177,7 +187,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (isListening) stopListening();
     stopTTS();
     await sendMessage(text);
-    sendingRef.current = false;
+    if (mountedRef.current) sendingRef.current = false;
   }, [inputText, resetTranscript, isListening, stopListening, stopTTS, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -187,16 +197,36 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     }
   };
 
-  const toggleVoice = () => {
-    if (isListening) {
-      stopListening();
-      if (inputText.trim()) handleSend();
-    } else {
-      setInputText('');
-      resetTranscript();
-      startListening();
-    }
-  };
+  // --- Hold-to-speak handlers ---
+  // On press down: start listening, interrupt TTS
+  const handleMicDown = useCallback(() => {
+    if (isAnalyzing || isPhaseComplete) return;
+    holdingRef.current = true;
+    setInputText('');
+    resetTranscript();
+    if (isSpeaking) stopTTS();
+    startListening();
+  }, [isAnalyzing, isPhaseComplete, isSpeaking, stopTTS, startListening, resetTranscript]);
+
+  // On release: stop listening and send whatever was captured
+  const handleMicUp = useCallback(() => {
+    if (!holdingRef.current) return;
+    holdingRef.current = false;
+    stopListening();
+    // Small delay to let final recognition results come in before sending
+    setTimeout(() => {
+      const text = (latestTranscriptForSendRef.current || inputText).trim();
+      if (text && !sendingRef.current) {
+        handleSendTranscript(text);
+      }
+    }, 150);
+  }, [stopListening, inputText, handleSendTranscript]);
+
+  // We need a ref to get the latest transcript at send time
+  const latestTranscriptForSendRef = useRef('');
+  useEffect(() => {
+    latestTranscriptForSendRef.current = transcript;
+  }, [transcript]);
 
   // Determine current state for the voice-mode UI
   const voiceState: 'speaking' | 'listening' | 'thinking' | 'idle' =
@@ -236,25 +266,16 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           </div>
         ))}
 
-        {/* Live transcript preview while listening — tap to edit */}
+        {/* Live transcript preview while holding to speak */}
         {isListening && transcript && (
           <div className="ml-auto max-w-[85%]">
             <div
-              className="rounded-2xl rounded-br-sm px-4 py-3 opacity-50 cursor-pointer"
+              className="rounded-2xl rounded-br-sm px-4 py-3 opacity-50"
               style={{ backgroundColor: 'var(--t-travertine)' }}
-              onClick={() => {
-                // Stop listening and switch to text mode so user can fix garbled transcript
-                stopListening();
-                setInputText(transcript);
-                setVoiceMode(false);
-                setTimeout(() => inputRef.current?.focus(), 100);
-              }}
-              title="Tap to edit"
             >
               <p className="text-[15px] leading-relaxed text-[var(--t-ink)] italic">
                 {transcript}
               </p>
-              <p className="text-[10px] text-[var(--t-ink)]/25 mt-1">tap to edit</p>
             </div>
           </div>
         )}
@@ -274,6 +295,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           <button
             onClick={() => {
               if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+              stopTTS(); // Stop TTS immediately when user taps Continue
               onComplete();
             }}
             className="w-full py-3 rounded-xl text-[14px] font-medium text-white transition-all
@@ -290,9 +312,8 @@ export default function ConversationView({ phase, onComplete }: ConversationView
             ) : 'Continue'}
           </button>
         ) : voiceMode && speechSupported && !speechFailed ? (
-          /* Voice-first mode — clean, centered UI */
+          /* Voice-first mode — hold-to-speak UI */
           <div className="flex flex-col items-center gap-3">
-            {/* Voice state indicator */}
             <div className="flex items-center justify-center gap-3 w-full">
               {/* TTS toggle (small) */}
               <button
@@ -315,19 +336,25 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                 </svg>
               </button>
 
-              {/* Main mic button — large and centered */}
+              {/* Main mic button — HOLD to speak (touch + mouse support) */}
               <button
-                onClick={toggleVoice}
-                disabled={isAnalyzing || isSpeaking}
+                onTouchStart={(e) => { e.preventDefault(); handleMicDown(); }}
+                onTouchEnd={(e) => { e.preventDefault(); handleMicUp(); }}
+                onTouchCancel={() => handleMicUp()}
+                onMouseDown={handleMicDown}
+                onMouseUp={handleMicUp}
+                onMouseLeave={() => { if (holdingRef.current) handleMicUp(); }}
+                onContextMenu={(e) => e.preventDefault()} // prevent long-press context menu on mobile
+                disabled={isAnalyzing}
                 className={`
-                  w-14 h-14 rounded-full flex items-center justify-center transition-all
+                  w-14 h-14 rounded-full flex items-center justify-center transition-all select-none touch-none
                   ${voiceState === 'listening'
                     ? 'bg-[var(--t-signal-red)] text-white scale-110'
                     : voiceState === 'speaking'
                       ? 'bg-[var(--t-honey)] text-white'
                       : voiceState === 'thinking'
                         ? 'bg-[var(--t-travertine)] text-[var(--t-ink)]/40'
-                        : 'bg-[var(--t-ink)] text-[var(--t-cream)] hover:scale-105'
+                        : 'bg-[var(--t-ink)] text-[var(--t-cream)] hover:scale-105 active:scale-110'
                   }
                 `}
               >
@@ -378,10 +405,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
 
             {/* Status text */}
             <p className="text-[12px] font-mono text-[var(--t-ink)]/30">
-              {voiceState === 'listening' && 'Listening... just talk naturally'}
+              {voiceState === 'listening' && 'Listening...'}
               {voiceState === 'speaking' && 'Speaking...'}
               {voiceState === 'thinking' && 'Thinking...'}
-              {voiceState === 'idle' && (isAnalyzing ? 'Processing...' : 'Tap to talk')}
+              {voiceState === 'idle' && (isAnalyzing ? 'Processing...' : 'Hold to speak')}
             </p>
           </div>
         ) : (

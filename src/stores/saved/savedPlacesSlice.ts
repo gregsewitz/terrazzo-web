@@ -44,7 +44,7 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
   setCityFilter: (city) => set({ cityFilter: city }),
 
   addPlace: (place) => {
-    const stamped = { ...place, addedAt: place.addedAt || new Date().toISOString() };
+    const stamped = { ...place, savedAt: place.savedAt || new Date().toISOString() };
     set((state) => ({ myPlaces: [stamped, ...state.myPlaces] }));
     // Write-through: save to DB
     dbWrite('/api/places/save', 'POST', {
@@ -65,7 +65,6 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
       tips: place.tips,
       alsoKnownAs: place.alsoKnownAs,
       importBatchId: place.importBatchId,
-      savedDate: place.savedDate,
       travelWith: place.travelWith,
       userContext: place.userContext,
       timing: place.timing,

@@ -29,6 +29,7 @@ export function useSpeechRecognition({
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasFinalResultRef = useRef(false);
   const latestTranscriptRef = useRef('');
+  const sentRef = useRef(false); // guard: true once transcript has been sent (prevents double-send from both silence timer + onend)
   const onSilenceRef = useRef(onSilenceDetected);
   onSilenceRef.current = onSilenceDetected;
   const silenceTimeoutRef = useRef(silenceTimeout);
@@ -49,7 +50,8 @@ export function useSpeechRecognition({
 
     silenceTimerRef.current = setTimeout(() => {
       const text = latestTranscriptRef.current.trim();
-      if (text && hasFinalResultRef.current) {
+      if (text && hasFinalResultRef.current && !sentRef.current) {
+        sentRef.current = true;
         onSilenceRef.current?.(text);
       }
     }, silenceTimeoutRef.current);
@@ -98,10 +100,12 @@ export function useSpeechRecognition({
     recognition.onend = () => {
       setIsListening(false);
       // When recognition naturally ends (browser decided user is done),
-      // if we have content, trigger auto-send immediately
+      // if we have content that hasn't been sent yet, trigger auto-send immediately.
+      // Guard: only fire if we haven't already sent via the silence timer.
       const text = latestTranscriptRef.current.trim();
-      if (text && silenceTimeoutRef.current > 0) {
+      if (text && silenceTimeoutRef.current > 0 && !sentRef.current) {
         clearSilenceTimer();
+        sentRef.current = true;
         onSilenceRef.current?.(text);
       }
     };
@@ -119,6 +123,7 @@ export function useSpeechRecognition({
       setTranscript('');
       latestTranscriptRef.current = '';
       hasFinalResultRef.current = false;
+      sentRef.current = false;
       clearSilenceTimer();
       try {
         recognitionRef.current.start();

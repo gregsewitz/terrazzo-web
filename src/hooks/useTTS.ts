@@ -26,6 +26,9 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
 
   const stop = useCallback(() => {
     if (audioRef.current) {
+      // Remove event handlers BEFORE pausing so onended doesn't fire onDone
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
       audioRef.current.pause();
       audioRef.current.src = '';
       audioRef.current = null;

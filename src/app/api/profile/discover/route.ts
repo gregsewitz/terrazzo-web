@@ -176,38 +176,81 @@ function extractPlaces(feed: any): Array<{ name: string; location: string }> {
 }
 
 /**
- * Fire-and-forget: resolve each place via Google Places API and trigger enrichment.
- * Runs after the response is sent — does not block the client.
+ * Resolve all places via Google Places API concurrently, returning a lookup map
+ * of name||location → googlePlaceId. Also triggers enrichment for each resolved place.
+ *
+ * Runs BEFORE the response is sent so we can attach googlePlaceIds to the feed.
+ * Uses Promise.allSettled so one failure doesn't block the rest.
  */
-async function enrichAllPlaces(places: Array<{ name: string; location: string }>, userId: string) {
-  const results: Array<{ name: string; googlePlaceId?: string; intelligenceId?: string | null; error?: string }> = [];
+async function resolveAllPlaces(
+  places: Array<{ name: string; location: string }>,
+  userId: string,
+): Promise<Map<string, string>> {
+  const placeIdMap = new Map<string, string>();
 
-  for (const { name, location } of places) {
-    try {
+  const settled = await Promise.allSettled(
+    places.map(async ({ name, location }) => {
       const query = location ? `${name} ${location}` : name;
       const googleResult = await searchPlace(query);
-      if (!googleResult) {
-        results.push({ name, error: 'Not found on Google Places' });
-        continue;
-      }
+      if (!googleResult) return { name, location, googlePlaceId: undefined };
+
       const googlePlaceId = googleResult.id;
       const resolvedName = googleResult.displayName?.text || name;
-      const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, userId);
-      results.push({ name, googlePlaceId, intelligenceId });
-    } catch (err) {
-      results.push({ name, error: err instanceof Error ? err.message : 'Unknown error' });
+
+      // Fire-and-forget enrichment (don't wait for pipeline to complete)
+      ensureEnrichment(googlePlaceId, resolvedName, userId).catch(() => {});
+
+      return { name, location, googlePlaceId };
+    }),
+  );
+
+  let resolved = 0;
+  let failed = 0;
+  for (const result of settled) {
+    if (result.status === 'fulfilled' && result.value.googlePlaceId) {
+      const { name, location, googlePlaceId } = result.value;
+      placeIdMap.set(`${name}||${location}`, googlePlaceId);
+      resolved++;
+    } else {
+      failed++;
     }
   }
 
-  // Log summary for observability
-  const enriched = results.filter(r => r.intelligenceId);
-  const failed = results.filter(r => r.error);
-  if (failed.length > 0) {
-    console.warn(`[discover-enrichment] ${enriched.length}/${results.length} places enriched, ${failed.length} failed:`,
-      failed.map(f => `${f.name}: ${f.error}`));
-  } else {
-    console.log(`[discover-enrichment] All ${enriched.length} places resolved and enrichment triggered`);
+  console.log(`[discover-resolve] ${resolved}/${places.length} places resolved${failed > 0 ? `, ${failed} failed` : ''}`);
+  return placeIdMap;
+}
+
+/**
+ * Walk the feed and attach googlePlaceId to every place object using the lookup map.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function attachPlaceIds(feed: any, placeIdMap: Map<string, string>): void {
+  function attach(obj: { name?: string; place?: string; location?: string; googlePlaceId?: string } | undefined) {
+    if (!obj) return;
+    const name = obj.name || obj.place;
+    if (!name) return;
+    const id = placeIdMap.get(`${name}||${obj.location || ''}`);
+    if (id) obj.googlePlaceId = id;
   }
+
+  // becauseYouCards (use "place" field instead of "name")
+  for (const card of feed.becauseYouCards || []) attach(card);
+  // signalThread.places
+  for (const p of feed.signalThread?.places || []) attach(p);
+  // tasteTension.resolvedBy
+  attach(feed.tasteTension?.resolvedBy);
+  // weeklyCollection.places
+  for (const p of feed.weeklyCollection?.places || []) attach(p);
+  // moodBoards[].places[]
+  for (const board of feed.moodBoards || []) {
+    for (const p of board.places || []) attach(p);
+  }
+  // deepMatch
+  attach(feed.deepMatch);
+  // stretchPick
+  attach(feed.stretchPick);
+  // contextRecs
+  for (const rec of feed.contextRecs || []) attach(rec);
 }
 
 export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
@@ -271,13 +314,18 @@ Generate the full discover feed. Return valid JSON only.`;
 
     const result = JSON.parse(jsonMatch[0]);
 
-    // Fire-and-forget: resolve all places + trigger enrichment pipeline
-    // This runs in the background — the client gets the response immediately
+    // Resolve all places via Google Places API and attach googlePlaceIds
+    // This runs BEFORE the response so the frontend can link directly to detail pages
+    // without a separate resolve step. Enrichment is triggered as a side effect.
     const places = extractPlaces(result);
     if (places.length > 0) {
-      enrichAllPlaces(places, user.id).catch(err =>
-        console.error('[discover-enrichment] Background enrichment failed:', err)
-      );
+      try {
+        const placeIdMap = await resolveAllPlaces(places, user.id);
+        attachPlaceIds(result, placeIdMap);
+      } catch (err) {
+        // Non-fatal — feed still works without googlePlaceIds, just falls back to resolve-on-click
+        console.error('[discover-resolve] Pre-resolution failed (non-blocking):', err);
+      }
     }
 
     return NextResponse.json(result);

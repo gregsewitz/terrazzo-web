@@ -804,7 +804,7 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
         {displayCards.map((card, idx) => {
           const domainColor = DIMENSION_COLORS[card.signalDomain] || '#8b6b4a';
           return (
-            <PlaceLink key={card.place} name={card.place} location={card.location}>
+            <PlaceLink key={card.place} name={card.place} location={card.location} googlePlaceId={card.googlePlaceId}>
               <SafeMotionDiv
                 className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
                 style={{ background: card.bg, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
@@ -880,7 +880,7 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
         {/* Vertical thread line connecting places */}
         <div className="flex flex-col gap-0">
           {t.places.map((place, i) => (
-            <PlaceLink key={place.name} name={place.name} location={place.location}>
+            <PlaceLink key={place.name} name={place.name} location={place.location} googlePlaceId={place.googlePlaceId}>
               <SafeMotionDiv
                 className="flex gap-3"
                 initial={{ opacity: 0, y: 20 }}
@@ -983,7 +983,7 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
             {t.editorial}
           </p>
         </div>
-        <PlaceLink name={t.resolvedBy.name} location={t.resolvedBy.location}>
+        <PlaceLink name={t.resolvedBy.name} location={t.resolvedBy.location} googlePlaceId={t.resolvedBy.googlePlaceId}>
           <div className="px-5 py-4" style={{ background: 'rgba(245,245,240,0.05)', borderTop: '1px solid rgba(245,245,240,0.08)' }}>
             <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'rgba(104,68,160,0.7)', fontFamily: FONT.mono }}>Resolved by</div>
             <div className="text-[13px] font-semibold mb-1" style={{ color: '#f5f5f0' }}>
@@ -1018,7 +1018,7 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
           const domainColor = DIMENSION_COLORS[place.signalDomain] || '#8b6b4a';
           const imageUrl = getPlaceImage(place.name);
           return (
-            <PlaceLink key={place.name} name={place.name} location={place.location}>
+            <PlaceLink key={place.name} name={place.name} location={place.location} googlePlaceId={place.googlePlaceId}>
               <SafeMotionDiv
                 className="flex-shrink-0 rounded-xl flex flex-col overflow-hidden"
                 style={{ background: 'white', border: '1px solid var(--t-linen)', width: 240, scrollSnapAlign: 'start' }}
@@ -1085,7 +1085,7 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
               {board.places.map((p, pIdx) => {
                 const imageUrl = getPlaceImage(p.name);
                 return (
-                  <PlaceLink key={p.name} name={p.name} location={p.location}>
+                  <PlaceLink key={p.name} name={p.name} location={p.location} googlePlaceId={p.googlePlaceId}>
                     <SafeMotionDiv
                       className="flex items-center gap-3"
                       initial={{ opacity: 0, y: 20 }}
@@ -1132,7 +1132,7 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-verde)">Your deepest match</SectionLabel>
-      <PlaceLink name={m.name} location={m.location}>
+      <PlaceLink name={m.name} location={m.location} googlePlaceId={m.googlePlaceId}>
         <SafeMotionDiv
           className="mt-3 rounded-2xl overflow-hidden"
           style={{ background: '#1e2e24' }}
@@ -1197,7 +1197,7 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
       viewport={{ once: true, margin: '-100px' }}
     >
       <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
-      <PlaceLink name={s.name} location={s.location}>
+      <PlaceLink name={s.name} location={s.location} googlePlaceId={s.googlePlaceId}>
         <SafeMotionDiv
           className="p-4 rounded-xl mt-3"
           style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}
@@ -1266,7 +1266,7 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
           {displayRecs.map((rec, idx) => {
             const imageUrl = getPlaceImage(rec.name);
             return (
-              <PlaceLink key={rec.name} name={rec.name} location={rec.location}>
+              <PlaceLink key={rec.name} name={rec.name} location={rec.location} googlePlaceId={rec.googlePlaceId}>
                 <SafeMotionDiv
                   className="flex items-center gap-3"
                   initial={{ opacity: 0, y: 20 }}
@@ -1371,7 +1371,7 @@ function FriendsSavingSection() {
       <SectionLabel>Friends are saving</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {FRIEND_SAVES.map((save, idx) => (
-          <PlaceLink key={save.place} name={save.place} location={save.location}>
+          <PlaceLink key={save.place} name={save.place} location={save.location} googlePlaceId={save.googlePlaceId}>
             <SafeMotionDiv
               className="p-3.5 rounded-xl flex items-start gap-3"
               style={{ background: 'white', border: '1px solid var(--t-linen)' }}

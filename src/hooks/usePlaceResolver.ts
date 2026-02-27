@@ -1,58 +1,46 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api-client';
 
 /**
- * Client-side hook for the discover click → resolve → navigate flow.
+ * Client-side hook for the discover click → navigate flow.
  *
- * 1. Calls POST /api/places/resolve with { name, location }
- * 2. Caches the full response in sessionStorage so the detail page loads instantly
- * 3. Navigates to /places/${googlePlaceId}
+ * Two modes:
+ *   1. googlePlaceId available (pre-resolved at discover generation time):
+ *      Navigate directly to /places/{googlePlaceId} — no API call needed.
+ *   2. googlePlaceId missing (fallback for hardcoded data, older cached feeds):
+ *      Navigate to /places/{encodedName} — detail page resolves in background.
  */
 export function usePlaceResolver() {
   const router = useRouter();
-  const [isResolving, setIsResolving] = useState(false);
-  const [resolvingName, setResolvingName] = useState<string | null>(null);
 
   const navigateToPlace = useCallback(
-    async (name: string, location: string) => {
-      if (isResolving) return;
+    (name: string, location: string, googlePlaceId?: string) => {
+      // Save scroll position so the profile page can restore it on back-nav
+      sessionStorage.setItem('profile_scroll_y', String(window.scrollY));
 
-      setIsResolving(true);
-      setResolvingName(name);
-
-      try {
-        const data = await apiFetch<{
-          googlePlaceId: string;
-          name: string;
-          location: string;
-          [key: string]: unknown;
-        }>('/api/places/resolve', {
-          method: 'POST',
-          body: JSON.stringify({ name, location }),
-        });
-
-        // Cache in sessionStorage so the detail page can hydrate instantly
+      if (googlePlaceId) {
+        // Pre-resolved: navigate directly with the canonical ID
+        // Stash the full resolved data so the detail page can hydrate from sessionStorage
         sessionStorage.setItem(
-          `place_resolve_${data.googlePlaceId}`,
-          JSON.stringify(data),
+          `place_resolve_${googlePlaceId}`,
+          JSON.stringify({ googlePlaceId, name, location }),
         );
-
-        // Save scroll position so the profile page can restore it on back-nav
-        sessionStorage.setItem('profile_scroll_y', String(window.scrollY));
-
-        router.push(`/places/${data.googlePlaceId}`);
-      } catch (err) {
-        console.error('Place resolution failed:', err);
-      } finally {
-        setIsResolving(false);
-        setResolvingName(null);
+        router.push(`/places/${googlePlaceId}`);
+      } else {
+        // Fallback: navigate with the name, detail page resolves in background
+        const slug = encodeURIComponent(name);
+        sessionStorage.setItem(
+          `place_pending_${slug}`,
+          JSON.stringify({ name, location }),
+        );
+        router.push(`/places/${slug}`);
       }
     },
-    [isResolving, router],
+    [router],
   );
 
-  return { navigateToPlace, isResolving, resolvingName };
+  // isResolving is always false — we never block navigation
+  return { navigateToPlace, isResolving: false, resolvingName: null };
 }
