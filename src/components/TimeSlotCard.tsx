@@ -2,12 +2,14 @@
 
 import { useCallback, useRef, useEffect, useState, memo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { TimeSlot, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS } from '@/types';
+import { TimeSlot, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, QuickEntry } from '@/types';
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from './GhostCard';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import ReactionPills from './ReactionPills';
+import QuickEntryCard from './QuickEntryCard';
+import QuickEntryInput from './QuickEntryInput';
 import { FONT, INK } from '@/constants/theme';
 import { hasGhostItems } from '@/utils/ghostFiltering';
 import PlaceTimeEditor from './PlaceTimeEditor';
@@ -32,6 +34,7 @@ interface TimeSlotCardProps {
   dragItemId?: string | null;
   onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
   // AI suggestion loading state
+  /** @deprecated shimmer removed — suggestions fade in when ready */
   isLoadingSuggestions?: boolean;
   // Collaboration
   suggestions?: Suggestion[];
@@ -46,11 +49,19 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const setPlaceTime = useTripStore(s => s.setPlaceTime);
+  const addQuickEntry = useTripStore(s => s.addQuickEntry);
+  const removeQuickEntry = useTripStore(s => s.removeQuickEntry);
+  const confirmQuickEntry = useTripStore(s => s.confirmQuickEntry);
   const icon = SLOT_ICONS[slot.id] || 'pin';
   const slotRef = useRef<HTMLDivElement>(null);
   const hasPlaces = slot.places.length > 0;
-  const isEmpty = !hasPlaces && !hasGhostItems(slot);
+  const hasQuickEntries = (slot.quickEntries?.length || 0) > 0;
+  const hasContent = hasPlaces || hasQuickEntries;
+  const isEmpty = !hasContent && !hasGhostItems(slot);
   const hasGhosts = hasGhostItems(slot);
+
+  // ─── Quick entry inline input state ───
+  const [showQuickInput, setShowQuickInput] = useState(false);
 
   // ─── Drag-from-slot gesture handling ───
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -129,6 +140,21 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   }, [updateRect]);
 
   const handleEmptyClick = () => {
+    // On empty slot tap, show the quick entry input instead of opening pool
+    setShowQuickInput(true);
+  };
+
+  const handleQuickEntrySubmit = useCallback((entry: Omit<QuickEntry, 'id' | 'createdAt'>) => {
+    addQuickEntry(dayNumber, slot.id, entry);
+    setShowQuickInput(false);
+  }, [addQuickEntry, dayNumber, slot.id]);
+
+  const handleQuickInputCancel = useCallback(() => {
+    setShowQuickInput(false);
+  }, []);
+
+  // Open pool for this slot (secondary action — "browse places" link)
+  const handleOpenPool = useCallback(() => {
     if (onOpenForSlot && allSlots && slotIndex != null) {
       const prevSlot = slotIndex > 0 ? allSlots[slotIndex - 1] : undefined;
       const nextSlot = slotIndex < allSlots.length - 1 ? allSlots[slotIndex + 1] : undefined;
@@ -146,7 +172,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     } else {
       onOpenUnsorted();
     }
-  };
+  }, [onOpenForSlot, onOpenUnsorted, allSlots, slotIndex, slot.id, slot.label, dayNumber]);
 
   // ─── Rail + Content layout (horizontal flex) ───
 
@@ -180,8 +206,58 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     </div>
   );
 
+  // ─── Shared: Quick entries renderer ───
+  const QuickEntriesBlock = () => {
+    if (!slot.quickEntries?.length) return null;
+    return (
+      <>
+        {slot.quickEntries.map(qe => (
+          <QuickEntryCard
+            key={qe.id}
+            entry={qe}
+            onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
+            onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
+          />
+        ))}
+      </>
+    );
+  };
+
+  // ─── Shared: Add more button (shown in filled slots below existing content) ───
+  const AddMoreRow = () => (
+    <div className="flex items-center gap-2 mt-1">
+      <button
+        onClick={(e) => { e.stopPropagation(); setShowQuickInput(true); }}
+        className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
+        style={{
+          color: INK['35'],
+          fontFamily: FONT.sans,
+          transition: 'color 0.15s',
+        }}
+        onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
+        onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['35']; }}
+      >
+        + add note
+      </button>
+      <span style={{ color: INK['15'] }}>·</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); handleOpenPool(); }}
+        className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
+        style={{
+          color: INK['35'],
+          fontFamily: FONT.sans,
+          transition: 'color 0.15s',
+        }}
+        onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
+        onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['35']; }}
+      >
+        browse places
+      </button>
+    </div>
+  );
+
   // ─── Ghost slots: rail + ghost cards ───
-  if (hasGhosts && !hasPlaces) {
+  if (hasGhosts && !hasContent) {
     return (
       <div
         ref={slotRef}
@@ -221,8 +297,8 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     );
   }
 
-  // ─── Filled slots: rail + place cards ───
-  if (hasPlaces) {
+  // ─── Filled slots: rail + place cards + quick entries ───
+  if (hasContent) {
     return (
       <div
         ref={slotRef}
@@ -385,6 +461,9 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             );
           })}
 
+          {/* Quick entries */}
+          <QuickEntriesBlock />
+
           {/* Collaborator suggestions for this slot */}
           {suggestions && suggestions.length > 0 && (
             <div className="flex flex-col gap-1.5 mb-1">
@@ -400,66 +479,63 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             </div>
           )}
 
+          {/* Inline quick entry input (when active) */}
+          {showQuickInput ? (
+            <div className="mt-1">
+              <QuickEntryInput
+                slotLabel={slot.label}
+                onSubmit={handleQuickEntrySubmit}
+                onCancel={handleQuickInputCancel}
+              />
+            </div>
+          ) : (
+            <AddMoreRow />
+          )}
+
         </div>
       </div>
     );
   }
 
-  // ─── Loading shimmer — rail + shimmer content ───
-  if (!hasPlaces && !hasGhosts && isLoadingSuggestions) {
+  // ─── Empty slot: rail + add button (tap to type) ───
+  if (showQuickInput) {
     return (
       <div
         ref={slotRef}
         className="flex"
-        style={{ borderBottom: '1px solid var(--t-linen)' }}
+        style={{
+          borderBottom: '1px solid var(--t-linen)',
+          background: 'transparent',
+        }}
       >
         <RailLabel accent={false} />
-        <div className="flex-1 min-w-0 py-2 pr-3 pl-2.5">
-          <div className="flex flex-col gap-2">
-            {[0, 1].map(i => (
-              <div
-                key={i}
-                className="rounded-lg overflow-hidden"
-                style={{
-                  background: 'var(--t-cream)',
-                  border: '1.5px dashed rgba(107,139,154,0.25)',
-                  padding: '8px 10px',
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="rounded-full flex-shrink-0 shimmer-pulse"
-                    style={{ width: 28, height: 28, background: 'rgba(42,122,86,0.06)' }}
-                  />
-                  <div className="flex-1 min-w-0 flex flex-col gap-1">
-                    <div
-                      className="shimmer-pulse rounded"
-                      style={{ height: 11, width: '60%', background: 'rgba(42,122,86,0.08)' }}
-                    />
-                    <div
-                      className="shimmer-pulse rounded"
-                      style={{ height: 9, width: '40%', background: 'rgba(42,122,86,0.05)' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="flex-1 min-w-0 py-1.5 pr-3 pl-2.5">
+          <QuickEntryInput
+            slotLabel={slot.label}
+            onSubmit={handleQuickEntrySubmit}
+            onCancel={handleQuickInputCancel}
+          />
+          {/* Secondary: browse places link */}
+          <div className="mt-1.5 mb-0.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleOpenPool(); }}
+              className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
+              style={{
+                color: INK['30'],
+                fontFamily: FONT.sans,
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['30']; }}
+            >
+              or browse saved places
+            </button>
           </div>
-          <style>{`
-            @keyframes shimmerPulse {
-              0%, 100% { opacity: 0.4; }
-              50% { opacity: 1; }
-            }
-            .shimmer-pulse {
-              animation: shimmerPulse 1.8s ease-in-out infinite;
-            }
-          `}</style>
         </div>
       </div>
     );
   }
 
-  // ─── Empty slot: rail + add button ───
   return (
     <div
       ref={slotRef}

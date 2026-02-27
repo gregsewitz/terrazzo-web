@@ -1,4 +1,4 @@
-import { ImportedPlace, PlaceRating } from '@/types';
+import { ImportedPlace, PlaceRating, QuickEntry } from '@/types';
 import { StateCreator } from 'zustand';
 import { updateCurrentTrip, mapDaySlots, mapAllSlots, debouncedTripSave } from './tripHelpers';
 import type { TripState } from './types';
@@ -21,6 +21,11 @@ export interface TripPlacementState {
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
   setPlaceTime: (dayNumber: number, slotId: string, placeId: string, specificTime: string | undefined, specificTimeLabel?: string) => void;
+  // Quick Entry actions
+  addQuickEntry: (dayNumber: number, slotId: string, entry: Omit<QuickEntry, 'id' | 'createdAt'>) => void;
+  removeQuickEntry: (dayNumber: number, slotId: string, entryId: string) => void;
+  confirmQuickEntry: (dayNumber: number, slotId: string, entryId: string) => void;
+  updateQuickEntry: (dayNumber: number, slotId: string, entryId: string, updates: Partial<QuickEntry>) => void;
 }
 
 // ═══════════════════════════════════════════
@@ -352,6 +357,95 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
 
       return { ...trip, days: updatedDays };
     }));
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  // ─── Quick Entry CRUD ───────────────────────────────────────────────────
+
+  addQuickEntry: (dayNumber, slotId, entry) => {
+    const newEntry: QuickEntry = {
+      ...entry,
+      id: `qe-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: new Date().toISOString(),
+    };
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s =>
+          s.id === slotId
+            ? { ...s, quickEntries: [...(s.quickEntries || []), newEntry] }
+            : s
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  removeQuickEntry: (dayNumber, slotId, entryId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s =>
+          s.id === slotId
+            ? { ...s, quickEntries: (s.quickEntries || []).filter(e => e.id !== entryId) }
+            : s
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  confirmQuickEntry: (dayNumber, slotId, entryId) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s =>
+          s.id === slotId
+            ? {
+                ...s,
+                quickEntries: (s.quickEntries || []).map(e =>
+                  e.id === entryId ? { ...e, status: 'confirmed' as const } : e
+                ),
+              }
+            : s
+        ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  updateQuickEntry: (dayNumber, slotId, entryId, updates) => {
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s =>
+          s.id === slotId
+            ? {
+                ...s,
+                quickEntries: (s.quickEntries || []).map(e =>
+                  e.id === entryId ? { ...e, ...updates } : e
+                ),
+              }
+            : s
+        ),
+      }))
+    );
     const tripId = get().currentTripId;
     if (tripId) debouncedTripSave(tripId, () => {
       const t = get().trips.find(tr => tr.id === tripId);

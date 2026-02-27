@@ -126,6 +126,9 @@ export function useTripSuggestions(
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Hard timeout: stop loading after 12s so shimmer doesn't persist forever
+    const timeoutId = setTimeout(() => controller.abort(), 12_000);
+
     setIsLoading(true);
     setError(null);
     setIsCached(false);
@@ -200,11 +203,16 @@ export function useTripSuggestions(
         });
       }
     } catch (err: any) {
-      if (err?.name === 'AbortError') return; // expected on abort
+      if (err?.name === 'AbortError') {
+        // Could be user-triggered or our timeout — either way, stop loading
+        setIsLoading(false);
+        return;
+      }
       console.error('[useTripSuggestions] Fetch error:', err);
       setError(err?.message || 'Failed to load suggestions');
       // Keep existing suggestions on error (graceful degradation)
     } finally {
+      clearTimeout(timeoutId);
       if (!controller.signal.aborted) {
         setIsLoading(false);
       }

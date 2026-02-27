@@ -78,6 +78,8 @@ function TripDetailContent() {
   const [exportOpen, setExportOpen] = useState(false);
   // Imperative ref to expand the PicksStrip from DayPlanner callbacks
   const expandStripRef = useRef<((filter?: FilterType) => void) | null>(null);
+  // When the pool is opened from a specific empty slot, tapping should place directly
+  const [slotTarget, setSlotTarget] = useState<{ dayNumber: number; slotId: string } | null>(null);
 
   // Auto-repair missing geoDestination coordinates (geocode destination names)
   useGeoDestinationRepair();
@@ -837,6 +839,7 @@ function TripDetailContent() {
             onTapDetail={openDetail}
             onOpenUnsorted={() => { expandStripRef.current?.(); }}
             onOpenForSlot={(ctx: SlotContext) => {
+              setSlotTarget({ dayNumber: ctx.dayNumber, slotId: ctx.slotId });
               expandStripRef.current?.(ctx.suggestedTypes?.[0] as FilterType | undefined);
             }}
             dropTarget={dropTarget}
@@ -876,6 +879,14 @@ function TripDetailContent() {
               onRegisterRect={handleRegisterStripRect}
               returningPlaceId={returningPlaceId}
               expandRef={expandStripRef}
+              slotTarget={slotTarget}
+              onQuickPlace={(item) => {
+                if (slotTarget) {
+                  placeFromSaved(item, slotTarget.dayNumber, slotTarget.slotId);
+                  if (navigator.vibrate) navigator.vibrate(15);
+                }
+              }}
+              onClearSlotTarget={() => setSlotTarget(null)}
             />
           </div>
         )}

@@ -62,6 +62,10 @@ interface PicksStripProps {
   returningPlaceId?: string | null;
   /** Imperative expand with optional pre-set type filter (used by DayPlanner empty slot tap) */
   expandRef?: React.MutableRefObject<((filter?: FilterType) => void) | null>;
+  /** When set, tapping a card places it directly into this slot instead of opening detail */
+  slotTarget?: { dayNumber: number; slotId: string } | null;
+  onQuickPlace?: (item: ImportedPlace) => void;
+  onClearSlotTarget?: () => void;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -71,7 +75,7 @@ interface PicksStripProps {
 function PicksStrip({
   onTapDetail, onDragStart, dragItemId,
   isDropTarget, onRegisterRect, returningPlaceId,
-  expandRef,
+  expandRef, slotTarget, onQuickPlace, onClearSlotTarget,
 }: PicksStripProps) {
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
   const [sortBy, setSortBy] = useState<SortOption>('match');
@@ -95,6 +99,15 @@ function PicksStrip({
     searchQuery,
   });
 
+  // ─── Tap handler: quick-place when opened from a slot, otherwise open detail ───
+  const handleTap = useCallback((item: ImportedPlace) => {
+    if (slotTarget && onQuickPlace) {
+      onQuickPlace(item);
+    } else {
+      onTapDetail(item);
+    }
+  }, [slotTarget, onQuickPlace, onTapDetail]);
+
   // ─── Pointer drag gesture (shared hook) ───
   const {
     handlePointerDown,
@@ -104,7 +117,7 @@ function PicksStrip({
     holdingId,
   } = useDragGesture({
     onDragActivate: onDragStart,
-    onTap: onTapDetail,
+    onTap: handleTap,
     layout: expanded ? 'vertical' : 'horizontal',
     isDragging: !!dragItemId,
   });
@@ -174,6 +187,11 @@ function PicksStrip({
   useEffect(() => {
     if (dragItemId && expanded) setExpanded(false);
   }, [dragItemId, expanded]);
+
+  // ─── Clear slot target when pool collapses ───
+  useEffect(() => {
+    if (!expanded && slotTarget) onClearSlotTarget?.();
+  }, [expanded, slotTarget, onClearSlotTarget]);
 
   const hasActiveFilters = activeFilter !== 'all' || sourceFilter !== 'all' || sortBy !== 'match' || searchQuery.trim() !== '';
 

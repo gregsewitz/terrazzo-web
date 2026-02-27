@@ -201,12 +201,38 @@ export interface ImportedPlace {
   addedByName?: string;     // "Sarah" — denormalized for display
 }
 
+// ─── Quick Entry (free-text slot items) ───
+
+export type QuickEntryCategory = 'activity' | 'transport' | 'dining' | 'logistics' | 'other';
+export type QuickEntryStatus = 'confirmed' | 'tentative';
+
+export interface QuickEntry {
+  id: string;
+  text: string;                   // Original user input (preserved for re-parsing)
+  label: string;                  // AI-cleaned display name (question mark stripped)
+  category: QuickEntryCategory;   // Derived from text content
+  status: QuickEntryStatus;       // 'tentative' if input ended with "?"
+  specificTime?: string;          // Extracted time in 24h "HH:mm" format
+  specificTimeLabel?: string;     // "Departure", "Pickup", "Reservation", etc.
+  notes?: string;                 // Any extra context
+  createdAt: string;              // ISO timestamp
+}
+
+export const QUICK_ENTRY_CATEGORY_ICONS: Record<QuickEntryCategory, PerriandIconName> = {
+  activity: 'activity',
+  transport: 'transport',
+  dining: 'restaurant',
+  logistics: 'plan',
+  other: 'pin',
+};
+
 export interface TimeSlot {
   id: string;
   label: string;
   time: string;
-  places: ImportedPlace[];      // confirmed places (supports multiple per slot)
-  ghostItems?: ImportedPlace[]; // proposed items (ghost cards) for this slot
+  places: ImportedPlace[];        // confirmed places (supports multiple per slot)
+  quickEntries?: QuickEntry[];    // free-text entries (lightweight, user-typed)
+  ghostItems?: ImportedPlace[];   // proposed items (ghost cards) for this slot
 }
 
 // ─── Hotel / Accommodation ───
