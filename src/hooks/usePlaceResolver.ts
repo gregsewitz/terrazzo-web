@@ -40,6 +40,9 @@ export function usePlaceResolver() {
           JSON.stringify(data),
         );
 
+        // Save scroll position so the profile page can restore it on back-nav
+        sessionStorage.setItem('profile_scroll_y', String(window.scrollY));
+
         router.push(`/places/${data.googlePlaceId}`);
       } catch (err) {
         console.error('Place resolution failed:', err);

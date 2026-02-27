@@ -77,7 +77,7 @@ async function _fetchSinglePlace(
 
   const body: Record<string, unknown> = {
     textQuery: typeof locationBias === 'string' ? `${query} ${locationBias}` : query,
-    maxResultCount: 1,
+    maxResultCount: 3, // Fetch top 3 to pick best name match
     languageCode: 'en',
   };
 
@@ -107,7 +107,38 @@ async function _fetchSinglePlace(
   }
 
   const data = await response.json();
-  return data.places?.[0] || null;
+  const places: PlaceSearchResult[] = data.places || [];
+  if (places.length === 0) return null;
+  if (places.length === 1) return places[0];
+
+  // Pick the result whose displayName best matches the query.
+  // This prevents Google returning a nearby popular place instead of the one we asked for.
+  const queryLower = query.toLowerCase();
+  const queryWords = queryLower.split(/[\s,]+/).filter(Boolean);
+
+  let best = places[0];
+  let bestScore = 0;
+
+  for (const place of places) {
+    const name = (place.displayName?.text || '').toLowerCase();
+    // Score: count how many query words appear in the display name
+    let score = 0;
+    for (const word of queryWords) {
+      if (name.includes(word)) score++;
+    }
+    // Bonus for exact name containment
+    if (name.includes(queryLower.split(',')[0].trim())) score += 5;
+    if (score > bestScore) {
+      bestScore = score;
+      best = place;
+    }
+  }
+
+  if (best !== places[0]) {
+    console.log(`[places] Reranked: query="${query}" → picked "${best.displayName?.text}" over "${places[0].displayName?.text}"`);
+  }
+
+  return best;
 }
 
 async function _fetchMultiplePlaces(

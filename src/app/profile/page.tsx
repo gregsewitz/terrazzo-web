@@ -85,7 +85,16 @@ export default function ProfilePage() {
   const [showWrapped, setShowWrapped] = useState(false);
   const [showMosaic, setShowMosaic] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ProfileTab>('discover');
+  const [activeTab, setActiveTabRaw] = useState<ProfileTab>(() => {
+    if (typeof window !== 'undefined') {
+      return (sessionStorage.getItem('profile_active_tab') as ProfileTab) || 'discover';
+    }
+    return 'discover';
+  });
+  const setActiveTab = useCallback((tab: ProfileTab) => {
+    setActiveTabRaw(tab);
+    sessionStorage.setItem('profile_active_tab', tab);
+  }, []);
   const [discoverContent, setDiscoverContent] = useState<DiscoverContent | null>(null);
   const [isLoadingDiscover, setIsLoadingDiscover] = useState(false);
   const [isResynthesizing, setIsResynthesizing] = useState(false);
@@ -123,6 +132,18 @@ export default function ProfilePage() {
       prevDiscoverContent.current = discoverContent;
     }
   }, [discoverContent]);
+
+  // Restore scroll position after back-navigation from a place detail page
+  useEffect(() => {
+    const savedY = sessionStorage.getItem('profile_scroll_y');
+    if (savedY) {
+      sessionStorage.removeItem('profile_scroll_y');
+      // Delay to let content render before scrolling
+      requestAnimationFrame(() => {
+        window.scrollTo(0, parseInt(savedY, 10));
+      });
+    }
+  }, []);
 
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)

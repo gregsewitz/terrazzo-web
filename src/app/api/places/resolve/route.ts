@@ -25,8 +25,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
   }
 
-  // 1. Search Google Places API
-  const query = location ? `${name} ${location}` : name;
+  // 1. Search Google Places API — use exact name for best match
+  const query = location ? `${name}, ${location}` : name;
   const googleResult = await searchPlace(query);
 
   if (!googleResult) {
@@ -38,6 +38,11 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
   const googlePlaceId = googleResult.id;
   const resolvedName = googleResult.displayName?.text || name;
+
+  // Log if Google returned a different name than what was queried (helps debug mismatches)
+  if (resolvedName.toLowerCase() !== name.toLowerCase()) {
+    console.log(`[resolve] Name mismatch: queried "${name}" → Google returned "${resolvedName}" (id: ${googlePlaceId})`);
+  }
 
   // 2. Check if user already has this place in their library
   const savedPlace = await prisma.savedPlace.findUnique({
@@ -92,6 +97,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   return NextResponse.json({
     googlePlaceId,
     name: resolvedName,
+    queriedName: name, // original name before Google resolution
     location: location || googleResult.formattedAddress || null,
     type: mapGoogleTypeToPlaceType(googleResult.primaryType),
     googleData,
