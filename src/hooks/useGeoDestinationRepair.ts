@@ -7,45 +7,30 @@ import { GeoDestination } from '@/types';
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 /**
- * Geocode a place name, trying Google Geocoding API first (handles regions
- * like "Cotswolds" well), then falling back to Open-Meteo (free, city-focused).
+ * Geocode a place name using Google Geocoding API.
+ *
+ * We previously fell back to Open-Meteo when Google failed, but Open-Meteo
+ * is city-focused and returns wrong results for regions (e.g. "Cotswolds"
+ * mapped to Hong Kong). Instead, the repair hook now falls back to hotel
+ * coordinates from the trip's days when Google geocoding is unavailable.
  */
 async function geocodeName(name: string): Promise<{ lat: number; lng: number; placeId?: string; formattedAddress?: string } | null> {
-  // 1. Try Google Geocoding API (best for regions, districts, areas)
-  if (GOOGLE_API_KEY) {
-    try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${GOOGLE_API_KEY}`,
-        { signal: AbortSignal.timeout(5000) }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const result = data.results?.[0];
-        if (result?.geometry?.location) {
-          return {
-            lat: result.geometry.location.lat,
-            lng: result.geometry.location.lng,
-            placeId: result.place_id,
-            formattedAddress: result.formatted_address,
-          };
-        }
-      }
-    } catch {
-      // Fall through to Open-Meteo
-    }
-  }
-
-  // 2. Fallback: Open-Meteo free geocoding (good for cities, may miss regions)
+  if (!GOOGLE_API_KEY) return null;
   try {
     const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=en`,
-      { signal: AbortSignal.timeout(4000) }
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${GOOGLE_API_KEY}`,
+      { signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return null;
     const data = await res.json();
     const result = data.results?.[0];
-    if (!result?.latitude || !result?.longitude) return null;
-    return { lat: result.latitude, lng: result.longitude };
+    if (!result?.geometry?.location) return null;
+    return {
+      lat: result.geometry.location.lat,
+      lng: result.geometry.location.lng,
+      placeId: result.place_id,
+      formattedAddress: result.formatted_address,
+    };
   } catch {
     return null;
   }
@@ -56,8 +41,8 @@ async function geocodeName(name: string): Promise<{ lat: number; lng: number; pl
  *
  * When a trip has `destinations` but `geoDestinations` is missing or has
  * entries without lat/lng, this hook geocodes them using Google Geocoding
- * API (which handles regions like "Cotswolds") with Open-Meteo as fallback,
- * then updates the trip in the store + saves to server.
+ * API and falls back to hotel coordinates from the trip's days when Google
+ * is unavailable. A 200 km sanity check rejects wildly wrong geocodes.
  *
  * Runs once per trip load — a ref tracks which trip ID was last repaired.
  */
@@ -94,9 +79,43 @@ export function useGeoDestinationRepair() {
       const updates: GeoDestination[] = [...existing];
       let changed = false;
 
+      // Build hotel-coord lookup for sanity-checking geocoded results
+      const hotelByDest = new Map<string, { lat: number; lng: number }>();
+      trip.days?.forEach((day: { destination?: string; hotelInfo?: { lat?: number; lng?: number } }) => {
+        if (day.destination && day.hotelInfo?.lat && day.hotelInfo?.lng && !hotelByDest.has(day.destination.toLowerCase())) {
+          hotelByDest.set(day.destination.toLowerCase(), { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng });
+        }
+      });
+
       for (const destName of needsRepair) {
-        const coords = await geocodeName(destName);
-        if (!coords) continue;
+        let coords = await geocodeName(destName);
+
+        // If Google geocoding failed (no API key, network error, etc.),
+        // fall back to hotel coordinates so geoDestinations still gets
+        // populated with reasonable coords for the picks filter.
+        if (!coords) {
+          const hotel = hotelByDest.get(destName.toLowerCase());
+          if (!hotel) continue;
+          coords = { lat: hotel.lat, lng: hotel.lng };
+        }
+
+        // Belt-and-suspenders: if we have hotel coords, reject geocoded
+        // results that are wildly off (>200km) and use hotel coords instead.
+        const hotel = hotelByDest.get(destName.toLowerCase());
+        if (hotel) {
+          const R = 6371;
+          const dLat = (coords.lat - hotel.lat) * Math.PI / 180;
+          const dLng = (coords.lng - hotel.lng) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(hotel.lat * Math.PI / 180) * Math.cos(coords.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+          const drift = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          if (drift > 200) {
+            console.warn(`[GeoRepair] Geocoded "${destName}" to (${coords.lat}, ${coords.lng}) but hotel is ${drift.toFixed(0)}km away — using hotel coords instead`);
+            coords.lat = hotel.lat;
+            coords.lng = hotel.lng;
+            delete coords.placeId;
+            delete coords.formattedAddress;
+          }
+        }
 
         // Find existing entry to update, or create new one
         const idx = updates.findIndex(g => g.name.toLowerCase() === destName.toLowerCase());
