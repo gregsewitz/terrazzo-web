@@ -223,35 +223,64 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
     );
   };
 
-  // ─── Shared: Add more button (shown in filled slots below existing content) ───
+  // ─── Shared: Add more buttons (shown in filled slots below existing content) ───
   const AddMoreRow = () => (
-    <div className="flex items-center gap-2 mt-1">
+    <div className="flex items-center gap-2 mt-1.5">
       <button
         onClick={(e) => { e.stopPropagation(); setShowQuickInput(true); }}
-        className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
+        className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
         style={{
-          color: INK['35'],
+          color: INK['80'],
           fontFamily: FONT.sans,
-          transition: 'color 0.15s',
+          fontWeight: 500,
+          background: INK['04'],
+          border: `1px solid ${INK['10']}`,
+          padding: '4px 8px',
+          transition: 'all 0.15s',
+          touchAction: 'manipulation',
         }}
-        onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
-        onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['35']; }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget;
+          el.style.background = 'rgba(42,122,86,0.06)';
+          el.style.borderColor = 'rgba(42,122,86,0.2)';
+          el.style.color = 'var(--t-verde)';
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget;
+          el.style.background = INK['04'];
+          el.style.borderColor = INK['10'];
+          el.style.color = INK['80'];
+        }}
       >
-        + add note
+        <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> add entry
       </button>
-      <span style={{ color: INK['15'] }}>·</span>
       <button
         onClick={(e) => { e.stopPropagation(); handleOpenPool(); }}
-        className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
+        className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
         style={{
-          color: INK['35'],
+          color: INK['80'],
           fontFamily: FONT.sans,
-          transition: 'color 0.15s',
+          fontWeight: 500,
+          background: INK['04'],
+          border: `1px solid ${INK['10']}`,
+          padding: '4px 8px',
+          transition: 'all 0.15s',
+          touchAction: 'manipulation',
         }}
-        onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
-        onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['35']; }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget;
+          el.style.background = 'rgba(42,122,86,0.06)';
+          el.style.borderColor = 'rgba(42,122,86,0.2)';
+          el.style.color = 'var(--t-verde)';
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget;
+          el.style.background = INK['04'];
+          el.style.borderColor = INK['10'];
+          el.style.color = INK['80'];
+        }}
       >
-        browse places
+        <PerriandIcon name="pin" size={9} color="currentColor" /> browse places
       </button>
     </div>
   );
@@ -291,6 +320,22 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                 onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
               />
             ))}
+
+            {/* Quick entries in ghost slots */}
+            <QuickEntriesBlock />
+
+            {/* Inline quick entry input or add buttons */}
+            {showQuickInput ? (
+              <div className="mt-1">
+                <QuickEntryInput
+                  slotLabel={slot.label}
+                  onSubmit={handleQuickEntrySubmit}
+                  onCancel={handleQuickInputCancel}
+                />
+              </div>
+            ) : (
+              <AddMoreRow />
+            )}
           </div>
         </div>
       </div>
@@ -521,12 +566,12 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
               onClick={(e) => { e.stopPropagation(); handleOpenPool(); }}
               className="text-[10px] bg-transparent border-none cursor-pointer py-0.5 px-0"
               style={{
-                color: INK['30'],
+                color: INK['70'],
                 fontFamily: FONT.sans,
                 transition: 'color 0.15s',
               }}
               onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'var(--t-verde)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['30']; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = INK['70']; }}
             >
               or browse saved places
             </button>
@@ -555,7 +600,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         <span
           className="text-[11px]"
           style={{
-            color: isDropTarget ? 'var(--t-verde)' : INK['40'],
+            color: isDropTarget ? 'var(--t-verde)' : INK['70'],
             fontWeight: isDropTarget ? 600 : 400,
             fontFamily: FONT.sans,
             transition: 'color 0.15s',

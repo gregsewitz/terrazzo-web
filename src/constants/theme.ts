@@ -35,3 +35,10 @@ export const INK = {
   '03': 'rgba(28,26,23,0.03)',
   '02': 'rgba(28,26,23,0.02)',
 } as const;
+
+// ─── Styling guidelines ───
+// TEXT OPACITY: Avoid using INK values below '70' for any readable text content
+// (labels, badges, links, action text, time displays). Low-opacity text looks
+// washed out and is harder to read. Reserve INK['04']–'30' for decorative
+// elements only (borders, dividers, subtle backgrounds). For text that should
+// feel secondary, use INK['70']–'80' — not '35'–'50'.

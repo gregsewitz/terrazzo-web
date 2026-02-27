@@ -355,31 +355,84 @@ export default function DayContextMenu({
     <div
       style={{
         background: 'white',
-        borderRadius: 10,
-        boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
+        borderRadius: 12,
+        boxShadow: '0 8px 28px rgba(0,0,0,0.14)',
         border: '1px solid var(--t-linen)',
-        padding: '4px 0',
-        minWidth: 170,
+        padding: 0,
+        minWidth: 200,
         zIndex: 50,
+        overflow: 'hidden',
       }}
     >
-      {/* Destination row for popover */}
+      {/* ── Location section ── */}
       {onChangeDestination && currentDestination && getDestColor && (
-        <>
-          <div style={{ padding: '4px 12px 2px' }}>
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'], textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>
+        <div style={{ padding: '8px 6px 6px' }}>
+          <div style={{ padding: '2px 8px 6px' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>
               Location
             </span>
           </div>
-          {uniqueDestinations?.map(dest => {
-            const isCurrent = dest === currentDestination;
-            const destC = getDestColor(dest);
-            return (
-              <button
-                key={dest}
-                onClick={() => {
-                  if (!isCurrent) onChangeDestination(dest);
+          {showAddDest ? (
+            <div style={{ padding: '0 4px 4px' }}>
+              <AddDestinationSearch
+                onAdded={() => {
+                  setShowAddDest(false);
                   onClose();
+                }}
+                onCancel={() => setShowAddDest(false)}
+              />
+            </div>
+          ) : (
+            <>
+              {uniqueDestinations?.map(dest => {
+                const isCurrent = dest === currentDestination;
+                const destC = getDestColor(dest);
+                return (
+                  <button
+                    key={dest}
+                    onClick={() => {
+                      if (!isCurrent) onChangeDestination(dest);
+                      onClose();
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'var(--t-linen)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = isCurrent ? destC.bg : 'transparent';
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '6px 8px',
+                      borderRadius: 6,
+                      border: 'none',
+                      background: isCurrent ? destC.bg : 'transparent',
+                      fontFamily: FONT.sans,
+                      fontSize: 12,
+                      color: INK['85'],
+                      cursor: isCurrent ? 'default' : 'pointer',
+                      fontWeight: isCurrent ? 600 : 400,
+                      transition: 'background 100ms',
+                    }}
+                  >
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: destC.accent, flexShrink: 0 }} />
+                    {dest}
+                    {isCurrent && (
+                      <span style={{ marginLeft: 'auto', fontSize: 10, color: INK['70'], fontWeight: 400 }}>✓</span>
+                    )}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setShowAddDest(true)}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'var(--t-linen)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
                 }}
                 style={{
                   display: 'flex',
@@ -387,71 +440,83 @@ export default function DayContextMenu({
                   gap: 8,
                   width: '100%',
                   textAlign: 'left',
-                  padding: '5px 12px',
+                  padding: '6px 8px',
+                  marginTop: 2,
+                  borderRadius: 6,
                   border: 'none',
-                  background: isCurrent ? destC.bg : 'transparent',
+                  background: 'transparent',
                   fontFamily: FONT.sans,
                   fontSize: 12,
-                  color: 'var(--t-ink)',
-                  cursor: isCurrent ? 'default' : 'pointer',
-                  fontWeight: isCurrent ? 600 : 400,
-                  opacity: isCurrent ? 0.5 : 1,
+                  color: INK['70'],
+                  cursor: 'pointer',
+                  transition: 'background 100ms',
                 }}
               >
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: destC.accent, flexShrink: 0 }} />
-                {dest}
+                <span style={{ fontSize: 13, lineHeight: 1, width: 8, textAlign: 'center' }}>+</span>
+                New destination
               </button>
-            );
-          })}
-          <div style={{ height: 1, background: 'var(--t-linen)', margin: '4px 0' }} />
-        </>
+            </>
+          )}
+        </div>
       )}
-      {items.map((item, i) => {
-        if (item === 'divider') {
-          return <div key={`div-${i}`} style={{ height: 1, background: 'var(--t-linen)', margin: '4px 0' }} />;
-        }
-        return (
-          <button
-            key={item.label}
-            onClick={() => handleItemClick(item)}
-            disabled={item.disabled}
-            onMouseEnter={(e) => {
-              if (!item.disabled) (e.currentTarget as HTMLElement).style.background = item.destructive ? '#fef2f2' : 'var(--t-linen)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = 'none';
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              width: '100%',
-              textAlign: 'left',
-              padding: '7px 12px',
-              border: 'none',
-              background: 'none',
-              fontFamily: FONT.sans,
-              fontSize: 12,
-              fontWeight: 500,
-              color: item.disabled ? INK['30'] : item.destructive ? '#c0392b' : INK['80'],
-              cursor: item.disabled ? 'default' : 'pointer',
-              borderRadius: 0,
-              transition: 'background 100ms',
-              opacity: item.disabled ? 0.5 : 1,
-            }}
-          >
-            <span style={{
-              width: 18,
-              textAlign: 'center',
-              fontSize: item.destructive ? 14 : 12,
-              opacity: item.destructive ? 1 : 0.5,
-            }}>
-              {item.icon}
-            </span>
-            {item.label}
-          </button>
-        );
-      })}
+
+      {/* ── Day actions section ── */}
+      <div style={{
+        padding: '6px 6px 6px',
+        borderTop: onChangeDestination && currentDestination ? '1px solid var(--t-linen)' : 'none',
+      }}>
+        <div style={{ padding: '2px 8px 6px' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>
+            Day
+          </span>
+        </div>
+        {items.map((item, i) => {
+          if (item === 'divider') {
+            return <div key={`div-${i}`} style={{ height: 1, background: 'var(--t-linen)', margin: '3px 8px' }} />;
+          }
+          return (
+            <button
+              key={item.label}
+              onClick={() => handleItemClick(item)}
+              disabled={item.disabled}
+              onMouseEnter={(e) => {
+                if (!item.disabled) (e.currentTarget as HTMLElement).style.background = item.destructive ? '#fef2f2' : 'var(--t-linen)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'none';
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                width: '100%',
+                textAlign: 'left',
+                padding: '6px 8px',
+                border: 'none',
+                background: 'none',
+                fontFamily: FONT.sans,
+                fontSize: 12,
+                fontWeight: 500,
+                color: item.disabled ? INK['30'] : item.destructive ? '#c0392b' : INK['80'],
+                cursor: item.disabled ? 'default' : 'pointer',
+                borderRadius: 6,
+                transition: 'background 100ms',
+                opacity: item.disabled ? 0.5 : 1,
+              }}
+            >
+              <span style={{
+                width: 18,
+                textAlign: 'center',
+                fontSize: item.destructive ? 14 : 12,
+                opacity: item.destructive ? 1 : 0.6,
+              }}>
+                {item.icon}
+              </span>
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

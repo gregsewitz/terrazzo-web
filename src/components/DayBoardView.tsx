@@ -8,12 +8,14 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
 import HotelInput from './HotelInput';
 import DayContextMenu from './DayContextMenu';
-import AddDestinationSearch from './AddDestinationSearch';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { formatTime12h, inferTimeLabel } from './PlaceTimeEditor';
+import QuickEntryCard from './QuickEntryCard';
+import QuickEntryInput from './QuickEntryInput';
+import type { QuickEntry } from '@/types';
 import type { Suggestion, Reaction } from '@/stores/collaborationStore';
 
 interface DayBoardViewProps {
@@ -243,30 +245,19 @@ function DayBoardView({
   const clearDay = useTripStore(s => s.clearDay);
   const setDayDestination = useTripStore(s => s.setDayDestination);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
+  const addQuickEntry = useTripStore(s => s.addQuickEntry);
+  const removeQuickEntry = useTripStore(s => s.removeQuickEntry);
+  const confirmQuickEntry = useTripStore(s => s.confirmQuickEntry);
   const trip = useMemo(() => trips.find(t => t.id === currentTripId), [trips, currentTripId]);
   const isDesktop = useIsDesktop();
+  // Track which slot currently has the quick entry input open — "dayNumber-slotId"
+  const [activeQuickInput, setActiveQuickInput] = useState<string | null>(null);
   const [editingHotelDay, setEditingHotelDay] = useState<number | null>(null);
   const [addingTransportDay, setAddingTransportDay] = useState<number | null>(null);
   const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
-  const [destPickerDay, setDestPickerDay] = useState<number | null>(null);
-  const [destPickerAddMode, setDestPickerAddMode] = useState(false);
   const [deleteDayConfirm, setDeleteDayConfirm] = useState<number | null>(null);
   const [menuDayNumber, setMenuDayNumber] = useState<number | null>(null);
-  const destPickerRef = useRef<HTMLDivElement>(null);
   const dayMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close destination picker on click outside
-  useEffect(() => {
-    if (destPickerDay === null) return;
-    const handler = (e: MouseEvent) => {
-      if (destPickerRef.current && !destPickerRef.current.contains(e.target as Node)) {
-        setDestPickerDay(null);
-        setDestPickerAddMode(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [destPickerDay]);
 
   // Close day context menu on click outside
   useEffect(() => {
@@ -353,22 +344,21 @@ function DayBoardView({
                   e.stopPropagation();
                   setMenuDayNumber(prev => prev === day.dayNumber ? null : day.dayNumber);
                 }}
-                className="day-col-menu-btn flex items-center justify-center cursor-pointer"
+                className="flex items-center justify-center cursor-pointer"
                 style={{
-                  width: 22,
-                  height: 18,
-                  background: `${destColor.accent}12`,
-                  border: 'none',
-                  borderRadius: 5,
+                  width: 26,
+                  height: 22,
+                  background: menuDayNumber === day.dayNumber ? 'white' : 'rgba(255,255,255,0.85)',
+                  border: '1px solid var(--t-linen)',
+                  borderRadius: 6,
                   fontFamily: FONT.sans,
                   fontSize: 14,
                   fontWeight: 700,
-                  color: destColor.accent,
-                  opacity: menuDayNumber === day.dayNumber ? 0.9 : 0,
-                  transition: 'opacity 150ms',
+                  color: INK['70'],
                   lineHeight: 1,
                   padding: 0,
                   letterSpacing: 1,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                 }}
                 title="Day options"
               >
@@ -385,17 +375,21 @@ function DayBoardView({
                     onClear={() => clearDay(day.dayNumber)}
                     onDelete={() => { setMenuDayNumber(null); setDeleteDayConfirm(day.dayNumber); }}
                     onClose={() => setMenuDayNumber(null)}
+                    currentDestination={day.destination}
+                    uniqueDestinations={uniqueDestinations}
+                    getDestColor={getDestColor}
+                    onChangeDestination={(dest) => setDayDestination(day.dayNumber, dest)}
                   />
                 </div>
               )}
             </div>
-            {/* Day column header — click selects day */}
+            {/* Day column header — compact single row */}
             <div
-              className="px-3 flex items-center justify-between cursor-pointer"
+              className="px-2.5 flex items-center justify-between cursor-pointer gap-2"
               onClick={() => setCurrentDay(day.dayNumber)}
               style={{
-                paddingTop: isDesktop ? 10 : 8,
-                paddingBottom: isDesktop ? 10 : 8,
+                paddingTop: 6,
+                paddingBottom: 6,
                 background: destColor.bg,
                 borderBottom: currentDay === day.dayNumber
                   ? `2px solid var(--t-verde)`
@@ -403,148 +397,49 @@ function DayBoardView({
                 transition: 'border-color 150ms ease',
               }}
             >
-              <div className="flex items-start gap-1.5">
-                <div>
-                  <div style={{
+              <div className="flex items-baseline gap-1.5 min-w-0">
+                {showMonth && !isFlexible && (
+                  <span style={{
                     fontFamily: FONT.mono,
-                    fontSize: 9,
+                    fontSize: 8,
                     fontWeight: 600,
                     color: destColor.accent,
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
-                    lineHeight: 1,
-                    marginBottom: 2,
-                    opacity: 0.7,
-                    visibility: showMonth ? 'visible' : 'hidden',
+                    opacity: 0.6,
+                    flexShrink: 0,
                   }}>
-                    {isFlexible ? '\u00A0' : (shortMonth || '\u00A0')}
-                  </div>
-                  <div style={{ fontFamily: FONT.sans, fontSize: DAY_TITLE_SIZE, fontWeight: 700, color: destColor.text }}>
-                    {isFlexible ? `Day ${dateNum}` : `${shortDay} ${dateNum}`}
-                  </div>
-                  <div style={{ position: 'relative' }}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDestPickerDay(prev => prev === day.dayNumber ? null : day.dayNumber);
-                        setDestPickerAddMode(false);
-                      }}
-                      style={{
-                        fontFamily: FONT.sans,
-                        fontSize: DAY_DEST_SIZE,
-                        fontWeight: 500,
-                        color: destColor.accent,
-                        cursor: 'pointer',
-                        background: 'none',
-                        border: 'none',
-                        borderBottom: `1px dashed ${destColor.accent}60`,
-                        padding: 0,
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {day.destination || 'TBD'}
-                    </button>
-
-                    {/* Destination picker popover */}
-                    {destPickerDay === day.dayNumber && (
-                      <div
-                        ref={destPickerRef}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: 4,
-                          background: 'white',
-                          borderRadius: 12,
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                          border: '1px solid var(--t-linen)',
-                          padding: destPickerAddMode ? 0 : 8,
-                          zIndex: 50,
-                          minWidth: destPickerAddMode ? 240 : 160,
-                        }}
-                      >
-                        {destPickerAddMode ? (
-                          <AddDestinationSearch
-                            onAdded={() => {
-                              setDestPickerDay(null);
-                              setDestPickerAddMode(false);
-                            }}
-                            onCancel={() => {
-                              setDestPickerAddMode(false);
-                            }}
-                          />
-                        ) : (
-                          <>
-                            {uniqueDestinations.map(dest => {
-                              const isCurrent = dest === day.destination;
-                              const destC = getDestColor(dest);
-                              return (
-                                <button
-                                  key={dest}
-                                  onClick={() => {
-                                    if (!isCurrent) setDayDestination(day.dayNumber, dest);
-                                    setDestPickerDay(null);
-                                  }}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                    width: '100%',
-                                    textAlign: 'left',
-                                    padding: '6px 10px',
-                                    borderRadius: 8,
-                                    border: 'none',
-                                    background: isCurrent ? destC.bg : 'transparent',
-                                    fontFamily: FONT.sans,
-                                    fontSize: 13,
-                                    color: 'var(--t-ink)',
-                                    cursor: isCurrent ? 'default' : 'pointer',
-                                    fontWeight: isCurrent ? 600 : 400,
-                                    opacity: isCurrent ? 0.6 : 1,
-                                  }}
-                                >
-                                  <span style={{
-                                    width: 8, height: 8, borderRadius: '50%',
-                                    background: destC.accent, flexShrink: 0,
-                                  }} />
-                                  {dest}
-                                </button>
-                              );
-                            })}
-                            <button
-                              onClick={() => setDestPickerAddMode(true)}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                width: '100%',
-                                textAlign: 'left',
-                                padding: '6px 10px',
-                                marginTop: 2,
-                                borderRadius: 8,
-                                border: 'none',
-                                borderTop: '1px solid var(--t-linen)',
-                                background: 'transparent',
-                                fontFamily: FONT.sans,
-                                fontSize: 12,
-                                color: INK['50'],
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
-                              Add destination
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                    {shortMonth}
+                  </span>
+                )}
+                <span style={{ fontFamily: FONT.sans, fontSize: DAY_TITLE_SIZE, fontWeight: 700, color: destColor.text, flexShrink: 0 }}>
+                  {isFlexible ? `Day ${dateNum}` : `${shortDay} ${dateNum}`}
+                </span>
+                <span style={{
+                  fontFamily: FONT.sans,
+                  fontSize: DAY_DEST_SIZE,
+                  fontWeight: 500,
+                  color: destColor.accent,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {day.destination || 'TBD'}
+                </span>
               </div>
-              <div className="flex flex-col items-end gap-1">
+            </div>
+
+            {/* Context bar — hotel, transport, directions (like mobile) */}
+            <div
+              className="flex items-center justify-between px-2.5 py-1"
+              style={{
+                background: destColor.bg,
+                borderBottom: `1px solid ${destColor.accent}18`,
+              }}
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
                 {editingHotelDay === day.dayNumber ? (
-                  <div style={{ maxWidth: 180, minWidth: 160 }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ maxWidth: 200, minWidth: 160 }} onClick={(e) => e.stopPropagation()}>
                     <HotelInput
                       value={day.hotelInfo}
                       legacyValue={day.hotel}
@@ -558,69 +453,109 @@ function DayBoardView({
                 ) : (day.hotelInfo || day.hotel) ? (
                   <button
                     onClick={(e) => { e.stopPropagation(); setEditingHotelDay(day.dayNumber); }}
-                    className="flex flex-col items-end gap-0 cursor-pointer"
-                    style={{ maxWidth: 140, background: 'none', border: 'none', padding: 0 }}
-                  >
-                    <div
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-                      style={{ background: `${destColor.accent}12` }}
-                    >
-                      <PerriandIcon name="hotel" size={10} color={destColor.accent} />
-                      <span
-                        className="truncate"
-                        style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: destColor.text, fontWeight: 500 }}
-                      >
-                        {day.hotelInfo?.name || day.hotel}
-                      </span>
-                    </div>
-                    {day.hotelInfo?.address && (
-                      <span
-                        className="truncate px-2"
-                        style={{ fontFamily: FONT.sans, fontSize: 9, color: INK['55'], maxWidth: 140 }}
-                      >
-                        {day.hotelInfo.address}
-                      </span>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setEditingHotelDay(day.dayNumber); }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer nav-hover"
+                    className="flex items-center gap-1 min-w-0"
                     style={{
                       background: 'none',
-                      border: `1px dashed ${destColor.accent}40`,
-                      fontFamily: FONT.sans,
-                      fontSize: 9,
-                      color: destColor.accent,
-                      opacity: 0.7,
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      overflow: 'hidden',
                     }}
                   >
-                    <PerriandIcon name="hotel" size={10} color={destColor.accent} />
-                    Add hotel
-                  </button>
-                )}
-                {/* + Transport pill in header */}
-                {addingTransportDay !== day.dayNumber && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setAddingTransportDay(day.dayNumber); }}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full cursor-pointer nav-hover"
-                    style={{
-                      background: `${destColor.accent}15`,
-                      border: 'none',
+                    <span className="flex items-center gap-1" style={{
                       fontFamily: FONT.sans,
                       fontSize: 10,
                       fontWeight: 600,
                       color: destColor.text,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      <PerriandIcon name="hotel" size={10} color={destColor.text} />
+                      {day.hotelInfo?.name || day.hotel}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditingHotelDay(day.dayNumber); }}
+                    className="flex items-center gap-1"
+                    style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 10,
+                      fontWeight: 500,
+                      color: `${destColor.accent}cc`,
+                      whiteSpace: 'nowrap',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
                     }}
                   >
-                    <PerriandIcon name="transport" size={11} color={destColor.accent} />
-                    + Transportation
+                    <PerriandIcon name="hotel" size={10} color={`${destColor.accent}cc`} />
+                    + Hotel
+                  </button>
+                )}
+
+                {!editingHotelDay && (
+                  <span style={{ color: INK['15'], fontSize: 9 }}>·</span>
+                )}
+
+                {/* + Transport button */}
+                {addingTransportDay !== day.dayNumber && !editingHotelDay && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setAddingTransportDay(day.dayNumber); }}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{
+                      fontFamily: FONT.sans,
+                      fontSize: 9,
+                      fontWeight: 600,
+                      color: destColor.text,
+                      whiteSpace: 'nowrap',
+                      background: `${destColor.accent}18`,
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <PerriandIcon name="transport" size={10} color={destColor.accent} />
+                    + Transport
                   </button>
                 )}
               </div>
+
+              {/* Directions button (only when 2+ placed items) */}
+              {(() => {
+                const placedItems = day.slots.flatMap(s => s.places);
+                if (placedItems.length < 2) return null;
+                return (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const waypoints = placedItems.map(p => {
+                        const g = p.google as Record<string, unknown> & { lat?: number; lng?: number } | undefined;
+                        if (g?.lat && g?.lng) return `${g.lat},${g.lng}`;
+                        return encodeURIComponent(`${p.name} ${p.location}`);
+                      });
+                      window.open(`https://www.google.com/maps/dir/${waypoints.join('/')}`, '_blank');
+                    }}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{
+                      background: `${destColor.accent}12`,
+                      color: destColor.accent,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: FONT.sans,
+                      fontSize: 9,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <PerriandIcon name="discover" size={10} color={destColor.accent} />
+                    Directions
+                  </button>
+                );
+              })()}
             </div>
 
-            {/* Transport input form (new transport) — expands below header */}
+            {/* Transport input form (new transport) — expands below context bar */}
             {addingTransportDay === day.dayNumber && (
               <div className="px-2 py-1.5" style={{ background: `${destColor.bg}`, borderBottom: '1px solid var(--t-linen)' }} onClick={e => e.stopPropagation()}>
                 <TransportInput
@@ -779,6 +714,20 @@ function DayBoardView({
                       );
                     })}
 
+                    {/* Quick entries */}
+                    {slot.quickEntries && slot.quickEntries.length > 0 && (
+                      <div className={`px-${CARD_PX} pb-0.5`}>
+                        {slot.quickEntries.map(qe => (
+                          <QuickEntryCard
+                            key={qe.id}
+                            entry={qe}
+                            onRemove={() => removeQuickEntry(day.dayNumber, slot.id, qe.id)}
+                            onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(day.dayNumber, slot.id, qe.id) : undefined}
+                          />
+                        ))}
+                      </div>
+                    )}
+
                     {/* Collaborator suggestions */}
                     {slotSuggestions.length > 0 && (
                       <div className={`px-${CARD_PX} pb-1 flex flex-col gap-1`}>
@@ -794,10 +743,11 @@ function DayBoardView({
                       </div>
                     )}
 
-                    {/* Empty slot — same height as card rows */}
-                    {!hasPlaces && !hasGhosts && slotSuggestions.length === 0 && (
+                    {/* Empty slot placeholder — only when truly empty and no quick input */}
+                    {!hasPlaces && !hasGhosts && !(slot.quickEntries?.length) && slotSuggestions.length === 0 && activeQuickInput !== `${day.dayNumber}-${slot.id}` && (
                       <div
-                        className={`mx-${CARD_PX} mb-1.5 rounded flex items-center justify-center`}
+                        onClick={() => setActiveQuickInput(`${day.dayNumber}-${slot.id}`)}
+                        className={`mx-${CARD_PX} mb-1.5 rounded flex items-center justify-center cursor-pointer`}
                         style={{
                           height: CARD_H,
                           border: isDropActive ? '2px dashed var(--t-verde)' : '1px dashed var(--t-linen)',
@@ -805,9 +755,56 @@ function DayBoardView({
                           transition: 'all 150ms ease',
                         }}
                       >
-                        <span style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 11 : 10, color: INK['45'] }}>
-                          + add
+                        <span style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 11 : 10, color: INK['70'] }}>
+                          + add entry
                         </span>
+                      </div>
+                    )}
+
+                    {/* Inline quick entry input (desktop) */}
+                    {activeQuickInput === `${day.dayNumber}-${slot.id}` && (
+                      <div className={`px-${CARD_PX} mb-1.5`}>
+                        <QuickEntryInput
+                          slotLabel={slot.label}
+                          onSubmit={(entry) => {
+                            addQuickEntry(day.dayNumber, slot.id, entry);
+                            setActiveQuickInput(null);
+                          }}
+                          onCancel={() => setActiveQuickInput(null)}
+                        />
+                      </div>
+                    )}
+
+                    {/* Add entry / browse places buttons — always visible when content exists and input isn't active */}
+                    {(hasPlaces || hasGhosts || (slot.quickEntries?.length ?? 0) > 0) && activeQuickInput !== `${day.dayNumber}-${slot.id}` && (
+                      <div className={`px-${CARD_PX} pb-1.5 flex items-center gap-1.5`}>
+                        <button
+                          onClick={() => setActiveQuickInput(`${day.dayNumber}-${slot.id}`)}
+                          className="text-[9px] cursor-pointer rounded flex items-center gap-0.5"
+                          style={{
+                            color: INK['80'],
+                            fontFamily: FONT.sans,
+                            fontWeight: 500,
+                            background: INK['04'],
+                            border: `1px solid ${INK['10']}`,
+                            padding: '3px 6px',
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={(e) => {
+                            const el = e.currentTarget;
+                            el.style.background = 'rgba(42,122,86,0.06)';
+                            el.style.borderColor = 'rgba(42,122,86,0.2)';
+                            el.style.color = 'var(--t-verde)';
+                          }}
+                          onMouseLeave={(e) => {
+                            const el = e.currentTarget;
+                            el.style.background = INK['04'];
+                            el.style.borderColor = INK['10'];
+                            el.style.color = INK['80'];
+                          }}
+                        >
+                          <span style={{ fontSize: 11, lineHeight: 1 }}>+</span> add entry
+                        </button>
                       </div>
                     )}
 
