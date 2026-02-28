@@ -258,7 +258,8 @@ export const placeIntelligencePipeline = inngest.createFunction(
           const isTimeout = errMsg.includes('abort') || errMsg.includes('timeout') || errMsg.includes('TimeoutError');
           console.error(`[pipeline] ${stage.id} FAILED for ${base.propertyName} (${base.googlePlaceId}): ${isTimeout ? 'TIMEOUT' : 'ERROR'} — ${errMsg}`);
           completedStages.push(`${stage.id}_skipped`);
-          return { ...stage.fallback, _stageError: { stage: stage.id, error: errMsg, isTimeout } };
+          const fb = (typeof stage.fallback === 'object' && stage.fallback !== null ? stage.fallback : {}) as Record<string, unknown>;
+          return { ...fb, _stageError: { stage: stage.id, error: errMsg, isTimeout } };
         }
       });
       results[stage.id] = result;
