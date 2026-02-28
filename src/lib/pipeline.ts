@@ -16,11 +16,14 @@ const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
 // ─── Helper: call the Python pipeline worker ───
 
+const WORKER_TIMEOUT_MS = 120_000; // 2 minutes — fail fast instead of hanging until Vercel kills the function
+
 async function callWorker(stage: string, payload: Record<string, unknown>): Promise<unknown> {
   const res = await fetch(`${PIPELINE_WORKER_URL}/run`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ stage, ...payload }),
+    signal: AbortSignal.timeout(WORKER_TIMEOUT_MS),
   });
 
   if (!res.ok) {
