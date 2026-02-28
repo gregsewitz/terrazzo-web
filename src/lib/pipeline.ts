@@ -16,7 +16,7 @@ const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
 // ─── Helper: call the Python pipeline worker ───
 
-const WORKER_TIMEOUT_MS = 120_000; // 2 minutes — fail fast instead of hanging until Vercel kills the function
+const WORKER_TIMEOUT_MS = 300_000; // 5 minutes — editorial & review stages can need 3+ min for Apify + GPT
 
 async function callWorker(stage: string, payload: Record<string, unknown>): Promise<unknown> {
   const res = await fetch(`${PIPELINE_WORKER_URL}/run`, {
@@ -254,9 +254,11 @@ export const placeIntelligencePipeline = inngest.createFunction(
           return res;
         } catch (e) {
           if (!stage.optional) throw e;
-          console.error(`${stage.id} failed, continuing:`, e);
+          const errMsg = e instanceof Error ? e.message : String(e);
+          const isTimeout = errMsg.includes('abort') || errMsg.includes('timeout') || errMsg.includes('TimeoutError');
+          console.error(`[pipeline] ${stage.id} FAILED for ${base.propertyName} (${base.googlePlaceId}): ${isTimeout ? 'TIMEOUT' : 'ERROR'} — ${errMsg}`);
           completedStages.push(`${stage.id}_skipped`);
-          return stage.fallback;
+          return { ...stage.fallback, _stageError: { stage: stage.id, error: errMsg, isTimeout } };
         }
       });
       results[stage.id] = result;
@@ -266,6 +268,14 @@ export const placeIntelligencePipeline = inngest.createFunction(
 
     // ── Build enriched source diagnostics ──
     const scrapeResult = results.scrape_reviews as Record<string, unknown> | undefined;
+
+    // Collect stage errors from any stages that used fallbacks
+    const stageErrors: Record<string, unknown> = {};
+    for (const stage of STAGES) {
+      const r = results[stage.id] as Record<string, unknown> | undefined;
+      if (r?._stageError) stageErrors[stage.id] = r._stageError;
+    }
+
     const sourceDiagnostics = {
       ...(merged.sourceSummary || {}),
       reviewScraper: {
@@ -278,6 +288,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
         skipped: completedStages.includes('scrape_reviews_skipped'),
         rawKeys: scrapeResult ? Object.keys(scrapeResult) : [],
       },
+      ...(Object.keys(stageErrors).length > 0 ? { stageErrors } : {}),
     };
 
     // ── Save to Database ──
