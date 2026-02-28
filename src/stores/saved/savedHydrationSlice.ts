@@ -63,12 +63,15 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       const emoji = isPerriandIconName(rawEmoji) ? rawEmoji : 'pin';
       const emojiChanged = emoji !== rawEmoji;
 
-      // Write-back pruned placeIds and/or sanitized emoji to Supabase
-      if (hadOrphans || emojiChanged) {
-        const patch: Record<string, unknown> = {};
-        if (hadOrphans) patch.placeIds = prunedIds;
-        if (emojiChanged) patch.emoji = emoji;
-        dbWrite(`/api/collections/${ds.id}`, 'PATCH', patch);
+      // Write-back sanitized emoji to Supabase (safe — icon name fix only).
+      // NOTE: We intentionally do NOT write-back pruned placeIds here.
+      // Orphan pruning is a local-only safety measure. Writing back could
+      // destroy data if the place IDs are legitimately stored on the server
+      // but failed to load in this particular hydration (e.g. pagination,
+      // transient error, or a race with ID swaps). The server is the source
+      // of truth for placeIds — let it keep what it has.
+      if (emojiChanged) {
+        dbWrite(`/api/collections/${ds.id}`, 'PATCH', { emoji });
       }
 
       return {

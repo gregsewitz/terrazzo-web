@@ -1,5 +1,6 @@
 import type { ImportedPlace } from '@/types';
 import { StateCreator } from 'zustand';
+import { apiFetch } from '@/lib/api-client';
 import { dbWrite } from './savedHelpers';
 import type { SavedState, HistoryItem } from './savedTypes';
 
@@ -29,8 +30,9 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
     const histItem = state.history.find((h) => h.id === id);
     if (!histItem) return;
 
+    const clientId = `promoted-${id}`;
     const newPlace: ImportedPlace = {
-      id: `promoted-${id}`,
+      id: clientId,
       name: histItem.name,
       type: histItem.type,
       location: histItem.location,
@@ -47,15 +49,43 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
       history: state.history.filter((h) => h.id !== id),
     });
 
-    // Write-through: save promoted place to DB
-    dbWrite('/api/places/save', 'POST', {
-      name: newPlace.name,
-      type: newPlace.type,
-      location: newPlace.location,
-      ghostSource: 'manual',
-      matchScore: 0,
-      matchBreakdown: newPlace.matchBreakdown,
-    });
+    // Save to server and swap the client ID → server ID (same pattern as addPlace).
+    (async () => {
+      try {
+        const res = await apiFetch<{ place?: { id: string } }>('/api/places/save', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: newPlace.name,
+            type: newPlace.type,
+            location: newPlace.location,
+            ghostSource: 'manual',
+            matchScore: 0,
+            matchBreakdown: newPlace.matchBreakdown,
+          }),
+        });
+        const realId = res?.place?.id;
+        if (realId && realId !== clientId) {
+          const affectedCollectionIds: string[] = [];
+          set((s) => {
+            const updatedCollections = s.collections.map(c => {
+              if (!c.placeIds.includes(clientId)) return c;
+              affectedCollectionIds.push(c.id);
+              return { ...c, placeIds: c.placeIds.map(pid => pid === clientId ? realId : pid) };
+            });
+            return {
+              myPlaces: s.myPlaces.map(p => p.id === clientId ? { ...p, id: realId } : p),
+              collections: updatedCollections,
+            };
+          });
+          affectedCollectionIds.forEach(cid => {
+            const col = get().collections.find(c => c.id === cid);
+            if (col) dbWrite(`/api/collections/${cid}`, 'PATCH', { placeIds: col.placeIds });
+          });
+        }
+      } catch (err) {
+        console.error('[promoteFromHistory] Failed to save on server:', err);
+      }
+    })();
   },
 
   archiveToHistory: (id) => {
@@ -73,13 +103,29 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
       ghostSource: place.ghostSource || 'manual',
     };
 
+    // Also strip the place from any collections (local cleanup so state
+    // is consistent even if the server DELETE is delayed or fails).
+    const affectedCollectionIds: string[] = [];
+    const updatedCollections = state.collections.map(c => {
+      if (!c.placeIds.includes(id)) return c;
+      affectedCollectionIds.push(c.id);
+      return { ...c, placeIds: c.placeIds.filter(pid => pid !== id) };
+    });
+
     set({
       myPlaces: state.myPlaces.filter((p) => p.id !== id),
+      collections: updatedCollections,
       history: [historyItem, ...state.history],
     });
 
     // Write-through: remove archived place from DB
     dbWrite(`/api/places/${id}`, 'DELETE');
+
+    // Re-PATCH affected collections so the server also removes the reference
+    affectedCollectionIds.forEach(cid => {
+      const col = get().collections.find(c => c.id === cid);
+      if (col) dbWrite(`/api/collections/${cid}`, 'PATCH', { placeIds: col.placeIds });
+    });
   },
 
   addHistoryItems: (items) => set((state) => {

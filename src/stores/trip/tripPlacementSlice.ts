@@ -239,6 +239,29 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   ratePlace: (itemId, rating) => {
+    // Find the library reference before updating, so we can sync the rating
+    // back to the main library (saved places store).
+    const trip = get().currentTrip();
+    let libraryId: string | undefined;
+    if (trip) {
+      const poolItem = trip.pool.find(p => p.id === itemId);
+      if (poolItem) {
+        libraryId = poolItem.libraryPlaceId || poolItem.id;
+      } else {
+        // Check placed items in day slots
+        for (const day of trip.days) {
+          for (const slot of day.slots) {
+            const placed = slot.places.find(p => p.id === itemId);
+            if (placed) {
+              libraryId = placed.libraryPlaceId || placed.id;
+              break;
+            }
+          }
+          if (libraryId) break;
+        }
+      }
+    }
+
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
@@ -255,6 +278,19 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
       const t = get().trips.find(tr => tr.id === tripId);
       return t ? { days: t.days, pool: t.pool } : {};
     });
+
+    // Also persist the rating to the library entry so it syncs across
+    // devices via the saved places store (not just inside this trip).
+    if (libraryId && libraryId !== itemId) {
+      // Lazy-import to avoid circular deps between trip and saved stores
+      import('../savedStore').then(({ useSavedStore }) => {
+        const savedState = useSavedStore.getState();
+        const libraryPlace = savedState.myPlaces.find(p => p.id === libraryId);
+        if (libraryPlace) {
+          savedState.ratePlace(libraryId!, rating);
+        }
+      }).catch(() => { /* saved store not available */ });
+    }
   },
 
   setPlaceTime: (dayNumber, slotId, placeId, specificTime, specificTimeLabel) => {

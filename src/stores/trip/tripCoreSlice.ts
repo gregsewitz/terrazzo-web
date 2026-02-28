@@ -1,7 +1,7 @@
 import { Trip, ImportedPlace, TripDay, DEFAULT_TIME_SLOTS, TripCreationData, GeoDestination, TravelContext } from '@/types';
 import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
-import { dbWrite } from './tripHelpers';
+import { dbWrite, _pendingTripIds, debouncedTripSave, cancelTripSave } from './tripHelpers';
 import type { TripState } from './types';
 
 // ═══════════════════════════════════════════
@@ -98,7 +98,6 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
 
   deleteTrip: async (id: string) => {
     // Cancel any pending debounced saves to avoid PATCH-after-DELETE race
-    const { cancelTripSave } = require('./tripHelpers');
     cancelTripSave(id);
 
     // Snapshot for rollback
@@ -134,7 +133,6 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       trips: state.trips.map(t => t.id === id ? { ...t, name: trimmed } : t),
     }));
     // Debounce-save to server
-    const { debouncedTripSave } = require('./tripHelpers');
     debouncedTripSave(id, () => {
       const trip = get().trips.find(t => t.id === id);
       return trip ? { name: trip.name } : {};
@@ -226,7 +224,9 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       currentDay: 1,
     }));
 
-    // Create in DB and sync the real ID back to the store
+    // Create in DB and sync the real ID back to the store.
+    // Track the temp ID so debounced saves skip it until the real ID arrives.
+    _pendingTripIds.add(id);
     const payload = {
       name: data.name,
       destinations: data.destinations,
@@ -246,14 +246,35 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
         });
         const realId = res?.trip?.id;
         if (realId && realId !== id) {
+          // Capture any changes made while using the temp ID
+          const preSwap = get().trips.find(t => t.id === id);
+
           set((state) => ({
             trips: state.trips.map(t =>
               t.id === id ? { ...t, id: realId } : t
             ),
             currentTripId: state.currentTripId === id ? realId : state.currentTripId,
           }));
+          _pendingTripIds.delete(id);
+
+          // If the trip accumulated changes under the temp ID (e.g. pool
+          // additions, day edits), persist them now under the real ID.
+          if (preSwap && (preSwap.pool.length > 0 || preSwap.days.length > 0)) {
+            const swapped = get().trips.find(t => t.id === realId);
+            if (swapped) {
+              debouncedTripSave(realId, () => ({
+                days: swapped.days,
+                pool: swapped.pool,
+                status: swapped.status,
+                name: swapped.name,
+              }));
+            }
+          }
+        } else {
+          _pendingTripIds.delete(id);
         }
       } catch (err) {
+        _pendingTripIds.delete(id);
         console.error('[createTrip] Failed to create on server:', err);
       }
     })();
@@ -436,7 +457,6 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
 
     const tripId = get().currentTripId;
     if (tripId) {
-      const { debouncedTripSave } = require('./tripHelpers');
       debouncedTripSave(tripId, () => {
         const t = get().trips.find(tr => tr.id === tripId);
         return t ? { days: t.days, status: t.status, startDate: isFlexible ? undefined : startDate, endDate: isFlexible ? undefined : endDate, flexibleDates: isFlexible || undefined } : {};

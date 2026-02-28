@@ -10,6 +10,30 @@ function safeEmoji(raw?: string): string {
   return raw && isPerriandIconName(raw) ? raw : 'pin';
 }
 
+// ── Temp → Real ID resolution ─────────────────────────────────────────
+// Tracks optimistic client IDs that haven't been confirmed by the server
+// yet. Entries are cleaned up once the real ID arrives.
+const _pendingCollectionIds = new Set<string>();
+
+/**
+ * Resolve a collection ID that might be a stale temp ID.
+ * After createCollection(Async) swaps temp → real in the store,
+ * callers that captured the temp ID will no longer find it.
+ * This helper falls back to finding by other means.
+ */
+function resolveCollectionInStore(
+  collections: Collection[],
+  id: string,
+): Collection | undefined {
+  // Fast path: exact match (works for real IDs and pre-swap temp IDs)
+  const exact = collections.find(c => c.id === id);
+  if (exact) return exact;
+  // If the ID looks like a temp ID that was already swapped, we can't
+  // reliably find it. Return undefined — the caller should skip the write
+  // (the ID swap handler will re-PATCH with the correct data).
+  return undefined;
+}
+
 // ═══════════════════════════════════════════
 // Collection slice state
 // ═══════════════════════════════════════════
@@ -47,6 +71,7 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
     const validEmoji = safeEmoji(emoji);
     const newId = `collection-${Date.now()}`;
     const now = new Date().toISOString();
+    _pendingCollectionIds.add(newId);
     set((state) => ({
       collections: [
         ...state.collections,
@@ -63,7 +88,10 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         },
       ],
     }));
-    // Create in DB and sync the real ID back to the store
+    // Create in DB and sync the real ID back to the store.
+    // After swap, re-PATCH the collection if it gained placeIds while
+    // still using the temp ID (fixes the race where adds happen before
+    // the server responds).
     (async () => {
       try {
         const res = await apiFetch<{ collection?: { id: string } }>('/api/collections', {
@@ -72,13 +100,27 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         });
         const realId = res?.collection?.id;
         if (realId && realId !== newId) {
+          // Capture placeIds that may have accumulated under the temp ID
+          const preSwap = get().collections.find(c => c.id === newId);
+          const placeIds = preSwap?.placeIds ?? [];
+
           set((state) => ({
             collections: state.collections.map(sl =>
               sl.id === newId ? { ...sl, id: realId } : sl
             ),
           }));
+          _pendingCollectionIds.delete(newId);
+
+          // If places were added while the temp ID was active, persist
+          // them now under the real server ID.
+          if (placeIds.length > 0) {
+            dbWrite(`/api/collections/${realId}`, 'PATCH', { placeIds });
+          }
+        } else {
+          _pendingCollectionIds.delete(newId);
         }
       } catch (err) {
+        _pendingCollectionIds.delete(newId);
         console.error('[createCollection] Failed to create on server:', err);
       }
     })();
@@ -89,6 +131,11 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
     const validEmoji = safeEmoji(emoji);
     const tempId = `collection-${Date.now()}`;
     const now = new Date().toISOString();
+
+    // Track this temp ID so addPlaceToCollection/removePlaceFromCollection
+    // skip DB writes while the server round-trip is in flight.
+    _pendingCollectionIds.add(tempId);
+
     set((state) => ({
       collections: [
         ...state.collections,
@@ -112,15 +159,28 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
       });
       const realId = res?.collection?.id;
       if (realId && realId !== tempId) {
+        // Check if places were added during the await
+        const preSwap = get().collections.find(c => c.id === tempId);
+        const placeIds = preSwap?.placeIds ?? [];
+
         set((state) => ({
           collections: state.collections.map(sl =>
             sl.id === tempId ? { ...sl, id: realId } : sl
           ),
         }));
+        _pendingCollectionIds.delete(tempId);
+
+        // If places accumulated under the temp ID, persist them under the real ID
+        if (placeIds.length > 0) {
+          dbWrite(`/api/collections/${realId}`, 'PATCH', { placeIds });
+        }
+
         return realId;
       }
+      _pendingCollectionIds.delete(tempId);
       return tempId;
     } catch (err) {
+      _pendingCollectionIds.delete(tempId);
       console.error('[createCollectionAsync] Failed to create on server:', err);
       return tempId;
     }
@@ -161,9 +221,16 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         }),
       };
     });
-    // Write-through
-    const sl = get().collections.find(s => s.id === collectionId);
-    if (sl) dbWrite(`/api/collections/${collectionId}`, 'PATCH', { placeIds: sl.placeIds });
+    // Write-through — use the collection's actual ID (may differ from
+    // param if the temp → real swap already happened).
+    const sl = resolveCollectionInStore(get().collections, collectionId);
+    if (sl) {
+      // If the collection still has a pending temp ID, skip the write —
+      // the createCollection ID-swap handler will re-PATCH.
+      if (!_pendingCollectionIds.has(sl.id)) {
+        dbWrite(`/api/collections/${sl.id}`, 'PATCH', { placeIds: sl.placeIds });
+      }
+    }
   },
 
   removePlaceFromCollection: (collectionId, placeId) => {
@@ -181,9 +248,13 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
         }),
       };
     });
-    // Write-through
-    const sl = get().collections.find(s => s.id === collectionId);
-    if (sl) dbWrite(`/api/collections/${collectionId}`, 'PATCH', { placeIds: sl.placeIds });
+    // Write-through — use the collection's actual ID
+    const sl = resolveCollectionInStore(get().collections, collectionId);
+    if (sl) {
+      if (!_pendingCollectionIds.has(sl.id)) {
+        dbWrite(`/api/collections/${sl.id}`, 'PATCH', { placeIds: sl.placeIds });
+      }
+    }
   },
 
   createSmartCollection: (name, emoji, query, filterTags, placeIds) => {

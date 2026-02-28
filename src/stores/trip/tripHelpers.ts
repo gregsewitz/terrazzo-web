@@ -11,6 +11,13 @@ export function dbWrite(url: string, method: string, body?: unknown) {
 }
 
 // ═══════════════════════════════════════════
+// Pending trip ID tracking
+// ═══════════════════════════════════════════
+
+/** Tracks optimistic temp trip IDs that haven't been confirmed by the server yet. */
+export const _pendingTripIds = new Set<string>();
+
+// ═══════════════════════════════════════════
 // Debounced trip save
 // ═══════════════════════════════════════════
 
@@ -21,7 +28,16 @@ export function debouncedTripSave(tripId: string, getData: () => Partial<Trip>) 
   if (existing) clearTimeout(existing);
   _tripSaveTimers.set(tripId, setTimeout(() => {
     _tripSaveTimers.delete(tripId);
+    // Skip if the trip still has a pending temp ID — the createTrip
+    // ID-swap handler will save the accumulated state under the real ID.
+    if (_pendingTripIds.has(tripId)) {
+      console.warn(`[debouncedTripSave] Skipping save for pending temp ID: ${tripId}`);
+      return;
+    }
     const data = getData();
+    // Guard: if getData returned nothing meaningful (trip was deleted or
+    // its ID was swapped since this timer was queued), skip the write.
+    if (!data || Object.keys(data).length === 0) return;
     dbWrite(`/api/trips/${tripId}/save`, 'PATCH', data);
   }, 2000));
 }

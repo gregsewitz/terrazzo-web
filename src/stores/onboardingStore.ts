@@ -320,6 +320,20 @@ export const useOnboardingStore = create<OnboardingState>()(
   )
 );
 
+// ─── Flush pending saves on tab close ───
+// During onboarding, profile data is saved via fire-and-forget `dbSave`.
+// If the user closes/refreshes the tab before `finishOnboarding` is called,
+// those queued writes could be lost. This listener flushes them synchronously.
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    const state = useOnboardingStore.getState();
+    // Only flush if onboarding is in progress (has signals but isn't complete)
+    if (!state.isComplete && state.allSignals.length > 0) {
+      flushSaves();
+    }
+  });
+}
+
 // ─── Selectors ───
 
 export const selectCurrentPhaseId = (state: OnboardingState) =>
