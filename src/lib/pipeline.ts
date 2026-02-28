@@ -264,6 +264,22 @@ export const placeIntelligencePipeline = inngest.createFunction(
 
     const merged = results.merge as PipelineResult;
 
+    // ── Build enriched source diagnostics ──
+    const scrapeResult = results.scrape_reviews as Record<string, unknown> | undefined;
+    const sourceDiagnostics = {
+      ...(merged.sourceSummary || {}),
+      reviewScraper: {
+        totalCount: (scrapeResult as { totalCount?: number })?.totalCount ?? 0,
+        googleCount: (scrapeResult as { googleCount?: number })?.googleCount ?? 0,
+        tripadvisorCount: (scrapeResult as { tripadvisorCount?: number })?.tripadvisorCount ?? 0,
+        reviewsReturned: Array.isArray((scrapeResult as { reviews?: unknown[] })?.reviews)
+          ? (scrapeResult as { reviews: unknown[] }).reviews.length : 0,
+        urlsAttempted: (scrapeResult as { urlsAttempted?: unknown })?.urlsAttempted ?? null,
+        skipped: completedStages.includes('scrape_reviews_skipped'),
+        rawKeys: scrapeResult ? Object.keys(scrapeResult) : [],
+      },
+    };
+
     // ── Save to Database ──
     await step.run('save-to-database', async () => {
       await prisma.placeIntelligence.update({
@@ -278,9 +294,9 @@ export const placeIntelligencePipeline = inngest.createFunction(
           reviewIntel: JSON.parse(JSON.stringify(merged.reviewIntelSummary)) as any,
           signalCount: merged.signals.length,
           antiSignalCount: merged.antiSignals.length,
-          reviewCount: merged.reliability?.totalReviews || 0,
-          reliabilityScore: merged.reliability?.overall || null,
-          sourcesProcessed: JSON.parse(JSON.stringify(merged.sourceSummary)) as any,
+          reviewCount: merged.reliability?.totalReviews ?? 0,
+          reliabilityScore: merged.reliability?.overall ?? null,
+          sourcesProcessed: JSON.parse(JSON.stringify(sourceDiagnostics)) as any,
           lastEnrichedAt: new Date(),
         },
       });
