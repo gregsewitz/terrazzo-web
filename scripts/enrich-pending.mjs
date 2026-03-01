@@ -4,6 +4,8 @@
  * Calls the Railway pipeline worker directly for pending PlaceIntelligence records.
  * No Inngest, no Vercel — Railway runs the full pipeline and writes to Supabase.
  *
+ * Uses async job submission + polling to avoid Railway's 5-min proxy timeout.
+ *
  * Usage:
  *   node scripts/enrich-pending.mjs         # all pending
  *   node scripts/enrich-pending.mjs 10      # first 10 pending
@@ -17,7 +19,8 @@ dotenv.config({ path: '.env.local' });
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL;
 const DATABASE_URL = process.env.DATABASE_URL;
 const CONCURRENCY = 5; // max parallel enrichments
-const WORKER_TIMEOUT_MS = 600_000; // 10 minutes per place
+const POLL_INTERVAL_MS = 15_000; // check status every 15s
+const JOB_TIMEOUT_MS = 1200_000; // 20 minutes max per place
 
 if (!PIPELINE_WORKER_URL || !DATABASE_URL) {
   console.error('Missing PIPELINE_WORKER_URL or DATABASE_URL in .env.local');
@@ -26,9 +29,8 @@ if (!PIPELINE_WORKER_URL || !DATABASE_URL) {
 }
 
 async function enrichPlace(place) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), WORKER_TIMEOUT_MS);
-
+  // Step 1: Submit job (returns immediately)
+  let jobId;
   try {
     const res = await fetch(`${PIPELINE_WORKER_URL}/enrich`, {
       method: 'POST',
@@ -39,22 +41,51 @@ async function enrichPlace(place) {
         placeIntelligenceId: place.id,
         placeType: 'restaurant',
       }),
-      signal: controller.signal,
     });
-
-    clearTimeout(timeout);
 
     if (!res.ok) {
       const text = await res.text();
-      return { success: false, propertyName: place.propertyName, error: `${res.status}: ${text.slice(0, 200)}` };
+      return { success: false, propertyName: place.propertyName, error: `Submit ${res.status}: ${text.slice(0, 200)}` };
     }
 
-    const result = await res.json();
-    return { success: true, ...result };
+    const data = await res.json();
+    jobId = data.jobId;
   } catch (e) {
-    clearTimeout(timeout);
-    return { success: false, propertyName: place.propertyName, error: e.message };
+    return { success: false, propertyName: place.propertyName, error: `Submit failed: ${e.message}` };
   }
+
+  // Step 2: Poll for completion
+  const deadline = Date.now() + JOB_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+
+    try {
+      const res = await fetch(`${PIPELINE_WORKER_URL}/enrich/status/${jobId}`);
+      if (!res.ok) continue; // retry on transient error
+
+      const status = await res.json();
+
+      if (status.status === 'complete') {
+        return {
+          success: true,
+          propertyName: place.propertyName,
+          signalCount: status.result?.signalCount ?? 0,
+          durationMs: status.result?.durationMs ?? status.elapsedSeconds * 1000,
+        };
+      }
+
+      if (status.status === 'failed') {
+        return { success: false, propertyName: place.propertyName, error: status.error || 'Pipeline failed' };
+      }
+
+      // Still running — log stage
+    } catch {
+      // Network blip — keep polling
+    }
+  }
+
+  return { success: false, propertyName: place.propertyName, error: `Timed out after ${JOB_TIMEOUT_MS / 1000}s` };
 }
 
 async function main() {
@@ -87,14 +118,15 @@ async function main() {
   let failed = 0;
   const startTime = Date.now();
 
-  // Simple concurrency pool
   const queue = [...rows];
-  const active = new Set();
+  const active = new Map(); // propertyName -> currentStage
 
   function logProgress() {
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     const total = rows.length;
+    const activeNames = [...active.keys()].join(', ');
     console.log(`  ⏳ ${elapsed}s — ${completed + failed}/${total} done (${completed} ✓, ${failed} ✗, ${active.size} active, ${queue.length} queued)`);
+    if (active.size > 0) console.log(`     Active: ${activeNames}`);
   }
 
   const progressInterval = setInterval(logProgress, 30000);
@@ -102,7 +134,7 @@ async function main() {
   async function processNext() {
     while (queue.length > 0) {
       const place = queue.shift();
-      active.add(place.propertyName);
+      active.set(place.propertyName, 'starting');
       console.log(`  → Starting: ${place.propertyName}`);
 
       const result = await enrichPlace(place);
