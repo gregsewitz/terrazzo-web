@@ -180,7 +180,7 @@ export const placeIntelligencePipeline = inngest.createFunction(
   {
     id: 'place-intelligence-pipeline',
     retries: 2,
-    concurrency: { limit: 10 },
+    concurrency: { limit: 5 },
     onFailure: async ({ event, error }) => {
       const data = event.data.event.data as PipelineEventData;
       const errorMessage = error?.message || 'Unknown error (retries exhausted)';
