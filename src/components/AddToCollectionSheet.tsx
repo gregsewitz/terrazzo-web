@@ -1,10 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+
+type CollectionSortKey = 'recent' | 'az' | 'most' | 'fewest';
+
+const SORT_OPTIONS: { id: CollectionSortKey; label: string }[] = [
+  { id: 'recent', label: 'Recent' },
+  { id: 'az', label: 'A–Z' },
+  { id: 'most', label: 'Most' },
+  { id: 'fewest', label: 'Fewest' },
+];
 
 export default function AddToCollectionSheet({
   place,
@@ -21,6 +30,26 @@ export default function AddToCollectionSheet({
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [sortBy, setSortBy] = useState<CollectionSortKey>('recent');
+
+  const sortedCollections = useMemo(() => {
+    const items = [...collections];
+    switch (sortBy) {
+      case 'az':
+        return items.sort((a, b) => a.name.localeCompare(b.name));
+      case 'most':
+        return items.sort((a, b) => b.placeIds.length - a.placeIds.length);
+      case 'fewest':
+        return items.sort((a, b) => a.placeIds.length - b.placeIds.length);
+      case 'recent':
+      default:
+        // newest first — already default store order, but reverse to be safe
+        return items.sort((a, b) =>
+          new Date(b.updatedAt || b.createdAt).getTime() -
+          new Date(a.updatedAt || a.createdAt).getTime()
+        );
+    }
+  }, [collections, sortBy]);
 
   const toggleMembership = (collectionId: string, isIn: boolean) => {
     if (isIn) {
@@ -69,13 +98,38 @@ export default function AddToCollectionSheet({
             <PerriandIcon name="close" size={16} color={INK['50']} />
           </button>
         </div>
-        <div className="text-[11px] mb-4" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+        <div className="text-[11px] mb-3" style={{ color: INK['70'], fontFamily: FONT.sans }}>
           {place.name}
         </div>
 
+        {/* Sort pills */}
+        {collections.length > 2 && (
+          <div className="flex items-center gap-1.5 mb-3 pb-3" style={{ borderBottom: `1px solid var(--t-linen)` }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 8, letterSpacing: 1.5, color: INK['40'], textTransform: 'uppercase', marginRight: 4 }}>
+              Sort
+            </span>
+            {SORT_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => setSortBy(opt.id)}
+                className="px-2.5 py-1 rounded-full text-[10px] cursor-pointer transition-all"
+                style={{
+                  background: sortBy === opt.id ? 'var(--t-ink)' : 'transparent',
+                  color: sortBy === opt.id ? 'white' : INK['70'],
+                  border: sortBy === opt.id ? '1px solid var(--t-ink)' : `1px solid ${INK['12']}`,
+                  fontFamily: FONT.sans,
+                  fontWeight: sortBy === opt.id ? 600 : 400,
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Collection list */}
         <div className="flex flex-col gap-1.5 mb-4 flex-1 min-h-0 overflow-y-auto">
-          {collections.map(sl => {
+          {sortedCollections.map(sl => {
             const isIn = sl.placeIds.includes(place.id);
             const isIcon = sl.emoji ? isPerriandIconName(sl.emoji) : false;
 

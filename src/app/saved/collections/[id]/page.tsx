@@ -14,6 +14,7 @@ import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK } from '@/constants/theme';
 import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
+import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet';
 
 export default function CollectionDetailPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
@@ -46,6 +47,7 @@ function CollectionDetailContent() {
   const [editDescription, setEditDescription] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
+  const [showAddPlaces, setShowAddPlaces] = useState(false);
 
   // Filter & sort
   const [typeFilter, setTypeFilter] = useState<PlaceType | 'all'>('all');
@@ -203,6 +205,21 @@ function CollectionDetailContent() {
             </button>
           )}
         </>
+      )}
+      {!collection.isSmartCollection && (
+        <button
+          onClick={() => setShowAddPlaces(true)}
+          className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
+          style={{
+            background: 'rgba(42,122,86,0.08)',
+            color: 'var(--t-verde)',
+            border: 'none',
+            fontFamily: FONT.mono,
+          }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 600, lineHeight: 1 }}>+</span>
+          Add Places
+        </button>
       )}
       <button
         onClick={startEditing}
@@ -540,7 +557,7 @@ function CollectionDetailContent() {
           <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
             {collectionSearch || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all'
               ? 'Try adjusting your search or filters'
-              : 'Use the search bar above to find and add places'}
+              : 'Tap "Add Places" above to add from your library'}
           </p>
         </div>
       )}
@@ -656,6 +673,13 @@ function CollectionDetailContent() {
             resourceId={collection.id}
             resourceName={collection.name}
             onClose={() => setShowShareSheet(false)}
+          />
+        )}
+
+        {showAddPlaces && collection && (
+          <AddPlacesToCollectionSheet
+            collection={collection}
+            onClose={() => setShowAddPlaces(false)}
           />
         )}
       </div>
@@ -826,6 +850,14 @@ function CollectionDetailContent() {
           resourceId={collection.id}
           resourceName={collection.name}
           onClose={() => setShowShareSheet(false)}
+        />
+      )}
+
+      {/* Add Places Sheet */}
+      {showAddPlaces && collection && (
+        <AddPlacesToCollectionSheet
+          collection={collection}
+          onClose={() => setShowAddPlaces(false)}
         />
       )}
 
