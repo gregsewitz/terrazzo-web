@@ -20,7 +20,7 @@ const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL;
 const DATABASE_URL = process.env.DATABASE_URL;
 const CONCURRENCY = 5; // max parallel enrichments
 const POLL_INTERVAL_MS = 15_000; // check status every 15s
-const JOB_TIMEOUT_MS = 1200_000; // 20 minutes max per place
+const JOB_TIMEOUT_MS = 1800_000; // 30 minutes max per place
 
 if (!PIPELINE_WORKER_URL || !DATABASE_URL) {
   console.error('Missing PIPELINE_WORKER_URL or DATABASE_URL in .env.local');
