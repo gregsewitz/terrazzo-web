@@ -1,7 +1,7 @@
 /**
  * Taste Intelligence — Vector Computation
  *
- * Converts user taste profiles and property signals into 32-dimensional vectors
+ * Converts user taste profiles and property signals into 34-dimensional vectors
  * that live in the same embedding space, enabling direct cosine similarity.
  *
  * Vector layout (34 dimensions):
@@ -30,7 +30,7 @@ const DOMAIN_INDEX: Record<TasteDomain, number> = {
   CulturalEngagement: 7,
 };
 
-const ALL_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
+const ALL_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
 
 // ─── Deterministic signal hashing ────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ function hashSignalToBucket(signal: string): number {
 }
 
 /**
- * Build the signal feature portion of a vector (dimensions 6-31).
+ * Build the signal feature portion of a vector (dimensions 8-33).
  * Each signal contributes its confidence to its hashed bucket.
  * Multiple signals can map to the same bucket (accumulates).
  * Final values are normalized to [0, 1].
@@ -89,7 +89,7 @@ function l2Normalize(vec: number[]): number[] {
 // ─── User Taste Vector (TG-04) ──────────────────────────────────────────────
 
 export interface UserVectorInput {
-  /** 6-axis radar data from onboarding (axis → 0-1 value) */
+  /** 8-axis radar data from onboarding (axis → 0-1 value) */
   radarData: { axis: string; value: number }[];
   /** Micro-signals per domain from GeneratedTasteProfile */
   microTasteSignals: Record<string, string[]>;
@@ -98,17 +98,17 @@ export interface UserVectorInput {
 }
 
 /**
- * Compute a 32-dimensional taste vector for a user.
+ * Compute a 34-dimensional taste vector for a user.
  *
  * Combines:
- * - radarData (mapped to 6 domain dimensions)
+ * - radarData (mapped to 8 domain dimensions)
  * - microTasteSignals (hashed into 26 feature dimensions)
  * - allSignals confidence (if available, to boost signal features)
  */
 export function computeUserTasteVector(input: UserVectorInput): number[] {
   const vector = new Array(VECTOR_DIM).fill(0);
 
-  // Dimensions 0-5: radar axes mapped to domains
+  // Dimensions 0-7: radar axes mapped to domains
   // radarData axes use various names; map them to domains
   const axisToIndex: Record<string, number> = {
     design: 0, 'design language': 0,
@@ -117,6 +117,8 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
     food: 3, 'food & drink': 3, 'food & drink identity': 3,
     location: 4, 'location & context': 4, 'location & setting': 4,
     wellness: 5, 'wellness & body': 5,
+    rhythm: 6, 'rhythm & tempo': 6,
+    culturalengagement: 7, 'cultural engagement': 7,
   };
 
   for (const { axis, value } of input.radarData) {
@@ -126,7 +128,7 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
     }
   }
 
-  // Dimensions 6-31: micro-signal hash features
+  // Dimensions 8-33: micro-signal hash features
   const signalInputs: Array<{ text: string; confidence: number }> = [];
 
   for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
@@ -179,7 +181,7 @@ export interface PropertyEmbeddingInput {
 }
 
 /**
- * Compute a 32-dimensional embedding for a property.
+ * Compute a 34-dimensional embedding for a property.
  *
  * Lives in the same vector space as user taste vectors, enabling
  * direct cosine similarity for user-to-property matching.
@@ -191,7 +193,7 @@ export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[
   const vector = new Array(VECTOR_DIM).fill(0);
   const { signals, antiSignals = [] } = input;
 
-  // Dimensions 0-5: per-domain strength from signals
+  // Dimensions 0-7: per-domain strength from signals
   const domainSignals: Record<TasteDomain, BriefingSignal[]> = {
     Design: [], Character: [], Service: [], Food: [], Location: [], Wellness: [], Rhythm: [], CulturalEngagement: [],
   };
@@ -226,7 +228,7 @@ export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[
     }
   }
 
-  // Dimensions 6-31: signal text hash features
+  // Dimensions 8-33: signal text hash features
   const signalInputs = signals.map((s) => ({
     text: s.signal,
     confidence: s.confidence,
