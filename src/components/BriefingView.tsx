@@ -38,78 +38,197 @@ interface BriefingViewProps {
 
 const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
 
-function strengthLabel(c: number): string {
-  if (c >= 0.8) return 'Strong';
-  if (c >= 0.5) return 'Moderate';
-  return 'Faint';
-}
+// ─── Utility components ───
 
-function SignalCard({ signal, domain }: { signal: BriefingSignal; domain: TasteDomain }) {
-  const color = DOMAIN_COLORS[domain];
+function TrustBadge({ score, reviewCount }: { score: number | null; reviewCount: number }) {
+  const level = score == null ? 0 : score >= 0.75 ? 3 : score >= 0.5 ? 2 : 1;
+  const labels = ['Low', 'Fair', 'Good', 'Strong'];
+  const colors = ['var(--t-signal-red)', 'var(--t-amber)', 'var(--t-verde)', 'var(--t-verde)'];
   return (
-    <div
-      className="p-3 rounded-xl mb-2"
-      style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-    >
-      <div className="text-[12px] leading-relaxed mb-2" style={{ color: 'var(--t-ink)' }}>
-        {signal.signal}
-      </div>
-      <div className="flex items-center gap-2">
-        {/* Confidence bar */}
-        <div className="flex-1">
-          <AnimatedBar
-            percentage={signal.confidence * 100}
-            color={color}
-            height={4}
-            delay={0.1}
-            borderRadius={2}
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3].map(i => (
+          <div
+            key={i}
+            className="rounded-full"
+            style={{
+              width: 6, height: 6,
+              background: i <= level ? colors[level] : INK['12'],
+              transition: 'background 0.3s ease',
+            }}
           />
-        </div>
-        <span className="text-[9px] font-semibold" style={{ color: INK['90'], fontFamily: FONT.mono }}>
-          {Math.round(signal.confidence * 100)}%
-        </span>
-        {/* Source type tag */}
-        {signal.source_type && (
-          <span
-            className="text-[8px] px-1.5 py-0.5 rounded"
-            style={{ background: 'var(--t-linen)', color: INK['80'], fontFamily: FONT.mono }}
-          >
-            {signal.source_type}
-          </span>
-        )}
-        {/* Review corroborated badge */}
-        {signal.review_corroborated && (
-          <div title="Review corroborated" className="flex items-center">
-            <PerriandIcon name="check" size={12} color="var(--t-verde)" />
-          </div>
-        )}
+        ))}
       </div>
+      <span className="text-[10px] font-semibold" style={{ color: colors[level], fontFamily: FONT.mono }}>
+        {labels[level]}
+      </span>
+      {reviewCount > 0 && (
+        <span className="text-[9px]" style={{ color: INK['60'], fontFamily: FONT.mono }}>
+          · {reviewCount} reviews
+        </span>
+      )}
     </div>
   );
 }
 
-function AntiSignalCard({ signal }: { signal: BriefingAntiSignal }) {
-  const domain = DIMENSION_TO_DOMAIN[signal.dimension] as TasteDomain | undefined;
+function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }) {
+  const sourceCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    signals.forEach(s => {
+      const src = s.source_type || 'analysis';
+      counts[src] = (counts[src] || 0) + 1;
+    });
+    return counts;
+  }, [signals]);
+
+  const corroboratedCount = signals.filter(s => s.review_corroborated).length;
+  const sourceLabels: Record<string, { icon: string; label: string }> = {
+    editorial: { icon: '✎', label: 'Editorial' },
+    review: { icon: '★', label: 'Reviews' },
+    instagram: { icon: '◎', label: 'Instagram' },
+    menu: { icon: '▤', label: 'Menu' },
+    awards: { icon: '◆', label: 'Awards' },
+    analysis: { icon: '◈', label: 'Analysis' },
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {Object.entries(sourceCounts).map(([src, count]) => {
+        const meta = sourceLabels[src] || sourceLabels.analysis;
+        return (
+          <span
+            key={src}
+            className="text-[9px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1"
+            style={{ background: INK['04'], color: INK['80'], fontFamily: FONT.mono }}
+          >
+            <span style={{ fontSize: 10 }}>{meta.icon}</span>
+            {count} {meta.label}
+          </span>
+        );
+      })}
+      {corroboratedCount > 0 && (
+        <span
+          className="text-[9px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1"
+          style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+        >
+          <PerriandIcon name="check" size={9} color="var(--t-verde)" />
+          {corroboratedCount} corroborated
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ConfidenceSpectrum({ signals, color }: { signals: BriefingSignal[]; color: string }) {
+  // Plot signal confidences as dots on a 0-1 spectrum
+  return (
+    <div className="relative h-3 rounded-full overflow-hidden" style={{ background: `${color}08` }}>
+      {/* Track line */}
+      <div className="absolute top-1/2 left-0 right-0 h-px" style={{ background: `${color}20`, transform: 'translateY(-50%)' }} />
+      {/* Signal dots */}
+      {signals.map((sig, i) => (
+        <div
+          key={i}
+          className="absolute top-1/2 rounded-full"
+          title={`${sig.signal} (${Math.round(sig.confidence * 100)}%)`}
+          style={{
+            width: sig.review_corroborated ? 7 : 5,
+            height: sig.review_corroborated ? 7 : 5,
+            background: sig.review_corroborated ? color : `${color}90`,
+            border: sig.review_corroborated ? `1px solid white` : 'none',
+            left: `${Math.max(2, Math.min(98, sig.confidence * 100))}%`,
+            transform: 'translate(-50%, -50%)',
+            boxShadow: '0 0 2px rgba(0,0,0,0.15)',
+          }}
+        />
+      ))}
+      {/* Scale labels */}
+      <span className="absolute left-1 top-full text-[7px] mt-0.5" style={{ color: INK['40'], fontFamily: FONT.mono }}>0</span>
+      <span className="absolute right-1 top-full text-[7px] mt-0.5" style={{ color: INK['40'], fontFamily: FONT.mono }}>100</span>
+    </div>
+  );
+}
+
+function HeadlineSignal({ signal, color }: { signal: BriefingSignal; color: string }) {
   return (
     <div
-      className="p-3 rounded-xl mb-2"
+      className="p-4 rounded-xl mb-2"
       style={{
-        background: 'rgba(160,108,40,0.04)',
-        borderLeft: '3px solid var(--t-amber)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+        background: `${color}06`,
+        borderLeft: `3px solid ${color}`,
       }}
     >
-      <div className="text-[12px] leading-relaxed mb-1.5" style={{ color: 'var(--t-ink)' }}>
+      <div className="text-[13px] leading-relaxed font-medium" style={{ color: 'var(--t-ink)' }}>
         {signal.signal}
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-[9px] font-semibold" style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}>
-          {strengthLabel(signal.confidence)} · {domain || signal.dimension}
+      <div className="flex items-center gap-2 mt-2">
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${color}15`, color, fontFamily: FONT.mono }}>
+          {Math.round(signal.confidence * 100)}% confidence
         </span>
+        {signal.source_type && (
+          <span className="text-[8px]" style={{ color: INK['60'], fontFamily: FONT.mono }}>
+            via {signal.source_type}
+          </span>
+        )}
+        {signal.review_corroborated && (
+          <span className="flex items-center gap-0.5 text-[8px]" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}>
+            <PerriandIcon name="check" size={9} color="var(--t-verde)" /> verified
+          </span>
+        )}
       </div>
     </div>
   );
 }
+
+function CompactSignal({ signal }: { signal: BriefingSignal }) {
+  return (
+    <div className="flex items-start gap-2 py-1.5">
+      <span className="text-[9px] font-semibold w-7 text-right flex-shrink-0 mt-0.5" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+        {Math.round(signal.confidence * 100)}
+      </span>
+      <span className="text-[11px] leading-snug" style={{ color: INK['85'] }}>
+        {signal.signal}
+        {signal.review_corroborated && (
+          <PerriandIcon name="check" size={9} color="var(--t-verde)" style={{ display: 'inline', marginLeft: 3, verticalAlign: 'middle' }} />
+        )}
+      </span>
+    </div>
+  );
+}
+
+function InlineAntiSignal({ signal }: { signal: BriefingAntiSignal }) {
+  return (
+    <div className="flex items-start gap-2 py-1.5 px-3 rounded-lg mt-1.5" style={{ background: 'rgba(160,108,40,0.05)' }}>
+      <span className="text-[10px] flex-shrink-0 mt-0.5" style={{ color: 'var(--t-amber)' }}>⚠</span>
+      <span className="text-[11px] leading-snug italic" style={{ color: INK['75'] }}>
+        {signal.signal}
+      </span>
+    </div>
+  );
+}
+
+const FACT_ICONS: Record<string, string> = {
+  cuisine: '🍽', cuisineType: '🍽', type: '🍽',
+  priceRange: '💰', price: '💰', priceTier: '💰',
+  michelinStars: '⭐', michelin: '⭐', awards: '🏆',
+  yearOpened: '📅', established: '📅', opened: '📅',
+  capacity: '👥', seats: '👥', seating: '👥',
+  chef: '👨‍🍳', headChef: '👨‍🍳',
+  neighborhood: '📍', area: '📍', district: '📍',
+  style: '✦', ambiance: '✦', vibe: '✦',
+  reservations: '📞', booking: '📞',
+  dressCode: '👔', attire: '👔',
+};
+
+function getFactIcon(key: string): string {
+  const lower = key.toLowerCase();
+  for (const [k, icon] of Object.entries(FACT_ICONS)) {
+    if (lower.includes(k.toLowerCase())) return icon;
+  }
+  return '●';
+}
+
+// ─── Main Component ───
 
 export default function BriefingView({ googlePlaceId, placeName, matchScore, place, onClose }: BriefingViewProps) {
   const { data, loading, error } = useBriefing(googlePlaceId);
@@ -144,6 +263,18 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
     return grouped as Record<TasteDomain, BriefingSignal[]>;
   }, [data?.signals]);
 
+  // Group anti-signals by domain for inline display
+  const antiSignalsByDomain = useMemo(() => {
+    if (!data?.antiSignals || !Array.isArray(data.antiSignals)) return {} as Record<string, BriefingAntiSignal[]>;
+    const grouped: Record<string, BriefingAntiSignal[]> = {};
+    data.antiSignals.forEach(sig => {
+      const domain = DIMENSION_TO_DOMAIN[sig.dimension] || sig.dimension;
+      if (!grouped[domain]) grouped[domain] = [];
+      grouped[domain].push(sig);
+    });
+    return grouped;
+  }, [data?.antiSignals]);
+
   // How long ago was last enrichment
   const enrichedAgo = useMemo(() => {
     if (!data?.lastEnrichedAt) return null;
@@ -160,15 +291,16 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
       {/* Backdrop */}
       <div className="fixed inset-0 z-[55] bg-black/30" onClick={onClose} />
 
-      {/* Full-screen panel */}
+      {/* Full-screen panel — desktop-aware layout */}
       <div
         className="fixed inset-0 z-[55] overflow-y-auto"
         style={{ background: 'var(--t-cream)' }}
       >
-        <div style={{ maxWidth: 480, margin: '0 auto' }}>
+        {/* Desktop: two-column layout. Mobile: single column */}
+        <div className="mx-auto" style={{ maxWidth: 880 }}>
           {/* Header — immersive with gradient backdrop */}
           <div
-            className="sticky top-0 z-10 px-5 pt-5 pb-4"
+            className="sticky top-0 z-10 px-5 md:px-8 pt-5 pb-4"
             style={{
               background: 'linear-gradient(to bottom, var(--t-cream) 70%, transparent)',
               backdropFilter: 'blur(12px)',
@@ -185,14 +317,20 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   ← Back to summary
                 </button>
                 <h1
-                  className="text-[22px] leading-tight italic"
+                  className="text-[22px] md:text-[26px] leading-tight italic"
                   style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
                 >
                   {placeName}
                 </h1>
-                <p className="text-[10px] mt-0.5" style={{ color: INK['70'], fontFamily: FONT.mono }}>
-                  Terrazzo Briefing
-                </p>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-[10px]" style={{ color: INK['70'], fontFamily: FONT.mono }}>
+                    Terrazzo Intelligence Briefing
+                  </p>
+                  {/* Trust badge in header */}
+                  {data && (
+                    <TrustBadge score={data.reliabilityScore} reviewCount={data.reviewCount} />
+                  )}
+                </div>
               </div>
               <button
                 onClick={onClose}
@@ -204,7 +342,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
             </div>
           </div>
 
-          <div className="px-5 pb-8">
+          <div className="px-5 md:px-8 pb-8">
             {/* Loading state */}
             {loading && !data && (
               <div className="text-center py-12">
@@ -291,20 +429,15 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   </FadeInSection>
                 )}
 
-                {/* Caveat / heads-up */}
+                {/* Caveat */}
                 {place.terrazzoInsight?.caveat && (
                   <FadeInSection delay={0.15} direction="up" distance={14}>
                     <div className="mb-6">
                       <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: 'var(--t-amber)', fontFamily: FONT.mono, letterSpacing: '1px' }}
-                      >
-                        Heads Up
-                      </div>
-                      <div
-                        className="p-4 rounded-2xl"
+                        className="p-4 rounded-2xl flex items-start gap-2.5"
                         style={{ background: 'rgba(160,108,40,0.04)', borderLeft: '3px solid var(--t-amber)' }}
                       >
+                        <span className="text-[12px] mt-0.5">⚠</span>
                         <p className="text-[12px] leading-relaxed" style={{ color: 'var(--t-ink)' }}>
                           {place.terrazzoInsight.caveat}
                         </p>
@@ -338,13 +471,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                                 {domain}
                               </span>
                               <div className="flex-1">
-                                <AnimatedBar
-                                  percentage={score * 100}
-                                  color={color}
-                                  height={6}
-                                  delay={i * 0.08}
-                                  borderRadius={3}
-                                />
+                                <AnimatedBar percentage={score * 100} color={color} height={6} delay={i * 0.08} borderRadius={3} />
                               </div>
                               <span className="text-[9px] w-8 text-right font-semibold" style={{ color: INK['80'], fontFamily: FONT.mono }}>
                                 <AnimatedNumber value={Math.round(score * 100)} />
@@ -357,190 +484,88 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   </FadeInSection>
                 )}
 
-                {/* What to order */}
-                {place.whatToOrder && place.whatToOrder.length > 0 && (
-                  <FadeInSection delay={0.1} direction="up" distance={16}>
-                    <div className="mb-6">
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
-                      >
-                        What to Order
-                      </div>
-                      <div className="flex flex-col gap-1.5" style={{ padding: '12px 14px', background: 'white', borderRadius: 16, border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                        {place.whatToOrder.map((item, i) => (
-                          <div key={i} className="text-[12px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </FadeInSection>
-                )}
-
-                {/* Tips */}
-                {place.tips && place.tips.length > 0 && (
-                  <FadeInSection delay={0.1} direction="up" distance={16}>
-                    <div className="mb-6">
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
-                      >
-                        Tips
-                      </div>
-                      <div className="flex flex-col gap-1.5" style={{ padding: '12px 14px', background: 'white', borderRadius: 16, border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                        {place.tips.map((tip, i) => (
-                          <div key={i} className="text-[12px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
-                            {tip}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </FadeInSection>
-                )}
-
-                {/* Enrichment facts */}
-                {place.enrichment && (
-                  <FadeInSection delay={0.1} direction="up" distance={16}>
-                    <div className="mb-6">
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
-                      >
-                        Details
-                      </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-3 p-4 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                        {place.enrichment.priceRange && (
-                          <div>
-                            <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['70'], fontFamily: FONT.mono }}>Price Range</div>
-                            <div className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--t-ink)' }}>{place.enrichment.priceRange}</div>
-                          </div>
-                        )}
-                        {place.enrichment.hours && (
-                          <div>
-                            <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['70'], fontFamily: FONT.mono }}>Hours</div>
-                            <div className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--t-ink)' }}>{place.enrichment.hours}</div>
-                          </div>
-                        )}
-                        {place.enrichment.closedDays && place.enrichment.closedDays.length > 0 && (
-                          <div>
-                            <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['70'], fontFamily: FONT.mono }}>Closed</div>
-                            <div className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--t-ink)' }}>{place.enrichment.closedDays.join(', ')}</div>
-                          </div>
-                        )}
-                        {place.enrichment.seasonalNote && (
-                          <div>
-                            <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['70'], fontFamily: FONT.mono }}>Note</div>
-                            <div className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--t-ink)' }}>{place.enrichment.seasonalNote}</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </FadeInSection>
-                )}
-
-                {/* Taste note */}
-                {place.tasteNote && (
-                  <FadeInSection delay={0.1} direction="up" distance={14}>
-                    <div className="mb-6">
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
-                      >
-                        Taste Note
-                      </div>
-                      <div
-                        className="p-4 rounded-2xl text-[12px] leading-relaxed italic"
-                        style={{ background: 'white', border: '1px solid var(--t-linen)', color: INK['80'], fontFamily: FONT.serif, boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-                      >
-                        {place.tasteNote}
-                      </div>
-                    </div>
-                  </FadeInSection>
-                )}
-
-                {/* Friend attribution */}
-                {place.friendAttribution && (
-                  <FadeInSection delay={0.1} direction="up" distance={14}>
-                    <div className="mb-6">
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
-                      >
-                        Recommended By
-                      </div>
-                      <div
-                        className="p-4 rounded-2xl flex items-start gap-3"
-                        style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-                      >
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold"
-                          style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
-                        >
-                          {place.friendAttribution.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
-                            {place.friendAttribution.name}
-                          </div>
-                          {place.friendAttribution.note && (
-                            <div className="text-[11px] italic mt-0.5" style={{ color: INK['70'], fontFamily: FONT.serif }}>
-                              &ldquo;{place.friendAttribution.note}&rdquo;
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </FadeInSection>
-                )}
-
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-3 mt-2" style={{ borderTop: '1px solid var(--t-linen)' }}>
                   <span className="text-[9px]" style={{ color: INK['70'], fontFamily: FONT.mono }}>
-                    Local briefing
+                    Local briefing · limited data
                   </span>
                 </div>
               </>
             )}
 
+            {/* ═══════════════════════════════════════════════ */}
+            {/* FULL INTELLIGENCE BRIEFING (from API data)     */}
+            {/* ═══════════════════════════════════════════════ */}
             {data && (
               <>
-                {/* Summary bar — mosaic + animated stats */}
+                {/* Summary row — mosaic + score arc + stats */}
                 <SafeFadeIn direction="up" distance={14} duration={0.5}>
-                  <div className="flex gap-2.5 mb-5">
+                  <div className="flex gap-3 mb-6 flex-wrap md:flex-nowrap">
+                    {/* Score arc */}
+                    {matchScore != null && (
+                      <div className="flex items-center gap-3 p-4 rounded-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(200,146,58,0.08), rgba(200,146,58,0.03))', border: '1px solid rgba(200,146,58,0.12)' }}>
+                        <AnimatedScoreArc score={matchScore} size={52} color="#8a6a2a" />
+                        <div>
+                          <div className="text-[18px] font-bold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
+                            <AnimatedNumber value={matchScore} suffix="%" />
+                          </div>
+                          <div className="text-[9px]" style={{ color: INK['60'] }}>Taste Match</div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Mosaic */}
                     <div className="flex items-center justify-center p-3 rounded-2xl" style={{ background: INK['03'] }}>
                       <TerrazzoMosaic profile={numericProfile} size="xs" />
                     </div>
-                    {matchScore != null && (
-                      <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: 'linear-gradient(135deg, rgba(200,146,58,0.08), rgba(200,146,58,0.03))' }}>
-                        <div className="text-[20px] font-bold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
-                          <AnimatedNumber value={matchScore} suffix="%" />
+                    {/* Stat cards */}
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(42,122,86,0.04)' }}>
+                        <div
+                          className="text-[18px] font-bold"
+                          style={{
+                            color: data.reliabilityScore && data.reliabilityScore >= 0.6 ? 'var(--t-verde)' : 'var(--t-amber)',
+                            fontFamily: FONT.mono,
+                          }}
+                        >
+                          {data.reliabilityScore != null ? (
+                            <AnimatedNumber value={Math.round(data.reliabilityScore * 100)} />
+                          ) : '—'}
                         </div>
-                        <div className="text-[9px] mt-0.5" style={{ color: INK['70'] }}>Match</div>
+                        <div className="text-[9px]" style={{ color: INK['60'] }}>Reliability</div>
                       </div>
-                    )}
-                    <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: 'rgba(42,122,86,0.04)' }}>
-                      <div
-                        className="text-[20px] font-bold"
-                        style={{
-                          color: data.reliabilityScore && data.reliabilityScore >= 0.6 ? 'var(--t-verde)' : 'var(--t-amber)',
-                          fontFamily: FONT.mono,
-                        }}
-                      >
-                        {data.reliabilityScore != null ? (
-                          <AnimatedNumber value={Math.round(data.reliabilityScore * 100)} />
-                        ) : '—'}
+                      <div className="p-3 rounded-xl text-center" style={{ background: INK['03'] }}>
+                        <div className="text-[18px] font-bold" style={{ color: 'var(--t-ink)', fontFamily: FONT.mono }}>
+                          <AnimatedNumber value={data.reviewCount} />
+                        </div>
+                        <div className="text-[9px]" style={{ color: INK['60'] }}>Reviews</div>
                       </div>
-                      <div className="text-[9px] mt-0.5" style={{ color: INK['70'] }}>Reliability</div>
-                    </div>
-                    <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: INK['03'] }}>
-                      <div className="text-[20px] font-bold" style={{ color: 'var(--t-ink)', fontFamily: FONT.mono }}>
-                        <AnimatedNumber value={data.reviewCount} />
+                      <div className="p-3 rounded-xl text-center" style={{ background: INK['03'] }}>
+                        <div className="text-[18px] font-bold" style={{ color: 'var(--t-ink)', fontFamily: FONT.mono }}>
+                          <AnimatedNumber value={data.signalCount} />
+                        </div>
+                        <div className="text-[9px]" style={{ color: INK['60'] }}>Signals</div>
                       </div>
-                      <div className="text-[9px] mt-0.5" style={{ color: INK['70'] }}>Reviews</div>
+                      <div className="p-3 rounded-xl text-center" style={{ background: data.antiSignalCount > 0 ? 'rgba(160,108,40,0.04)' : INK['03'] }}>
+                        <div className="text-[18px] font-bold" style={{ color: data.antiSignalCount > 0 ? 'var(--t-amber)' : INK['50'], fontFamily: FONT.mono }}>
+                          <AnimatedNumber value={data.antiSignalCount} />
+                        </div>
+                        <div className="text-[9px]" style={{ color: INK['60'] }}>Caveats</div>
+                      </div>
                     </div>
                   </div>
                 </SafeFadeIn>
+
+                {/* Source provenance strip */}
+                {data.signals && Array.isArray(data.signals) && data.signals.length > 0 && (
+                  <SafeFadeIn direction="up" distance={10} duration={0.4} delay={0.05}>
+                    <div className="mb-6">
+                      <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['50'], fontFamily: FONT.mono, letterSpacing: '1px' }}>
+                        Intelligence Sources
+                      </div>
+                      <SourceProvenanceStrip signals={data.signals} />
+                    </div>
+                  </SafeFadeIn>
+                )}
 
                 {/* Pipeline progress — shown while running */}
                 {isRunning && data.latestRun && (
@@ -562,10 +587,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                       className="p-4 rounded-2xl mb-5"
                       style={{ background: 'rgba(214,48,32,0.06)', border: '1px solid rgba(214,48,32,0.15)' }}
                     >
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                        style={{ color: 'var(--t-signal-red)', fontFamily: FONT.mono }}
-                      >
+                      <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--t-signal-red)', fontFamily: FONT.mono }}>
                         Briefing incomplete
                       </div>
                       <p className="text-[11px]" style={{ color: 'var(--t-ink)' }}>
@@ -575,87 +597,103 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   </SafeFadeIn>
                 )}
 
-                {/* Signals by dimension — staggered reveal */}
-                {TASTE_DOMAINS.map((domain, domainIdx) => {
-                  const signals = signalsByDomain[domain];
-                  if (!signals || signals.length === 0) return null;
-                  const color = DOMAIN_COLORS[domain];
-                  const icon = DOMAIN_ICONS[domain];
+                {/* ─── Domain sections with signal hierarchy ─── */}
+                {/* Desktop: 2-column grid. Mobile: single column */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                  {TASTE_DOMAINS.map((domain, domainIdx) => {
+                    const signals = signalsByDomain[domain];
+                    if (!signals || signals.length === 0) return null;
+                    const color = DOMAIN_COLORS[domain];
+                    const icon = DOMAIN_ICONS[domain];
+                    const sorted = [...signals].sort((a, b) => b.confidence - a.confidence);
+                    const headline = sorted[0]; // highest confidence = headline
+                    const rest = sorted.slice(1);
+                    const domainAntiSignals = antiSignalsByDomain[domain] || [];
+
+                    return (
+                      <FadeInSection key={domain} delay={domainIdx * 0.06} direction="up" distance={16}>
+                        <div className="mb-6">
+                          {/* Domain header */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <div
+                              className="w-6 h-6 rounded-lg flex items-center justify-center"
+                              style={{ background: `${color}12` }}
+                            >
+                              <PerriandIcon name={icon} size={14} color={color} />
+                            </div>
+                            <span
+                              className="text-[10px] font-bold uppercase tracking-wider"
+                              style={{ color, fontFamily: FONT.mono, letterSpacing: '1px' }}
+                            >
+                              {domain}
+                            </span>
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                              style={{ background: `${color}12`, color, fontFamily: FONT.mono }}
+                            >
+                              {signals.length}
+                            </span>
+                          </div>
+
+                          {/* Confidence spectrum — visual signal distribution */}
+                          <div className="mb-3 px-1">
+                            <ConfidenceSpectrum signals={signals} color={color} />
+                          </div>
+
+                          {/* Headline signal — big callout */}
+                          <HeadlineSignal signal={headline} color={color} />
+
+                          {/* Remaining signals — compact list */}
+                          {rest.length > 0 && (
+                            <div className="ml-1 border-l-2 pl-3 mb-1" style={{ borderColor: `${color}15` }}>
+                              {rest.map((sig, i) => (
+                                <CompactSignal key={i} signal={sig} />
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Inline anti-signals for this domain */}
+                          {domainAntiSignals.length > 0 && (
+                            <div className="mt-2">
+                              {domainAntiSignals.map((sig, i) => (
+                                <InlineAntiSignal key={i} signal={sig} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </FadeInSection>
+                    );
+                  })}
+                </div>
+
+                {/* Orphan anti-signals — those not mapped to a rendered domain */}
+                {(() => {
+                  const renderedDomains = new Set(TASTE_DOMAINS.filter(d => signalsByDomain[d]?.length));
+                  const orphanAntiSignals = (data.antiSignals || []).filter(sig => {
+                    const domain = DIMENSION_TO_DOMAIN[sig.dimension] || sig.dimension;
+                    return !renderedDomains.has(domain as TasteDomain);
+                  });
+                  if (orphanAntiSignals.length === 0) return null;
                   return (
-                    <FadeInSection key={domain} delay={domainIdx * 0.06} direction="up" distance={16}>
+                    <FadeInSection delay={0.1} direction="up" distance={16}>
                       <div className="mb-6">
                         <div className="flex items-center gap-2 mb-2.5">
-                          <div
-                            className="w-6 h-6 rounded-lg flex items-center justify-center"
-                            style={{ background: `${color}12` }}
-                          >
-                            <PerriandIcon name={icon} size={14} color={color} />
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(160,108,40,0.10)' }}>
+                            <PerriandIcon name="sparkle" size={14} color="var(--t-amber)" />
                           </div>
-                          <span
-                            className="text-[10px] font-bold uppercase tracking-wider"
-                            style={{ color, fontFamily: FONT.mono, letterSpacing: '1px' }}
-                          >
-                            {domain}
-                          </span>
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded-full ml-1 font-semibold"
-                            style={{ background: `${color}12`, color, fontFamily: FONT.mono }}
-                          >
-                            {signals.length}
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--t-amber)', fontFamily: FONT.mono, letterSpacing: '1px' }}>
+                            Other Caveats
                           </span>
                         </div>
-                        <StaggerContainer staggerDelay={0.06}>
-                          {signals
-                            .sort((a, b) => b.confidence - a.confidence)
-                            .map((sig, i) => (
-                              <StaggerItem key={i}>
-                                <SignalCard signal={sig} domain={domain} />
-                              </StaggerItem>
-                            ))}
-                        </StaggerContainer>
+                        {orphanAntiSignals.map((sig, i) => (
+                          <InlineAntiSignal key={i} signal={sig} />
+                        ))}
                       </div>
                     </FadeInSection>
                   );
-                })}
+                })()}
 
-                {/* Anti-signals */}
-                {data.antiSignals && data.antiSignals.length > 0 && (
-                  <FadeInSection delay={0.1} direction="up" distance={16}>
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <div
-                          className="w-6 h-6 rounded-lg flex items-center justify-center"
-                          style={{ background: 'rgba(160,108,40,0.10)' }}
-                        >
-                          <PerriandIcon name="sparkle" size={14} color="var(--t-amber)" />
-                        </div>
-                        <span
-                          className="text-[10px] font-bold uppercase tracking-wider"
-                          style={{ color: 'var(--t-amber)', fontFamily: FONT.mono, letterSpacing: '1px' }}
-                        >
-                          Heads Up
-                        </span>
-                        <span
-                          className="text-[9px] px-1.5 py-0.5 rounded-full ml-1 font-semibold"
-                          style={{ background: 'rgba(160,108,40,0.1)', color: 'var(--t-amber)', fontFamily: FONT.mono }}
-                        >
-                          {data.antiSignals.length}
-                        </span>
-                      </div>
-                      <StaggerContainer staggerDelay={0.06}>
-                        {data.antiSignals
-                          .sort((a, b) => b.confidence - a.confidence)
-                          .map((sig, i) => (
-                            <StaggerItem key={i}>
-                              <AntiSignalCard signal={sig} />
-                            </StaggerItem>
-                          ))}
-                      </StaggerContainer>
-                    </div>
-                  </FadeInSection>
-                )}
-
-                {/* Facts */}
+                {/* Facts — structured detail grid */}
                 {data.facts && Object.keys(data.facts).length > 0 && (
                   <FadeInSection delay={0.1} direction="up" distance={16}>
                     <div className="mb-6">
@@ -663,25 +701,28 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                         className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
                         style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}
                       >
-                        Facts
+                        Place Dossier
                       </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-3 p-4 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                        {Object.entries(data.facts).map(([key, value]) => {
+                      <div
+                        className="rounded-2xl overflow-hidden"
+                        style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+                      >
+                        {Object.entries(data.facts).map(([key, value], i, arr) => {
                           if (value == null || value === '') return null;
                           const displayKey = key
                             .replace(/([A-Z])/g, ' $1')
                             .replace(/^./, s => s.toUpperCase())
                             .trim();
                           return (
-                            <div key={key}>
-                              <div
-                                className="text-[9px] uppercase tracking-wider"
-                                style={{ color: INK['70'], fontFamily: FONT.mono }}
-                              >
-                                {displayKey}
-                              </div>
-                              <div className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--t-ink)' }}>
-                                {String(value)}
+                            <div
+                              key={key}
+                              className="flex items-start gap-3 px-4 py-2.5"
+                              style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--t-linen)' : 'none' }}
+                            >
+                              <span className="text-[12px] flex-shrink-0 w-5 text-center mt-0.5">{getFactIcon(key)}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['50'], fontFamily: FONT.mono }}>{displayKey}</div>
+                                <div className="text-[12px] font-medium mt-0.5" style={{ color: 'var(--t-ink)' }}>{String(value)}</div>
                               </div>
                             </div>
                           );

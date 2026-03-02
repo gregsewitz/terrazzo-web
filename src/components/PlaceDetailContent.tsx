@@ -425,7 +425,69 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Match score — immersive card with animated score */}
+        {/* Sensory Atmosphere — evocative one-liner from sensoryCues */}
+        {item.sensoryCues && (item.sensoryCues.lightQuality || item.sensoryCues.soundscape || item.sensoryCues.scentNotes?.length || item.sensoryCues.materialTextures?.length) && (
+          <FadeInSection delay={0.1} direction="up" distance={14}>
+            <div className="mb-5 px-4 py-3 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(107,139,154,0.06), rgba(74,103,65,0.04))', border: '1px solid rgba(107,139,154,0.12)' }}>
+              <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['60'], fontFamily: FONT.mono, letterSpacing: '1px' }}>Atmosphere</div>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                {item.sensoryCues.lightQuality && (
+                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
+                    <span style={{ fontSize: 13, opacity: 0.7 }}>◐</span>
+                    {item.sensoryCues.lightQuality}
+                  </span>
+                )}
+                {item.sensoryCues.lightQuality && (item.sensoryCues.soundscape || item.sensoryCues.scentNotes?.length || item.sensoryCues.materialTextures?.length) && (
+                  <span style={{ color: INK['20'] }}>·</span>
+                )}
+                {item.sensoryCues.soundscape && (
+                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
+                    <span style={{ fontSize: 13, opacity: 0.7 }}>♪</span>
+                    {item.sensoryCues.soundscape}
+                  </span>
+                )}
+                {item.sensoryCues.soundscape && (item.sensoryCues.scentNotes?.length || item.sensoryCues.materialTextures?.length) && (
+                  <span style={{ color: INK['20'] }}>·</span>
+                )}
+                {item.sensoryCues.scentNotes && item.sensoryCues.scentNotes.length > 0 && (
+                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
+                    <span style={{ fontSize: 13, opacity: 0.7 }}>❋</span>
+                    {item.sensoryCues.scentNotes.join(', ')}
+                  </span>
+                )}
+                {item.sensoryCues.scentNotes?.length && item.sensoryCues.materialTextures?.length ? (
+                  <span style={{ color: INK['20'] }}>·</span>
+                ) : null}
+                {item.sensoryCues.materialTextures && item.sensoryCues.materialTextures.length > 0 && (
+                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
+                    <span style={{ fontSize: 13, opacity: 0.7 }}>▧</span>
+                    {item.sensoryCues.materialTextures.join(', ')}
+                  </span>
+                )}
+              </div>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Rhythm at a glance — single-line summary */}
+        {item.rhythmProfile && (item.rhythmProfile.tempo || item.rhythmProfile.morningOrientation || item.rhythmProfile.spontaneityTolerance) && (
+          <FadeInSection delay={0.1} direction="up" distance={12}>
+            <div className="flex items-center gap-1.5 mb-5 flex-wrap">
+              <PerriandIcon name="activity" size={12} color={INK['50']} />
+              {[
+                item.rhythmProfile.tempo && ({ slow: 'Slow-paced', moderate: 'Moderate pace', fast: 'Fast-paced' } as Record<string, string>)[item.rhythmProfile.tempo],
+                item.rhythmProfile.morningOrientation && ({ dawn: 'Early riser', 'mid-morning': 'Mid-morning', late: 'Late start' } as Record<string, string>)[item.rhythmProfile.morningOrientation],
+                item.rhythmProfile.spontaneityTolerance && ({ rigid: 'Book ahead', flexible: 'Flexible', spontaneous: 'Walk-in friendly' } as Record<string, string>)[item.rhythmProfile.spontaneityTolerance],
+              ].filter(Boolean).map((label, i, arr) => (
+                <span key={i} className="text-[11px]" style={{ color: INK['70'] }}>
+                  {label}{i < arr.length - 1 ? <span style={{ color: INK['20'], margin: '0 2px' }}> · </span> : null}
+                </span>
+              ))}
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Match score — immersive card with animated score + domain highlights */}
         <FadeInSection delay={0.15} direction="up" distance={18}>
           <div
             className="flex items-center gap-4 p-4 rounded-2xl mb-5"
@@ -442,7 +504,28 @@ function PlaceDetailContent({
             <AnimatedScoreArc score={item.matchScore} size={56} color="#8a6a2a" />
             <div className="flex-1 min-w-0">
               <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Taste match</div>
-              <div className={`${matchScoreSubFontSize} mt-0.5`} style={{ color: INK['70'] }}>Based on your profile preferences</div>
+              {/* Top domain highlights — at-a-glance breakdown */}
+              {item.matchBreakdown && (() => {
+                const topDomains = TASTE_DOMAINS
+                  .map(d => ({ domain: d, score: item.matchBreakdown[d] ?? 0 }))
+                  .filter(d => d.score > 0.15)
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 3);
+                return topDomains.length > 0 ? (
+                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                    {topDomains.map(({ domain, score }) => (
+                      <span
+                        key={domain}
+                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
+                        style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
+                      >
+                        <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
+                        {domain} {Math.round(score * 100)}
+                      </span>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
               {isEnriching && intelData?.latestRun && (<div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>)}
               {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing →</button>)}
             </div>
@@ -492,8 +575,8 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Rhythm compatibility */}
-        {item.rhythmProfile && (
+        {/* Rhythm compatibility — detailed view (only if compact line didn't show) */}
+        {item.rhythmProfile && item.rhythmProfile.dayArc && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
               <RhythmVisualization
