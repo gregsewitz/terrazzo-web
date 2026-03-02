@@ -5,6 +5,7 @@ import { ImportedPlace, T, DOMAIN_COLORS } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { TYPE_ICONS } from '@/constants/placeTypes';
+import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
 
 interface PoolItemCardProps {
   item: ImportedPlace;
@@ -106,6 +107,14 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
           <PerriandIcon name="location" size={10} />
           {item.source.name}
         </span>
+
+        {/* Sustainability badge */}
+        {item.sustainabilityScore !== undefined && item.sustainabilityScore >= 0.5 && (
+          <SustainabilityBadge
+            sensitivity={item.sustainabilityScore >= 0.75 ? 'LEADING' : 'CONSCIOUS'}
+            compact
+          />
+        )}
 
         {/* Warning badge */}
         {hasWarning && (

@@ -28,8 +28,11 @@ export {
   findTasteNeighbors,
   findSimilarPropertiesToProperty,
   findPropertiesByDomain,
+  findPropertiesByDomainWeights,
+  findContradictionCoOccurrences,
+  findContradictionNeighbors,
 } from './queries';
-export type { VectorMatch, UserNeighbor } from './queries';
+export type { VectorMatch, UserNeighbor, ContradictionCoOccurrence } from './queries';
 
 // Backfill pipeline
 export {
@@ -39,3 +42,10 @@ export {
   backfillAllPropertyEmbeddings,
   runFullBackfill,
 } from './backfill';
+
+// Evaluation harness (PE-10)
+export {
+  evaluateUser,
+  evaluateAll,
+} from './evaluation';
+export type { EvaluationResult } from './evaluation';

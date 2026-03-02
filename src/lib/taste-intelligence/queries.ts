@@ -171,16 +171,154 @@ export async function findPropertiesByDomain(
   domain: string,
   limit: number = 10,
 ): Promise<VectorMatch[]> {
-  // Build a probe vector that emphasizes the target domain
+  // Build a probe vector that emphasizes the target domain (34 dimensions)
   const DOMAIN_INDICES: Record<string, number> = {
-    Design: 0, Character: 1, Service: 2, Food: 3, Location: 4, Wellness: 5,
+    Design: 0, Character: 1, Service: 2, Food: 3,
+    Location: 4, Wellness: 5, Rhythm: 6, CulturalEngagement: 7,
   };
   const idx = DOMAIN_INDICES[domain];
   if (idx === undefined) return [];
 
-  const probe = new Array(32).fill(0);
+  const probe = new Array(34).fill(0); // 8 domain dims + 26 signal hash features
   probe[idx] = 1.0;
   // L2 normalize (already unit vector since only one dimension is set)
 
   return findSimilarProperties(probe, limit);
+}
+
+// ─── PE-09 Extension: Multi-Domain Slice ─────────────────────────────────────
+
+/**
+ * Find properties matching a weighted combination of taste domains.
+ * Useful for "mood-based" discovery (e.g., "design-forward + great food").
+ */
+export async function findPropertiesByDomainWeights(
+  weights: Partial<Record<string, number>>,
+  limit: number = 10,
+): Promise<VectorMatch[]> {
+  const DOMAIN_INDICES: Record<string, number> = {
+    Design: 0, Character: 1, Service: 2, Food: 3,
+    Location: 4, Wellness: 5, Rhythm: 6, CulturalEngagement: 7,
+  };
+
+  const probe = new Array(34).fill(0);
+  let magnitude = 0;
+
+  for (const [domain, weight] of Object.entries(weights)) {
+    const idx = DOMAIN_INDICES[domain];
+    if (idx !== undefined && weight) {
+      probe[idx] = weight;
+      magnitude += weight * weight;
+    }
+  }
+
+  // L2 normalize the probe vector
+  if (magnitude > 0) {
+    const norm = Math.sqrt(magnitude);
+    for (let i = 0; i < probe.length; i++) {
+      probe[i] /= norm;
+    }
+  } else {
+    return [];
+  }
+
+  return findSimilarProperties(probe, limit);
+}
+
+// ─── TG-06: Contradiction Co-Occurrence Analysis ─────────────────────────────
+
+export interface ContradictionCoOccurrence {
+  stated: string;
+  revealed: string;
+  domain: string;
+  userCount: number;
+  userIds: string[];
+}
+
+/**
+ * Find contradiction patterns shared across multiple users.
+ *
+ * Identifies users who share the same stated/revealed tension, surfacing
+ * non-obvious commonalities that content-based matching can't detect.
+ * These patterns are inputs to future collaborative filtering (Phase 3).
+ */
+export async function findContradictionCoOccurrences(
+  minUsers: number = 2,
+  limit: number = 20,
+): Promise<ContradictionCoOccurrence[]> {
+  // Query ContradictionNode table for patterns shared across users
+  const results = await prisma.$queryRawUnsafe<Array<{
+    stated: string;
+    revealed: string;
+    domain: string;
+    user_count: number;
+    user_ids: string[];
+  }>>(
+    `SELECT
+       "stated",
+       "revealed",
+       "domain",
+       COUNT(DISTINCT "userId") as user_count,
+       ARRAY_AGG(DISTINCT "userId") as user_ids
+     FROM "ContradictionNode"
+     GROUP BY "stated", "revealed", "domain"
+     HAVING COUNT(DISTINCT "userId") >= $1
+     ORDER BY COUNT(DISTINCT "userId") DESC
+     LIMIT $2`,
+    minUsers,
+    limit,
+  );
+
+  return results.map((r) => ({
+    stated: r.stated,
+    revealed: r.revealed,
+    domain: r.domain,
+    userCount: Number(r.user_count),
+    userIds: r.user_ids,
+  }));
+}
+
+/**
+ * Find users who share contradictions with a specific user.
+ * Returns users with matching stated/revealed tensions — these are
+ * "contradiction neighbors" who may respond similarly to novel properties.
+ */
+export async function findContradictionNeighbors(
+  userId: string,
+  limit: number = 10,
+): Promise<{ userId: string; sharedContradictions: number; similarity: number }[]> {
+  const results = await prisma.$queryRawUnsafe<Array<{
+    other_user_id: string;
+    shared_count: number;
+    total_contradictions: number;
+  }>>(
+    `WITH user_contradictions AS (
+       SELECT "stated", "revealed", "domain"
+       FROM "ContradictionNode"
+       WHERE "userId" = $1
+     )
+     SELECT
+       cn."userId" as other_user_id,
+       COUNT(*) as shared_count,
+       (SELECT COUNT(*) FROM "ContradictionNode" WHERE "userId" = cn."userId") as total_contradictions
+     FROM "ContradictionNode" cn
+     JOIN user_contradictions uc
+       ON cn."stated" = uc."stated"
+       AND cn."revealed" = uc."revealed"
+       AND cn."domain" = uc."domain"
+     WHERE cn."userId" != $1
+     GROUP BY cn."userId"
+     ORDER BY COUNT(*) DESC
+     LIMIT $2`,
+    userId,
+    limit,
+  );
+
+  return results.map((r) => ({
+    userId: r.other_user_id,
+    sharedContradictions: Number(r.shared_count),
+    similarity: Number(r.total_contradictions) > 0
+      ? Number(r.shared_count) / Number(r.total_contradictions)
+      : 0,
+  }));
 }

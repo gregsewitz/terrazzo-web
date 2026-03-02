@@ -287,6 +287,8 @@ export const placeIntelligencePipeline = inngest.createFunction(
     const results: StageResults = {};
 
     for (const stage of STAGES) {
+      const stageStartMs = Date.now();
+
       const result = await step.run(stage.stepName, async () => {
         try {
           const payload = stage.buildPayload(base, results);
@@ -305,6 +307,41 @@ export const placeIntelligencePipeline = inngest.createFunction(
         }
       });
       results[stage.id] = result;
+
+      // ── Persist stage result to DB for resilience & raw data access ──
+      await step.run(`save-stage-${stage.id}`, async () => {
+        const stageResult = result as Record<string, unknown> | undefined;
+        const isError = !!stageResult?._stageError;
+        const signalCount = Array.isArray(stageResult?.signals)
+          ? (stageResult.signals as unknown[]).length : null;
+
+        await prisma.pipelineStageResult.upsert({
+          where: {
+            pipelineRunId_stageId: { pipelineRunId: run.id, stageId: stage.id },
+          },
+          create: {
+            pipelineRunId: run.id,
+            stageId: stage.id,
+            status: isError ? 'failed' : 'complete',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            output: JSON.parse(JSON.stringify(result)) as any,
+            signalCount,
+            durationMs: Date.now() - stageStartMs,
+            error: isError ? String((stageResult as any)?._stageError?.error) : null,
+            startedAt: new Date(stageStartMs),
+            completedAt: new Date(),
+          },
+          update: {
+            status: isError ? 'failed' : 'complete',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            output: JSON.parse(JSON.stringify(result)) as any,
+            signalCount,
+            durationMs: Date.now() - stageStartMs,
+            error: isError ? String((stageResult as any)?._stageError?.error) : null,
+            completedAt: new Date(),
+          },
+        });
+      });
     }
 
     const merged = results.merge as PipelineResult;

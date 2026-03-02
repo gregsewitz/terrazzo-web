@@ -11,6 +11,8 @@ import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import PipelineProgress from '@/components/PipelineProgress';
 import { FONT, INK } from '@/constants/theme';
 import PlacePhoto from '@/components/PlacePhoto';
+import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
+import RhythmVisualization from '@/components/profile/RhythmVisualization';
 
 export interface PlaceDetailContentProps {
   item: ImportedPlace;
@@ -26,7 +28,7 @@ export interface PlaceDetailContentProps {
   variant: 'desktop' | 'mobile';
 }
 
-const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
+const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
 
 function PlaceDetailContent({
   item,
@@ -401,6 +403,82 @@ function PlaceDetailContent({
             <MosaicLegend profile={item.matchBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
           </div>
         </div>
+
+        {/* Sustainability alignment */}
+        {item.sustainabilityScore !== undefined && item.sustainabilityScore > 0 && (
+          <div className="mb-4">
+            <h3 className="text-[10px] uppercase tracking-wider mb-2.5 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Sustainability</h3>
+            <SustainabilityBadge
+              sensitivity={
+                item.sustainabilityScore >= 0.75 ? 'LEADING'
+                  : item.sustainabilityScore >= 0.5 ? 'CONSCIOUS'
+                    : item.sustainabilityScore >= 0.25 ? 'PASSIVE'
+                      : 'INDIFFERENT'
+              }
+              score={Math.round(item.sustainabilityScore * 100)}
+            />
+            {item.sustainabilityFeatures && item.sustainabilityFeatures.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {item.sustainabilityFeatures.map((feat) => (
+                  <span
+                    key={feat}
+                    className="text-[10px] px-2 py-0.5 rounded-full"
+                    style={{ background: '#e8f5e8', color: '#2d6a2d', fontFamily: FONT.mono }}
+                  >
+                    {feat}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rhythm compatibility */}
+        {item.rhythmProfile && (
+          <div className="mb-4">
+            <RhythmVisualization
+              title="Rhythm Profile"
+              axes={[
+                ...(item.rhythmProfile.tempo ? [{
+                  label: 'Pace',
+                  leftPole: 'Slow',
+                  rightPole: 'Fast',
+                  value: item.rhythmProfile.tempo === 'slow' ? 0.2 : item.rhythmProfile.tempo === 'fast' ? 0.8 : 0.5,
+                }] : []),
+                ...(item.rhythmProfile.morningOrientation ? [{
+                  label: 'Morning',
+                  leftPole: 'Dawn',
+                  rightPole: 'Late',
+                  value: item.rhythmProfile.morningOrientation === 'dawn' ? 0.15 : item.rhythmProfile.morningOrientation === 'late' ? 0.85 : 0.5,
+                }] : []),
+                ...(item.rhythmProfile.spontaneityTolerance ? [{
+                  label: 'Structure',
+                  leftPole: 'Planned',
+                  rightPole: 'Spontaneous',
+                  value: item.rhythmProfile.spontaneityTolerance === 'rigid' ? 0.15 : item.rhythmProfile.spontaneityTolerance === 'spontaneous' ? 0.85 : 0.5,
+                }] : []),
+              ]}
+            />
+          </div>
+        )}
+
+        {/* Cultural engagement options */}
+        {item.culturalEngagementOptions && item.culturalEngagementOptions.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-[10px] uppercase tracking-wider mb-2 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Cultural Experiences</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {item.culturalEngagementOptions.map((opt) => (
+                <span
+                  key={opt}
+                  className="text-[10px] px-2.5 py-1 rounded-lg"
+                  style={{ background: 'rgba(107,139,154,0.12)', color: '#4a6a7a', fontFamily: FONT.mono }}
+                >
+                  {opt.replace(/-/g, ' ')}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Rate button */}
         {onRate && (

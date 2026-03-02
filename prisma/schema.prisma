@@ -485,7 +485,7 @@ model PlaceIntelligence {
   enrichmentTTL   Int      @default(90) // days
 
   // Taste Intelligence (Phase 2: Property Embeddings)
-  embedding          Unsupported("vector(32)")?
+  embedding          Unsupported("vector(34)")?
   embeddingUpdatedAt DateTime?
 
   // Relations
@@ -525,8 +525,32 @@ model PipelineRun {
 
   createdAt           DateTime @default(now())
 
+  stageResults        PipelineStageResult[]
+
   @@index([placeIntelligenceId])
   @@index([status])
+}
+
+model PipelineStageResult {
+  id              String   @id @default(cuid())
+  pipelineRunId   String
+  pipelineRun     PipelineRun @relation(fields: [pipelineRunId], references: [id], onDelete: Cascade)
+
+  stageId         String   // e.g. "google_places", "scrape_reviews", "editorial_extraction"
+  status          String   @default("pending") // pending | running | complete | failed | skipped
+
+  output          Json?    // Full raw output from this stage
+  signalCount     Int?     // Quick-access: how many signals this stage produced
+  durationMs      Int?     // How long this stage took
+  error           String?  // Error message if failed
+
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@unique([pipelineRunId, stageId])
+  @@index([pipelineRunId])
+  @@index([stageId])
 }
 
 // ──────────────────────────────────────────────

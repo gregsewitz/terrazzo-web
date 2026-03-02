@@ -278,6 +278,22 @@ export interface ImportedPlace {
   // Attribution — who added this place (relevant in shared trips)
   addedByUserId?: string;   // null/undefined = trip owner
   addedByName?: string;     // "Sarah" — denormalized for display
+  // ─── v2 Enrichment Surfacing ───
+  sustainabilityScore?: number;        // 0-1 from PlaceIntelligence
+  sustainabilityFeatures?: string[];   // e.g. ["solar-powered", "locally-sourced"]
+  rhythmProfile?: {
+    tempo?: string;                    // 'slow' | 'moderate' | 'fast'
+    dayArc?: string;                   // natural daily rhythm description
+    morningOrientation?: string;       // 'dawn' | 'mid-morning' | 'late'
+    spontaneityTolerance?: string;     // 'rigid' | 'flexible' | 'spontaneous'
+  };
+  culturalEngagementOptions?: string[]; // e.g. ["cooking-class", "artisan-workshop"]
+  sensoryCues?: {
+    lightQuality?: string;
+    soundscape?: string;
+    scentNotes?: string[];
+    materialTextures?: string[];
+  };
 }
 
 // ─── Quick Entry (free-text slot items) ───
