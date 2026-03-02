@@ -475,9 +475,11 @@ model PlaceIntelligence {
   sustainabilityScore        Float?    // 0-1 overall sustainability rating
   sustainabilityFeatures     String[]  @default([]) // e.g. solar-powered, locally-sourced
   culturalEngagementOptions  String[]  @default([]) // e.g. cooking-class, artisan-workshop
-  provenanceNarrative        String?   // origin story, founding architect, heritage
-  seasonalityData            Json?     // { bestMonths, shoulderSeasons, weatherPatterns }
+  heritageNarrative          String?   // origin story, founding architect, heritage (renamed from provenanceNarrative)
+  heritageData               Json?     // { architect, yearEstablished, previousUses, significance, restorationPhilosophy }
+  seasonalityData            Json?     // { peakMonths, shoulderSeasons, quietMonths, bestMonths, weatherByMonth, crowdPatterns, recommendations }
   sensoryCues                Json?     // { lightQuality, soundscape, scentNotes, materialTextures }
+  competitiveContext         Json?     // { position, ecosystemType, uniquenessScore, neighborhoodRole, alternativeScenarios, nearbyAlternatives }
 
   // Sources processed
   sourcesProcessed Json?

@@ -9,6 +9,9 @@ import ConversationView from '@/components/onboarding/ConversationView';
 import QuickDiagnosticView from '@/components/onboarding/QuickDiagnosticView';
 import VisualTasteView from '@/components/onboarding/VisualTasteView';
 import TripSeedView from '@/components/onboarding/TripSeedView';
+import SliderPhaseView from '@/components/onboarding/SliderPhaseView';
+import SwipePhaseView from '@/components/onboarding/SwipePhaseView';
+import SpectrumPhaseView from '@/components/onboarding/SpectrumPhaseView';
 
 export default function PhasePage() {
   const params = useParams();
@@ -115,6 +118,15 @@ export default function PhasePage() {
         )}
         {phase.modality === 'trip-seed' && (
           <TripSeedView onComplete={handlePhaseComplete} />
+        )}
+        {phase.modality === 'slider' && (
+          <SliderPhaseView onComplete={handlePhaseComplete} />
+        )}
+        {phase.modality === 'swipe' && (
+          <SwipePhaseView onComplete={handlePhaseComplete} />
+        )}
+        {phase.modality === 'spectrum' && (
+          <SpectrumPhaseView onComplete={handlePhaseComplete} />
         )}
       </div>
     </div>

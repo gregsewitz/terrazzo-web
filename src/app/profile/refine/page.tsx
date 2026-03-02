@@ -4,19 +4,38 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { REFINEMENT_PHASES, REFINEMENT_PHASE_IDS, REFINEMENT_PHASE_FIELDS } from '@/constants/onboarding';
+import {
+  ONBOARDING_PHASES,
+  ALL_PHASE_IDS,
+  REFINEMENT_PHASES,
+  REFINEMENT_PHASE_IDS,
+  REFINEMENT_PHASE_FIELDS,
+} from '@/constants/onboarding';
 import type { RefinementPhaseId } from '@/constants/onboarding';
+import type { OnboardingPhase } from '@/types';
 import ConversationView from '@/components/onboarding/ConversationView';
+import SliderPhaseView from '@/components/onboarding/SliderPhaseView';
+import SwipePhaseView from '@/components/onboarding/SwipePhaseView';
+import SpectrumPhaseView from '@/components/onboarding/SpectrumPhaseView';
 import CertaintyBar from '@/components/onboarding/CertaintyBar';
 import { apiFetch } from '@/lib/api-client';
 import { FONT, INK } from '@/constants/theme';
 
 /**
- * /profile/refine — "Fill the gaps" flow
+ * /profile/refine — Dynamic "Fill the gaps" flow
  *
- * Loads the user's current profile, detects which v2 fields are empty/default,
- * and only surfaces the refinement phases that would fill those gaps.
- * On completion, patches the profile via /api/profile/save without touching existing data.
+ * Two layers of gap detection:
+ *
+ * 1. PHASE-BASED: Checks which onboarding phases the user hasn't completed.
+ *    New modality phases (slider/swipe/spectrum) added after a user's original
+ *    onboarding will surface here automatically — no hardcoding needed.
+ *    Interactive phases come first since they're quick and fun.
+ *
+ * 2. FIELD-BASED: Checks specific User DB columns for the deeper conversation
+ *    refinement phases (sustainability, rhythm, cultural engagement).
+ *    These only show if the specific columns are still empty/default.
+ *
+ * On completion, triggers re-synthesis to incorporate new signals.
  */
 
 interface UserV2Fields {
@@ -28,8 +47,15 @@ interface UserV2Fields {
   tasteTrajectoryDescription: string | null;
 }
 
-/** Check if a refinement phase has gaps that need filling */
-function phaseHasGaps(phaseId: RefinementPhaseId, fields: UserV2Fields): boolean {
+/** IDs of onboarding phases that use interactive modalities (slider, swipe, spectrum).
+ *  These are detected as gaps purely by phase completion status. */
+const INTERACTIVE_PHASE_IDS = ALL_PHASE_IDS.filter((id) => {
+  const phase = ONBOARDING_PHASES.find((p) => p.id === id);
+  return phase && ['slider', 'swipe', 'spectrum'].includes(phase.modality);
+});
+
+/** Check if a conversation-based refinement phase has gaps that need filling */
+function refinementPhaseHasGaps(phaseId: RefinementPhaseId, fields: UserV2Fields): boolean {
   switch (phaseId) {
     case 'refine-sustainability':
       return (
@@ -40,8 +66,7 @@ function phaseHasGaps(phaseId: RefinementPhaseId, fields: UserV2Fields): boolean
     case 'refine-rhythm':
       return !fields.tasteTrajectoryDirection || !fields.tasteTrajectoryDescription;
     case 'refine-cultural':
-      // Cultural engagement signals are always additive — always offer this phase
-      // unless the user explicitly completed it before
+      // Cultural engagement signals are always additive — always offer unless completed
       return true;
     default:
       return false;
@@ -60,7 +85,7 @@ export default function RefinePage() {
   const [isSaving, setIsSaving] = useState(false);
   const hasLoaded = useRef(false);
 
-  // Fetch user's current v2 fields to detect gaps
+  // Fetch user's current v2 fields for conversation-phase gap detection
   useEffect(() => {
     if (hasLoaded.current || authLoading || !isAuthenticated) return;
     hasLoaded.current = true;
@@ -71,7 +96,6 @@ export default function RefinePage() {
         setUserFields(data);
       } catch (err) {
         console.error('Failed to load v2 fields:', err);
-        // Default to all gaps — show everything
         setUserFields({
           sustainabilitySensitivity: null,
           sustainabilityPriorities: [],
@@ -86,19 +110,32 @@ export default function RefinePage() {
     })();
   }, [authLoading, isAuthenticated]);
 
-  // Determine which phases to show based on gaps
-  const phasesToShow = useMemo(() => {
+  // Build the dynamic list of phases to show
+  const phasesToShow = useMemo((): OnboardingPhase[] => {
     if (!userFields) return [];
-    return REFINEMENT_PHASE_IDS
-      .filter((id) => phaseHasGaps(id, userFields))
-      .filter((id) => !completedPhaseIds.includes(id)); // skip already-completed refinement phases
+
+    const phases: OnboardingPhase[] = [];
+
+    // Layer 1: Interactive modality phases the user hasn't completed yet
+    // These come first — they're quick, fun, and require no typing
+    for (const phaseId of INTERACTIVE_PHASE_IDS) {
+      if (completedPhaseIds.includes(phaseId)) continue;
+      const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);
+      if (phase) phases.push(phase);
+    }
+
+    // Layer 2: Conversation-based refinement phases with field-level gap detection
+    for (const phaseId of REFINEMENT_PHASE_IDS) {
+      if (completedPhaseIds.includes(phaseId)) continue;
+      if (!refinementPhaseHasGaps(phaseId, userFields)) continue;
+      const phase = REFINEMENT_PHASES.find((p) => p.id === phaseId);
+      if (phase) phases.push(phase);
+    }
+
+    return phases;
   }, [userFields, completedPhaseIds]);
 
-  const currentPhase = useMemo(() => {
-    if (phasesToShow.length === 0) return null;
-    const phaseId = phasesToShow[currentPhaseIdx];
-    return REFINEMENT_PHASES.find((p) => p.id === phaseId) || null;
-  }, [phasesToShow, currentPhaseIdx]);
+  const currentPhase = phasesToShow[currentPhaseIdx] ?? null;
 
   // Handle phase completion — advance to next gap phase or finish
   const handlePhaseComplete = useCallback(() => {
@@ -109,7 +146,6 @@ export default function RefinePage() {
     if (currentPhaseIdx < phasesToShow.length - 1) {
       setCurrentPhaseIdx((i) => i + 1);
     } else {
-      // All refinement phases done — trigger re-synthesis
       setIsComplete(true);
     }
   }, [currentPhase, currentPhaseIdx, phasesToShow.length, completePhase, setCurrentPhaseProgress]);
@@ -121,13 +157,11 @@ export default function RefinePage() {
 
     (async () => {
       try {
-        // Trigger a full re-synthesis which will incorporate the new signals
         const store = useOnboardingStore.getState();
         await store.triggerResynthesis();
       } catch (err) {
         console.error('Re-synthesis failed:', err);
       }
-      // Navigate back to profile
       setTimeout(() => router.push('/profile'), 1500);
     })();
   }, [isComplete, isSaving, router]);
@@ -156,8 +190,7 @@ export default function RefinePage() {
         <div className="max-w-lg w-full text-center">
           <h2 className="font-serif text-[28px] text-[var(--t-ink)] mb-3">All caught up</h2>
           <p className="text-[15px] text-[var(--t-ink)]/60 mb-6" style={{ fontFamily: FONT.sans }}>
-            Your profile already has all the v2 dimensions filled in.
-            Your taste profile is as complete as it gets.
+            Your taste profile is fully calibrated — all dimensions covered.
           </p>
           <button
             onClick={() => router.push('/profile')}
@@ -192,7 +225,9 @@ export default function RefinePage() {
     );
   }
 
-  // Active phase conversation
+  // Active refinement phase — render based on modality
+  const modality = currentPhase?.modality;
+
   return (
     <div className="h-dvh flex flex-col bg-[var(--t-cream)] overflow-hidden">
       {/* Header */}
@@ -222,14 +257,23 @@ export default function RefinePage() {
         <CertaintyBar />
       </div>
 
-      {/* Conversation */}
+      {/* Phase content — renders correct component based on modality */}
       <div className="flex-1 flex flex-col min-h-0">
-        {currentPhase && (
+        {currentPhase && (modality === 'voice' || modality === 'voice+cards') && (
           <ConversationView
             key={currentPhase.id}
             phase={currentPhase}
             onComplete={handlePhaseComplete}
           />
+        )}
+        {currentPhase && modality === 'slider' && (
+          <SliderPhaseView key={currentPhase.id} onComplete={handlePhaseComplete} />
+        )}
+        {currentPhase && modality === 'swipe' && (
+          <SwipePhaseView key={currentPhase.id} onComplete={handlePhaseComplete} />
+        )}
+        {currentPhase && modality === 'spectrum' && (
+          <SpectrumPhaseView key={currentPhase.id} onComplete={handlePhaseComplete} />
         )}
       </div>
     </div>

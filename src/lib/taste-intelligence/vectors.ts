@@ -111,6 +111,7 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
   // Dimensions 0-7: radar axes mapped to domains
   // radarData axes use various names; map them to domains
   const axisToIndex: Record<string, number> = {
+    // Current 8-domain names
     design: 0, 'design language': 0,
     character: 1, 'character & identity': 1, 'scale & intimacy': 1,
     service: 2, 'service philosophy': 2,
@@ -119,6 +120,13 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
     wellness: 5, 'wellness & body': 5,
     rhythm: 6, 'rhythm & tempo': 6,
     culturalengagement: 7, 'cultural engagement': 7,
+    // Legacy v1 radar axis names (from pre-v2 onboarding)
+    material: 0,             // Material quality → Design
+    authenticity: 1,         // Authenticity → Character
+    social: 2,               // Social dynamics → Service
+    sensory: 5,              // Sensory experience → Wellness
+    cultural: 7,             // Cultural affinity → CulturalEngagement
+    spatial: 4,              // Spatial preferences → Location
   };
 
   for (const { axis, value } of input.radarData) {
@@ -131,10 +139,22 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
   // Dimensions 8-33: micro-signal hash features
   const signalInputs: Array<{ text: string; confidence: number }> = [];
 
+  // Map legacy microTasteSignal domain keys to current TasteDomain names
+  const legacyDomainMap: Record<string, TasteDomain> = {
+    architectural_attraction: 'Design',
+    material_obsessions: 'Design',
+    social_dynamics: 'Character',
+    service_ideals: 'Service',
+    cultural_indicators: 'CulturalEngagement',
+    spatial_preferences: 'Location',
+    wellness_essentials: 'Wellness',
+  };
+
   for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
     for (const sig of signals) {
-      // Use domain weight as base confidence for micro-signals
-      const domainIdx = DOMAIN_INDEX[domain as TasteDomain];
+      // Map legacy domain keys to current domain names
+      const resolvedDomain = legacyDomainMap[domain] || (domain as TasteDomain);
+      const domainIdx = DOMAIN_INDEX[resolvedDomain];
       const domainWeight = domainIdx !== undefined ? vector[domainIdx] : 0.5;
       signalInputs.push({ text: sig, confidence: domainWeight });
     }

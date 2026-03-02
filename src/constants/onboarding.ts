@@ -464,8 +464,25 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Design: 70, Character: 45, Service: 50, Food: 35, Location: 50, Wellness: 10 },
   },
   {
-    id: 'anti-stay',
+    id: 'rhythm-refinement',
     phaseNumber: 2,
+    title: 'Your Rhythm',
+    subtitle: 'How you like to move through a place',
+    modality: 'slider',
+    act: 1,
+    aiPrompt: '',
+    followUps: [],
+    sampleUserResponses: [],
+    extractedSignals: [
+      { tag: 'Pace preference', cat: 'Core', confidence: 0.85 },
+      { tag: 'Morning vs night orientation', cat: 'Core', confidence: 0.88 },
+      { tag: 'Spontaneity tolerance', cat: 'Core', confidence: 0.82 },
+    ],
+    certaintyAfter: { Design: 72, Character: 52, Service: 50, Food: 35, Location: 55, Wellness: 18 },
+  },
+  {
+    id: 'anti-stay',
+    phaseNumber: 3,
     title: 'The Anti-Stay',
     subtitle: 'What looked perfect but felt wrong',
     modality: 'voice',
@@ -493,7 +510,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'companion-context',
-    phaseNumber: 3,
+    phaseNumber: 4,
     title: 'Who You Travel With',
     subtitle: 'How your taste shifts with company',
     modality: 'voice+cards',
@@ -520,8 +537,25 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Design: 88, Character: 75, Service: 78, Food: 55, Location: 72, Wellness: 25 },
   },
   {
+    id: 'cultural-engagement',
+    phaseNumber: 5,
+    title: 'Cultural Compass',
+    subtitle: 'What draws you into a culture',
+    modality: 'swipe',
+    act: 1,
+    aiPrompt: '',
+    followUps: [],
+    sampleUserResponses: [],
+    extractedSignals: [
+      { tag: 'Cultural immersion preference', cat: 'Core', confidence: 0.86 },
+      { tag: 'Heritage sensitivity', cat: 'Core', confidence: 0.84 },
+      { tag: 'Local connection style', cat: 'Core', confidence: 0.82 },
+    ],
+    certaintyAfter: { Design: 88, Character: 80, Service: 78, Food: 58, Location: 76, Wellness: 30 },
+  },
+  {
     id: 'seed-trips',
-    phaseNumber: 4,
+    phaseNumber: 6,
     title: 'Seed Your Trips',
     subtitle: "A trip you're planning and one you dream about",
     modality: 'trip-seed',
@@ -540,7 +574,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'trusted-sources',
-    phaseNumber: 5,
+    phaseNumber: 7,
     title: 'Trusted Sources',
     subtitle: 'Who you trust for travel recommendations',
     modality: 'voice',
@@ -556,8 +590,25 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Design: 88, Character: 75, Service: 78, Food: 55, Location: 72, Wellness: 25 },
   },
   {
+    id: 'sustainability-values',
+    phaseNumber: 8,
+    title: 'Values & Impact',
+    subtitle: 'What you care about beyond the experience',
+    modality: 'spectrum',
+    act: 1,
+    aiPrompt: '',
+    followUps: [],
+    sampleUserResponses: [],
+    extractedSignals: [
+      { tag: 'Sustainability sensitivity', cat: 'Core', confidence: 0.85 },
+      { tag: 'Local economy priority', cat: 'Core', confidence: 0.83 },
+      { tag: 'Cultural preservation awareness', cat: 'Core', confidence: 0.80 },
+    ],
+    certaintyAfter: { Design: 90, Character: 78, Service: 80, Food: 58, Location: 76, Wellness: 40 },
+  },
+  {
     id: 'go-back-place',
-    phaseNumber: 6,
+    phaseNumber: 9,
     title: 'The Go-Back Place',
     subtitle: "Where you'd go tomorrow without thinking",
     modality: 'voice',
@@ -583,7 +634,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ═══════════════════════════════════════
   {
     id: 'details-matter',
-    phaseNumber: 7,
+    phaseNumber: 10,
     title: 'The Details That Matter',
     subtitle: 'The small things that change everything for you',
     modality: 'voice',
@@ -611,7 +662,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'quick-diagnostic',
-    phaseNumber: 8,
+    phaseNumber: 11,
     title: 'Quick Diagnostics',
     subtitle: "Fast instincts — don't overthink it",
     modality: 'cards',
@@ -626,7 +677,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'visual-taste',
-    phaseNumber: 9,
+    phaseNumber: 12,
     title: 'Design Eye',
     subtitle: 'Pick the vibe — trust your gut',
     modality: 'visual',
@@ -641,7 +692,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'emotional-core',
-    phaseNumber: 10,
+    phaseNumber: 13,
     title: 'Why You Travel',
     subtitle: 'What a great trip gives you',
     modality: 'voice',
@@ -667,7 +718,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
 
 // ─── Act structure ───
 
-export const ACT_1_PHASE_IDS = ['welcome', 'memorable-stays', 'anti-stay', 'companion-context', 'seed-trips', 'trusted-sources', 'go-back-place'];
+export const ACT_1_PHASE_IDS = ['welcome', 'memorable-stays', 'rhythm-refinement', 'anti-stay', 'companion-context', 'cultural-engagement', 'seed-trips', 'trusted-sources', 'sustainability-values', 'go-back-place'];
 export const ACT_2_PHASE_IDS = ['details-matter', 'quick-diagnostic', 'visual-taste', 'emotional-core'];
 export const ALL_PHASE_IDS = [...ACT_1_PHASE_IDS, ...ACT_2_PHASE_IDS];
 

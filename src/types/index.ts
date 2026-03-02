@@ -157,6 +157,62 @@ export interface SustainabilityProfile {
   willingnessToPayPremium: number; // 0-1
 }
 
+// ─── Heritage Data (from pipeline heritage_analysis stage) ───
+
+export interface HeritageData {
+  architect?: string;
+  yearEstablished?: string;
+  yearRenovated?: string;
+  previousUses?: string[];
+  significance?: string;
+  restorationPhilosophy?: string;
+}
+
+// ─── Seasonality Data (from pipeline seasonality_analysis stage) ───
+
+export interface SeasonalityData {
+  peakMonths?: string[];
+  shoulderSeasons?: string[];
+  quietMonths?: string[];
+  bestMonths?: string[];
+  weatherByMonth?: Record<string, string>;
+  crowdPatterns?: { peak?: string; shoulder?: string; quiet?: string };
+  seasonalClosures?: string[];
+  recommendations?: string;
+}
+
+// ─── Competitive Context (from pipeline competitive_context stage) ───
+
+export type CompetitivePosition =
+  | 'category_leader'
+  | 'local_secret'
+  | 'neighborhood_institution'
+  | 'rising_star'
+  | 'specialist'
+  | 'niche'
+  | 'unique';
+
+export type EcosystemType = 'saturated' | 'unique' | 'emerging' | 'dominant';
+
+export type NeighborhoodRole = 'anchor' | 'destination' | 'discovery' | 'outpost';
+
+export interface CompetitiveAlternative {
+  name: string;
+  distance_km: number;
+  why: string;
+}
+
+export interface CompetitiveContextData {
+  position?: CompetitivePosition;
+  positioningRationale?: string;
+  uniquenessScore?: number;
+  ecosystemType?: EcosystemType;
+  neighborhoodRole?: NeighborhoodRole;
+  neighborhoodContext?: string;
+  alternativeScenarios?: Record<string, string>;
+  nearbyAlternatives?: CompetitiveAlternative[];
+}
+
 // ─── Signal with Decay Metadata ───
 
 export interface DecayableSignal extends TasteSignal {
@@ -589,6 +645,15 @@ export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
   'Pace & Rhythm': 'Rhythm',
   'Cultural Immersion': 'CulturalEngagement',
   'Cultural & Creative': 'CulturalEngagement',
+  // Legacy signal category names (from v1 onboarding allSignals)
+  'Design': 'Design',
+  'Character': 'Character',
+  'Service': 'Service',
+  'Food': 'Food',
+  'Location': 'Location',
+  'Wellness': 'Wellness',
+  'Mosaic': 'Character',          // Cross-domain "mosaic" signals → Character (identity)
+  'TasteAxes': 'Character',       // Taste axis summaries → Character
 };
 
 export interface BriefingSignal {
