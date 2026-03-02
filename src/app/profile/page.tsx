@@ -1202,7 +1202,7 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
                     <ScoreArc score={place.score} size={38} color="#4a6741" />
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2.5">
-                    {place.signals.map(s => (
+                    {(Array.isArray(place.signals) ? place.signals : []).map(s => (
                       <span key={s} className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.sans }}>{s}</span>
                     ))}
                   </div>
