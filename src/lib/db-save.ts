@@ -1,6 +1,7 @@
 'use client';
 
 import { apiFetch } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase-client';
 
 // ═══════════════════════════════════════════
 // Centralized DB save with retry + error tracking
@@ -16,10 +17,13 @@ interface PendingSave {
   body?: unknown;
   retries: number;
   createdAt: number;
+  authRetries: number; // separate counter for auth-specific retries
 }
 
 const MAX_RETRIES = 3;
+const MAX_AUTH_RETRIES = 5; // more retries for auth — session may arrive later
 const RETRY_DELAYS = [1000, 3000, 8000]; // exponential-ish backoff
+const AUTH_RETRY_DELAYS = [1500, 3000, 5000, 8000, 12000]; // longer patience for auth
 const listeners = new Set<(status: SaveStatus, pending: number, lastError?: string) => void>();
 
 let _status: SaveStatus = 'idle';
@@ -27,6 +31,16 @@ let _pendingCount = 0;
 let _lastError: string | undefined;
 let _queue: PendingSave[] = [];
 let _processing = false;
+
+// ─── Auth state listener: retry queued saves when session appears ───
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.access_token && _queue.length > 0 && !_processing) {
+      console.log('[dbSave] Auth session appeared, retrying queued saves');
+      processQueue();
+    }
+  });
+}
 
 function notify() {
   listeners.forEach(fn => fn(_status, _pendingCount, _lastError));
@@ -74,19 +88,37 @@ async function processQueue() {
       const msg = err instanceof Error ? err.message : 'Save failed';
       const isAuthError = msg.includes('401') || msg.includes('Unauthorized') || msg.includes('403');
 
-      // Auth errors (401/403) — don't retry, don't surface loudly.
-      // These happen when token is expired or user isn't signed in yet.
-      // The old fire-and-forget pattern silently swallowed these.
+      // Auth errors (401/403) — retry with patience.
+      // Common during onboarding when session hasn't fully propagated yet.
+      // The onAuthStateChange listener will also trigger retries when session arrives.
       if (isAuthError) {
-        console.warn(`[dbSave] Auth error (skipping):`, save.url, msg);
-        _queue.shift();
-        _pendingCount = _queue.length;
-        if (_queue.length === 0) {
-          _status = 'idle';
-          _lastError = undefined;
+        if (save.authRetries < MAX_AUTH_RETRIES - 1) {
+          save.authRetries++;
+          const delay = AUTH_RETRY_DELAYS[save.authRetries - 1] || 12000;
+          console.warn(`[dbSave] Auth error (retry ${save.authRetries}/${MAX_AUTH_RETRIES}):`, save.url);
+          _status = 'retrying';
+          _lastError = undefined; // Don't surface auth retries to UI — they're expected during onboarding
+          notify();
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue; // Keep in queue, retry
+        } else {
+          // Max auth retries exhausted — surface error
+          console.error(`[dbSave] Auth failed after ${MAX_AUTH_RETRIES} retries:`, save.url);
+          _queue.shift();
+          _pendingCount = _queue.length;
+          _status = 'error';
+          _lastError = 'Unable to save — please sign in and try again.';
+          notify();
+          // Clear error after 15s
+          setTimeout(() => {
+            if (_status === 'error' && _queue.length === 0) {
+              _status = 'idle';
+              _lastError = undefined;
+              notify();
+            }
+          }, 15_000);
+          continue;
         }
-        notify();
-        continue;
       }
 
       console.error(`[dbSave] Failed (attempt ${save.retries + 1}/${MAX_RETRIES}):`, save.url, msg);
@@ -139,6 +171,7 @@ export function dbSave(url: string, method: string, body?: unknown) {
     method,
     body,
     retries: 0,
+    authRetries: 0,
     createdAt: Date.now(),
   };
 
