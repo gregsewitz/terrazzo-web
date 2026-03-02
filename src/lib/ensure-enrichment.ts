@@ -1,17 +1,17 @@
 import { prisma } from '@/lib/prisma';
-import { inngest } from '@/lib/inngest';
+
+const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
 /**
  * Ensure a PlaceIntelligence record exists for this googlePlaceId and trigger
  * the enrichment pipeline if it hasn't run yet. Returns the intelligence ID
  * so we can link it to the SavedPlace.
  *
- * IMPORTANT: This function also auto-links any unlinked SavedPlace and Place
- * records that share this googlePlaceId. This ensures every call site
- * (save, resolve, discover, onboarding, backfill) consistently maintains the
- * foreign-key relationship — even fire-and-forget callers.
+ * Enrichment is triggered directly via the Railway pipeline worker's /enrich
+ * endpoint, which runs all stages internally with parallel execution and
+ * writes results back to Supabase.
  *
- * This is fire-and-forget — pipeline runs in the background via Inngest.
+ * This is fire-and-forget — pipeline runs in the background on Railway.
  * Subsequent saves of the same place (by any user) will find the existing
  * record and skip re-triggering.
  *
@@ -50,18 +50,7 @@ export async function ensureEnrichment(
       });
 
       await linkPlacesToIntelligence(googlePlaceId, existing.id);
-
-      const sendResult = await inngest.send({
-        name: 'pipeline/run',
-        data: {
-          googlePlaceId,
-          propertyName,
-          placeIntelligenceId: existing.id,
-          trigger,
-          triggeredByUserId: userId,
-        },
-      });
-      console.log(`[ensureEnrichment] ${propertyName}: inngest.send result:`, JSON.stringify(sendResult));
+      await triggerRailwayEnrichment(googlePlaceId, propertyName, existing.id);
 
       return existing.id;
     }
@@ -79,18 +68,7 @@ export async function ensureEnrichment(
     });
 
     await linkPlacesToIntelligence(googlePlaceId, intel.id);
-
-    const sendResult = await inngest.send({
-      name: 'pipeline/run',
-      data: {
-        googlePlaceId,
-        propertyName,
-        placeIntelligenceId: intel.id,
-        trigger,
-        triggeredByUserId: userId,
-      },
-    });
-    console.log(`[ensureEnrichment] ${propertyName}: inngest.send result:`, JSON.stringify(sendResult));
+    await triggerRailwayEnrichment(googlePlaceId, propertyName, intel.id);
 
     return intel.id;
   } catch (error) {
@@ -118,12 +96,54 @@ export async function ensureEnrichment(
         },
       });
     } catch (logErr) {
-      // If even logging fails, at least console.error
       console.error('[ensureEnrichment] Failed to log error to DB:', logErr);
     }
 
     console.error(`[ensureEnrichment] Failed for ${propertyName} (${googlePlaceId}):`, errorMessage);
     return null;
+  }
+}
+
+/**
+ * Fire-and-forget call to the Railway pipeline worker's /enrich endpoint.
+ * The worker runs the full 12-stage pipeline asynchronously and writes
+ * results directly to Supabase when complete.
+ */
+async function triggerRailwayEnrichment(
+  googlePlaceId: string,
+  propertyName: string,
+  placeIntelligenceId: string,
+  placeType?: string,
+): Promise<void> {
+  if (!PIPELINE_WORKER_URL) {
+    console.error('[ensureEnrichment] PIPELINE_WORKER_URL not configured — enrichment will not run');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${PIPELINE_WORKER_URL}/enrich`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        googlePlaceId,
+        propertyName,
+        placeIntelligenceId,
+        placeType: placeType || undefined,
+      }),
+      signal: AbortSignal.timeout(10_000), // 10s — just needs to accept the job
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[ensureEnrichment] Railway /enrich returned ${res.status}: ${errText}`);
+      return;
+    }
+
+    const { jobId } = await res.json() as { jobId: string };
+    console.log(`[ensureEnrichment] ${propertyName}: Railway job started (jobId: ${jobId})`);
+  } catch (err) {
+    // Fire-and-forget — don't fail the caller if Railway is temporarily down
+    console.error(`[ensureEnrichment] Failed to trigger Railway enrichment for ${propertyName}:`, err);
   }
 }
 
@@ -156,7 +176,6 @@ async function linkPlacesToIntelligence(googlePlaceId: string, intelligenceId: s
       console.log(`[ensureEnrichment] Linked ${savedResult.count} SavedPlace(s) + ${placeResult.count} Place(s) to intelligence ${intelligenceId}`);
     }
   } catch (err) {
-    // Non-fatal — the intelligence record still exists, linking can be retried
     console.error(`[ensureEnrichment] Failed to link places for ${googlePlaceId}:`, err);
   }
 }

@@ -9,12 +9,34 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { inngest } from '@/lib/inngest';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
+
+const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
 function daysBetween(a: Date | null, b: Date): number {
   if (!a) return Infinity;
   return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Fire-and-forget trigger to Railway pipeline worker.
+ */
+async function triggerEnrichment(
+  googlePlaceId: string,
+  propertyName: string,
+  placeIntelligenceId: string,
+): Promise<void> {
+  if (!PIPELINE_WORKER_URL) return;
+  try {
+    await fetch(`${PIPELINE_WORKER_URL}/enrich`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ googlePlaceId, propertyName, placeIntelligenceId }),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (err) {
+    console.error(`[intelligence/lookup] Failed to trigger enrichment for ${propertyName}:`, err);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -57,16 +79,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Stale — trigger background refresh, return existing data
-      await inngest.send({
-        name: 'pipeline/run',
-        data: {
-          googlePlaceId,
-          propertyName,
-          placeIntelligenceId: existing.id,
-          trigger: 'refresh',
-          triggeredByUserId: userId,
-        },
-      });
+      triggerEnrichment(googlePlaceId, propertyName, existing.id);
 
       return NextResponse.json({
         status: 'ready',
@@ -110,16 +123,7 @@ export async function POST(req: NextRequest) {
           },
         });
 
-    await inngest.send({
-      name: 'pipeline/run',
-      data: {
-        googlePlaceId,
-        propertyName,
-        placeIntelligenceId: intel.id,
-        trigger: 'user_import',
-        triggeredByUserId: userId,
-      },
-    });
+    triggerEnrichment(googlePlaceId, propertyName, intel.id);
 
     return NextResponse.json({
       status: 'queued',

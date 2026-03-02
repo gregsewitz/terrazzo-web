@@ -7,19 +7,21 @@
  * Optional query params:
  *   ?email=...     — limit to a specific user's places
  *   ?dryRun=true   — just report what would be triggered, don't actually send events
+ *   ?force=true    — re-run even for "complete" records with empty signals
  *
- * This is a utility route for backfilling demo/production data.
+ * Enrichment is triggered directly via the Railway pipeline worker's /enrich endpoint.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { inngest } from '@/lib/inngest';
+
+const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
 export async function POST(req: NextRequest) {
   try {
     const email = req.nextUrl.searchParams.get('email');
     const dryRun = req.nextUrl.searchParams.get('dryRun') === 'true';
-    const force = req.nextUrl.searchParams.get('force') === 'true'; // re-run even for "complete" records with empty signals
+    const force = req.nextUrl.searchParams.get('force') === 'true';
 
     // 1. Find all saved places with a googlePlaceId
     const whereClause: Record<string, unknown> = {
@@ -102,7 +104,6 @@ export async function POST(req: NextRequest) {
       }
 
       if (existing?.status === 'enriching') {
-        // Ensure link even for in-progress records
         await prisma.savedPlace.updateMany({
           where: {
             googlePlaceId: place.googlePlaceId,
@@ -139,7 +140,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Create PlaceIntelligence records and trigger pipeline for each
-    const triggered: { googlePlaceId: string; name: string; intelligenceId: string }[] = [];
+    const triggered: { googlePlaceId: string; name: string; intelligenceId: string; jobId?: string }[] = [];
+    const errors: { googlePlaceId: string; name: string; error: string }[] = [];
 
     for (const place of uniqueToEnrich) {
       // Create or reset the intelligence record
@@ -166,24 +168,40 @@ export async function POST(req: NextRequest) {
         data: { placeIntelligenceId: intel.id },
       });
 
-      // Fire the Inngest event
-      await inngest.send({
-        name: 'pipeline/run',
-        data: {
-          googlePlaceId: place.googlePlaceId,
-          propertyName: place.name,
-          placeIntelligenceId: intel.id,
-          placeType: place.type,
-          trigger: 'backfill' as const,
-          triggeredByUserId: place.userId,
-        },
-      });
+      // Trigger Railway pipeline worker directly
+      try {
+        const res = await fetch(`${PIPELINE_WORKER_URL}/enrich`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            googlePlaceId: place.googlePlaceId,
+            propertyName: place.name,
+            placeIntelligenceId: intel.id,
+            placeType: place.type,
+          }),
+          signal: AbortSignal.timeout(10_000),
+        });
 
-      triggered.push({
-        googlePlaceId: place.googlePlaceId,
-        name: place.name,
-        intelligenceId: intel.id,
-      });
+        if (!res.ok) {
+          const errText = await res.text();
+          errors.push({ googlePlaceId: place.googlePlaceId, name: place.name, error: `Railway ${res.status}: ${errText}` });
+          continue;
+        }
+
+        const { jobId } = await res.json() as { jobId: string };
+        triggered.push({
+          googlePlaceId: place.googlePlaceId,
+          name: place.name,
+          intelligenceId: intel.id,
+          jobId,
+        });
+      } catch (err) {
+        errors.push({
+          googlePlaceId: place.googlePlaceId,
+          name: place.name,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
     }
 
     return NextResponse.json({
@@ -192,7 +210,8 @@ export async function POST(req: NextRequest) {
       alreadyEnriched: skipped.filter(s => s.status === 'complete').length,
       currentlyEnriching: skipped.filter(s => s.status === 'enriching').length,
       triggered: triggered.length,
-      places: triggered.map(p => ({ name: p.name, googlePlaceId: p.googlePlaceId })),
+      places: triggered.map(p => ({ name: p.name, googlePlaceId: p.googlePlaceId, jobId: p.jobId })),
+      ...(errors.length > 0 ? { errors } : {}),
     });
   } catch (error) {
     console.error('Backfill error:', error);

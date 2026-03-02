@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/signal-decay",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/vector-refresh",
+      "schedule": "0 2 * * 0"
+    }
+  ]
+}
