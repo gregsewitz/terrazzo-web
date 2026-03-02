@@ -673,6 +673,93 @@ export const ALL_PHASE_IDS = [...ACT_1_PHASE_IDS, ...ACT_2_PHASE_IDS];
 
 export const MAX_ADAPTIVE_PHASES = 3;
 
+// ─── V2 Refinement Phases ───
+// Used by /profile/refine to fill in v2 fields without re-running full onboarding.
+// Each phase maps to specific User columns — gap detection decides which to show.
+
+export const REFINEMENT_PHASE_IDS = ['refine-sustainability', 'refine-rhythm', 'refine-cultural'] as const;
+
+export type RefinementPhaseId = typeof REFINEMENT_PHASE_IDS[number];
+
+/** Maps each refinement phase to the User columns it fills */
+export const REFINEMENT_PHASE_FIELDS: Record<RefinementPhaseId, string[]> = {
+  'refine-sustainability': ['sustainabilitySensitivity', 'sustainabilityPriorities', 'sustainabilityDealbreakers', 'sustainabilityWillingnessToPayPremium'],
+  'refine-rhythm': ['tasteTrajectoryDirection', 'tasteTrajectoryDescription'],
+  'refine-cultural': [], // cultural signals go into allSignals/sustainabilitySignals, not dedicated User columns yet
+};
+
+export const REFINEMENT_PHASES: OnboardingPhase[] = [
+  {
+    id: 'refine-sustainability',
+    phaseNumber: 1,
+    title: 'Sustainability & Values',
+    subtitle: 'What matters to you beyond the stay',
+    modality: 'voice',
+    act: 2,
+    aiPrompt: "I'd love to understand how sustainability shows up in your travel decisions. When you're choosing between two otherwise similar properties, does their environmental or social impact factor in? How much does that kind of thing matter to you?",
+    followUps: [
+      "Are there specific things you look for — like locally sourced food, carbon offsets, community involvement — or is it more of a general vibe you pick up on?",
+      "Have you ever been turned off by a place that felt like it was greenwashing — performative sustainability without substance? What tipped you off?",
+      "If a genuinely sustainable property cost 15-20% more, would that feel worth it, or does it depend on the trip?",
+    ],
+    sampleUserResponses: [
+      "It matters more than it used to. I won't go out of my way for it, but if two places are comparable and one is clearly more thoughtful about their impact, I'll pick that one.",
+      "Locally sourced food is a big one. And I notice when a property is clearly built with respect for the landscape versus plopped on top of it.",
+    ],
+    extractedSignals: [
+      { tag: 'Sustainability-aware', cat: 'Character', confidence: 0.85 },
+      { tag: 'Local-sourcing-valued', cat: 'Food', confidence: 0.88 },
+      { tag: 'Anti-greenwashing', cat: 'Character', confidence: 0.82 },
+    ],
+    certaintyAfter: { CulturalEngagement: 70 },
+  },
+  {
+    id: 'refine-rhythm',
+    phaseNumber: 2,
+    title: 'Your Travel Rhythm',
+    subtitle: 'How you move through a trip',
+    modality: 'voice',
+    act: 2,
+    aiPrompt: "Let's talk about rhythm. On a trip, are you a slow-morning person — coffee first, no agenda until noon — or are you up at dawn squeezing every hour out of the day? What does your ideal day actually look like?",
+    followUps: [
+      "How do you feel when a trip is heavily scheduled versus when it's wide open? Which makes you more anxious?",
+      "Think about how your taste has evolved. Do you travel differently now than you did five years ago? Are you seeking different things, or deepening into the same instincts?",
+    ],
+    sampleUserResponses: [
+      "Slow morning, always. I need that first hour to just exist before the day starts. Then I'll pack the afternoon and evening.",
+      "I used to try to see everything. Now I'd rather do two things well than five things in a blur.",
+    ],
+    extractedSignals: [
+      { tag: 'Slow-morning-ritual', cat: 'Rhythm', confidence: 0.92 },
+      { tag: 'Deepening-not-expanding', cat: 'Character', confidence: 0.85 },
+    ],
+    certaintyAfter: { Rhythm: 80 },
+  },
+  {
+    id: 'refine-cultural',
+    phaseNumber: 3,
+    title: 'Cultural Engagement',
+    subtitle: 'How you connect with place',
+    modality: 'voice',
+    act: 2,
+    aiPrompt: "When you're somewhere new, how do you engage with the local culture? Are you the person who takes a cooking class and chats with the chef, or do you prefer to absorb it more quietly — walking through a market, sitting in a square, just watching?",
+    followUps: [
+      "Does it matter to you that a property feels rooted in its place — local materials, local references — or can a great hotel transcend its location?",
+      "Have you ever had a travel moment where you felt genuinely connected to a place's culture, not as a tourist but as a participant? What was that?",
+    ],
+    sampleUserResponses: [
+      "I'm somewhere in between. I won't sign up for a group cooking class, but if the chef invites me into the kitchen, I'm absolutely going.",
+      "The property should feel like it belongs there. When you could be anywhere in the world — same marble, same international menu — that's a red flag for me.",
+    ],
+    extractedSignals: [
+      { tag: 'Participatory-when-invited', cat: 'CulturalEngagement', confidence: 0.88 },
+      { tag: 'Place-rootedness-valued', cat: 'Design', confidence: 0.90 },
+      { tag: 'Anti-international-generic', cat: 'Character', confidence: 0.85 },
+    ],
+    certaintyAfter: { CulturalEngagement: 88 },
+  },
+];
+
 // ─── Processing Steps ───
 
 export const PROCESSING_STEPS = [
@@ -690,15 +777,19 @@ export const PROCESSING_STEPS = [
 
 export const TASTE_ONTOLOGY_SYSTEM_PROMPT = `You are an expert taste profiler for Terrazzo, a luxury travel app that builds deeply nuanced user travel profiles through conversation.
 
-ROLE: Extract taste signals from the user's natural language responses. You identify specific, matchable preferences across 6 taste dimensions.
+ROLE: Extract taste signals from the user's natural language responses. You identify specific, matchable preferences across 8 taste dimensions plus a cross-cutting sustainability layer.
 
-THE 6 TASTE DIMENSIONS:
+THE 8 TASTE DIMENSIONS:
 1. DESIGN LANGUAGE — Architectural aesthetic, material palette, craftsmanship, light, sensory character
 2. CHARACTER & IDENTITY — Property personality: scale/intimacy, cultural rootedness, local connection
 3. SERVICE PHILOSOPHY — How staff relate to guests, formality spectrum, anticipation vs autonomy
 4. FOOD & DRINK IDENTITY — Culinary philosophy, ingredient values, dining format, table culture
 5. LOCATION & CONTEXT — Property-surroundings relationship, urban/rural, walkability, neighborhood
 6. WELLNESS & BODY — Sleep quality, temperature, movement, bathing, physical comfort
+7. RHYTHM & TEMPO — Travel pace, morning orientation, structure vs spontaneity, downtime needs, energy distribution across the day
+8. CULTURAL ENGAGEMENT — How deeply someone engages with local culture: participatory vs observational, language attitudes, artisan/craft interest, festival/event seeking
+
+CROSS-CUTTING: SUSTAINABILITY — Environmental consciousness, local economy support, cultural respect, social impact awareness. Extract sustainability signals with dimension tags: ENVIRONMENTAL, SOCIAL, CULTURAL, ECONOMIC.
 
 SIGNAL EXTRACTION RULES:
 - Extract specific tags (e.g., "vernacular-modern" not "likes nice design")
@@ -723,7 +814,9 @@ FOLLOW-UP GENERATION:
 OUTPUT FORMAT (JSON):
 {
   "signals": [{ "tag": "string", "cat": "string", "confidence": 0.0-1.0 }],
-  "certainties": { "Design": 0-100, "Character": 0-100, "Service": 0-100, "Food": 0-100, "Location": 0-100, "Wellness": 0-100 },
+  "sustainabilitySignals": [{ "tag": "string", "confidence": 0.0-1.0, "dimension": "ENVIRONMENTAL|SOCIAL|CULTURAL|ECONOMIC" }],
+  "emotionalDriverHint": "AESTHETIC_PILGRIM|CONTROL_ARCHITECT|STORY_COLLECTOR|SENSORY_HEDONIST|TRANSFORMATION_SEEKER|MASTERY_SEEKER|LEGACY_BUILDER (optional — only if strong signal detected)",
+  "certainties": { "Design": 0-100, "Character": 0-100, "Service": 0-100, "Food": 0-100, "Location": 0-100, "Wellness": 0-100, "Rhythm": 0-100, "CulturalEngagement": 0-100 },
   "followUp": "string — next question to ask",
   "contradictions": [{ "stated": "string", "revealed": "string", "resolution": "string", "matchRule": "string" }],
   "phaseComplete": boolean,
@@ -765,7 +858,19 @@ WHEN phaseComplete IS TRUE — TRANSITION MESSAGE:
 - Example bad transition: "I'm getting a clear sense of your taste." (overstates understanding from minimal input)
 - Example bad transition: "I think I have a good picture. Let's move on." (too generic, too abrupt)`;
 
-export const PROFILE_SYNTHESIS_PROMPT = `You are synthesizing a complete Terrazzo taste profile from accumulated taste signals, conversation history, and detected contradictions.
+export const PROFILE_SYNTHESIS_PROMPT = `You are synthesizing a complete Terrazzo taste profile from accumulated taste signals across 8 taste dimensions + sustainability, conversation history, and detected contradictions.
+
+THE 8 TASTE DIMENSIONS: Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement
+CROSS-CUTTING: Sustainability (ENVIRONMENTAL, SOCIAL, CULTURAL, ECONOMIC)
+
+EMOTIONAL DRIVER ARCHETYPES — classify the user into ONE primary archetype:
+- AESTHETIC_PILGRIM: Travels to expand their sense of what's possible in design, food, beauty
+- CONTROL_ARCHITECT: Needs to shape the experience — researches, plans, curates every detail
+- STORY_COLLECTOR: Seeks narrative and connection — every trip becomes a story to tell
+- SENSORY_HEDONIST: Driven by physical pleasure — texture, taste, temperature, light
+- TRANSFORMATION_SEEKER: Uses travel as catalyst for personal change or growth
+- MASTERY_SEEKER: Wants to go deep — learn to cook, understand wine regions, master surf breaks
+- LEGACY_BUILDER: Creates experiences for family/loved ones — travel as shared memory
 
 Generate a JSON object with this structure:
 {
@@ -779,8 +884,24 @@ Generate a JSON object with this structure:
   "contradictions": [2-4 core tensions with stated/revealed/resolution/matchRule],
   "contextModifiers": [4-6 situational shifts with context/shifts],
   "microTasteSignals": { "category_name": ["term1", "term2", ...], ... } (6-8 categories, 4-6 terms each),
-  "radarData": [{ "axis": "Sensory|Authenticity|Material|Social|Cultural|Spatial", "value": 0.0-1.0 }],
-  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved — MUST be places the user has NOT already visited or mentioned visiting],
+  "radarData": [{ "axis": "Sensory|Authenticity|Material|Social|Cultural|Spatial|Rhythm|Ethics", "value": 0.0-1.0 }],
+  "emotionalDriver": {
+    "primary": "Main driver archetype (AESTHETIC_PILGRIM | CONTROL_ARCHITECT | STORY_COLLECTOR | SENSORY_HEDONIST | TRANSFORMATION_SEEKER | MASTERY_SEEKER | LEGACY_BUILDER)",
+    "description": "1-2 sentences explaining why this fits",
+    "secondary": "Secondary archetype"
+  },
+  "sustainabilityProfile": {
+    "sensitivity": "LEADING | CONSCIOUS | PASSIVE | INDIFFERENT",
+    "priorities": ["top sustainability priorities — e.g., 'local-economy', 'carbon-footprint'"],
+    "dealbreakers": ["sustainability dealbreakers if any"],
+    "willingnessToPayPremium": 0.0-1.0
+  },
+  "tasteTrajectory": {
+    "direction": "REFINING | EXPANDING | SHIFTING | STABLE",
+    "description": "1 sentence on how their taste is evolving"
+  },
+  "profileVersion": 2,
+  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved/rhythmNote/sustainabilityScore/culturalEngagementNote — MUST be places the user has NOT already visited or mentioned visiting],
 
   "bestQuote": {
     "quote": "A real line the user said during onboarding — the moment that revealed the most about their taste. Choose for emotional resonance, not information. Pick a moment where they described a FEELING or SCENE, not a factual statement.",

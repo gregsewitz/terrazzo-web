@@ -4,9 +4,9 @@
  * Converts user taste profiles and property signals into 32-dimensional vectors
  * that live in the same embedding space, enabling direct cosine similarity.
  *
- * Vector layout (32 dimensions):
- *   [0-5]   : 6 core taste domains (Design, Character, Service, Food, Location, Wellness)
- *   [6-31]  : 26 semantic signal hash features (signal text → deterministic bucket)
+ * Vector layout (34 dimensions):
+ *   [0-7]   : 8 core taste domains (Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement)
+ *   [8-33]  : 26 semantic signal hash features (signal text → deterministic bucket)
  *
  * TG-04: User taste vector from radarData + micro-signals
  * PE-02: Property embedding from PlaceIntelligence signals
@@ -15,9 +15,9 @@
 import type { TasteDomain, TasteProfile, BriefingSignal, GeneratedTasteProfile } from '@/types';
 import { DIMENSION_TO_DOMAIN } from '@/types';
 
-const VECTOR_DIM = 32;
-const DOMAIN_DIMS = 6;     // indices 0-5
-const SIGNAL_DIMS = 26;    // indices 6-31
+const VECTOR_DIM = 34;
+const DOMAIN_DIMS = 8;     // indices 0-7
+const SIGNAL_DIMS = 26;    // indices 8-33
 
 const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Design: 0,
@@ -26,6 +26,8 @@ const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Food: 3,
   Location: 4,
   Wellness: 5,
+  Rhythm: 6,
+  CulturalEngagement: 7,
 };
 
 const ALL_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
@@ -182,8 +184,8 @@ export interface PropertyEmbeddingInput {
  * Lives in the same vector space as user taste vectors, enabling
  * direct cosine similarity for user-to-property matching.
  *
- * Dimensions 0-5: domain strength (signal density × confidence per domain)
- * Dimensions 6-31: signal text hash features (same hashing as user vectors)
+ * Dimensions 0-7: domain strength (signal density × confidence per domain)
+ * Dimensions 8-33: signal text hash features (same hashing as user vectors)
  */
 export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[] {
   const vector = new Array(VECTOR_DIM).fill(0);
@@ -191,7 +193,7 @@ export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[
 
   // Dimensions 0-5: per-domain strength from signals
   const domainSignals: Record<TasteDomain, BriefingSignal[]> = {
-    Design: [], Character: [], Service: [], Food: [], Location: [], Wellness: [],
+    Design: [], Character: [], Service: [], Food: [], Location: [], Wellness: [], Rhythm: [], CulturalEngagement: [],
   };
 
   for (const sig of signals) {

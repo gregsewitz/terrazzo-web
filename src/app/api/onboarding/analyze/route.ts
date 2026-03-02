@@ -119,12 +119,19 @@ Return valid JSON only.`;
     }
 
     const result = JSON.parse(jsonMatch[0]);
+
+    // Normalize: ensure new fields exist even if Claude omits them
+    if (!result.sustainabilitySignals) result.sustainabilitySignals = [];
+    if (!result.emotionalDriverHint) result.emotionalDriverHint = null;
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Onboarding analysis error:', error);
     // Return a graceful fallback
     return NextResponse.json({
       signals: [],
+      sustainabilitySignals: [],
+      emotionalDriverHint: null,
       certainties: {},
       followUp: null,
       contradictions: [],

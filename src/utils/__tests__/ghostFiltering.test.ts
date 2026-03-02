@@ -16,7 +16,7 @@ function makeGhost(name: string, location: string, ghostSource?: string): Import
     location,
     source: { type: 'text', name: 'Test' },
     matchScore: 70,
-    matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+    matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0, Rhythm: 0.5, CulturalEngagement: 0.5 },
     tasteNote: '',
     status: 'available',
     ghostSource: (ghostSource || 'manual') as ImportedPlace['ghostSource'],

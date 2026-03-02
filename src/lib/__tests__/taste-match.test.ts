@@ -18,6 +18,8 @@ const userProfile: TasteProfile = {
   Food: 0.7,
   Location: 0.6,
   Wellness: 0.3,
+  Rhythm: 0.5,
+  CulturalEngagement: 0.5,
 };
 
 const strongDesignSignals = [
@@ -34,6 +36,8 @@ const placeProfileHigh: TasteProfile = {
   Food: 0.8,
   Location: 0.75,
   Wellness: 0.6,
+  Rhythm: 0.5,
+  CulturalEngagement: 0.5,
 };
 
 const placeProfileLow: TasteProfile = {
@@ -43,6 +47,8 @@ const placeProfileLow: TasteProfile = {
   Food: 0.1,
   Location: 0.2,
   Wellness: 0.9,
+  Rhythm: 0.5,
+  CulturalEngagement: 0.5,
 };
 
 // ─── computeMatchFromSignals ────────────────────────────────────────────────
@@ -132,7 +138,7 @@ describe('computeMatchScore', () => {
 
   it('returns 50 when all weights are zero', () => {
     const zeroProfile: TasteProfile = {
-      Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0,
+      Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0, Rhythm: 0, CulturalEngagement: 0,
     };
     const score = computeMatchScore(zeroProfile, placeProfileHigh);
     expect(score).toBe(50);
@@ -140,7 +146,7 @@ describe('computeMatchScore', () => {
 
   it('returns 100 for a perfect match (all 1.0)', () => {
     const perfect: TasteProfile = {
-      Design: 1, Character: 1, Service: 1, Food: 1, Location: 1, Wellness: 1,
+      Design: 1, Character: 1, Service: 1, Food: 1, Location: 1, Wellness: 1, Rhythm: 1, CulturalEngagement: 1,
     };
     const score = computeMatchScore(perfect, perfect);
     expect(score).toBe(100);
@@ -163,9 +169,9 @@ describe('getTopAxes', () => {
     expect(top).toHaveLength(2);
   });
 
-  it('returns all 6 when count >= 6', () => {
+  it('returns all 8 when count >= 8', () => {
     const top = getTopAxes(userProfile, 10);
-    expect(top).toHaveLength(6);
+    expect(top).toHaveLength(8);
   });
 });
 
@@ -176,7 +182,7 @@ describe('isStretchPick', () => {
     // User top 2: Design, Character
     // Place top 2: Wellness, Location → no overlap = stretch
     const wellnessPlace: TasteProfile = {
-      Design: 0.1, Character: 0.1, Service: 0.2, Food: 0.2, Location: 0.8, Wellness: 0.95,
+      Design: 0.1, Character: 0.1, Service: 0.2, Food: 0.2, Location: 0.8, Wellness: 0.95, Rhythm: 0.3, CulturalEngagement: 0.2,
     };
     expect(isStretchPick(userProfile, wellnessPlace)).toBe(true);
   });
@@ -224,11 +230,13 @@ describe('computeMatch', () => {
 // ─── DEFAULT_USER_PROFILE ───────────────────────────────────────────────────
 
 describe('DEFAULT_USER_PROFILE', () => {
-  it('has all 6 domains', () => {
+  it('has all 8 domains', () => {
     const domains = Object.keys(DEFAULT_USER_PROFILE);
-    expect(domains).toHaveLength(6);
+    expect(domains).toHaveLength(8);
     expect(domains).toContain('Design');
     expect(domains).toContain('Wellness');
+    expect(domains).toContain('Rhythm');
+    expect(domains).toContain('CulturalEngagement');
   });
 
   it('has values between 0 and 1', () => {

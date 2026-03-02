@@ -85,6 +85,8 @@ export const TASTE_PROFILE: TasteProfile = {
     { axis: "Social", value: 0.72 },
     { axis: "Cultural", value: 0.80 },
     { axis: "Spatial", value: 0.85 },
+    { axis: "Rhythm", value: 0.78 },
+    { axis: "Ethics", value: 0.65 },
   ],
   matchedProperties: [
     {
@@ -136,6 +138,8 @@ export const DIMENSION_COLORS: Record<string, string> = {
   "Food & Drink": "#8b4a4a",
   "Location & Context": "#4a6b8b",
   "Wellness & Body": "#6b6b4a",
+  "Rhythm & Tempo": "#a06830",
+  "Cultural Engagement": "#4a7a8b",
   "Rejection": "#8b4a4a",
 };
 
@@ -146,6 +150,8 @@ export const AXIS_COLORS: Record<string, string> = {
   Social: T.pantonOrange,
   Cultural: T.pantonViolet,
   Spatial: T.verde,
+  Rhythm: T.pantonOrange,
+  Ethics: T.ghost,
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {

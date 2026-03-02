@@ -28,6 +28,16 @@ model User {
   isOnboardingComplete Boolean      @default(false)
   onboardingDepth      String?      // shallow | standard | deep
 
+  // Expanded Taste Intelligence v2
+  sustainabilitySensitivity String?   // LEADING | CONSCIOUS | PASSIVE | INDIFFERENT
+  sustainabilityPriorities  String[]  @default([])
+  sustainabilityDealbreakers String[] @default([])
+  sustainabilityWillingnessToPayPremium Float? // 0-1
+  profileVersion            Int       @default(1)
+  lastProfileSynthesizedAt  DateTime?
+  tasteTrajectoryDirection  String?   // REFINING | EXPANDING | SHIFTING | STABLE
+  tasteTrajectoryDescription String?
+
   // Relations
   nylasGrants          NylasGrant[]
   trips                Trip[]
@@ -42,13 +52,17 @@ model User {
   slotNotes            SlotNote[]
 
   // Taste Intelligence (Phase 1)
-  tasteVector          Unsupported("vector(32)")?
+  tasteVector          Unsupported("vector(34)")?
   tasteVectorUpdatedAt DateTime?
 
   // Taste graph relations
   tasteNodes           TasteNode[]
   contradictions       ContradictionNode[]
   contextModifiers     ContextModifier[]
+
+  // Expanded ontology v2 relations
+  sustainabilitySignals  SustainabilitySignal[]
+  tasteTrajectoryShifts  TasteTrajectoryShift[]
 
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
@@ -448,6 +462,15 @@ model PlaceIntelligence {
   reviewCount      Int     @default(0)
   reliabilityScore Float?  // 0-1
 
+  // Expanded ontology v2: property enrichment
+  rhythmProfile              Json?     // { tempo, dayArc, morningOrientation, spontaneityTolerance }
+  sustainabilityScore        Float?    // 0-1 overall sustainability rating
+  sustainabilityFeatures     String[]  @default([]) // e.g. solar-powered, locally-sourced
+  culturalEngagementOptions  String[]  @default([]) // e.g. cooking-class, artisan-workshop
+  provenanceNarrative        String?   // origin story, founding architect, heritage
+  seasonalityData            Json?     // { bestMonths, shoulderSeasons, weatherPatterns }
+  sensoryCues                Json?     // { lightQuality, soundscape, scentNotes, materialTextures }
+
   // Sources processed
   sourcesProcessed Json?
 
@@ -514,13 +537,22 @@ model TasteNode {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  domain      String   // Design | Character | Service | Food | Location | Wellness
+  domain      String   // Design | Character | Service | Food | Location | Wellness | Rhythm | CulturalEngagement
   signal      String   // the signal text
   confidence  Float    @default(0.5)
   source      String   @default("onboarding") // onboarding | import | behavioral | pipeline
   category    String?  // from TasteSignal.cat
   version     Int      @default(1)
   isActive    Boolean  @default(true)
+
+  // Signal decay & provenance (v2)
+  extractedAt       DateTime?        // when the signal was first captured
+  sourcePhaseId     String?          // which onboarding phase produced this signal
+  sourceModality    String?          // VOICE | CARD | SLIDER | SWIPE | SPECTRUM | IMPORT
+  decayedConfidence Float?           // computed: confidence * 0.5^(age/180)
+  ageInDays         Int?             // computed: days since extraction
+  supersededBy      String?          // if a newer signal contradicts, link to replacement
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -569,4 +601,40 @@ model ContextModifier {
   createdAt   DateTime @default(now())
 
   @@index([userId])
+}
+
+// ──────────────────────────────────────────────
+// Sustainability Signals (v2)
+// ──────────────────────────────────────────────
+
+model SustainabilitySignal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag         String   // e.g. "Carbon-conscious", "Local-economy-priority"
+  confidence  Float    // 0-1
+  dimension   String   // ENVIRONMENTAL | SOCIAL | CULTURAL | ECONOMIC
+  extractedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([dimension])
+}
+
+// ──────────────────────────────────────────────
+// Taste Trajectory Shifts (v2)
+// ──────────────────────────────────────────────
+
+model TasteTrajectoryShift {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain      String   // which of the 8 domains shifted
+  fromPattern String   // previous dominant signal pattern
+  toPattern   String   // new dominant signal pattern
+  detectedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([domain])
 }

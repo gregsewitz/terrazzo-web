@@ -148,13 +148,52 @@ const STAGES: StageConfig[] = [
   {
     id: 'review_intelligence',
     stepName: 'stage-review-intelligence',
-    nextStage: 'merge',
+    nextStage: 'rhythm',
     optional: true,
     fallback: {},
     buildPayload: (base, r) => ({
       propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType,
       reviews: r.scrape_reviews,
       existingSignals: (r.editorial_extraction as { signals?: unknown[] })?.signals ?? [],
+    }),
+  },
+  // ── V2 enrichment stages ──
+  {
+    id: 'rhythm_analysis',
+    stepName: 'stage-rhythm-analysis',
+    nextStage: 'sustainability',
+    optional: true,
+    fallback: { signals: [], rhythmProfile: null },
+    buildPayload: (base, r) => ({
+      propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType,
+      reviews: r.scrape_reviews,
+      placesData: r.google_places,
+      existingSignals: (r.editorial_extraction as { signals?: unknown[] })?.signals ?? [],
+    }),
+  },
+  {
+    id: 'sustainability_analysis',
+    stepName: 'stage-sustainability-analysis',
+    nextStage: 'cultural_engagement',
+    optional: true,
+    fallback: { signals: [], sustainabilityScore: null },
+    buildPayload: (base, r) => ({
+      propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType,
+      reviews: r.scrape_reviews,
+      placesData: r.google_places,
+    }),
+  },
+  {
+    id: 'cultural_engagement_analysis',
+    stepName: 'stage-cultural-engagement',
+    nextStage: 'merge',
+    optional: true,
+    fallback: { signals: [], culturalDepth: null },
+    buildPayload: (base, r) => ({
+      propertyName: base.propertyName, googlePlaceId: base.googlePlaceId, placeType: base.placeType,
+      reviews: r.scrape_reviews,
+      placesData: r.google_places,
+      editorial: r.editorial_extraction,
     }),
   },
   {
@@ -169,6 +208,9 @@ const STAGES: StageConfig[] = [
       menu: r.menu_analysis,
       awards: r.award_positioning,
       reviewIntel: r.review_intelligence,
+      rhythm: r.rhythm_analysis,
+      sustainability: r.sustainability_analysis,
+      culturalEngagement: r.cultural_engagement_analysis,
       placesData: r.google_places,
     }),
   },

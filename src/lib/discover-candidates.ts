@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { computeMatchFromSignals } from '@/lib/taste-match';
+import type { MatchOptions } from '@/lib/taste-match';
 import {
   findSimilarProperties,
   sqlToVector,
@@ -17,6 +18,8 @@ import type {
   TasteContradiction,
   BriefingSignal,
   BriefingAntiSignal,
+  SustainabilityProfile,
+  SustainabilitySignal,
 } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -44,6 +47,15 @@ export interface ScoredCandidate extends CandidateProperty {
   vectorScore?: number;
   /** Blended score combining signal-based and vector-based matching */
   blendedScore?: number;
+  /** Sustainability alignment score (present when user has sustainability profile) */
+  sustainabilityScore?: number;
+}
+
+/** Extended scoring context for v2 matching */
+export interface ScoringContext {
+  sustainabilityProfile?: SustainabilityProfile;
+  propertySustainabilitySignals?: Map<string, SustainabilitySignal[]>;
+  applyDecay?: boolean;
 }
 
 // ─── In-memory cache (upgrade to Upstash Redis when traffic justifies it) ───
@@ -112,12 +124,25 @@ export function scoreCandidate(
   userProfile: TasteProfile,
   userMicroSignals: Record<string, string[]>,
   userContradictions: TasteContradiction[],
+  scoringContext?: ScoringContext,
 ): ScoredCandidate {
-  // Core match scoring (reuse existing logic)
+  // Build match options from scoring context
+  const matchOptions: MatchOptions = {};
+  if (scoringContext?.applyDecay !== undefined) {
+    matchOptions.applyDecay = scoringContext.applyDecay;
+  }
+  if (scoringContext?.sustainabilityProfile) {
+    matchOptions.sustainabilityProfile = scoringContext.sustainabilityProfile;
+    matchOptions.propertySustainabilitySignals =
+      scoringContext.propertySustainabilitySignals?.get(candidate.googlePlaceId);
+  }
+
+  // Core match scoring (reuse existing logic, now with v2 options)
   const match = computeMatchFromSignals(
     candidate.signals,
     candidate.antiSignals,
     userProfile,
+    matchOptions,
   );
 
   // Find signals most relevant to this user's micro-signals
@@ -151,9 +176,10 @@ export function scoreAllCandidates(
   userProfile: TasteProfile,
   userMicroSignals: Record<string, string[]>,
   userContradictions: TasteContradiction[],
+  scoringContext?: ScoringContext,
 ): ScoredCandidate[] {
   return candidates
-    .map((c) => scoreCandidate(c, userProfile, userMicroSignals, userContradictions))
+    .map((c) => scoreCandidate(c, userProfile, userMicroSignals, userContradictions, scoringContext))
     .sort((a, b) => b.overallScore - a.overallScore);
 }
 

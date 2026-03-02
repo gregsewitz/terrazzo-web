@@ -35,8 +35,9 @@ export default function ProfileDeepDive() {
       Sensory: 'Design', Material: 'Design',
       Authenticity: 'Character', Social: 'Service',
       Cultural: 'Location', Spatial: 'Wellness',
+      Rhythm: 'Rhythm', Ethics: 'CulturalEngagement',
     };
-    const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.5, Location: 0.5, Wellness: 0.5 };
+    const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.5, Location: 0.5, Wellness: 0.5, Rhythm: 0.5, CulturalEngagement: 0.5 };
     for (const r of profile.radarData || []) {
       const domain = radarMap[r.axis];
       if (domain && domain in result) {

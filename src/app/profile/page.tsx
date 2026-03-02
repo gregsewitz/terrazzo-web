@@ -192,8 +192,9 @@ export default function ProfilePage() {
       Sensory: 'Design', Material: 'Design',
       Authenticity: 'Character', Social: 'Service',
       Cultural: 'Location', Spatial: 'Wellness',
+      Rhythm: 'Rhythm', Ethics: 'CulturalEngagement',
     };
-    const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.75, Location: 0.5, Wellness: 0.5 };
+    const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.75, Location: 0.5, Wellness: 0.5, Rhythm: 0.5, CulturalEngagement: 0.5 };
     const radarData = (profile as { radarData?: { axis: string; value: number }[] }).radarData;
     if (radarData) {
       for (const r of radarData) {
@@ -740,10 +741,31 @@ export default function ProfilePage() {
               ))}
             </div>
 
+            {/* Refine Profile — fill in v2 dimensions without redoing everything */}
+            <button
+              onClick={() => router.push('/profile/refine')}
+              className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-4"
+              style={{
+                background: 'rgba(200,146,58,0.08)',
+                border: '1px dashed rgba(200,146,58,0.25)',
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <PerriandIcon name="discover" size={12} color="var(--t-honey)" />
+                <span className="text-[12px] font-medium" style={{ color: 'var(--t-honey)' }}>
+                  Refine Profile
+                </span>
+                <span className="text-[10px]" style={{ color: INK['85'] }}>
+                  — sustainability, rhythm, cultural depth
+                </span>
+              </div>
+              <span style={{ color: 'var(--t-honey)', fontSize: 12 }}>→</span>
+            </button>
+
             {/* Redo Onboarding */}
             <button
               onClick={handleRedoOnboarding}
-              className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-4"
+              className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-2"
               style={{
                 background: 'rgba(232,115,58,0.06)',
                 border: '1px dashed rgba(232,115,58,0.2)',

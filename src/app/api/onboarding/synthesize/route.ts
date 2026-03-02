@@ -65,11 +65,20 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const messages = validation.data.messages as any[];
 
-    const contextMessage = `
-Synthesize a complete taste profile from the following onboarding data:
+    // Separate sustainability signals if present
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sustainabilitySignals = (signals as any[]).filter((s) => s.cat === 'Sustainability');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tasteSignals = (signals as any[]).filter((s) => s.cat !== 'Sustainability');
 
-SIGNALS (${signals.length} total):
-${JSON.stringify(signals, null, 2)}
+    const contextMessage = `
+Synthesize a complete taste profile from the following onboarding data.
+
+TASTE SIGNALS (${tasteSignals.length} total across 8 dimensions):
+${JSON.stringify(tasteSignals, null, 2)}
+
+SUSTAINABILITY SIGNALS (${sustainabilitySignals.length} total):
+${JSON.stringify(sustainabilitySignals, null, 2)}
 
 KEY CONVERSATION HIGHLIGHTS:
 ${messages.filter((m: { role: string }) => m.role === 'user').slice(0, 12).map((m: { text: string }) => `- "${m.text}"`).join('\n')}
@@ -77,8 +86,10 @@ ${messages.filter((m: { role: string }) => m.role === 'user').slice(0, 12).map((
 DETECTED CONTRADICTIONS:
 ${JSON.stringify(contradictions, null, 2)}
 
-FINAL CERTAINTIES:
+FINAL CERTAINTIES (8 dimensions):
 ${JSON.stringify(certainties)}
+
+IMPORTANT: Generate the profile using all 8 taste dimensions (Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement) plus sustainability. Include radarData with 8 axes. Classify the user into one of the 7 emotional driver archetypes. Include sustainabilityProfile and tasteTrajectory in your response.
 
 Return valid JSON only matching the specified schema.`;
 

@@ -6,6 +6,7 @@ import type {
   TasteSignal, TasteContradiction, ConversationMessage,
   GeneratedTasteProfile, TrustedSource, GoBackPlace,
   SeedTripInput, OnboardingLifeContext, OnboardingDepth,
+  SustainabilitySignal,
 } from '@/types';
 import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
 import { apiFetch } from '@/lib/api-client';
@@ -67,6 +68,9 @@ interface OnboardingState {
   allContradictions: TasteContradiction[];
   generatedProfile: GeneratedTasteProfile | null;
 
+  // ─── Sustainability Signals ───
+  sustainabilitySignals: SustainabilitySignal[];
+
   // ─── Expand Your Mosaic ───
   mosaicAnswers: MosaicAnswer[];      // full answer log (persisted)
   mosaicAxes: Record<string, number>; // accumulated axis values (running totals, start at 0.5)
@@ -98,6 +102,7 @@ interface OnboardingState {
   addSignals: (signals: TasteSignal[]) => void;
   addMessages: (messages: ConversationMessage[]) => void;
   addContradictions: (contradictions: TasteContradiction[]) => void;
+  addSustainabilitySignals: (signals: SustainabilitySignal[]) => void;
   setGeneratedProfile: (profile: GeneratedTasteProfile) => void;
   setLifeContext: (update: Partial<OnboardingLifeContext>) => void;
   addSeedTrip: (trip: SeedTripInput) => void;
@@ -116,6 +121,7 @@ interface OnboardingState {
 
 const INITIAL_CERTAINTIES: Record<string, number> = {
   Design: 5, Character: 5, Service: 5, Food: 5, Location: 5, Wellness: 5,
+  Rhythm: 5, CulturalEngagement: 5,
 };
 
 const INITIAL_LIFE_CONTEXT: OnboardingLifeContext = {
@@ -135,6 +141,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       allSignals: [],
       allMessages: [],
       allContradictions: [],
+      sustainabilitySignals: [],
       generatedProfile: null,
       mosaicAnswers: [],
       mosaicAxes: {},
@@ -171,6 +178,10 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       addContradictions: (contradictions) => set((state) => ({
         allContradictions: [...state.allContradictions, ...contradictions],
+      })),
+
+      addSustainabilitySignals: (signals) => set((state) => ({
+        sustainabilitySignals: [...state.sustainabilitySignals, ...signals],
       })),
 
       setGeneratedProfile: (profile) => {
@@ -270,6 +281,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         allSignals: [],
         allMessages: [],
         allContradictions: [],
+        sustainabilitySignals: [],
         generatedProfile: null,
         mosaicAnswers: [],
         mosaicAxes: {},
@@ -308,6 +320,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         allSignals: state.allSignals,
         allMessages: state.allMessages,
         allContradictions: state.allContradictions,
+        sustainabilitySignals: state.sustainabilitySignals,
         generatedProfile: state.generatedProfile,
         mosaicAnswers: state.mosaicAnswers,
         mosaicAxes: state.mosaicAxes,

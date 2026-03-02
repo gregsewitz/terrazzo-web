@@ -27,6 +27,8 @@ export const DOMAIN_COLORS: Record<TasteDomain, string> = {
   Food: T.royerePink,
   Location: T.verde,
   Wellness: T.chromeYellow,
+  Rhythm: T.pantonOrange,
+  CulturalEngagement: T.ghost,
 };
 
 export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
@@ -36,6 +38,8 @@ export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
   Location: 'location',
   Service: 'service',
   Wellness: 'wellness',
+  Rhythm: 'plan',
+  CulturalEngagement: 'discover',
 };
 
 // Rating system
@@ -85,9 +89,84 @@ export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string;
   manual: { color: T.ink, bg: INK['06'], icon: 'manual', label: 'Added' },
 };
 
-export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness';
+export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness' | 'Rhythm' | 'CulturalEngagement';
+
+/** The original 6 domains (for backward-compat code that iterates over legacy data) */
+export const LEGACY_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
+
+/** All 8 taste domains in the expanded ontology */
+export const ALL_TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
 
 export type TasteProfile = Record<TasteDomain, number>;
+
+// ─── Signal Modality & Decay ───
+
+export type SignalModality = 'VOICE' | 'CARD' | 'SLIDER' | 'SWIPE' | 'SPECTRUM' | 'IMPORT';
+
+export type SustainabilityDimension = 'ENVIRONMENTAL' | 'SOCIAL' | 'CULTURAL' | 'ECONOMIC';
+
+export type SustainabilitySensitivity = 'LEADING' | 'CONSCIOUS' | 'PASSIVE' | 'INDIFFERENT';
+
+export type TrajectoryDirection = 'REFINING' | 'EXPANDING' | 'SHIFTING' | 'STABLE';
+
+export type EmotionalDriverType =
+  | 'AESTHETIC_PILGRIM'
+  | 'CONTROL_ARCHITECT'
+  | 'STORY_COLLECTOR'
+  | 'SENSORY_HEDONIST'
+  | 'TRANSFORMATION_SEEKER'
+  | 'MASTERY_SEEKER'
+  | 'LEGACY_BUILDER';
+
+export const EMOTIONAL_DRIVER_LABELS: Record<EmotionalDriverType, string> = {
+  AESTHETIC_PILGRIM: 'The Aesthetic Pilgrim',
+  CONTROL_ARCHITECT: 'The Control Architect',
+  STORY_COLLECTOR: 'The Story Collector',
+  SENSORY_HEDONIST: 'The Sensory Hedonist',
+  TRANSFORMATION_SEEKER: 'The Transformation Seeker',
+  MASTERY_SEEKER: 'The Mastery Seeker',
+  LEGACY_BUILDER: 'The Legacy Builder',
+};
+
+// ─── Sustainability Signal ───
+
+export interface SustainabilitySignal {
+  id?: string;
+  tag: string;
+  confidence: number;
+  dimension: SustainabilityDimension;
+  extractedAt?: string; // ISO timestamp — assigned by DB
+}
+
+// ─── Taste Trajectory Shift ───
+
+export interface TasteTrajectoryShift {
+  id: string;
+  domain: TasteDomain;
+  fromPattern: string;
+  toPattern: string;
+  detectedAt: string; // ISO timestamp
+}
+
+// ─── Sustainability Profile (on user) ───
+
+export interface SustainabilityProfile {
+  sensitivity: SustainabilitySensitivity;
+  priorities: string[];
+  dealbreakers: string[];
+  willingnessToPayPremium: number; // 0-1
+}
+
+// ─── Signal with Decay Metadata ───
+
+export interface DecayableSignal extends TasteSignal {
+  extractedAt?: string;       // ISO timestamp
+  sourcePhaseId?: string;
+  sourceModality?: SignalModality;
+  decayedConfidence?: number; // computed: confidence * 0.5^(age/180)
+  ageInDays?: number;
+  supersededBy?: string;
+}
 
 export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
 
@@ -481,13 +560,19 @@ export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
   'Food & Drink Identity': 'Food',
   'Location & Context': 'Location',
   'Wellness & Body': 'Wellness',
+  'Rhythm & Tempo': 'Rhythm',
+  'Cultural Engagement': 'CulturalEngagement',
   // Legacy dimension names (from older pipeline runs)
   'Design & Aesthetic': 'Design',
   'Scale & Intimacy': 'Character',
   'Culture & Character': 'Character',
   'Food & Drink': 'Food',
   'Location & Setting': 'Location',
-  'Rhythm & Pace': 'Character',
+  'Rhythm & Pace': 'Rhythm',
+  // Additional synonyms for new domains
+  'Pace & Rhythm': 'Rhythm',
+  'Cultural Immersion': 'CulturalEngagement',
+  'Cultural & Creative': 'CulturalEngagement',
 };
 
 export interface BriefingSignal {
@@ -535,6 +620,9 @@ export const PIPELINE_STAGES = [
   { key: 'menu_analysis', label: 'Menu' },
   { key: 'award_positioning', label: 'Awards' },
   { key: 'review_insights', label: 'Insights' },
+  { key: 'rhythm_analysis', label: 'Rhythm' },
+  { key: 'sustainability_analysis', label: 'Sustainability' },
+  { key: 'cultural_engagement_analysis', label: 'Culture' },
   { key: 'merge', label: 'Compose' },
   { key: 'save', label: 'Done' },
 ] as const;
@@ -566,6 +654,10 @@ export interface MatchedProperty {
   matchReasons: string[];
   tensionResolved: string;
   googlePlaceId?: string;
+  // Expanded ontology fields
+  rhythmNote?: string;              // pace compatibility explanation
+  sustainabilityScore?: number;     // 0-1 sustainability alignment
+  culturalEngagementNote?: string;  // cultural engagement compatibility
 }
 
 export interface GeneratedTasteProfile {
@@ -622,6 +714,17 @@ export interface GeneratedTasteProfile {
       reason: string;              // one-line explanation
     };
   };
+
+  // ─── Expanded Ontology (v4) ───
+  /** Sustainability profile derived from onboarding signals */
+  sustainabilityProfile?: SustainabilityProfile;
+  /** Taste trajectory — how the user's preferences are evolving */
+  tasteTrajectory?: {
+    direction: TrajectoryDirection;
+    description: string;
+  };
+  /** Profile version — incremented on each re-synthesis */
+  profileVersion?: number;
 }
 
 export interface ConversationMessage {
@@ -696,7 +799,7 @@ export interface EloState {
   round: number;
 }
 
-export type OnboardingPhaseModality = 'voice' | 'cards' | 'visual' | 'voice+cards' | 'trip-seed';
+export type OnboardingPhaseModality = 'voice' | 'cards' | 'visual' | 'voice+cards' | 'trip-seed' | 'slider' | 'swipe' | 'spectrum';
 
 export interface OnboardingPhase {
   id: string;
@@ -788,4 +891,7 @@ export interface AnalysisResult {
   followUp: string;
   contradictions: TasteContradiction[];
   phaseComplete: boolean;
+  // Expanded ontology
+  sustainabilitySignals?: SustainabilitySignal[];
+  emotionalDriverHint?: EmotionalDriverType;
 }
