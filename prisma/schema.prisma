@@ -125,6 +125,14 @@ model SavedPlace {
   // Google data cache
   googleData          Json?
 
+  // Promoted intelligence summary (lightweight fields for list-view display)
+  sustainabilityScore Float?
+  reliabilityScore    Float?
+  rhythmTempo         String?
+  bestMonths          String[]
+  signalCount         Int?
+  antiSignalCount     Int?
+
   // Link to global intelligence
   placeIntelligenceId String?
   intelligence        PlaceIntelligence? @relation("SavedPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
