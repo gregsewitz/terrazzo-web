@@ -55,9 +55,9 @@ function PlaceDetailContent({
   const memberCollections = collections.filter(sl => sl.placeIds.includes(item.id));
   const isInCollections = memberCollections.length > 0;
 
-  // Briefing polling for inline progress
+  // Briefing polling for inline progress — always fetch intelligence when we have a googlePlaceId
   const googlePlaceId = (item.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
-  const { data: intelData } = useBriefing(onViewBriefing ? googlePlaceId : undefined);
+  const { data: intelData } = useBriefing(googlePlaceId);
   const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
   const handleSave = () => {

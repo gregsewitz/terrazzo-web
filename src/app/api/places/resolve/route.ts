@@ -3,7 +3,35 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
+import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match';
+import type { TasteProfile, GeneratedTasteProfile } from '@/types';
 import type { User } from '@prisma/client';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Same radar→domain mapping used by the discover route */
+const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
+  Sensory: 'Atmosphere',
+  Material: 'Design',
+  Authenticity: 'Character',
+  Social: 'Service',
+  Cultural: 'Character',
+  Spatial: 'Setting',
+  Rhythm: 'Atmosphere',
+  Ethics: 'Sustainability',
+};
+
+/** Build a TasteProfile from the stored GeneratedTasteProfile (radarData). */
+function buildTasteProfile(generated: GeneratedTasteProfile): TasteProfile {
+  const profile: TasteProfile = { ...DEFAULT_USER_PROFILE };
+  for (const r of generated.radarData || []) {
+    const domain = RADAR_TO_DOMAIN[r.axis];
+    if (domain) {
+      profile[domain] = Math.max(profile[domain], r.value);
+    }
+  }
+  return profile;
+}
 
 /**
  * POST /api/places/resolve
@@ -88,14 +116,39 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     });
   }
 
-  // 4. Fetch intelligence status if we have an ID
+  // 4. Fetch intelligence record (status + signals for scoring)
   let intelligenceStatus: string | null = null;
+  let computedMatchScore: number | null = null;
+  let computedMatchBreakdown: Record<string, number> | null = null;
+
   if (intelligenceId) {
     const intel = await prisma.placeIntelligence.findUnique({
       where: { id: intelligenceId },
-      select: { status: true },
+      select: { status: true, signals: true, antiSignals: true },
     });
     intelligenceStatus = intel?.status || null;
+
+    // If SavedPlace doesn't have scores but intelligence is complete, compute them now
+    if (intel?.status === 'complete' && !savedPlace?.matchScore) {
+      try {
+        // Get user's taste profile to compute match
+        const userRecord = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { tasteProfile: true },
+        });
+        const generated = userRecord?.tasteProfile as unknown as GeneratedTasteProfile | null;
+        const tasteProfile = generated ? buildTasteProfile(generated) : DEFAULT_USER_PROFILE;
+
+        const signals = (intel.signals as any[]) || [];
+        const antiSignals = (intel.antiSignals as any[]) || [];
+        const match = computeMatchFromSignals(signals, antiSignals, tasteProfile);
+
+        computedMatchScore = match.overallScore;
+        computedMatchBreakdown = match.breakdown;
+      } catch (err) {
+        console.error(`[resolve] Failed to compute match from intelligence:`, err);
+      }
+    }
   }
 
   // 5. Build Google data payload
@@ -125,8 +178,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // Library state
     savedPlaceId: savedPlace?.deletedAt ? null : savedPlace?.id || null,
     isInLibrary: savedPlace ? savedPlace.deletedAt === null : false,
-    matchScore: savedPlace?.matchScore || null,
-    matchBreakdown: savedPlace?.matchBreakdown || null,
+    matchScore: savedPlace?.matchScore || computedMatchScore || null,
+    matchBreakdown: savedPlace?.matchBreakdown || computedMatchBreakdown || null,
     tasteNote: savedPlace?.tasteNote || null,
     // Intelligence state
     intelligenceId: intelligenceId || null,
