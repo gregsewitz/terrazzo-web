@@ -341,12 +341,14 @@ async function generateGroundedFeed(
   // Build a TasteProfile (domain weights) from radarData
   // Radar axes (Sensory, Material, etc.) map to domains (Design, Character, etc.)
   const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
-    Sensory: 'Design',
+    Sensory: 'Atmosphere',
     Material: 'Design',
     Authenticity: 'Character',
     Social: 'Service',
-    Cultural: 'Location',
-    Spatial: 'Wellness',
+    Cultural: 'Character',
+    Spatial: 'Setting',
+    Rhythm: 'Atmosphere',
+    Ethics: 'Sustainability',
   };
   const userTasteProfile: TasteProfile = { ...DEFAULT_USER_PROFILE };
   for (const r of userProfile.radarData || []) {
