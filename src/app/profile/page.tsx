@@ -367,8 +367,7 @@ function ProfilePageContent() {
   const fetchEmailStatus = async () => {
     setEmailLoading(true);
     try {
-      const res = await fetch('/api/email/status');
-      const data = await res.json();
+      const data = await apiFetch<{ connected: boolean; email?: string; provider?: string; connectedAt?: string }>('/api/email/status');
       setEmailStatus(data);
     } catch { setEmailStatus({ connected: false }); }
     finally { setEmailLoading(false); }
@@ -376,7 +375,7 @@ function ProfilePageContent() {
 
   const handleDisconnect = async () => {
     try {
-      await fetch('/api/auth/nylas/disconnect', { method: 'POST' });
+      await apiFetch('/api/auth/nylas/disconnect', { method: 'POST' });
       setEmailStatus({ connected: false });
       setScanState('idle');
       setScanResult(null);
@@ -386,12 +385,10 @@ function ProfilePageContent() {
   const handleScanNow = async () => {
     setScanState('scanning');
     try {
-      const res = await fetch('/api/email/scan', {
+      const data = await apiFetch<{ emailsFound: number; scanId: string }>('/api/email/scan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scanType: 'full' }),
       });
-      const data = await res.json();
       setScanResult({ emailsFound: data.emailsFound, scanId: data.scanId });
       setScanState('done');
     } catch { setScanState('idle'); }
@@ -400,8 +397,7 @@ function ProfilePageContent() {
   const fetchImportHistory = async () => {
     setHistoryLoading(true);
     try {
-      const res = await fetch('/api/import-history');
-      const data = await res.json();
+      const data = await apiFetch<{ timeline: Array<{ id: string; type: 'email-scan' | 'url-import' | 'manual'; date: string; title: string; subtitle: string; count: number; status?: string; scanId?: string }> }>('/api/import-history');
       setImportHistory(data.timeline || []);
     } catch { /* ignore */ }
     finally { setHistoryLoading(false); }
