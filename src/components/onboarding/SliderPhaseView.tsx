@@ -24,7 +24,7 @@ const RHYTHM_SLIDERS: SliderDef[] = [
     rightLabel: 'Fast & spontaneous',
     leftSignals: ['Slow-luxury', 'Deliberate-pace', 'Structured-itinerary'],
     rightSignals: ['Dynamic-city', 'Adventure-paced', 'Drift-friendly'],
-    domain: 'Rhythm',
+    domain: 'Atmosphere',
   },
   {
     id: 'morning',
@@ -32,7 +32,7 @@ const RHYTHM_SLIDERS: SliderDef[] = [
     rightLabel: 'Late starter',
     leftSignals: ['Dawn-friendly', 'Morning-ritual-sacred', 'Early-market-seeker'],
     rightSignals: ['Late-riser-compatible', 'Night-owl', 'Evening-energy-peak'],
-    domain: 'Rhythm',
+    domain: 'Atmosphere',
   },
   {
     id: 'structure',
@@ -40,7 +40,7 @@ const RHYTHM_SLIDERS: SliderDef[] = [
     rightLabel: 'Go with the flow',
     leftSignals: ['Structured-itinerary', 'Advance-booking', 'Research-driven'],
     rightSignals: ['Drift-friendly', 'Spontaneity-seeker', 'Discovery-by-wandering'],
-    domain: 'Rhythm',
+    domain: 'Atmosphere',
   },
   {
     id: 'downtime',
@@ -48,7 +48,7 @@ const RHYTHM_SLIDERS: SliderDef[] = [
     rightLabel: 'Built-in downtime',
     leftSignals: ['Maximizer', 'Activity-dense', 'FOMO-driven'],
     rightSignals: ['Downtime-essential', 'Pool-day-welcomed', 'Reading-time-protected'],
-    domain: 'Rhythm',
+    domain: 'Atmosphere',
   },
 ];
 

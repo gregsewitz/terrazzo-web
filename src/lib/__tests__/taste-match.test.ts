@@ -13,13 +13,13 @@ import type { TasteProfile } from '@/types';
 
 const userProfile: TasteProfile = {
   Design: 0.9,
+  Atmosphere: 0.75,
   Character: 0.8,
   Service: 0.5,
-  Food: 0.7,
-  Location: 0.6,
+  FoodDrink: 0.7,
+  Setting: 0.6,
   Wellness: 0.3,
-  Rhythm: 0.5,
-  CulturalEngagement: 0.5,
+  Sustainability: 0.3,
 };
 
 const strongDesignSignals = [
@@ -31,24 +31,24 @@ const strongDesignSignals = [
 
 const placeProfileHigh: TasteProfile = {
   Design: 0.95,
+  Atmosphere: 0.8,
   Character: 0.85,
   Service: 0.7,
-  Food: 0.8,
-  Location: 0.75,
+  FoodDrink: 0.8,
+  Setting: 0.75,
   Wellness: 0.6,
-  Rhythm: 0.5,
-  CulturalEngagement: 0.5,
+  Sustainability: 0.5,
 };
 
 const placeProfileLow: TasteProfile = {
   Design: 0.1,
+  Atmosphere: 0.2,
   Character: 0.15,
   Service: 0.2,
-  Food: 0.1,
-  Location: 0.2,
+  FoodDrink: 0.1,
+  Setting: 0.2,
   Wellness: 0.9,
-  Rhythm: 0.5,
-  CulturalEngagement: 0.5,
+  Sustainability: 0.5,
 };
 
 // ─── computeMatchFromSignals ────────────────────────────────────────────────
@@ -68,7 +68,7 @@ describe('computeMatchFromSignals', () => {
     );
     // Wellness has no signals, so should be neutral 50
     expect(result.breakdown.Wellness).toBe(50);
-    expect(result.breakdown.Food).toBe(50);
+    expect(result.breakdown.FoodDrink).toBe(50);
   });
 
   it('scores higher with more confident signals', () => {
@@ -138,7 +138,7 @@ describe('computeMatchScore', () => {
 
   it('returns 50 when all weights are zero', () => {
     const zeroProfile: TasteProfile = {
-      Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0, Rhythm: 0, CulturalEngagement: 0,
+      Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0,
     };
     const score = computeMatchScore(zeroProfile, placeProfileHigh);
     expect(score).toBe(50);
@@ -146,7 +146,7 @@ describe('computeMatchScore', () => {
 
   it('returns 100 for a perfect match (all 1.0)', () => {
     const perfect: TasteProfile = {
-      Design: 1, Character: 1, Service: 1, Food: 1, Location: 1, Wellness: 1, Rhythm: 1, CulturalEngagement: 1,
+      Design: 1, Atmosphere: 1, Character: 1, Service: 1, FoodDrink: 1, Setting: 1, Wellness: 1, Sustainability: 1,
     };
     const score = computeMatchScore(perfect, perfect);
     expect(score).toBe(100);
@@ -161,7 +161,7 @@ describe('getTopAxes', () => {
     expect(top).toHaveLength(3);
     expect(top[0]).toBe('Design'); // 0.9
     expect(top[1]).toBe('Character'); // 0.8
-    expect(top[2]).toBe('Food'); // 0.7
+    expect(top[2]).toBe('Atmosphere'); // 0.75
   });
 
   it('respects the count parameter', () => {
@@ -180,9 +180,9 @@ describe('getTopAxes', () => {
 describe('isStretchPick', () => {
   it('returns true when place top axes differ from user top axes', () => {
     // User top 2: Design, Character
-    // Place top 2: Wellness, Location → no overlap = stretch
+    // Place top 2: Wellness, Setting → no overlap = stretch
     const wellnessPlace: TasteProfile = {
-      Design: 0.1, Character: 0.1, Service: 0.2, Food: 0.2, Location: 0.8, Wellness: 0.95, Rhythm: 0.3, CulturalEngagement: 0.2,
+      Design: 0.1, Atmosphere: 0.15, Character: 0.1, Service: 0.2, FoodDrink: 0.2, Setting: 0.8, Wellness: 0.95, Sustainability: 0.2,
     };
     expect(isStretchPick(userProfile, wellnessPlace)).toBe(true);
   });
@@ -235,8 +235,8 @@ describe('DEFAULT_USER_PROFILE', () => {
     expect(domains).toHaveLength(8);
     expect(domains).toContain('Design');
     expect(domains).toContain('Wellness');
-    expect(domains).toContain('Rhythm');
-    expect(domains).toContain('CulturalEngagement');
+    expect(domains).toContain('Atmosphere');
+    expect(domains).toContain('Sustainability');
   });
 
   it('has values between 0 and 1', () => {

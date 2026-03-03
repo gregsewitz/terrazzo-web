@@ -214,7 +214,7 @@ export function allocateSlots(
 
   // ── 7. Mood Boards: 2 groups of 3 from different domains ──
   const moodBoards: AllocatedMoodBoard[] = [];
-  const remainingDomains = (['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'] as TasteDomain[])
+  const remainingDomains = (['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'] as TasteDomain[])
     .filter((d) => d !== weeklyDomain);
 
   for (const domain of remainingDomains) {

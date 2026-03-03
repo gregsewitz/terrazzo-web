@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getUser } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/profile?error=no_code', request.url));
     }
 
-    // Exchange code for token
+    // Exchange code for token via Nylas API
     const response = await fetch('https://api.us.nylas.com/v3/connect/token', {
       method: 'POST',
       headers: {
@@ -28,11 +30,35 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    
-    // Store grant in a cookie (session-based, will upgrade to DB later)
+    const grantId = data.grant_id;
+    const email = data.email || '';
+
+    // ── Persist grant to database ──────────────────────────────────────────
+    // Try to get the authenticated user from the Authorization header (forwarded
+    // via state param or cookie). If we can't resolve a user, fall back to the
+    // cookie-only approach so the OAuth flow never breaks.
+    const user = await getUser(request).catch(() => null);
+
+    if (user) {
+      await prisma.nylasGrant.upsert({
+        where: { grantId },
+        create: {
+          userId: user.id,
+          grantId,
+          email,
+          provider: 'google',
+        },
+        update: {
+          email,
+          provider: 'google',
+        },
+      });
+    }
+
+    // ── Also set httpOnly cookie (session fallback) ────────────────────────
     const redirectUrl = new URL('/trips?email_connected=1', request.url);
     const res = NextResponse.redirect(redirectUrl);
-    res.cookies.set('nylas_grant_id', data.grant_id, {
+    res.cookies.set('nylas_grant_id', grantId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

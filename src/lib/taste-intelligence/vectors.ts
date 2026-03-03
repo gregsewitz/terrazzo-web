@@ -1,11 +1,12 @@
 /**
- * Taste Intelligence — Vector Computation
+ * Taste Intelligence — Vector Computation (v2 Taxonomy)
  *
  * Converts user taste profiles and property signals into 34-dimensional vectors
  * that live in the same embedding space, enabling direct cosine similarity.
  *
  * Vector layout (34 dimensions):
- *   [0-7]   : 8 core taste domains (Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement)
+ *   [0-5]   : 6 core taste domains (Design, Atmosphere, Character, Service, FoodDrink, Setting)
+ *   [6-7]   : 2 preference dimensions (Wellness, Sustainability) — lower weight in similarity
  *   [8-33]  : 26 semantic signal hash features (signal text → deterministic bucket)
  *
  * TG-04: User taste vector from radarData + micro-signals
@@ -13,24 +14,24 @@
  */
 
 import type { TasteDomain, TasteProfile, BriefingSignal, GeneratedTasteProfile } from '@/types';
-import { DIMENSION_TO_DOMAIN } from '@/types';
+import { DIMENSION_TO_DOMAIN, ALL_TASTE_DOMAINS } from '@/types';
 
 const VECTOR_DIM = 34;
-const DOMAIN_DIMS = 8;     // indices 0-7
+const DOMAIN_DIMS = 8;     // indices 0-7 (6 taste domains + 2 preference dimensions)
 const SIGNAL_DIMS = 26;    // indices 8-33
 
 const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Design: 0,
-  Character: 1,
-  Service: 2,
-  Food: 3,
-  Location: 4,
-  Wellness: 5,
-  Rhythm: 6,
-  CulturalEngagement: 7,
+  Atmosphere: 1,
+  Character: 2,
+  Service: 3,
+  FoodDrink: 4,
+  Setting: 5,
+  Wellness: 6,
+  Sustainability: 7,
 };
 
-const ALL_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
+const ALL_DOMAINS: TasteDomain[] = ALL_TASTE_DOMAINS;
 
 // ─── Deterministic signal hashing ────────────────────────────────────────────
 
@@ -111,22 +112,28 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
   // Dimensions 0-7: radar axes mapped to domains
   // radarData axes use various names; map them to domains
   const axisToIndex: Record<string, number> = {
-    // Current 8-domain names
+    // v2 domain names → indices
     design: 0, 'design language': 0,
-    character: 1, 'character & identity': 1, 'scale & intimacy': 1,
-    service: 2, 'service philosophy': 2,
-    food: 3, 'food & drink': 3, 'food & drink identity': 3,
-    location: 4, 'location & context': 4, 'location & setting': 4,
-    wellness: 5, 'wellness & body': 5,
-    rhythm: 6, 'rhythm & tempo': 6,
-    culturalengagement: 7, 'cultural engagement': 7,
+    atmosphere: 1, 'sensory environment': 1,
+    character: 2, 'character & identity': 2,
+    service: 3, 'service philosophy': 3,
+    fooddrink: 4, 'food & drink': 4, 'food & drink identity': 4, food: 4,
+    setting: 5, 'location & context': 5, 'location & setting': 5, location: 5,
+    wellness: 6, 'wellness & body': 6,
+    sustainability: 7,
     // Legacy v1 radar axis names (from pre-v2 onboarding)
     material: 0,             // Material quality → Design
-    authenticity: 1,         // Authenticity → Character
-    social: 2,               // Social dynamics → Service
-    sensory: 5,              // Sensory experience → Wellness
-    cultural: 7,             // Cultural affinity → CulturalEngagement
-    spatial: 4,              // Spatial preferences → Location
+    sensory: 1,              // Sensory experience → Atmosphere (v2: was Wellness)
+    authenticity: 2,         // Authenticity → Character
+    social: 3,               // Social dynamics → Service
+    cultural: 2,             // Cultural affinity → Character (v2: was CulturalEngagement)
+    spatial: 5,              // Spatial preferences → Setting
+    // Legacy v1 domain names that no longer exist
+    rhythm: 1,               // v2: folded into Atmosphere
+    culturalengagement: 2,   // v2: folded into Character
+    'cultural engagement': 2,
+    'rhythm & tempo': 1,
+    'scale & intimacy': 1,   // v2: spatial feeling → Atmosphere
   };
 
   for (const { axis, value } of input.radarData) {
@@ -143,11 +150,12 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
   const legacyDomainMap: Record<string, TasteDomain> = {
     architectural_attraction: 'Design',
     material_obsessions: 'Design',
-    social_dynamics: 'Character',
+    social_dynamics: 'Character',      // v2: social → Character (identity/belonging)
     service_ideals: 'Service',
-    cultural_indicators: 'CulturalEngagement',
-    spatial_preferences: 'Location',
+    cultural_indicators: 'Character',  // v2: was CulturalEngagement, now Character
+    spatial_preferences: 'Setting',    // v2: was Location, now Setting
     wellness_essentials: 'Wellness',
+    rejection_signals: 'Character',    // anti-signals map to Character by default
   };
 
   for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
@@ -215,7 +223,7 @@ export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[
 
   // Dimensions 0-7: per-domain strength from signals
   const domainSignals: Record<TasteDomain, BriefingSignal[]> = {
-    Design: [], Character: [], Service: [], Food: [], Location: [], Wellness: [], Rhythm: [], CulturalEngagement: [],
+    Design: [], Atmosphere: [], Character: [], Service: [], FoodDrink: [], Setting: [], Wellness: [], Sustainability: [],
   };
 
   for (const sig of signals) {

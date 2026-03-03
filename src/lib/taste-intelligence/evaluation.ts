@@ -140,8 +140,9 @@ export async function evaluateUser(userId: string): Promise<EvaluationResult> {
 
   // Map radar data to taste profile
   const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
-    Sensory: 'Design', Material: 'Design', Authenticity: 'Character',
-    Social: 'Service', Cultural: 'Location', Spatial: 'Wellness',
+    Sensory: 'Atmosphere', Material: 'Design', Authenticity: 'Character',
+    Social: 'Service', Cultural: 'Character', Spatial: 'Setting',
+    Rhythm: 'Atmosphere', Ethics: 'Sustainability',
   };
   for (const r of profile.radarData || []) {
     const domain = RADAR_TO_DOMAIN[r.axis];

@@ -265,13 +265,13 @@ export function isStretchPick(userProfile: TasteProfile, placeProfile: TasteProf
 
 export const DEFAULT_USER_PROFILE: TasteProfile = {
   Design: 0.85,
+  Atmosphere: 0.75,
   Character: 0.8,
   Service: 0.6,
-  Food: 0.75,
-  Location: 0.7,
+  FoodDrink: 0.75,
+  Setting: 0.7,
   Wellness: 0.4,
-  Rhythm: 0.5,
-  CulturalEngagement: 0.5,
+  Sustainability: 0.3,
 };
 
 /**

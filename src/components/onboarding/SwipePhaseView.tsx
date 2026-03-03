@@ -26,7 +26,7 @@ const CULTURAL_SWIPE_CARDS: SwipeCard[] = [
     optionB: { label: 'Visit a world-class museum', description: 'Observer, curated' },
     aSignals: ['Cultural-participant', 'Hands-on-immersion', 'Cooking-class-seeker'],
     bSignals: ['Cultural-observer', 'Museum-goer', 'Curated-experience'],
-    domain: 'CulturalEngagement',
+    domain: 'Character',
   },
   {
     id: 2,
@@ -35,7 +35,7 @@ const CULTURAL_SWIPE_CARDS: SwipeCard[] = [
     optionB: { label: 'Wandering a local market on your own', description: 'Self-directed discovery' },
     aSignals: ['Artisan-workshop', 'Guided-cultural', 'Craft-immersion'],
     bSignals: ['Self-directed', 'Market-explorer', 'Discovery-by-wandering'],
-    domain: 'CulturalEngagement',
+    domain: 'Character',
   },
   {
     id: 3,
@@ -44,7 +44,7 @@ const CULTURAL_SWIPE_CARDS: SwipeCard[] = [
     optionB: { label: 'Prefer English-friendly or a guide', description: 'Values communication' },
     aSignals: ['Language-barrier-embracer', 'Full-immersion', 'Adventure-seeker'],
     bSignals: ['English-preferred', 'Communication-priority', 'Guided-experience'],
-    domain: 'CulturalEngagement',
+    domain: 'Character',
   },
   {
     id: 4,
@@ -53,7 +53,7 @@ const CULTURAL_SWIPE_CARDS: SwipeCard[] = [
     optionB: { label: 'Appreciate what\u2019s in the hotel', description: 'Curated for you' },
     aSignals: ['Art-discovery', 'Gallery-seeker', 'Emerging-artist-supporter'],
     bSignals: ['Art-passive', 'Hotel-curated', 'Ambient-appreciation'],
-    domain: 'CulturalEngagement',
+    domain: 'Character',
   },
   {
     id: 5,
@@ -62,7 +62,7 @@ const CULTURAL_SWIPE_CARDS: SwipeCard[] = [
     optionB: { label: 'Nice if it happens, not a driver', description: 'Serendipity over planning' },
     aSignals: ['Festival-planner', 'Cultural-calendar-aware', 'Event-driven-travel'],
     bSignals: ['Serendipity-over-planning', 'Low-research', 'Go-with-flow'],
-    domain: 'CulturalEngagement',
+    domain: 'Character',
   },
 ];
 

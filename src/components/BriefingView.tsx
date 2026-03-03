@@ -36,7 +36,7 @@ interface BriefingViewProps {
   onClose: () => void;
 }
 
-const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
+const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
 
 // ─── Utility components ───
 
@@ -239,9 +239,10 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
     const gp = generatedProfile as unknown as { radarData?: { axis: string; value: number }[] } | null;
     if (!gp?.radarData?.length) return DEFAULT_USER_PROFILE;
     const radarMap: Record<string, keyof NumericProfile> = {
-      Sensory: 'Design', Material: 'Design',
+      Sensory: 'Atmosphere', Material: 'Design',
       Authenticity: 'Character', Social: 'Service',
-      Cultural: 'Location', Spatial: 'Wellness',
+      Cultural: 'Character', Spatial: 'Setting',
+      Rhythm: 'Atmosphere', Ethics: 'Sustainability',
     };
     const result: NumericProfile = { ...DEFAULT_USER_PROFILE };
     for (const r of gp.radarData) {

@@ -13,7 +13,7 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
   { id: 'local-cafe', label: 'Walk to the neighborhood café locals go to', cluster: 'explorer',
     pairWith: 'room-service', dimension: 'Morning Ritual',
     scene: 'Cobblestones, a standing-only bar, the hiss of steam',
-    signals: ['Local-café-seeker', 'Neighborhood-explorer'], category: 'Food' },
+    signals: ['Local-café-seeker', 'Neighborhood-explorer'], category: 'FoodDrink' },
 
   // ── DIMENSION 2: Pool Energy (social vs solitary) ──
   { id: 'infinity-pool', label: 'Poolside scene — music, drinks, people-watching', cluster: 'scene',
@@ -45,28 +45,28 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
   { id: 'perfect-city', label: 'Perfect city, forgettable hotel', cluster: 'explorer',
     pairWith: 'perfect-hotel', dimension: 'What Matters More',
     scene: 'The hotel is fine — but the city is everything',
-    signals: ['Destination-first', 'City-over-property'], category: 'Location' },
+    signals: ['Destination-first', 'City-over-property'], category: 'Setting' },
 
   // ── DIMENSION 5: Landscape Pull (from mosaic #36) ──
   // Simple but massively diagnostic for location recommendations
   { id: 'beach', label: 'Beach — salt air, warm sand, horizon', cluster: 'scene',
     pairWith: 'mountain', dimension: 'Landscape Pull',
     scene: 'Turquoise water, bare feet, the sun on your shoulders',
-    signals: ['Coastal-drawn', 'Warm-climate', 'Water-oriented'], category: 'Location' },
+    signals: ['Coastal-drawn', 'Warm-climate', 'Water-oriented'], category: 'Setting' },
   { id: 'mountain', label: 'Mountain — thin air, pine trees, silence', cluster: 'retreat',
     pairWith: 'beach', dimension: 'Landscape Pull',
     scene: 'A trail above the clouds, cold morning, hot coffee',
-    signals: ['Alpine-drawn', 'Cool-climate', 'Elevation-seeker'], category: 'Location' },
+    signals: ['Alpine-drawn', 'Cool-climate', 'Elevation-seeker'], category: 'Setting' },
 
   // ── DIMENSION 6: Location Feel (in the city vs away from it all) ──
   { id: 'walkable', label: 'Step outside and you\'re in the middle of it', cluster: 'urban',
     pairWith: 'remote', dimension: 'Location Feel',
     scene: 'Step outside, turn left, you are in the city',
-    signals: ['Walkable-radius', 'Urban-embedded'], category: 'Location' },
+    signals: ['Walkable-radius', 'Urban-embedded'], category: 'Setting' },
   { id: 'remote', label: 'Dirt road, no signal — just you and the landscape', cluster: 'retreat',
     pairWith: 'walkable', dimension: 'Location Feel',
     scene: 'Dirt road, no phone signal, only the landscape',
-    signals: ['Remote-isolated', 'Destination-property'], category: 'Location' },
+    signals: ['Remote-isolated', 'Destination-property'], category: 'Setting' },
 
   // ── DIMENSION 7: After Dark (early to bed vs night owl) ──
   // Not covered by conversation phases — reveals nightlife/social energy
@@ -452,16 +452,16 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     ],
     extractedSignals: [
       { tag: 'Vernacular architecture', cat: 'Design', confidence: 0.92 },
-      { tag: 'Communal dining', cat: 'Food', confidence: 0.94 },
+      { tag: 'Communal dining', cat: 'FoodDrink', confidence: 0.94 },
       { tag: 'Staff-as-host', cat: 'Service', confidence: 0.88 },
       { tag: 'Owner-operated', cat: 'Character', confidence: 0.91 },
       { tag: 'Anti-performative', cat: 'Design', confidence: 0.85 },
-      { tag: 'Natural wine', cat: 'Food', confidence: 0.78 },
+      { tag: 'Natural wine', cat: 'FoodDrink', confidence: 0.78 },
       { tag: 'Intimate-under-20', cat: 'Character', confidence: 0.86 },
       { tag: 'Morning-light-drawn', cat: 'Design', confidence: 0.80 },
-      { tag: 'Rooftop-social', cat: 'Location', confidence: 0.72 },
+      { tag: 'Rooftop-social', cat: 'Setting', confidence: 0.72 },
     ],
-    certaintyAfter: { Design: 70, Character: 45, Service: 50, Food: 35, Location: 50, Wellness: 10 },
+    certaintyAfter: { Design: 70, Character: 45, Service: 50, FoodDrink: 35, Setting: 50, Wellness: 10 },
   },
   {
     id: 'rhythm-refinement',
@@ -759,10 +759,10 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
     ],
     extractedSignals: [
       { tag: 'Sustainability-aware', cat: 'Character', confidence: 0.85 },
-      { tag: 'Local-sourcing-valued', cat: 'Food', confidence: 0.88 },
+      { tag: 'Local-sourcing-valued', cat: 'FoodDrink', confidence: 0.88 },
       { tag: 'Anti-greenwashing', cat: 'Character', confidence: 0.82 },
     ],
-    certaintyAfter: { CulturalEngagement: 70 },
+    certaintyAfter: { Character: 70 },
   },
   {
     id: 'refine-rhythm',
@@ -781,10 +781,10 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
       "I used to try to see everything. Now I'd rather do two things well than five things in a blur.",
     ],
     extractedSignals: [
-      { tag: 'Slow-morning-ritual', cat: 'Rhythm', confidence: 0.92 },
+      { tag: 'Slow-morning-ritual', cat: 'Atmosphere', confidence: 0.92 },
       { tag: 'Deepening-not-expanding', cat: 'Character', confidence: 0.85 },
     ],
-    certaintyAfter: { Rhythm: 80 },
+    certaintyAfter: { Atmosphere: 80 },
   },
   {
     id: 'refine-cultural',
@@ -803,11 +803,11 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
       "The property should feel like it belongs there. When you could be anywhere in the world — same marble, same international menu — that's a red flag for me.",
     ],
     extractedSignals: [
-      { tag: 'Participatory-when-invited', cat: 'CulturalEngagement', confidence: 0.88 },
+      { tag: 'Participatory-when-invited', cat: 'Character', confidence: 0.88 },
       { tag: 'Place-rootedness-valued', cat: 'Design', confidence: 0.90 },
       { tag: 'Anti-international-generic', cat: 'Character', confidence: 0.85 },
     ],
-    certaintyAfter: { CulturalEngagement: 88 },
+    certaintyAfter: { Character: 88 },
   },
 ];
 

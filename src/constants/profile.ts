@@ -133,13 +133,17 @@ export const WRAPPED = {
 // These map the full dimension names to muted earth-tone variants for profile UI.
 export const DIMENSION_COLORS: Record<string, string> = {
   "Design Language": "#8b6b4a",
+  "Sensory Environment": "#a06830",
   "Character & Identity": "#4a6741",
   "Service Philosophy": "#6b8b4a",
+  "Food & Drink Identity": "#8b4a4a",
   "Food & Drink": "#8b4a4a",
   "Location & Context": "#4a6b8b",
   "Wellness & Body": "#6b6b4a",
+  "Sustainability": "#4a7a8b",
+  // Legacy dimension names
   "Rhythm & Tempo": "#a06830",
-  "Cultural Engagement": "#4a7a8b",
+  "Cultural Engagement": "#4a6741",
   "Rejection": "#8b4a4a",
 };
 

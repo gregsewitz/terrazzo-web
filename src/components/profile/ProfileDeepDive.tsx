@@ -32,12 +32,12 @@ export default function ProfileDeepDive() {
 
   const numericProfile: NumericProfile = useMemo(() => {
     const radarMap: Record<string, string> = {
-      Sensory: 'Design', Material: 'Design',
+      Sensory: 'Atmosphere', Material: 'Design',
       Authenticity: 'Character', Social: 'Service',
-      Cultural: 'Location', Spatial: 'Wellness',
-      Rhythm: 'Rhythm', Ethics: 'CulturalEngagement',
+      Cultural: 'Character', Spatial: 'Setting',
+      Rhythm: 'Atmosphere', Ethics: 'Sustainability',
     };
-    const result: NumericProfile = { Design: 0.5, Character: 0.5, Service: 0.5, Food: 0.5, Location: 0.5, Wellness: 0.5, Rhythm: 0.5, CulturalEngagement: 0.5 };
+    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
     for (const r of profile.radarData || []) {
       const domain = radarMap[r.axis];
       if (domain && domain in result) {
