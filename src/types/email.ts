@@ -165,36 +165,66 @@ export interface NylasEmailMessage {
 
 // ─── Search Queries ────────────────────────────────────────────────────────────
 
-/** Known confirmation email senders / patterns */
+/** Known confirmation email senders / patterns.
+ *  We use BROAD sender-only queries for known platforms (they mostly send
+ *  confirmations anyway), plus targeted generic subject queries at the end.
+ */
 export const RESERVATION_SEARCH_QUERIES: { label: string; query: string }[] = [
-  // Restaurants
-  { label: 'OpenTable', query: 'from:opentable.com subject:reservation' },
-  { label: 'Resy', query: 'from:resy.com subject:reservation' },
-  { label: 'TheFork', query: 'from:thefork.com subject:(reservation OR booking)' },
-  { label: 'Yelp Reservations', query: 'from:yelp.com subject:reservation' },
-  { label: 'Google Reservations', query: 'from:google.com subject:"reservation confirmed"' },
+  // ── Restaurants ───────────────────────────────────────────────────────
+  { label: 'OpenTable', query: 'from:opentable.com' },
+  { label: 'Resy', query: 'from:resy.com' },
+  { label: 'TheFork', query: 'from:thefork.com' },
+  { label: 'Yelp Reservations', query: 'from:yelp.com subject:(reservation OR booking)' },
+  { label: 'Tock', query: 'from:exploretock.com' },
+  { label: 'SevenRooms', query: 'from:sevenrooms.com' },
 
-  // Hotels
-  { label: 'Booking.com', query: 'from:booking.com subject:(confirmation OR booking)' },
-  { label: 'Airbnb', query: 'from:airbnb.com subject:(reservation OR booking OR confirmed)' },
-  { label: 'Hotels.com', query: 'from:hotels.com subject:confirmation' },
-  { label: 'Expedia', query: 'from:expedia.com subject:(confirmation OR itinerary)' },
-  { label: 'Marriott', query: 'from:marriott.com subject:confirmation' },
-  { label: 'Hilton', query: 'from:hilton.com subject:confirmation' },
-  { label: 'Hyatt', query: 'from:hyatt.com subject:confirmation' },
-  { label: 'VRBO', query: 'from:vrbo.com subject:(confirmation OR booking)' },
+  // ── Hotels / Lodging ─────────────────────────────────────────────────
+  { label: 'Booking.com', query: 'from:booking.com' },
+  { label: 'Airbnb', query: 'from:airbnb.com' },
+  { label: 'Hotels.com', query: 'from:hotels.com' },
+  { label: 'Expedia', query: 'from:expedia.com' },
+  { label: 'Marriott', query: 'from:marriott.com' },
+  { label: 'Hilton', query: 'from:hilton.com' },
+  { label: 'Hyatt', query: 'from:hyatt.com' },
+  { label: 'VRBO', query: 'from:vrbo.com' },
+  { label: 'IHG', query: 'from:ihg.com' },
+  { label: 'Hostelworld', query: 'from:hostelworld.com' },
 
-  // Flights
-  { label: 'Airline confirmations', query: 'subject:("flight confirmation" OR "itinerary" OR "e-ticket" OR "booking confirmation") from:(-newsletter -promo)' },
-  { label: 'Google Flights', query: 'from:google.com subject:("flight" AND "confirmed")' },
+  // ── Flights / Airlines ───────────────────────────────────────────────
+  { label: 'United Airlines', query: 'from:united.com subject:(confirmation OR itinerary OR receipt)' },
+  { label: 'Delta Airlines', query: 'from:delta.com subject:(confirmation OR itinerary OR receipt)' },
+  { label: 'American Airlines', query: 'from:aa.com subject:(confirmation OR itinerary OR receipt)' },
+  { label: 'Southwest Airlines', query: 'from:southwest.com subject:(confirmation OR itinerary)' },
+  { label: 'JetBlue', query: 'from:jetblue.com subject:(confirmation OR itinerary)' },
+  { label: 'Alaska Airlines', query: 'from:alaskaair.com subject:(confirmation OR itinerary)' },
+  { label: 'Spirit Airlines', query: 'from:spirit.com subject:(confirmation OR itinerary)' },
+  { label: 'Frontier Airlines', query: 'from:flyfrontier.com subject:(confirmation OR itinerary)' },
+  { label: 'Google Flights', query: 'from:googletravel-noreply@google.com' },
+  { label: 'Kayak', query: 'from:kayak.com subject:(confirmation OR itinerary)' },
+  { label: 'Skyscanner', query: 'from:skyscanner.com' },
+  { label: 'Hopper', query: 'from:hopper.com' },
 
-  // Activities
-  { label: 'Viator', query: 'from:viator.com subject:(confirmation OR booking)' },
-  { label: 'GetYourGuide', query: 'from:getyourguide.com subject:(confirmation OR booking)' },
-  { label: 'Klook', query: 'from:klook.com subject:confirmation' },
+  // ── Activities / Experiences ──────────────────────────────────────────
+  { label: 'Viator', query: 'from:viator.com' },
+  { label: 'GetYourGuide', query: 'from:getyourguide.com' },
+  { label: 'Klook', query: 'from:klook.com' },
+  { label: 'Airbnb Experiences', query: 'from:airbnb.com subject:experience' },
 
-  // Generic confirmation patterns
-  { label: 'Generic confirmations', query: 'subject:("your reservation" OR "booking confirmed" OR "reservation confirmed")' },
+  // ── Transport ────────────────────────────────────────────────────────
+  { label: 'Uber', query: 'from:uber.com subject:(trip OR receipt)' },
+  { label: 'Lyft', query: 'from:lyft.com subject:(ride OR receipt)' },
+  { label: 'Amtrak', query: 'from:amtrak.com subject:(confirmation OR itinerary)' },
+
+  // ── Car Rental ───────────────────────────────────────────────────────
+  { label: 'Turo', query: 'from:turo.com' },
+  { label: 'Enterprise', query: 'from:enterprise.com subject:confirmation' },
+  { label: 'Hertz', query: 'from:hertz.com subject:confirmation' },
+
+  // ── Generic catch-alls (broadest, run last) ──────────────────────────
+  { label: 'Reservation confirmations', query: 'subject:("your reservation" OR "reservation confirmed" OR "reservation confirmation")' },
+  { label: 'Booking confirmations', query: 'subject:("booking confirmed" OR "booking confirmation" OR "your booking")' },
+  { label: 'Itinerary emails', query: 'subject:("your itinerary" OR "trip confirmation" OR "travel confirmation")' },
+  { label: 'Check-in emails', query: 'subject:("check-in" OR "check in") subject:(hotel OR flight OR reservation)' },
 ];
 
 // ─── Trip Match Suggestion ─────────────────────────────────────────────────────

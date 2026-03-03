@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
     });
 
     // ── Search for confirmation emails ───────────────────────────────────
+    const debug = body.debug === true;
+
     const { messages, queriesRun } = await searchConfirmationEmails(
       resolvedGrant.grantId,
       RESERVATION_SEARCH_QUERIES,
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const response: Record<string, unknown> = {
       scanId: scan.id,
       status: 'completed',
       emailsFound: messages.length,
@@ -99,7 +101,21 @@ export async function POST(request: NextRequest) {
         date: new Date(m.date * 1000).toISOString(),
         snippet: m.snippet,
       })),
-    });
+    };
+
+    // In debug mode, include the search window for troubleshooting
+    if (debug) {
+      response.debug = {
+        scanFrom: new Date(receivedAfter * 1000).toISOString(),
+        scanTo: new Date().toISOString(),
+        sinceDays,
+        grantId: resolvedGrant.grantId,
+        queryCount: RESERVATION_SEARCH_QUERIES.length,
+        queries: RESERVATION_SEARCH_QUERIES.map(q => q.label),
+      };
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Email scan error:', error);
     return NextResponse.json(

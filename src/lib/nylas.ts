@@ -55,7 +55,7 @@ export async function searchConfirmationEmails(
   const allMessages: NylasEmailMessage[] = [];
   let queriesRun = 0;
 
-  for (const { query } of queries) {
+  for (const { label, query } of queries) {
     try {
       queriesRun++;
       const queryParams: Record<string, unknown> = {
@@ -71,17 +71,25 @@ export async function searchConfirmationEmails(
         queryParams: queryParams as Parameters<typeof nylas.messages.list>[0]['queryParams'],
       });
 
+      let newCount = 0;
       for (const msg of result.data) {
         if (!seen.has(msg.id)) {
           seen.add(msg.id);
           allMessages.push(mapNylasMessage(msg));
+          newCount++;
         }
+      }
+
+      if (result.data.length > 0 || newCount > 0) {
+        console.log(`[email-scan] "${label}": ${result.data.length} results, ${newCount} new`);
       }
     } catch (err) {
       // Log but don't fail the entire scan for one bad query
-      console.warn(`Nylas search failed for query "${query}":`, err);
+      console.warn(`[email-scan] FAILED "${label}" (${query}):`, err);
     }
   }
+
+  console.log(`[email-scan] Scan complete: ${queriesRun} queries → ${allMessages.length} unique messages`);
 
   return { messages: allMessages, queriesRun };
 }

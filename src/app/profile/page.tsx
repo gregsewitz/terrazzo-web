@@ -385,13 +385,17 @@ function ProfilePageContent() {
   const handleScanNow = async () => {
     setScanState('scanning');
     try {
-      const data = await apiFetch<{ emailsFound: number; scanId: string }>('/api/email/scan', {
+      const data = await apiFetch<{ emailsFound: number; scanId: string; debug?: Record<string, unknown> }>('/api/email/scan', {
         method: 'POST',
-        body: JSON.stringify({ scanType: 'full' }),
+        body: JSON.stringify({ scanType: 'full', debug: true }),
       });
+      console.log('[terrazzo] Email scan result:', JSON.stringify(data, null, 2));
       setScanResult({ emailsFound: data.emailsFound, scanId: data.scanId });
       setScanState('done');
-    } catch { setScanState('idle'); }
+    } catch (err) {
+      console.error('[terrazzo] Email scan failed:', err);
+      setScanState('idle');
+    }
   };
 
   const fetchImportHistory = async () => {
