@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FONT, INK } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { apiFetch } from '@/lib/api-client';
 import type { PerriandIconName } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -60,8 +61,7 @@ export default function StagingInboxPage() {
   const fetchReservations = useCallback(async (status: FilterTab) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/email/reservations?status=${status}`);
-      const data = await res.json();
+      const data = await apiFetch<{ reservations: StagedReservation[]; counts: typeof counts }>(`/api/email/reservations?status=${status}`);
       setReservations(data.reservations || []);
       setCounts(data.counts || { pending: 0, confirmed: 0, dismissed: 0 });
     } catch (err) {
@@ -78,15 +78,12 @@ export default function StagingInboxPage() {
   const handleAction = async (id: string, action: 'confirm' | 'dismiss') => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/email/reservations/${id}`, {
+      await apiFetch(`/api/email/reservations/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
-      if (res.ok) {
-        // Refresh the list
-        await fetchReservations(activeTab);
-      }
+      // Refresh the list
+      await fetchReservations(activeTab);
     } catch (err) {
       console.error(`Failed to ${action} reservation:`, err);
     } finally {
