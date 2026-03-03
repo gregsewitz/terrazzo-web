@@ -36,7 +36,7 @@ interface PlaceDetailAPI {
   openCollectionPicker: (place: ImportedPlace) => void;
 }
 
-export const PlaceDetailContext = createContext<PlaceDetailAPI | null>(null);
+const PlaceDetailContext = createContext<PlaceDetailAPI | null>(null);
 
 export function usePlaceDetail(): PlaceDetailAPI {
   const ctx = useContext(PlaceDetailContext);
@@ -182,12 +182,10 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           item={detailItem}
           onClose={closeDetail}
           onRate={isDetailPreview ? undefined : handleRate}
-          onSave={isDetailPreview ? handleSaveFromPreview : undefined}
           onEditRating={isDetailPreview ? undefined : handleEditRating}
           onCollectionTap={isDetailPreview ? undefined : handleCollectionTap}
-          onViewBriefing={handleViewBriefing}
+          onViewBriefing={isDetailPreview ? undefined : handleViewBriefing}
           onDelete={isDetailPreview ? undefined : handleDeletePlace}
-          isPreview={isDetailPreview}
           siblingPlaces={siblingPlaces}
         />
       )}

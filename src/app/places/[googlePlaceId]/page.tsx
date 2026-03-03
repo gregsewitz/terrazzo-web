@@ -295,7 +295,7 @@ export default function PlaceDetailPage() {
     return (
       <div className="min-h-screen bg-[var(--t-cream)]">
         {isDesktop ? <DesktopNav /> : null}
-        <div className={`mx-auto ${isDesktop ? 'max-w-2xl pt-6 pb-16' : 'pb-24'}`}>
+        <div className={`mx-auto ${isDesktop ? 'max-w-xl pt-6 pb-16' : 'pb-24'}`}>
           <div
             className={`flex flex-col ${isDesktop ? 'rounded-2xl overflow-hidden border border-[var(--t-linen)] bg-white shadow-sm' : ''}`}
           >
@@ -325,7 +325,7 @@ export default function PlaceDetailPage() {
     <div className="min-h-screen bg-[var(--t-cream)]">
       {isDesktop ? <DesktopNav /> : null}
 
-      <div className={`mx-auto ${isDesktop ? 'max-w-2xl pt-6 pb-16' : 'pb-24'}`}>
+      <div className={`mx-auto ${isDesktop ? 'max-w-xl pt-6 pb-16' : 'pb-24'}`}>
         <div
           className={`flex flex-col ${isDesktop ? 'rounded-2xl overflow-hidden border border-[var(--t-linen)] bg-white shadow-sm' : ''}`}
         >

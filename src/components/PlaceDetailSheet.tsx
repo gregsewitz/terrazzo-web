@@ -37,9 +37,9 @@ export default function PlaceDetailSheet(props: PlaceDetailSheetProps) {
           onClick={props.onClose}
         />
         <motion.div
-          className="fixed top-0 right-0 bottom-0 z-50 flex flex-col overflow-y-auto"
+          className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
           style={{
-            width: 560,
+            width: 440,
             background: 'var(--t-cream)',
             boxShadow: '-8px 0 32px rgba(0,0,0,0.08)',
           }}

@@ -665,20 +665,20 @@ function ProfilePageContent() {
                           </div>
                           {emailStatus?.connected && (
                             <div className="ml-5 mb-2">
-                              <span className="text-[10px] block mb-1" style={{ color: INK['50'] }}>{emailStatus.email}</span>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {scanState === 'idle' && (
-                                  <button onClick={handleScanNow} className="text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-ink)', color: 'var(--t-parchment)' }}>Scan Now</button>
-                                )}
-                                {scanState === 'scanning' && <span className="text-[10px]" style={{ color: 'var(--t-honey)' }}>Scanning…</span>}
-                                {scanState === 'done' && scanResult && (
-                                  <>
-                                    <span className="text-[10px]" style={{ color: 'var(--t-verde)' }}>Found {scanResult.emailsFound} emails</span>
-                                    <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>Review →</button>
-                                  </>
-                                )}
-                                <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(196,80,32,0.08)', color: '#c45020' }}>Disconnect</button>
-                              </div>
+                              <span className="text-[10px] block mb-2" style={{ color: INK['50'] }}>{emailStatus.email}</span>
+                              {scanState === 'idle' && (
+                                <button onClick={handleScanNow} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer block mb-2" style={{ background: 'var(--t-ink)', color: 'var(--t-parchment)' }}>Scan Inbox</button>
+                              )}
+                              {scanState === 'scanning' && (
+                                <span className="text-[10px] block mb-2" style={{ color: 'var(--t-honey)' }}>Scanning…</span>
+                              )}
+                              {scanState === 'done' && scanResult && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-[10px]" style={{ color: 'var(--t-verde)' }}>Found {scanResult.emailsFound} emails</span>
+                                  <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>Review →</button>
+                                </div>
+                              )}
+                              <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(196,80,32,0.08)', color: '#c45020' }}>Disconnect</button>
                             </div>
                           )}
                           <div className="flex items-center justify-between">
