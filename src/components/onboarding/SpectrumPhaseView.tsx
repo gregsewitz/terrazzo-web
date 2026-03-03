@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, SustainabilitySignal } from '@/types';
 import { T } from '@/types';
+import { FONT, INK } from '@/constants/theme';
 
 // ─── Spectrum Definitions ───
 
@@ -24,7 +25,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
     id: 'eco-priority',
     prompt: 'How much does environmental impact shape where you stay?',
     leftLabel: 'Not a factor',
-    rightLabel: "It's a dealbreaker",
+    rightLabel: "It\u2019s a dealbreaker",
     leftColor: T.travertine,
     rightColor: '#4a7a4a',
     leftSignals: ['Eco-indifferent', 'Convenience-first'],
@@ -33,7 +34,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
   },
   {
     id: 'local-economy',
-    prompt: 'Supporting local businesses and artisans when you travel...',
+    prompt: 'Supporting local businesses and artisans when you travel\u2026',
     leftLabel: 'Nice but not essential',
     rightLabel: 'I actively seek it out',
     leftColor: T.travertine,
@@ -55,7 +56,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
   },
   {
     id: 'social-impact',
-    prompt: 'Staff welfare and community impact of where you stay...',
+    prompt: 'Staff welfare and community impact of where you stay\u2026',
     leftLabel: 'Rarely consider it',
     rightLabel: 'Always on my mind',
     leftColor: T.travertine,
@@ -142,7 +143,6 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
     if (tasteSignals.length > 0) addSignals(tasteSignals);
     if (sustainSignals.length > 0) addSustainabilitySignals(sustainSignals);
 
-    // Derive overall sensitivity from average intensity
     const avgIntensity = spectrums.reduce((sum, s) => sum + Math.abs(values[s.id] - 0.5) * 2, 0) / spectrums.length;
     const certaintyBoost = avgIntensity * 20;
     if (certaintyBoost > 2) {
@@ -154,89 +154,157 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
   }, [submitted, spectrums, values, addSignals, addSustainabilitySignals, updateCertainties, setCurrentPhaseProgress, onComplete]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28, padding: '24px 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: 4 }}>
-        <p style={{ color: T.ink, opacity: 0.6, fontSize: 14, margin: 0 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '32px 20px 40px',
+        flex: 1,
+        overflow: 'auto',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Instruction */}
+        <p style={{
+          color: INK['50'],
+          fontSize: 14,
+          margin: '0 0 16px',
+          textAlign: 'center',
+          fontFamily: FONT.sans,
+          letterSpacing: '0.01em',
+        }}>
           Drag along each spectrum — there are no wrong answers
         </p>
-      </div>
 
-      {spectrums.map((spectrum) => {
-        const val = values[spectrum.id];
-        const gradientColor = lerpColor(spectrum.leftColor, spectrum.rightColor, val);
+        {/* Spectrums */}
+        {spectrums.map((spectrum, i) => {
+          const val = values[spectrum.id];
+          const gradientColor = lerpColor(spectrum.leftColor, spectrum.rightColor, val);
+          const leftActive = val < 0.45;
+          const rightActive = val > 0.55;
 
-        return (
-          <div key={spectrum.id} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <p style={{ fontSize: 14, fontWeight: 500, color: T.ink, margin: 0, textAlign: 'center' }}>
-              {spectrum.prompt}
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.ink }}>
-              <span style={{ opacity: val < 0.45 ? 1 : 0.45, fontWeight: val < 0.45 ? 600 : 400 }}>
-                {spectrum.leftLabel}
-              </span>
-              <span style={{ opacity: val > 0.55 ? 1 : 0.45, fontWeight: val > 0.55 ? 600 : 400 }}>
-                {spectrum.rightLabel}
-              </span>
-            </div>
-
-            {/* Gradient track */}
+          return (
             <div
-              ref={(el) => { trackRefs.current[spectrum.id] = el; }}
-              onPointerDown={(e) => handlePointerDown(spectrum.id, e)}
+              key={spectrum.id}
               style={{
-                position: 'relative',
-                height: 32,
-                borderRadius: 16,
-                background: `linear-gradient(to right, ${spectrum.leftColor}, ${spectrum.rightColor})`,
-                cursor: submitted ? 'default' : 'pointer',
-                touchAction: 'none',
-                opacity: submitted ? 0.7 : 1,
-                transition: 'opacity 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                padding: '20px 24px',
+                background: 'rgba(28,26,23,0.02)',
+                borderRadius: 14,
+                border: '1px solid rgba(28,26,23,0.05)',
+                animation: `fadeInUp 0.4s ease ${i * 0.08}s both`,
               }}
             >
-              {/* Thumb */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: `${val * 100}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  background: gradientColor,
-                  border: `2.5px solid ${T.cream}`,
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                  transition: submitted ? 'none' : 'box-shadow 0.15s ease',
-                  pointerEvents: 'none',
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
+              <p style={{
+                fontSize: 14,
+                fontWeight: 500,
+                color: T.ink,
+                margin: 0,
+                textAlign: 'center',
+                fontFamily: FONT.sans,
+                lineHeight: 1.4,
+              }}>
+                {spectrum.prompt}
+              </p>
 
-      <button
-        onClick={handleSubmit}
-        disabled={submitted}
-        style={{
-          marginTop: 12,
-          padding: '14px 32px',
-          background: submitted ? T.travertine : T.ink,
-          color: submitted ? T.ink : T.cream,
-          border: 'none',
-          borderRadius: 8,
-          fontSize: 15,
-          fontWeight: 500,
-          cursor: submitted ? 'default' : 'pointer',
-          transition: 'all 0.2s ease',
-          opacity: submitted ? 0.6 : 1,
-          alignSelf: 'center',
-        }}
-      >
-        {submitted ? 'Noted' : 'Continue'}
-      </button>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                gap: 12,
+              }}>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: leftActive ? 600 : 400,
+                  color: leftActive ? T.ink : INK['35'],
+                  fontFamily: FONT.sans,
+                  transition: 'all 0.2s ease',
+                  flex: '0 1 auto',
+                  minWidth: 0,
+                }}>
+                  {spectrum.leftLabel}
+                </span>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: rightActive ? 600 : 400,
+                  color: rightActive ? T.ink : INK['35'],
+                  fontFamily: FONT.sans,
+                  transition: 'all 0.2s ease',
+                  textAlign: 'right',
+                  flex: '0 1 auto',
+                  minWidth: 0,
+                }}>
+                  {spectrum.rightLabel}
+                </span>
+              </div>
+
+              {/* Gradient track */}
+              <div
+                ref={(el) => { trackRefs.current[spectrum.id] = el; }}
+                onPointerDown={(e) => handlePointerDown(spectrum.id, e)}
+                style={{
+                  position: 'relative',
+                  height: 28,
+                  borderRadius: 14,
+                  background: `linear-gradient(to right, ${spectrum.leftColor}, ${spectrum.rightColor})`,
+                  cursor: submitted ? 'default' : 'pointer',
+                  touchAction: 'none',
+                  opacity: submitted ? 0.6 : 1,
+                  transition: 'opacity 0.2s ease',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
+                }}
+              >
+                {/* Thumb */}
+                <div
+                  className="spectrum-thumb-enter"
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: `${val * 100}%`,
+                    transform: 'translate(-50%, -50%)',
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    background: gradientColor,
+                    border: `2.5px solid ${T.cream}`,
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+                    pointerEvents: 'none',
+                    transition: submitted ? 'none' : 'box-shadow 0.15s ease',
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          disabled={submitted}
+          className="btn-hover"
+          style={{
+            marginTop: 20,
+            padding: '15px 40px',
+            background: submitted ? T.travertine : T.ink,
+            color: submitted ? INK['50'] : T.cream,
+            border: 'none',
+            borderRadius: 100,
+            fontSize: 15,
+            fontWeight: 500,
+            fontFamily: FONT.sans,
+            cursor: submitted ? 'default' : 'pointer',
+            transition: 'all 0.25s ease',
+            opacity: submitted ? 0.6 : 1,
+            alignSelf: 'center',
+            letterSpacing: '0.02em',
+          }}
+        >
+          {submitted ? 'Noted \u2713' : 'Continue'}
+        </button>
+      </div>
     </div>
   );
 }

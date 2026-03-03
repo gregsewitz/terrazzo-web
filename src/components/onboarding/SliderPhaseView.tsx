@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal } from '@/types';
 import { T } from '@/types';
+import { FONT, INK } from '@/constants/theme';
 
 // ─── Slider Definitions ───
 
@@ -68,7 +69,6 @@ export default function SliderPhaseView({ onComplete, sliders = RHYTHM_SLIDERS }
 
   const handleChange = useCallback((sliderId: string, value: number) => {
     setValues((prev) => ({ ...prev, [sliderId]: value }));
-    // Update progress based on how many sliders have been moved from center
     const newValues = { ...values, [sliderId]: value };
     const movedCount = Object.values(newValues).filter((v) => Math.abs(v - 0.5) > 0.05).length;
     setCurrentPhaseProgress(movedCount / sliders.length);
@@ -83,12 +83,12 @@ export default function SliderPhaseView({ onComplete, sliders = RHYTHM_SLIDERS }
 
     for (const slider of sliders) {
       const val = values[slider.id];
-      const intensity = Math.abs(val - 0.5) * 2; // 0-1 how far from center
+      const intensity = Math.abs(val - 0.5) * 2;
 
-      if (intensity < 0.1) continue; // Too close to center — no strong signal
+      if (intensity < 0.1) continue;
 
       const signals = val < 0.5 ? slider.leftSignals : slider.rightSignals;
-      const confidence = 0.5 + intensity * 0.4; // 0.5–0.9
+      const confidence = 0.5 + intensity * 0.4;
 
       for (const tag of signals) {
         extractedSignals.push({
@@ -98,7 +98,6 @@ export default function SliderPhaseView({ onComplete, sliders = RHYTHM_SLIDERS }
         });
       }
 
-      // Boost certainty for this domain
       const currentCertainty = certaintyUpdates[slider.domain] || 0;
       certaintyUpdates[slider.domain] = currentCertainty + intensity * 15;
     }
@@ -115,61 +114,118 @@ export default function SliderPhaseView({ onComplete, sliders = RHYTHM_SLIDERS }
   }, [submitted, sliders, values, addSignals, updateCertainties, setCurrentPhaseProgress, onComplete]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32, padding: '24px 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <p style={{ color: T.ink, opacity: 0.6, fontSize: 14, margin: 0 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '32px 20px 40px',
+        flex: 1,
+        overflow: 'auto',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Instruction */}
+        <p style={{
+          color: INK['50'],
+          fontSize: 14,
+          margin: '0 0 20px',
+          textAlign: 'center',
+          fontFamily: FONT.sans,
+          letterSpacing: '0.01em',
+        }}>
           Drag each slider toward whichever feels more like you
         </p>
+
+        {/* Sliders */}
+        {sliders.map((slider, i) => {
+          const val = values[slider.id];
+          const leftActive = val < 0.45;
+          const rightActive = val > 0.55;
+
+          return (
+            <div
+              key={slider.id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                padding: '20px 24px',
+                background: 'rgba(28,26,23,0.02)',
+                borderRadius: 14,
+                border: '1px solid rgba(28,26,23,0.05)',
+                animation: `fadeInUp 0.4s ease ${i * 0.08}s both`,
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                gap: 16,
+              }}>
+                <span style={{
+                  fontSize: 13,
+                  fontWeight: leftActive ? 600 : 400,
+                  color: leftActive ? T.ink : INK['40'],
+                  fontFamily: FONT.sans,
+                  transition: 'all 0.2s ease',
+                  flex: '0 1 auto',
+                  minWidth: 0,
+                }}>
+                  {slider.leftLabel}
+                </span>
+                <span style={{
+                  fontSize: 13,
+                  fontWeight: rightActive ? 600 : 400,
+                  color: rightActive ? T.ink : INK['40'],
+                  fontFamily: FONT.sans,
+                  transition: 'all 0.2s ease',
+                  textAlign: 'right',
+                  flex: '0 1 auto',
+                  minWidth: 0,
+                }}>
+                  {slider.rightLabel}
+                </span>
+              </div>
+              <input
+                type="range"
+                className="terrazzo-slider"
+                min={0}
+                max={1}
+                step={0.01}
+                value={val}
+                onChange={(e) => handleChange(slider.id, parseFloat(e.target.value))}
+                disabled={submitted}
+              />
+            </div>
+          );
+        })}
+
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          disabled={submitted}
+          className="btn-hover"
+          style={{
+            marginTop: 24,
+            padding: '15px 40px',
+            background: submitted ? T.travertine : T.ink,
+            color: submitted ? INK['50'] : T.cream,
+            border: 'none',
+            borderRadius: 100,
+            fontSize: 15,
+            fontWeight: 500,
+            fontFamily: FONT.sans,
+            cursor: submitted ? 'default' : 'pointer',
+            transition: 'all 0.25s ease',
+            opacity: submitted ? 0.6 : 1,
+            alignSelf: 'center',
+            letterSpacing: '0.02em',
+          }}
+        >
+          {submitted ? 'Noted ✓' : 'Continue'}
+        </button>
       </div>
-
-      {sliders.map((slider) => (
-        <div key={slider.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: T.ink }}>
-            <span style={{ opacity: values[slider.id] < 0.45 ? 1 : 0.5, fontWeight: values[slider.id] < 0.45 ? 600 : 400 }}>
-              {slider.leftLabel}
-            </span>
-            <span style={{ opacity: values[slider.id] > 0.55 ? 1 : 0.5, fontWeight: values[slider.id] > 0.55 ? 600 : 400 }}>
-              {slider.rightLabel}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={values[slider.id]}
-            onChange={(e) => handleChange(slider.id, parseFloat(e.target.value))}
-            disabled={submitted}
-            style={{
-              width: '100%',
-              accentColor: T.honey,
-              height: 6,
-              cursor: submitted ? 'default' : 'pointer',
-            }}
-          />
-        </div>
-      ))}
-
-      <button
-        onClick={handleSubmit}
-        disabled={submitted}
-        style={{
-          marginTop: 16,
-          padding: '14px 32px',
-          background: submitted ? T.travertine : T.ink,
-          color: submitted ? T.ink : T.cream,
-          border: 'none',
-          borderRadius: 8,
-          fontSize: 15,
-          fontWeight: 500,
-          cursor: submitted ? 'default' : 'pointer',
-          transition: 'all 0.2s ease',
-          opacity: submitted ? 0.6 : 1,
-          alignSelf: 'center',
-        }}
-      >
-        {submitted ? 'Noted' : 'Continue'}
-      </button>
     </div>
   );
 }
