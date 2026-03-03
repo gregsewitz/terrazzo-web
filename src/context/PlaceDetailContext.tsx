@@ -61,12 +61,46 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
   const [collectionPickerItem, setCollectionPickerItem] = useState<ImportedPlace | null>(null);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<ImportedPlace | null>(null);
   const removePlace = useSavedStore(s => s.removePlace);
+  const myPlaces = useSavedStore(s => s.myPlaces);
+
+  // ─── Hydrate enrichment from library ───
+  // Trip places are stored as snapshots in the days blob and may have stale/null
+  // enrichment data. When opening a detail, look up the canonical SavedPlace
+  // by libraryPlaceId (or matching name) and merge its enrichment fields.
+  const hydrateFromLibrary = useCallback((place: ImportedPlace): ImportedPlace => {
+    // Already has enrichment — use as-is
+    if (place.enrichment && place.terrazzoInsight) return place;
+
+    // Try to find canonical library entry
+    const libraryMatch = myPlaces.find(lp =>
+      (place.libraryPlaceId && (lp.id === place.libraryPlaceId || lp.libraryPlaceId === place.libraryPlaceId))
+      || lp.name === place.name
+    );
+    if (!libraryMatch) return place;
+
+    // Merge enrichment fields from library, preferring non-null values
+    return {
+      ...place,
+      enrichment: place.enrichment || libraryMatch.enrichment,
+      terrazzoInsight: place.terrazzoInsight || libraryMatch.terrazzoInsight,
+      matchScore: (place.matchScore && place.matchScore > 0) ? place.matchScore : libraryMatch.matchScore,
+      matchBreakdown: place.matchBreakdown || libraryMatch.matchBreakdown,
+      sensoryCues: place.sensoryCues || libraryMatch.sensoryCues,
+      rhythmProfile: place.rhythmProfile || libraryMatch.rhythmProfile,
+      sustainabilityScore: place.sustainabilityScore || libraryMatch.sustainabilityScore,
+      sustainabilityFeatures: place.sustainabilityFeatures || libraryMatch.sustainabilityFeatures,
+      culturalEngagementOptions: place.culturalEngagementOptions || libraryMatch.culturalEngagementOptions,
+      whatToOrder: place.whatToOrder || libraryMatch.whatToOrder,
+      tips: place.tips || libraryMatch.tips,
+      tasteNote: place.tasteNote || libraryMatch.tasteNote,
+    };
+  }, [myPlaces]);
 
   // ─── Public API ───
   const openDetail = useCallback((place: ImportedPlace) => {
-    setDetailItem(place);
+    setDetailItem(hydrateFromLibrary(place));
     setIsDetailPreview(false);
-  }, []);
+  }, [hydrateFromLibrary]);
 
   const openPreview = useCallback((place: ImportedPlace) => {
     setDetailItem(place);
