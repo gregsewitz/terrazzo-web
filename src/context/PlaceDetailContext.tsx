@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { ImportedPlace, PlaceRating } from '@/types';
 import { useSavedStore } from '@/stores/savedStore';
 import { FONT, INK } from '@/constants/theme';
@@ -8,6 +8,14 @@ import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import BriefingView from '@/components/BriefingView';
 import AddToCollectionSheet from '@/components/AddToCollectionSheet';
+
+// ─── Module-level bridge for PlaceLink ───
+// React context can fail in Next.js when modules are duplicated across chunks.
+// This plain-object bridge is a reliable fallback: the Provider sets it on mount,
+// and PlaceLink reads it on click (not during render, so no re-render needed).
+export const placeLinkBridge: {
+  openPreview: ((place: ImportedPlace) => void) | null;
+} = { openPreview: null };
 
 // ─── Config: each page provides its own callbacks ───
 
@@ -36,7 +44,7 @@ interface PlaceDetailAPI {
   openCollectionPicker: (place: ImportedPlace) => void;
 }
 
-const PlaceDetailContext = createContext<PlaceDetailAPI | null>(null);
+export const PlaceDetailContext = createContext<PlaceDetailAPI | null>(null);
 
 export function usePlaceDetail(): PlaceDetailAPI {
   const ctx = useContext(PlaceDetailContext);
@@ -170,6 +178,12 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     ? config.getSiblingPlaces(detailItem)
     : undefined;
 
+  // ─── Sync module-level bridge so PlaceLink works even if context is duped ───
+  useEffect(() => {
+    placeLinkBridge.openPreview = openPreview;
+    return () => { placeLinkBridge.openPreview = null; };
+  }, [openPreview]);
+
   const api: PlaceDetailAPI = { openDetail, openPreview, closeDetail, detailItem, openCollectionPicker };
 
   return (
@@ -182,10 +196,12 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
           item={detailItem}
           onClose={closeDetail}
           onRate={isDetailPreview ? undefined : handleRate}
+          onSave={isDetailPreview ? handleSaveFromPreview : undefined}
           onEditRating={isDetailPreview ? undefined : handleEditRating}
           onCollectionTap={isDetailPreview ? undefined : handleCollectionTap}
-          onViewBriefing={isDetailPreview ? undefined : handleViewBriefing}
+          onViewBriefing={handleViewBriefing}
           onDelete={isDetailPreview ? undefined : handleDeletePlace}
+          isPreview={isDetailPreview}
           siblingPlaces={siblingPlaces}
         />
       )}
