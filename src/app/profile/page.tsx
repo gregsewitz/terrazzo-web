@@ -398,6 +398,17 @@ function ProfilePageContent() {
     }
   };
 
+  const handleDebugEmail = async () => {
+    try {
+      const data = await apiFetch<Record<string, unknown>>('/api/email/debug');
+      console.log('[terrazzo] EMAIL DEBUG:', JSON.stringify(data, null, 2));
+      alert(`Debug result — check console.\nRecent emails: ${JSON.stringify((data.tests as Record<string, unknown> & { recentMessages: { count: number } })?.recentMessages?.count ?? 'error')}`);
+    } catch (err) {
+      console.error('[terrazzo] Debug failed:', err);
+      alert('Debug failed — check console');
+    }
+  };
+
   const fetchImportHistory = async () => {
     setHistoryLoading(true);
     try {
@@ -669,6 +680,9 @@ function ProfilePageContent() {
                               <div className="flex items-center gap-2 flex-wrap mb-2">
                                 <button onClick={handleScanNow} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: '#2a7a56', color: 'white' }}>
                                   {scanState === 'scanning' ? 'Scanning…' : scanState === 'done' ? '✓ Scanned' : 'Scan Inbox'}
+                                </button>
+                                <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: INK['60'] }}>
+                                  Debug
                                 </button>
                                 {scanState === 'done' && scanResult && (
                                   <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>
