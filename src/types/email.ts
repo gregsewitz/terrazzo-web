@@ -221,10 +221,36 @@ export const RESERVATION_SEARCH_QUERIES: { label: string; query: string }[] = [
   { label: 'Hertz', query: 'from:hertz.com subject:confirmation' },
 
   // ── Generic catch-alls (broadest, run last) ──────────────────────────
-  { label: 'Reservation confirmations', query: 'subject:("your reservation" OR "reservation confirmed" OR "reservation confirmation")' },
-  { label: 'Booking confirmations', query: 'subject:("booking confirmed" OR "booking confirmation" OR "your booking")' },
-  { label: 'Itinerary emails', query: 'subject:("your itinerary" OR "trip confirmation" OR "travel confirmation")' },
-  { label: 'Check-in emails', query: 'subject:("check-in" OR "check in") subject:(hotel OR flight OR reservation)' },
+  // Reservation + identifiers
+  { label: 'Reservation confirmed', query: 'subject:("reservation confirmed" OR "reservation confirmation")' },
+  { label: 'Reservation ID/number', query: 'subject:(reservation) subject:(number OR id OR code OR details)' },
+  { label: 'Your reservation', query: 'subject:("your reservation")' },
+
+  // Booking + identifiers
+  { label: 'Booking confirmed', query: 'subject:("booking confirmed" OR "booking confirmation")' },
+  { label: 'Booking ID/number', query: 'subject:(booking) subject:(number OR id OR code OR reference)' },
+  { label: 'Your booking', query: 'subject:("your booking")' },
+
+  // Confirmation + identifiers
+  { label: 'Confirmation number', query: 'subject:(confirmation) subject:(number OR id OR code)' },
+  { label: 'Your confirmation', query: 'subject:("your confirmation" OR "confirmation details")' },
+
+  // Order + travel context
+  { label: 'Order confirmed (travel)', query: 'subject:("order confirmed" OR "order confirmation") subject:(flight OR hotel OR trip OR travel OR stay)' },
+  { label: 'Order number (travel)', query: 'subject:(order) subject:(number OR id) subject:(flight OR hotel OR trip OR travel)' },
+
+  // Itinerary / trip
+  { label: 'Itinerary emails', query: 'subject:("your itinerary" OR "trip itinerary" OR "travel itinerary")' },
+  { label: 'Trip confirmations', query: 'subject:("trip confirmation" OR "travel confirmation" OR "trip details")' },
+
+  // Check-in
+  { label: 'Check-in emails', query: 'subject:("check-in" OR "check in") subject:(hotel OR flight OR reservation OR ready)' },
+
+  // E-ticket / boarding
+  { label: 'E-tickets', query: 'subject:("e-ticket" OR "eticket" OR "boarding pass" OR "mobile boarding")' },
+
+  // Receipt with travel context
+  { label: 'Travel receipts', query: 'subject:(receipt) subject:(flight OR hotel OR booking OR reservation OR stay)' },
 ];
 
 // ─── Trip Match Suggestion ─────────────────────────────────────────────────────
