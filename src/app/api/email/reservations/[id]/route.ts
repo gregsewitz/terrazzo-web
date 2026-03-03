@@ -100,7 +100,7 @@ export async function PATCH(
           type: reservation.placeType,
           location: reservation.location || '',
           googlePlaceId: googlePlaceId || null,
-          googleData: googleData || undefined,
+          googleData: (googleData as import('@prisma/client').Prisma.InputJsonValue) || undefined,
           source: {
             type: 'email',
             name: reservation.provider || reservation.emailFromName || reservation.emailFrom,

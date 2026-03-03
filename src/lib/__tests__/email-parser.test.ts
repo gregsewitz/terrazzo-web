@@ -18,6 +18,7 @@ const { parseEmailForReservations, parseEmailBatch } = await import('../email-pa
 function makeEmail(overrides: Partial<NylasEmailMessage> = {}): NylasEmailMessage {
   return {
     id: 'msg-1',
+    grantId: 'grant-test-123',
     subject: 'Your reservation is confirmed!',
     from: [{ name: 'OpenTable', email: 'reservations@opentable.com' }],
     to: [{ name: 'Greg', email: 'greg@example.com' }],

@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           checkOutDate: res.checkOutDate ? new Date(res.checkOutDate) : null,
           activityDetails: res.activityDetails || null,
           confidence: res.confidence,
-          rawExtraction: res as unknown as Record<string, unknown>,
+          rawExtraction: JSON.parse(JSON.stringify(res)),
           status: 'pending',
         });
       }
@@ -144,8 +144,8 @@ export async function POST(request: NextRequest) {
           id: t.id,
           name: t.name,
           location: t.location,
-          startDate: t.startDate ? new Date(t.startDate as string).toISOString() : null,
-          endDate: t.endDate ? new Date(t.endDate as string).toISOString() : null,
+          startDate: t.startDate ? (t.startDate instanceof Date ? t.startDate.toISOString() : String(t.startDate)) : null,
+          endDate: t.endDate ? (t.endDate instanceof Date ? t.endDate.toISOString() : String(t.endDate)) : null,
           destinations: (t.destinations as string[]) || [],
           days: t.days as unknown as { dayNumber: number; date?: string; destination?: string }[],
         }))
