@@ -30,8 +30,10 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!grant) {
-      // Fallback: check cookie
+    let resolvedGrant = grant;
+
+    if (!resolvedGrant) {
+      // Fallback: check cookie and create DB record
       const cookieGrantId = request.cookies.get('nylas_grant_id')?.value;
       if (!cookieGrantId) {
         return NextResponse.json(
@@ -40,12 +42,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create a DB record from the cookie grant for future use
-      // (handles migration from cookie-only to DB-backed grants)
-      return NextResponse.json(
-        { error: 'Email grant not linked to your account. Please reconnect Gmail.' },
-        { status: 400 }
-      );
+      // Migrate cookie-only grant to DB
+      resolvedGrant = await prisma.nylasGrant.upsert({
+        where: { grantId: cookieGrantId },
+        create: {
+          userId: user.id,
+          grantId: cookieGrantId,
+          email: user.email || '',
+          provider: 'google',
+        },
+        update: { userId: user.id },
+      });
     }
 
     // ── Create scan record ───────────────────────────────────────────────
@@ -55,7 +62,7 @@ export async function POST(request: NextRequest) {
     const scan = await prisma.emailScan.create({
       data: {
         userId: user.id,
-        nylasGrantId: grant.id,
+        nylasGrantId: resolvedGrant.id,
         status: 'running',
         scanType,
         scanFrom,
@@ -65,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // ── Search for confirmation emails ───────────────────────────────────
     const { messages, queriesRun } = await searchConfirmationEmails(
-      grant.grantId,
+      resolvedGrant.grantId,
       RESERVATION_SEARCH_QUERIES,
       { limit: 25, receivedAfter }
     );

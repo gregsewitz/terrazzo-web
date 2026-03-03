@@ -24,12 +24,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback: check cookie (backward compat)
-    const cookieGrant = request.cookies.get('nylas_grant_id')?.value;
+    // Fallback: check cookie and migrate to DB if we have a user
+    const cookieGrantId = request.cookies.get('nylas_grant_id')?.value;
+
+    if (cookieGrantId && user) {
+      // Migrate cookie-only grant to DB
+      const migrated = await prisma.nylasGrant.upsert({
+        where: { grantId: cookieGrantId },
+        create: {
+          userId: user.id,
+          grantId: cookieGrantId,
+          email: user.email || '',
+          provider: 'google',
+        },
+        update: { userId: user.id },
+      });
+      return NextResponse.json({
+        connected: true,
+        email: migrated.email || user.email,
+        provider: migrated.provider,
+        grantId: migrated.grantId,
+        connectedAt: migrated.createdAt,
+      });
+    }
 
     return NextResponse.json({
-      connected: !!cookieGrant,
-      ...(cookieGrant ? { grantId: cookieGrant } : {}),
+      connected: !!cookieGrantId,
+      ...(cookieGrantId ? { grantId: cookieGrantId } : {}),
     });
   } catch (error) {
     console.error('Email status error:', error);
