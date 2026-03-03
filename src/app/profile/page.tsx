@@ -602,14 +602,85 @@ export default function ProfilePage() {
                 {/* Settings links */}
                 <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
                   {SETTINGS_LINKS.map(({ label, action }) => (
-                    <div
-                      key={action}
-                      onClick={() => handleSettingTap(action)}
-                      className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg cursor-pointer nav-hover"
-                      style={{ fontSize: 12, color: INK['60'], fontFamily: FONT.sans }}
-                    >
-                      <span>{label}</span>
-                      <span style={{ color: INK['30'] }}>→</span>
+                    <div key={action}>
+                      <div
+                        onClick={() => handleSettingTap(action)}
+                        className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg cursor-pointer nav-hover"
+                        style={{ fontSize: 12, color: expandedSection === action ? 'var(--t-ink)' : INK['60'], fontFamily: FONT.sans }}
+                      >
+                        <span>{label}</span>
+                        <span style={{ color: INK['30'], transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', display: 'inline-block' }}>→</span>
+                      </div>
+                      {expandedSection === 'accounts' && action === 'accounts' && (
+                        <div className="px-2 py-2.5 mt-1 rounded-lg" style={{ background: 'rgba(107,139,154,0.05)', fontSize: 11 }}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <PerriandIcon name="email" size={11} color="var(--t-ink)" />
+                              <span style={{ color: 'var(--t-ink)' }}>Gmail</span>
+                            </div>
+                            {emailLoading ? (
+                              <span className="text-[10px]" style={{ color: INK['40'] }}>Checking…</span>
+                            ) : emailStatus?.connected ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>Connected</span>
+                            ) : (
+                              <a href="/api/auth/nylas/connect" className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--t-verde)', color: 'white', textDecoration: 'none' }}>Connect</a>
+                            )}
+                          </div>
+                          {emailStatus?.connected && (
+                            <div className="ml-5 mb-2">
+                              <span className="text-[10px] block mb-1" style={{ color: INK['50'] }}>{emailStatus.email}</span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {scanState === 'idle' && (
+                                  <button onClick={handleScanNow} className="text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-ink)', color: 'var(--t-parchment)' }}>Scan Now</button>
+                                )}
+                                {scanState === 'scanning' && <span className="text-[10px]" style={{ color: 'var(--t-honey)' }}>Scanning…</span>}
+                                {scanState === 'done' && scanResult && (
+                                  <>
+                                    <span className="text-[10px]" style={{ color: 'var(--t-verde)' }}>Found {scanResult.emailsFound} emails</span>
+                                    <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>Review →</button>
+                                  </>
+                                )}
+                                <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(196,80,32,0.08)', color: '#c45020' }}>Disconnect</button>
+                              </div>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <PerriandIcon name="pin" size={11} color="var(--t-ink)" />
+                              <span style={{ color: 'var(--t-ink)' }}>Google Maps</span>
+                            </div>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>Via import</span>
+                          </div>
+                        </div>
+                      )}
+                      {expandedSection === 'history' && action === 'history' && (
+                        <div className="px-2 py-2.5 mt-1 rounded-lg" style={{ background: 'rgba(107,139,154,0.05)', fontSize: 11 }}>
+                          {historyLoading ? (
+                            <span className="text-[10px]" style={{ color: INK['40'] }}>Loading history…</span>
+                          ) : importHistory.length === 0 ? (
+                            <span className="text-[10px]" style={{ color: INK['40'] }}>No import history yet. Connect Gmail or import from a URL to get started.</span>
+                          ) : (
+                            <div className="flex flex-col gap-1.5">
+                              {importHistory.slice(0, 10).map((item) => (
+                                <div key={item.id} className="flex items-center justify-between py-1 cursor-pointer" onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <PerriandIcon name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'} size={9} color={INK['50']} />
+                                    <span className="text-[10px] truncate" style={{ color: 'var(--t-ink)' }}>{item.title}</span>
+                                  </div>
+                                  <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: INK['30'] }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                </div>
+                              ))}
+                              <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left" style={{ color: 'var(--t-honey)' }}>View email reservations →</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {expandedSection === 'notifications' && action === 'notifications' && (
+                        <div className="px-2 py-2.5 mt-1 rounded-lg text-[10px]" style={{ background: 'rgba(107,139,154,0.05)', color: INK['50'] }}>Notification preferences coming soon.</div>
+                      )}
+                      {expandedSection === 'about' && action === 'about' && (
+                        <div className="px-2 py-2.5 mt-1 rounded-lg text-[10px]" style={{ background: 'rgba(107,139,154,0.05)', color: INK['50'] }}>Terrazzo v0.1 — Your taste-driven travel companion.</div>
+                      )}
                     </div>
                   ))}
                   <button
