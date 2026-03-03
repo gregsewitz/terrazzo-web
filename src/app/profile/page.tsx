@@ -925,6 +925,9 @@ function ProfilePageContent() {
                             >
                               {scanState === 'scanning' ? 'Scanning…' : scanState === 'done' ? '✓ Scanned' : 'Scan Inbox'}
                             </button>
+                            <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: INK['60'] }}>
+                              Debug
+                            </button>
                             {scanState === 'done' && scanResult && (
                               <button
                                 onClick={() => router.push('/email/inbox')}
