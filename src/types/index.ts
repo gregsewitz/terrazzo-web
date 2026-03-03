@@ -354,20 +354,9 @@ export interface ImportedPlace {
   addedByName?: string;     // "Sarah" — denormalized for display
   // ─── v2 Enrichment Surfacing ───
   sustainabilityScore?: number;        // 0-1 from PlaceIntelligence
-  sustainabilityFeatures?: string[];   // e.g. ["solar-powered", "locally-sourced"]
-  rhythmProfile?: {
-    tempo?: string;                    // 'slow' | 'moderate' | 'fast'
-    dayArc?: string;                   // natural daily rhythm description
-    morningOrientation?: string;       // 'dawn' | 'mid-morning' | 'late'
-    spontaneityTolerance?: string;     // 'rigid' | 'flexible' | 'spontaneous'
-  };
-  culturalEngagementOptions?: string[]; // e.g. ["cooking-class", "artisan-workshop"]
-  sensoryCues?: {
-    lightQuality?: string;
-    soundscape?: string;
-    scentNotes?: string[];
-    materialTextures?: string[];
-  };
+  accolades?: Array<{ type: string; value: string; year?: string | null; category?: string }>;
+  formalityLevel?: string;             // white-glove | professional-warm | casual-friendly | self-service | mixed
+  cuisineStyle?: string;               // short cuisine description
 }
 
 // ─── Quick Entry (free-text slot items) ───

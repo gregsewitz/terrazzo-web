@@ -12,7 +12,6 @@ import PipelineProgress from '@/components/PipelineProgress';
 import { FONT, INK } from '@/constants/theme';
 import PlacePhoto from '@/components/PlacePhoto';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
-import RhythmVisualization from '@/components/profile/RhythmVisualization';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar, AnimatedNumber, AnimatedScoreArc } from '@/components/animations/AnimatedElements';
 
@@ -425,68 +424,6 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Sensory Atmosphere — evocative one-liner from sensoryCues */}
-        {item.sensoryCues && (item.sensoryCues.lightQuality || item.sensoryCues.soundscape || item.sensoryCues.scentNotes?.length || item.sensoryCues.materialTextures?.length) && (
-          <FadeInSection delay={0.1} direction="up" distance={14}>
-            <div className="mb-5 px-4 py-3 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(107,139,154,0.06), rgba(74,103,65,0.04))', border: '1px solid rgba(107,139,154,0.12)' }}>
-              <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['60'], fontFamily: FONT.mono, letterSpacing: '1px' }}>Atmosphere</div>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                {item.sensoryCues.lightQuality && (
-                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
-                    <span style={{ fontSize: 13, opacity: 0.7 }}>◐</span>
-                    {item.sensoryCues.lightQuality}
-                  </span>
-                )}
-                {item.sensoryCues.lightQuality && (item.sensoryCues.soundscape || item.sensoryCues.scentNotes?.length || item.sensoryCues.materialTextures?.length) && (
-                  <span style={{ color: INK['20'] }}>·</span>
-                )}
-                {item.sensoryCues.soundscape && (
-                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
-                    <span style={{ fontSize: 13, opacity: 0.7 }}>♪</span>
-                    {item.sensoryCues.soundscape}
-                  </span>
-                )}
-                {item.sensoryCues.soundscape && (item.sensoryCues.scentNotes?.length || item.sensoryCues.materialTextures?.length) && (
-                  <span style={{ color: INK['20'] }}>·</span>
-                )}
-                {item.sensoryCues.scentNotes && item.sensoryCues.scentNotes.length > 0 && (
-                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
-                    <span style={{ fontSize: 13, opacity: 0.7 }}>❋</span>
-                    {item.sensoryCues.scentNotes.join(', ')}
-                  </span>
-                )}
-                {item.sensoryCues.scentNotes?.length && item.sensoryCues.materialTextures?.length ? (
-                  <span style={{ color: INK['20'] }}>·</span>
-                ) : null}
-                {item.sensoryCues.materialTextures && item.sensoryCues.materialTextures.length > 0 && (
-                  <span className="flex items-center gap-1 text-[11px]" style={{ color: INK['80'] }}>
-                    <span style={{ fontSize: 13, opacity: 0.7 }}>▧</span>
-                    {item.sensoryCues.materialTextures.join(', ')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Rhythm at a glance — single-line summary */}
-        {item.rhythmProfile && (item.rhythmProfile.tempo || item.rhythmProfile.morningOrientation || item.rhythmProfile.spontaneityTolerance) && (
-          <FadeInSection delay={0.1} direction="up" distance={12}>
-            <div className="flex items-center gap-1.5 mb-5 flex-wrap">
-              <PerriandIcon name="activity" size={12} color={INK['50']} />
-              {[
-                item.rhythmProfile.tempo && ({ slow: 'Slow-paced', moderate: 'Moderate pace', fast: 'Fast-paced' } as Record<string, string>)[item.rhythmProfile.tempo],
-                item.rhythmProfile.morningOrientation && ({ dawn: 'Early riser', 'mid-morning': 'Mid-morning', late: 'Late start' } as Record<string, string>)[item.rhythmProfile.morningOrientation],
-                item.rhythmProfile.spontaneityTolerance && ({ rigid: 'Book ahead', flexible: 'Flexible', spontaneous: 'Walk-in friendly' } as Record<string, string>)[item.rhythmProfile.spontaneityTolerance],
-              ].filter(Boolean).map((label, i, arr) => (
-                <span key={i} className="text-[11px]" style={{ color: INK['70'] }}>
-                  {label}{i < arr.length - 1 ? <span style={{ color: INK['20'], margin: '0 2px' }}> · </span> : null}
-                </span>
-              ))}
-            </div>
-          </FadeInSection>
-        )}
-
         {/* Match score — immersive card with animated score + domain highlights */}
         <FadeInSection delay={0.15} direction="up" distance={18}>
           <div
@@ -557,72 +494,6 @@ function PlaceDetailContent({
                 }
                 score={Math.round(item.sustainabilityScore * 100)}
               />
-              {item.sustainabilityFeatures && item.sustainabilityFeatures.length > 0 && (
-                <StaggerContainer className="flex flex-wrap gap-1.5 mt-2.5" staggerDelay={0.06}>
-                  {item.sustainabilityFeatures.map((feat) => (
-                    <StaggerItem key={feat}>
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full"
-                        style={{ background: '#e8f5e8', color: '#2d6a2d', fontFamily: FONT.mono }}
-                      >
-                        {feat}
-                      </span>
-                    </StaggerItem>
-                  ))}
-                </StaggerContainer>
-              )}
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Rhythm compatibility — detailed view (only if compact line didn't show) */}
-        {item.rhythmProfile && item.rhythmProfile.dayArc && (
-          <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <RhythmVisualization
-                title="Rhythm Profile"
-                axes={[
-                  ...(item.rhythmProfile.tempo ? [{
-                    label: 'Pace',
-                    leftPole: 'Slow',
-                    rightPole: 'Fast',
-                    value: item.rhythmProfile.tempo === 'slow' ? 0.2 : item.rhythmProfile.tempo === 'fast' ? 0.8 : 0.5,
-                  }] : []),
-                  ...(item.rhythmProfile.morningOrientation ? [{
-                    label: 'Morning',
-                    leftPole: 'Dawn',
-                    rightPole: 'Late',
-                    value: item.rhythmProfile.morningOrientation === 'dawn' ? 0.15 : item.rhythmProfile.morningOrientation === 'late' ? 0.85 : 0.5,
-                  }] : []),
-                  ...(item.rhythmProfile.spontaneityTolerance ? [{
-                    label: 'Structure',
-                    leftPole: 'Planned',
-                    rightPole: 'Spontaneous',
-                    value: item.rhythmProfile.spontaneityTolerance === 'rigid' ? 0.15 : item.rhythmProfile.spontaneityTolerance === 'spontaneous' ? 0.85 : 0.5,
-                  }] : []),
-                ]}
-              />
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Cultural engagement options */}
-        {item.culturalEngagementOptions && item.culturalEngagementOptions.length > 0 && (
-          <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-2.5 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Cultural Experiences</h3>
-              <StaggerContainer className="flex flex-wrap gap-1.5" staggerDelay={0.06}>
-                {item.culturalEngagementOptions.map((opt) => (
-                  <StaggerItem key={opt}>
-                    <span
-                      className="text-[10px] px-2.5 py-1 rounded-lg"
-                      style={{ background: 'rgba(107,139,154,0.12)', color: '#4a6a7a', fontFamily: FONT.mono }}
-                    >
-                      {opt.replace(/-/g, ' ')}
-                    </span>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
             </div>
           </FadeInSection>
         )}
