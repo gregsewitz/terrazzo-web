@@ -40,6 +40,8 @@ model User {
 
   // Relations
   nylasGrants          NylasGrant[]
+  emailScans           EmailScan[]
+  emailReservations    EmailReservation[]
   trips                Trip[]
   savedPlaces          SavedPlace[]
   shortlists           Shortlist[]
@@ -77,7 +79,110 @@ model NylasGrant {
   grantId   String   @unique
   email     String
   provider  String   @default("google")
+  scopes    String[] @default(["https://www.googleapis.com/auth/gmail.readonly"])
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailScans EmailScan[]
+}
+
+// ──────────────────────────────────────────────
+// Email Scanning & Reservation Staging
+// ──────────────────────────────────────────────
+
+model EmailScan {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nylasGrantId  String
+  nylasGrant    NylasGrant @relation(fields: [nylasGrantId], references: [id], onDelete: Cascade)
+
+  // Scan metadata
+  status        String   @default("running") // running | completed | failed
+  scanType      String   @default("full")    // full | incremental
+  emailsFound   Int      @default(0)
+  emailsParsed  Int      @default(0)
+  reservationsFound Int  @default(0)
+  errorMessage  String?
+
+  // Time range scanned
+  scanFrom      DateTime?  // earliest email date scanned
+  scanTo        DateTime?  // latest email date scanned
+
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  reservations  EmailReservation[]
+
+  @@index([userId])
+  @@index([nylasGrantId])
+}
+
+model EmailReservation {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailScanId   String
+  emailScan     EmailScan @relation(fields: [emailScanId], references: [id], onDelete: Cascade)
+
+  // Staging status
+  status        String   @default("pending") // pending | confirmed | dismissed | merged
+  reviewedAt    DateTime?
+
+  // Email provenance
+  nylasMessageId String   // Nylas message ID for re-fetch
+  emailSubject   String
+  emailFrom      String   // sender address
+  emailFromName  String?  // sender display name
+  emailDate      DateTime // when the email was sent/received
+
+  // Parsed reservation data
+  placeName      String
+  placeType      String   // restaurant | hotel | flight | activity | bar | cafe
+  location       String?  // city or address
+  googlePlaceId  String?  // resolved Google Places ID (if matched)
+
+  // Booking details
+  reservationDate    DateTime?  // when the reservation is for
+  reservationTime    String?    // "HH:mm" format
+  partySize          Int?
+  confirmationNumber String?
+  provider           String?    // OpenTable | Resy | Booking.com | Airbnb | etc.
+
+  // Flight-specific
+  flightNumber       String?
+  departureAirport   String?
+  arrivalAirport     String?
+  departureTime      String?    // "HH:mm"
+  arrivalTime        String?    // "HH:mm"
+
+  // Hotel-specific
+  checkInDate        DateTime?
+  checkOutDate       DateTime?
+
+  // Activity-specific
+  activityDetails    String?    // e.g. "2-hour guided tour"
+
+  // Confidence & matching
+  confidence         Float    @default(0.0)  // 0-1, how confident the extraction is
+  rawExtraction      Json?    // full Claude extraction for debugging
+
+  // Trip matching
+  matchedTripId      String?  // auto-matched trip (if any)
+  matchedTripName    String?  // denormalized for display
+  suggestedDayNumber Int?     // suggested day within the trip
+  suggestedSlotId    String?  // suggested slot (breakfast, lunch, dinner, etc.)
+
+  // Link to library
+  savedPlaceId       String?  // set when user confirms → creates/links SavedPlace
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([emailScanId])
+  @@index([status])
+  @@index([reservationDate])
 }
 
 // ──────────────────────────────────────────────
@@ -130,6 +235,8 @@ model SavedPlace {
   reliabilityScore    Float?
   rhythmTempo         String?
   bestMonths          String[]
+  formalityLevel      String?   // from serviceProfile
+  cuisineStyle        String?   // from culinaryProfile
   signalCount         Int?
   antiSignalCount     Int?
 
@@ -470,16 +577,30 @@ model PlaceIntelligence {
   reviewCount      Int     @default(0)
   reliabilityScore Float?  // 0-1
 
-  // Expanded ontology v2: property enrichment
+  // Expanded ontology v2: domain metadata (1:1 with taste domains)
+  // Design
+  designProfile              Json?     // { materialPalette, spatialLanguage, designEra, architectOrDesigner, designPhilosophy }
+  // Atmosphere
   rhythmProfile              Json?     // { tempo, dayArc, morningOrientation, spontaneityTolerance }
+  sensoryCues                Json?     // { lightQuality, soundscape, scentNotes, materialTextures }
+  seasonalityData            Json?     // { peakMonths, shoulderSeasons, quietMonths, bestMonths, crowdPatterns, recommendations }
+  // Character
+  culturalEngagementOptions  String[]  @default([]) // e.g. cooking-class, artisan-workshop
+  heritageNarrative          String?   // origin story, founding architect, heritage
+  heritageData               Json?     // { architect, yearEstablished, previousUses, significance, restorationPhilosophy }
+  // Service
+  serviceProfile             Json?     // { formalityLevel, serviceStyle, servicePhilosophy, signatureRituals }
+  // FoodDrink
+  culinaryProfile            Json?     // { philosophy, chefName, cuisineStyle, signatureDishes, beverageIdentity, diningFormat }
+  // Setting
+  competitiveContext         Json?     // { position, uniquenessScore, neighborhoodRole, neighborhoodContext, alternativeScenarios }
+  // Wellness
+  wellnessPhilosophy         Json?     // { approach, signature, emphasis }
+  wellnessFeatures           String[]  @default([]) // e.g. spa, thermal-bath, yoga
+  // Sustainability
   sustainabilityScore        Float?    // 0-1 overall sustainability rating
   sustainabilityFeatures     String[]  @default([]) // e.g. solar-powered, locally-sourced
-  culturalEngagementOptions  String[]  @default([]) // e.g. cooking-class, artisan-workshop
-  heritageNarrative          String?   // origin story, founding architect, heritage (renamed from provenanceNarrative)
-  heritageData               Json?     // { architect, yearEstablished, previousUses, significance, restorationPhilosophy }
-  seasonalityData            Json?     // { peakMonths, shoulderSeasons, quietMonths, bestMonths, weatherByMonth, crowdPatterns, recommendations }
-  sensoryCues                Json?     // { lightQuality, soundscape, scentNotes, materialTextures }
-  competitiveContext         Json?     // { position, ecosystemType, uniquenessScore, neighborhoodRole, alternativeScenarios, nearbyAlternatives }
+  certifications             String[]  @default([]) // e.g. LEED, Green Globe
 
   // Sources processed
   sourcesProcessed Json?

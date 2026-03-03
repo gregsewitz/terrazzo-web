@@ -22,24 +22,24 @@ export const T = {
 
 export const DOMAIN_COLORS: Record<TasteDomain, string> = {
   Design: T.signalRed,
+  Atmosphere: T.pantonOrange,
   Character: T.pantonViolet,
   Service: T.amber,
-  Food: T.royerePink,
-  Location: T.verde,
+  FoodDrink: T.royerePink,
+  Setting: T.verde,
   Wellness: T.chromeYellow,
-  Rhythm: T.pantonOrange,
-  CulturalEngagement: T.ghost,
+  Sustainability: T.ghost,
 };
 
 export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
   Design: 'design',
+  Atmosphere: 'discover',
   Character: 'character',
-  Food: 'food',
-  Location: 'location',
   Service: 'service',
+  FoodDrink: 'food',
+  Setting: 'location',
   Wellness: 'wellness',
-  Rhythm: 'plan',
-  CulturalEngagement: 'discover',
+  Sustainability: 'plan',
 };
 
 // Rating system
@@ -89,13 +89,31 @@ export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string;
   manual: { color: T.ink, bg: INK['06'], icon: 'manual', label: 'Added' },
 };
 
-export type TasteDomain = 'Design' | 'Character' | 'Service' | 'Food' | 'Location' | 'Wellness' | 'Rhythm' | 'CulturalEngagement';
+/**
+ * Taste Taxonomy v2
+ *
+ * 6 Taste Domains — rich signal-to-signal matching dimensions:
+ *   Design, Atmosphere, Character, Service, FoodDrink, Setting
+ *
+ * 2 Preference Dimensions — weighted checklists with thinner taste spaces:
+ *   Wellness, Sustainability
+ */
+export type TasteDomain = 'Design' | 'Atmosphere' | 'Character' | 'Service' | 'FoodDrink' | 'Setting' | 'Wellness' | 'Sustainability';
 
-/** The original 6 domains (for backward-compat code that iterates over legacy data) */
-export const LEGACY_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness'];
+/** The original 8 domain names from v1 ontology (for backward-compat / migration code) */
+export const LEGACY_DOMAINS_V1: string[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
 
-/** All 8 taste domains in the expanded ontology */
-export const ALL_TASTE_DOMAINS: TasteDomain[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
+/** 6 core taste domains (rich signal-to-signal matching) */
+export const CORE_TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
+
+/** 2 preference dimensions (weighted checklist, lighter embedding treatment) */
+export const PREFERENCE_DIMENSIONS: TasteDomain[] = ['Wellness', 'Sustainability'];
+
+/** All 8 dimensions (6 taste domains + 2 preference dimensions) */
+export const ALL_TASTE_DOMAINS: TasteDomain[] = [...CORE_TASTE_DOMAINS, ...PREFERENCE_DIMENSIONS];
+
+/** @deprecated Use LEGACY_DOMAINS_V1 */
+export const LEGACY_DOMAINS: TasteDomain[] = CORE_TASTE_DOMAINS;
 
 export type TasteProfile = Record<TasteDomain, number>;
 
@@ -157,7 +175,7 @@ export interface SustainabilityProfile {
   willingnessToPayPremium: number; // 0-1
 }
 
-// ─── Heritage Data (from pipeline heritage_analysis stage) ───
+// ─── Heritage Data (from pipeline character_analysis stage) ───
 
 export interface HeritageData {
   architect?: string;
@@ -168,7 +186,7 @@ export interface HeritageData {
   restorationPhilosophy?: string;
 }
 
-// ─── Seasonality Data (from pipeline seasonality_analysis stage) ───
+// ─── Seasonality Data (from pipeline atmosphere_analysis stage) ───
 
 export interface SeasonalityData {
   peakMonths?: string[];
@@ -181,7 +199,7 @@ export interface SeasonalityData {
   recommendations?: string;
 }
 
-// ─── Competitive Context (from pipeline competitive_context stage) ───
+// ─── Competitive Context (from pipeline setting_analysis stage) ───
 
 export type CompetitivePosition =
   | 'category_leader'
@@ -625,35 +643,51 @@ export interface Collection {
 // ─── Pipeline Briefing Types ───
 
 export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
-  // Current pipeline dimension names
-  'Design Language': 'Design',
-  'Character & Identity': 'Character',
-  'Service Philosophy': 'Service',
-  'Food & Drink Identity': 'Food',
-  'Location & Context': 'Location',
-  'Wellness & Body': 'Wellness',
-  'Rhythm & Tempo': 'Rhythm',
-  'Cultural Engagement': 'CulturalEngagement',
-  // Legacy dimension names (from older pipeline runs)
-  'Design & Aesthetic': 'Design',
-  'Scale & Intimacy': 'Character',
-  'Culture & Character': 'Character',
-  'Food & Drink': 'Food',
-  'Location & Setting': 'Location',
-  'Rhythm & Pace': 'Rhythm',
-  // Additional synonyms for new domains
-  'Pace & Rhythm': 'Rhythm',
-  'Cultural Immersion': 'CulturalEngagement',
-  'Cultural & Creative': 'CulturalEngagement',
-  // Legacy signal category names (from v1 onboarding allSignals)
+  // ─── v2 Canonical Domain Names (identity mapping) ─────────────────────────
+  // Pipeline now outputs these 8 domain names directly.
   'Design': 'Design',
+  'Atmosphere': 'Atmosphere',
   'Character': 'Character',
   'Service': 'Service',
-  'Food': 'Food',
-  'Location': 'Location',
+  'FoodDrink': 'FoodDrink',
+  'Setting': 'Setting',
   'Wellness': 'Wellness',
-  'Mosaic': 'Character',          // Cross-domain "mosaic" signals → Character (identity)
-  'TasteAxes': 'Character',       // Taste axis summaries → Character
+  'Sustainability': 'Sustainability',
+
+  // ─── Legacy fallbacks (pre-v2 data still in DB) ───────────────────────────
+  'Design Language': 'Design',
+  'Architectural Style': 'Design',
+  'Material Quality': 'Design',
+  'Design & Aesthetic': 'Design',
+  'Visual Character': 'Design',
+  'Sensory Environment': 'Atmosphere',
+  'Rhythm': 'Atmosphere',
+  'Rhythm & Tempo': 'Atmosphere',
+  'Rhythm & Pace': 'Atmosphere',
+  'Pace & Rhythm': 'Atmosphere',
+  'Scale & Intimacy': 'Atmosphere',
+  'Character & Identity': 'Character',
+  'CulturalEngagement': 'Character',
+  'Cultural Engagement': 'Character',
+  'Culture & Character': 'Character',
+  'Cultural Immersion': 'Character',
+  'Cultural & Creative': 'Character',
+  'Service Philosophy': 'Service',
+  'Service Style': 'Service',
+  'Visitor Experience': 'Service',
+  'Food & Drink Identity': 'FoodDrink',
+  'Menu Personality': 'FoodDrink',
+  'Culinary Scene': 'FoodDrink',
+  'Food & Drink': 'FoodDrink',
+  'Food': 'FoodDrink',
+  'Location & Context': 'Setting',
+  'Location & Setting': 'Setting',
+  'Location': 'Setting',
+  'Wellness & Body': 'Wellness',
+
+  // Legacy onboarding category names
+  'Mosaic': 'Character',
+  'TasteAxes': 'Character',
 };
 
 export interface BriefingSignal {
@@ -694,16 +728,23 @@ export interface BriefingData {
 }
 
 export const PIPELINE_STAGES = [
+  // Layer 1 — Data Gathering
   { key: 'google_places', label: 'Places' },
   { key: 'scrape_reviews', label: 'Reviews' },
+  // Layer 2 — Broad Extraction
   { key: 'editorial_extraction', label: 'Editorial' },
   { key: 'instagram_analysis', label: 'Instagram' },
-  { key: 'menu_analysis', label: 'Menu' },
-  { key: 'award_positioning', label: 'Awards' },
-  { key: 'review_insights', label: 'Insights' },
-  { key: 'rhythm_analysis', label: 'Rhythm' },
+  { key: 'review_intelligence', label: 'Insights' },
+  // Layer 3 — Domain Deep Dives (1:1 with taste domains)
+  { key: 'design_analysis', label: 'Design' },
+  { key: 'atmosphere_analysis', label: 'Atmosphere' },
+  { key: 'character_analysis', label: 'Character' },
+  { key: 'service_analysis', label: 'Service' },
+  { key: 'fooddrink_analysis', label: 'Food & Drink' },
+  { key: 'setting_analysis', label: 'Setting' },
+  { key: 'wellness_analysis', label: 'Wellness' },
   { key: 'sustainability_analysis', label: 'Sustainability' },
-  { key: 'cultural_engagement_analysis', label: 'Culture' },
+  // Layer 4 — Aggregation
   { key: 'merge', label: 'Compose' },
   { key: 'save', label: 'Done' },
 ] as const;

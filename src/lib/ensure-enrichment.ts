@@ -106,7 +106,7 @@ export async function ensureEnrichment(
 
 /**
  * Fire-and-forget call to the Railway pipeline worker's /enrich endpoint.
- * The worker runs the full 12-stage pipeline asynchronously and writes
+ * The worker runs the full 14-stage pipeline asynchronously and writes
  * results directly to Supabase when complete.
  */
 async function triggerRailwayEnrichment(
