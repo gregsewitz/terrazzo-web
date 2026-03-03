@@ -26,25 +26,6 @@ export interface DBTrip {
 }
 
 // ═══════════════════════════════════════════
-// Lazy demo data loader
-// ═══════════════════════════════════════════
-
-let _tripDemoLoaded = false;
-
-/** Lazily load demo trip data. Safe to call multiple times. */
-export async function initTripDemoData() {
-  if (_tripDemoLoaded) return;
-  _tripDemoLoaded = true;
-  // Import the store dynamically to avoid circular dependencies
-  const { useTripStore } = await import('../tripStore');
-  const { ALL_DEMO_TRIPS } = await import('@/data/demoTrips');
-  useTripStore.setState({
-    trips: [...ALL_DEMO_TRIPS],
-    currentTripId: 'demo-stockholm-copenhagen',
-  });
-}
-
-// ═══════════════════════════════════════════
 // Core slice state
 // ═══════════════════════════════════════════
 

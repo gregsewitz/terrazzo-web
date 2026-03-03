@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createCoreSlice, type TripCoreState, type DBTrip, initTripDemoData } from './trip/tripCoreSlice';
+import { createCoreSlice, type TripCoreState, type DBTrip } from './trip/tripCoreSlice';
 import { createPlacementSlice, type TripPlacementState } from './trip/tripPlacementSlice';
 import { createDaySlice, type TripDayState } from './trip/tripDaySlice';
 import { createDreamBoardSlice, type TripDreamBoardState } from './trip/tripDreamBoardSlice';
@@ -21,4 +21,3 @@ export const useTripStore = create<TripState>((...args) => ({
 // ═══════════════════════════════════════════
 
 export type { DBTrip };
-export { initTripDemoData };

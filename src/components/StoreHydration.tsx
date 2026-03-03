@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { initSavedDemoData, useSavedStore, DBSavedPlace, DBCollection } from '@/stores/savedStore';
-import { initTripDemoData, useTripStore, DBTrip } from '@/stores/tripStore';
+import { useSavedStore, DBSavedPlace, DBCollection } from '@/stores/savedStore';
+import { useTripStore, DBTrip } from '@/stores/tripStore';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
 import type { OnboardingDepth } from '@/types';
@@ -11,7 +11,7 @@ import type { OnboardingDepth } from '@/types';
 /**
  * Auth-aware store hydration.
  * - Authenticated: load user data from database
- * - Not authenticated: load demo data (code-split)
+ * - Not authenticated: start with empty stores
  */
 export default function StoreHydration() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,11 +30,9 @@ export default function StoreHydration() {
       hydrated.current = true;
       loadUserData();
     } else {
-      // Load demo data for unauthenticated users
+      // Unauthenticated users start with empty stores
       hydrated.current = true;
       useOnboardingStore.getState().setDbHydrated(true);
-      initSavedDemoData();
-      initTripDemoData();
     }
   }, [isAuthenticated, isLoading]);
 
