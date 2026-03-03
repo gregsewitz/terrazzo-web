@@ -68,10 +68,10 @@ function PlaceDetailContent({
 
   // Variant-specific styles
   const isDesktop = variant === 'desktop';
-  const photoHeight = isDesktop ? 280 : 240;
-  const containerPadding = isDesktop ? 'px-7 pb-8' : 'px-5 pb-24';
+  const photoHeight = isDesktop ? 320 : 240;
+  const containerPadding = isDesktop ? 'px-8 pb-8' : 'px-5 pb-24';
   const containerMarginTop = isDesktop ? 'mt-5' : 'mt-4';
-  const nameFontSize = isDesktop ? 'text-[26px]' : 'text-[24px]';
+  const nameFontSize = isDesktop ? 'text-[28px]' : 'text-[24px]';
   const locationFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const akaFontSize = isDesktop ? 'text-[11px]' : 'text-[10px]';
   const descriptionFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
