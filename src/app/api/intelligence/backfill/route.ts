@@ -140,11 +140,12 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Create PlaceIntelligence records and trigger pipeline for each
+    //    Railway worker runs each job in a background thread — the /enrich call returns immediately.
+    //    We fire sequentially (each await takes ~100ms) so Railway gets a steady stream, not a burst.
     const triggered: { googlePlaceId: string; name: string; intelligenceId: string; jobId?: string }[] = [];
     const errors: { googlePlaceId: string; name: string; error: string }[] = [];
 
     for (const place of uniqueToEnrich) {
-      // Create or reset the intelligence record
       const intel = place.existingIntelId
         ? await prisma.placeIntelligence.update({
             where: { id: place.existingIntelId },
@@ -159,7 +160,6 @@ export async function POST(req: NextRequest) {
             },
           });
 
-      // Link ALL SavedPlaces with this googlePlaceId to the intelligence record
       await prisma.savedPlace.updateMany({
         where: {
           googlePlaceId: place.googlePlaceId,
@@ -168,7 +168,6 @@ export async function POST(req: NextRequest) {
         data: { placeIntelligenceId: intel.id },
       });
 
-      // Trigger Railway pipeline worker directly
       try {
         const res = await fetch(`${PIPELINE_WORKER_URL}/enrich`, {
           method: 'POST',
