@@ -135,6 +135,28 @@ export default function ProfilePage() {
 
   const [resynthesisResult, setResynthesisResult] = useState<'success' | 'error' | null>(null);
 
+  // ── Email / Connected Accounts state ─────────────────────────────────────
+  const [emailStatus, setEmailStatus] = useState<{
+    connected: boolean;
+    email?: string;
+    provider?: string;
+    connectedAt?: string;
+  } | null>(null);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done'>('idle');
+  const [scanResult, setScanResult] = useState<{ emailsFound: number; scanId: string } | null>(null);
+  const [importHistory, setImportHistory] = useState<Array<{
+    id: string;
+    type: 'email-scan' | 'url-import' | 'manual';
+    date: string;
+    title: string;
+    subtitle: string;
+    count: number;
+    status?: string;
+    scanId?: string;
+  }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const { isAuthenticated, user, signOut } = useAuth();
   const resetForRedo = useOnboardingStore(s => s.resetForRedo);
   const triggerResynthesis = useOnboardingStore(s => s.triggerResynthesis);
@@ -297,11 +319,55 @@ export default function ProfilePage() {
   }, [fetchMoreContent]);
 
   const handleSettingTap = (action: string) => {
-    if (action === 'history') {
-      router.push('/saved');
-      return;
-    }
-    setExpandedSection(expandedSection === action ? null : action);
+    const next = expandedSection === action ? null : action;
+    setExpandedSection(next);
+    // Fetch email status when accounts panel opens
+    if (next === 'accounts' && !emailStatus) fetchEmailStatus();
+    // Fetch import history when history panel opens
+    if (next === 'history' && importHistory.length === 0) fetchImportHistory();
+  };
+
+  const fetchEmailStatus = async () => {
+    setEmailLoading(true);
+    try {
+      const res = await fetch('/api/email/status');
+      const data = await res.json();
+      setEmailStatus(data);
+    } catch { setEmailStatus({ connected: false }); }
+    finally { setEmailLoading(false); }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await fetch('/api/auth/nylas/disconnect', { method: 'POST' });
+      setEmailStatus({ connected: false });
+      setScanState('idle');
+      setScanResult(null);
+    } catch (err) { console.error('Disconnect failed:', err); }
+  };
+
+  const handleScanNow = async () => {
+    setScanState('scanning');
+    try {
+      const res = await fetch('/api/email/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanType: 'full' }),
+      });
+      const data = await res.json();
+      setScanResult({ emailsFound: data.emailsFound, scanId: data.scanId });
+      setScanState('done');
+    } catch { setScanState('idle'); }
+  };
+
+  const fetchImportHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch('/api/import-history');
+      const data = await res.json();
+      setImportHistory(data.timeline || []);
+    } catch { /* ignore */ }
+    finally { setHistoryLoading(false); }
   };
 
   const handleResynthesis = async () => {
@@ -703,28 +769,130 @@ export default function ProfilePage() {
                   </div>
                   {expandedSection === 'accounts' && action === 'accounts' && (
                     <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
+                      {/* Gmail row — dynamic */}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <PerriandIcon name="email" size={12} color="var(--t-ink)" />
                           <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>Gmail</span>
                         </div>
-                        <a
-                          href="/api/auth/nylas/connect"
-                          className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                          style={{ background: 'var(--t-verde)', color: 'white', textDecoration: 'none' }}
-                        >
-                          Connect
-                        </a>
+                        {emailLoading ? (
+                          <span className="text-[10px]" style={{ color: INK['40'] }}>Checking…</span>
+                        ) : emailStatus?.connected ? (
+                          <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
+                            Connected
+                          </span>
+                        ) : (
+                          <a
+                            href="/api/auth/nylas/connect"
+                            className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                            style={{ background: 'var(--t-verde)', color: 'white', textDecoration: 'none' }}
+                          >
+                            Connect
+                          </a>
+                        )}
                       </div>
+                      {/* Connected: show email, scan, disconnect */}
+                      {emailStatus?.connected && (
+                        <div className="ml-5 mb-3">
+                          <span className="text-[10px] block mb-1.5" style={{ color: INK['50'] }}>
+                            {emailStatus.email}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {scanState === 'idle' && (
+                              <button
+                                onClick={handleScanNow}
+                                className="text-[10px] font-semibold px-2.5 py-1 rounded-full border-none cursor-pointer"
+                                style={{ background: 'var(--t-ink)', color: 'var(--t-parchment)' }}
+                              >
+                                Scan Now
+                              </button>
+                            )}
+                            {scanState === 'scanning' && (
+                              <span className="text-[10px]" style={{ color: 'var(--t-honey)' }}>Scanning…</span>
+                            )}
+                            {scanState === 'done' && scanResult && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px]" style={{ color: 'var(--t-verde)' }}>
+                                  Found {scanResult.emailsFound} emails
+                                </span>
+                                <button
+                                  onClick={() => router.push('/email/inbox')}
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full border-none cursor-pointer"
+                                  style={{ background: 'var(--t-honey)', color: 'white' }}
+                                >
+                                  Review →
+                                </button>
+                              </div>
+                            )}
+                            <button
+                              onClick={handleDisconnect}
+                              className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer"
+                              style={{ background: 'rgba(196,80,32,0.08)', color: '#c45020' }}
+                            >
+                              Disconnect
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {/* Google Maps row — static */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <PerriandIcon name="location" size={12} color="var(--t-ink)" />
+                          <PerriandIcon name="pin" size={12} color="var(--t-ink)" />
                           <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>Google Maps</span>
                         </div>
                         <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
                           Via import
                         </span>
                       </div>
+                    </div>
+                  )}
+                  {/* Import History panel */}
+                  {expandedSection === 'history' && action === 'history' && (
+                    <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
+                      {historyLoading ? (
+                        <span className="text-[10px]" style={{ color: INK['40'] }}>Loading history…</span>
+                      ) : importHistory.length === 0 ? (
+                        <span className="text-[10px]" style={{ color: INK['40'] }}>
+                          No import history yet. Connect Gmail or import from a URL to get started.
+                        </span>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {importHistory.slice(0, 15).map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between py-1.5 cursor-pointer"
+                              onClick={() => item.scanId ? router.push('/email/inbox') : undefined}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <PerriandIcon
+                                  name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'}
+                                  size={10}
+                                  color={INK['50']}
+                                />
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-medium block truncate" style={{ color: 'var(--t-ink)' }}>
+                                    {item.title}
+                                  </span>
+                                  <span className="text-[9px] block" style={{ color: INK['40'] }}>
+                                    {item.subtitle}
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: INK['30'] }}>
+                                {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                          ))}
+                          {/* Link to staging inbox */}
+                          <button
+                            onClick={() => router.push('/email/inbox')}
+                            className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left"
+                            style={{ color: 'var(--t-honey)' }}
+                          >
+                            View email reservations →
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {expandedSection === 'notifications' && action === 'notifications' && (

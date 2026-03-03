@@ -577,30 +577,9 @@ model PlaceIntelligence {
   reviewCount      Int     @default(0)
   reliabilityScore Float?  // 0-1
 
-  // Expanded ontology v2: domain metadata (1:1 with taste domains)
-  // Design
-  designProfile              Json?     // { materialPalette, spatialLanguage, designEra, architectOrDesigner, designPhilosophy }
-  // Atmosphere
-  rhythmProfile              Json?     // { tempo, dayArc, morningOrientation, spontaneityTolerance }
-  sensoryCues                Json?     // { lightQuality, soundscape, scentNotes, materialTextures }
-  seasonalityData            Json?     // { peakMonths, shoulderSeasons, quietMonths, bestMonths, crowdPatterns, recommendations }
-  // Character
-  culturalEngagementOptions  String[]  @default([]) // e.g. cooking-class, artisan-workshop
-  heritageNarrative          String?   // origin story, founding architect, heritage
-  heritageData               Json?     // { architect, yearEstablished, previousUses, significance, restorationPhilosophy }
-  // Service
-  serviceProfile             Json?     // { formalityLevel, serviceStyle, servicePhilosophy, signatureRituals }
-  // FoodDrink
-  culinaryProfile            Json?     // { philosophy, chefName, cuisineStyle, signatureDishes, beverageIdentity, diningFormat }
-  // Setting
-  competitiveContext         Json?     // { position, uniquenessScore, neighborhoodRole, neighborhoodContext, alternativeScenarios }
-  // Wellness
-  wellnessPhilosophy         Json?     // { approach, signature, emphasis }
-  wellnessFeatures           String[]  @default([]) // e.g. spa, thermal-bath, yoga
-  // Sustainability
-  sustainabilityScore        Float?    // 0-1 overall sustainability rating
-  sustainabilityFeatures     String[]  @default([]) // e.g. solar-powered, locally-sourced
-  certifications             String[]  @default([]) // e.g. LEED, Green Globe
+  // v2 metadata — only product-consumed fields survive
+  sustainabilityScore        Float?    // 0-1 overall sustainability rating (drives SustainabilityBadge)
+  accolades                  Json?     // [{ type, value, year?, category? }] — Michelin stars, Green Key, awards etc.
 
   // Sources processed
   sourcesProcessed Json?
