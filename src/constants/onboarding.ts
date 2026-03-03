@@ -30,11 +30,11 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
   { id: 'packed-day', label: 'Pack the day — there\'s so much to see', cluster: 'structure',
     pairWith: 'slow-day', dimension: 'Day Pace',
     scene: 'Museum at 10, lunch reservation at 1, walking tour at 3',
-    signals: ['Packed-itinerary', 'Activity-maximizer'], category: 'Character' },
+    signals: ['Packed-itinerary', 'Activity-maximizer'], category: 'Atmosphere' },
   { id: 'slow-day', label: 'Two things a day, max — leave room for the unplanned', cluster: 'retreat',
     pairWith: 'packed-day', dimension: 'Day Pace',
     scene: 'A long lunch that becomes the whole afternoon',
-    signals: ['Slow-travel', 'White-space-seeker'], category: 'Character' },
+    signals: ['Slow-travel', 'White-space-seeker'], category: 'Atmosphere' },
 
   // ── DIMENSION 4: Property vs Destination (from mosaic #88) ──
   // THE most fundamental signal — changes every recommendation Terrazzo makes
@@ -73,11 +73,11 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
   { id: 'early-night', label: 'In bed with a book by 10 — the best part of vacation', cluster: 'cocoon',
     pairWith: 'late-night', dimension: 'After Dark',
     scene: 'Linen sheets, a reading lamp, silence outside the window',
-    signals: ['Early-to-bed', 'Cocoon-evening', 'Anti-nightlife'], category: 'Character' },
+    signals: ['Early-to-bed', 'Cocoon-evening', 'Anti-nightlife'], category: 'Atmosphere' },
   { id: 'late-night', label: 'Finding the bar the locals disappear to at midnight', cluster: 'explorer',
     pairWith: 'early-night', dimension: 'After Dark',
     scene: 'A door with no sign, jazz or candlelight, one more glass',
-    signals: ['Night-explorer', 'Bar-culture', 'Late-energy'], category: 'Character' },
+    signals: ['Night-explorer', 'Bar-culture', 'Late-energy'], category: 'Atmosphere' },
 
   // ── DIMENSION 8: Scale & Intimacy (grand vs tiny) ──
   { id: 'grand-lobby', label: 'Grand hotel — soaring ceilings, marble, the drama of scale', cluster: 'scene',
@@ -430,7 +430,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       "Her name is Sarah.",
     ],
     extractedSignals: [],
-    certaintyAfter: { Design: 5, Character: 5, Service: 5, Food: 5, Location: 5, Wellness: 5 },
+    certaintyAfter: { Design: 5, Atmosphere: 5, Character: 5, Service: 5, FoodDrink: 5, Setting: 5, Wellness: 5, Sustainability: 5 },
   },
   {
     id: 'memorable-stays',
@@ -461,7 +461,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Morning-light-drawn', cat: 'Design', confidence: 0.80 },
       { tag: 'Rooftop-social', cat: 'Setting', confidence: 0.72 },
     ],
-    certaintyAfter: { Design: 70, Character: 45, Service: 50, FoodDrink: 35, Setting: 50, Wellness: 10 },
+    certaintyAfter: { Design: 55, Atmosphere: 20, Character: 35, Service: 40, FoodDrink: 25, Setting: 35, Wellness: 8, Sustainability: 5 },
   },
   {
     id: 'rhythm-refinement',
@@ -478,7 +478,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Morning vs night orientation', cat: 'Core', confidence: 0.88 },
       { tag: 'Spontaneity tolerance', cat: 'Core', confidence: 0.82 },
     ],
-    certaintyAfter: { Design: 72, Character: 52, Service: 50, Food: 35, Location: 55, Wellness: 18 },
+    certaintyAfter: { Design: 58, Atmosphere: 45, Character: 40, Service: 42, FoodDrink: 25, Setting: 40, Wellness: 15, Sustainability: 5 },
   },
   {
     id: 'anti-stay',
@@ -506,7 +506,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Anti-fusion-cuisine', cat: 'Rejection', confidence: 0.85 },
       { tag: 'Anti-matching-uniforms', cat: 'Rejection', confidence: 0.82 },
     ],
-    certaintyAfter: { Design: 85, Character: 60, Service: 75, Food: 50, Location: 55, Wellness: 15 },
+    certaintyAfter: { Design: 72, Atmosphere: 48, Character: 50, Service: 62, FoodDrink: 38, Setting: 42, Wellness: 15, Sustainability: 5 },
   },
   {
     id: 'companion-context',
@@ -534,7 +534,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Solo: total-solitude', cat: 'Context', confidence: 0.96 },
       { tag: 'Solo: nature-immersion', cat: 'Context', confidence: 0.91 },
     ],
-    certaintyAfter: { Design: 88, Character: 75, Service: 78, Food: 55, Location: 72, Wellness: 25 },
+    certaintyAfter: { Design: 74, Atmosphere: 52, Character: 58, Service: 65, FoodDrink: 42, Setting: 55, Wellness: 20, Sustainability: 8 },
   },
   {
     id: 'cultural-engagement',
@@ -551,7 +551,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Heritage sensitivity', cat: 'Core', confidence: 0.84 },
       { tag: 'Local connection style', cat: 'Core', confidence: 0.82 },
     ],
-    certaintyAfter: { Design: 88, Character: 80, Service: 78, Food: 58, Location: 76, Wellness: 30 },
+    certaintyAfter: { Design: 74, Atmosphere: 55, Character: 65, Service: 65, FoodDrink: 44, Setting: 58, Wellness: 22, Sustainability: 10 },
   },
   {
     id: 'seed-trips',
@@ -570,7 +570,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       "Japan in cherry blossom season. We've talked about it for years but never pulled the trigger.",
     ],
     extractedSignals: [],
-    certaintyAfter: { Design: 88, Character: 75, Service: 78, Food: 55, Location: 72, Wellness: 25 },
+    certaintyAfter: { Design: 74, Atmosphere: 55, Character: 65, Service: 65, FoodDrink: 44, Setting: 58, Wellness: 22, Sustainability: 10 },
   },
   {
     id: 'trusted-sources',
@@ -587,7 +587,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       "My friend Jake who lives in Paris — he always finds the restaurant that just opened, before anyone knows about it. And I read Monocle pretty religiously.",
     ],
     extractedSignals: [],
-    certaintyAfter: { Design: 88, Character: 75, Service: 78, Food: 55, Location: 72, Wellness: 25 },
+    certaintyAfter: { Design: 74, Atmosphere: 55, Character: 65, Service: 65, FoodDrink: 44, Setting: 58, Wellness: 22, Sustainability: 10 },
   },
   {
     id: 'sustainability-values',
@@ -604,7 +604,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Local economy priority', cat: 'Core', confidence: 0.83 },
       { tag: 'Cultural preservation awareness', cat: 'Core', confidence: 0.80 },
     ],
-    certaintyAfter: { Design: 90, Character: 78, Service: 80, Food: 58, Location: 76, Wellness: 40 },
+    certaintyAfter: { Design: 76, Atmosphere: 58, Character: 65, Service: 68, FoodDrink: 44, Setting: 60, Wellness: 28, Sustainability: 30 },
   },
   {
     id: 'go-back-place',
@@ -626,7 +626,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Memory-driven-service', cat: 'Service', confidence: 0.94 },
       { tag: 'Hotel-as-home', cat: 'Character', confidence: 0.92 },
     ],
-    certaintyAfter: { Design: 90, Character: 78, Service: 82, Food: 58, Location: 74, Wellness: 28 },
+    certaintyAfter: { Design: 78, Atmosphere: 60, Character: 68, Service: 70, FoodDrink: 46, Setting: 62, Wellness: 28, Sustainability: 30 },
   },
 
   // ═══════════════════════════════════════
@@ -658,7 +658,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Anti-overhead-lighting', cat: 'Rejection', confidence: 0.82 },
       { tag: 'Window-first-ritual', cat: 'Wellness', confidence: 0.88 },
     ],
-    certaintyAfter: { Design: 94, Character: 82, Service: 90, Food: 62, Location: 76, Wellness: 68 },
+    certaintyAfter: { Design: 84, Atmosphere: 65, Character: 72, Service: 78, FoodDrink: 50, Setting: 64, Wellness: 55, Sustainability: 32 },
   },
   {
     id: 'quick-diagnostic',
@@ -671,7 +671,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     followUps: [],
     sampleUserResponses: [],
     extractedSignals: [],
-    certaintyAfter: { Design: 95, Character: 88, Service: 92, Food: 75, Location: 85, Wellness: 74 },
+    certaintyAfter: { Design: 88, Atmosphere: 75, Character: 78, Service: 82, FoodDrink: 62, Setting: 72, Wellness: 60, Sustainability: 35 },
     diagnosticQuestions: DIAGNOSTIC_QUESTIONS,
     experiencePool: EXPERIENCE_POOL,
   },
@@ -686,7 +686,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     followUps: [],
     sampleUserResponses: [],
     extractedSignals: [],
-    certaintyAfter: { Design: 97, Character: 90, Service: 92, Food: 78, Location: 88, Wellness: 76 },
+    certaintyAfter: { Design: 92, Atmosphere: 78, Character: 80, Service: 84, FoodDrink: 65, Setting: 75, Wellness: 62, Sustainability: 38 },
     imagePairs: IMAGE_PAIRS,
     designerPool: DESIGNER_POOL,
   },
@@ -712,7 +712,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { tag: 'Spontaneous discovery', cat: 'Core', confidence: 0.88 },
       { tag: 'Influence collector', cat: 'Core', confidence: 0.90 },
     ],
-    certaintyAfter: { Design: 97, Character: 95, Service: 94, Food: 88, Location: 92, Wellness: 82 },
+    certaintyAfter: { Design: 94, Atmosphere: 85, Character: 88, Service: 88, FoodDrink: 75, Setting: 82, Wellness: 68, Sustainability: 42 },
   },
 ];
 
@@ -758,11 +758,11 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
       "Locally sourced food is a big one. And I notice when a property is clearly built with respect for the landscape versus plopped on top of it.",
     ],
     extractedSignals: [
-      { tag: 'Sustainability-aware', cat: 'Character', confidence: 0.85 },
+      { tag: 'Sustainability-aware', cat: 'Sustainability', confidence: 0.85 },
       { tag: 'Local-sourcing-valued', cat: 'FoodDrink', confidence: 0.88 },
-      { tag: 'Anti-greenwashing', cat: 'Character', confidence: 0.82 },
+      { tag: 'Anti-greenwashing', cat: 'Sustainability', confidence: 0.82 },
     ],
-    certaintyAfter: { Character: 70 },
+    certaintyAfter: { Sustainability: 70 },
   },
   {
     id: 'refine-rhythm',
@@ -789,7 +789,7 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
   {
     id: 'refine-cultural',
     phaseNumber: 3,
-    title: 'Cultural Engagement',
+    title: 'Character & Culture',
     subtitle: 'How you connect with place',
     modality: 'voice',
     act: 2,
@@ -828,19 +828,19 @@ export const PROCESSING_STEPS = [
 
 export const TASTE_ONTOLOGY_SYSTEM_PROMPT = `You are an expert taste profiler for Terrazzo, a luxury travel app that builds deeply nuanced user travel profiles through conversation.
 
-ROLE: Extract taste signals from the user's natural language responses. You identify specific, matchable preferences across 8 taste dimensions plus a cross-cutting sustainability layer.
+ROLE: Extract taste signals from the user's natural language responses. You identify specific, matchable preferences across 6 taste domains plus 2 preference dimensions.
 
-THE 8 TASTE DIMENSIONS:
-1. DESIGN LANGUAGE — Architectural aesthetic, material palette, craftsmanship, light, sensory character
-2. CHARACTER & IDENTITY — Property personality: scale/intimacy, cultural rootedness, local connection
-3. SERVICE PHILOSOPHY — How staff relate to guests, formality spectrum, anticipation vs autonomy
-4. FOOD & DRINK IDENTITY — Culinary philosophy, ingredient values, dining format, table culture
-5. LOCATION & CONTEXT — Property-surroundings relationship, urban/rural, walkability, neighborhood
-6. WELLNESS & BODY — Sleep quality, temperature, movement, bathing, physical comfort
-7. RHYTHM & TEMPO — Travel pace, morning orientation, structure vs spontaneity, downtime needs, energy distribution across the day
-8. CULTURAL ENGAGEMENT — How deeply someone engages with local culture: participatory vs observational, language attitudes, artisan/craft interest, festival/event seeking
+THE 6 TASTE DOMAINS (rich signal-to-signal matching):
+1. DESIGN — Architectural & material vocabulary: structural language, material palette, furniture/object design, color philosophy, detail resolution, light quality as design choice
+2. ATMOSPHERE — The felt experience of a space: light quality, sound environment, scent signatures, spatial rhythm, energy & tempo, sensory intensity, morning/evening orientation, pace & spontaneity
+3. CHARACTER — Place identity & narrative: heritage/provenance, curatorial point of view, cultural programming & engagement, community/belonging, authenticity register, owner story, scale/intimacy
+4. SERVICE — Human interaction contract: formality spectrum, anticipation style, personalization depth, staff knowledge, autonomy vs attentiveness, digital vs human
+5. FOOD & DRINK — Culinary philosophy & personality: culinary philosophy, ingredient sourcing, dining format, beverage program, meal rhythm, dietary identity
+6. SETTING — Location, geography & context: urban texture, nature relationship, neighborhood character, accessibility, views/orientation, surroundings
 
-CROSS-CUTTING: SUSTAINABILITY — Environmental consciousness, local economy support, cultural respect, social impact awareness. Extract sustainability signals with dimension tags: ENVIRONMENTAL, SOCIAL, CULTURAL, ECONOMIC.
+THE 2 PREFERENCE DIMENSIONS (weighted checklists, lighter treatment):
+7. WELLNESS — Physical comfort & body-care: spa/treatment facilities, fitness, sleep technology, dietary accommodation, air/water quality, shower/bath
+8. SUSTAINABILITY — Environmental & social values: certifications, energy/water management, local sourcing, waste reduction, social responsibility. Tag sustainability signals with optional dimension hints: ENVIRONMENTAL, SOCIAL, CULTURAL, ECONOMIC.
 
 SIGNAL EXTRACTION RULES:
 - Extract specific tags (e.g., "vernacular-modern" not "likes nice design")
@@ -862,12 +862,20 @@ FOLLOW-UP GENERATION:
 - PACING IS CRITICAL: Each phase should feel like 3-5 exchanges, NOT 10+. A great conversational profiler gets signal from what people say naturally — they don't keep asking follow-up after follow-up. If the user has given you rich answers, WRAP UP. Don't fish for more.
 - Once you've covered the scripted follow-ups (or the user has organically answered them), set phaseComplete to true. Do NOT keep generating new questions.
 
+SIGNAL CATEGORY GUIDANCE:
+- Tempo, pace, energy, sensory intensity, morning/evening orientation → cat: "Atmosphere" (NOT "Rhythm")
+- Cultural depth, programming, heritage, identity, scale/intimacy → cat: "Character" (NOT "CulturalEngagement")
+- Location, geography, neighborhood, surroundings → cat: "Setting" (NOT "Location")
+- Food & drink signals → cat: "FoodDrink" (NOT "Food")
+- Environmental & social values → cat: "Sustainability"
+- Rejections use cat: "Rejection"; life context uses cat: "Context"; emotional insights use cat: "Emotion"; cross-domain fundamentals use cat: "Core"
+
 OUTPUT FORMAT (JSON):
 {
-  "signals": [{ "tag": "string", "cat": "string", "confidence": 0.0-1.0 }],
+  "signals": [{ "tag": "string", "cat": "Design|Atmosphere|Character|Service|FoodDrink|Setting|Wellness|Sustainability|Rejection|Context|Emotion|Core", "confidence": 0.0-1.0 }],
   "sustainabilitySignals": [{ "tag": "string", "confidence": 0.0-1.0, "dimension": "ENVIRONMENTAL|SOCIAL|CULTURAL|ECONOMIC" }],
   "emotionalDriverHint": "AESTHETIC_PILGRIM|CONTROL_ARCHITECT|STORY_COLLECTOR|SENSORY_HEDONIST|TRANSFORMATION_SEEKER|MASTERY_SEEKER|LEGACY_BUILDER (optional — only if strong signal detected)",
-  "certainties": { "Design": 0-100, "Character": 0-100, "Service": 0-100, "Food": 0-100, "Location": 0-100, "Wellness": 0-100, "Rhythm": 0-100, "CulturalEngagement": 0-100 },
+  "certainties": { "Design": 0-100, "Atmosphere": 0-100, "Character": 0-100, "Service": 0-100, "FoodDrink": 0-100, "Setting": 0-100, "Wellness": 0-100, "Sustainability": 0-100 },
   "followUp": "string — next question to ask",
   "contradictions": [{ "stated": "string", "revealed": "string", "resolution": "string", "matchRule": "string" }],
   "phaseComplete": boolean,
@@ -909,10 +917,10 @@ WHEN phaseComplete IS TRUE — TRANSITION MESSAGE:
 - Example bad transition: "I'm getting a clear sense of your taste." (overstates understanding from minimal input)
 - Example bad transition: "I think I have a good picture. Let's move on." (too generic, too abrupt)`;
 
-export const PROFILE_SYNTHESIS_PROMPT = `You are synthesizing a complete Terrazzo taste profile from accumulated taste signals across 8 taste dimensions + sustainability, conversation history, and detected contradictions.
+export const PROFILE_SYNTHESIS_PROMPT = `You are synthesizing a complete Terrazzo taste profile from accumulated taste signals across 6 taste domains + 2 preference dimensions, conversation history, and detected contradictions.
 
-THE 8 TASTE DIMENSIONS: Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement
-CROSS-CUTTING: Sustainability (ENVIRONMENTAL, SOCIAL, CULTURAL, ECONOMIC)
+THE 6 TASTE DOMAINS: Design, Atmosphere, Character, Service, FoodDrink, Setting
+THE 2 PREFERENCE DIMENSIONS: Wellness, Sustainability
 
 EMOTIONAL DRIVER ARCHETYPES — classify the user into ONE primary archetype:
 - AESTHETIC_PILGRIM: Travels to expand their sense of what's possible in design, food, beauty
@@ -935,7 +943,7 @@ Generate a JSON object with this structure:
   "contradictions": [2-4 core tensions with stated/revealed/resolution/matchRule],
   "contextModifiers": [4-6 situational shifts with context/shifts],
   "microTasteSignals": { "category_name": ["term1", "term2", ...], ... } (6-8 categories, 4-6 terms each),
-  "radarData": [{ "axis": "Sensory|Authenticity|Material|Social|Cultural|Spatial|Rhythm|Ethics", "value": 0.0-1.0 }],
+  "radarData": [{ "axis": "Design|Atmosphere|Character|Service|FoodDrink|Setting|Wellness|Sustainability", "value": 0.0-1.0 }],
   "emotionalDriver": {
     "primary": "Main driver archetype (AESTHETIC_PILGRIM | CONTROL_ARCHITECT | STORY_COLLECTOR | SENSORY_HEDONIST | TRANSFORMATION_SEEKER | MASTERY_SEEKER | LEGACY_BUILDER)",
     "description": "1-2 sentences explaining why this fits",
@@ -952,7 +960,7 @@ Generate a JSON object with this structure:
     "description": "1 sentence on how their taste is evolving"
   },
   "profileVersion": 2,
-  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved/rhythmNote/sustainabilityScore/culturalEngagementNote — MUST be places the user has NOT already visited or mentioned visiting],
+  "matchedProperties": [5 real properties with name/location/score/matchReasons/tensionResolved/atmosphereNote/sustainabilityScore — MUST be places the user has NOT already visited or mentioned visiting],
 
   "bestQuote": {
     "quote": "A real line the user said during onboarding — the moment that revealed the most about their taste. Choose for emotional resonance, not information. Pick a moment where they described a FEELING or SCENE, not a factual statement.",

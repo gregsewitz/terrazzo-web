@@ -70,23 +70,25 @@ export const TASTE_PROFILE: TasteProfile = {
     { context: "Summer", shifts: "Indoor-outdoor flow, open air, terrace dining, natural pool." },
   ],
   microTasteSignals: {
-    "Design Language": ["Neo-rustic refined", "Vernacular modern", "Curated density", "Anti-performative", "Wabi-sabi warmth", "Raw stone (warm)", "Artisan ceramics", "Morning light (golden)"],
-    "Character & Identity": ["Intimate-under-20", "Staff-knows-your-name", "Communal-table-seeker", "Cultural-immersion-seeker", "Ceremony-curious", "Artisan-economy-supporter", "Anti-mega-resort", "Anti-tourist-version"],
-    "Service Philosophy": ["Staff-as-host", "Initiative without intrusion", "Memory-driven", "Owner-operated", "Anti-butler"],
-    "Food & Drink": ["Farm-to-table-driven", "Communal dinner (long table)", "Aperitivo culture", "Natural wine devotee", "Breakfast-sacred"],
-    "Location & Context": ["Village-scale", "Walkable radius", "Courtyard-centered", "Indoor-outdoor flow", "Hotel-as-destination"],
-    "Wellness & Body": ["Temperature-precise", "Natural pool preference", "Fresh-air-obsessive", "Sleep-darkness-critical", "Barefoot preference"],
+    "Design": ["Neo-rustic refined", "Vernacular modern", "Curated density", "Anti-performative", "Wabi-sabi warmth", "Raw stone (warm)", "Artisan ceramics", "Morning light (golden)"],
+    "Atmosphere": ["Intimate-under-20", "Communal-table-seeker", "Warm chaos welcomed", "Slow morning energy", "Quiet-after-dark", "Ceremony-curious", "Anti-mega-resort"],
+    "Character": ["Staff-knows-your-name", "Cultural-immersion-seeker", "Artisan-economy-supporter", "Anti-tourist-version", "Owner-story-matters", "Place-has-a-point-of-view"],
+    "Service": ["Staff-as-host", "Initiative without intrusion", "Memory-driven", "Owner-operated", "Anti-butler"],
+    "FoodDrink": ["Farm-to-table-driven", "Communal dinner (long table)", "Aperitivo culture", "Natural wine devotee", "Breakfast-sacred"],
+    "Setting": ["Village-scale", "Walkable radius", "Courtyard-centered", "Indoor-outdoor flow", "Hotel-as-destination"],
+    "Wellness": ["Temperature-precise", "Natural pool preference", "Fresh-air-obsessive", "Sleep-darkness-critical", "Barefoot preference"],
+    "Sustainability": ["Artisan-economy-supporter", "Local-supply-chain", "Anti-greenwash", "Seasonal-only-menu", "Adaptive-reuse-architecture"],
     "Rejection": ["Anti-Instagram aesthetic", "Anti-scripted service", "Anti-resort pool", "Anti-QR-code dining", "Anti-marble-lobby"],
   },
   radarData: [
-    { axis: "Sensory", value: 0.92 },
-    { axis: "Authenticity", value: 0.95 },
-    { axis: "Material", value: 0.88 },
-    { axis: "Social", value: 0.72 },
-    { axis: "Cultural", value: 0.80 },
-    { axis: "Spatial", value: 0.85 },
-    { axis: "Rhythm", value: 0.78 },
-    { axis: "Ethics", value: 0.65 },
+    { axis: "Design", value: 0.92 },
+    { axis: "Atmosphere", value: 0.78 },
+    { axis: "Character", value: 0.95 },
+    { axis: "Service", value: 0.88 },
+    { axis: "FoodDrink", value: 0.80 },
+    { axis: "Setting", value: 0.85 },
+    { axis: "Wellness", value: 0.72 },
+    { axis: "Sustainability", value: 0.65 },
   ],
   matchedProperties: [
     {
@@ -127,35 +129,31 @@ export const WRAPPED = {
   rarestPercent: 4,
 };
 
-// Dimension colors for profile deep-dive sections
+// Domain colors for profile deep-dive sections (muted earth-tone variants)
 // NOTE: These are intentionally different from DOMAIN_COLORS in types/index.ts —
-// those map the 6 TasteDomain keys (Design, Character, etc.) to vibrant brand colors.
-// These map the full dimension names to muted earth-tone variants for profile UI.
+// those map the TasteDomain keys to vibrant brand colors for UI accents.
+// These map to muted earth-tones for profile section backgrounds.
 export const DIMENSION_COLORS: Record<string, string> = {
-  "Design Language": "#8b6b4a",
-  "Sensory Environment": "#a06830",
-  "Character & Identity": "#4a6741",
-  "Service Philosophy": "#6b8b4a",
-  "Food & Drink Identity": "#8b4a4a",
-  "Food & Drink": "#8b4a4a",
-  "Location & Context": "#4a6b8b",
-  "Wellness & Body": "#6b6b4a",
+  "Design": "#8b6b4a",
+  "Atmosphere": "#a06830",
+  "Character": "#4a6741",
+  "Service": "#6b8b4a",
+  "FoodDrink": "#8b4a4a",
+  "Setting": "#4a6b8b",
+  "Wellness": "#6b6b4a",
   "Sustainability": "#4a7a8b",
-  // Legacy dimension names
-  "Rhythm & Tempo": "#a06830",
-  "Cultural Engagement": "#4a6741",
   "Rejection": "#8b4a4a",
 };
 
 export const AXIS_COLORS: Record<string, string> = {
-  Sensory: T.honey,
-  Authenticity: T.signalRed,
-  Material: T.chromeYellow,
-  Social: T.pantonOrange,
-  Cultural: T.pantonViolet,
-  Spatial: T.verde,
-  Rhythm: T.pantonOrange,
-  Ethics: T.ghost,
+  Design: T.honey,
+  Atmosphere: T.pantonOrange,
+  Character: T.signalRed,
+  Service: T.chromeYellow,
+  FoodDrink: T.pantonViolet,
+  Setting: T.verde,
+  Wellness: T.pantonOrange,
+  Sustainability: T.ghost,
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {

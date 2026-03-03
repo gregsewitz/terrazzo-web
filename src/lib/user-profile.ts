@@ -5,23 +5,14 @@
 import { NextRequest } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste-match';
-import type { TasteProfile } from '@/types';
+import type { TasteProfile, TasteDomain } from '@/types';
+import { ALL_TASTE_DOMAINS } from '@/types';
 
-/** Radar axis → TasteProfile domain mapping */
-const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
-  Sensory: 'Atmosphere',
-  Material: 'Design',
-  Authenticity: 'Character',
-  Social: 'Service',
-  Cultural: 'Character',
-  Spatial: 'Setting',
-  Rhythm: 'Atmosphere',
-  Ethics: 'Sustainability',
-};
+const VALID_DOMAINS = new Set<string>(ALL_TASTE_DOMAINS);
 
 /**
  * Convert a raw tasteProfile JSON (with radarData) into a flat TasteProfile.
- * Usable from any server context — no request/auth needed.
+ * radarData axes are v2 domain names (Design, Atmosphere, etc.) directly.
  */
 export function parseTasteProfile(raw: unknown): TasteProfile {
   const tp = raw as { radarData?: { axis: string; value: number }[] } | null;
@@ -29,9 +20,8 @@ export function parseTasteProfile(raw: unknown): TasteProfile {
 
   const result: TasteProfile = { ...DEFAULT_USER_PROFILE };
   for (const r of tp.radarData) {
-    const domain = RADAR_TO_DOMAIN[r.axis];
-    if (domain) {
-      result[domain] = Math.max(result[domain], r.value);
+    if (VALID_DOMAINS.has(r.axis)) {
+      result[r.axis as TasteDomain] = Math.max(result[r.axis as TasteDomain], r.value);
     }
   }
   return result;

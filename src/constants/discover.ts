@@ -113,7 +113,7 @@ export interface DeepMatch {
 export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
   {
     signal: "morning light (golden)",
-    signalDomain: "Design Language",
+    signalDomain: "Design",
     place: "Masseria Moroseta",
     location: "Puglia, Italy",
     score: 97,
@@ -122,7 +122,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
   },
   {
     signal: "initiative without intrusion",
-    signalDomain: "Service Philosophy",
+    signalDomain: "Service",
     place: "Hoshinoya Kyoto",
     location: "Kyoto, Japan",
     score: 89,
@@ -131,7 +131,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
   },
   {
     signal: "communal dinner (long table)",
-    signalDomain: "Food & Drink",
+    signalDomain: "FoodDrink",
     place: "Forestis",
     location: "Dolomites, Italy",
     score: 94,
@@ -200,7 +200,7 @@ export const WEEKLY_COLLECTION = {
       location: "Puglia, Italy",
       score: 97,
       signals: ["Vernacular modern", "Artisan ceramics", "Morning light"],
-      signalDomain: "Design Language",
+      signalDomain: "Design",
       note: "A white masseria where the architecture IS the experience — every surface is hand-finished local tufa",
     },
     {
@@ -208,7 +208,7 @@ export const WEEKLY_COLLECTION = {
       location: "Dolomites, Italy",
       score: 94,
       signals: ["Neo-rustic refined", "Staff-as-host", "Fresh-air-obsessive"],
-      signalDomain: "Design Language",
+      signalDomain: "Design",
       note: "Built into the mountain at 1,800m. Larch wood, floor-to-ceiling glass, and air that tastes like pine",
     },
     {
@@ -216,7 +216,7 @@ export const WEEKLY_COLLECTION = {
       location: "Stockholm, Sweden",
       score: 92,
       signals: ["Curated density", "Domestic atmosphere", "Owner-operated"],
-      signalDomain: "Character & Identity",
+      signalDomain: "Character",
       note: "A townhouse that feels like staying at a brilliantly stylish friend's home — 12 rooms, no lobby",
     },
     {
@@ -224,7 +224,7 @@ export const WEEKLY_COLLECTION = {
       location: "Kyoto, Japan",
       score: 89,
       signals: ["Guided ritual", "Spatial precision", "Memory-driven"],
-      signalDomain: "Service Philosophy",
+      signalDomain: "Service",
       note: "Accessible only by boat. Rooms designed around the river sounds. Service remembers everything",
     },
     {
@@ -232,7 +232,7 @@ export const WEEKLY_COLLECTION = {
       location: "Mallorca, Spain",
       score: 87,
       signals: ["Natural pool", "Courtyard-centered", "Village-scale"],
-      signalDomain: "Location & Context",
+      signalDomain: "Setting",
       note: "A 17th-century estate woven into Santanyí village — the natural pool is carved from the original cistern",
     },
   ] as CollectionPlace[],
@@ -244,11 +244,11 @@ export const STRETCH_PICK = {
   location: "Atxondo, Basque Country",
   score: 74,
   type: "restaurant",
-  strongAxis: "Sensory",
+  strongAxis: "FoodDrink",
   strongScore: 97,
-  weakAxis: "Social",
+  weakAxis: "Atmosphere",
   weakScore: 28,
-  why: "Your Sensory axis is 85% but this could crack it wide open. Etxebarri is a single-minded obsession with fire — every course, including dessert, touches the grill. It's the kind of place that permanently recalibrates what you think flavor can be.",
+  why: "Your FoodDrink axis is 85% but this could crack it wide open. Etxebarri is a single-minded obsession with fire — every course, including dessert, touches the grill. It's the kind of place that permanently recalibrates what you think flavor can be.",
   tension: "It breaks your 'urban-walkable' signal (it's a 40-minute drive into the Basque hills) but the valley setting and zero pretension create the intimacy your profile craves.",
 };
 
@@ -305,11 +305,11 @@ export const DEEP_MATCH: DeepMatch = {
   score: 97,
   headline: "This place was made for the way you travel.",
   signalBreakdown: [
-    { signal: "Vernacular modern", domain: "Design Language", strength: 98, note: "Local tufa stone, contemporary proportions — architecture rooted in place" },
-    { signal: "Communal dinner", domain: "Food & Drink", strength: 95, note: "One long table, farm-sourced menu, everyone eats together" },
-    { signal: "Morning light (golden)", domain: "Design Language", strength: 97, note: "East-facing rooms, the stone glows amber at breakfast" },
-    { signal: "Owner-operated", domain: "Service Philosophy", strength: 94, note: "The owner greets you. Staff are neighbors. Nothing is scripted." },
-    { signal: "Sleep-darkness-critical", domain: "Wellness & Body", strength: 90, note: "Heavy shutters, no light pollution — the Puglian countryside after dark" },
+    { signal: "Vernacular modern", domain: "Design", strength: 98, note: "Local tufa stone, contemporary proportions — architecture rooted in place" },
+    { signal: "Communal dinner", domain: "FoodDrink", strength: 95, note: "One long table, farm-sourced menu, everyone eats together" },
+    { signal: "Morning light (golden)", domain: "Design", strength: 97, note: "East-facing rooms, the stone glows amber at breakfast" },
+    { signal: "Owner-operated", domain: "Service", strength: 94, note: "The owner greets you. Staff are neighbors. Nothing is scripted." },
+    { signal: "Sleep-darkness-critical", domain: "Wellness", strength: 90, note: "Heavy shutters, no light pollution — the Puglian countryside after dark" },
   ],
   tensionResolved: "Your contradiction of wanting quiet rooms AND lively dining? Here they're literally separated by architecture — stone walls for sleep, open-air courtyard for dinner.",
 };

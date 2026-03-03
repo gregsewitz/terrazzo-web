@@ -4,30 +4,20 @@ import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
 import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match';
-import type { TasteProfile, GeneratedTasteProfile } from '@/types';
+import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
+import { ALL_TASTE_DOMAINS } from '@/types';
 import type { User } from '@prisma/client';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Same radar→domain mapping used by the discover route */
-const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
-  Sensory: 'Atmosphere',
-  Material: 'Design',
-  Authenticity: 'Character',
-  Social: 'Service',
-  Cultural: 'Character',
-  Spatial: 'Setting',
-  Rhythm: 'Atmosphere',
-  Ethics: 'Sustainability',
-};
+const VALID_DOMAINS = new Set<string>(ALL_TASTE_DOMAINS);
 
 /** Build a TasteProfile from the stored GeneratedTasteProfile (radarData). */
 function buildTasteProfile(generated: GeneratedTasteProfile): TasteProfile {
   const profile: TasteProfile = { ...DEFAULT_USER_PROFILE };
   for (const r of generated.radarData || []) {
-    const domain = RADAR_TO_DOMAIN[r.axis];
-    if (domain) {
-      profile[domain] = Math.max(profile[domain], r.value);
+    if (VALID_DOMAINS.has(r.axis)) {
+      profile[r.axis as TasteDomain] = Math.max(profile[r.axis as TasteDomain], r.value);
     }
   }
   return profile;

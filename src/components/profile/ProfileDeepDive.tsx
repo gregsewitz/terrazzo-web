@@ -211,7 +211,7 @@ function DesignLanguageSection({ profile, gp, mosaicAxes }: { profile: ProfileSh
     <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
       <FadeInSection>
         <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8b6b4a', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Design Language
+          Your Design Eye
         </div>
         {insight?.headline && (
           <h3 className="text-[16px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
@@ -450,8 +450,8 @@ function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null }) {
 // DIMENSIONS — 6 domain certainty overview
 // ═══════════════════════════════════════════
 const DIMENSION_CERTAINTIES: Record<string, number> = {
-  "Design Language": 92, "Character & Identity": 85, "Service Philosophy": 88,
-  "Food & Drink": 90, "Location & Context": 82, "Wellness & Body": 72,
+  "Design": 92, "Atmosphere": 78, "Character": 85, "Service": 88,
+  "FoodDrink": 90, "Setting": 82, "Wellness": 72, "Sustainability": 65,
 };
 
 function DimensionBar({ certainty, color }: { certainty: number; color: string }) {

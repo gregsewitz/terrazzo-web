@@ -6,8 +6,9 @@ import type {
   TasteSignal, TasteContradiction, ConversationMessage,
   GeneratedTasteProfile, TrustedSource, GoBackPlace,
   SeedTripInput, OnboardingLifeContext, OnboardingDepth,
-  SustainabilitySignal,
+  SustainabilitySignal, TasteDomain,
 } from '@/types';
+import { ALL_TASTE_DOMAINS, CORE_TASTE_DOMAINS, PREFERENCE_DIMENSIONS } from '@/types';
 import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
 import { apiFetch } from '@/lib/api-client';
 import { dbSave, flushSaves } from '@/lib/db-save';
@@ -119,10 +120,13 @@ interface OnboardingState {
   setDbHydrated: (hydrated: boolean) => void;
 }
 
-const INITIAL_CERTAINTIES: Record<string, number> = {
-  Design: 5, Character: 5, Service: 5, Food: 5, Location: 5, Wellness: 5,
-  Rhythm: 5, CulturalEngagement: 5,
+const INITIAL_CERTAINTIES: Record<TasteDomain, number> = {
+  // 6 Taste Domains — start low, rich signal space to fill
+  Design: 5, Atmosphere: 5, Character: 5, Service: 5, FoodDrink: 5, Setting: 5,
+  // 2 Preference Dimensions — start slightly higher, thinner signal space
+  Wellness: 10, Sustainability: 10,
 };
+
 
 const INITIAL_LIFE_CONTEXT: OnboardingLifeContext = {
   primaryCompanions: [],
@@ -307,6 +311,7 @@ export const useOnboardingStore = create<OnboardingState>()(
     }),
     {
       name: 'terrazzo-onboarding', // localStorage key
+      version: 2, // v2 taxonomy migration
       storage: createJSONStorage(() => localStorage),
       skipHydration: true, // hydrate manually to avoid SSR issues
       // Don't persist actions or transient UI state
@@ -355,5 +360,9 @@ export const selectCurrentPhaseId = (state: OnboardingState) =>
 export const selectIsAct1Complete = (state: OnboardingState) =>
   ACT_1_PHASE_IDS.every((id) => state.completedPhaseIds.includes(id));
 
-export const selectProfileIsComplete = (state: OnboardingState) =>
-  Object.values(state.certainties).every((v) => v >= 70);
+export const selectProfileIsComplete = (state: OnboardingState) => {
+  const c = state.certainties;
+  const coreComplete = CORE_TASTE_DOMAINS.every(d => (c[d] ?? 0) >= 70);
+  const prefComplete = PREFERENCE_DIMENSIONS.every(d => (c[d] ?? 0) >= 50);
+  return coreComplete && prefComplete;
+};

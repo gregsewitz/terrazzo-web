@@ -24,7 +24,8 @@ import {
   scoreAllCandidates,
   scoreWithVectors,
 } from '../discover-candidates';
-import type { TasteProfile, TasteContradiction } from '@/types';
+import type { TasteProfile, TasteDomain, TasteContradiction } from '@/types';
+import { ALL_TASTE_DOMAINS } from '@/types';
 import { DEFAULT_USER_PROFILE } from '../taste-match';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -138,16 +139,11 @@ export async function evaluateUser(userId: string): Promise<EvaluationResult> {
   const userContradictions: TasteContradiction[] = profile.contradictions || [];
   const userTasteProfile: TasteProfile = { ...DEFAULT_USER_PROFILE };
 
-  // Map radar data to taste profile
-  const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
-    Sensory: 'Atmosphere', Material: 'Design', Authenticity: 'Character',
-    Social: 'Service', Cultural: 'Character', Spatial: 'Setting',
-    Rhythm: 'Atmosphere', Ethics: 'Sustainability',
-  };
+  // Map radar data to taste profile (axes are v2 domain names directly)
+  const validDomains = new Set<string>(ALL_TASTE_DOMAINS);
   for (const r of profile.radarData || []) {
-    const domain = RADAR_TO_DOMAIN[r.axis];
-    if (domain) {
-      userTasteProfile[domain] = Math.max(userTasteProfile[domain], r.value);
+    if (validDomains.has(r.axis)) {
+      userTasteProfile[r.axis as TasteDomain] = Math.max(userTasteProfile[r.axis as TasteDomain], r.value);
     }
   }
 

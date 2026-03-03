@@ -632,8 +632,6 @@ export interface Collection {
 // ─── Pipeline Briefing Types ───
 
 export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
-  // ─── v2 Canonical Domain Names (identity mapping) ─────────────────────────
-  // Pipeline now outputs these 8 domain names directly.
   'Design': 'Design',
   'Atmosphere': 'Atmosphere',
   'Character': 'Character',
@@ -642,41 +640,6 @@ export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
   'Setting': 'Setting',
   'Wellness': 'Wellness',
   'Sustainability': 'Sustainability',
-
-  // ─── Legacy fallbacks (pre-v2 data still in DB) ───────────────────────────
-  'Design Language': 'Design',
-  'Architectural Style': 'Design',
-  'Material Quality': 'Design',
-  'Design & Aesthetic': 'Design',
-  'Visual Character': 'Design',
-  'Sensory Environment': 'Atmosphere',
-  'Rhythm': 'Atmosphere',
-  'Rhythm & Tempo': 'Atmosphere',
-  'Rhythm & Pace': 'Atmosphere',
-  'Pace & Rhythm': 'Atmosphere',
-  'Scale & Intimacy': 'Atmosphere',
-  'Character & Identity': 'Character',
-  'CulturalEngagement': 'Character',
-  'Cultural Engagement': 'Character',
-  'Culture & Character': 'Character',
-  'Cultural Immersion': 'Character',
-  'Cultural & Creative': 'Character',
-  'Service Philosophy': 'Service',
-  'Service Style': 'Service',
-  'Visitor Experience': 'Service',
-  'Food & Drink Identity': 'FoodDrink',
-  'Menu Personality': 'FoodDrink',
-  'Culinary Scene': 'FoodDrink',
-  'Food & Drink': 'FoodDrink',
-  'Food': 'FoodDrink',
-  'Location & Context': 'Setting',
-  'Location & Setting': 'Setting',
-  'Location': 'Setting',
-  'Wellness & Body': 'Wellness',
-
-  // Legacy onboarding category names
-  'Mosaic': 'Character',
-  'TasteAxes': 'Character',
 };
 
 export interface BriefingSignal {

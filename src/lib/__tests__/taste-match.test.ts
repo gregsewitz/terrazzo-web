@@ -23,10 +23,10 @@ const userProfile: TasteProfile = {
 };
 
 const strongDesignSignals = [
-  { dimension: 'Design Language', confidence: 0.95, signal: 'minimalist' },
-  { dimension: 'Design Language', confidence: 0.9, signal: 'brutalist' },
-  { dimension: 'Design Language', confidence: 0.85, signal: 'concrete' },
-  { dimension: 'Character & Identity', confidence: 0.8, signal: 'intimate' },
+  { dimension: 'Design', confidence: 0.95, signal: 'minimalist' },
+  { dimension: 'Design', confidence: 0.9, signal: 'brutalist' },
+  { dimension: 'Design', confidence: 0.85, signal: 'concrete' },
+  { dimension: 'Character', confidence: 0.8, signal: 'intimate' },
 ];
 
 const placeProfileHigh: TasteProfile = {
@@ -62,7 +62,7 @@ describe('computeMatchFromSignals', () => {
 
   it('returns 50 for domains with no signals (neutral)', () => {
     const result = computeMatchFromSignals(
-      [{ dimension: 'Design Language', confidence: 0.9, signal: 'test' }],
+      [{ dimension: 'Design', confidence: 0.9, signal: 'test' }],
       [],
       userProfile,
     );
@@ -73,12 +73,12 @@ describe('computeMatchFromSignals', () => {
 
   it('scores higher with more confident signals', () => {
     const highConf = [
-      { dimension: 'Design Language', confidence: 0.95, signal: 'a' },
-      { dimension: 'Design Language', confidence: 0.9, signal: 'b' },
+      { dimension: 'Design', confidence: 0.95, signal: 'a' },
+      { dimension: 'Design', confidence: 0.9, signal: 'b' },
     ];
     const lowConf = [
-      { dimension: 'Design Language', confidence: 0.3, signal: 'a' },
-      { dimension: 'Design Language', confidence: 0.2, signal: 'b' },
+      { dimension: 'Design', confidence: 0.3, signal: 'a' },
+      { dimension: 'Design', confidence: 0.2, signal: 'b' },
     ];
     const rHigh = computeMatchFromSignals(highConf, [], userProfile);
     const rLow = computeMatchFromSignals(lowConf, [], userProfile);
@@ -87,10 +87,10 @@ describe('computeMatchFromSignals', () => {
 
   it('applies anti-signal penalties', () => {
     const signals = [
-      { dimension: 'Design Language', confidence: 0.9, signal: 'test' },
+      { dimension: 'Design', confidence: 0.9, signal: 'test' },
     ];
     const antiSignals = [
-      { dimension: 'Design Language', confidence: 1.0, signal: 'anti-test' },
+      { dimension: 'Design', confidence: 1.0, signal: 'anti-test' },
     ];
     const withAnti = computeMatchFromSignals(signals, antiSignals, userProfile);
     const withoutAnti = computeMatchFromSignals(signals, [], userProfile);
@@ -98,8 +98,8 @@ describe('computeMatchFromSignals', () => {
   });
 
   it('boosts corroborated signals', () => {
-    const plain = [{ dimension: 'Design Language', confidence: 0.8, signal: 'a', review_corroborated: false }];
-    const corr = [{ dimension: 'Design Language', confidence: 0.8, signal: 'a', review_corroborated: true }];
+    const plain = [{ dimension: 'Design', confidence: 0.8, signal: 'a', review_corroborated: false }];
+    const corr = [{ dimension: 'Design', confidence: 0.8, signal: 'a', review_corroborated: true }];
     const rPlain = computeMatchFromSignals(plain, [], userProfile);
     const rCorr = computeMatchFromSignals(corr, [], userProfile);
     expect(rCorr.breakdown.Design).toBeGreaterThanOrEqual(rPlain.breakdown.Design);
@@ -113,7 +113,7 @@ describe('computeMatchFromSignals', () => {
 
   it('caps confidence at 1.0 even with corroboration boost', () => {
     const signals = [
-      { dimension: 'Design Language', confidence: 0.99, signal: 'a', review_corroborated: true },
+      { dimension: 'Design', confidence: 0.99, signal: 'a', review_corroborated: true },
     ];
     const result = computeMatchFromSignals(signals, [], userProfile);
     // With 0.99 + 0.05 boost = 1.04 → should be capped at 1.0

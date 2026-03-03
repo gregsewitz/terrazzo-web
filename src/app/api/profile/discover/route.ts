@@ -8,10 +8,12 @@ import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
 import type {
   TasteProfile,
+  TasteDomain,
   TasteContradiction,
   GeneratedTasteProfile,
   OnboardingLifeContext,
 } from '@/types';
+import { ALL_TASTE_DOMAINS } from '@/types';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste-match';
 
 // RAG-grounded discover modules
@@ -43,7 +45,7 @@ You must return valid JSON matching this EXACT structure:
   "becauseYouCards": [
     {
       "signal": "a specific micro-signal from their profile",
-      "signalDomain": "Design Language | Character & Identity | Service Philosophy | Food & Drink | Location & Context | Wellness & Body",
+      "signalDomain": "Design | Atmosphere | Character | Service | FoodDrink | Setting | Wellness | Sustainability",
       "place": "Real place name",
       "location": "City, Country",
       "score": 85-99,
@@ -339,22 +341,12 @@ async function generateGroundedFeed(
   const userContradictions: TasteContradiction[] = userProfile.contradictions || [];
 
   // Build a TasteProfile (domain weights) from radarData
-  // Radar axes (Sensory, Material, etc.) map to domains (Design, Character, etc.)
-  const RADAR_TO_DOMAIN: Record<string, keyof TasteProfile> = {
-    Sensory: 'Atmosphere',
-    Material: 'Design',
-    Authenticity: 'Character',
-    Social: 'Service',
-    Cultural: 'Character',
-    Spatial: 'Setting',
-    Rhythm: 'Atmosphere',
-    Ethics: 'Sustainability',
-  };
+  // radarData axes are v2 domain names (Design, Atmosphere, etc.) directly
+  const validDomains = new Set<string>(ALL_TASTE_DOMAINS);
   const userTasteProfile: TasteProfile = { ...DEFAULT_USER_PROFILE };
   for (const r of userProfile.radarData || []) {
-    const domain = RADAR_TO_DOMAIN[r.axis];
-    if (domain) {
-      userTasteProfile[domain] = Math.max(userTasteProfile[domain], r.value);
+    if (validDomains.has(r.axis)) {
+      userTasteProfile[r.axis as TasteDomain] = Math.max(userTasteProfile[r.axis as TasteDomain], r.value);
     }
   }
 

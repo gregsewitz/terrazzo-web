@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     const contextMessage = `
 Synthesize a complete taste profile from the following onboarding data.
 
-TASTE SIGNALS (${tasteSignals.length} total across 8 dimensions):
+TASTE SIGNALS (${tasteSignals.length} total across 6 taste domains + 2 preference dimensions):
 ${JSON.stringify(tasteSignals, null, 2)}
 
 SUSTAINABILITY SIGNALS (${sustainabilitySignals.length} total):
@@ -86,10 +86,13 @@ ${messages.filter((m: { role: string }) => m.role === 'user').slice(0, 12).map((
 DETECTED CONTRADICTIONS:
 ${JSON.stringify(contradictions, null, 2)}
 
-FINAL CERTAINTIES (8 dimensions):
+FINAL CERTAINTIES (6 taste domains + 2 preference dimensions):
 ${JSON.stringify(certainties)}
 
-IMPORTANT: Generate the profile using all 8 taste dimensions (Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement) plus sustainability. Include radarData with 8 axes. Classify the user into one of the 7 emotional driver archetypes. Include sustainabilityProfile and tasteTrajectory in your response.
+IMPORTANT: Generate the profile using the v2 taxonomy:
+6 taste domains (Design, Atmosphere, Character, Service, FoodDrink, Setting) +
+2 preference dimensions (Wellness, Sustainability).
+Include radarData with 8 axes matching these domains. Classify the user into one of the 7 emotional driver archetypes. Include sustainabilityProfile and tasteTrajectory in your response.
 
 Return valid JSON only matching the specified schema.`;
 

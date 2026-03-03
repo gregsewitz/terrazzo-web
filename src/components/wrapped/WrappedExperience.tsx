@@ -75,7 +75,7 @@ const containerVariants = {
 function buildObservations(signals: Record<string, string[]>): string[] {
   const observations: string[] = [];
 
-  const design = signals['Design Language'];
+  const design = signals['Design'];
   if (design?.length) {
     const terms = design.slice(0, 2).map(t => t.replace(/-/g, ' ').toLowerCase());
     observations.push(
@@ -83,7 +83,7 @@ function buildObservations(signals: Record<string, string[]>): string[] {
     );
   }
 
-  const character = signals['Character & Identity'];
+  const character = signals['Character'];
   if (character?.length) {
     const term = character[0].replace(/-/g, ' ').toLowerCase();
     observations.push(
@@ -91,7 +91,7 @@ function buildObservations(signals: Record<string, string[]>): string[] {
     );
   }
 
-  const food = signals['Food & Drink'];
+  const food = signals['FoodDrink'];
   if (food?.length) {
     const term = food[0].replace(/-/g, ' ').toLowerCase();
     observations.push(
@@ -99,8 +99,8 @@ function buildObservations(signals: Record<string, string[]>): string[] {
     );
   }
 
-  const location = signals['Location & Context'];
-  if (location?.length) {
+  const setting = signals['Setting'];
+  if (setting?.length) {
     observations.push(
       `Neighborhood matters to you — you'd rather be in the right quarter of town than the right hotel.`
     );
