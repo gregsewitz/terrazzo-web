@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, memo } from 'react';
-import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType } from '@/types';
+import React, { useState, useEffect, memo } from 'react';
+import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain, REACTIONS, SOURCE_STYLES, GhostSourceType, GooglePlaceData } from '@/types';
+import { apiFetch } from '@/lib/api-client';
 import { useSavedStore } from '@/stores/savedStore';
 import { useBriefing } from '@/hooks/useBriefing';
 import { getPlaceImage } from '@/constants/placeImages';
@@ -59,6 +60,63 @@ function PlaceDetailContent({
   const { data: intelData } = useBriefing(googlePlaceId);
   const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
+  // ─── Hydrate preview places from the resolve API ───
+  // When opened from discover feed, the item only has name/location/googlePlaceId.
+  // Resolve fills in matchScore, matchBreakdown, google data, etc.
+  const [resolvedItem, setResolvedItem] = useState<ImportedPlace>(item);
+  useEffect(() => {
+    setResolvedItem(item); // reset when item changes
+    if (!googlePlaceId) return;
+    // Only resolve if the item looks under-populated (no match data, no google details)
+    const needsResolve = !item.matchScore && !item.google?.rating;
+    if (!needsResolve) return;
+
+    let cancelled = false;
+    apiFetch<{
+      googlePlaceId: string; name: string; location: string | null; type: string;
+      googleData: { address?: string | null; rating?: number | null; reviewCount?: number | null;
+        priceLevel?: string | null; hours?: string[] | null; photoUrl?: string | null;
+        website?: string | null; phone?: string | null; lat?: number | null; lng?: number | null;
+        category?: string | null };
+      matchScore: number | null; matchBreakdown: Record<string, number> | null;
+      tasteNote: string | null; intelligenceStatus: string;
+      savedPlaceId: string | null; isInLibrary: boolean;
+    }>('/api/places/resolve', {
+      method: 'POST',
+      body: JSON.stringify({ googlePlaceId, name: item.name, location: item.location }),
+    }).then(data => {
+      if (cancelled) return;
+      const g = data.googleData;
+      const priceNum = g.priceLevel ? g.priceLevel.length : undefined;
+      const google: GooglePlaceData = {
+        placeId: data.googlePlaceId,
+        address: g.address || undefined, rating: g.rating || undefined,
+        reviewCount: g.reviewCount || undefined, category: g.category || undefined,
+        priceLevel: priceNum, hours: g.hours || undefined,
+        photoUrl: g.photoUrl || undefined, website: g.website || undefined,
+        phone: g.phone || undefined, lat: g.lat || undefined, lng: g.lng || undefined,
+      };
+      setResolvedItem(prev => ({
+        ...prev,
+        matchScore: data.matchScore || prev.matchScore || 0,
+        matchBreakdown: (data.matchBreakdown || prev.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
+        tasteNote: data.tasteNote || prev.tasteNote || '',
+        google,
+        location: data.location || prev.location,
+        type: (data.type || prev.type) as ImportedPlace['type'],
+      }));
+    }).catch(err => console.error('Failed to resolve preview place:', err));
+    return () => { cancelled = true; };
+  }, [googlePlaceId, item]);
+
+  // Hydrated values — prefer resolved data over the bare-bones item
+  const hydratedMatchScore = resolvedItem.matchScore || item.matchScore || 0;
+  const hydratedBreakdown = (Object.keys(resolvedItem.matchBreakdown || {}).length > 0 ? resolvedItem.matchBreakdown : item.matchBreakdown) || ({} as ImportedPlace['matchBreakdown']);
+  const hydratedGoogle = resolvedItem.google && (resolvedItem.google as Record<string, unknown>).rating
+    ? resolvedItem.google : item.google;
+  const hydratedTasteNote = resolvedItem.tasteNote || item.tasteNote;
+  const hydratedLocation = resolvedItem.location || item.location;
+
   const handleSave = () => {
     if (!saved) {
       addPlace({ ...item, id: `saved-${Date.now()}` });
@@ -68,10 +126,10 @@ function PlaceDetailContent({
 
   // Variant-specific styles
   const isDesktop = variant === 'desktop';
-  const photoHeight = isDesktop ? 280 : 240;
-  const containerPadding = isDesktop ? 'px-7 pb-8' : 'px-5 pb-24';
+  const photoHeight = isDesktop ? 320 : 240;
+  const containerPadding = isDesktop ? 'px-8 pb-8' : 'px-5 pb-24';
   const containerMarginTop = isDesktop ? 'mt-5' : 'mt-4';
-  const nameFontSize = isDesktop ? 'text-[26px]' : 'text-[24px]';
+  const nameFontSize = isDesktop ? 'text-[28px]' : 'text-[24px]';
   const locationFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const akaFontSize = isDesktop ? 'text-[11px]' : 'text-[10px]';
   const descriptionFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
@@ -237,7 +295,7 @@ function PlaceDetailContent({
         <SafeFadeIn direction="up" distance={10} duration={0.5} delay={0.1}>
           <div className="flex items-center gap-1.5 mt-2.5 mb-4 flex-wrap">
             <span className={`${locationFontSize}`} style={{ color: INK['70'] }}>
-              {item.location} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+              {hydratedLocation} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
             </span>
             {item.alsoKnownAs && (
               <span className={`${akaFontSize}`} style={{ color: INK['70'] }}>
@@ -253,26 +311,26 @@ function PlaceDetailContent({
                 via {item.source?.name || sourceStyle.label}
               </span>
             )}
-            {item.google?.category && (
+            {hydratedGoogle?.category && (
               <span
                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
                 style={{ background: 'rgba(200,146,58,0.15)', color: '#7a5e24' }}
               >
-                {item.google.category}
+                {hydratedGoogle.category}
               </span>
             )}
-            {item.google?.rating && (
+            {hydratedGoogle?.rating && (
               <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: 'var(--t-ink)' }}>
                 <PerriandIcon name="star" size={11} color="var(--t-chrome-yellow)" />
-                {item.google.rating}
-                {item.google.reviewCount && (
-                  <span style={{ color: INK['70'] }}>({item.google.reviewCount.toLocaleString()})</span>
+                {hydratedGoogle.rating}
+                {hydratedGoogle.reviewCount && (
+                  <span style={{ color: INK['70'] }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
                 )}
               </span>
             )}
-            {item.google?.priceLevel && (
+            {hydratedGoogle?.priceLevel && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: 'var(--t-ink)' }}>
-                {'$'.repeat(item.google.priceLevel)}
+                {'$'.repeat(hydratedGoogle.priceLevel)}
               </span>
             )}
           </div>
@@ -288,8 +346,8 @@ function PlaceDetailContent({
         )}
 
         {/* Place details — tile grid */}
-        {item.google && (item.google.address || item.google.website || item.google.phone || item.google.placeId || item.google.lat) && (() => {
-          const g = item.google as Record<string, unknown> & { placeId?: string; lat?: number; lng?: number; address?: string; website?: string; phone?: string };
+        {hydratedGoogle && (hydratedGoogle.address || hydratedGoogle.website || hydratedGoogle.phone || hydratedGoogle.placeId || hydratedGoogle.lat) && (() => {
+          const g = hydratedGoogle as Record<string, unknown> & { placeId?: string; lat?: number; lng?: number; address?: string; website?: string; phone?: string };
           const mapsUrl = g.placeId
             ? `https://www.google.com/maps/place/?q=place_id:${g.placeId}`
             : g.lat && g.lng
@@ -365,11 +423,11 @@ function PlaceDetailContent({
         )}
 
         {/* Author's notes */}
-        {item.tasteNote && (
+        {hydratedTasteNote && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="mb-5" style={{ background: sourceStyle ? `${sourceStyle.color}14` : 'rgba(199,82,51,0.08)', borderLeft: `3px solid ${sourceStyle?.color || '#c75233'}`, padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
               <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>{item.source?.name ? `From ${item.source.name}` : 'Source note'}</div>
-              <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: 'var(--t-ink)' }}>{item.tasteNote}</p>
+              <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: 'var(--t-ink)' }}>{hydratedTasteNote}</p>
             </div>
           </FadeInSection>
         )}
@@ -438,13 +496,13 @@ function PlaceDetailContent({
             tabIndex={onViewBriefing ? 0 : undefined}
             onKeyDown={onViewBriefing ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewBriefing(); } } : undefined}
           >
-            <AnimatedScoreArc score={item.matchScore} size={56} color="#8a6a2a" />
+            <AnimatedScoreArc score={hydratedMatchScore} size={56} color="#8a6a2a" />
             <div className="flex-1 min-w-0">
               <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Taste match</div>
               {/* Top domain highlights — at-a-glance breakdown */}
-              {item.matchBreakdown && (() => {
+              {hydratedBreakdown && (() => {
                 const topDomains = TASTE_DOMAINS
-                  .map(d => ({ domain: d, score: item.matchBreakdown[d] ?? 0 }))
+                  .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
                   .filter(d => d.score > 0.15)
                   .sort((a, b) => b.score - a.score)
                   .slice(0, 3);
@@ -474,8 +532,8 @@ function PlaceDetailContent({
           <div className="mb-5">
             <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Taste Mosaic</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <TerrazzoMosaic profile={item.matchBreakdown} size="md" />
-              <MosaicLegend profile={item.matchBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+              <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
+              <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
             </div>
           </div>
         </FadeInSection>
