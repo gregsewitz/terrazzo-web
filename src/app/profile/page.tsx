@@ -180,8 +180,9 @@ function ProfilePageContent() {
     connectedAt?: string;
   } | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
-  const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done'>('idle');
-  const [scanResult, setScanResult] = useState<{ emailsFound: number; scanId: string } | null>(null);
+  const [scanState, setScanState] = useState<'idle' | 'scanning' | 'parsing' | 'done'>('idle');
+  const [scanResult, setScanResult] = useState<{ emailsFound: number; scanId: string; reservationsCreated?: number } | null>(null);
+  const [parseProgress, setParseProgress] = useState<{ parsed: number; total: number } | null>(null);
   const [importHistory, setImportHistory] = useState<Array<{
     id: string;
     type: 'email-scan' | 'url-import' | 'manual';
@@ -384,13 +385,57 @@ function ProfilePageContent() {
 
   const handleScanNow = async () => {
     setScanState('scanning');
+    setScanResult(null);
+    setParseProgress(null);
     try {
-      const data = await apiFetch<{ emailsFound: number; scanId: string; debug?: Record<string, unknown> }>('/api/email/scan', {
+      // Step 1: Scan for matching emails
+      const scanData = await apiFetch<{
+        emailsFound: number;
+        scanId: string;
+        messages: { id: string; subject: string }[];
+        debug?: Record<string, unknown>;
+      }>('/api/email/scan', {
         method: 'POST',
         body: JSON.stringify({ scanType: 'full', debug: true }),
       });
-      console.log('[terrazzo] Email scan result:', JSON.stringify(data, null, 2));
-      setScanResult({ emailsFound: data.emailsFound, scanId: data.scanId });
+      console.log('[terrazzo] Scan found', scanData.emailsFound, 'emails');
+
+      if (scanData.emailsFound === 0) {
+        setScanResult({ emailsFound: 0, scanId: scanData.scanId, reservationsCreated: 0 });
+        setScanState('done');
+        return;
+      }
+
+      // Step 2: Parse emails with Claude (in batches to avoid timeout)
+      setScanState('parsing');
+      setScanResult({ emailsFound: scanData.emailsFound, scanId: scanData.scanId });
+
+      const allMessageIds = scanData.messages.map(m => m.id);
+      const BATCH_SIZE = 20;
+      let totalReservations = 0;
+      let totalParsed = 0;
+
+      for (let i = 0; i < allMessageIds.length; i += BATCH_SIZE) {
+        const batch = allMessageIds.slice(i, i + BATCH_SIZE);
+        try {
+          const parseData = await apiFetch<{
+            parsed: number;
+            reservationsCreated: number;
+          }>('/api/email/parse', {
+            method: 'POST',
+            body: JSON.stringify({ scanId: scanData.scanId, messageIds: batch }),
+          });
+          totalParsed += parseData.parsed;
+          totalReservations += parseData.reservationsCreated;
+          setParseProgress({ parsed: Math.min(i + BATCH_SIZE, allMessageIds.length), total: allMessageIds.length });
+          console.log(`[terrazzo] Parsed batch ${i / BATCH_SIZE + 1}: ${parseData.reservationsCreated} reservations found`);
+        } catch (batchErr) {
+          console.error(`[terrazzo] Parse batch ${i / BATCH_SIZE + 1} failed:`, batchErr);
+        }
+      }
+
+      console.log(`[terrazzo] Parse complete: ${totalParsed} emails → ${totalReservations} reservations`);
+      setScanResult({ emailsFound: scanData.emailsFound, scanId: scanData.scanId, reservationsCreated: totalReservations });
       setScanState('done');
     } catch (err) {
       console.error('[terrazzo] Email scan failed:', err);
@@ -678,16 +723,21 @@ function ProfilePageContent() {
                             <div className="ml-5 mb-2">
                               <span className="text-[10px] block mb-2" style={{ color: INK['50'] }}>{emailStatus.email}</span>
                               <div className="flex items-center gap-2 flex-wrap mb-2">
-                                <button onClick={handleScanNow} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: '#2a7a56', color: 'white' }}>
-                                  {scanState === 'scanning' ? 'Scanning…' : scanState === 'done' ? '✓ Scanned' : 'Scan Inbox'}
+                                <button onClick={handleScanNow} disabled={scanState === 'scanning' || scanState === 'parsing'} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: '#2a7a56', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}>
+                                  {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${parseProgress ? ` ${parseProgress.parsed}/${parseProgress.total}` : '…'}` : scanState === 'done' ? '✓ Done' : 'Scan Inbox'}
                                 </button>
                                 <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: INK['60'] }}>
                                   Debug
                                 </button>
-                                {scanState === 'done' && scanResult && (
+                                {scanState === 'done' && scanResult && scanResult.reservationsCreated !== undefined && scanResult.reservationsCreated > 0 && (
                                   <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>
-                                    Review {scanResult.emailsFound} emails →
+                                    Review {scanResult.reservationsCreated} reservations →
                                   </button>
+                                )}
+                                {scanState === 'done' && scanResult && (scanResult.reservationsCreated === undefined || scanResult.reservationsCreated === 0) && (
+                                  <span className="text-[10px]" style={{ color: INK['40'] }}>
+                                    {scanResult.emailsFound} emails scanned · no reservations found
+                                  </span>
                                 )}
                               </div>
                               <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(196,80,32,0.08)', color: '#c45020' }}>Disconnect</button>
@@ -920,22 +970,28 @@ function ProfilePageContent() {
                           <div className="flex items-center gap-2 flex-wrap mb-2">
                             <button
                               onClick={handleScanNow}
+                              disabled={scanState === 'scanning' || scanState === 'parsing'}
                               className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer"
-                              style={{ background: '#2a7a56', color: 'white' }}
+                              style={{ background: '#2a7a56', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}
                             >
-                              {scanState === 'scanning' ? 'Scanning…' : scanState === 'done' ? '✓ Scanned' : 'Scan Inbox'}
+                              {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${parseProgress ? ` ${parseProgress.parsed}/${parseProgress.total}` : '…'}` : scanState === 'done' ? '✓ Done' : 'Scan Inbox'}
                             </button>
                             <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: INK['60'] }}>
                               Debug
                             </button>
-                            {scanState === 'done' && scanResult && (
+                            {scanState === 'done' && scanResult && scanResult.reservationsCreated !== undefined && scanResult.reservationsCreated > 0 && (
                               <button
                                 onClick={() => router.push('/email/inbox')}
                                 className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer"
                                 style={{ background: 'var(--t-honey)', color: 'white' }}
                               >
-                                Review {scanResult.emailsFound} emails →
+                                Review {scanResult.reservationsCreated} reservations →
                               </button>
+                            )}
+                            {scanState === 'done' && scanResult && (scanResult.reservationsCreated === undefined || scanResult.reservationsCreated === 0) && (
+                              <span className="text-[10px]" style={{ color: INK['40'] }}>
+                                {scanResult.emailsFound} emails scanned · no reservations found
+                              </span>
                             )}
                           </div>
                           <button
