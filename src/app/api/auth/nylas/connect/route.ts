@@ -11,7 +11,7 @@ export async function GET() {
 
     const authUrl = `https://api.us.nylas.com/v3/connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&provider=google&access_type=online&scope=https://www.googleapis.com/auth/gmail.readonly`;
 
-    return NextResponse.json({ url: authUrl });
+    return NextResponse.redirect(authUrl);
   } catch (error) {
     console.error('Nylas connect error:', error);
     return NextResponse.json({ error: 'Failed to generate auth URL' }, { status: 500 });
