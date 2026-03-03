@@ -55,16 +55,21 @@ export async function searchConfirmationEmails(
   const allMessages: NylasEmailMessage[] = [];
   let queriesRun = 0;
 
+  // Build a Gmail-native date filter (after:YYYY/MM/DD) instead of using
+  // Nylas's receivedAfter param, which may conflict with searchQueryNative
+  // on Google providers.
+  const dateFilter = receivedAfter
+    ? ` after:${new Date(receivedAfter * 1000).toISOString().slice(0, 10).replace(/-/g, '/')}`
+    : '';
+
   for (const { label, query } of queries) {
     try {
       queriesRun++;
+      const fullQuery = query + dateFilter;
       const queryParams: Record<string, unknown> = {
         limit,
-        searchQueryNative: query,
+        searchQueryNative: fullQuery,
       };
-      if (receivedAfter) {
-        queryParams.receivedAfter = receivedAfter;
-      }
 
       const result = await nylas.messages.list({
         identifier: grantId,
