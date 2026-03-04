@@ -37,7 +37,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
       enrichment: dp.enrichment as ImportedPlace['enrichment'],
-      google: dp.googleData as ImportedPlace['google'],
+      google: normalizeGoogleData(dp.googleData, dp.googlePlaceId),
       userContext: dp.userContext || undefined,
       timing: dp.timing || undefined,
       travelWith: dp.travelWith || undefined,
@@ -92,3 +92,40 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
     set({ myPlaces: places, collections, history: [] });
   },
 });
+
+/**
+ * Normalize the raw googleData JSON blob into the GooglePlaceData shape.
+ *
+ * The Google Places API returns `id` (e.g. "ChIJ...") but our GooglePlaceData
+ * interface expects `placeId`. Hydration needs to bridge this gap so the
+ * frontend can reliably read `item.google.placeId`.
+ *
+ * Also falls back to the DB column `googlePlaceId` if the JSON blob doesn't
+ * have either field (e.g. for places that were backfilled before this fix).
+ */
+function normalizeGoogleData(
+  raw: unknown,
+  dbGooglePlaceId?: string | null,
+): ImportedPlace['google'] {
+  if (!raw || typeof raw !== 'object') {
+    // No googleData blob at all — synthesize minimal google object from DB column
+    return dbGooglePlaceId ? { placeId: dbGooglePlaceId } : undefined;
+  }
+
+  const data = raw as Record<string, unknown>;
+
+  // If placeId is already set, return as-is
+  if (data.placeId) return raw as ImportedPlace['google'];
+
+  // Map `id` → `placeId` (Google API field name → our interface)
+  if (data.id && typeof data.id === 'string') {
+    return { ...data, placeId: data.id } as unknown as ImportedPlace['google'];
+  }
+
+  // Last resort: use the DB column
+  if (dbGooglePlaceId) {
+    return { ...data, placeId: dbGooglePlaceId } as unknown as ImportedPlace['google'];
+  }
+
+  return raw as ImportedPlace['google'];
+}
