@@ -672,11 +672,13 @@ export const SLOT_ICON_NAMES: Record<string, PerriandIconName> = {
 /** Taste domain → icon name mapping */
 export const DOMAIN_ICON_NAMES: Record<string, PerriandIconName> = {
   Design: 'design',
+  Atmosphere: 'design',
   Character: 'character',
-  Food: 'food',
-  Location: 'location',
   Service: 'service',
+  FoodDrink: 'food',
+  Setting: 'location',
   Wellness: 'wellness',
+  Sustainability: 'wellness',
 };
 
 /** Ghost source → icon name mapping */

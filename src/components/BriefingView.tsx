@@ -238,16 +238,11 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
   const numericProfile: NumericProfile = useMemo(() => {
     const gp = generatedProfile as unknown as { radarData?: { axis: string; value: number }[] } | null;
     if (!gp?.radarData?.length) return DEFAULT_USER_PROFILE;
-    const radarMap: Record<string, keyof NumericProfile> = {
-      Sensory: 'Atmosphere', Material: 'Design',
-      Authenticity: 'Character', Social: 'Service',
-      Cultural: 'Character', Spatial: 'Setting',
-      Rhythm: 'Atmosphere', Ethics: 'Sustainability',
-    };
     const result: NumericProfile = { ...DEFAULT_USER_PROFILE };
     for (const r of gp.radarData) {
-      const d = radarMap[r.axis];
-      if (d) result[d] = Math.max(result[d], r.value);
+      if (r.axis in result) {
+        result[r.axis as keyof NumericProfile] = Math.max(result[r.axis as keyof NumericProfile], r.value);
+      }
     }
     return result;
   }, [generatedProfile]);

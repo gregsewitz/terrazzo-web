@@ -106,13 +106,13 @@ TASTE MATCHING:
 User profile (0-1 per axis): ${JSON.stringify(userProfile)}
 For each place, also score:
 - matchScore: 0-100 overall match
-- matchBreakdown: { Design: 0-1, Character: 0-1, Service: 0-1, Food: 0-1, Location: 0-1, Wellness: 0-1 } — how the PLACE scores
+- matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Setting: 0-1, Wellness: 0-1, Sustainability: 0-1 } — how the PLACE scores
 - tasteNote: one-line description in a warm, friend-like voice
 - terrazzoInsight: { why: "1-2 sentences on match", caveat: "honest heads-up" }` : '';
 
   const tasteFieldsBlock = includeTasteMatch ? `
     "matchScore": number,
-    "matchBreakdown": { Design, Character, Service, Food, Location, Wellness },
+    "matchBreakdown": { Design, Atmosphere, Character, Service, FoodDrink, Setting, Wellness, Sustainability },
     "tasteNote": string,
     "terrazzoInsight": { "why": string, "caveat": string }` : '';
 
@@ -243,13 +243,13 @@ export async function generateTasteMatchBatch(
 
   const placeList = places.map((p, i) => `${i + 1}. ${p.name} (${p.type}${p.city ? `, ${p.city}` : ''})`).join('\n');
 
-  const tasteMatchSystemPrompt = `You are Terrazzo's taste concierge. Given a list of places and a user's taste profile (scored 0-1 across 6 axes: Design, Character, Service, Food, Location, Wellness), generate taste match data for EACH place.
+  const tasteMatchSystemPrompt = `You are Terrazzo's taste concierge. Given a list of places and a user's taste profile (scored 0-1 across 8 axes: Design, Atmosphere, Character, Service, FoodDrink, Setting, Wellness, Sustainability), generate taste match data for EACH place.
 
 ${TERRAZZO_VOICE}
 
 For each place, return an object with:
 - matchScore: number 0-100 (overall match to the user's taste)
-- matchBreakdown: { Design: 0-1, Character: 0-1, Service: 0-1, Food: 0-1, Location: 0-1, Wellness: 0-1 } (how the PLACE scores on each axis — this is about the place, not the user)
+- matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Setting: 0-1, Wellness: 0-1, Sustainability: 0-1 } (how the PLACE scores on each axis — this is about the place, not the user)
 - tasteNote: string (one-line description of the place's character, written in the Terrazzo voice — like a friend telling you why this place matters)
 - terrazzoInsight: { why: string (1-2 sentences on why this matches the user), caveat: string (honest heads-up) }
 

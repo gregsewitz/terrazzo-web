@@ -100,9 +100,6 @@ export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string;
  */
 export type TasteDomain = 'Design' | 'Atmosphere' | 'Character' | 'Service' | 'FoodDrink' | 'Setting' | 'Wellness' | 'Sustainability';
 
-/** The original 8 domain names from v1 ontology (for backward-compat / migration code) */
-export const LEGACY_DOMAINS_V1: string[] = ['Design', 'Character', 'Service', 'Food', 'Location', 'Wellness', 'Rhythm', 'CulturalEngagement'];
-
 /** 6 core taste domains (rich signal-to-signal matching) */
 export const CORE_TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
 
@@ -111,9 +108,6 @@ export const PREFERENCE_DIMENSIONS: TasteDomain[] = ['Wellness', 'Sustainability
 
 /** All 8 dimensions (6 taste domains + 2 preference dimensions) */
 export const ALL_TASTE_DOMAINS: TasteDomain[] = [...CORE_TASTE_DOMAINS, ...PREFERENCE_DIMENSIONS];
-
-/** @deprecated Use LEGACY_DOMAINS_V1 */
-export const LEGACY_DOMAINS: TasteDomain[] = CORE_TASTE_DOMAINS;
 
 export type TasteProfile = Record<TasteDomain, number>;
 
@@ -728,10 +722,8 @@ export interface MatchedProperty {
   matchReasons: string[];
   tensionResolved: string;
   googlePlaceId?: string;
-  // Expanded ontology fields
-  rhythmNote?: string;              // pace compatibility explanation
+  atmosphereNote?: string;          // atmosphere/pace compatibility explanation
   sustainabilityScore?: number;     // 0-1 sustainability alignment
-  culturalEngagementNote?: string;  // cultural engagement compatibility
 }
 
 export interface GeneratedTasteProfile {

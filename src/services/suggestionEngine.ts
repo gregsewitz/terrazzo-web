@@ -52,11 +52,13 @@ If no candidates fit well, return an empty array: []`;
 
 const AXIS_DESCRIPTIONS: Record<string, string> = {
   Design: "you're drawn to carefully curated, visually striking spaces",
+  Atmosphere: 'tempo, light, sound, and sensory texture define your ideal setting',
   Character: 'authenticity and intimacy matter — you love places with soul',
   Service: 'attentive hospitality elevates an experience for you',
-  Food: 'quality cuisine and culinary discovery are central',
-  Location: "walkable, neighborhood-rooted spots where you feel the city's pulse",
+  FoodDrink: 'quality cuisine and culinary discovery are central',
+  Setting: "walkable, neighborhood-rooted spots where you feel the city's pulse",
   Wellness: 'pace, calm, and physical wellbeing shape your travel choices',
+  Sustainability: 'environmental and social responsibility matter in your choices',
 };
 
 function describeProfile(profile: TasteProfile, topAxes: string[]): string {

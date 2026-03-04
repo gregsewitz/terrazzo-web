@@ -121,19 +121,6 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
     setting: 5, 'location & context': 5, 'location & setting': 5, location: 5,
     wellness: 6, 'wellness & body': 6,
     sustainability: 7,
-    // Legacy v1 radar axis names (from pre-v2 onboarding)
-    material: 0,             // Material quality → Design
-    sensory: 1,              // Sensory experience → Atmosphere (v2: was Wellness)
-    authenticity: 2,         // Authenticity → Character
-    social: 3,               // Social dynamics → Service
-    cultural: 2,             // Cultural affinity → Character (v2: was CulturalEngagement)
-    spatial: 5,              // Spatial preferences → Setting
-    // Legacy v1 domain names that no longer exist
-    rhythm: 1,               // v2: folded into Atmosphere
-    culturalengagement: 2,   // v2: folded into Character
-    'cultural engagement': 2,
-    'rhythm & tempo': 1,
-    'scale & intimacy': 1,   // v2: spatial feeling → Atmosphere
   };
 
   for (const { axis, value } of input.radarData) {
@@ -146,22 +133,22 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
   // Dimensions 8-33: micro-signal hash features
   const signalInputs: Array<{ text: string; confidence: number }> = [];
 
-  // Map legacy microTasteSignal domain keys to current TasteDomain names
-  const legacyDomainMap: Record<string, TasteDomain> = {
+  // Map microTasteSignal category keys to TasteDomain names
+  const signalCategoryToDomain: Record<string, TasteDomain> = {
     architectural_attraction: 'Design',
     material_obsessions: 'Design',
-    social_dynamics: 'Character',      // v2: social → Character (identity/belonging)
+    social_dynamics: 'Character',
     service_ideals: 'Service',
-    cultural_indicators: 'Character',  // v2: was CulturalEngagement, now Character
-    spatial_preferences: 'Setting',    // v2: was Location, now Setting
+    cultural_indicators: 'Character',
+    spatial_preferences: 'Setting',
     wellness_essentials: 'Wellness',
-    rejection_signals: 'Character',    // anti-signals map to Character by default
+    rejection_signals: 'Character',
   };
 
   for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
     for (const sig of signals) {
-      // Map legacy domain keys to current domain names
-      const resolvedDomain = legacyDomainMap[domain] || (domain as TasteDomain);
+      // Map micro-signal category keys to domain names
+      const resolvedDomain = signalCategoryToDomain[domain] || (domain as TasteDomain);
       const domainIdx = DOMAIN_INDEX[resolvedDomain];
       const domainWeight = domainIdx !== undefined ? vector[domainIdx] : 0.5;
       signalInputs.push({ text: sig, confidence: domainWeight });

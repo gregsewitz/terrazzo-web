@@ -8,7 +8,7 @@
  * v2 additions:
  * - Decay-weighted scoring: newer signals carry more weight via 180-day half-life
  * - Sustainability alignment: optional bonus for eco-conscious users
- * - Rhythm compatibility: pace/tempo matching between user and property
+ * - Atmosphere compatibility: tempo/ambiance matching between user and property
  * - Source credibility weighting: corroborated + multi-source signals score higher
  */
 

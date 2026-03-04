@@ -766,7 +766,7 @@ const ICON_OPTIONS: { name: PerriandIconName; label: string }[] = [
   { name: 'shop', label: 'Shop' },
   { name: 'heart', label: 'Heart' },
   { name: 'star', label: 'Star' },
-  { name: 'food', label: 'Food' },
+  { name: 'food', label: 'Food & Drink' },
   { name: 'design', label: 'Design' },
   { name: 'wellness', label: 'Wellness' },
 ];

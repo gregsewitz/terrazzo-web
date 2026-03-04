@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
           location: mp.address,
           source: { type: 'google-maps' as const, name: 'Google Maps' },
           matchScore: 0,
-          matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+          matchBreakdown: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
           tasteNote: '',
           status: 'available' as const,
           google: {
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
                   location: googleResult.formattedAddress || mp.address,
                   source: { type: 'google-maps' as const, name: 'Google Maps' },
                   matchScore: 0,
-                  matchBreakdown: { Design: 0, Character: 0, Service: 0, Food: 0, Location: 0, Wellness: 0 },
+                  matchBreakdown: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
                   tasteNote: '',
                   status: 'available' as const,
                   google: {

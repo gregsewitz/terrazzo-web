@@ -19,7 +19,7 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
 // ─── Category filter pills ───
 const CATEGORIES: { key: PlaceType | 'all'; label: string; icon: PerriandIconName }[] = [
   { key: 'all', label: 'All', icon: 'discover' },
-  { key: 'restaurant', label: 'Food', icon: 'restaurant' },
+  { key: 'restaurant', label: 'Food & Drink', icon: 'restaurant' },
   { key: 'bar', label: 'Drinks', icon: 'bar' },
   { key: 'cafe', label: 'Coffee', icon: 'cafe' },
   { key: 'hotel', label: 'Stay', icon: 'hotel' },

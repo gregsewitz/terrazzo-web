@@ -466,7 +466,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   {
     id: 'rhythm-refinement',
     phaseNumber: 2,
-    title: 'Your Rhythm',
+    title: 'Your Tempo',
     subtitle: 'How you like to move through a place',
     modality: 'slider',
     act: 1,
@@ -728,15 +728,15 @@ export const MAX_ADAPTIVE_PHASES = 3;
 // Used by /profile/refine to fill in v2 fields without re-running full onboarding.
 // Each phase maps to specific User columns — gap detection decides which to show.
 
-export const REFINEMENT_PHASE_IDS = ['refine-sustainability', 'refine-rhythm', 'refine-cultural'] as const;
+export const REFINEMENT_PHASE_IDS = ['refine-sustainability', 'refine-atmosphere', 'refine-character'] as const;
 
 export type RefinementPhaseId = typeof REFINEMENT_PHASE_IDS[number];
 
 /** Maps each refinement phase to the User columns it fills */
 export const REFINEMENT_PHASE_FIELDS: Record<RefinementPhaseId, string[]> = {
   'refine-sustainability': ['sustainabilitySensitivity', 'sustainabilityPriorities', 'sustainabilityDealbreakers', 'sustainabilityWillingnessToPayPremium'],
-  'refine-rhythm': ['tasteTrajectoryDirection', 'tasteTrajectoryDescription'],
-  'refine-cultural': [], // cultural signals go into allSignals/sustainabilitySignals, not dedicated User columns yet
+  'refine-atmosphere': ['tasteTrajectoryDirection', 'tasteTrajectoryDescription'],
+  'refine-character': [],
 };
 
 export const REFINEMENT_PHASES: OnboardingPhase[] = [
@@ -765,13 +765,13 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Sustainability: 70 },
   },
   {
-    id: 'refine-rhythm',
+    id: 'refine-atmosphere',
     phaseNumber: 2,
-    title: 'Your Travel Rhythm',
+    title: 'Your Travel Tempo',
     subtitle: 'How you move through a trip',
     modality: 'voice',
     act: 2,
-    aiPrompt: "Let's talk about rhythm. On a trip, are you a slow-morning person — coffee first, no agenda until noon — or are you up at dawn squeezing every hour out of the day? What does your ideal day actually look like?",
+    aiPrompt: "On a trip, are you a slow-morning person — coffee first, no agenda until noon — or are you up at dawn squeezing every hour out of the day? What does your ideal day actually look like?",
     followUps: [
       "How do you feel when a trip is heavily scheduled versus when it's wide open? Which makes you more anxious?",
       "Think about how your taste has evolved. Do you travel differently now than you did five years ago? Are you seeking different things, or deepening into the same instincts?",
@@ -787,7 +787,7 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Atmosphere: 80 },
   },
   {
-    id: 'refine-cultural',
+    id: 'refine-character',
     phaseNumber: 3,
     title: 'Character & Culture',
     subtitle: 'How you connect with place',
@@ -863,10 +863,10 @@ FOLLOW-UP GENERATION:
 - Once you've covered the scripted follow-ups (or the user has organically answered them), set phaseComplete to true. Do NOT keep generating new questions.
 
 SIGNAL CATEGORY GUIDANCE:
-- Tempo, pace, energy, sensory intensity, morning/evening orientation → cat: "Atmosphere" (NOT "Rhythm")
-- Cultural depth, programming, heritage, identity, scale/intimacy → cat: "Character" (NOT "CulturalEngagement")
-- Location, geography, neighborhood, surroundings → cat: "Setting" (NOT "Location")
-- Food & drink signals → cat: "FoodDrink" (NOT "Food")
+- Tempo, pace, energy, sensory intensity, morning/evening orientation → cat: "Atmosphere"
+- Cultural depth, programming, heritage, identity, scale/intimacy → cat: "Character"
+- Location, geography, neighborhood, surroundings → cat: "Setting"
+- Food & drink signals → cat: "FoodDrink"
 - Environmental & social values → cat: "Sustainability"
 - Rejections use cat: "Rejection"; life context uses cat: "Context"; emotional insights use cat: "Emotion"; cross-domain fundamentals use cat: "Core"
 

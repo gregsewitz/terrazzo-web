@@ -15,18 +15,17 @@ import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
 // Maps legacy v1 domain/category names to canonical v2 TasteDomain keys.
 // Used only by migrateStoreToV2() to remap existing signals and certainties.
 const V1_TO_V2: Record<string, TasteDomain> = {
-  // Already v2 — identity mappings
+  // v2 domain names — identity mappings
   'Design': 'Design', 'Atmosphere': 'Atmosphere', 'Character': 'Character',
   'Service': 'Service', 'FoodDrink': 'FoodDrink', 'Setting': 'Setting',
   'Wellness': 'Wellness', 'Sustainability': 'Sustainability',
-  // v1 long-form display names
+  // Display name variants the LLM may produce
   'Design Language': 'Design', 'Design Sensibility': 'Design',
-  'Sensory & Atmosphere': 'Atmosphere', 'Rhythm & Pace': 'Atmosphere', 'Rhythm': 'Atmosphere',
-  'Character & Identity': 'Character', 'Cultural Engagement': 'Character',
+  'Character & Identity': 'Character',
   'Service Philosophy': 'Service', 'Service Style': 'Service',
-  'Food & Drink': 'FoodDrink', 'Food': 'FoodDrink', 'Culinary': 'FoodDrink', 'F&B': 'FoodDrink',
-  'Location & Context': 'Setting', 'Location': 'Setting', 'Setting & Place': 'Setting',
-  'Wellness & Rhythm': 'Wellness', 'Retreat & Wellbeing': 'Wellness',
+  'Food & Drink': 'FoodDrink', 'Culinary': 'FoodDrink', 'F&B': 'FoodDrink',
+  'Location & Context': 'Setting', 'Setting & Place': 'Setting',
+  'Retreat & Wellbeing': 'Wellness',
   'Values & Sustainability': 'Sustainability',
 };
 

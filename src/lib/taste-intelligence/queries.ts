@@ -173,8 +173,8 @@ export async function findPropertiesByDomain(
 ): Promise<VectorMatch[]> {
   // Build a probe vector that emphasizes the target domain (34 dimensions)
   const DOMAIN_INDICES: Record<string, number> = {
-    Design: 0, Character: 1, Service: 2, Food: 3,
-    Location: 4, Wellness: 5, Rhythm: 6, CulturalEngagement: 7,
+    Design: 0, Atmosphere: 1, Character: 2, Service: 3,
+    FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
   };
   const idx = DOMAIN_INDICES[domain];
   if (idx === undefined) return [];
@@ -197,8 +197,8 @@ export async function findPropertiesByDomainWeights(
   limit: number = 10,
 ): Promise<VectorMatch[]> {
   const DOMAIN_INDICES: Record<string, number> = {
-    Design: 0, Character: 1, Service: 2, Food: 3,
-    Location: 4, Wellness: 5, Rhythm: 6, CulturalEngagement: 7,
+    Design: 0, Atmosphere: 1, Character: 2, Service: 3,
+    FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
   };
 
   const probe = new Array(34).fill(0);

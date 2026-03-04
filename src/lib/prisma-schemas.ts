@@ -1,13 +1,15 @@
 import { z } from 'zod';
 
-/** Taste profile — 6-dimension scoring */
+/** Taste profile — 8-dimension scoring (v2 taxonomy) */
 export const tasteProfileSchema = z.object({
   Design: z.number().min(0).max(1),
+  Atmosphere: z.number().min(0).max(1),
   Character: z.number().min(0).max(1),
   Service: z.number().min(0).max(1),
-  Food: z.number().min(0).max(1),
-  Location: z.number().min(0).max(1),
+  FoodDrink: z.number().min(0).max(1),
+  Setting: z.number().min(0).max(1),
   Wellness: z.number().min(0).max(1),
+  Sustainability: z.number().min(0).max(1),
 });
 
 /** Life context signals from onboarding */

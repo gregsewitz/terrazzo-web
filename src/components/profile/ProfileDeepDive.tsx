@@ -31,17 +31,10 @@ export default function ProfileDeepDive() {
   const signalCount = allSignals?.length || WRAPPED.totalSignals;
 
   const numericProfile: NumericProfile = useMemo(() => {
-    const radarMap: Record<string, string> = {
-      Sensory: 'Atmosphere', Material: 'Design',
-      Authenticity: 'Character', Social: 'Service',
-      Cultural: 'Character', Spatial: 'Setting',
-      Rhythm: 'Atmosphere', Ethics: 'Sustainability',
-    };
     const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
     for (const r of profile.radarData || []) {
-      const domain = radarMap[r.axis];
-      if (domain && domain in result) {
-        result[domain as keyof NumericProfile] = Math.max(result[domain as keyof NumericProfile], r.value);
+      if (r.axis in result) {
+        result[r.axis as keyof NumericProfile] = Math.max(result[r.axis as keyof NumericProfile], r.value);
       }
     }
     return result;
