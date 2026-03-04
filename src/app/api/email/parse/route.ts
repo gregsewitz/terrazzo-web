@@ -60,12 +60,16 @@ export async function POST(request: NextRequest) {
         let googlePlaceId: string | undefined;
         if (res.placeName && res.location && res.placeType !== 'flight') {
           try {
-            const placeResult = await searchPlace(`${res.placeName} ${res.location}`);
+            const searchQuery = `${res.placeName} ${res.location}`.trim();
+            const placeResult = await searchPlace(searchQuery, undefined, res.placeName);
             if (placeResult) {
               googlePlaceId = placeResult.id;
+              console.log(`[parse] Resolved "${res.placeName}" → ${placeResult.id}`);
+            } else {
+              console.warn(`[parse] searchPlace returned null for "${res.placeName}" (query: "${searchQuery}")`);
             }
-          } catch {
-            // Google Places lookup is best-effort
+          } catch (searchErr) {
+            console.error(`[parse] searchPlace failed for "${res.placeName}":`, searchErr);
           }
         }
 

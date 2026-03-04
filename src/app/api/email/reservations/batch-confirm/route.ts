@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         if (!googlePlaceId && reservation.placeType !== 'flight') {
           try {
             const searchQuery = `${reservation.placeName} ${reservation.location || ''}`.trim();
-            const placeResult = await searchPlace(searchQuery);
+            const placeResult = await searchPlace(searchQuery, undefined, reservation.placeName);
             if (placeResult) {
               googlePlaceId = placeResult.id;
               googleData = placeResult as unknown as Record<string, unknown>;

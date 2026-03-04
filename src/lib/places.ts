@@ -32,10 +32,16 @@ export interface PlaceSearchResult {
 /**
  * Search for a single place — cached with 5-min TTL.
  * Used for detailed lookups (import, save, enrichment).
+ *
+ * @param nameHint — The actual place name (without address/location).
+ *   When provided, the scoring algorithm uses this for name matching
+ *   instead of trying to extract the name from the query string.
+ *   This prevents address words from diluting the match ratio.
  */
 export async function searchPlace(
   query: string,
-  locationBias?: string | { lat: number; lng: number; radiusMeters?: number }
+  locationBias?: string | { lat: number; lng: number; radiusMeters?: number },
+  nameHint?: string,
 ): Promise<PlaceSearchResult | null> {
   const extras = locationBias
     ? typeof locationBias === 'string'
@@ -46,7 +52,7 @@ export async function searchPlace(
   return cachedPlacesCall(
     'single',
     query,
-    () => _fetchSinglePlace(query, locationBias),
+    () => _fetchSinglePlace(query, locationBias, nameHint),
     extras,
   );
 }
@@ -71,7 +77,8 @@ export async function searchPlaces(
 
 async function _fetchSinglePlace(
   query: string,
-  locationBias?: string | { lat: number; lng: number; radiusMeters?: number }
+  locationBias?: string | { lat: number; lng: number; radiusMeters?: number },
+  nameHint?: string,
 ): Promise<PlaceSearchResult | null> {
   const url = 'https://places.googleapis.com/v1/places:searchText';
 
@@ -110,8 +117,11 @@ async function _fetchSinglePlace(
   const places: PlaceSearchResult[] = data.places || [];
   if (places.length === 0) return null;
 
-  // Extract the place name portion of the query (before the first comma = location)
-  const queryNamePart = query.split(',')[0].trim().toLowerCase();
+  // Use nameHint if provided (prevents address words from diluting match ratio),
+  // otherwise fall back to extracting name from query (before first comma)
+  const queryNamePart = nameHint
+    ? nameHint.trim().toLowerCase()
+    : query.split(',')[0].trim().toLowerCase();
   // Separate "category" words from "proper name" words
   const CATEGORY_WORDS = new Set(['hotel', 'restaurant', 'bar', 'cafe', 'café', 'resort', 'inn', 'hostel', 'bistro', 'pizzeria', 'trattoria', 'brasserie', 'tavern', 'pub', 'lodge', 'motel', 'spa', 'club', 'house', 'the']);
   const allQueryWords = queryNamePart.split(/\s+/).filter(w => w.length > 1);
