@@ -168,6 +168,17 @@ export default function RefinePage() {
     })();
   }, [isComplete, isSaving, router]);
 
+  // ─── Re-synthesize with v2 taxonomy ─────────────────────────────────────────
+  const handleMigrate = useCallback(async () => {
+    setIsMigrating(true);
+    const ok = await migrateStoreToV2();
+    setIsMigrating(false);
+    setMigrationDone(true);
+    if (ok) {
+      setTimeout(() => router.push('/profile'), 1500);
+    }
+  }, [migrateStoreToV2, router]);
+
   // Redirect if not authenticated
   if (!authLoading && !isAuthenticated) {
     router.replace('/login');
@@ -184,20 +195,6 @@ export default function RefinePage() {
       </div>
     );
   }
-
-  // ─── Re-synthesize with v2 taxonomy ─────────────────────────────────────────
-  // Always offered as the first step — remaps any v1 signal cats to v2 domains
-  // and re-runs synthesis with the current (v2) prompts.
-
-  const handleMigrate = useCallback(async () => {
-    setIsMigrating(true);
-    const ok = await migrateStoreToV2();
-    setIsMigrating(false);
-    setMigrationDone(true);
-    if (ok) {
-      setTimeout(() => router.push('/profile'), 1500);
-    }
-  }, [migrateStoreToV2, router]);
 
   if (!migrationDone) {
     return (
