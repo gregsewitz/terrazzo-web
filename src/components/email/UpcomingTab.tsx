@@ -4,6 +4,7 @@ import React from 'react';
 import { INK } from '@/constants/theme';
 import { TripGroup } from './TripGroup';
 import type { TripGroupData } from '@/lib/email-reservations-helpers';
+import type { TripOption } from '@/hooks/useEmailReservations';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -18,7 +19,9 @@ interface UpcomingTabProps {
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onCreateTrip?: (name: string, reservationIds: string[]) => Promise<string | null>;
+  onAddToExistingTrip?: (tripId: string, tripName: string, reservationIds: string[]) => void;
   isCreatingTrip?: boolean;
+  existingTrips?: TripOption[];
 }
 
 export const UpcomingTab = React.memo(function UpcomingTab({
@@ -32,7 +35,9 @@ export const UpcomingTab = React.memo(function UpcomingTab({
   onSelectAll,
   onDeselectAll,
   onCreateTrip,
+  onAddToExistingTrip,
   isCreatingTrip,
+  existingTrips = [],
 }: UpcomingTabProps) {
   if (totalCount === 0) {
     return (
@@ -83,7 +88,9 @@ export const UpcomingTab = React.memo(function UpcomingTab({
             isLinked={group.tripId ? (tripLinkEnabled.get(group.tripId) ?? true) : false}
             onToggleTripLink={() => group.tripId && onToggleTripLink(group.tripId)}
             onCreateTrip={onCreateTrip}
+            onAddToExistingTrip={onAddToExistingTrip}
             isCreatingTrip={isCreatingTrip}
+            existingTrips={existingTrips}
           />
         ))}
       </div>

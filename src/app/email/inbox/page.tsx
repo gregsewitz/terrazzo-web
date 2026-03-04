@@ -24,6 +24,7 @@ export default function EmailReservationsPage() {
     yearGroups,
     upcomingReservations,
     historyReservations,
+    allHistoryReservations,
     activeTab,
     selectedIds,
     tripLinkEnabled,
@@ -32,6 +33,10 @@ export default function EmailReservationsPage() {
     loading,
     importing,
     creatingTrip,
+    existingTrips,
+    collections,
+    selectedCollectionId,
+    creatingCollection,
     error,
     selectedCount,
     switchTab,
@@ -42,6 +47,9 @@ export default function EmailReservationsPage() {
     setRating,
     setTypeFilter,
     createTripForGroup,
+    addToExistingTrip,
+    selectCollection,
+    createCollectionInline,
     importSelected,
     dismissSelected,
   } = useEmailReservations();
@@ -130,7 +138,9 @@ export default function EmailReservationsPage() {
                 onSelectAll={selectAllVisible}
                 onDeselectAll={deselectAll}
                 onCreateTrip={createTripForGroup}
+                onAddToExistingTrip={addToExistingTrip}
                 isCreatingTrip={creatingTrip}
+                existingTrips={existingTrips}
               />
             )}
 
@@ -142,6 +152,7 @@ export default function EmailReservationsPage() {
                 typeFilter={typeFilter}
                 selectedCount={selectedCount}
                 totalCount={totalVisible}
+                unfilteredCount={allHistoryReservations.length}
                 onToggleSelect={toggleSelect}
                 onRate={setRating}
                 onTypeFilterChange={setTypeFilter}
@@ -161,6 +172,11 @@ export default function EmailReservationsPage() {
           importing={importing}
           onImport={importSelected}
           onDismiss={dismissSelected}
+          collections={collections}
+          selectedCollectionId={selectedCollectionId}
+          onSelectCollection={selectCollection}
+          onCreateCollection={createCollectionInline}
+          creatingCollection={creatingCollection}
         />
       )}
     </div>

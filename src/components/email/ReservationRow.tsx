@@ -97,8 +97,13 @@ export const ReservationRow = React.memo(function ReservationRow({
         {/* Confirmation number */}
         {r.confirmationNumber && (
           <span
-            className="text-[8px] px-1.5 py-0.5 rounded flex-shrink-0"
-            style={{ background: INK['06'], color: INK['40'], fontFamily: FONT.mono }}
+            className="text-[10px] px-2 py-1 rounded-md flex-shrink-0"
+            style={{
+              background: 'var(--t-linen)',
+              color: INK['60'],
+              fontFamily: FONT.mono,
+              letterSpacing: '0.02em',
+            }}
           >
             {r.confirmationNumber}
           </span>

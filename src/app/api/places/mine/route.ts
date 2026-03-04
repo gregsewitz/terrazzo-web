@@ -18,5 +18,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
     }),
   ]);
 
-  return Response.json({ places, collections });
+  return Response.json({ places, collections }, {
+    headers: { 'Cache-Control': 'private, no-cache' },
+  });
 });

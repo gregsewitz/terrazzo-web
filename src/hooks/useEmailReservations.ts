@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { useSavedStore, type DBSavedPlace, type DBCollection } from '@/stores/savedStore';
 import type { ReactionId } from '@/types';
 import {
   type StagedReservation,
@@ -30,6 +31,22 @@ interface BatchConfirmResponse {
   errors: Array<{ id: string; error: string }>;
 }
 
+/** Minimal trip info for the picker */
+export interface TripOption {
+  id: string;
+  name: string;
+  location: string;
+  startDate: string | null;
+}
+
+/** Minimal collection info for the picker */
+export interface CollectionOption {
+  id: string;
+  name: string;
+  emoji: string;
+  placeCount: number;
+}
+
 /** A trip created inline for unmatched reservations */
 interface CreatedTripLink {
   tripId: string;
@@ -55,6 +72,10 @@ export function useEmailReservations() {
   const [importing, setImporting] = useState(false);
   const [createdTrips, setCreatedTrips] = useState<CreatedTripLink[]>([]);
   const [creatingTrip, setCreatingTrip] = useState(false);
+  const [existingTrips, setExistingTrips] = useState<TripOption[]>([]);
+  const [collections, setCollections] = useState<CollectionOption[]>([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [creatingCollection, setCreatingCollection] = useState(false);
 
   // ── Fetch ──────────────────────────────────────────────────────────────
 
@@ -62,13 +83,31 @@ export function useEmailReservations() {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch<{
-        reservations: StagedReservation[];
-        counts: { pending: number; confirmed: number; dismissed: number };
-      }>('/api/email/reservations?status=pending');
+      const [data, tripsData, collectionsData] = await Promise.all([
+        apiFetch<{
+          reservations: StagedReservation[];
+          counts: { pending: number; confirmed: number; dismissed: number };
+        }>('/api/email/reservations?status=pending'),
+        apiFetch<{ trips: TripOption[] }>('/api/trips/mine'),
+        apiFetch<{ collections: Array<{ id: string; name: string; emoji: string; placeIds: string[] | unknown }> }>(
+          '/api/collections'
+        ),
+      ]);
 
       setReservations(data.reservations || []);
       setCounts(data.counts || { pending: 0, confirmed: 0, dismissed: 0 });
+      setExistingTrips((tripsData.trips || []).map(t => ({
+        id: t.id,
+        name: t.name,
+        location: t.location,
+        startDate: t.startDate,
+      })));
+      setCollections((collectionsData.collections || []).map(c => ({
+        id: c.id,
+        name: c.name,
+        emoji: c.emoji || 'sparkle',
+        placeCount: Array.isArray(c.placeIds) ? c.placeIds.length : 0,
+      })));
 
       // Initialize trip link toggles (default ON for matched trips)
       const tripLinks = new Map<string, boolean>();
@@ -96,9 +135,14 @@ export function useEmailReservations() {
     [reservations]
   );
 
+  const allHistoryReservations = useMemo(
+    () => reservations.filter(isPastReservation),
+    [reservations]
+  );
+
   const historyReservations = useMemo(
-    () => filterByType(reservations.filter(isPastReservation), typeFilter),
-    [reservations, typeFilter]
+    () => filterByType(allHistoryReservations, typeFilter),
+    [allHistoryReservations, typeFilter]
   );
 
   const tripGroups = useMemo(() => {
@@ -252,6 +296,57 @@ export function useEmailReservations() {
     }
   }, [reservations]);
 
+  // ── Collection management ────────────────────────────────────────
+
+  const selectCollection = useCallback((id: string | null) => {
+    setSelectedCollectionId(id);
+  }, []);
+
+  const createCollectionInline = useCallback(async (name: string) => {
+    setCreatingCollection(true);
+    try {
+      const res = await apiFetch<{ collection?: { id: string; name: string; emoji: string } }>(
+        '/api/collections',
+        { method: 'POST', body: JSON.stringify({ name, emoji: 'sparkle' }) }
+      );
+      const col = res?.collection;
+      if (!col) throw new Error('Collection creation failed');
+
+      const newOption: CollectionOption = {
+        id: col.id,
+        name: col.name,
+        emoji: col.emoji || 'sparkle',
+        placeCount: 0,
+      };
+      setCollections(prev => [newOption, ...prev]);
+      setSelectedCollectionId(col.id);
+      return col.id;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create collection');
+      return null;
+    } finally {
+      setCreatingCollection(false);
+    }
+  }, []);
+
+  /** Link unmatched reservations to an existing trip (no API call — just sets up the trip link for batch-confirm) */
+  const addToExistingTrip = useCallback((
+    tripId: string,
+    tripName: string,
+    groupReservationIds: string[],
+  ) => {
+    setCreatedTrips(prev => [...prev, {
+      tripId,
+      tripName,
+      reservationIds: groupReservationIds,
+    }]);
+    setTripLinkEnabled(prev => {
+      const next = new Map(prev);
+      next.set(tripId, true);
+      return next;
+    });
+  }, []);
+
   // ── Batch actions ──────────────────────────────────────────────────────
 
   const importSelected = useCallback(async () => {
@@ -301,11 +396,41 @@ export function useEmailReservations() {
         { method: 'POST', body: JSON.stringify(payload) }
       );
 
+      // Add saved places to selected collection (if any)
+      if (selectedCollectionId && result.savedPlaceIds?.length) {
+        try {
+          // Fetch current placeIds for the collection, then append
+          const colData = await apiFetch<{ collections: Array<{ id: string; placeIds: string[] | unknown }> }>(
+            '/api/collections'
+          );
+          const col = (colData.collections || []).find(c => c.id === selectedCollectionId);
+          const existingPlaceIds = Array.isArray(col?.placeIds) ? col.placeIds as string[] : [];
+          const mergedIds = [...new Set([...existingPlaceIds, ...result.savedPlaceIds])];
+
+          await apiFetch(`/api/collections/${selectedCollectionId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ placeIds: mergedIds }),
+          });
+        } catch (err) {
+          console.error('[import] Failed to add places to collection:', err);
+          // Don't fail the import — collection linking is best-effort
+        }
+      }
+
       // Clear selections and refresh
       setSelectedIds(new Set());
       setRatings(new Map());
       setCreatedTrips([]);
+      setSelectedCollectionId(null);
       await fetchReservations();
+
+      // Rehydrate the library store so new places appear immediately on navigation
+      try {
+        const freshData = await apiFetch<{ places: DBSavedPlace[]; collections: DBCollection[] }>('/api/places/mine');
+        useSavedStore.getState().hydrateFromDB(freshData.places || [], freshData.collections || []);
+      } catch {
+        // Best-effort — library will still refresh on next hard navigation
+      }
 
       return result;
     } catch (err) {
@@ -350,6 +475,7 @@ export function useEmailReservations() {
     yearGroups,
     upcomingReservations,
     historyReservations,
+    allHistoryReservations,
 
     // UI state
     activeTab,
@@ -360,6 +486,10 @@ export function useEmailReservations() {
     loading,
     importing,
     creatingTrip,
+    existingTrips,
+    collections,
+    selectedCollectionId,
+    creatingCollection,
     error,
     selectedCount,
     visibleIds,
@@ -373,6 +503,9 @@ export function useEmailReservations() {
     setRating,
     setTypeFilter,
     createTripForGroup,
+    addToExistingTrip,
+    selectCollection,
+    createCollectionInline,
     importSelected,
     dismissSelected,
   };
