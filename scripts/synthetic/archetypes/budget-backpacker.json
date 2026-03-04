@@ -1,0 +1,121 @@
+{
+  "id": "budget-backpacker",
+  "name": "The Budget Backpacker",
+  "description": "Travels 3-4 months a year on $50/day. Hostels, guesthouses, street food, overnight buses. Has seen more of the world than anyone in the luxury segment but through a completely different lens. Values community, spontaneity, and authentic local experience. Actively distrustful of anything polished or expensive. Tests whether the ontology can handle someone who rejects the entire premise of curated hospitality.",
+
+  "expectedProfile": {
+    "Design": 0.15,
+    "Atmosphere": 0.70,
+    "Character": 0.80,
+    "Service": 0.10,
+    "FoodDrink": 0.75,
+    "Setting": 0.65,
+    "Wellness": 0.15,
+    "Sustainability": 0.70
+  },
+
+  "expectedSignals": [
+    { "domain": "Character", "tag": "Neighborhood-explorer", "minConfidence": 0.7 },
+    { "domain": "Character", "tag": "Local-café-seeker", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Social-energy", "minConfidence": 0.6 },
+    { "domain": "FoodDrink", "tag": "Street-food-seeker", "minConfidence": 0.7 },
+    { "domain": "Setting", "tag": "Urban-embedded", "minConfidence": 0.5 },
+    { "domain": "Sustainability", "tag": "Local-economy", "minConfidence": 0.6 },
+    { "domain": "Rejection", "tag": "anti-Grand-hotel-lover", "minConfidence": 0.7 },
+    { "domain": "Rejection", "tag": "anti-Formal-protocol", "minConfidence": 0.6 },
+    { "domain": "Rejection", "tag": "anti-Room-service-ritual", "minConfidence": 0.5 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Doesn't care about accommodation quality",
+      "revealed": "Deeply particular about hostel vibe — the right hostel has a rooftop kitchen, a communal table, other travelers who share food and stories",
+      "expectedResolution": "Properties where community IS the amenity — social hostels, co-living spaces, small guesthouses with communal areas"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "solo",
+      "domainDeltas": { "Atmosphere": 0.15, "Character": 0.05, "Service": -0.05 }
+    },
+    {
+      "context": "friends",
+      "domainDeltas": { "FoodDrink": 0.10, "Atmosphere": 0.10 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "CONSCIOUS",
+    "priorities": ["Local-economy", "Community-integrated", "Low-impact"],
+    "dealbreakers": ["Massive-resort-chains", "Over-tourism-contributor"]
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "expansive",
+    "specificity": "concrete",
+    "consistency": 0.80
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.15,
+      "restaurant": 0.80,
+      "bar": 0.70,
+      "cafe": 0.85,
+      "museum": 0.40,
+      "activity": 0.75
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.25, "enjoyed": 0.40, "mixed": 0.15, "notMe": 0.20 },
+      "tagVerbosity": "thorough",
+      "returnIntentBias": "enthusiastic"
+    },
+    "importSources": ["google-maps", "friend"],
+    "importVolume": 40
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "b",
+      "pool-energy": "b",
+      "day-pace": "a",
+      "what-matters-more": "b",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "b",
+      "scale-intimacy": "b"
+    },
+    "imagePairChoices": {
+      "1": "a",
+      "2": "a",
+      "3": "b",
+      "4": "b",
+      "5": "b",
+      "6": "a",
+      "7": "b",
+      "8": "b"
+    },
+    "designerSelections": [
+      "ilse-crawford",
+      "blackberry-farm"
+    ],
+    "diagnosticChoices": {
+      "1": "b",
+      "2": "b",
+      "3": "b",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "b"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Stories about people, not properties. 'The best place I stayed was this family guesthouse in Hoi An — the grandmother cooked breakfast every morning and taught me how to make banh xeo. The room was $12 a night and had a fan, not AC, but I stayed for three weeks.' Names neighborhoods, not hotels.",
+    "anti-stay": "An all-inclusive resort. 'Everything was fake — fake beach, fake friendliness, fake food. I was surrounded by tourists who never left the compound. I escaped on day 2 and found a hostel in town.'",
+    "go-back-place": "A neighborhood in a specific city — not a property. 'Cihangir in Istanbul. I know every bakery, every tea house, every rooftop. My friend has an apartment there and the door's always open.'",
+    "cultural-engagement": "Total immersion — learns basic language, eats only local food, makes friends with neighbors. Disdainful of tourist infrastructure.",
+    "emotional-core": "Travels to feel part of the human story. Connection, not consumption. STORY_COLLECTOR."
+  }
+}

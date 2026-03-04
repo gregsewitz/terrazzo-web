@@ -1,0 +1,118 @@
+{
+  "id": "instagram-aesthete",
+  "name": "The Instagram Aesthete",
+  "description": "Travels primarily for visual content. Every destination is evaluated through the lens of 'will this photograph well?' Cares deeply about Design but in a surface-level way — it's about the shot, not the craft. High Atmosphere sensitivity for mood/lighting. Surprisingly low Character interest — local culture is backdrop, not destination. Tests whether the system can distinguish genuine design appreciation from photogenic-seeking behavior.",
+
+  "expectedProfile": {
+    "Design": 0.75,
+    "Atmosphere": 0.85,
+    "Character": 0.25,
+    "Service": 0.50,
+    "FoodDrink": 0.70,
+    "Setting": 0.80,
+    "Wellness": 0.55,
+    "Sustainability": 0.15
+  },
+
+  "expectedSignals": [
+    { "domain": "Design", "tag": "Photogenic-spaces", "minConfidence": 0.7 },
+    { "domain": "Atmosphere", "tag": "Golden-hour-chaser", "minConfidence": 0.6 },
+    { "domain": "Setting", "tag": "Iconic-backdrop", "minConfidence": 0.7 },
+    { "domain": "FoodDrink", "tag": "Plating-obsessed", "minConfidence": 0.5 },
+    { "domain": "Design", "tag": "Statement-pool", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Curated-vibe", "minConfidence": 0.6 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Loves unique design and architecture",
+      "revealed": "Only cares about design that photographs well — would choose a mediocre hotel with an infinity pool over a brilliantly designed one with no Instagrammable moments",
+      "expectedResolution": "Properties with strong visual identity and photogenic features, not necessarily design-award winners"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "solo",
+      "domainDeltas": { "Setting": 0.10, "Atmosphere": 0.05 }
+    },
+    {
+      "context": "friends",
+      "domainDeltas": { "FoodDrink": 0.10, "Atmosphere": 0.10, "Setting": 0.05 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "INDIFFERENT",
+    "priorities": [],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "moderate",
+    "specificity": "concrete",
+    "consistency": 0.75
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.85,
+      "restaurant": 0.75,
+      "bar": 0.80,
+      "cafe": 0.70,
+      "museum": 0.30,
+      "activity": 0.50
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.35, "enjoyed": 0.35, "mixed": 0.15, "notMe": 0.15 },
+      "tagVerbosity": "moderate",
+      "returnIntentBias": "neutral"
+    },
+    "importSources": ["instagram", "tiktok", "friend"],
+    "importVolume": 30
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "a",
+      "pool-energy": "a",
+      "day-pace": "b",
+      "what-matters-more": "a",
+      "landscape-pull": "b",
+      "location-feel": "b",
+      "after-dark": "b",
+      "scale-intimacy": "a"
+    },
+    "imagePairChoices": {
+      "1": "b",
+      "2": "b",
+      "3": "a",
+      "4": "a",
+      "5": "a",
+      "6": "b",
+      "7": "a",
+      "8": "a"
+    },
+    "designerSelections": [
+      "kelly-wearstler",
+      "martin-brudnizki"
+    ],
+    "diagnosticChoices": {
+      "1": "a",
+      "2": "a",
+      "3": "a",
+      "4": "b",
+      "5": "a",
+      "6": "b",
+      "7": "a"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Describes places in visual terms — 'the light', 'the colors', 'the pool overlooking the ocean'. Names trendy properties (Amangiri, Cavo Tagoo, Aman Tokyo) but describes them in terms of the experience of being seen there, not the craftsmanship. 'The bathtub had this view and I just sat there for an hour taking photos.'",
+    "anti-stay": "A place that was ugly or generic. 'The room looked like every other Hilton. The lobby had carpet. There was nothing to photograph. I wanted to leave immediately.'",
+    "go-back-place": "Santorini, Bali, or Amalfi Coast — classic visual destinations. Describes the setting and light, not the people or culture.",
+    "cultural-engagement": "Picks experiences that are photogenic — lantern festivals, colorful markets, scenic hikes. Doesn't seek depth. 'I love finding those hidden spots that look incredible but aren't overrun yet.'",
+    "emotional-core": "Travels to create a visual diary of their life. Beauty as meaning. VISUAL_CURATOR."
+  }
+}

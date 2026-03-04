@@ -8,7 +8,7 @@
  * engine with compounding data network effects.
  */
 
-// Vector computation
+// Vector computation (v2.1 — 136-dim, FNV-1a hash)
 export {
   computeUserTasteVector,
   computeUserVectorFromProfile,
@@ -29,7 +29,22 @@ export {
 } from './vectors';
 export type { UserVectorInput, PropertyEmbeddingInput } from './vectors';
 
-// Database queries
+// Vector computation (v3 — 104-dim, semantic clusters)
+export {
+  computeUserTasteVectorV3,
+  computePropertyEmbeddingV3,
+  cosineSimilarityV3,
+  vectorToSqlV3,
+  setIdfWeightsV3,
+  clearIdfWeightsV3,
+  lookupSignalCluster,
+  getSignalClusterLabel,
+  getAllClusterLabels,
+  VECTOR_DIM_V3,
+} from './vectors-v3';
+export type { UserVectorInputV3, PropertyEmbeddingInputV3 } from './vectors-v3';
+
+// Database queries (v2.1)
 export {
   findSimilarProperties,
   findTasteNeighbors,
@@ -41,7 +56,16 @@ export {
 } from './queries';
 export type { VectorMatch, UserNeighbor, ContradictionCoOccurrence } from './queries';
 
-// Backfill pipeline
+// Database queries (v3)
+export {
+  findSimilarPropertiesV3,
+  findTasteNeighborsV3,
+  findSimilarPropertiesToPropertyV3,
+  findPropertiesByDomainV3,
+  findPropertiesByDomainWeightsV3,
+} from './queries-v3';
+
+// Backfill pipeline (v2.1)
 export {
   backfillUser,
   backfillAllUsers,
@@ -49,6 +73,15 @@ export {
   backfillAllPropertyEmbeddings,
   runFullBackfill,
 } from './backfill';
+
+// Backfill pipeline (v3)
+export {
+  backfillUserV3,
+  backfillAllUsersV3,
+  backfillPropertyEmbeddingV3,
+  backfillAllPropertyEmbeddingsV3,
+  runFullBackfillV3,
+} from './backfill-v3';
 
 // Evaluation harness (PE-10)
 export {

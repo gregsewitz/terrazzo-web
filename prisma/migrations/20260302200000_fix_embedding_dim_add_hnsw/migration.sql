@@ -1,7 +1,15 @@
--- PE-13: Fix PlaceIntelligence.embedding dimension from vector(32) to vector(34)
+-- PE-13: Ensure PlaceIntelligence.embedding exists, then resize to vector(34)
 -- to match User.tasteVector dimension. Existing embeddings are nulled and must be re-backfilled.
-ALTER TABLE "PlaceIntelligence"
-  ALTER COLUMN "embedding" TYPE vector(34) USING NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='PlaceIntelligence' AND column_name='embedding') THEN
+    ALTER TABLE "PlaceIntelligence" ADD COLUMN "embedding" vector(34);
+  ELSE
+    ALTER TABLE "PlaceIntelligence" ALTER COLUMN "embedding" TYPE vector(34) USING NULL;
+  END IF;
+END $$;
+
+-- Also ensure PlaceIntelligence.embeddingUpdatedAt exists
+ALTER TABLE "PlaceIntelligence" ADD COLUMN IF NOT EXISTS "embeddingUpdatedAt" TIMESTAMP(3);
 
 -- TG-11: HNSW index on User.tasteVector for fast nearest-neighbor queries
 CREATE INDEX IF NOT EXISTS idx_user_taste_vector_hnsw

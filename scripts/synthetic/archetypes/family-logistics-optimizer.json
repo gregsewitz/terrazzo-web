@@ -1,0 +1,124 @@
+{
+  "id": "family-logistics-optimizer",
+  "name": "The Family Logistics Optimizer",
+  "description": "Traveling with three kids under 10 has made taste a luxury they can't afford to prioritize. Every decision is filtered through 'will the kids be safe, fed, entertained, and asleep by 8?' Has strong Service preferences (needs help) and moderate Setting preferences (pool is non-negotiable). Design is irrelevant — they'll take ugly-but-functional over beautiful-but-impractical every time. Pre-kids, they probably had a real taste profile. Now it's buried.",
+
+  "expectedProfile": {
+    "Design": 0.25,
+    "Atmosphere": 0.40,
+    "Character": 0.35,
+    "Service": 0.90,
+    "FoodDrink": 0.55,
+    "Setting": 0.65,
+    "Wellness": 0.30,
+    "Sustainability": 0.25
+  },
+
+  "expectedSignals": [
+    { "domain": "Service", "tag": "Smooth-check-in", "minConfidence": 0.7 },
+    { "domain": "Service", "tag": "Family-friendly-service", "minConfidence": 0.6 },
+    { "domain": "Setting", "tag": "Walkable-radius", "minConfidence": 0.5 },
+    { "domain": "Atmosphere", "tag": "Anti-nightlife", "minConfidence": 0.5 },
+    { "domain": "FoodDrink", "tag": "Reliable-dining", "minConfidence": 0.5 },
+    { "domain": "Rejection", "tag": "anti-Intimate-under-20", "minConfidence": 0.5 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Doesn't care about design or atmosphere anymore",
+      "revealed": "Gets wistful describing pre-kids travel — clearly had strong Design preferences that are now suppressed",
+      "expectedResolution": "Properties that serve both selves: family-functional but with real design quality — Martinhal, Borgo Egnazia"
+    },
+    {
+      "stated": "Pool is non-negotiable",
+      "revealed": "Hates resort pool scenes — needs a quiet pool where kids can swim without judgment",
+      "expectedResolution": "Properties with family pools separate from adult pool areas"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "family",
+      "domainDeltas": { "Service": 0.15, "Design": -0.15, "Atmosphere": -0.10 }
+    },
+    {
+      "context": "partner",
+      "domainDeltas": { "Design": 0.25, "Atmosphere": 0.20, "FoodDrink": 0.20, "Service": -0.10 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "PASSIVE",
+    "priorities": [],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "moderate",
+    "specificity": "concrete",
+    "consistency": 0.70
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.85,
+      "restaurant": 0.70,
+      "bar": 0.10,
+      "cafe": 0.40,
+      "museum": 0.30,
+      "activity": 0.80
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.15, "enjoyed": 0.50, "mixed": 0.25, "notMe": 0.10 },
+      "tagVerbosity": "moderate",
+      "returnIntentBias": "enthusiastic"
+    },
+    "importSources": ["google-maps", "friend"],
+    "importVolume": 20
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "a",
+      "pool-energy": "b",
+      "day-pace": "b",
+      "what-matters-more": "a",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "a",
+      "scale-intimacy": "a"
+    },
+    "imagePairChoices": {
+      "1": "a",
+      "2": "b",
+      "3": "a",
+      "4": "a",
+      "5": "a",
+      "6": "a",
+      "7": "a",
+      "8": "a"
+    },
+    "designerSelections": [
+      "hotel-du-cap",
+      "peninsula-hong-kong",
+      "ilse-crawford"
+    ],
+    "diagnosticChoices": {
+      "1": "a",
+      "2": "b",
+      "3": "a",
+      "4": "b",
+      "5": "a",
+      "6": "a",
+      "7": "a"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Splits answer between 'before kids' and 'now.' Pre-kids: mentions a romantic boutique hotel with real affection. Now: 'honestly, the best hotel experience we've had with the kids was a Club Med in Portugal — the kids were taken care of, we could actually eat dinner together.' Practical, slightly apologetic about it.",
+    "anti-stay": "A beautiful design hotel with no kids' menu, breakable objects everywhere, a rooftop pool with no railing, and staff who visibly winced when they walked in. 'It was clearly not designed for anyone under 30.'",
+    "go-back-place": "Somewhere that worked for the whole family — probably a specific resort or villa rental where the kids were happy AND the parents got a break. Describes logistics as much as atmosphere.",
+    "cultural-engagement": "Kid-friendly activities — beaches, easy hikes, gelato runs, open-air markets. Avoids museums unless they're interactive. 'We do a lot of parks and playgrounds, honestly.'",
+    "emotional-core": "Travels to connect with family and give kids experiences. There's a buried desire for personal discovery too. CONTROL_ARCHITECT with suppressed AESTHETIC_PILGRIM."
+  }
+}

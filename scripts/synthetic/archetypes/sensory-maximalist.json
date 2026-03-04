@@ -1,0 +1,130 @@
+{
+  "id": "sensory-maximalist",
+  "name": "The Sensory Maximalist",
+  "description": "Wants every sense engaged simultaneously. Drawn to layered, rich environments where color, texture, scent, sound, and flavor compete for attention. Kelly Wearstler and Kit Kemp are heroes. Believes minimalism is fear of living. Will always choose the place with more going on.",
+
+  "expectedProfile": {
+    "Design": 0.90,
+    "Atmosphere": 0.95,
+    "Character": 0.70,
+    "Service": 0.75,
+    "FoodDrink": 0.90,
+    "Setting": 0.60,
+    "Wellness": 0.35,
+    "Sustainability": 0.20
+  },
+
+  "expectedSignals": [
+    { "domain": "Design", "tag": "Bold-color", "minConfidence": 0.7 },
+    { "domain": "Design", "tag": "Pattern-maximalism", "minConfidence": 0.7 },
+    { "domain": "Design", "tag": "Curated-density", "minConfidence": 0.6 },
+    { "domain": "Design", "tag": "Maximalist-warmth", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Pool-as-scene", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Social-energy", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Late-energy", "minConfidence": 0.5 },
+    { "domain": "FoodDrink", "tag": "Chef-tasting-seeker", "minConfidence": 0.6 },
+    { "domain": "Service", "tag": "Theatrical-service", "minConfidence": 0.5 },
+    { "domain": "Character", "tag": "Cinematic-narrative", "minConfidence": 0.5 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Wants sensory overload everywhere",
+      "revealed": "Actually needs a calm bedroom to sleep well",
+      "expectedResolution": "Properties where public spaces are electric but rooms are restful — the NoMad, Chiltern Firehouse"
+    },
+    {
+      "stated": "Loves social energy and scene",
+      "revealed": "Cherishes the one quiet corner table where you can watch it all",
+      "expectedResolution": "Properties with both communal buzz and intimate nooks"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "friends",
+      "domainDeltas": { "Atmosphere": 0.10, "FoodDrink": 0.10, "Service": -0.10 }
+    },
+    {
+      "context": "solo",
+      "domainDeltas": { "Design": 0.10, "Atmosphere": -0.15, "Character": 0.15 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "PASSIVE",
+    "priorities": [],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "expansive",
+    "specificity": "concrete",
+    "consistency": 0.75
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.8,
+      "restaurant": 0.9,
+      "bar": 0.85,
+      "cafe": 0.6,
+      "museum": 0.5,
+      "activity": 0.7
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.25, "enjoyed": 0.50, "mixed": 0.15, "notMe": 0.10 },
+      "tagVerbosity": "thorough",
+      "returnIntentBias": "enthusiastic"
+    },
+    "importSources": ["google-maps", "article", "friend"],
+    "importVolume": 35
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "a",
+      "pool-energy": "a",
+      "day-pace": "a",
+      "what-matters-more": "a",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "b",
+      "scale-intimacy": "a"
+    },
+    "imagePairChoices": {
+      "1": "a",
+      "2": "b",
+      "3": "b",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "a",
+      "8": "a"
+    },
+    "designerSelections": [
+      "kelly-wearstler",
+      "kit-kemp",
+      "ken-fulk",
+      "martin-brudnizki",
+      "jacques-garcia"
+    ],
+    "diagnosticChoices": {
+      "1": "a",
+      "2": "a",
+      "3": "a",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "b"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Should describe properties with overwhelming sensory detail — the smell of the lobby, the live music leaking from the bar, the hand-painted tiles in the bathroom, the cocktail list that read like a novel. Name-drops specific restaurants and bars within hotels. Long, effusive answers.",
+    "anti-stay": "A sterile, over-designed modern hotel with no soul — all white, no texture, no smell, no music. Should describe it as 'dead' or 'like sleeping in a rendering.' Might mention a specific chain that felt corporate.",
+    "go-back-place": "Somewhere with layers — a hotel where every visit reveals something new. Probably describes the restaurant, the pool scene, the rooftop, the neighborhood bar all in one answer.",
+    "cultural-engagement": "Experiences culture through food, nightlife, and street energy. Wants to be in the thick of it, not observing from a distance.",
+    "emotional-core": "Travels to feel alive. Primary driver is SENSORY_HEDONIST."
+  }
+}

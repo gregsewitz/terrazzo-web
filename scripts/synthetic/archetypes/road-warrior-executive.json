@@ -1,0 +1,119 @@
+{
+  "id": "road-warrior-executive",
+  "name": "The Road Warrior Executive",
+  "description": "150 nights a year in hotels. Travel is work, not pleasure. Has points status at every major chain and knows exactly which Marriott properties have the best lounges. Cares about consistency, efficiency, and sleep quality above all. Design is irrelevant as long as the room is quiet and the blackout curtains work. Will occasionally do a 'nice trip' with their spouse but defaults to reliability. The anti-boutique traveler.",
+
+  "expectedProfile": {
+    "Design": 0.20,
+    "Atmosphere": 0.25,
+    "Character": 0.20,
+    "Service": 0.85,
+    "FoodDrink": 0.45,
+    "Setting": 0.30,
+    "Wellness": 0.50,
+    "Sustainability": 0.15
+  },
+
+  "expectedSignals": [
+    { "domain": "Service", "tag": "Smooth-check-in", "minConfidence": 0.8 },
+    { "domain": "Service", "tag": "White-glove-precision", "minConfidence": 0.5 },
+    { "domain": "Atmosphere", "tag": "Cocoon-evening", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Early-to-bed", "minConfidence": 0.5 },
+    { "domain": "Setting", "tag": "Walkable-radius", "minConfidence": 0.4 },
+    { "domain": "Rejection", "tag": "anti-Packed-itinerary", "minConfidence": 0.4 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Doesn't care about hotels beyond function",
+      "revealed": "Has surprisingly strong opinions about pillow quality, shower pressure, and room temperature control",
+      "expectedResolution": "Properties that nail the invisible details — the St. Regis approach to comfort without drama"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "solo",
+      "domainDeltas": { "Service": 0.10, "Design": -0.10, "Atmosphere": -0.10 }
+    },
+    {
+      "context": "partner",
+      "domainDeltas": { "Design": 0.25, "FoodDrink": 0.30, "Character": 0.20, "Service": -0.05 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "INDIFFERENT",
+    "priorities": [],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "terse",
+    "specificity": "concrete",
+    "consistency": 0.95
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.70,
+      "restaurant": 0.50,
+      "bar": 0.40,
+      "cafe": 0.20,
+      "museum": 0.10,
+      "activity": 0.15
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.10, "enjoyed": 0.55, "mixed": 0.25, "notMe": 0.10 },
+      "tagVerbosity": "minimal",
+      "returnIntentBias": "neutral"
+    },
+    "importSources": ["google-maps"],
+    "importVolume": 8
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "a",
+      "pool-energy": "b",
+      "day-pace": "b",
+      "what-matters-more": "a",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "a",
+      "scale-intimacy": "a"
+    },
+    "imagePairChoices": {
+      "1": "b",
+      "2": "b",
+      "3": "a",
+      "4": "a",
+      "5": "a",
+      "6": "a",
+      "7": "a",
+      "8": "a"
+    },
+    "designerSelections": [
+      "joseph-dirand",
+      "peninsula-hong-kong",
+      "thierry-despont"
+    ],
+    "diagnosticChoices": {
+      "1": "a",
+      "2": "b",
+      "3": "a",
+      "4": "b",
+      "5": "a",
+      "6": "a",
+      "7": "a"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Brief, efficiency-focused. 'Park Hyatt Tokyo. Quiet room, great gym, Girandole for breakfast, 10 minutes from my meetings. That's all I need.' Might mention points and status unprompted. Names chain properties, not boutiques.",
+    "anti-stay": "A trendy boutique where the room key was a puzzle, the shower had no curtain, the bed was on the floor, and there was no desk. 'I had a 6am call and couldn't find the light switch.'",
+    "go-back-place": "A specific hotel in a city they work in frequently — chosen for reliability. 'The Mandarin Oriental in Hong Kong. Same room every time if I can.'",
+    "cultural-engagement": "Minimal during work travel. 'I know every good steak restaurant in a 5-block radius of the major convention centers.' On vacation, defers to spouse.",
+    "emotional-core": "Honestly, travel is mostly obligation. When pressed about why personal travel matters: 'I just want to stop moving and be somewhere beautiful with my wife.' Reluctant CONTROL_ARCHITECT."
+  }
+}

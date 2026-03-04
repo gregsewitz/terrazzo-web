@@ -1,7 +1,7 @@
 -- Taste Intelligence: graph tables, v2 signal decay columns, sustainability, trajectory
 
 -- Enable pgvector if not already enabled
-CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ──────────────────────────────────────────────
 -- Core taste-graph tables (idempotent)

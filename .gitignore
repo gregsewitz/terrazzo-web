@@ -42,3 +42,6 @@ next-env.d.ts
 
 # enrichment logs
 enrich-log*.txt
+
+# large cache files
+signal-embeddings-cache.json

@@ -1,0 +1,118 @@
+{
+  "id": "urban-food-obsessive",
+  "name": "The Urban Food Obsessive",
+  "description": "Entire trips planned around restaurant reservations. Knows which night to go to which place, has the sommelier's number, follows chefs on Instagram. FoodDrink is the dominant dimension by a wide margin. Hotels are just where you sleep between meals. Tests extreme single-domain peaking and whether the system can surface food-forward properties even when Design/Service signals are weak.",
+
+  "expectedProfile": {
+    "Design": 0.30,
+    "Atmosphere": 0.65,
+    "Character": 0.70,
+    "Service": 0.55,
+    "FoodDrink": 0.98,
+    "Setting": 0.50,
+    "Wellness": 0.10,
+    "Sustainability": 0.45
+  },
+
+  "expectedSignals": [
+    { "domain": "FoodDrink", "tag": "Chef-follower", "minConfidence": 0.8 },
+    { "domain": "FoodDrink", "tag": "Tasting-menu-devotee", "minConfidence": 0.7 },
+    { "domain": "FoodDrink", "tag": "Wine-knowledge", "minConfidence": 0.6 },
+    { "domain": "Character", "tag": "Neighborhood-explorer", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Restaurant-atmosphere", "minConfidence": 0.5 },
+    { "domain": "FoodDrink", "tag": "Market-pilgrim", "minConfidence": 0.6 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Doesn't care about hotels at all",
+      "revealed": "Actually very particular about hotel location — needs to be walking distance from the restaurants. Also secretly loves a great hotel breakfast, but frames it as 'fuel for the day'",
+      "expectedResolution": "Properties in food-destination neighborhoods with strong breakfast programs"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "solo",
+      "domainDeltas": { "FoodDrink": 0.02, "Service": 0.10 }
+    },
+    {
+      "context": "partner",
+      "domainDeltas": { "Atmosphere": 0.15, "Design": 0.10 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "CONSCIOUS",
+    "priorities": ["Farm-to-table", "Local-sourcing", "Seasonal-cooking"],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "expansive",
+    "specificity": "concrete",
+    "consistency": 0.85
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.25,
+      "restaurant": 0.98,
+      "bar": 0.80,
+      "cafe": 0.70,
+      "museum": 0.15,
+      "activity": 0.20
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.30, "enjoyed": 0.35, "mixed": 0.20, "notMe": 0.15 },
+      "tagVerbosity": "thorough",
+      "returnIntentBias": "enthusiastic"
+    },
+    "importSources": ["google-maps", "instagram", "friend"],
+    "importVolume": 55
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "a",
+      "pool-energy": "b",
+      "day-pace": "a",
+      "what-matters-more": "b",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "b",
+      "scale-intimacy": "b"
+    },
+    "imagePairChoices": {
+      "1": "a",
+      "2": "a",
+      "3": "b",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "b",
+      "8": "b"
+    },
+    "designerSelections": [
+      "nobu-matsuhisa",
+      "ilse-crawford"
+    ],
+    "diagnosticChoices": {
+      "1": "b",
+      "2": "b",
+      "3": "a",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "b"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Barely mentions the hotel — immediately pivots to the restaurants. 'I stayed somewhere in San Sebastián — honestly can't remember the name — but Mugaritz that trip was a religious experience. The fermented plum course changed how I think about acidity.' Names specific dishes, chefs, vintages.",
+    "anti-stay": "A place with bad food. 'Resort in Cancún where every restaurant was a buffet. The 'fine dining' option was a steak house with pre-made Caesar salad. I nearly cried. We found a taco stand on the highway and ate there every night.'",
+    "go-back-place": "Tokyo, San Sebastián, Mexico City, or Lyon — food capitals. 'Tokyo. Easily. I could eat there for a year and never repeat a meal. The izakayas alone...'",
+    "cultural-engagement": "Through food exclusively. Markets at dawn, street food for lunch, tasting menu for dinner. 'Food IS culture. You can learn more about a place from one meal at a family restaurant than a week in museums.'",
+    "emotional-core": "Travels to eat. Food as the purest form of place-making. TASTE_PILGRIM."
+  }
+}

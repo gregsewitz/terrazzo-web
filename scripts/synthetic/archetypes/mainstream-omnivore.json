@@ -1,0 +1,108 @@
+{
+  "id": "mainstream-omnivore",
+  "name": "The Mainstream Omnivore",
+  "description": "Likes nice things without strong opinions about why. Has stayed at Four Seasons, Ritz-Carlton, and Rosewood and thought they were all 'great.' Doesn't distinguish between design schools or care about architect names. This archetype specifically tests whether the system can differentiate a flat profile from a peaked one — if everyone gets 82, this person should reveal it.",
+
+  "expectedProfile": {
+    "Design": 0.55,
+    "Atmosphere": 0.55,
+    "Character": 0.50,
+    "Service": 0.60,
+    "FoodDrink": 0.60,
+    "Setting": 0.55,
+    "Wellness": 0.45,
+    "Sustainability": 0.30
+  },
+
+  "expectedSignals": [
+    { "domain": "Service", "tag": "Smooth-check-in", "minConfidence": 0.5 },
+    { "domain": "FoodDrink", "tag": "Reliable-dining", "minConfidence": 0.5 },
+    { "domain": "Design", "tag": "Contemporary-sleek", "minConfidence": 0.4 },
+    { "domain": "Atmosphere", "tag": "Social-energy", "minConfidence": 0.4 },
+    { "domain": "Setting", "tag": "Walkable-radius", "minConfidence": 0.4 }
+  ],
+
+  "contradictions": [],
+
+  "contextShifts": [
+    {
+      "context": "family",
+      "domainDeltas": { "Service": 0.15, "Setting": 0.05, "Atmosphere": -0.10 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "INDIFFERENT",
+    "priorities": [],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "terse",
+    "specificity": "abstract",
+    "consistency": 0.90
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.7,
+      "restaurant": 0.7,
+      "bar": 0.5,
+      "cafe": 0.3,
+      "museum": 0.4,
+      "activity": 0.6
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.10, "enjoyed": 0.65, "mixed": 0.20, "notMe": 0.05 },
+      "tagVerbosity": "minimal",
+      "returnIntentBias": "neutral"
+    },
+    "importSources": ["google-maps"],
+    "importVolume": 8
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "a",
+      "pool-energy": "a",
+      "day-pace": "a",
+      "what-matters-more": "b",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "b",
+      "scale-intimacy": "a"
+    },
+    "imagePairChoices": {
+      "1": "a",
+      "2": "b",
+      "3": "a",
+      "4": "a",
+      "5": "a",
+      "6": "a",
+      "7": "a",
+      "8": "a"
+    },
+    "designerSelections": [
+      "thierry-despont",
+      "peninsula-hong-kong",
+      "hotel-du-cap"
+    ],
+    "diagnosticChoices": {
+      "1": "a",
+      "2": "a",
+      "3": "a",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "b"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Short, generic answers. 'We stayed at the Four Seasons in Maui and it was great — beautiful pool, good food, the kids loved it.' No design language, no specific sensory details. Uses words like 'nice,' 'great,' 'beautiful' without specificity.",
+    "anti-stay": "Complains about practical failures — bad wifi, rude staff, dirty room — not aesthetic failures. Wouldn't notice or care about design problems.",
+    "go-back-place": "Somewhere with reliable quality and good weather. Probably a well-known resort destination. Answer is 1-2 sentences.",
+    "cultural-engagement": "Does the standard tourist things — visits the famous sites, eats at Tripadvisor recommendations. No strong cultural curiosity.",
+    "emotional-core": "Travels to relax and spend time with family. No deeper driver. If pressed, might say CONTROL_ARCHITECT (wants things to go smoothly)."
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "id": "spontaneous-wanderer",
+  "name": "The Spontaneous Wanderer",
+  "description": "Books flights the night before. No itinerary, no reservations, no plan. The anti-planner. Moderate across most domains because they genuinely don't have strong fixed preferences — what they want depends on what they find. High Character and Atmosphere because the serendipity of stumbling on something unexpected IS the point. Tests whether the system can serve someone whose taste is defined by openness rather than specificity.",
+
+  "expectedProfile": {
+    "Design": 0.35,
+    "Atmosphere": 0.70,
+    "Character": 0.80,
+    "Service": 0.20,
+    "FoodDrink": 0.55,
+    "Setting": 0.65,
+    "Wellness": 0.20,
+    "Sustainability": 0.40
+  },
+
+  "expectedSignals": [
+    { "domain": "Character", "tag": "Serendipity-seeker", "minConfidence": 0.7 },
+    { "domain": "Character", "tag": "Neighborhood-explorer", "minConfidence": 0.6 },
+    { "domain": "Atmosphere", "tag": "Unscripted-energy", "minConfidence": 0.6 },
+    { "domain": "Setting", "tag": "Walkable-discovery", "minConfidence": 0.5 },
+    { "domain": "Rejection", "tag": "anti-Advance-booking", "minConfidence": 0.6 },
+    { "domain": "Rejection", "tag": "anti-Itinerary-culture", "minConfidence": 0.5 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Doesn't plan anything, goes with the flow",
+      "revealed": "Actually does extensive passive research — follows travel accounts, saves articles, has a mental map of neighborhoods in cities they've never visited. The 'spontaneity' is really well-informed improvisation",
+      "expectedResolution": "Serve discovery content they can mentally bookmark — the feed IS their research tool, even if they never formally save anything"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "solo",
+      "domainDeltas": { "Character": 0.10, "Atmosphere": 0.05 }
+    },
+    {
+      "context": "partner",
+      "domainDeltas": { "FoodDrink": 0.15, "Design": 0.10, "Service": 0.10 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "PASSIVE",
+    "priorities": [],
+    "dealbreakers": []
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "moderate",
+    "specificity": "abstract",
+    "consistency": 0.65
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.30,
+      "restaurant": 0.40,
+      "bar": 0.45,
+      "cafe": 0.35,
+      "museum": 0.25,
+      "activity": 0.50
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.15, "enjoyed": 0.50, "mixed": 0.20, "notMe": 0.15 },
+      "tagVerbosity": "minimal",
+      "returnIntentBias": "neutral"
+    },
+    "importSources": ["google-maps"],
+    "importVolume": 15
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "b",
+      "pool-energy": "b",
+      "day-pace": "a",
+      "what-matters-more": "b",
+      "landscape-pull": "a",
+      "location-feel": "a",
+      "after-dark": "b",
+      "scale-intimacy": "b"
+    },
+    "imagePairChoices": {
+      "1": "a",
+      "2": "a",
+      "3": "b",
+      "4": "a",
+      "5": "b",
+      "6": "a",
+      "7": "a",
+      "8": "b"
+    },
+    "designerSelections": [
+      "ilse-crawford",
+      "blackberry-farm"
+    ],
+    "diagnosticChoices": {
+      "1": "a",
+      "2": "b",
+      "3": "a",
+      "4": "a",
+      "5": "a",
+      "6": "b",
+      "7": "a"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Stories are about what happened, not where they stayed. 'I was in Lisbon — don't even remember the hotel name, somewhere in Alfama — and I wandered into this tiny bar where a woman was singing fado. Spent the whole night there. That's what I remember, not the room.'",
+    "anti-stay": "Over-programmed experiences. 'A resort where every hour was scheduled. Yoga at 7, breakfast buffet 7:30-9, pool opens at 10. I felt like I was in school. I checked out early and walked to the next town.'",
+    "go-back-place": "Not a specific place but a type of moment. 'Anywhere I've gotten lost and found something I wasn't looking for. That could be Oaxaca, Tbilisi, Porto — the city matters less than the feeling of not knowing what's next.'",
+    "cultural-engagement": "Entirely unstructured. Wanders, follows noise, says yes to invitations from strangers. 'I don't research. I just walk. The city tells you where to go if you listen.'",
+    "emotional-core": "Travels to feel alive through uncertainty. Routine is the enemy. FREEDOM_SEEKER."
+  }
+}

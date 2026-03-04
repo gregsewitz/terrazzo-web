@@ -1,0 +1,120 @@
+{
+  "id": "adventure-pragmatist",
+  "name": "The Adventure Pragmatist",
+  "description": "Hotels are for sleeping. The trip IS the hike, the dive, the climb, the dawn patrol surf session. Will sleep in a van, a tent, or a basic guesthouse without complaint. Actively hostile to hotel luxury — sees it as waste. Cares deeply about Setting and access to nature, indifferent to Design and Service. Would pick a moldy surf shack on the right beach over a five-star anywhere else.",
+
+  "expectedProfile": {
+    "Design": 0.15,
+    "Atmosphere": 0.45,
+    "Character": 0.55,
+    "Service": 0.15,
+    "FoodDrink": 0.40,
+    "Setting": 0.98,
+    "Wellness": 0.60,
+    "Sustainability": 0.65
+  },
+
+  "expectedSignals": [
+    { "domain": "Setting", "tag": "Remote-isolated", "minConfidence": 0.8 },
+    { "domain": "Setting", "tag": "Elevation-seeker", "minConfidence": 0.6 },
+    { "domain": "Setting", "tag": "Elemental-rawness", "minConfidence": 0.7 },
+    { "domain": "Atmosphere", "tag": "Slow-travel", "minConfidence": 0.5 },
+    { "domain": "Character", "tag": "Rustic-refinement", "minConfidence": 0.5 },
+    { "domain": "Sustainability", "tag": "Carbon-conscious", "minConfidence": 0.5 },
+    { "domain": "Rejection", "tag": "anti-Grand-hotel-lover", "minConfidence": 0.6 },
+    { "domain": "Rejection", "tag": "anti-Pool-as-scene", "minConfidence": 0.5 }
+  ],
+
+  "contradictions": [
+    {
+      "stated": "Doesn't care about accommodation at all",
+      "revealed": "Actually very particular about location — will drive 2 extra hours for the trailhead lodge vs. the town hotel",
+      "expectedResolution": "Properties where the setting IS the amenity — wilderness lodges, eco-camps, surf compounds"
+    }
+  ],
+
+  "contextShifts": [
+    {
+      "context": "solo",
+      "domainDeltas": { "Setting": 0.05, "Service": -0.10, "Design": -0.05 }
+    },
+    {
+      "context": "partner",
+      "domainDeltas": { "FoodDrink": 0.15, "Design": 0.10, "Atmosphere": 0.10 }
+    }
+  ],
+
+  "sustainability": {
+    "sensitivity": "LEADING",
+    "priorities": ["Carbon-conscious", "Leave-no-trace", "Local-economy", "Community-integrated"],
+    "dealbreakers": ["Massive-resort-chains", "Over-tourism-contributor"]
+  },
+
+  "onboardingBehavior": {
+    "verbosity": "moderate",
+    "specificity": "concrete",
+    "consistency": 0.90
+  },
+
+  "postOnboardingBehavior": {
+    "saveProbability": {
+      "hotel": 0.3,
+      "restaurant": 0.5,
+      "bar": 0.3,
+      "cafe": 0.6,
+      "museum": 0.2,
+      "activity": 0.95
+    },
+    "ratingStyle": {
+      "reactionDistribution": { "myPlace": 0.05, "enjoyed": 0.30, "mixed": 0.35, "notMe": 0.30 },
+      "tagVerbosity": "minimal",
+      "returnIntentBias": "selective"
+    },
+    "importSources": ["google-maps", "friend"],
+    "importVolume": 15
+  },
+
+  "onboardingInputs": {
+    "experiencePreferences": {
+      "morning-ritual": "b",
+      "pool-energy": "b",
+      "day-pace": "a",
+      "what-matters-more": "b",
+      "landscape-pull": "b",
+      "location-feel": "b",
+      "after-dark": "a",
+      "scale-intimacy": "b"
+    },
+    "imagePairChoices": {
+      "1": "b",
+      "2": "a",
+      "3": "a",
+      "4": "b",
+      "5": "b",
+      "6": "b",
+      "7": "b",
+      "8": "b"
+    },
+    "designerSelections": [
+      "amangiri",
+      "blackberry-farm"
+    ],
+    "diagnosticChoices": {
+      "1": "b",
+      "2": "b",
+      "3": "b",
+      "4": "b",
+      "5": "b",
+      "6": "b",
+      "7": "a"
+    }
+  },
+
+  "voiceAnswerGuidance": {
+    "memorable-stays": "Talks about places by describing the landscape, not the property. 'We stayed at this tiny lodge in Patagonia — you could see the glacier from the breakfast table. The rooms were basic but who cares, you're there for the Torres.' Might mention camping or van life fondly.",
+    "anti-stay": "A resort that felt like a prison — couldn't leave the compound, everything was manicured, the pool was packed, the beach was roped off. 'I spent $800 a night to feel like I was in a shopping mall.'",
+    "go-back-place": "Somewhere remote and wild — Iceland, Patagonia, New Zealand backcountry, a specific surf break in Indonesia. Describes the landscape, weather, and physical experience more than any building.",
+    "cultural-engagement": "Engages through physical landscape and local guides. Hiking with a Sherpa, surfing with locals, climbing with a guide who knows the mountain. Not museums.",
+    "emotional-core": "Travels to feel physically alive and small against the landscape. TRANSFORMATION_SEEKER."
+  }
+}

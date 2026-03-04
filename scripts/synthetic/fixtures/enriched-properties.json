@@ -1,0 +1,134 @@
+[
+  {
+    "id": "prop-001",
+    "name": "Aman Tokyo",
+    "googlePlaceId": "ChIJx8DRjMOMGGARz4INi3IsJQw",
+    "signals": [
+      { "dimension": "Design", "confidence": 0.95, "signal": "Material-connoisseur" },
+      { "dimension": "Design", "confidence": 0.90, "signal": "Restraint-as-luxury" },
+      { "dimension": "Atmosphere", "confidence": 0.85, "signal": "Hushed-refinement" },
+      { "dimension": "Service", "confidence": 0.90, "signal": "Anticipatory-invisible" },
+      { "dimension": "Setting", "confidence": 0.75, "signal": "Urban-sanctuary" },
+      { "dimension": "Wellness", "confidence": 0.80, "signal": "Integrated-wellbeing" }
+    ],
+    "antiSignals": [
+      { "dimension": "Atmosphere", "confidence": 0.85, "signal": "Party-scene" },
+      { "dimension": "Design", "confidence": 0.80, "signal": "Flashy-opulence" }
+    ],
+    "profile": { "Design": 0.95, "Atmosphere": 0.85, "Character": 0.60, "Service": 0.90, "FoodDrink": 0.75, "Setting": 0.80, "Wellness": 0.80, "Sustainability": 0.60 }
+  },
+  {
+    "id": "prop-002",
+    "name": "Ace Hotel Downtown LA",
+    "googlePlaceId": "ChIJ_____-TDwoAR",
+    "signals": [
+      { "dimension": "Atmosphere", "confidence": 0.85, "signal": "Creative-buzz" },
+      { "dimension": "Character", "confidence": 0.80, "signal": "Neighborhood-explorer" },
+      { "dimension": "Design", "confidence": 0.70, "signal": "Industrial-chic" },
+      { "dimension": "FoodDrink", "confidence": 0.75, "signal": "Third-wave-coffee" },
+      { "dimension": "Atmosphere", "confidence": 0.70, "signal": "See-and-be-seen" }
+    ],
+    "antiSignals": [
+      { "dimension": "Service", "confidence": 0.60, "signal": "Formal-service" },
+      { "dimension": "Atmosphere", "confidence": 0.50, "signal": "Hushed-refinement" }
+    ],
+    "profile": { "Design": 0.70, "Atmosphere": 0.80, "Character": 0.85, "Service": 0.40, "FoodDrink": 0.75, "Setting": 0.65, "Wellness": 0.30, "Sustainability": 0.50 }
+  },
+  {
+    "id": "prop-003",
+    "name": "Six Senses Yao Noi",
+    "googlePlaceId": "ChIJm4z_____HkER",
+    "signals": [
+      { "dimension": "Wellness", "confidence": 0.95, "signal": "Holistic-spa" },
+      { "dimension": "Sustainability", "confidence": 0.90, "signal": "Zero-waste-pioneer" },
+      { "dimension": "Setting", "confidence": 0.90, "signal": "Nature-immersion" },
+      { "dimension": "FoodDrink", "confidence": 0.80, "signal": "Farm-to-table" },
+      { "dimension": "Design", "confidence": 0.70, "signal": "Biophilic-design" }
+    ],
+    "antiSignals": [
+      { "dimension": "Atmosphere", "confidence": 0.70, "signal": "Urban-energy" },
+      { "dimension": "Character", "confidence": 0.50, "signal": "Nightlife-culture" }
+    ],
+    "profile": { "Design": 0.70, "Atmosphere": 0.65, "Character": 0.50, "Service": 0.80, "FoodDrink": 0.85, "Setting": 0.95, "Wellness": 0.95, "Sustainability": 0.90 }
+  },
+  {
+    "id": "prop-004",
+    "name": "Hostel One Paralelo Barcelona",
+    "googlePlaceId": "ChIJrb7_____pBIR",
+    "signals": [
+      { "dimension": "Character", "confidence": 0.85, "signal": "Backpacker-community" },
+      { "dimension": "Atmosphere", "confidence": 0.80, "signal": "Social-energy" },
+      { "dimension": "Setting", "confidence": 0.70, "signal": "Walkable-discovery" },
+      { "dimension": "FoodDrink", "confidence": 0.60, "signal": "Local-street-food" }
+    ],
+    "antiSignals": [
+      { "dimension": "Service", "confidence": 0.80, "signal": "Luxury-service" },
+      { "dimension": "Design", "confidence": 0.70, "signal": "Material-connoisseur" },
+      { "dimension": "Wellness", "confidence": 0.60, "signal": "Spa-culture" }
+    ],
+    "profile": { "Design": 0.25, "Atmosphere": 0.80, "Character": 0.90, "Service": 0.20, "FoodDrink": 0.55, "Setting": 0.70, "Wellness": 0.10, "Sustainability": 0.35 }
+  },
+  {
+    "id": "prop-005",
+    "name": "Noma Restaurant",
+    "googlePlaceId": "ChIJc3_____CQUBR",
+    "signals": [
+      { "dimension": "FoodDrink", "confidence": 0.99, "signal": "Culinary-innovation" },
+      { "dimension": "FoodDrink", "confidence": 0.90, "signal": "Tasting-menu-temple" },
+      { "dimension": "Design", "confidence": 0.80, "signal": "Wabi-sabi" },
+      { "dimension": "Sustainability", "confidence": 0.85, "signal": "Foraging-culture" },
+      { "dimension": "Character", "confidence": 0.75, "signal": "Culinary-pilgrimage" }
+    ],
+    "antiSignals": [
+      { "dimension": "Atmosphere", "confidence": 0.60, "signal": "Casual-dining" }
+    ],
+    "profile": { "Design": 0.80, "Atmosphere": 0.70, "Character": 0.75, "Service": 0.85, "FoodDrink": 0.99, "Setting": 0.60, "Wellness": 0.40, "Sustainability": 0.85 }
+  },
+  {
+    "id": "prop-006",
+    "name": "Marriott Times Square",
+    "googlePlaceId": "ChIJ_____3CawokR",
+    "signals": [
+      { "dimension": "Service", "confidence": 0.70, "signal": "Chain-reliability" },
+      { "dimension": "Setting", "confidence": 0.65, "signal": "Central-location" }
+    ],
+    "antiSignals": [
+      { "dimension": "Character", "confidence": 0.80, "signal": "Generic-chain" },
+      { "dimension": "Design", "confidence": 0.70, "signal": "Corporate-standard" },
+      { "dimension": "Atmosphere", "confidence": 0.60, "signal": "Tourist-trap" }
+    ],
+    "profile": { "Design": 0.30, "Atmosphere": 0.35, "Character": 0.20, "Service": 0.65, "FoodDrink": 0.40, "Setting": 0.60, "Wellness": 0.35, "Sustainability": 0.25 }
+  },
+  {
+    "id": "prop-007",
+    "name": "Fogo Island Inn",
+    "googlePlaceId": "ChIJ_____vZXQ0AR",
+    "signals": [
+      { "dimension": "Design", "confidence": 0.90, "signal": "Architectural-masterpiece" },
+      { "dimension": "Character", "confidence": 0.90, "signal": "Cultural-deep-dive" },
+      { "dimension": "Sustainability", "confidence": 0.85, "signal": "Community-economics" },
+      { "dimension": "Setting", "confidence": 0.90, "signal": "Remote-beauty" },
+      { "dimension": "FoodDrink", "confidence": 0.80, "signal": "Terroir-driven" },
+      { "dimension": "Atmosphere", "confidence": 0.75, "signal": "Contemplative-space" }
+    ],
+    "antiSignals": [
+      { "dimension": "Atmosphere", "confidence": 0.80, "signal": "Party-scene" },
+      { "dimension": "Setting", "confidence": 0.60, "signal": "Urban-convenience" }
+    ],
+    "profile": { "Design": 0.92, "Atmosphere": 0.80, "Character": 0.95, "Service": 0.85, "FoodDrink": 0.85, "Setting": 0.90, "Wellness": 0.60, "Sustainability": 0.90 }
+  },
+  {
+    "id": "prop-008",
+    "name": "1 Hotel South Beach",
+    "googlePlaceId": "ChIJ_____vPLrYgR",
+    "signals": [
+      { "dimension": "Sustainability", "confidence": 0.80, "signal": "Green-certified" },
+      { "dimension": "Design", "confidence": 0.75, "signal": "Biophilic-design" },
+      { "dimension": "Wellness", "confidence": 0.75, "signal": "Fitness-forward" },
+      { "dimension": "Setting", "confidence": 0.80, "signal": "Beachfront-access" },
+      { "dimension": "Atmosphere", "confidence": 0.65, "signal": "Instagram-worthy" }
+    ],
+    "antiSignals": [],
+    "profile": { "Design": 0.75, "Atmosphere": 0.65, "Character": 0.45, "Service": 0.70, "FoodDrink": 0.60, "Setting": 0.80, "Wellness": 0.75, "Sustainability": 0.80 }
+  }
+]
