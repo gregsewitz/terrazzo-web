@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     // ── 1. Backfill googleData from SavedPlace → PlaceIntelligence ────────
     const piMissingGoogleData = await prisma.placeIntelligence.findMany({
       where: {
-        googleData: { equals: null },
+        googleData: { equals: Prisma.JsonNull },
       },
       select: { id: true, googlePlaceId: true, propertyName: true },
       take: limit,
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
         const sp = await prisma.savedPlace.findFirst({
           where: {
             googlePlaceId: pi.googlePlaceId,
-            googleData: { not: null },
+            googleData: { not: Prisma.JsonNull },
           },
           select: { googleData: true },
         });
