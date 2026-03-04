@@ -125,6 +125,35 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   const resolvedPlaceType = mapGoogleTypeToPlaceType(googleResult.primaryType);
   const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, user.id, 'user_import', resolvedPlaceType);
 
+  // 3a. Store canonical googleData on PlaceIntelligence (if it doesn't have it yet)
+  if (intelligenceId) {
+    const existingIntel = await prisma.placeIntelligence.findUnique({
+      where: { id: intelligenceId },
+      select: { googleData: true },
+    });
+    if (!existingIntel?.googleData) {
+      const canonicalGoogleData = {
+        address: googleResult.formattedAddress || null,
+        rating: googleResult.rating || null,
+        reviewCount: googleResult.userRatingCount || null,
+        priceLevel: priceLevelToString(googleResult.priceLevel),
+        hours: googleResult.regularOpeningHours?.weekdayDescriptions || null,
+        lat: googleResult.location?.latitude || null,
+        lng: googleResult.location?.longitude || null,
+        category: googleResult.primaryTypeDisplayName?.text || null,
+        website: googleResult.websiteUri || null,
+        phone: googleResult.internationalPhoneNumber || null,
+        placeId: googlePlaceId,
+      };
+      await prisma.placeIntelligence.update({
+        where: { id: intelligenceId },
+        data: { googleData: canonicalGoogleData as any },
+      }).catch((err: unknown) => {
+        console.error(`[resolve] Failed to store googleData on PlaceIntelligence:`, err);
+      });
+    }
+  }
+
   // 3b. If SavedPlace exists but isn't linked to intelligence, link it now
   if (intelligenceId && savedPlace && !savedPlace.placeIntelligenceId) {
     await prisma.savedPlace.update({

@@ -31,6 +31,17 @@ export interface DBSavedPlace {
   placeIntelligenceId?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  // Joined from PlaceIntelligence (canonical property data)
+  intelligence?: {
+    description?: string | null;
+    whatToOrder?: string[] | null;
+    tips?: string[] | null;
+    alsoKnownAs?: string | null;
+    googleData?: Record<string, unknown> | null;
+    formalityLevel?: string | null;
+    cuisineStyle?: string | null;
+    status?: string | null;
+  } | null;
 }
 
 export interface DBCollection {

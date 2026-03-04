@@ -52,8 +52,8 @@ model User {
   tasteVector          Unsupported("vector(136)")?
   tasteVectorUpdatedAt DateTime?
 
-  // Taste Intelligence v3 (semantic clusters, 104-dim)
-  tasteVectorV3        Unsupported("vector(104)")?
+  // Taste Intelligence v3 (semantic clusters, 308-dim = 8 domains + 300 clusters)
+  tasteVectorV3        Unsupported("vector(308)")?
 
   // Taste graph relations
   tasteNodes           TasteNode[]
@@ -580,6 +580,19 @@ model PlaceIntelligence {
   sustainabilityScore        Float?    // 0-1 overall sustainability rating (drives SustainabilityBadge)
   accolades                  Json?     // [{ type, value, year?, category? }] — Michelin stars, Green Key, awards etc.
 
+  // Property-level product data (canonical — synthesized from intelligence)
+  description         String?   // 2-3 sentence editorial-style property description
+  whatToOrder          Json?     // string[] — top 3-5 dish/experience recommendations
+  tips                Json?     // string[] — 3-5 practical visitor tips
+  alsoKnownAs         String?   // alternative name (e.g. "El Sótano")
+  googleData          Json?     // canonical Google Places data { rating, reviewCount, address, hours, etc. }
+  formalityLevel      String?   // from service analysis: formal | semi-formal | casual | etc.
+  cuisineStyle        String?   // from fooddrink analysis: short cuisine description
+
+  // Synthesis metadata
+  synthesisVersion    String    @default("v1")  // synthesis algorithm version
+  synthesisRunAt      DateTime? // when description/whatToOrder/tips were last generated
+
   // Sources processed
   sourcesProcessed Json?
 
@@ -597,8 +610,8 @@ model PlaceIntelligence {
   embedding          Unsupported("vector(136)")?
   embeddingUpdatedAt DateTime?
 
-  // Taste Intelligence v3 (semantic clusters, 104-dim)
-  embeddingV3        Unsupported("vector(104)")?
+  // Taste Intelligence v3 (semantic clusters, 308-dim = 8 domains + 300 clusters)
+  embeddingV3        Unsupported("vector(308)")?
 
   // Relations
   pipelineRuns    PipelineRun[]

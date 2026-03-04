@@ -50,7 +50,68 @@ export async function POST(req: NextRequest) {
       console.error(`[enrichment-complete] Embedding computation failed:`, err);
     }
 
-    // ── 2. Recompute match scores for all users who saved this place ──────
+    // ── 2. Promote synthesis fields from PlaceIntelligence → SavedPlace ──────
+    let fieldsPromoted = 0;
+    try {
+      const intelForPromotion = await prisma.placeIntelligence.findUnique({
+        where: { id: placeIntelligenceId },
+        select: {
+          description: true,
+          whatToOrder: true,
+          tips: true,
+          alsoKnownAs: true,
+          googleData: true,
+          formalityLevel: true,
+          cuisineStyle: true,
+          reliabilityScore: true,
+          sustainabilityScore: true,
+          signalCount: true,
+          antiSignalCount: true,
+        },
+      });
+
+      if (intelForPromotion) {
+        const promotionData: Record<string, any> = {};
+
+        // Summary fields
+        if (intelForPromotion.reliabilityScore != null) promotionData.reliabilityScore = intelForPromotion.reliabilityScore;
+        if (intelForPromotion.sustainabilityScore != null) promotionData.sustainabilityScore = intelForPromotion.sustainabilityScore;
+        if (intelForPromotion.signalCount != null) promotionData.signalCount = intelForPromotion.signalCount;
+        if (intelForPromotion.antiSignalCount != null) promotionData.antiSignalCount = intelForPromotion.antiSignalCount;
+        if (intelForPromotion.formalityLevel) promotionData.formalityLevel = intelForPromotion.formalityLevel;
+        if (intelForPromotion.cuisineStyle) promotionData.cuisineStyle = intelForPromotion.cuisineStyle;
+
+        // Synthesis fields — denormalized cache on SavedPlace
+        if (intelForPromotion.description) {
+          promotionData.enrichment = { description: intelForPromotion.description };
+        }
+        if (intelForPromotion.whatToOrder && Array.isArray(intelForPromotion.whatToOrder) && (intelForPromotion.whatToOrder as any[]).length > 0) {
+          promotionData.whatToOrder = intelForPromotion.whatToOrder;
+        }
+        if (intelForPromotion.tips && Array.isArray(intelForPromotion.tips) && (intelForPromotion.tips as any[]).length > 0) {
+          promotionData.tips = intelForPromotion.tips;
+        }
+        if (intelForPromotion.googleData) {
+          promotionData.googleData = intelForPromotion.googleData;
+        }
+        if (intelForPromotion.alsoKnownAs) {
+          promotionData.alsoKnownAs = intelForPromotion.alsoKnownAs;
+        }
+
+        if (Object.keys(promotionData).length > 0) {
+          const result = await prisma.savedPlace.updateMany({
+            where: { placeIntelligenceId },
+            data: promotionData,
+          });
+          fieldsPromoted = result.count;
+          console.log(`[enrichment-complete] Promoted ${Object.keys(promotionData).length} fields to ${fieldsPromoted} SavedPlace(s)`);
+        }
+      }
+    } catch (err) {
+      console.error(`[enrichment-complete] Field promotion failed:`, err);
+    }
+
+    // ── 3. Recompute match scores for all users who saved this place ──────
     let matchesUpdated = 0;
     try {
       // Find all SavedPlace records for this googlePlaceId, with their user's taste profile
@@ -115,6 +176,7 @@ export async function POST(req: NextRequest) {
       success: true,
       googlePlaceId,
       embeddingComputed,
+      fieldsPromoted,
       matchesUpdated,
     });
   } catch (error) {

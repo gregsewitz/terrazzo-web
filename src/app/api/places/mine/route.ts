@@ -11,6 +11,20 @@ export const GET = apiHandler(async (req: NextRequest) => {
     prisma.savedPlace.findMany({
       where: { userId: user.id, deletedAt: null },
       orderBy: { createdAt: 'desc' },
+      include: {
+        intelligence: {
+          select: {
+            description: true,
+            whatToOrder: true,
+            tips: true,
+            alsoKnownAs: true,
+            googleData: true,
+            formalityLevel: true,
+            cuisineStyle: true,
+            status: true,
+          },
+        },
+      },
     }),
     prisma.shortlist.findMany({
       where: { userId: user.id },

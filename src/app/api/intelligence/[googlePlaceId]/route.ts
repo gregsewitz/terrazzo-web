@@ -72,6 +72,14 @@ export async function GET(
       reliabilityScore: intel.reliabilityScore,
       lastEnrichedAt: intel.lastEnrichedAt,
       pipelineVersion: intel.pipelineVersion,
+      // Synthesis fields
+      description: intel.description ?? null,
+      whatToOrder: intel.whatToOrder ?? null,
+      tips: intel.tips ?? null,
+      alsoKnownAs: intel.alsoKnownAs ?? null,
+      googleData: intel.googleData ?? null,
+      formalityLevel: intel.formalityLevel ?? null,
+      cuisineStyle: intel.cuisineStyle ?? null,
       latestRun: latestRun
         ? {
             status: latestRun.status,

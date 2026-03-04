@@ -36,17 +36,19 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       rating: dp.rating as PlaceRating | undefined,
       friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
-      enrichment: dp.enrichment as ImportedPlace['enrichment'],
-      google: normalizeGoogleData(dp.googleData, dp.googlePlaceId),
+      enrichment: dp.intelligence?.description
+        ? { ...(dp.enrichment as Record<string, unknown> || {}), description: dp.intelligence.description }
+        : dp.enrichment as ImportedPlace['enrichment'],
+      google: normalizeGoogleData(dp.intelligence?.googleData || dp.googleData, dp.googlePlaceId),
       userContext: dp.userContext || undefined,
       timing: dp.timing || undefined,
       travelWith: dp.travelWith || undefined,
       intentStatus: dp.intentStatus as ImportedPlace['intentStatus'],
       savedAt: dp.createdAt || undefined,
       importBatchId: dp.importBatchId || undefined,
-      whatToOrder: dp.whatToOrder || undefined,
-      tips: dp.tips || undefined,
-      alsoKnownAs: dp.alsoKnownAs || undefined,
+      whatToOrder: (dp.intelligence?.whatToOrder || dp.whatToOrder || undefined) as string[] | undefined,
+      tips: (dp.intelligence?.tips || dp.tips || undefined) as string[] | undefined,
+      alsoKnownAs: dp.intelligence?.alsoKnownAs || dp.alsoKnownAs || undefined,
     }));
 
     // Build a set of valid place IDs for fast lookup
