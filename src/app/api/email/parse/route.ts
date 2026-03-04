@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
         // Try to resolve Google Place ID
         let googlePlaceId: string | undefined;
-        if (res.placeName && res.location && res.placeType !== 'flight') {
+        if (res.placeName && res.location && res.placeType !== 'flight' && res.placeType !== 'rental') {
           try {
             const searchQuery = `${res.placeName} ${res.location}`.trim();
             const placeResult = await searchPlace(searchQuery, undefined, res.placeName);

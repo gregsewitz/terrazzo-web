@@ -60,13 +60,9 @@ function PlaceDetailContent({
   const { data: intelData } = useBriefing(googlePlaceId);
   const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
-  // A place is a "private listing" (Airbnb/Vrbo) only when:
-  //   1. It has no googlePlaceId AND no Google rating data (Google can't find it), AND
-  //   2. It's an accommodation type (hotel) — restaurants/bars/etc. that temporarily
-  //      lack a googlePlaceId should show the taste match card, not "Private listing".
-  const hasNoGoogleData = !googlePlaceId && !item.google?.rating;
-  const isAccommodation = item.type === 'hotel';
-  const isPrivateListing = hasNoGoogleData && isAccommodation;
+  // A place is a "private listing" (Airbnb/Vrbo) when the parser explicitly
+  // classified it as a "rental" — a private vacation rental not on Google Maps.
+  const isPrivateListing = item.type === 'rental';
 
   // ─── Hydrate preview places from the resolve API ───
   // When opened from discover feed, the item only has name/location/googlePlaceId.

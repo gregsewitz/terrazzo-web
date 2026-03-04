@@ -206,7 +206,7 @@ export interface CompetitiveContextData {
   nearbyAlternatives?: CompetitiveAlternative[];
 }
 
-export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
+export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'rental' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
 
 export type ImportSourceType = 'url' | 'text' | 'google-maps' | 'email' | 'friend-list';
 

@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
       return handleEnrichBackfill(user);
     }
 
-    // Find all non-flight reservations missing googlePlaceId
+    // Find all non-flight, non-rental reservations missing googlePlaceId
     const reservations = await prisma.emailReservation.findMany({
       where: {
         userId: user.id,
         googlePlaceId: null,
-        placeType: { not: 'flight' },
+        placeType: { notIn: ['flight', 'rental'] },
         placeName: { not: '' },
       },
       select: {

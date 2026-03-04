@@ -6,6 +6,7 @@ import type { PerriandIconName } from '@/components/icons/PerriandIcons';
 export const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
   restaurant: 'restaurant',
   hotel: 'hotel',
+  rental: 'hotel',
   bar: 'bar',
   cafe: 'cafe',
   museum: 'museum',
@@ -19,6 +20,7 @@ export const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
 export const THUMB_GRADIENTS: Record<PlaceType, string> = {
   restaurant: 'linear-gradient(135deg, #d8c8ae, #c0ab8e)',
   hotel: 'linear-gradient(135deg, #d0c8d8, #b8b0c0)',
+  rental: 'linear-gradient(135deg, #d0d0c8, #b8b8b0)',
   bar: 'linear-gradient(135deg, #c0d0c8, #a8c0b0)',
   cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0)',
   museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8)',
@@ -32,6 +34,7 @@ export const THUMB_GRADIENTS: Record<PlaceType, string> = {
 export const PHOTO_GRADIENTS: Record<PlaceType, string> = {
   restaurant: 'linear-gradient(135deg, #d8c0a0, #c0a880, #b89870)',
   hotel: 'linear-gradient(135deg, #c8c0d0, #b0a8b8, #a098a8)',
+  rental: 'linear-gradient(135deg, #c8c8c0, #b0b0a8, #a0a098)',
   bar: 'linear-gradient(135deg, #d0c0a0, #b8a888, #a89878)',
   cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0, #b8b0a0)',
   museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8, #98a0a8)',
@@ -45,6 +48,7 @@ export const PHOTO_GRADIENTS: Record<PlaceType, string> = {
 export const TYPE_COLORS_MUTED: Record<PlaceType, string> = {
   restaurant: '#c0ab8e',
   hotel: '#b8b0c0',
+  rental: '#b0b0a8',
   bar: '#a8c0b0',
   cafe: '#c8c0b0',
   museum: '#a8b0b8',
@@ -58,6 +62,7 @@ export const TYPE_COLORS_MUTED: Record<PlaceType, string> = {
 export const TYPE_COLORS_VIBRANT: Record<PlaceType, string> = {
   restaurant: T.royerePink,
   hotel: T.honey,
+  rental: T.honey,
   bar: T.pantonViolet,
   museum: T.verde,
   cafe: T.chromeYellow,
@@ -78,6 +83,7 @@ export const TYPE_CHIPS_SHORT: FilterChip[] = [
   { value: 'museum', label: 'See', icon: 'museum' },
   { value: 'activity', label: 'Do', icon: 'activity' },
   { value: 'hotel', label: 'Stay', icon: 'hotel' },
+  { value: 'rental', label: 'Rental', icon: 'hotel' },
   { value: 'shop', label: 'Shop', icon: 'shop' },
   { value: 'neighborhood', label: 'Walk', icon: 'location' },
 ];
@@ -93,6 +99,7 @@ export const TYPE_CHIPS_WITH_ALL: FilterChip[] = [
   { value: 'neighborhood', label: 'Walk', icon: 'location' },
   { value: 'shop', label: 'Shop', icon: 'shop' },
   { value: 'hotel', label: 'Stay', icon: 'hotel' },
+  { value: 'rental', label: 'Rental', icon: 'hotel' },
 ];
 
 /** Full-name labels — used in PoolTray */
@@ -104,6 +111,7 @@ export const TYPE_CHIPS_FULL: FilterChip[] = [
   { value: 'museum', label: 'Museum', icon: 'museum' },
   { value: 'activity', label: 'Activity', icon: 'activity' },
   { value: 'hotel', label: 'Hotel', icon: 'hotel' },
+  { value: 'rental', label: 'Rental', icon: 'hotel' },
   { value: 'neighborhood', label: 'Area', icon: 'location' },
   { value: 'shop', label: 'Shop', icon: 'shop' },
 ];

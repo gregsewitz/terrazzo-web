@@ -20,7 +20,7 @@ For each reservation, return a JSON object with these fields:
 
 {
   "placeName": "Name of the restaurant, hotel, airline, or activity provider",
-  "placeType": "restaurant | hotel | flight | activity | bar | cafe",
+  "placeType": "restaurant | hotel | rental | flight | activity | bar | cafe",
   "location": "City or full address if available",
   "reservationDate": "YYYY-MM-DD format, the date of the reservation/check-in/departure",
   "reservationTime": "HH:mm 24h format, if available",
@@ -57,6 +57,10 @@ RULES:
 - If an email is a MODIFICATION, extract the updated details (not the original).
 - Parse dates carefully — handle formats like "March 14, 2025", "14/03/2025", "2025-03-14", etc.
 - For restaurants, infer placeType from context (bar vs restaurant vs cafe).
+- IMPORTANT: Distinguish "hotel" from "rental":
+  - Use "hotel" for branded hotels and hotel chains (Marriott, Hilton, Hyatt, Four Seasons, boutique hotels, hostels, etc.) — places that are commercial establishments listed on Google Maps.
+  - Use "rental" for private vacation rentals and short-term stays (Airbnb, VRBO, Vacasa, Turnkey, Evolve, HomeAway, any private home/apartment/villa/cabin). These are private properties NOT listed as businesses on Google Maps.
+  - When the email is from airbnb.com or vrbo.com, the placeType should almost always be "rental" (unless it's an Airbnb Experience, which is "activity").
 - Always prefer the venue's actual name over the booking platform name.
 - Strip HTML tags from names and locations.
 

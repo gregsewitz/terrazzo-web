@@ -6,7 +6,7 @@
 
 // ─── Reservation Types ─────────────────────────────────────────────────────────
 
-export type ReservationType = 'restaurant' | 'hotel' | 'flight' | 'activity' | 'bar' | 'cafe';
+export type ReservationType = 'restaurant' | 'hotel' | 'rental' | 'flight' | 'activity' | 'bar' | 'cafe';
 
 export type ReservationProvider =
   | 'opentable'
