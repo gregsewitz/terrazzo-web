@@ -5,7 +5,8 @@
  * TG-10:  Compute + store taste vectors for all existing users
  * PE-08:  Compute + store embeddings for all PlaceIntelligence records
  *
- * These can be run as one-shot scripts or as Inngest jobs.
+ * v2.1: Now computes IDF weights from the property corpus before generating vectors,
+ *       so rare signals are weighted more heavily than common ones.
  */
 
 import { prisma } from '@/lib/prisma';
@@ -13,6 +14,7 @@ import {
   computeUserVectorFromProfile,
   computePropertyEmbedding,
   vectorToSql,
+  setIdfWeights,
 } from './vectors';
 import type {
   TasteSignal,
@@ -23,6 +25,47 @@ import type {
   BriefingAntiSignal,
 } from '@/types';
 import { DIMENSION_TO_DOMAIN } from '@/types';
+
+// ─── IDF Computation ─────────────────────────────────────────────────────────
+
+/**
+ * Compute IDF weights from all property signals in the corpus.
+ * Must be called before generating any vectors.
+ *
+ * Scans all PlaceIntelligence.signals to build document frequency per signal,
+ * then calls setIdfWeights() to make them available to vector computation.
+ */
+export async function computeAndSetIdfWeights(): Promise<{ totalDocs: number; uniqueSignals: number }> {
+  const allRecords = await prisma.placeIntelligence.findMany({
+    where: { status: 'complete', signalCount: { gt: 0 } },
+    select: { signals: true },
+  });
+
+  const signalDocFrequency = new Map<string, number>();
+  let totalDocs = 0;
+
+  for (const record of allRecords) {
+    const signals = (record.signals as unknown as BriefingSignal[]) || [];
+    if (signals.length === 0) continue;
+    totalDocs++;
+
+    // Track unique signals per document (each signal counts once per property)
+    const seenInDoc = new Set<string>();
+    for (const sig of signals) {
+      const normalized = sig.signal.toLowerCase().trim();
+      if (!seenInDoc.has(normalized)) {
+        seenInDoc.add(normalized);
+        signalDocFrequency.set(normalized, (signalDocFrequency.get(normalized) || 0) + 1);
+      }
+    }
+  }
+
+  setIdfWeights(signalDocFrequency, totalDocs);
+
+  console.log(`[idf] Computed IDF weights: ${signalDocFrequency.size} unique signals across ${totalDocs} properties`);
+
+  return { totalDocs, uniqueSignals: signalDocFrequency.size };
+}
 
 // ─── TG-02: Extract signals from User.allSignals → TasteNode ───────────────
 
@@ -69,7 +112,6 @@ export async function backfillUser(userId: string): Promise<BackfillUserResult> 
     const nodes = signals
       .filter((s) => s.confidence > 0)
       .map((s) => {
-        // Map signal category to domain
         const domain = DIMENSION_TO_DOMAIN[s.cat] || s.cat;
         return {
           userId,
@@ -120,7 +162,7 @@ export async function backfillUser(userId: string): Promise<BackfillUserResult> 
     result.contextModifiersCreated = modifiers.length;
   }
 
-  // 4. Compute taste vector
+  // 4. Compute taste vector (IDF weights should already be set via computeAndSetIdfWeights)
   if (profile?.radarData && profile.radarData.length > 0) {
     const vector = computeUserVectorFromProfile(
       profile,
@@ -230,9 +272,6 @@ export async function backfillAllPropertyEmbeddings(): Promise<{
   computed: number;
   skipped: number;
 }> {
-  // Only backfill properties with complete enrichment AND actual signal data.
-  // Some records have signalCount > 0 but empty signals JSON (pipeline artifacts),
-  // so we also fetch signals to filter those out before processing.
   const allRecords = await prisma.placeIntelligence.findMany({
     where: {
       status: 'complete',
@@ -241,7 +280,6 @@ export async function backfillAllPropertyEmbeddings(): Promise<{
     select: { id: true, propertyName: true, signals: true },
   });
 
-  // Filter to records that actually have signal data in the JSON
   const records = allRecords.filter((r) => {
     const signals = r.signals as unknown as unknown[];
     return Array.isArray(signals) && signals.length > 0;
@@ -273,9 +311,16 @@ export async function backfillAllPropertyEmbeddings(): Promise<{
 
 /**
  * Run the complete Phase 1 + Phase 2 backfill.
+ * v2.1: Computes IDF weights first, then generates all vectors.
  */
 export async function runFullBackfill() {
-  console.log('═══ Taste Intelligence Backfill ═══');
+  console.log('═══ Taste Intelligence Backfill (v2.1: 136-dim) ═══');
+  console.log('');
+
+  // Step 0: Compute IDF weights from property corpus
+  console.log('── Step 0: Computing IDF Weights ──');
+  const idfStats = await computeAndSetIdfWeights();
+  console.log(`IDF: ${idfStats.uniqueSignals} unique signals across ${idfStats.totalDocs} properties`);
   console.log('');
 
   console.log('── Phase 1: User Taste Graph ──');
@@ -297,5 +342,5 @@ export async function runFullBackfill() {
 
   console.log('═══ Backfill Complete ═══');
 
-  return { userResults, propResults };
+  return { userResults, propResults, idfStats };
 }

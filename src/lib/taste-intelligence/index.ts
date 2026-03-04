@@ -17,7 +17,14 @@ export {
   similarityToScore,
   vectorToSql,
   sqlToVector,
+  setIdfWeights,
+  clearIdfWeights,
+  hashSignalToBucket,
   VECTOR_DIM,
+  SIGNAL_DIMS,
+  DOMAIN_DIMS,
+  DOMAIN_WEIGHT,
+  SIGNAL_WEIGHT,
   DOMAIN_INDEX,
 } from './vectors';
 export type { UserVectorInput, PropertyEmbeddingInput } from './vectors';

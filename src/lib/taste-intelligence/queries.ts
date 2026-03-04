@@ -10,7 +10,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { vectorToSql } from './vectors';
+import { vectorToSql, VECTOR_DIM } from './vectors';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -179,7 +179,7 @@ export async function findPropertiesByDomain(
   const idx = DOMAIN_INDICES[domain];
   if (idx === undefined) return [];
 
-  const probe = new Array(34).fill(0); // 8 domain dims + 26 signal hash features
+  const probe = new Array(VECTOR_DIM).fill(0);
   probe[idx] = 1.0;
   // L2 normalize (already unit vector since only one dimension is set)
 
@@ -201,7 +201,7 @@ export async function findPropertiesByDomainWeights(
     FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
   };
 
-  const probe = new Array(34).fill(0);
+  const probe = new Array(VECTOR_DIM).fill(0);
   let magnitude = 0;
 
   for (const [domain, weight] of Object.entries(weights)) {

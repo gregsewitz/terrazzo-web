@@ -1,13 +1,17 @@
 /**
- * Taste Intelligence — Vector Computation (v2 Taxonomy)
+ * Taste Intelligence — Vector Computation (v2.1: High-Res Vectors)
  *
- * Converts user taste profiles and property signals into 34-dimensional vectors
+ * Converts user taste profiles and property signals into 136-dimensional vectors
  * that live in the same embedding space, enabling direct cosine similarity.
  *
- * Vector layout (34 dimensions):
- *   [0-5]   : 6 core taste domains (Design, Atmosphere, Character, Service, FoodDrink, Setting)
- *   [6-7]   : 2 preference dimensions (Wellness, Sustainability) — lower weight in similarity
- *   [8-33]  : 26 semantic signal hash features (signal text → deterministic bucket)
+ * v2.1 improvements over v2.0 (34-dim):
+ *   1. 128 hash buckets (was 26) — dramatically reduces signal collision
+ *   2. Independent normalization — domain dims guaranteed 30% of similarity
+ *   3. IDF weighting — rare signals count more than common ones
+ *
+ * Vector layout (136 dimensions):
+ *   [0-7]     : 8 taste domains (Design, Atmosphere, Character, Service, FoodDrink, Setting, Wellness, Sustainability)
+ *   [8-135]   : 128 signal hash features (signal text → deterministic bucket, IDF-weighted)
  *
  * TG-04: User taste vector from radarData + micro-signals
  * PE-02: Property embedding from PlaceIntelligence signals
@@ -16,9 +20,15 @@
 import type { TasteDomain, TasteProfile, BriefingSignal, GeneratedTasteProfile } from '@/types';
 import { DIMENSION_TO_DOMAIN, ALL_TASTE_DOMAINS } from '@/types';
 
-const VECTOR_DIM = 34;
-const DOMAIN_DIMS = 8;     // indices 0-7 (6 taste domains + 2 preference dimensions)
-const SIGNAL_DIMS = 26;    // indices 8-33
+// ─── Vector dimensions ──────────────────────────────────────────────────────
+
+const VECTOR_DIM = 136;
+const DOMAIN_DIMS = 8;      // indices 0-7
+const SIGNAL_DIMS = 128;    // indices 8-135
+
+/** Weight of domain dims in final vector (signal dims get 1 - this) */
+const DOMAIN_WEIGHT = 0.30;
+const SIGNAL_WEIGHT = 1.0 - DOMAIN_WEIGHT;
 
 const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Design: 0,
@@ -33,11 +43,57 @@ const DOMAIN_INDEX: Record<TasteDomain, number> = {
 
 const ALL_DOMAINS: TasteDomain[] = ALL_TASTE_DOMAINS;
 
+// ─── IDF (Inverse Document Frequency) ────────────────────────────────────────
+
+/**
+ * IDF weights per signal text, computed from the corpus of all properties.
+ * Set once via setIdfWeights() before computing vectors.
+ *
+ * IDF(signal) = log(N / df(signal)) where:
+ *   N = total properties in corpus
+ *   df(signal) = number of properties containing that signal
+ *
+ * Falls back to 1.0 if not set (backward compatible).
+ */
+let idfWeights: Map<string, number> | null = null;
+let corpusSize: number = 0;
+
+/**
+ * Set IDF weights from a pre-computed map of signal → document frequency.
+ * Call this once before running backfill.
+ */
+export function setIdfWeights(signalDocFrequency: Map<string, number>, totalDocs: number): void {
+  idfWeights = new Map();
+  corpusSize = totalDocs;
+  for (const [signal, df] of signalDocFrequency.entries()) {
+    // Smoothed IDF: log(1 + N/df) to avoid extreme values
+    const idf = Math.log(1 + totalDocs / Math.max(df, 1));
+    idfWeights.set(signal.toLowerCase().trim(), idf);
+  }
+}
+
+/**
+ * Get IDF weight for a signal. Returns 1.0 if IDF not initialized.
+ */
+function getIdfWeight(signalText: string): number {
+  if (!idfWeights) return 1.0;
+  const normalized = signalText.toLowerCase().trim();
+  return idfWeights.get(normalized) ?? Math.log(1 + corpusSize); // unseen signal gets max IDF
+}
+
+/**
+ * Clear IDF weights (for testing).
+ */
+export function clearIdfWeights(): void {
+  idfWeights = null;
+  corpusSize = 0;
+}
+
 // ─── Deterministic signal hashing ────────────────────────────────────────────
 
 /**
  * Hash a signal string into a bucket index [0, SIGNAL_DIMS).
- * Uses a simple but effective FNV-1a-inspired hash for determinism.
+ * Uses FNV-1a hash for determinism and good distribution.
  */
 function hashSignalToBucket(signal: string): number {
   const normalized = signal.toLowerCase().trim();
@@ -50,25 +106,29 @@ function hashSignalToBucket(signal: string): number {
 }
 
 /**
- * Build the signal feature portion of a vector (dimensions 8-33).
- * Each signal contributes its confidence to its hashed bucket.
- * Multiple signals can map to the same bucket (accumulates).
- * Final values are normalized to [0, 1].
+ * Build the signal feature portion of a vector (128 dimensions).
+ * Each signal contributes its IDF-weighted confidence to its hashed bucket.
+ * Multiple signals can map to the same bucket (accumulates weighted average).
  */
 function buildSignalFeatures(signals: Array<{ text: string; confidence: number }>): number[] {
   const features = new Array(SIGNAL_DIMS).fill(0);
-  const counts = new Array(SIGNAL_DIMS).fill(0);
+  const totalWeights = new Array(SIGNAL_DIMS).fill(0);
 
   for (const { text, confidence } of signals) {
     const bucket = hashSignalToBucket(text);
-    features[bucket] += confidence;
-    counts[bucket] += 1;
+    const idf = getIdfWeight(text);
+    const weightedConfidence = confidence * idf;
+    features[bucket] += weightedConfidence;
+    totalWeights[bucket] += idf;
   }
 
-  // Normalize: average confidence per bucket, capped at 1.0
+  // Normalize: weighted average per bucket, capped at max IDF value
   for (let i = 0; i < SIGNAL_DIMS; i++) {
-    if (counts[i] > 0) {
-      features[i] = Math.min(features[i] / counts[i], 1.0);
+    if (totalWeights[i] > 0) {
+      features[i] = features[i] / totalWeights[i];
+      // Cap at 1.0 — the IDF weighting changes relative importance between buckets,
+      // but each bucket's value should still be in [0, 1]
+      features[i] = Math.min(features[i], 1.0);
     }
   }
 
@@ -87,6 +147,28 @@ function l2Normalize(vec: number[]): number[] {
   return vec.map((v) => v / magnitude);
 }
 
+// ─── Independent normalization + weighting ───────────────────────────────────
+
+/**
+ * Normalize domain and signal portions independently, then combine with weights.
+ * This ensures domain dims always contribute DOMAIN_WEIGHT (30%) of similarity
+ * regardless of how many signal dims there are.
+ *
+ * final = concat(DOMAIN_WEIGHT × L2norm(domains), SIGNAL_WEIGHT × L2norm(signals))
+ * Then L2-normalize the combined vector.
+ */
+function normalizeWithWeighting(domainDims: number[], signalDims: number[]): number[] {
+  const normDomains = l2Normalize(domainDims);
+  const normSignals = l2Normalize(signalDims);
+
+  const weighted = [
+    ...normDomains.map((v) => v * DOMAIN_WEIGHT),
+    ...normSignals.map((v) => v * SIGNAL_WEIGHT),
+  ];
+
+  return l2Normalize(weighted);
+}
+
 // ─── User Taste Vector (TG-04) ──────────────────────────────────────────────
 
 export interface UserVectorInput {
@@ -99,20 +181,18 @@ export interface UserVectorInput {
 }
 
 /**
- * Compute a 34-dimensional taste vector for a user.
+ * Compute a 136-dimensional taste vector for a user.
  *
  * Combines:
- * - radarData (mapped to 8 domain dimensions)
- * - microTasteSignals (hashed into 26 feature dimensions)
- * - allSignals confidence (if available, to boost signal features)
+ * - radarData (mapped to 8 domain dimensions, independently normalized)
+ * - microTasteSignals + allSignals (hashed into 128 IDF-weighted features, independently normalized)
+ * - Domain and signal portions weighted 30/70 to guarantee domain dims matter
  */
 export function computeUserTasteVector(input: UserVectorInput): number[] {
-  const vector = new Array(VECTOR_DIM).fill(0);
+  const domainDims = new Array(DOMAIN_DIMS).fill(0);
 
   // Dimensions 0-7: radar axes mapped to domains
-  // radarData axes use various names; map them to domains
   const axisToIndex: Record<string, number> = {
-    // v2 domain names → indices
     design: 0, 'design language': 0,
     atmosphere: 1, 'sensory environment': 1,
     character: 2, 'character & identity': 2,
@@ -126,14 +206,13 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
   for (const { axis, value } of input.radarData) {
     const idx = axisToIndex[axis.toLowerCase()];
     if (idx !== undefined) {
-      vector[idx] = Math.max(vector[idx], value); // take highest if duplicates
+      domainDims[idx] = Math.max(domainDims[idx], value);
     }
   }
 
-  // Dimensions 8-33: micro-signal hash features
+  // Signal hash features
   const signalInputs: Array<{ text: string; confidence: number }> = [];
 
-  // Map microTasteSignal category keys to TasteDomain names
   const signalCategoryToDomain: Record<string, TasteDomain> = {
     architectural_attraction: 'Design',
     material_obsessions: 'Design',
@@ -147,10 +226,9 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
 
   for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
     for (const sig of signals) {
-      // Map micro-signal category keys to domain names
       const resolvedDomain = signalCategoryToDomain[domain] || (domain as TasteDomain);
       const domainIdx = DOMAIN_INDEX[resolvedDomain];
-      const domainWeight = domainIdx !== undefined ? vector[domainIdx] : 0.5;
+      const domainWeight = domainIdx !== undefined ? domainDims[domainIdx] : 0.5;
       signalInputs.push({ text: sig, confidence: domainWeight });
     }
   }
@@ -164,12 +242,9 @@ export function computeUserTasteVector(input: UserVectorInput): number[] {
     }
   }
 
-  const signalFeatures = buildSignalFeatures(signalInputs);
-  for (let i = 0; i < SIGNAL_DIMS; i++) {
-    vector[DOMAIN_DIMS + i] = signalFeatures[i];
-  }
+  const signalDims = buildSignalFeatures(signalInputs);
 
-  return l2Normalize(vector);
+  return normalizeWithWeighting(domainDims, signalDims);
 }
 
 /**
@@ -196,16 +271,16 @@ export interface PropertyEmbeddingInput {
 }
 
 /**
- * Compute a 34-dimensional embedding for a property.
+ * Compute a 136-dimensional embedding for a property.
  *
  * Lives in the same vector space as user taste vectors, enabling
  * direct cosine similarity for user-to-property matching.
  *
  * Dimensions 0-7: domain strength (signal density × confidence per domain)
- * Dimensions 8-33: signal text hash features (same hashing as user vectors)
+ * Dimensions 8-135: IDF-weighted signal text hash features
  */
 export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[] {
-  const vector = new Array(VECTOR_DIM).fill(0);
+  const domainDims = new Array(DOMAIN_DIMS).fill(0);
   const { signals, antiSignals = [] } = input;
 
   // Dimensions 0-7: per-domain strength from signals
@@ -230,8 +305,7 @@ export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[
     }, 0) / sigs.length;
 
     const density = Math.min(sigs.length / 20, 1.0);
-    // 60% confidence, 40% density — matches taste-match.ts scoring
-    vector[DOMAIN_INDEX[domain]] = avgConf * 0.6 + density * 0.4;
+    domainDims[DOMAIN_INDEX[domain]] = avgConf * 0.6 + density * 0.4;
   }
 
   // Apply anti-signal penalties to domain dimensions
@@ -239,22 +313,19 @@ export function computePropertyEmbedding(input: PropertyEmbeddingInput): number[
     const domain = DIMENSION_TO_DOMAIN[anti.dimension];
     if (domain) {
       const idx = DOMAIN_INDEX[domain];
-      vector[idx] = Math.max(0, vector[idx] - anti.confidence * 0.1);
+      domainDims[idx] = Math.max(0, domainDims[idx] - anti.confidence * 0.1);
     }
   }
 
-  // Dimensions 8-33: signal text hash features
+  // Signal text hash features (IDF-weighted)
   const signalInputs = signals.map((s) => ({
     text: s.signal,
     confidence: s.confidence,
   }));
 
-  const signalFeatures = buildSignalFeatures(signalInputs);
-  for (let i = 0; i < SIGNAL_DIMS; i++) {
-    vector[DOMAIN_DIMS + i] = signalFeatures[i];
-  }
+  const signalDims = buildSignalFeatures(signalInputs);
 
-  return l2Normalize(vector);
+  return normalizeWithWeighting(domainDims, signalDims);
 }
 
 // ─── Similarity ─────────────────────────────────────────────────────────────
@@ -276,8 +347,6 @@ export function cosineSimilarity(a: number[], b: number[]): number {
  * Uses a sigmoid-like mapping that emphasizes differences in the 0.3-0.8 range.
  */
 export function similarityToScore(similarity: number): number {
-  // Map [-1, 1] → [0, 100] with emphasis on the useful range
-  // similarity of 0.5 → ~50, 0.8 → ~85, 0.3 → ~30
   const score = Math.round(((similarity + 1) / 2) * 100);
   return Math.max(0, Math.min(100, score));
 }
@@ -294,4 +363,4 @@ export function sqlToVector(sql: string): number[] {
   return sql.replace(/[\[\]]/g, '').split(',').map(Number);
 }
 
-export { VECTOR_DIM, DOMAIN_INDEX, ALL_DOMAINS };
+export { VECTOR_DIM, SIGNAL_DIMS, DOMAIN_DIMS, DOMAIN_WEIGHT, SIGNAL_WEIGHT, DOMAIN_INDEX, ALL_DOMAINS, hashSignalToBucket };
