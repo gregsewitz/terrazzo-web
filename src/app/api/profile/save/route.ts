@@ -29,6 +29,8 @@ export const POST = apiHandler(async (req: NextRequest) => {
       ...(body.sustainabilityWillingnessToPayPremium !== undefined && { sustainabilityWillingnessToPayPremium: body.sustainabilityWillingnessToPayPremium }),
       ...(body.profileVersion !== undefined && { profileVersion: body.profileVersion }),
       ...(body.lastProfileSynthesizedAt !== undefined && { lastProfileSynthesizedAt: body.lastProfileSynthesizedAt ? new Date(body.lastProfileSynthesizedAt) : null }),
+      ...(body.sustainabilitySignals !== undefined && { sustainabilitySignals: body.sustainabilitySignals }),
+      ...(body.completedPhaseIds !== undefined && { completedPhaseIds: body.completedPhaseIds }),
     },
   });
 

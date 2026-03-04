@@ -241,6 +241,7 @@ export const useOnboardingStore = create<OnboardingState>()(
           allContradictions: state.allContradictions,
           seedTrips: state.seedTrips,
           trustedSources: state.trustedSources,
+          completedPhaseIds: state.completedPhaseIds,
           isOnboardingComplete: true,
           onboardingDepth: depth,
         });

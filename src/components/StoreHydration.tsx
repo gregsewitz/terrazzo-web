@@ -6,6 +6,7 @@ import { useSavedStore, DBSavedPlace, DBCollection } from '@/stores/savedStore';
 import { useTripStore, DBTrip } from '@/stores/tripStore';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
+import { ALL_PHASE_IDS } from '@/constants/onboarding';
 import type { OnboardingDepth } from '@/types';
 
 /**
@@ -83,6 +84,19 @@ async function loadUserData() {
       const mosaicData = profile.user.mosaicData as { answers?: unknown[]; axes?: Record<string, number> } | null;
       if (mosaicData?.answers) updates.mosaicAnswers = mosaicData.answers;
       if (mosaicData?.axes) updates.mosaicAxes = mosaicData.axes;
+
+      // Merge completedPhaseIds from DB + localStorage (union — don't lose progress from either source)
+      const dbPhaseIds = (profile.user.completedPhaseIds as string[]) || [];
+      if (dbPhaseIds.length > 0) {
+        const localPhaseIds = onboarding.completedPhaseIds || [];
+        const merged = [...new Set([...localPhaseIds, ...dbPhaseIds])];
+        updates.completedPhaseIds = merged;
+        // Also derive currentPhaseIndex from the furthest completed phase
+        const maxIdx = Math.max(...merged.map(id => ALL_PHASE_IDS.indexOf(id)).filter(i => i >= 0));
+        if (maxIdx >= 0 && maxIdx + 1 < ALL_PHASE_IDS.length) {
+          updates.currentPhaseIndex = maxIdx + 1;
+        }
+      }
 
       if (Object.keys(updates).length > 0) {
         useOnboardingStore.setState(updates);

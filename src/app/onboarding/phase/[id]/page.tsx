@@ -12,6 +12,7 @@ import TripSeedView from '@/components/onboarding/TripSeedView';
 import SliderPhaseView from '@/components/onboarding/SliderPhaseView';
 import SwipePhaseView from '@/components/onboarding/SwipePhaseView';
 import SpectrumPhaseView from '@/components/onboarding/SpectrumPhaseView';
+import { apiFetch } from '@/lib/api-client';
 
 export default function PhasePage() {
   const params = useParams();
@@ -53,6 +54,18 @@ export default function PhasePage() {
 
   const handlePhaseComplete = useCallback(() => {
     completePhase(phaseId);
+
+    // Fire-and-forget save of accumulated signals + progress to DB after each phase
+    const store = useOnboardingStore.getState();
+    apiFetch('/api/profile/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        allSignals: store.allSignals,
+        allContradictions: store.allContradictions,
+        sustainabilitySignals: store.sustainabilitySignals,
+        completedPhaseIds: store.completedPhaseIds,
+      }),
+    }).catch((err) => console.error('Failed to save phase progress:', err));
 
     if (isLastAct1) {
       // Show celebratory milestone screen before Act 2

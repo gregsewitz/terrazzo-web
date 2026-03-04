@@ -775,14 +775,17 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
     followUps: [
       "How do you feel when a trip is heavily scheduled versus when it's wide open? Which makes you more anxious?",
       "Think about how your taste has evolved. Do you travel differently now than you did five years ago? Are you seeking different things, or deepening into the same instincts?",
+      "When you think back to a trip where the atmosphere was just right — everything clicked — what was that? What made it feel that way?",
     ],
     sampleUserResponses: [
       "Slow morning, always. I need that first hour to just exist before the day starts. Then I'll pack the afternoon and evening.",
       "I used to try to see everything. Now I'd rather do two things well than five things in a blur.",
+      "Puglia last September. Something about the light and the pace — long dinners, nowhere to rush to. It just felt right.",
     ],
     extractedSignals: [
       { tag: 'Slow-morning-ritual', cat: 'Atmosphere', confidence: 0.92 },
       { tag: 'Deepening-not-expanding', cat: 'Character', confidence: 0.85 },
+      { tag: 'Unhurried-evening-orientation', cat: 'Atmosphere', confidence: 0.88 },
     ],
     certaintyAfter: { Atmosphere: 80 },
   },
@@ -797,15 +800,18 @@ export const REFINEMENT_PHASES: OnboardingPhase[] = [
     followUps: [
       "Does it matter to you that a property feels rooted in its place — local materials, local references — or can a great hotel transcend its location?",
       "Have you ever had a travel moment where you felt genuinely connected to a place's culture, not as a tourist but as a participant? What was that?",
+      "What kind of scale do you prefer — the 8-room place where you know everyone by day two, or the larger property with more programming and energy? Or does it depend?",
     ],
     sampleUserResponses: [
       "I'm somewhere in between. I won't sign up for a group cooking class, but if the chef invites me into the kitchen, I'm absolutely going.",
       "The property should feel like it belongs there. When you could be anywhere in the world — same marble, same international menu — that's a red flag for me.",
+      "Depends on the trip. With my partner, small and intimate. With friends, I want a bit more going on.",
     ],
     extractedSignals: [
       { tag: 'Participatory-when-invited', cat: 'Character', confidence: 0.88 },
       { tag: 'Place-rootedness-valued', cat: 'Design', confidence: 0.90 },
       { tag: 'Anti-international-generic', cat: 'Character', confidence: 0.85 },
+      { tag: 'Scale-context-dependent', cat: 'Character', confidence: 0.82 },
     ],
     certaintyAfter: { Character: 88 },
   },
@@ -832,7 +838,7 @@ ROLE: Extract taste signals from the user's natural language responses. You iden
 
 THE 6 TASTE DOMAINS (rich signal-to-signal matching):
 1. DESIGN — Architectural & material vocabulary: structural language, material palette, furniture/object design, color philosophy, detail resolution, light quality as design choice
-2. ATMOSPHERE — The felt experience of a space: light quality, sound environment, scent signatures, spatial rhythm, energy & tempo, sensory intensity, morning/evening orientation, pace & spontaneity
+2. ATMOSPHERE — The felt experience of a space: overall vibe & energy, pace & spontaneity, morning/evening orientation, sensory character (light, sound, scent as holistic impressions — NOT as individual quiz topics)
 3. CHARACTER — Place identity & narrative: heritage/provenance, curatorial point of view, cultural programming & engagement, community/belonging, authenticity register, owner story, scale/intimacy
 4. SERVICE — Human interaction contract: formality spectrum, anticipation style, personalization depth, staff knowledge, autonomy vs attentiveness, digital vs human
 5. FOOD & DRINK — Culinary philosophy & personality: culinary philosophy, ingredient sourcing, dining format, beverage program, meal rhythm, dietary identity
@@ -889,6 +895,7 @@ PHASE COMPLETION RULES — READ CAREFULLY:
 - "phaseComplete" must be false if fewer than 3 user messages exist — UNLESS the user explicitly asks to skip (see below).
 - IMPORTANT: Do NOT keep the phase going just because certainty is low. There are 11 phases — signal will accumulate across all of them. It's much better to keep things moving than to over-interrogate on one phase.
 - If you've asked all the scripted follow-ups, set phaseComplete to true. Do NOT invent new questions to extend the conversation.
+- Keep questions broad and experiential — ask about memories, feelings, and moments rather than leading with granular specifics. If the user volunteers micro-details, extract signals from them, but don't initiate with niche questions most people won't have strong opinions on.
 
 USER-INITIATED SKIP:
 - If the user says anything like "skip", "move on", "next section", "let's move on", "can we skip this", "next question", "I'd rather not", "pass", or otherwise signals they want to move past this phase — ALWAYS honor it.

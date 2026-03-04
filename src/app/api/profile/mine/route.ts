@@ -24,6 +24,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
       mosaicData: userData.mosaicData ?? null,
       isOnboardingComplete: user.isOnboardingComplete,
       onboardingDepth: user.onboardingDepth,
+      completedPhaseIds: (user as Record<string, unknown>).completedPhaseIds ?? [],
     },
   }, {
     headers: { 'Cache-Control': 'private, no-cache' }

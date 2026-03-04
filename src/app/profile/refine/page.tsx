@@ -127,11 +127,24 @@ export default function RefinePage() {
 
   const currentPhase = phasesToShow[currentPhaseIdx] ?? null;
 
-  // Handle phase completion — advance to next gap phase or finish
+  // Handle phase completion — advance to next gap phase or finish.
+  // Persist signals to DB after each phase so progress survives tab close / browser switch.
   const handlePhaseComplete = useCallback(() => {
     if (!currentPhase) return;
     completePhase(currentPhase.id);
     setCurrentPhaseProgress(0);
+
+    // Fire-and-forget save of accumulated signals + progress to DB after each phase
+    const store = useOnboardingStore.getState();
+    apiFetch('/api/profile/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        allSignals: store.allSignals,
+        allContradictions: store.allContradictions,
+        sustainabilitySignals: store.sustainabilitySignals,
+        completedPhaseIds: store.completedPhaseIds,
+      }),
+    }).catch((err) => console.error('Failed to save phase progress:', err));
 
     if (currentPhaseIdx < phasesToShow.length - 1) {
       setCurrentPhaseIdx((i) => i + 1);
