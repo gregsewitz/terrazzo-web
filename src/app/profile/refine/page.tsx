@@ -76,13 +76,15 @@ function refinementPhaseHasGaps(phaseId: RefinementPhaseId, fields: UserV2Fields
 export default function RefinePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { completedPhaseIds, completePhase, setPhaseIndex, setCurrentPhaseProgress } = useOnboardingStore();
+  const { completedPhaseIds, completePhase, setPhaseIndex, setCurrentPhaseProgress, migrateStoreToV2 } = useOnboardingStore();
 
   const [userFields, setUserFields] = useState<UserV2Fields | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhaseIdx, setCurrentPhaseIdx] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationDone, setMigrationDone] = useState(false);
   const hasLoaded = useRef(false);
 
   // Fetch user's current v2 fields for conversation-phase gap detection
@@ -178,6 +180,52 @@ export default function RefinePage() {
       <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
         <div className="animate-pulse text-[13px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
           Checking your profile…
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Re-synthesize with v2 taxonomy ─────────────────────────────────────────
+  // Always offered as the first step — remaps any v1 signal cats to v2 domains
+  // and re-runs synthesis with the current (v2) prompts.
+
+  const handleMigrate = useCallback(async () => {
+    setIsMigrating(true);
+    const ok = await migrateStoreToV2();
+    setIsMigrating(false);
+    setMigrationDone(true);
+    if (ok) {
+      setTimeout(() => router.push('/profile'), 1500);
+    }
+  }, [migrateStoreToV2, router]);
+
+  if (!migrationDone) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center px-6" style={{ background: 'var(--t-cream)' }}>
+        <div className="max-w-lg w-full text-center">
+          <h2 className="font-serif text-[28px] text-[var(--t-ink)] mb-3">
+            {isMigrating ? 'Updating your profile' : 'Re-synthesize profile'}
+          </h2>
+          <p className="text-[15px] text-[var(--t-ink)]/60 mb-8" style={{ fontFamily: FONT.sans }}>
+            {isMigrating
+              ? 'Re-synthesizing with the v2 domain structure…'
+              : 'This will re-map your signals to the v2 taxonomy and re-synthesize your taste profile.'}
+          </p>
+          {isMigrating ? (
+            <div className="flex justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--t-honey)" strokeWidth="2" strokeLinecap="round" className="animate-spin">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            </div>
+          ) : (
+            <button
+              onClick={handleMigrate}
+              className="w-full py-3.5 rounded-xl text-[15px] font-medium text-white transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: 'var(--t-honey)' }}
+            >
+              Update profile
+            </button>
+          )}
         </div>
       </div>
     );

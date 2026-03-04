@@ -10,6 +10,27 @@ import type {
 } from '@/types';
 import { ALL_TASTE_DOMAINS, CORE_TASTE_DOMAINS, PREFERENCE_DIMENSIONS } from '@/types';
 import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
+
+// ─── V1→V2 Domain Migration (one-time) ─────────────────────────────────────
+// Maps legacy v1 domain/category names to canonical v2 TasteDomain keys.
+// Used only by migrateStoreToV2() to remap existing signals and certainties.
+const V1_TO_V2: Record<string, TasteDomain> = {
+  // Already v2 — identity mappings
+  'Design': 'Design', 'Atmosphere': 'Atmosphere', 'Character': 'Character',
+  'Service': 'Service', 'FoodDrink': 'FoodDrink', 'Setting': 'Setting',
+  'Wellness': 'Wellness', 'Sustainability': 'Sustainability',
+  // v1 long-form display names
+  'Design Language': 'Design', 'Design Sensibility': 'Design',
+  'Sensory & Atmosphere': 'Atmosphere', 'Rhythm & Pace': 'Atmosphere', 'Rhythm': 'Atmosphere',
+  'Character & Identity': 'Character', 'Cultural Engagement': 'Character',
+  'Service Philosophy': 'Service', 'Service Style': 'Service',
+  'Food & Drink': 'FoodDrink', 'Food': 'FoodDrink', 'Culinary': 'FoodDrink', 'F&B': 'FoodDrink',
+  'Location & Context': 'Setting', 'Location': 'Setting', 'Setting & Place': 'Setting',
+  'Wellness & Rhythm': 'Wellness', 'Retreat & Wellbeing': 'Wellness',
+  'Values & Sustainability': 'Sustainability',
+};
+
+const V2_DOMAIN_SET = new Set<string>(ALL_TASTE_DOMAINS);
 import { apiFetch } from '@/lib/api-client';
 import { dbSave, flushSaves } from '@/lib/db-save';
 
@@ -114,6 +135,8 @@ interface OnboardingState {
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   /** Manually trigger a full re-synthesis of the taste profile (e.g. after prompt updates) */
   triggerResynthesis: () => Promise<boolean>;
+  /** Remap v1 signals/certainties to v2 domains, then re-synthesize */
+  migrateStoreToV2: () => Promise<boolean>;
   reset: () => void;
   /** Soft reset for "redo onboarding" — keeps all taste data & profile, only resets progress */
   resetForRedo: () => void;
@@ -275,6 +298,43 @@ export const useOnboardingStore = create<OnboardingState>()(
         }
       },
 
+      migrateStoreToV2: async () => {
+        try {
+          const state = get();
+
+          // Remap signal categories
+          const migratedSignals = state.allSignals.map((s) => {
+            const mapped = V1_TO_V2[s.cat];
+            return mapped && mapped !== s.cat ? { ...s, cat: mapped } : s;
+          });
+
+          // Remap certainty keys — merge into v2 structure
+          const migratedCertainties: Record<string, number> = { ...INITIAL_CERTAINTIES };
+          for (const [key, value] of Object.entries(state.certainties)) {
+            const mapped = V1_TO_V2[key];
+            if (mapped) {
+              // Take the higher value when multiple v1 keys map to the same v2 domain
+              migratedCertainties[mapped] = Math.max(migratedCertainties[mapped] ?? 0, value);
+            }
+          }
+
+          // Update store with remapped data
+          set({
+            allSignals: migratedSignals,
+            certainties: migratedCertainties,
+          });
+
+          console.log('[mosaic] Store migrated to v2 taxonomy — triggering re-synthesis');
+
+          // Re-synthesize with v2-native prompts
+          await resynthesizeProfile();
+          return true;
+        } catch (err) {
+          console.error('[mosaic] V2 migration failed:', err);
+          return false;
+        }
+      },
+
       reset: () => set({
         isComplete: false,
         currentPhaseIndex: 0,
@@ -365,4 +425,33 @@ export const selectProfileIsComplete = (state: OnboardingState) => {
   const coreComplete = CORE_TASTE_DOMAINS.every(d => (c[d] ?? 0) >= 70);
   const prefComplete = PREFERENCE_DIMENSIONS.every(d => (c[d] ?? 0) >= 50);
   return coreComplete && prefComplete;
+};
+
+/**
+ * Detect whether the user's store data has v1 taxonomy artifacts that need migration.
+ * Checks signals (cat field) and certainty keys for non-v2 domain names.
+ */
+export const selectNeedsV2Migration = (state: OnboardingState): boolean => {
+  // Check if any signal has a non-v2 category
+  const hasV1Signals = state.allSignals.some(
+    (s) => !V2_DOMAIN_SET.has(s.cat) && V1_TO_V2[s.cat] !== undefined
+  );
+  if (hasV1Signals) return true;
+
+  // Check if any certainty key is a v1 name
+  const hasV1Certainties = Object.keys(state.certainties).some(
+    (k) => !V2_DOMAIN_SET.has(k) && V1_TO_V2[k] !== undefined
+  );
+  if (hasV1Certainties) return true;
+
+  // Check if stored profile radarData has v1 axis names
+  const profile = state.generatedProfile;
+  if (profile?.radarData?.length) {
+    const hasV1Axes = profile.radarData.some(
+      (r: { axis: string }) => !V2_DOMAIN_SET.has(r.axis) && V1_TO_V2[r.axis] !== undefined
+    );
+    if (hasV1Axes) return true;
+  }
+
+  return false;
 };

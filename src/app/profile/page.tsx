@@ -1114,27 +1114,6 @@ function ProfilePageContent() {
               ))}
             </div>
 
-            {/* Refine Profile — fill in v2 dimensions without redoing everything */}
-            <button
-              onClick={() => router.push('/profile/refine')}
-              className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-4"
-              style={{
-                background: 'rgba(200,146,58,0.08)',
-                border: '1px dashed rgba(200,146,58,0.25)',
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <PerriandIcon name="discover" size={12} color="var(--t-honey)" />
-                <span className="text-[12px] font-medium" style={{ color: 'var(--t-honey)' }}>
-                  Refine Profile
-                </span>
-                <span className="text-[10px]" style={{ color: INK['85'] }}>
-                  — sustainability, rhythm, cultural depth
-                </span>
-              </div>
-              <span style={{ color: 'var(--t-honey)', fontSize: 12 }}>→</span>
-            </button>
-
             {/* Redo Onboarding */}
             <button
               onClick={handleRedoOnboarding}
