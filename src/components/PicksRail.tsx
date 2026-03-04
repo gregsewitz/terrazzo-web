@@ -3,38 +3,19 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace } from '@/types';
-import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
+import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
 
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant', hotel: 'Hotel', bar: 'Bar', cafe: 'Café',
   museum: 'Museum', activity: 'Activity', neighborhood: 'Neighborhood', shop: 'Shop',
 };
-
-const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
-  { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
-  { value: 'cafe', label: 'Café', icon: 'cafe' },
-  { value: 'bar', label: 'Drink', icon: 'bar' },
-  { value: 'museum', label: 'See', icon: 'museum' },
-  { value: 'activity', label: 'Do', icon: 'activity' },
-  { value: 'hotel', label: 'Stay', icon: 'hotel' },
-  { value: 'shop', label: 'Shop', icon: 'shop' },
-];
-
-const SOURCE_FILTERS = [
-  { value: 'all', label: 'All sources' },
-  { value: 'article', label: 'Articles' },
-  { value: 'friend', label: 'Friends' },
-  { value: 'email', label: 'Email' },
-  { value: 'maps', label: 'Maps' },
-] as const;
-
-type SourceFilter = typeof SOURCE_FILTERS[number]['value'];
 
 interface PicksRailProps {
   onTapDetail: (item: ImportedPlace) => void;

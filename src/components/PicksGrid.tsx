@@ -4,22 +4,12 @@ import React, { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/types';
-import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
-
-const TYPE_CHIPS: { value: FilterType; label: string; icon: PerriandIconName }[] = [
-  { value: 'restaurant', label: 'Eat', icon: 'restaurant' },
-  { value: 'cafe', label: 'Cafe', icon: 'cafe' },
-  { value: 'bar', label: 'Drink', icon: 'bar' },
-  { value: 'museum', label: 'See', icon: 'museum' },
-  { value: 'activity', label: 'Do', icon: 'activity' },
-  { value: 'hotel', label: 'Stay', icon: 'hotel' },
-  { value: 'shop', label: 'Shop', icon: 'shop' },
-  { value: 'neighborhood', label: 'Walk', icon: 'location' },
-];
+import { TYPE_CHIPS } from '@/constants/picksFilters';
 
 interface PicksGridProps {
   onTapDetail: (item: ImportedPlace) => void;
