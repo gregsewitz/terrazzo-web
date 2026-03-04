@@ -6,7 +6,6 @@ import { prisma } from '@/lib/prisma';
  * GET /api/email/scan/[id]
  *
  * Returns the current status of a specific scan.
- * Used by the client to poll for progress during background parsing.
  */
 export async function GET(
   request: NextRequest,
@@ -20,9 +19,7 @@ export async function GET(
   try {
     const scan = await prisma.emailScan.findFirst({
       where: { id, userId: user.id },
-      include: {
-        _count: { select: { reservations: true } },
-      },
+      include: { _count: { select: { reservations: true } } },
     });
 
     if (!scan) {
@@ -31,7 +28,7 @@ export async function GET(
 
     return NextResponse.json({
       scanId: scan.id,
-      status: scan.status, // scanning | parsing | completed | failed
+      status: scan.status,
       emailsFound: scan.emailsFound,
       emailsParsed: scan.emailsParsed,
       reservationsFound: scan._count.reservations,
