@@ -60,6 +60,14 @@ function PlaceDetailContent({
   const { data: intelData } = useBriefing(googlePlaceId);
   const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
+  // A place is a "private listing" (Airbnb/Vrbo) only when:
+  //   1. It has no googlePlaceId AND no Google rating data (Google can't find it), AND
+  //   2. It's an accommodation type (hotel) — restaurants/bars/etc. that temporarily
+  //      lack a googlePlaceId should show the taste match card, not "Private listing".
+  const hasNoGoogleData = !googlePlaceId && !item.google?.rating;
+  const isAccommodation = item.type === 'hotel';
+  const isPrivateListing = hasNoGoogleData && isAccommodation;
+
   // ─── Hydrate preview places from the resolve API ───
   // When opened from discover feed, the item only has name/location/googlePlaceId.
   // Resolve fills in matchScore, matchBreakdown, google data, etc.
@@ -483,7 +491,7 @@ function PlaceDetailContent({
         )}
 
         {/* Match score — show taste match for enrichable places, fallback for rentals/private listings */}
-        {googlePlaceId ? (
+        {!isPrivateListing ? (
           <FadeInSection delay={0.15} direction="up" distance={18}>
             <div
               className="flex items-center gap-4 p-4 rounded-2xl mb-5"
@@ -557,7 +565,7 @@ function PlaceDetailContent({
         )}
 
         {/* Taste Mosaic — only show for enrichable places */}
-        {googlePlaceId && (
+        {!isPrivateListing && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
               <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Taste Mosaic</h3>
