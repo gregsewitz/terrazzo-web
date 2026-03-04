@@ -374,8 +374,48 @@ function ProfilePageContent() {
     try {
       const data = await apiFetch<{ connected: boolean; email?: string; provider?: string; connectedAt?: string }>('/api/email/status');
       setEmailStatus(data);
+      // If connected and we don't already have scan state, check for latest scan
+      if (data.connected && scanState === 'idle') {
+        restoreLatestScan();
+      }
     } catch { setEmailStatus({ connected: false }); }
     finally { setEmailLoading(false); }
+  };
+
+  // Restore state from the most recent scan (so the "Review" button persists across navigation)
+  const restoreLatestScan = async () => {
+    try {
+      const data = await apiFetch<{
+        scans: Array<{
+          id: string;
+          status: string;
+          emailsFound: number;
+          emailsParsed: number;
+          reservationsFound: number;
+        }>;
+      }>('/api/email/scan');
+      const latest = data.scans?.[0];
+      if (!latest) return;
+
+      setScanResult({
+        scanId: latest.id,
+        emailsFound: latest.emailsFound,
+        emailsParsed: latest.emailsParsed,
+        reservationsFound: latest.reservationsFound,
+      });
+
+      if (latest.status === 'parsing' || latest.status === 'scanning') {
+        // Still running — resume polling
+        setScanState('parsing');
+        pollScanProgress(latest.id, latest.emailsFound);
+      } else if (latest.status === 'completed') {
+        setScanState('done');
+      } else if (latest.status === 'failed') {
+        setScanState('failed');
+      }
+    } catch {
+      // No scan history — that's fine
+    }
   };
 
   const handleDisconnect = async () => {
