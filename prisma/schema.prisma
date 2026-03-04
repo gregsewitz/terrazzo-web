@@ -55,7 +55,7 @@ model User {
   slotNotes            SlotNote[]
 
   // Taste Intelligence (Phase 1)
-  tasteVector          Unsupported("vector(34)")?
+  tasteVector          Unsupported("vector(136)")?
   tasteVectorUpdatedAt DateTime?
 
   // Taste graph relations
@@ -560,6 +560,7 @@ model PlaceIntelligence {
   id              String   @id @default(cuid())
   googlePlaceId   String   @unique
   propertyName    String
+  placeType       String?  // hotel | restaurant | bar | cafe | museum | shop | neighborhood | activity — from Google primaryType
 
   // Pipeline status
   status          String   @default("pending") // pending | enriching | complete | failed
@@ -596,7 +597,7 @@ model PlaceIntelligence {
   enrichmentTTL   Int      @default(90) // days
 
   // Taste Intelligence (Phase 2: Property Embeddings)
-  embedding          Unsupported("vector(34)")?
+  embedding          Unsupported("vector(136)")?
   embeddingUpdatedAt DateTime?
 
   // Relations

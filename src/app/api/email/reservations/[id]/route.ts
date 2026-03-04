@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
-import { searchPlace } from '@/lib/places';
+import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 
 /**
@@ -141,7 +141,11 @@ export async function PATCH(
 
       // Fire-and-forget enrichment
       if (googlePlaceId) {
-        ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_single_confirm')
+        // Derive placeType from Google result if available, else from reservation
+        const emailPlaceType = googleData
+          ? mapGoogleTypeToPlaceType((googleData as any).primaryType)
+          : reservation.placeType || undefined;
+        ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_single_confirm', emailPlaceType)
           .catch(err => console.error('[email-confirm] enrichment error:', err));
       }
 

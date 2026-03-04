@@ -94,7 +94,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   });
 
   // 3. Ensure intelligence exists (creates record + triggers pipeline if needed)
-  const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, user.id);
+  const resolvedPlaceType = mapGoogleTypeToPlaceType(googleResult.primaryType);
+  const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, user.id, 'user_import', resolvedPlaceType);
 
   // 3b. If SavedPlace exists but isn't linked to intelligence, link it now
   if (intelligenceId && savedPlace && !savedPlace.placeIntelligenceId) {

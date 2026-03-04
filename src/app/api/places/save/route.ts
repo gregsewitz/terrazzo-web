@@ -98,7 +98,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
       }
 
       // Ensure intelligence exists and link it (fire-and-forget)
-      const intelligenceId = await ensureEnrichment(place.googlePlaceId, place.name, user.id);
+      const intelligenceId = await ensureEnrichment(place.googlePlaceId, place.name, user.id, 'user_import', place.type);
 
       const savedPlace = await prisma.savedPlace.update({
         where: { id: existing.id },
@@ -126,7 +126,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
     // ── First import: create with everything ──
     // Ensure intelligence exists and trigger pipeline (fire-and-forget)
-    const intelligenceId = await ensureEnrichment(place.googlePlaceId, place.name, user.id);
+    const intelligenceId = await ensureEnrichment(place.googlePlaceId, place.name, user.id, 'user_import', place.type);
 
     const savedPlace = await prisma.savedPlace.upsert({
       where: {

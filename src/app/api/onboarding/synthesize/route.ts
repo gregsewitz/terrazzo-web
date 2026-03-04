@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingSynthesizeSchema } from '@/lib/api-validation';
 import { getUser } from '@/lib/supabase-server';
-import { searchPlace } from '@/lib/places';
+import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { PROFILE_SYNTHESIS_PROMPT } from '@/constants/onboarding';
 
@@ -31,7 +31,8 @@ async function resolveMatchedProperties(
       // Fire-and-forget enrichment (non-blocking)
       if (userId) {
         const resolvedName = googleResult.displayName?.text || prop.name;
-        ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis').catch(() => {});
+        const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
+        ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis', placeType).catch(() => {});
       }
       return googlePlaceId;
     })

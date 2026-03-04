@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { authHandler } from '@/lib/api-auth-handler';
-import { searchPlace } from '@/lib/places';
+import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
 
@@ -123,7 +123,8 @@ async function resolveAllPlaces(
       const resolvedName = googleResult.displayName?.text || name;
 
       // Fire-and-forget enrichment
-      ensureEnrichment(googlePlaceId, resolvedName, userId).catch(() => {});
+      const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
+      ensureEnrichment(googlePlaceId, resolvedName, userId, 'discover_more', placeType).catch(() => {});
 
       return { name, location, googlePlaceId };
     }),

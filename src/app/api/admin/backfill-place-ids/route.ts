@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { searchPlace } from '@/lib/places';
+import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 
 /**
@@ -103,7 +103,8 @@ export async function POST(req: NextRequest) {
 
           // Fire-and-forget enrichment
           const resolvedName = googleResult.displayName?.text || prop.name;
-          ensureEnrichment(googleResult.id, resolvedName, user.id, 'backfill').catch(() => {});
+          const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
+          ensureEnrichment(googleResult.id, resolvedName, user.id, 'backfill', placeType).catch(() => {});
         } catch (err) {
           failed.push(`${prop.name}: ${err instanceof Error ? err.message : 'error'}`);
         }

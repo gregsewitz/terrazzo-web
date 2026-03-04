@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
         // 5. Fire-and-forget enrichment
         if (googlePlaceId) {
-          ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_batch_import')
+          ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_batch_import', reservation.placeType || undefined)
             .then(() => { enrichmentTriggered++; })
             .catch(err => console.error(`[batch-confirm] enrichment error for ${reservation.placeName}:`, err));
         }

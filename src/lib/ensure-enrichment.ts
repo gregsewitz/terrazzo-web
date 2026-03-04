@@ -23,17 +23,29 @@ export async function ensureEnrichment(
   propertyName: string,
   userId: string,
   trigger: string = 'user_import',
+  placeType?: string,
 ): Promise<string | null> {
   try {
     const existing = await prisma.placeIntelligence.findUnique({
       where: { googlePlaceId },
-      select: { id: true, status: true, lastEnrichedAt: true, enrichmentTTL: true, errorCount: true },
+      select: { id: true, status: true, lastEnrichedAt: true, enrichmentTTL: true, errorCount: true, placeType: true },
     });
 
     if (existing) {
       // Already enriching or complete — link any unlinked places and return
       if (existing.status === 'enriching' || existing.status === 'complete') {
         console.log(`[ensureEnrichment] ${propertyName}: already ${existing.status}, skipping (id: ${existing.id})`);
+
+        // Backfill placeType if we have it now but the record doesn't
+        if (placeType && !existing.placeType) {
+          await prisma.placeIntelligence.update({
+            where: { id: existing.id },
+            data: { placeType },
+          }).catch((err: unknown) => {
+            console.error(`[ensureEnrichment] Failed to backfill placeType for ${existing.id}:`, err);
+          });
+        }
+
         await linkPlacesToIntelligence(googlePlaceId, existing.id);
         return existing.id;
       }
@@ -46,6 +58,7 @@ export async function ensureEnrichment(
           status: 'pending',
           propertyName,
           lastTriggeredBy: userId,
+          ...(placeType ? { placeType } : {}),
         },
       });
 
@@ -64,6 +77,7 @@ export async function ensureEnrichment(
         status: 'pending',
         signals: '[]',
         lastTriggeredBy: userId,
+        ...(placeType ? { placeType } : {}),
       },
     });
 
@@ -93,6 +107,7 @@ export async function ensureEnrichment(
           lastErrorAt: new Date(),
           errorCount: 1,
           lastTriggeredBy: userId,
+          ...(placeType ? { placeType } : {}),
         },
       });
     } catch (logErr) {
