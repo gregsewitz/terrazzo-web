@@ -78,15 +78,17 @@ export async function POST(request: NextRequest) {
 
         if (!googlePlaceId && reservation.placeType !== 'flight') {
           try {
-            const placeResult = await searchPlace(
-              `${reservation.placeName} ${reservation.location || ''}`
-            );
+            const searchQuery = `${reservation.placeName} ${reservation.location || ''}`.trim();
+            const placeResult = await searchPlace(searchQuery);
             if (placeResult) {
               googlePlaceId = placeResult.id;
               googleData = placeResult as unknown as Record<string, unknown>;
+              console.log(`[batch-confirm] Resolved "${reservation.placeName}" → ${placeResult.id}`);
+            } else {
+              console.warn(`[batch-confirm] searchPlace returned null for "${searchQuery}"`);
             }
-          } catch {
-            // Best effort — continue without
+          } catch (searchErr) {
+            console.error(`[batch-confirm] searchPlace failed for "${reservation.placeName}":`, searchErr);
           }
         }
 

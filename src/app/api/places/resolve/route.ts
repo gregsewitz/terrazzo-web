@@ -6,7 +6,7 @@ import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, price
 import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match';
 import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
-import type { User } from '@prisma/client';
+import type { User, Prisma } from '@prisma/client';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -74,24 +74,52 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   }
 
   // 2. Check if user already has this place in their library
-  const savedPlace = await prisma.savedPlace.findUnique({
+  const savedPlaceSelect = {
+    id: true,
+    name: true,
+    type: true,
+    location: true,
+    matchScore: true,
+    matchBreakdown: true,
+    tasteNote: true,
+    enrichment: true,
+    googleData: true,
+    googlePlaceId: true,
+    placeIntelligenceId: true,
+    deletedAt: true,
+  } as const;
+
+  let savedPlace = await prisma.savedPlace.findUnique({
     where: {
       userId_googlePlaceId: { userId: user.id, googlePlaceId },
     },
-    select: {
-      id: true,
-      name: true,
-      type: true,
-      location: true,
-      matchScore: true,
-      matchBreakdown: true,
-      tasteNote: true,
-      enrichment: true,
-      googleData: true,
-      placeIntelligenceId: true,
-      deletedAt: true,
-    },
+    select: savedPlaceSelect,
   });
+
+  // 2b. Fallback: if not found by googlePlaceId, check by name (handles email imports
+  //     where Google Places resolution failed and googlePlaceId is null)
+  if (!savedPlace) {
+    savedPlace = await prisma.savedPlace.findFirst({
+      where: {
+        userId: user.id,
+        name: { equals: name, mode: 'insensitive' },
+        googlePlaceId: null,
+        deletedAt: null,
+      },
+      select: savedPlaceSelect,
+    });
+
+    // Backfill the googlePlaceId on the SavedPlace so future lookups work directly
+    if (savedPlace) {
+      console.log(`[resolve] Backfilling googlePlaceId for "${savedPlace.name}" (${savedPlace.id})`);
+      await prisma.savedPlace.update({
+        where: { id: savedPlace.id },
+        data: { googlePlaceId, googleData: googleResult as unknown as Prisma.InputJsonValue },
+      }).catch((err: unknown) => {
+        console.error(`[resolve] Failed to backfill googlePlaceId for ${savedPlace!.id}:`, err);
+      });
+    }
+  }
 
   // 3. Ensure intelligence exists (creates record + triggers pipeline if needed)
   const resolvedPlaceType = mapGoogleTypeToPlaceType(googleResult.primaryType);

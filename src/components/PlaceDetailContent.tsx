@@ -521,7 +521,11 @@ function PlaceDetailContent({
                   </div>
                 ) : null;
               })()}
-              {isEnriching && intelData?.latestRun && (<div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>)}
+              {isEnriching && (
+                intelData?.latestRun
+                  ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
+                  : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: INK['40'], fontFamily: FONT.mono }}>Researching this place…</span></div>
+              )}
               {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing →</button>)}
             </div>
           </div>
