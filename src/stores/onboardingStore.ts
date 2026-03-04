@@ -108,9 +108,6 @@ interface OnboardingState {
   // ─── Go-Back Place ───
   goBackPlace: GoBackPlace | null;
 
-  // ─── Mode ───
-  isLiveMode: boolean;
-
   // ─── Hydration ───
   /** True once DB profile data has been loaded (or skipped for unauth users) */
   dbHydrated: boolean;
@@ -129,7 +126,6 @@ interface OnboardingState {
   addSeedTrip: (trip: SeedTripInput) => void;
   addTrustedSource: (source: TrustedSource) => void;
   setGoBackPlace: (place: GoBackPlace) => void;
-  setLiveMode: (live: boolean) => void;
   finishOnboarding: (depth: OnboardingDepth) => Promise<void>;
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   /** Manually trigger a full re-synthesis of the taste profile (e.g. after prompt updates) */
@@ -175,7 +171,6 @@ export const useOnboardingStore = create<OnboardingState>()(
       seedTrips: [],
       trustedSources: [],
       goBackPlace: null,
-      isLiveMode: false,
       dbHydrated: false,
 
       // ─── Actions ───
@@ -228,8 +223,6 @@ export const useOnboardingStore = create<OnboardingState>()(
       })),
 
       setGoBackPlace: (place) => set({ goBackPlace: place }),
-
-      setLiveMode: (live) => set({ isLiveMode: live }),
 
       finishOnboarding: async (depth) => {
         set({ isComplete: true, onboardingDepth: depth });

@@ -121,25 +121,6 @@ export type SustainabilitySensitivity = 'LEADING' | 'CONSCIOUS' | 'PASSIVE' | 'I
 
 export type TrajectoryDirection = 'REFINING' | 'EXPANDING' | 'SHIFTING' | 'STABLE';
 
-export type EmotionalDriverType =
-  | 'AESTHETIC_PILGRIM'
-  | 'CONTROL_ARCHITECT'
-  | 'STORY_COLLECTOR'
-  | 'SENSORY_HEDONIST'
-  | 'TRANSFORMATION_SEEKER'
-  | 'MASTERY_SEEKER'
-  | 'LEGACY_BUILDER';
-
-export const EMOTIONAL_DRIVER_LABELS: Record<EmotionalDriverType, string> = {
-  AESTHETIC_PILGRIM: 'The Aesthetic Pilgrim',
-  CONTROL_ARCHITECT: 'The Control Architect',
-  STORY_COLLECTOR: 'The Story Collector',
-  SENSORY_HEDONIST: 'The Sensory Hedonist',
-  TRANSFORMATION_SEEKER: 'The Transformation Seeker',
-  MASTERY_SEEKER: 'The Mastery Seeker',
-  LEGACY_BUILDER: 'The Legacy Builder',
-};
-
 // ─── Sustainability Signal ───
 
 export interface SustainabilitySignal {
@@ -223,17 +204,6 @@ export interface CompetitiveContextData {
   neighborhoodContext?: string;
   alternativeScenarios?: Record<string, string>;
   nearbyAlternatives?: CompetitiveAlternative[];
-}
-
-// ─── Signal with Decay Metadata ───
-
-export interface DecayableSignal extends TasteSignal {
-  extractedAt?: string;       // ISO timestamp
-  sourcePhaseId?: string;
-  sourceModality?: SignalModality;
-  decayedConfidence?: number; // computed: confidence * 0.5^(age/180)
-  ageInDays?: number;
-  supersededBy?: string;
 }
 
 export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
@@ -883,6 +853,10 @@ export interface OnboardingPhase {
   imagePairs?: ImagePair[];
   experiencePool?: ExperienceItem[];
   designerPool?: DesignerItem[];
+  /** Custom slider definitions — passed to SliderPhaseView when modality is 'slider' */
+  sliderDefs?: { id: string; leftLabel: string; rightLabel: string; leftSignals: string[]; rightSignals: string[]; domain: string }[];
+  /** Custom swipe card definitions — passed to SwipePhaseView when modality is 'swipe' */
+  swipeCards?: { id: number; prompt: string; optionA: { label: string; description?: string }; optionB: { label: string; description?: string }; aSignals: string[]; bSignals: string[]; domain: string }[];
 }
 
 export interface TrustedSource {
@@ -959,5 +933,5 @@ export interface AnalysisResult {
   phaseComplete: boolean;
   // Expanded ontology
   sustainabilitySignals?: SustainabilitySignal[];
-  emotionalDriverHint?: EmotionalDriverType;
+  emotionalDriverHint?: string;
 }

@@ -29,13 +29,7 @@ model User {
   onboardingDepth      String?      // shallow | standard | deep
   completedPhaseIds    String[]     @default([])
 
-  // Expanded Taste Intelligence v2
-  sustainabilitySensitivity String?   // LEADING | CONSCIOUS | PASSIVE | INDIFFERENT
-  sustainabilityPriorities  String[]  @default([])
-  sustainabilityDealbreakers String[] @default([])
-  sustainabilityWillingnessToPayPremium Float? // 0-1
-  profileVersion            Int       @default(1)
-  lastProfileSynthesizedAt  DateTime?
+  // Taste trajectory (computed by signal decay route)
   tasteTrajectoryDirection  String?   // REFINING | EXPANDING | SHIFTING | STABLE
   tasteTrajectoryDescription String?
 
@@ -57,6 +51,9 @@ model User {
   // Taste Intelligence (Phase 1)
   tasteVector          Unsupported("vector(136)")?
   tasteVectorUpdatedAt DateTime?
+
+  // Taste Intelligence v3 (semantic clusters, 104-dim)
+  tasteVectorV3        Unsupported("vector(104)")?
 
   // Taste graph relations
   tasteNodes           TasteNode[]
@@ -599,6 +596,9 @@ model PlaceIntelligence {
   // Taste Intelligence (Phase 2: Property Embeddings)
   embedding          Unsupported("vector(136)")?
   embeddingUpdatedAt DateTime?
+
+  // Taste Intelligence v3 (semantic clusters, 104-dim)
+  embeddingV3        Unsupported("vector(104)")?
 
   // Relations
   pipelineRuns    PipelineRun[]

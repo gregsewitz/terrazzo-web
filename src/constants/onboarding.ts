@@ -464,25 +464,72 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Design: 55, Atmosphere: 20, Character: 35, Service: 40, FoodDrink: 25, Setting: 35, Wellness: 8, Sustainability: 5 },
   },
   {
-    id: 'rhythm-refinement',
+    id: 'setting-instinct',
     phaseNumber: 2,
-    title: 'Your Tempo',
-    subtitle: 'How you like to move through a place',
-    modality: 'slider',
+    title: 'Where You Come Alive',
+    subtitle: 'Landscape, city, or somewhere in between',
+    modality: 'swipe',
     act: 1,
     aiPrompt: '',
     followUps: [],
     sampleUserResponses: [],
     extractedSignals: [
-      { tag: 'Pace preference', cat: 'Core', confidence: 0.85 },
-      { tag: 'Morning vs night orientation', cat: 'Core', confidence: 0.88 },
-      { tag: 'Spontaneity tolerance', cat: 'Core', confidence: 0.82 },
+      { tag: 'Setting preference', cat: 'Setting', confidence: 0.88 },
+      { tag: 'Landscape orientation', cat: 'Setting', confidence: 0.85 },
     ],
-    certaintyAfter: { Design: 58, Atmosphere: 45, Character: 40, Service: 42, FoodDrink: 25, Setting: 40, Wellness: 15, Sustainability: 5 },
+    certaintyAfter: { Design: 58, Atmosphere: 28, Character: 38, Service: 42, FoodDrink: 28, Setting: 55, Wellness: 12, Sustainability: 5 },
+    swipeCards: [
+      {
+        id: 1,
+        prompt: 'Your dream morning view…',
+        optionA: { label: 'Ocean from a cliffside terrace', description: 'Salt air, infinite horizon' },
+        optionB: { label: 'A city skyline through floor-to-ceiling glass', description: 'Energy, lights, movement' },
+        aSignals: ['Coastal-drawn', 'Horizon-seeker', 'Cliffside-setting'],
+        bSignals: ['Urban-energy', 'Skyline-lover', 'City-immersion'],
+        domain: 'Setting',
+      },
+      {
+        id: 2,
+        prompt: 'End of a long travel day — you want…',
+        optionA: { label: 'A cabin surrounded by forest', description: 'Total silence, woodsmoke' },
+        optionB: { label: 'A rooftop bar above the old town', description: 'People, cocktails, a view' },
+        aSignals: ['Nature-retreat', 'Forest-drawn', 'Solitude-seeker'],
+        bSignals: ['Rooftop-social', 'Old-town-base', 'Social-energy'],
+        domain: 'Setting',
+      },
+      {
+        id: 3,
+        prompt: 'The neighborhood you gravitate toward…',
+        optionA: { label: 'Quiet residential with one perfect café', description: 'Local, unhurried, hidden' },
+        optionB: { label: 'The buzzing central district', description: 'Walkable, dense, never boring' },
+        aSignals: ['Neighborhood-local', 'Hidden-gem-seeker', 'Residential-over-tourist'],
+        bSignals: ['Central-location', 'Walkability-critical', 'Density-positive'],
+        domain: 'Setting',
+      },
+      {
+        id: 4,
+        prompt: 'Landscape that makes you feel something…',
+        optionA: { label: 'Desert — vast, minimal, ancient', description: 'Stark beauty, silence' },
+        optionB: { label: 'Vineyard hills — soft, cultivated, golden', description: 'Warmth, abundance, terroir' },
+        aSignals: ['Desert-drawn', 'Minimalist-landscape', 'Vastness-seeker'],
+        bSignals: ['Wine-country', 'Pastoral-landscape', 'Cultivated-beauty'],
+        domain: 'Setting',
+      },
+      {
+        id: 5,
+        prompt: 'Island getaway style…',
+        optionA: { label: 'Remote — barely on a map, no Wi-Fi', description: 'Disconnected, wild' },
+        optionB: { label: 'A well-connected island with great restaurants', description: 'Accessible, refined' },
+        aSignals: ['Remote-island', 'Off-grid', 'Wild-nature'],
+        bSignals: ['Connected-island', 'Restaurant-culture', 'Refined-escape'],
+        domain: 'Setting',
+      },
+    ],
   },
   {
     id: 'anti-stay',
     phaseNumber: 3,
+
     title: 'The Anti-Stay',
     subtitle: 'What looked perfect but felt wrong',
     modality: 'voice',
@@ -537,21 +584,54 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     certaintyAfter: { Design: 74, Atmosphere: 52, Character: 58, Service: 65, FoodDrink: 42, Setting: 55, Wellness: 20, Sustainability: 8 },
   },
   {
-    id: 'cultural-engagement',
+    id: 'service-style',
     phaseNumber: 5,
-    title: 'Cultural Compass',
-    subtitle: 'What draws you into a culture',
-    modality: 'swipe',
+    title: 'How You Like to Be Taken Care Of',
+    subtitle: 'Service that fits, not service that performs',
+    modality: 'slider',
     act: 1,
     aiPrompt: '',
     followUps: [],
     sampleUserResponses: [],
     extractedSignals: [
-      { tag: 'Cultural immersion preference', cat: 'Core', confidence: 0.86 },
-      { tag: 'Heritage sensitivity', cat: 'Core', confidence: 0.84 },
-      { tag: 'Local connection style', cat: 'Core', confidence: 0.82 },
+      { tag: 'Service philosophy', cat: 'Service', confidence: 0.88 },
+      { tag: 'Formality preference', cat: 'Service', confidence: 0.85 },
     ],
-    certaintyAfter: { Design: 74, Atmosphere: 55, Character: 65, Service: 65, FoodDrink: 44, Setting: 58, Wellness: 22, Sustainability: 10 },
+    certaintyAfter: { Design: 76, Atmosphere: 55, Character: 62, Service: 78, FoodDrink: 45, Setting: 58, Wellness: 22, Sustainability: 10 },
+    sliderDefs: [
+      {
+        id: 'visibility',
+        leftLabel: 'Invisible — I only see staff when I need them',
+        rightLabel: 'Present — I want warmth and check-ins',
+        leftSignals: ['Invisible-service', 'Privacy-first', 'Self-sufficient-traveler'],
+        rightSignals: ['Proactive-service', 'Warmth-seeking', 'Relationship-with-staff'],
+        domain: 'Service',
+      },
+      {
+        id: 'formality',
+        leftLabel: 'Formal — Mr. Sewitz, white gloves',
+        rightLabel: 'Casual — first names, no fuss',
+        leftSignals: ['Formal-service', 'Traditional-hospitality', 'Protocol-appreciator'],
+        rightSignals: ['Casual-service', 'First-name-basis', 'Anti-formality'],
+        domain: 'Service',
+      },
+      {
+        id: 'anticipation',
+        leftLabel: 'Anticipatory — they know before I ask',
+        rightLabel: 'On-demand — I\'ll ask when I need it',
+        leftSignals: ['Anticipatory-service', 'Detail-remembered', 'Preference-tracking'],
+        rightSignals: ['On-demand-service', 'Autonomy-first', 'Low-touch-preferred'],
+        domain: 'Service',
+      },
+      {
+        id: 'programming',
+        leftLabel: 'Minimal — just the room and the setting',
+        rightLabel: 'Curated — tastings, tours, experiences',
+        leftSignals: ['Minimal-programming', 'Self-directed-stay', 'Space-over-activity'],
+        rightSignals: ['Programming-rich', 'Curated-experiences', 'Hotel-as-guide'],
+        domain: 'Service',
+      },
+    ],
   },
   {
     id: 'seed-trips',
@@ -718,104 +798,11 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
 
 // ─── Act structure ───
 
-export const ACT_1_PHASE_IDS = ['welcome', 'memorable-stays', 'rhythm-refinement', 'anti-stay', 'companion-context', 'cultural-engagement', 'seed-trips', 'trusted-sources', 'sustainability-values', 'go-back-place'];
+export const ACT_1_PHASE_IDS = ['welcome', 'memorable-stays', 'setting-instinct', 'anti-stay', 'companion-context', 'service-style', 'seed-trips', 'trusted-sources', 'sustainability-values', 'go-back-place'];
 export const ACT_2_PHASE_IDS = ['details-matter', 'quick-diagnostic', 'visual-taste', 'emotional-core'];
 export const ALL_PHASE_IDS = [...ACT_1_PHASE_IDS, ...ACT_2_PHASE_IDS];
 
 export const MAX_ADAPTIVE_PHASES = 3;
-
-// ─── V2 Refinement Phases ───
-// Used by /profile/refine to fill in v2 fields without re-running full onboarding.
-// Each phase maps to specific User columns — gap detection decides which to show.
-
-export const REFINEMENT_PHASE_IDS = ['refine-sustainability', 'refine-atmosphere', 'refine-character'] as const;
-
-export type RefinementPhaseId = typeof REFINEMENT_PHASE_IDS[number];
-
-/** Maps each refinement phase to the User columns it fills */
-export const REFINEMENT_PHASE_FIELDS: Record<RefinementPhaseId, string[]> = {
-  'refine-sustainability': ['sustainabilitySensitivity', 'sustainabilityPriorities', 'sustainabilityDealbreakers', 'sustainabilityWillingnessToPayPremium'],
-  'refine-atmosphere': ['tasteTrajectoryDirection', 'tasteTrajectoryDescription'],
-  'refine-character': [],
-};
-
-export const REFINEMENT_PHASES: OnboardingPhase[] = [
-  {
-    id: 'refine-sustainability',
-    phaseNumber: 1,
-    title: 'Sustainability & Values',
-    subtitle: 'What matters to you beyond the stay',
-    modality: 'voice',
-    act: 2,
-    aiPrompt: "I'd love to understand how sustainability shows up in your travel decisions. When you're choosing between two otherwise similar properties, does their environmental or social impact factor in? How much does that kind of thing matter to you?",
-    followUps: [
-      "Are there specific things you look for — like locally sourced food, carbon offsets, community involvement — or is it more of a general vibe you pick up on?",
-      "Have you ever been turned off by a place that felt like it was greenwashing — performative sustainability without substance? What tipped you off?",
-      "If a genuinely sustainable property cost 15-20% more, would that feel worth it, or does it depend on the trip?",
-    ],
-    sampleUserResponses: [
-      "It matters more than it used to. I won't go out of my way for it, but if two places are comparable and one is clearly more thoughtful about their impact, I'll pick that one.",
-      "Locally sourced food is a big one. And I notice when a property is clearly built with respect for the landscape versus plopped on top of it.",
-    ],
-    extractedSignals: [
-      { tag: 'Sustainability-aware', cat: 'Sustainability', confidence: 0.85 },
-      { tag: 'Local-sourcing-valued', cat: 'FoodDrink', confidence: 0.88 },
-      { tag: 'Anti-greenwashing', cat: 'Sustainability', confidence: 0.82 },
-    ],
-    certaintyAfter: { Sustainability: 70 },
-  },
-  {
-    id: 'refine-atmosphere',
-    phaseNumber: 2,
-    title: 'Your Travel Tempo',
-    subtitle: 'How you move through a trip',
-    modality: 'voice',
-    act: 2,
-    aiPrompt: "On a trip, are you a slow-morning person — coffee first, no agenda until noon — or are you up at dawn squeezing every hour out of the day? What does your ideal day actually look like?",
-    followUps: [
-      "How do you feel when a trip is heavily scheduled versus when it's wide open? Which makes you more anxious?",
-      "Think about how your taste has evolved. Do you travel differently now than you did five years ago? Are you seeking different things, or deepening into the same instincts?",
-      "When you think back to a trip where the atmosphere was just right — everything clicked — what was that? What made it feel that way?",
-    ],
-    sampleUserResponses: [
-      "Slow morning, always. I need that first hour to just exist before the day starts. Then I'll pack the afternoon and evening.",
-      "I used to try to see everything. Now I'd rather do two things well than five things in a blur.",
-      "Puglia last September. Something about the light and the pace — long dinners, nowhere to rush to. It just felt right.",
-    ],
-    extractedSignals: [
-      { tag: 'Slow-morning-ritual', cat: 'Atmosphere', confidence: 0.92 },
-      { tag: 'Deepening-not-expanding', cat: 'Character', confidence: 0.85 },
-      { tag: 'Unhurried-evening-orientation', cat: 'Atmosphere', confidence: 0.88 },
-    ],
-    certaintyAfter: { Atmosphere: 80 },
-  },
-  {
-    id: 'refine-character',
-    phaseNumber: 3,
-    title: 'Character & Culture',
-    subtitle: 'How you connect with place',
-    modality: 'voice',
-    act: 2,
-    aiPrompt: "When you're somewhere new, how do you engage with the local culture? Are you the person who takes a cooking class and chats with the chef, or do you prefer to absorb it more quietly — walking through a market, sitting in a square, just watching?",
-    followUps: [
-      "Does it matter to you that a property feels rooted in its place — local materials, local references — or can a great hotel transcend its location?",
-      "Have you ever had a travel moment where you felt genuinely connected to a place's culture, not as a tourist but as a participant? What was that?",
-      "What kind of scale do you prefer — the 8-room place where you know everyone by day two, or the larger property with more programming and energy? Or does it depend?",
-    ],
-    sampleUserResponses: [
-      "I'm somewhere in between. I won't sign up for a group cooking class, but if the chef invites me into the kitchen, I'm absolutely going.",
-      "The property should feel like it belongs there. When you could be anywhere in the world — same marble, same international menu — that's a red flag for me.",
-      "Depends on the trip. With my partner, small and intimate. With friends, I want a bit more going on.",
-    ],
-    extractedSignals: [
-      { tag: 'Participatory-when-invited', cat: 'Character', confidence: 0.88 },
-      { tag: 'Place-rootedness-valued', cat: 'Design', confidence: 0.90 },
-      { tag: 'Anti-international-generic', cat: 'Character', confidence: 0.85 },
-      { tag: 'Scale-context-dependent', cat: 'Character', confidence: 0.82 },
-    ],
-    certaintyAfter: { Character: 88 },
-  },
-];
 
 // ─── Processing Steps ───
 

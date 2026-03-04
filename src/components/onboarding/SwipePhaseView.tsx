@@ -18,60 +18,12 @@ export interface SwipeCard {
   domain: string;
 }
 
-const CULTURAL_SWIPE_CARDS: SwipeCard[] = [
-  {
-    id: 1,
-    prompt: 'When visiting a new city, you\u2019d rather\u2026',
-    optionA: { label: 'Take a cooking class with a local chef', description: 'Hands-on, immersive' },
-    optionB: { label: 'Visit a world-class museum', description: 'Observer, curated' },
-    aSignals: ['Cultural-participant', 'Hands-on-immersion', 'Cooking-class-seeker'],
-    bSignals: ['Cultural-observer', 'Museum-goer', 'Curated-experience'],
-    domain: 'Character',
-  },
-  {
-    id: 2,
-    prompt: 'Your ideal local experience\u2026',
-    optionA: { label: 'A guided walk through artisan workshops', description: 'Deep-dive craft' },
-    optionB: { label: 'Wandering a local market on your own', description: 'Self-directed discovery' },
-    aSignals: ['Artisan-workshop', 'Guided-cultural', 'Craft-immersion'],
-    bSignals: ['Self-directed', 'Market-explorer', 'Discovery-by-wandering'],
-    domain: 'Character',
-  },
-  {
-    id: 3,
-    prompt: 'Language barrier abroad\u2026',
-    optionA: { label: 'Love it \u2014 part of the adventure', description: 'Embraces unfamiliarity' },
-    optionB: { label: 'Prefer English-friendly or a guide', description: 'Values communication' },
-    aSignals: ['Language-barrier-embracer', 'Full-immersion', 'Adventure-seeker'],
-    bSignals: ['English-preferred', 'Communication-priority', 'Guided-experience'],
-    domain: 'Character',
-  },
-  {
-    id: 4,
-    prompt: 'When it comes to local art\u2026',
-    optionA: { label: 'Seek out emerging local artists', description: 'Discovery-driven' },
-    optionB: { label: 'Appreciate what\u2019s in the hotel', description: 'Curated for you' },
-    aSignals: ['Art-discovery', 'Gallery-seeker', 'Emerging-artist-supporter'],
-    bSignals: ['Art-passive', 'Hotel-curated', 'Ambient-appreciation'],
-    domain: 'Character',
-  },
-  {
-    id: 5,
-    prompt: 'Festival or event in town\u2026',
-    optionA: { label: 'Absolutely \u2014 plan around it', description: 'Cultural calendar aware' },
-    optionB: { label: 'Nice if it happens, not a driver', description: 'Serendipity over planning' },
-    aSignals: ['Festival-planner', 'Cultural-calendar-aware', 'Event-driven-travel'],
-    bSignals: ['Serendipity-over-planning', 'Low-research', 'Go-with-flow'],
-    domain: 'Character',
-  },
-];
-
 interface SwipePhaseViewProps {
   onComplete: () => void;
-  cards?: SwipeCard[];
+  cards: SwipeCard[];
 }
 
-export default function SwipePhaseView({ onComplete, cards = CULTURAL_SWIPE_CARDS }: SwipePhaseViewProps) {
+export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProps) {
   const addSignals = useOnboardingStore((s) => s.addSignals);
   const updateCertainties = useOnboardingStore((s) => s.updateCertainties);
   const setCurrentPhaseProgress = useOnboardingStore((s) => s.setCurrentPhaseProgress);

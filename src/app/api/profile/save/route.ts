@@ -22,13 +22,8 @@ export const POST = apiHandler(async (req: NextRequest) => {
       ...(body.mosaicData !== undefined && { mosaicData: body.mosaicData }),
       ...(body.isOnboardingComplete !== undefined && { isOnboardingComplete: body.isOnboardingComplete }),
       ...(body.onboardingDepth !== undefined && { onboardingDepth: body.onboardingDepth }),
-      // v2 sustainability & trajectory fields
-      ...(body.sustainabilitySensitivity !== undefined && { sustainabilitySensitivity: body.sustainabilitySensitivity }),
-      ...(body.sustainabilityPriorities !== undefined && { sustainabilityPriorities: body.sustainabilityPriorities }),
-      ...(body.sustainabilityDealbreakers !== undefined && { sustainabilityDealbreakers: body.sustainabilityDealbreakers }),
-      ...(body.sustainabilityWillingnessToPayPremium !== undefined && { sustainabilityWillingnessToPayPremium: body.sustainabilityWillingnessToPayPremium }),
-      ...(body.profileVersion !== undefined && { profileVersion: body.profileVersion }),
-      ...(body.lastProfileSynthesizedAt !== undefined && { lastProfileSynthesizedAt: body.lastProfileSynthesizedAt ? new Date(body.lastProfileSynthesizedAt) : null }),
+      // Sustainability signals (raw from spectrum phase)
+      // Note: sustainabilityProfile is synthesized inside tasteProfile JSON, not as separate columns
       ...(body.sustainabilitySignals !== undefined && { sustainabilitySignals: body.sustainabilitySignals }),
       ...(body.completedPhaseIds !== undefined && { completedPhaseIds: body.completedPhaseIds }),
     },

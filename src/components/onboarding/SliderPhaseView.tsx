@@ -17,47 +17,12 @@ interface SliderDef {
   domain: string;
 }
 
-const RHYTHM_SLIDERS: SliderDef[] = [
-  {
-    id: 'pace',
-    leftLabel: 'Slow & deliberate',
-    rightLabel: 'Fast & spontaneous',
-    leftSignals: ['Slow-luxury', 'Deliberate-pace', 'Structured-itinerary'],
-    rightSignals: ['Dynamic-city', 'Adventure-paced', 'Drift-friendly'],
-    domain: 'Atmosphere',
-  },
-  {
-    id: 'morning',
-    leftLabel: 'Dawn riser',
-    rightLabel: 'Late starter',
-    leftSignals: ['Dawn-friendly', 'Morning-ritual-sacred', 'Early-market-seeker'],
-    rightSignals: ['Late-riser-compatible', 'Night-owl', 'Evening-energy-peak'],
-    domain: 'Atmosphere',
-  },
-  {
-    id: 'structure',
-    leftLabel: 'Planned itinerary',
-    rightLabel: 'Go with the flow',
-    leftSignals: ['Structured-itinerary', 'Advance-booking', 'Research-driven'],
-    rightSignals: ['Drift-friendly', 'Spontaneity-seeker', 'Discovery-by-wandering'],
-    domain: 'Atmosphere',
-  },
-  {
-    id: 'downtime',
-    leftLabel: 'Every moment counts',
-    rightLabel: 'Built-in downtime',
-    leftSignals: ['Maximizer', 'Activity-dense', 'FOMO-driven'],
-    rightSignals: ['Downtime-essential', 'Pool-day-welcomed', 'Reading-time-protected'],
-    domain: 'Atmosphere',
-  },
-];
-
 interface SliderPhaseViewProps {
   onComplete: () => void;
-  sliders?: SliderDef[];
+  sliders: SliderDef[];
 }
 
-export default function SliderPhaseView({ onComplete, sliders = RHYTHM_SLIDERS }: SliderPhaseViewProps) {
+export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseViewProps) {
   const addSignals = useOnboardingStore((s) => s.addSignals);
   const updateCertainties = useOnboardingStore((s) => s.updateCertainties);
   const setCurrentPhaseProgress = useOnboardingStore((s) => s.setCurrentPhaseProgress);

@@ -133,10 +133,10 @@ export default function PhasePage() {
           <TripSeedView onComplete={handlePhaseComplete} />
         )}
         {phase.modality === 'slider' && (
-          <SliderPhaseView onComplete={handlePhaseComplete} />
+          <SliderPhaseView onComplete={handlePhaseComplete} sliders={phase.sliderDefs!} />
         )}
         {phase.modality === 'swipe' && (
-          <SwipePhaseView onComplete={handlePhaseComplete} />
+          <SwipePhaseView onComplete={handlePhaseComplete} cards={phase.swipeCards!} />
         )}
         {phase.modality === 'spectrum' && (
           <SpectrumPhaseView onComplete={handlePhaseComplete} />
