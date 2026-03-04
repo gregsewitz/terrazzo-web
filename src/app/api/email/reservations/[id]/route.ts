@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { searchPlace } from '@/lib/places';
+import { ensureEnrichment } from '@/lib/ensure-enrichment';
 
 /**
  * PATCH /api/email/reservations/[id]
@@ -137,6 +138,12 @@ export async function PATCH(
           googlePlaceId: googlePlaceId || reservation.googlePlaceId,
         },
       });
+
+      // Fire-and-forget enrichment
+      if (googlePlaceId) {
+        ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_single_confirm')
+          .catch(err => console.error('[email-confirm] enrichment error:', err));
+      }
 
       return NextResponse.json({
         id: reservation.id,
