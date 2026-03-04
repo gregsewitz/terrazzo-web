@@ -482,65 +482,92 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Match score — immersive card with animated score + domain highlights */}
-        <FadeInSection delay={0.15} direction="up" distance={18}>
-          <div
-            className="flex items-center gap-4 p-4 rounded-2xl mb-5"
-            style={{
-              background: 'linear-gradient(135deg, rgba(200,146,58,0.10), rgba(200,146,58,0.04))',
-              border: '1px solid rgba(200,146,58,0.18)',
-              cursor: onViewBriefing ? 'pointer' : 'default',
-            }}
-            onClick={onViewBriefing}
-            role={onViewBriefing ? 'button' : undefined}
-            tabIndex={onViewBriefing ? 0 : undefined}
-            onKeyDown={onViewBriefing ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewBriefing(); } } : undefined}
-          >
-            <AnimatedScoreArc score={hydratedMatchScore} size={56} color="#8a6a2a" />
-            <div className="flex-1 min-w-0">
-              <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Taste match</div>
-              {/* Top domain highlights — at-a-glance breakdown */}
-              {hydratedBreakdown && (() => {
-                const topDomains = TASTE_DOMAINS
-                  .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
-                  .filter(d => d.score > 0.15)
-                  .sort((a, b) => b.score - a.score)
-                  .slice(0, 3);
-                return topDomains.length > 0 ? (
-                  <div className="flex items-center gap-1 mt-1 flex-wrap">
-                    {topDomains.map(({ domain, score }) => (
-                      <span
-                        key={domain}
-                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
-                        style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
-                      >
-                        <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
-                        {domain} {Math.round(score * 100)}
-                      </span>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
-              {isEnriching && (
-                intelData?.latestRun
-                  ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
-                  : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: INK['40'], fontFamily: FONT.mono }}>Researching this place…</span></div>
-              )}
-              {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing →</button>)}
+        {/* Match score — show taste match for enrichable places, fallback for rentals/private listings */}
+        {googlePlaceId ? (
+          <FadeInSection delay={0.15} direction="up" distance={18}>
+            <div
+              className="flex items-center gap-4 p-4 rounded-2xl mb-5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(200,146,58,0.10), rgba(200,146,58,0.04))',
+                border: '1px solid rgba(200,146,58,0.18)',
+                cursor: onViewBriefing ? 'pointer' : 'default',
+              }}
+              onClick={onViewBriefing}
+              role={onViewBriefing ? 'button' : undefined}
+              tabIndex={onViewBriefing ? 0 : undefined}
+              onKeyDown={onViewBriefing ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewBriefing(); } } : undefined}
+            >
+              <AnimatedScoreArc score={hydratedMatchScore} size={56} color="#8a6a2a" />
+              <div className="flex-1 min-w-0">
+                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Taste match</div>
+                {/* Top domain highlights — at-a-glance breakdown */}
+                {hydratedBreakdown && (() => {
+                  const topDomains = TASTE_DOMAINS
+                    .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
+                    .filter(d => d.score > 0.15)
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 3);
+                  return topDomains.length > 0 ? (
+                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                      {topDomains.map(({ domain, score }) => (
+                        <span
+                          key={domain}
+                          className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
+                          style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
+                        >
+                          <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
+                          {domain} {Math.round(score * 100)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+                {isEnriching && (
+                  intelData?.latestRun
+                    ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
+                    : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: INK['40'], fontFamily: FONT.mono }}>Researching this place…</span></div>
+                )}
+                {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing →</button>)}
+              </div>
             </div>
-          </div>
-        </FadeInSection>
+          </FadeInSection>
+        ) : (
+          <FadeInSection delay={0.15} direction="up" distance={18}>
+            <div
+              className="flex items-center gap-3.5 p-4 rounded-2xl mb-5"
+              style={{
+                background: INK['03'],
+                border: `1px solid ${INK['06']}`,
+              }}
+            >
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ width: 44, height: 44, borderRadius: 12, background: INK['06'] }}
+              >
+                <PerriandIcon name="pin" size={20} color={INK['40']} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Private listing</div>
+                <div className={`${matchScoreSubFontSize} mt-0.5`} style={{ color: INK['50'], fontFamily: FONT.mono }}>
+                  Taste matching isn&apos;t available for private rentals and listings
+                </div>
+              </div>
+            </div>
+          </FadeInSection>
+        )}
 
-        {/* Taste Mosaic */}
-        <FadeInSection delay={0.1} direction="up" distance={16}>
-          <div className="mb-5">
-            <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Taste Mosaic</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
-              <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+        {/* Taste Mosaic — only show for enrichable places */}
+        {googlePlaceId && (
+          <FadeInSection delay={0.1} direction="up" distance={16}>
+            <div className="mb-5">
+              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Taste Mosaic</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
+                <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+              </div>
             </div>
-          </div>
-        </FadeInSection>
+          </FadeInSection>
+        )}
 
         {/* Sustainability alignment */}
         {item.sustainabilityScore !== undefined && item.sustainabilityScore > 0 && (
