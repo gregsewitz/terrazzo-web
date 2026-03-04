@@ -153,7 +153,44 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     return Response.json({ place: savedPlace, alreadyInLibrary: false });
   }
 
-  // ── No googlePlaceId: always create (can't dedup without canonical ID) ──
+  // ── No googlePlaceId: dedup by (userId, name, location) to avoid duplicates ──
+  const existingByName = await prisma.savedPlace.findFirst({
+    where: {
+      userId: user.id,
+      name: { equals: place.name, mode: 'insensitive' },
+      location: place.location || '',
+      googlePlaceId: null,
+      deletedAt: null,
+    },
+    select: { id: true, importSources: true },
+  });
+
+  if (existingByName) {
+    // Re-import: update enrichment, preserve provenance
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingSources = (existingByName.importSources as any as ImportSourceEntry[]) || [];
+    let updatedSources = existingSources;
+    if (newSourceEntry) {
+      const alreadyLogged = existingSources.some(
+        (s) => s.type === newSourceEntry.type && s.name === newSourceEntry.name,
+      );
+      if (!alreadyLogged) {
+        updatedSources = [...existingSources, newSourceEntry];
+      }
+    }
+
+    const savedPlace = await prisma.savedPlace.update({
+      where: { id: existingByName.id },
+      data: {
+        ...enrichmentData,
+        importSources: toJson(updatedSources),
+        deletedAt: null,
+      },
+    });
+
+    return Response.json({ place: savedPlace, alreadyInLibrary: true });
+  }
+
   const savedPlace = await prisma.savedPlace.create({
     data: {
       userId: user.id,

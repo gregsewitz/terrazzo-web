@@ -99,39 +99,97 @@ export async function POST(request: NextRequest) {
           ratedAt: new Date().toISOString(),
         } : undefined;
 
-        // 3. Create SavedPlace
-        const savedPlace = await prisma.savedPlace.create({
-          data: {
-            userId: user.id,
-            name: reservation.placeName,
-            type: reservation.placeType,
-            location: reservation.location || '',
-            googlePlaceId: googlePlaceId || null,
-            googleData: (googleData as Prisma.InputJsonValue) || undefined,
-            source: {
-              type: 'email',
-              name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
+        // 3. Create or reuse SavedPlace
+        //    - With googlePlaceId: dedup via unique constraint (userId, googlePlaceId)
+        //    - Without googlePlaceId: dedup by (userId, name, location) to avoid
+        //      creating duplicates from multiple emails about the same rental
+        let savedPlace: { id: string };
+
+        const sourceEntry = {
+          type: 'email',
+          name: `${reservation.provider || 'Email'}: ${reservation.emailSubject}`,
+          importedAt: new Date().toISOString(),
+        };
+
+        if (googlePlaceId) {
+          savedPlace = await prisma.savedPlace.upsert({
+            where: {
+              userId_googlePlaceId: { userId: user.id, googlePlaceId },
             },
-            ghostSource: 'email',
-            intentStatus: 'booked',
-            timing: reservation.reservationDate
-              ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
-              : undefined,
-            importSources: [
-              {
+            create: {
+              userId: user.id,
+              name: reservation.placeName,
+              type: reservation.placeType,
+              location: reservation.location || '',
+              googlePlaceId,
+              googleData: (googleData as Prisma.InputJsonValue) || undefined,
+              source: {
                 type: 'email',
-                name: `${reservation.provider || 'Email'}: ${reservation.emailSubject}`,
-                importedAt: new Date().toISOString(),
+                name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
               },
-            ],
-            userContext: buildUserContext(reservation),
-            ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
-          },
-        });
+              ghostSource: 'email',
+              intentStatus: 'booked',
+              timing: reservation.reservationDate
+                ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                : undefined,
+              importSources: [sourceEntry],
+              userContext: buildUserContext(reservation),
+              ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
+            },
+            update: {
+              // Re-import: update enrichment data, preserve user edits
+              deletedAt: null,
+              ...(googleData ? { googleData: googleData as Prisma.InputJsonValue } : {}),
+            },
+          });
+        } else {
+          // No googlePlaceId — check for existing by name+location to avoid duplicates
+          const existing = await prisma.savedPlace.findFirst({
+            where: {
+              userId: user.id,
+              name: { equals: reservation.placeName, mode: 'insensitive' },
+              location: reservation.location || '',
+              googlePlaceId: null,
+              deletedAt: null,
+            },
+            select: { id: true },
+          });
+
+          if (existing) {
+            savedPlace = existing;
+            console.log(`[batch-confirm] Reusing existing SavedPlace for "${reservation.placeName}" (no googlePlaceId)`);
+          } else {
+            savedPlace = await prisma.savedPlace.create({
+              data: {
+                userId: user.id,
+                name: reservation.placeName,
+                type: reservation.placeType,
+                location: reservation.location || '',
+                googlePlaceId: null,
+                source: {
+                  type: 'email',
+                  name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
+                },
+                ghostSource: 'email',
+                intentStatus: 'booked',
+                timing: reservation.reservationDate
+                  ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  : undefined,
+                importSources: [sourceEntry],
+                userContext: buildUserContext(reservation),
+                ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
+              },
+            });
+          }
+        }
 
         savedPlaceIds.push(savedPlace.id);
 
