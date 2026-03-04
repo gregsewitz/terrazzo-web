@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
-      lastProfileSynthesizedAt: true,
+      updatedAt: true,
+      tasteProfile: true,
     },
   });
 
@@ -32,12 +33,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
+  // Use updatedAt as proxy for last synthesis time (profile is updated on synthesis)
+  const lastSynthesizedAt = user.updatedAt;
+
   // Count new saved places (proxy for "bookings") since last synthesis
-  const newBookingsSinceSynthesis = user.lastProfileSynthesizedAt
+  const newBookingsSinceSynthesis = lastSynthesizedAt
     ? await prisma.savedPlace.count({
         where: {
           userId,
-          createdAt: { gt: user.lastProfileSynthesizedAt },
+          createdAt: { gt: lastSynthesizedAt },
         },
       })
     : 0;
@@ -74,7 +78,7 @@ export async function GET(req: NextRequest) {
 
   // Run the check
   const result = checkReprofilingTriggers({
-    lastSynthesizedAt: user.lastProfileSynthesizedAt,
+    lastSynthesizedAt,
     newBookingsSinceSynthesis,
     domainConfidences,
     contradictionRatio,
@@ -83,7 +87,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     ...result,
     diagnostics: {
-      lastSynthesizedAt: user.lastProfileSynthesizedAt,
+      lastSynthesizedAt,
       newBookings: newBookingsSinceSynthesis,
       domainConfidences,
       contradictionRatio: Math.round(contradictionRatio * 100) / 100,
