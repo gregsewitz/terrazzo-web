@@ -141,8 +141,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         lat: googleResult.location?.latitude || null,
         lng: googleResult.location?.longitude || null,
         category: googleResult.primaryTypeDisplayName?.text || null,
-        website: googleResult.websiteUri || null,
-        phone: googleResult.internationalPhoneNumber || null,
+        website: (googleResult as any).websiteUri || null,
+        phone: (googleResult as any).internationalPhoneNumber || null,
         placeId: googlePlaceId,
       };
       await prisma.placeIntelligence.update({
