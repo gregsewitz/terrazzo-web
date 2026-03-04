@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useOnboardingStore } from '@/stores/onboardingStore';
@@ -9,7 +9,6 @@ import {
   ALL_PHASE_IDS,
   REFINEMENT_PHASES,
   REFINEMENT_PHASE_IDS,
-  REFINEMENT_PHASE_FIELDS,
 } from '@/constants/onboarding';
 import type { RefinementPhaseId } from '@/constants/onboarding';
 import type { OnboardingPhase } from '@/types';
@@ -77,14 +76,17 @@ export default function RefinePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { completedPhaseIds, completePhase, setPhaseIndex, setCurrentPhaseProgress } = useOnboardingStore();
 
-  const [userFields, setUserFields] = useState<UserV2Fields | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhaseIdx, setCurrentPhaseIdx] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // Freeze the phase list once computed so it doesn't shrink mid-session
+  // (completing a phase would otherwise remove it from the list AND the index
+  // would increment, causing a double-advance that overshoots the array)
+  const [phasesToShow, setPhasesToShow] = useState<OnboardingPhase[]>([]);
   const hasLoaded = useRef(false);
 
-  // Fetch user's current v2 fields for conversation-phase gap detection
+  // Fetch user's current v2 fields and compute phases once
   useEffect(() => {
     if (hasLoaded.current || authLoading || !isAuthenticated) return;
     hasLoaded.current = true;
@@ -92,47 +94,36 @@ export default function RefinePage() {
     (async () => {
       try {
         const data = await apiFetch<UserV2Fields>('/api/profile/v2-fields');
-        setUserFields(data);
+        const phases: OnboardingPhase[] = [];
+
+        // Layer 1: Interactive modality phases the user hasn't completed yet
+        for (const phaseId of INTERACTIVE_PHASE_IDS) {
+          if (completedPhaseIds.includes(phaseId)) continue;
+          const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);
+          if (phase) phases.push(phase);
+        }
+
+        // Layer 2: Conversation-based refinement phases with field-level gap detection
+        for (const phaseId of REFINEMENT_PHASE_IDS) {
+          if (completedPhaseIds.includes(phaseId)) continue;
+          if (!refinementPhaseHasGaps(phaseId, data)) continue;
+          const phase = REFINEMENT_PHASES.find((p) => p.id === phaseId);
+          if (phase) phases.push(phase);
+        }
+
+        setPhasesToShow(phases);
       } catch (err) {
         console.error('Failed to load v2 fields:', err);
-        setUserFields({
-          sustainabilitySensitivity: null,
-          sustainabilityPriorities: [],
-          sustainabilityDealbreakers: [],
-          sustainabilityWillingnessToPayPremium: null,
-          tasteTrajectoryDirection: null,
-          tasteTrajectoryDescription: null,
-        });
+        // On error, show all refinement phases as fallback
+        const fallbackPhases = REFINEMENT_PHASES.filter(
+          (p) => !completedPhaseIds.includes(p.id)
+        );
+        setPhasesToShow(fallbackPhases);
       } finally {
         setLoading(false);
       }
     })();
-  }, [authLoading, isAuthenticated]);
-
-  // Build the dynamic list of phases to show
-  const phasesToShow = useMemo((): OnboardingPhase[] => {
-    if (!userFields) return [];
-
-    const phases: OnboardingPhase[] = [];
-
-    // Layer 1: Interactive modality phases the user hasn't completed yet
-    // These come first — they're quick, fun, and require no typing
-    for (const phaseId of INTERACTIVE_PHASE_IDS) {
-      if (completedPhaseIds.includes(phaseId)) continue;
-      const phase = ONBOARDING_PHASES.find((p) => p.id === phaseId);
-      if (phase) phases.push(phase);
-    }
-
-    // Layer 2: Conversation-based refinement phases with field-level gap detection
-    for (const phaseId of REFINEMENT_PHASE_IDS) {
-      if (completedPhaseIds.includes(phaseId)) continue;
-      if (!refinementPhaseHasGaps(phaseId, userFields)) continue;
-      const phase = REFINEMENT_PHASES.find((p) => p.id === phaseId);
-      if (phase) phases.push(phase);
-    }
-
-    return phases;
-  }, [userFields, completedPhaseIds]);
+  }, [authLoading, isAuthenticated]); // intentionally exclude completedPhaseIds — freeze on first load
 
   const currentPhase = phasesToShow[currentPhaseIdx] ?? null;
 
