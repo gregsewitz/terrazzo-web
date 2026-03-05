@@ -37,7 +37,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
       enrichment: dp.intelligence?.description
-        ? { ...(dp.enrichment as Record<string, unknown> || {}), description: dp.intelligence.description }
+        ? { ...(dp.enrichment as ImportedPlace['enrichment'] || {}), confidence: (dp.enrichment as any)?.confidence ?? 1, description: dp.intelligence.description } as ImportedPlace['enrichment']
         : dp.enrichment as ImportedPlace['enrichment'],
       google: normalizeGoogleData(dp.intelligence?.googleData || dp.googleData, dp.googlePlaceId),
       userContext: dp.userContext || undefined,
