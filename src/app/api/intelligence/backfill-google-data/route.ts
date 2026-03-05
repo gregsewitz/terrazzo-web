@@ -17,6 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { searchPlace } from '@/lib/places';
 
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════
     if (phases.includes(2)) {
       const piMissingGD = await prisma.placeIntelligence.findMany({
-        where: { googleData: { equals: null } },
+        where: { googleData: { equals: Prisma.JsonNull } },
         select: { id: true, googlePlaceId: true, propertyName: true },
         take: limit,
       });
