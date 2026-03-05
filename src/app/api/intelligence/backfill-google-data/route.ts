@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
         where: {
           OR: [
             { googleData: { equals: Prisma.JsonNull } },
-            { googleData: null },
+            { googleData: { equals: Prisma.DbNull } },
           ],
         },
         select: { id: true, googlePlaceId: true, propertyName: true },
@@ -264,7 +264,7 @@ export async function POST(req: NextRequest) {
           where: {
             OR: [
               { googleData: { equals: Prisma.JsonNull } },
-              { googleData: null },
+              { googleData: { equals: Prisma.DbNull } },
             ],
           },
         });
