@@ -2,24 +2,26 @@
  * POST /api/intelligence/backfill-google-data
  *
  * Comprehensive backfill that fills in all missing fields across both
- * PlaceIntelligence and SavedPlace records. Runs four phases in order:
+ * PlaceIntelligence and SavedPlace records. Runs five phases in order:
  *
  *   Phase 1 — Re-fetch Google Places data for SavedPlaces missing rating
  *   Phase 2 — Copy googleData from SavedPlace → PlaceIntelligence
  *   Phase 3 — Copy synthesis fields (description, whatToOrder, tips, etc.)
  *             from PlaceIntelligence → SavedPlace where PI has them but SP doesn't
  *   Phase 4 — Trigger pipeline re-enrichment for PI records still missing synthesis
+ *   Phase 5 — Fetch Google Places data directly for PI records missing googleData
+ *             (lightweight — only fetches Google data, no full pipeline run)
  *
  * Query params:
- *   ?dryRun=true     — report what would happen without acting
- *   ?limit=50        — max records per phase (default 50)
- *   ?phase=1,2,3,4   — run only specific phases (comma-separated, default: all)
+ *   ?dryRun=true       — report what would happen without acting
+ *   ?limit=50          — max records per phase (default 50)
+ *   ?phase=1,2,3,4,5   — run only specific phases (comma-separated, default: all)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { searchPlace } from '@/lib/places';
+import { searchPlace, getPlaceById, priceLevelToString, getPhotoUrl } from '@/lib/places';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
     const phaseParam = req.nextUrl.searchParams.get('phase');
     const phases = phaseParam
       ? phaseParam.split(',').map(Number)
-      : [1, 2, 3, 4];
+      : [1, 2, 3, 4, 5];
 
     const report: Record<string, unknown> = { dryRun, phases };
 
@@ -235,6 +237,90 @@ export async function POST(req: NextRequest) {
         report.phase4 = {
           needed: piNeedsSynthesis.length,
           triggered: triggered.length,
+          errors: errors.length > 0 ? errors : undefined,
+        };
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PHASE 5 — Fetch Google data for PI records missing googleData
+    //           Lightweight: only calls Google Places API, no pipeline
+    // ═══════════════════════════════════════════════════════════════════
+    if (phases.includes(5)) {
+      const piMissingGoogleData = await prisma.placeIntelligence.findMany({
+        where: {
+          OR: [
+            { googleData: { equals: Prisma.JsonNull } },
+            { googleData: null },
+          ],
+        },
+        select: { id: true, googlePlaceId: true, propertyName: true },
+        take: limit,
+      });
+
+      if (dryRun) {
+        // Also get total count for reporting
+        const totalMissing = await prisma.placeIntelligence.count({
+          where: {
+            OR: [
+              { googleData: { equals: Prisma.JsonNull } },
+              { googleData: null },
+            ],
+          },
+        });
+        report.phase5 = {
+          needed: totalMissing,
+          batch: piMissingGoogleData.length,
+          places: piMissingGoogleData.slice(0, 10).map(p => p.propertyName),
+        };
+      } else {
+        const updated: string[] = [];
+        const errors: { name: string; error: string }[] = [];
+
+        for (const pi of piMissingGoogleData) {
+          try {
+            const googleResult = await getPlaceById(pi.googlePlaceId);
+            if (!googleResult) {
+              errors.push({ name: pi.propertyName, error: 'Not found on Google' });
+              continue;
+            }
+
+            const photoUrl = googleResult.photos?.[0]?.name
+              ? getPhotoUrl(googleResult.photos[0].name, 800)
+              : null;
+
+            const canonicalGoogleData = {
+              address: googleResult.formattedAddress || null,
+              rating: googleResult.rating || null,
+              reviewCount: googleResult.userRatingCount || null,
+              priceLevel: priceLevelToString(googleResult.priceLevel),
+              hours: googleResult.regularOpeningHours?.weekdayDescriptions || null,
+              lat: googleResult.location?.latitude || null,
+              lng: googleResult.location?.longitude || null,
+              category: googleResult.primaryTypeDisplayName?.text || null,
+              website: (googleResult as any).websiteUri || null,
+              phone: (googleResult as any).internationalPhoneNumber || null,
+              photoUrl,
+              placeId: pi.googlePlaceId,
+            };
+
+            await prisma.placeIntelligence.update({
+              where: { id: pi.id },
+              data: { googleData: canonicalGoogleData as any },
+            });
+
+            updated.push(pi.propertyName);
+
+            // Rate limit: 250ms between Google API calls
+            await new Promise(r => setTimeout(r, 250));
+          } catch (err) {
+            errors.push({ name: pi.propertyName, error: (err as Error).message });
+          }
+        }
+
+        report.phase5 = {
+          needed: piMissingGoogleData.length,
+          updated: updated.length,
           errors: errors.length > 0 ? errors : undefined,
         };
       }
