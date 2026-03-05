@@ -3,6 +3,7 @@ import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { searchPlace } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
+import { completeTasteFields } from '@/lib/taste-completion';
 import type { Prisma } from '@prisma/client';
 import type { ReactionId } from '@/types';
 
@@ -265,6 +266,23 @@ export async function POST(request: NextRequest) {
         console.error(`[batch-confirm] Failed to add items to trip ${tripId}:`, err);
         // Don't fail the batch — trip linking is best-effort
       }
+    }
+
+    // 8. Fire-and-forget: generate taste fields for all newly created places
+    if (savedPlaceIds.length > 0) {
+      const newlyCreated = await prisma.savedPlace.findMany({
+        where: { id: { in: savedPlaceIds } },
+        select: { id: true, name: true, type: true, location: true },
+      });
+      completeTasteFields(
+        newlyCreated.map(p => ({
+          savedPlaceId: p.id,
+          name: p.name,
+          type: p.type,
+          location: p.location || undefined,
+        })),
+        user.id,
+      ).catch(err => console.error('[batch-confirm] taste completion error:', err));
     }
 
     return NextResponse.json({

@@ -11,17 +11,20 @@
  *   Phase 4 — Trigger pipeline re-enrichment for PI records still missing synthesis
  *   Phase 5 — Fetch Google Places data directly for PI records missing googleData
  *             (lightweight — only fetches Google data, no full pipeline run)
+ *   Phase 6 — Generate missing taste fields (tasteNote, matchBreakdown, terrazzoInsight)
+ *             for SavedPlace records via Claude taste matching
  *
  * Query params:
- *   ?dryRun=true       — report what would happen without acting
- *   ?limit=50          — max records per phase (default 50)
- *   ?phase=1,2,3,4,5   — run only specific phases (comma-separated, default: all)
+ *   ?dryRun=true         — report what would happen without acting
+ *   ?limit=50            — max records per phase (default 50)
+ *   ?phase=1,2,3,4,5,6   — run only specific phases (comma-separated, default: all)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { searchPlace, getPlaceById, priceLevelToString, getPhotoUrl } from '@/lib/places';
+import { completeTasteFields } from '@/lib/taste-completion';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest) {
     const phaseParam = req.nextUrl.searchParams.get('phase');
     const phases = phaseParam
       ? phaseParam.split(',').map(Number)
-      : [1, 2, 3, 4, 5];
+      : [1, 2, 3, 4, 5, 6];
 
     const report: Record<string, unknown> = { dryRun, phases };
 
@@ -321,6 +324,94 @@ export async function POST(req: NextRequest) {
         report.phase5 = {
           needed: piMissingGoogleData.length,
           updated: updated.length,
+          errors: errors.length > 0 ? errors : undefined,
+        };
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Phase 6: Generate missing taste fields (tasteNote, matchBreakdown, terrazzoInsight)
+    // ═══════════════════════════════════════════════════════════════════
+    if (phases.includes(6)) {
+      const spsMissingTaste = await prisma.savedPlace.findMany({
+        where: {
+          deletedAt: null,
+          placeIntelligenceId: { not: null },
+          OR: [
+            { tasteNote: null },
+            { tasteNote: '' },
+            { terrazzoInsight: { equals: Prisma.DbNull } },
+            { matchBreakdown: { equals: Prisma.DbNull } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          location: true,
+          userId: true,
+          tasteNote: true,
+          terrazzoInsight: true,
+          matchBreakdown: true,
+        },
+        take: limit,
+      });
+
+      if (dryRun) {
+        const totalMissing = await prisma.savedPlace.count({
+          where: {
+            deletedAt: null,
+            placeIntelligenceId: { not: null },
+            OR: [
+              { tasteNote: null },
+              { tasteNote: '' },
+              { terrazzoInsight: { equals: Prisma.DbNull } },
+              { matchBreakdown: { equals: Prisma.DbNull } },
+            ],
+          },
+        });
+        report.phase6 = {
+          needed: totalMissing,
+          batch: spsMissingTaste.length,
+          places: spsMissingTaste.slice(0, 10).map(p => ({
+            name: p.name,
+            missingTasteNote: !p.tasteNote,
+            missingInsight: p.terrazzoInsight === null,
+            missingBreakdown: p.matchBreakdown === null,
+          })),
+        };
+      } else {
+        // Group by userId (each user needs personalized taste matching)
+        const byUser = new Map<string, typeof spsMissingTaste>();
+        for (const sp of spsMissingTaste) {
+          const existing = byUser.get(sp.userId) || [];
+          existing.push(sp);
+          byUser.set(sp.userId, existing);
+        }
+
+        let totalUpdated = 0;
+        const errors: { userId: string; error: string }[] = [];
+
+        for (const [userId, userPlaces] of byUser) {
+          try {
+            const count = await completeTasteFields(
+              userPlaces.map(sp => ({
+                savedPlaceId: sp.id,
+                name: sp.name,
+                type: sp.type,
+                location: sp.location || undefined,
+              })),
+              userId,
+            );
+            totalUpdated += count;
+          } catch (err) {
+            errors.push({ userId, error: (err as Error).message });
+          }
+        }
+
+        report.phase6 = {
+          needed: spsMissingTaste.length,
+          updated: totalUpdated,
           errors: errors.length > 0 ? errors : undefined,
         };
       }

@@ -11,9 +11,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { backfillPropertyEmbedding } from '@/lib/taste-intelligence/backfill';
 import { computeMatchFromSignals } from '@/lib/taste-match';
+import { completeTasteFields } from '@/lib/taste-completion';
 import type { TasteProfile } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -154,9 +156,18 @@ export async function POST(req: NextRequest) {
 
               const match = computeMatchFromSignals(signals, antiSignals, userProfile);
 
+              // Convert breakdown from 0-100 to 0-1 to match import convention
+              const normalizedBreakdown: Record<string, number> = {};
+              for (const [domain, score] of Object.entries(match.breakdown)) {
+                normalizedBreakdown[domain] = Math.round(score) / 100;
+              }
+
               await prisma.savedPlace.update({
                 where: { id: sp.id },
-                data: { matchScore: match.overallScore },
+                data: {
+                  matchScore: match.overallScore,
+                  matchBreakdown: normalizedBreakdown,
+                },
               });
 
               matchesUpdated++;
@@ -172,12 +183,68 @@ export async function POST(req: NextRequest) {
       console.error(`[enrichment-complete] Match score computation failed:`, err);
     }
 
+    // ── 4. Generate personalized taste text (tasteNote, terrazzoInsight) ──
+    let tasteTextUpdated = 0;
+    try {
+      // Find SPs linked to this PI that are missing tasteNote or terrazzoInsight
+      const spsNeedingTaste = await prisma.savedPlace.findMany({
+        where: {
+          placeIntelligenceId,
+          OR: [
+            { tasteNote: null },
+            { tasteNote: '' },
+            { terrazzoInsight: { equals: Prisma.DbNull } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          location: true,
+          userId: true,
+        },
+      });
+
+      if (spsNeedingTaste.length > 0) {
+        // Group by userId (each user needs their own personalized text)
+        const byUser = new Map<string, typeof spsNeedingTaste>();
+        for (const sp of spsNeedingTaste) {
+          const existing = byUser.get(sp.userId) || [];
+          existing.push(sp);
+          byUser.set(sp.userId, existing);
+        }
+
+        for (const [userId, userPlaces] of byUser) {
+          try {
+            const count = await completeTasteFields(
+              userPlaces.map(sp => ({
+                savedPlaceId: sp.id,
+                name: sp.name,
+                type: sp.type,
+                location: sp.location || undefined,
+              })),
+              userId,
+              { skipScores: true }, // signal-based scores already written above
+            );
+            tasteTextUpdated += count;
+          } catch (err) {
+            console.error(`[enrichment-complete] Taste text generation failed for user ${userId}:`, err);
+          }
+        }
+
+        console.log(`[enrichment-complete] Taste text: ${tasteTextUpdated} updated for ${googlePlaceId}`);
+      }
+    } catch (err) {
+      console.error(`[enrichment-complete] Taste text generation failed:`, err);
+    }
+
     return NextResponse.json({
       success: true,
       googlePlaceId,
       embeddingComputed,
       fieldsPromoted,
       matchesUpdated,
+      tasteTextUpdated,
     });
   } catch (error) {
     console.error('[enrichment-complete] Webhook error:', error);

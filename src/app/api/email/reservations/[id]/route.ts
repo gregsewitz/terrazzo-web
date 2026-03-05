@@ -3,6 +3,7 @@ import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
+import { completeTasteFields } from '@/lib/taste-completion';
 
 /**
  * PATCH /api/email/reservations/[id]
@@ -148,6 +149,13 @@ export async function PATCH(
         ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_single_confirm', emailPlaceType)
           .catch(err => console.error('[email-confirm] enrichment error:', err));
       }
+
+      // Fire-and-forget: generate initial taste fields (matchScore, tasteNote, etc.)
+      // These will be refined by the enrichment-complete webhook when signals are available.
+      completeTasteFields(
+        [{ savedPlaceId: savedPlace.id, name: reservation.placeName, type: reservation.placeType, location: reservation.location || undefined }],
+        user.id,
+      ).catch(err => console.error('[email-confirm] taste completion error:', err));
 
       return NextResponse.json({
         id: reservation.id,

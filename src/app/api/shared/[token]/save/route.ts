@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
+import { completeTasteFields } from '@/lib/taste-completion';
 import type { User } from '@prisma/client';
 
 /**
@@ -83,6 +84,7 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
       tips: toJson(p.tips),
       googleData: toJson(p.googleData),
       terrazzoInsight: toJson(p.terrazzoInsight),
+      alsoKnownAs: p.alsoKnownAs || undefined,
       placeIntelligenceId: p.placeIntelligenceId,
     }));
 
@@ -96,6 +98,24 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     );
     savedCount = created.length;
     newPlaceIds.push(...created.map(p => p.id));
+  }
+
+  // Re-personalize taste fields for the recipient (fire-and-forget)
+  if (newPlaces.length > 0) {
+    const createdPlaces = await prisma.savedPlace.findMany({
+      where: { id: { in: newPlaceIds } },
+      select: { id: true, name: true, type: true, location: true },
+    });
+
+    completeTasteFields(
+      createdPlaces.map(p => ({
+        savedPlaceId: p.id,
+        name: p.name,
+        type: p.type,
+        location: p.location || undefined,
+      })),
+      user.id,
+    ).catch(err => console.error('[shared-save] taste completion error:', err));
   }
 
   // Optionally create a collection with these places
