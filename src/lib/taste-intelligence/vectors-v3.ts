@@ -1,17 +1,19 @@
 /**
- * Taste Intelligence — Vector Computation (v3: Semantic Clustering)
+ * Taste Intelligence — Vector Computation (v3.2: Semantic Clustering + Neighbor Bleed)
  *
- * Identical to v2.1 except signal dimensions use learned semantic clusters
- * instead of random FNV-1a hashing. Each of the 96 signal dimensions
- * represents a meaningful taste concept (e.g., "Nordic Design", "Wellness Rituals").
+ * Uses learned semantic clusters with neighbor bleed for smoother taste matching.
+ * Each of the 400 signal dimensions represents a meaningful taste concept.
+ * When a signal activates cluster C, 25% of the energy also bleeds to each
+ * of C's 3 nearest neighbor clusters, improving recall for semantically adjacent concepts.
  *
- * Vector layout (104 dimensions):
- *   [0-7]    : 8 taste domains (same as v2.1)
- *   [8-103]  : 96 semantic cluster features (signal → cluster lookup, IDF-weighted)
+ * Vector layout (408 dimensions):
+ *   [0-7]     : 8 taste domains
+ *   [8-407]   : 400 semantic cluster features (signal → cluster + neighbor bleed, IDF-weighted)
  *
- * The only difference from v2.1 is how signals map to dimensions:
- *   v2.1: hashSignalToBucket(signal) → FNV-1a hash % 128
- *   v3:   lookupSignalCluster(signal) → JSON mapping from K-means clusters
+ * Changes from v3.1 (308-dim):
+ *   - 300 clusters → 400 clusters (finer-grained taste concepts)
+ *   - Added neighbor bleed: each signal spreads weight to 3 nearest clusters at decay=0.25
+ *   - Vector dimension: 308 → 408
  */
 
 import type { TasteDomain, TasteProfile, BriefingSignal, GeneratedTasteProfile } from '@/types';
@@ -20,9 +22,9 @@ import clusterMap from './signal-clusters.json';
 
 // ─── Vector dimensions ──────────────────────────────────────────────────────
 
-export const VECTOR_DIM_V3 = 104;
+export const VECTOR_DIM_V3 = 408;
 const DOMAIN_DIMS = 8;
-const SIGNAL_DIMS_V3 = 96;
+const SIGNAL_DIMS_V3 = 400;
 
 const DOMAIN_WEIGHT = 0.30;
 const SIGNAL_WEIGHT = 1.0 - DOMAIN_WEIGHT;
@@ -65,6 +67,21 @@ const signalToCluster: Record<string, number> = (clusterMap as any).signalToClus
 const clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[] }> =
   (clusterMap as any).clusters;
 
+// Neighbor bleed map: cluster → [{cluster, weight}]
+const NEIGHBOR_DECAY = (clusterMap as any).neighbor_decay ?? 0.25;
+const clusterNeighborsRaw: Record<string, Array<{ cluster: number; similarity: number; weight: number }>> =
+  (clusterMap as any).clusterNeighbors ?? {};
+
+/** Pre-built neighbor lookup: clusterIndex → Array<{idx: number; weight: number}> */
+const neighborMap: Map<number, Array<{ idx: number; weight: number }>> = new Map();
+for (const [cidStr, neighbors] of Object.entries(clusterNeighborsRaw)) {
+  const cid = parseInt(cidStr, 10);
+  neighborMap.set(
+    cid,
+    neighbors.map((n) => ({ idx: n.cluster, weight: n.weight ?? NEIGHBOR_DECAY })),
+  );
+}
+
 /**
  * Look up which semantic cluster a signal belongs to.
  * Falls back to word-overlap matching with cluster top signals for unseen signals.
@@ -72,7 +89,7 @@ const clusterInfo: Record<string, { label: string; domain?: string; topSignals: 
 export function lookupSignalCluster(signal: string): number {
   const normalized = signal.toLowerCase().trim();
 
-  // Direct lookup (covers all ~3,300 signals in the clustering corpus)
+  // Direct lookup (covers all ~7,628 signals in the clustering corpus)
   const directMatch = signalToCluster[normalized];
   if (directMatch !== undefined) return directMatch;
 
@@ -110,7 +127,7 @@ export function lookupSignalCluster(signal: string): number {
   return bestCluster;
 }
 
-// ─── Signal features (same as v2.1, but using cluster lookup) ───────────────
+// ─── Signal features (cluster lookup + neighbor bleed) ──────────────────────
 
 function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
   const features = new Array(SIGNAL_DIMS_V3).fill(0);
@@ -120,8 +137,19 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
     const bucket = lookupSignalCluster(text);
     const idf = getIdfWeight(text);
     const weightedConfidence = confidence * idf;
+
+    // Primary cluster gets full weight
     features[bucket] += weightedConfidence;
     totalWeights[bucket] += idf;
+
+    // Neighbor bleed: spread decayed energy to 3 nearest clusters
+    const neighbors = neighborMap.get(bucket);
+    if (neighbors) {
+      for (const { idx, weight } of neighbors) {
+        features[idx] += weightedConfidence * weight;
+        totalWeights[idx] += idf * weight;
+      }
+    }
   }
 
   for (let i = 0; i < SIGNAL_DIMS_V3; i++) {

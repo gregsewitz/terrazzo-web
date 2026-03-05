@@ -1,7 +1,7 @@
 /**
  * Taste Intelligence — Backfill Pipeline (v3: Semantic Clustering)
  *
- * Computes v3 vectors (104-dim, semantic cluster based) and stores them
+ * Computes v3.2 vectors (408-dim, 400 semantic clusters + neighbor bleed) and stores them
  * in parallel columns: embeddingV3, tasteVectorV3.
  *
  * Reuses IDF computation from v2.1 backfill.
@@ -179,7 +179,7 @@ export async function backfillAllPropertyEmbeddingsV3(): Promise<{
 // ─── Full v3 backfill ───────────────────────────────────────────────────────
 
 export async function runFullBackfillV3() {
-  console.log('═══ V3 Semantic Clustering Backfill (104-dim) ═══\n');
+  console.log('═══ V3.2 Semantic Clustering Backfill (408-dim, 400 clusters + neighbor bleed) ═══\n');
 
   console.log('── Step 0: IDF Weights ──');
   const idf = await computeAndSetIdfWeightsV3();

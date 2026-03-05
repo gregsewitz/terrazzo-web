@@ -2,8 +2,8 @@
  * Taste Intelligence — Vector Similarity Queries (v3: Semantic Clusters)
  *
  * Mirrors queries.ts but uses v3 columns:
- *   - "embeddingV3" vector(104) instead of "embedding" vector(136)
- *   - "tasteVectorV3" vector(104) instead of "tasteVector" vector(136)
+ *   - "embeddingV3" vector(408) instead of "embedding" vector(136)
+ *   - "tasteVectorV3" vector(408) instead of "tasteVector" vector(136)
  *
  * Same query patterns, same pgvector <=> operator, different columns.
  */
