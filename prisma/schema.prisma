@@ -52,8 +52,8 @@ model User {
   tasteVector          Unsupported("vector(136)")?
   tasteVectorUpdatedAt DateTime?
 
-  // Taste Intelligence v3 (semantic clusters, 308-dim = 8 domains + 300 clusters)
-  tasteVectorV3        Unsupported("vector(308)")?
+  // Taste Intelligence v3 (semantic clusters, 408-dim = 8 domains + 400 clusters + neighbor bleed)
+  tasteVectorV3        Unsupported("vector(408)")?
 
   // Taste graph relations
   tasteNodes           TasteNode[]
@@ -610,8 +610,8 @@ model PlaceIntelligence {
   embedding          Unsupported("vector(136)")?
   embeddingUpdatedAt DateTime?
 
-  // Taste Intelligence v3 (semantic clusters, 308-dim = 8 domains + 300 clusters)
-  embeddingV3        Unsupported("vector(308)")?
+  // Taste Intelligence v3 (semantic clusters, 408-dim = 8 domains + 400 clusters + neighbor bleed)
+  embeddingV3        Unsupported("vector(408)")?
 
   // Relations
   pipelineRuns    PipelineRun[]
