@@ -7,14 +7,16 @@ When the property catalog grows (new places finish enrichment), the v3 semantic 
 ## Current State (as of March 5, 2026)
 
 - **736 enriched properties** in the DB
-- **v3.2 clustering**: 400 clusters, 408-dim vectors (8 domain + 400 signal dims)
-- **Neighbor bleed**: 3 nearest-neighbor clusters per cluster at decay weight 0.25
+- **v3.3 clustering**: 400 clusters, 408-dim vectors (8 domain + 400 signal dims)
+- **Neighbor bleed (v3.3)**: Two-tier similarity-scaled bleed (replaces flat 0.25 decay)
+  - **Intra-domain**: up to 3 neighbors per cluster, weight = similarity × 0.30
+  - **Cross-domain**: up to 2 neighbors per cluster, weight = similarity × 0.10 (similarity > 0.5 threshold)
 - **signal-clusters.json**: Generated from 7,628 signals (freq ≥ 2)
 - **DB columns**: `PlaceIntelligence.embeddingV3 vector(408)` and `User.tasteVectorV3 vector(408)` — all populated
-- **DB staging tables**: `v3_signal_cluster_map` (7,627 rows), `v3_cluster_domain` (400 rows), `v3_cluster_neighbors` (1,200 rows)
+- **DB staging tables**: `v3_signal_cluster_map` (7,627 rows), `v3_cluster_domain` (400 rows), `v3_cluster_neighbors` (~1,200 intra + cross-domain rows, with `tier` column)
 - **Signal cache**: `v3_signal_cache` (113,907 rows — pre-computed cluster assignments for every property signal, including the ~106K that don't appear in the canonical corpus)
 - **IDF weights**: `_idf_weights` (112,050 rows)
-- **PL/pgSQL functions**: `compute_property_embedding_v3`, `compute_user_vector_v3`, `lookup_signal_cluster_v3`, `compute_signal_match_v3` — all current and using cache
+- **PL/pgSQL functions**: `compute_property_embedding_v3`, `compute_user_vector_v3`, `lookup_signal_cluster_v3`, `compute_signal_match_v3` — all current and using cache. Functions read pre-computed `weight` from `v3_cluster_neighbors` (no logic change needed when bleed weights change).
 
 ## Architecture Overview
 
@@ -24,14 +26,19 @@ Vector layout: [0-7] 8 domain dims + [8-K-1] K cluster dims = 8+K total
 
 Signal → Cluster: signal-clusters.json (domain-aware hierarchical K-means on OpenAI embeddings)
 Cluster → Dimension: cluster_id IS the dim index (offset by 8 for domains)
-Neighbor bleed: each signal activates its primary cluster at 100% + 3 neighbor clusters at 25%
+Neighbor bleed (v3.3 — two-tier, similarity-scaled):
+  Primary cluster: activated at 100%
+  Intra-domain neighbors (up to 3): weight = similarity × 0.30 (threshold > 0.3)
+  Cross-domain neighbors (up to 2): weight = similarity × 0.10 (threshold > 0.5)
+  Weights are pre-computed and stored in v3_cluster_neighbors.weight
+  PL/pgSQL functions read weight directly — no runtime calculation needed
 IDF weighting: ln(1 + N/df) per signal across all properties
 Normalization: independent L2 norm on domains + signals, then 0.30/0.70 blend, then final L2 norm
 
 Domain assignment (contiguous cluster ranges):
   Atmosphere (0-50), Character (51-135), Design (136-191), FoodDrink (192-263),
   Service (264-336), Setting (337-379), Sustainability (380-386), Wellness (387-399)
-  (ranges shift whenever K changes — these are the v3.2 ranges)
+  (ranges shift whenever K changes — these are the v3.2/v3.3 ranges)
 ```
 
 ## Key Files
@@ -198,12 +205,13 @@ CREATE TABLE IF NOT EXISTS v3_cluster_domain (
   domain TEXT NOT NULL
 );
 
--- Cluster → neighbor mapping
+-- Cluster → neighbor mapping (v3.3: two-tier with similarity-scaled weights)
 CREATE TABLE IF NOT EXISTS v3_cluster_neighbors (
   cluster_id INT NOT NULL,
   neighbor_id INT NOT NULL,
   similarity FLOAT NOT NULL,
-  weight FLOAT NOT NULL DEFAULT 0.25,
+  weight FLOAT NOT NULL,            -- pre-computed: similarity × bleed_scale
+  tier TEXT NOT NULL DEFAULT 'intra', -- 'intra' (within-domain) or 'cross' (cross-domain)
   PRIMARY KEY (cluster_id, neighbor_id)
 );
 
@@ -272,17 +280,24 @@ with open('staging-sql/cluster_domains.sql', 'w') as f:
     f.write(sql)
 print(f"Generated cluster_domains.sql ({len(clusters)} clusters)")
 
-# ── 3. Cluster-neighbors mapping (single file) ───────────────────────────
+# ── 3. Cluster-neighbors mapping (single file, v3.3 two-tier format) ─────
+INTRA_BLEED_SCALE = 0.30
+CROSS_BLEED_SCALE = 0.10
 neighbors = data.get('clusterNeighbors', {})
 rows = []
 for cid_str, neighbor_list in sorted(neighbors.items(), key=lambda x: int(x[0])):
     for n in neighbor_list:
-        rows.append(f"({cid_str},{n['cluster']},{n['similarity']},{n.get('weight', 0.25)})")
+        tier = n.get('tier', 'intra')
+        sim = n['similarity']
+        # Pre-compute weight: similarity × scale (PL/pgSQL reads weight directly)
+        scale = CROSS_BLEED_SCALE if tier == 'cross' else INTRA_BLEED_SCALE
+        weight = round(sim * scale, 6)
+        rows.append(f"({cid_str},{n['cluster']},{sim},{weight},'{tier}')")
 values = ','.join(rows)
 sql = (
-    f"INSERT INTO v3_cluster_neighbors (cluster_id, neighbor_id, similarity, weight) VALUES "
+    f"INSERT INTO v3_cluster_neighbors (cluster_id, neighbor_id, similarity, weight, tier) VALUES "
     f"{values} ON CONFLICT (cluster_id, neighbor_id) DO UPDATE "
-    f"SET similarity = EXCLUDED.similarity, weight = EXCLUDED.weight;"
+    f"SET similarity = EXCLUDED.similarity, weight = EXCLUDED.weight, tier = EXCLUDED.tier;"
 )
 with open('staging-sql/cluster_neighbors.sql', 'w') as f:
     f.write(sql)
@@ -662,17 +677,25 @@ WHERE scm.signal % u.signal
 ORDER BY scm.signal <-> u.signal
 ```
 
-### Neighbor Bleed Design
+### Neighbor Bleed Design (v3.3: Two-Tier Similarity-Scaled)
 
-The neighbor bleed (3 neighbors at 25% weight) was designed to smooth out the discrete cluster boundaries. It works well — properties that are "between" two clusters (e.g., a hotel that's both "wilderness retreat" and "design-forward architecture") get signal energy in both clusters plus their neighbors, giving better recall.
+**v3.2 (deprecated):** Flat 0.25 decay, within-domain only, 3 neighbors.
 
-The `neighbor_decay` of 0.25 was chosen heuristically. The clustering script computes neighbors using centroid cosine similarity within each domain. Only neighbors with similarity > 0.3 are included.
+**v3.3 (current):** Two-tier, similarity-scaled weights:
+- **Intra-domain** (tier 1): Up to 3 neighbors within same domain, weight = similarity × 0.30 (threshold > 0.3). Range: 0.09–0.27.
+- **Cross-domain** (tier 2): Up to 2 neighbors across domains, weight = similarity × 0.10 (threshold > 0.5). Range: 0.05–0.09.
 
-If you want to tune this:
-- **Lower decay (0.15)**: Sharper cluster boundaries, more discrimination, risk of missing near-matches
-- **Higher decay (0.35)**: Smoother boundaries, better recall, risk of everything looking similar
-- **More neighbors (5)**: More diffusion, less specific
-- **Cross-domain neighbors**: Currently disabled (neighbors are within-domain only) — enabling this could help properties that span domains
+**Why similarity-scaled?** With soft cluster boundaries (avg silhouette ~0.10), high-similarity neighbors represent genuine taste gradients — clusters that almost merged during K-means. These should bleed more. Low-similarity neighbors are genuinely distinct and should bleed less. The old flat 0.25 treated a 0.91-similarity neighbor the same as a 0.38-similarity one, losing information.
+
+**Why cross-domain?** Some taste patterns are inherently cross-domain: "raw alpine materiality" (Design) co-occurs with "mountain silence" (Atmosphere). Without cross-domain bleed, these patterns require direct signal in both domains. The 0.10 scale keeps cross-domain bleed gentle (max weight ~0.09) to prevent semantic confusion.
+
+**Architecture note:** Weights are pre-computed and stored in `v3_cluster_neighbors.weight`. The PL/pgSQL backfill functions read `weight` directly — they don't know or care about tiers or scales. This means tuning the bleed only requires updating the `weight` column, not rewriting functions.
+
+If you want to tune:
+- **Intra scale (0.30)**: Controls within-domain smoothing. Higher = smoother, lower = sharper.
+- **Cross scale (0.10)**: Controls cross-domain bridging. Keep low to avoid spurious connections.
+- **Cross threshold (0.5)**: Only high-similarity cross-domain pairs qualify. Lower = more bridges, more noise risk.
+- **Audit cross-domain links** after regenerating: check that "Japanese garden" (Setting) doesn't bleed to "Japanese breakfast" (FoodDrink) via surface vocabulary overlap.
 
 ## DB Tables Reference
 
@@ -680,7 +703,7 @@ If you want to tune this:
 |-------|-------------|---------|
 | `v3_signal_cluster_map` | 7,627 | Canonical signal → cluster_id (from clustering corpus) |
 | `v3_cluster_domain` | 400 | Cluster → taste domain name |
-| `v3_cluster_neighbors` | 1,200 | Cluster → 3 nearest neighbor clusters + similarity + weight |
+| `v3_cluster_neighbors` | ~1,200+ | Cluster → neighbors (intra + cross domain) + similarity + weight + tier |
 | `v3_signal_cache` | 113,907 | Pre-computed lookup for ALL property signals (canonical + unmapped) |
 | `_idf_weights` | 112,050 | Signal → IDF weight + doc frequency |
 
@@ -693,3 +716,4 @@ Tables that can be safely dropped: `_signal_cluster_map_v3` (legacy), `_signal_t
 | v3.0 | 2025 | 96 | 104 | 3,300 | ~250 | Original, hash-based |
 | v3.1 | Mar 2026 | 300 | 308 | 5,047 | 360 | Semantic K-means, no neighbor bleed |
 | v3.2 | Mar 2026 | 400 | 408 | 7,628 | 736 | + neighbor bleed, signal cache, trigram optimization |
+| v3.3 | Mar 2026 | 400 | 408 | 7,628 | 736 | + two-tier similarity-scaled bleed, cross-domain neighbors |

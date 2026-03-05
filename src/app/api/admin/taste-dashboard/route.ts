@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { computeMatchFromSignals } from '@/lib/taste-match';
+import type { TasteProfile } from '@/types';
+import { ALL_TASTE_DOMAINS } from '@/types';
 
 /**
  * GET /api/admin/taste-dashboard
  *
  * Returns all data needed by the taste-intelligence dashboard:
- *   - v2 vs v3 match scores for every property
+ *   - v1 (LLM signal matching) scores for every property
+ *   - v2 (Embedding 136-dim) vs v3 (Cluster 408-dim) match scores
  *   - cluster size distribution
  *   - domain statistics
  */
 export async function GET() {
   try {
-    // 1. Get the user with taste vectors
+    // 1. Get the user with taste vectors + taste profile (for LLM scoring)
     const users = await prisma.$queryRawUnsafe<
-      Array<{ id: string; tasteVector: string; tasteVectorV3: string }>
+      Array<{ id: string; tasteVector: string; tasteVectorV3: string; tasteProfile: any }>
     >(`
-      SELECT "id", "tasteVector"::text, "tasteVectorV3"::text
+      SELECT "id", "tasteVector"::text, "tasteVectorV3"::text, "tasteProfile"
       FROM "User"
       WHERE "tasteVector" IS NOT NULL AND "tasteVectorV3" IS NOT NULL
       LIMIT 1
@@ -25,47 +29,104 @@ export async function GET() {
       return NextResponse.json({ error: 'No user with both vectors found' }, { status: 404 });
     }
 
-    // 2. Property scores — v2 vs v3
-    const scores = await prisma.$queryRawUnsafe<
+    const user = users[0];
+
+    // Build TasteProfile from radarData for LLM scoring
+    const userTasteProfile: TasteProfile = {
+      Design: 0.5, Atmosphere: 0.5, Character: 0.5,
+      Service: 0.5, FoodDrink: 0.5, Setting: 0.5,
+      Wellness: 0.5, Sustainability: 0.5,
+    };
+
+    const axisToKey: Record<string, keyof TasteProfile> = {
+      design: 'Design', 'design language': 'Design',
+      atmosphere: 'Atmosphere', 'sensory environment': 'Atmosphere',
+      character: 'Character', 'character & identity': 'Character',
+      service: 'Service', 'service philosophy': 'Service',
+      fooddrink: 'FoodDrink', 'food & drink': 'FoodDrink', 'food & drink identity': 'FoodDrink', food: 'FoodDrink',
+      setting: 'Setting', 'location & context': 'Setting', 'location & setting': 'Setting', location: 'Setting',
+      wellness: 'Wellness', 'wellness & body': 'Wellness',
+      sustainability: 'Sustainability',
+    };
+
+    if (user.tasteProfile?.radarData) {
+      for (const { axis, value } of user.tasteProfile.radarData) {
+        const key = axisToKey[axis.toLowerCase()];
+        if (key) userTasteProfile[key] = value;
+      }
+    }
+
+    // 2. Get property scores — Embedding (v2) & Clusters (v3) via pgvector
+    //    Also load signals/antiSignals JSON for LLM scoring
+    const rows = await prisma.$queryRawUnsafe<
       Array<{
         id: string;
         name: string;
-        v2_score: number;
-        v3_score: number;
+        embedding_score: number;
+        clusters_score: number;
         signalCount: number;
+        signals: any;
+        antiSignals: any;
       }>
     >(`
       SELECT
         pi."id",
         pi."propertyName" as name,
-        ROUND((1 - (pi."embedding" <=> u."tasteVector"))::numeric * 100, 1) as v2_score,
-        ROUND((1 - (pi."embeddingV3" <=> u."tasteVectorV3"))::numeric * 100, 1) as v3_score,
-        pi."signalCount"
+        ROUND((1 - (pi."embedding" <=> u."tasteVector"))::numeric * 100, 1) as embedding_score,
+        ROUND((1 - (pi."embeddingV3" <=> u."tasteVectorV3"))::numeric * 100, 1) as clusters_score,
+        pi."signalCount",
+        pi."signals",
+        pi."antiSignals"
       FROM "PlaceIntelligence" pi
       CROSS JOIN "User" u
       WHERE u."id" = $1
         AND pi."embedding" IS NOT NULL
         AND pi."embeddingV3" IS NOT NULL
-      ORDER BY v3_score DESC
-    `, users[0].id);
+      ORDER BY clusters_score DESC
+    `, user.id);
 
-    // Build ranks
-    const v2Ranked = [...scores].sort((a, b) => Number(b.v2_score) - Number(a.v2_score));
-    const v3Ranked = [...scores].sort((a, b) => Number(b.v3_score) - Number(a.v3_score));
-    const v2Ranks = new Map(v2Ranked.map((r, i) => [r.id, i + 1]));
-    const v3Ranks = new Map(v3Ranked.map((r, i) => [r.id, i + 1]));
+    // 3. Compute LLM scores for each property
+    const properties = rows.map((r) => {
+      const signals = Array.isArray(r.signals) ? r.signals : [];
+      const antiSignals = Array.isArray(r.antiSignals) ? r.antiSignals : [];
 
-    const properties = scores.map((r) => ({
+      let llmScore = 50; // default neutral
+      if (signals.length > 0) {
+        const result = computeMatchFromSignals(signals, antiSignals, userTasteProfile);
+        llmScore = result.overallScore;
+      }
+
+      return {
+        id: r.id,
+        name: r.name,
+        llm: llmScore,
+        embedding: Number(r.embedding_score),
+        clusters: Number(r.clusters_score),
+        signals: Number(r.signalCount) || 0,
+      };
+    });
+
+    // Build ranks for each approach
+    const llmRanked = [...properties].sort((a, b) => b.llm - a.llm);
+    const embRanked = [...properties].sort((a, b) => b.embedding - a.embedding);
+    const cluRanked = [...properties].sort((a, b) => b.clusters - a.clusters);
+
+    const llmRanks = new Map(llmRanked.map((r, i) => [r.id, i + 1]));
+    const embRanks = new Map(embRanked.map((r, i) => [r.id, i + 1]));
+    const cluRanks = new Map(cluRanked.map((r, i) => [r.id, i + 1]));
+
+    const enriched = properties.map((r) => ({
       name: r.name,
-      v2: Number(r.v2_score),
-      v3: Number(r.v3_score),
-      signals: Number(r.signalCount) || 0,
-      v2r: v2Ranks.get(r.id)!,
-      v3r: v3Ranks.get(r.id)!,
-      rc: v2Ranks.get(r.id)! - v3Ranks.get(r.id)!,
+      llm: r.llm,
+      embedding: r.embedding,
+      clusters: r.clusters,
+      signals: r.signals,
+      llmR: llmRanks.get(r.id)!,
+      embR: embRanks.get(r.id)!,
+      cluR: cluRanks.get(r.id)!,
     }));
 
-    // 3. Cluster sizes from signal_cluster_map
+    // 4. Cluster sizes from signal_cluster_map
     const clusterRows = await prisma.$queryRawUnsafe<
       Array<{ cluster_id: number; signal_count: number }>
     >(`
@@ -80,7 +141,7 @@ export async function GET() {
       clusterSizes[Number(r.cluster_id)] = Number(r.signal_count);
     });
 
-    // 4. Domain stats
+    // 5. Domain stats
     const domainRanges = [
       { domain: 'Atmosphere', start: 0, end: 50 },
       { domain: 'Character', start: 51, end: 135 },
@@ -105,7 +166,7 @@ export async function GET() {
       };
     });
 
-    // 5. Cluster size histogram
+    // 6. Cluster size histogram
     const hist: Record<number, number> = {};
     clusterSizes.forEach((s) => {
       const bucket = Math.floor(s / 5) * 5;
@@ -116,12 +177,12 @@ export async function GET() {
       .sort((a, b) => a.bucket - b.bucket);
 
     return NextResponse.json({
-      properties,
+      properties: enriched,
       domains,
       clusterSizes,
       clusterHist,
       meta: {
-        propertyCount: properties.length,
+        propertyCount: enriched.length,
         clusterCount: 400,
         dimensions: 408,
         mappedSignals: clusterRows.reduce((s, r) => s + Number(r.signal_count), 0),

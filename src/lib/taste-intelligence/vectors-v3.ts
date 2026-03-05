@@ -1,19 +1,21 @@
 /**
- * Taste Intelligence — Vector Computation (v3.2: Semantic Clustering + Neighbor Bleed)
+ * Taste Intelligence — Vector Computation (v3.3: Similarity-Scaled Two-Tier Neighbor Bleed)
  *
- * Uses learned semantic clusters with neighbor bleed for smoother taste matching.
+ * Uses learned semantic clusters with two-tier neighbor bleed for smoother taste matching.
  * Each of the 400 signal dimensions represents a meaningful taste concept.
- * When a signal activates cluster C, 25% of the energy also bleeds to each
- * of C's 3 nearest neighbor clusters, improving recall for semantically adjacent concepts.
+ * When a signal activates cluster C, energy bleeds to neighbor clusters scaled by
+ * cosine similarity of their centroids:
+ *   - Intra-domain neighbors (up to 3): weight = similarity × 0.30
+ *   - Cross-domain neighbors (up to 2): weight = similarity × 0.10
  *
  * Vector layout (408 dimensions):
  *   [0-7]     : 8 taste domains
  *   [8-407]   : 400 semantic cluster features (signal → cluster + neighbor bleed, IDF-weighted)
  *
- * Changes from v3.1 (308-dim):
- *   - 300 clusters → 400 clusters (finer-grained taste concepts)
- *   - Added neighbor bleed: each signal spreads weight to 3 nearest clusters at decay=0.25
- *   - Vector dimension: 308 → 408
+ * Changes from v3.2:
+ *   - Flat 0.25 neighbor decay → similarity-scaled bleed (high-sim neighbors bleed more)
+ *   - Within-domain-only → two-tier: intra-domain (scale 0.30) + cross-domain (scale 0.10)
+ *   - Cross-domain neighbors bridge hard domain walls for co-occurring taste patterns
  */
 
 import type { TasteDomain, TasteProfile, BriefingSignal, GeneratedTasteProfile } from '@/types';
@@ -67,9 +69,14 @@ const signalToCluster: Record<string, number> = (clusterMap as any).signalToClus
 const clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[] }> =
   (clusterMap as any).clusters;
 
-// Neighbor bleed map: cluster → [{cluster, weight}]
-const NEIGHBOR_DECAY = (clusterMap as any).neighbor_decay ?? 0.25;
-const clusterNeighborsRaw: Record<string, Array<{ cluster: number; similarity: number; weight: number }>> =
+// Neighbor bleed map: cluster → [{cluster, similarity, tier}]
+// v3.3: similarity-scaled weights replace flat 0.25 decay
+const INTRA_BLEED_SCALE = (clusterMap as any).intra_bleed_scale ?? 0.30;
+const CROSS_BLEED_SCALE = (clusterMap as any).cross_bleed_scale ?? 0.10;
+// Backward compat: if signal-clusters.json is still v3.2 with flat weight/no tier
+const LEGACY_DECAY = (clusterMap as any).neighbor_decay ?? 0.25;
+
+const clusterNeighborsRaw: Record<string, Array<{ cluster: number; similarity: number; weight?: number; tier?: string }>> =
   (clusterMap as any).clusterNeighbors ?? {};
 
 /** Pre-built neighbor lookup: clusterIndex → Array<{idx: number; weight: number}> */
@@ -78,7 +85,15 @@ for (const [cidStr, neighbors] of Object.entries(clusterNeighborsRaw)) {
   const cid = parseInt(cidStr, 10);
   neighborMap.set(
     cid,
-    neighbors.map((n) => ({ idx: n.cluster, weight: n.weight ?? NEIGHBOR_DECAY })),
+    neighbors.map((n) => {
+      if (n.tier) {
+        // v3.3: similarity-scaled weight based on tier
+        const scale = n.tier === 'cross' ? CROSS_BLEED_SCALE : INTRA_BLEED_SCALE;
+        return { idx: n.cluster, weight: n.similarity * scale };
+      }
+      // v3.2 backward compat: use legacy flat weight
+      return { idx: n.cluster, weight: n.weight ?? LEGACY_DECAY };
+    }),
   );
 }
 
@@ -127,7 +142,7 @@ export function lookupSignalCluster(signal: string): number {
   return bestCluster;
 }
 
-// ─── Signal features (cluster lookup + neighbor bleed) ──────────────────────
+// ─── Signal features (cluster lookup + similarity-scaled two-tier neighbor bleed) ─
 
 function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
   const features = new Array(SIGNAL_DIMS_V3).fill(0);

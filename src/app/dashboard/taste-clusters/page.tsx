@@ -5,13 +5,18 @@ import Script from 'next/script';
 
 /* ═══════════════════════════════════════════════════════════
    Taste Intelligence Dashboard — /dashboard/taste-clusters
-   Unlinked page for reviewing clustering & match quality.
+   Compares three scoring approaches:
+     • LLM     — signal-based scoring via computeMatchFromSignals
+     • Embedding — 136-dim vectors (v2)
+     • Clusters  — 408-dim vectors with neighbor bleed (v3)
    ═══════════════════════════════════════════════════════════ */
 
 // Types
 interface Property {
-  name: string; v2: number; v3: number; signals: number;
-  v2r: number; v3r: number; rc: number;
+  name: string;
+  llm: number; embedding: number; clusters: number;
+  signals: number;
+  llmR: number; embR: number; cluR: number;
 }
 interface DomainStat {
   domain: string; clusters: number; signals: number;
@@ -41,6 +46,11 @@ const DOMAIN_RANGES = [
   { domain: 'Sustainability', start: 380, end: 386 },
   { domain: 'Wellness', start: 387, end: 399 },
 ];
+
+// Approach colors
+const LLM_COLOR = '#f59e0b';       // amber
+const EMB_COLOR = '#8b5cf6';       // purple
+const CLU_COLOR = '#06b6d4';       // cyan
 
 // ═══ MAIN COMPONENT ═══
 export default function TasteDashboard() {
@@ -116,7 +126,7 @@ function Header({ meta }: { meta: DashboardData['meta'] }) {
 function TabBar({ active, onChange }: { active: string; onChange: (t: any) => void }) {
   const tabs = [
     { key: 'overview', label: 'Overview' },
-    { key: 'comparison', label: 'v2 vs v3 Comparison' },
+    { key: 'comparison', label: 'LLM vs Embedding vs Clusters' },
     { key: 'clusters', label: 'Cluster Explorer' },
     { key: 'rankings', label: 'Property Rankings' },
   ];
@@ -183,24 +193,26 @@ const chartTheme = {
 
 // ═══ OVERVIEW ═══
 function OverviewPanel({ data }: { data: DashboardData }) {
-  const v2s = data.properties.map((d) => d.v2);
-  const v3s = data.properties.map((d) => d.v3);
-  const avgV3 = mean(v3s);
-  const avgV2 = mean(v2s);
-  const absChanges = data.properties.map((d) => Math.abs(d.rc)).sort((a, b) => a - b);
-  const medChange = absChanges[Math.floor(absChanges.length / 2)];
+  const llms = data.properties.map((d) => d.llm);
+  const embs = data.properties.map((d) => d.embedding);
+  const clus = data.properties.map((d) => d.clusters);
+  const avgLlm = mean(llms);
+  const avgEmb = mean(embs);
+  const avgClu = mean(clus);
 
-  const h2 = makeHist(v2s, 2);
-  const h3 = makeHist(v3s, 2);
-  const allLabels = [...new Set([...h2.labels, ...h3.labels])].sort();
+  const hL = makeHist(llms, 2);
+  const hE = makeHist(embs, 2);
+  const hC = makeHist(clus, 2);
+  const allLabels = [...new Set([...hL.labels, ...hE.labels, ...hC.labels])].sort();
 
   const distRef = useChart('dist', {
     type: 'bar',
     data: {
       labels: allLabels,
       datasets: [
-        { label: 'v2', data: allLabels.map((l) => { const i = h2.labels.indexOf(l); return i >= 0 ? h2.counts[i] : 0; }), backgroundColor: 'rgba(139,92,246,0.4)', borderColor: '#8b5cf6', borderWidth: 1 },
-        { label: 'v3', data: allLabels.map((l) => { const i = h3.labels.indexOf(l); return i >= 0 ? h3.counts[i] : 0; }), backgroundColor: 'rgba(6,182,212,0.4)', borderColor: '#06b6d4', borderWidth: 1 },
+        { label: 'LLM', data: allLabels.map((l) => { const i = hL.labels.indexOf(l); return i >= 0 ? hL.counts[i] : 0; }), backgroundColor: LLM_COLOR + '66', borderColor: LLM_COLOR, borderWidth: 1 },
+        { label: 'Embedding', data: allLabels.map((l) => { const i = hE.labels.indexOf(l); return i >= 0 ? hE.counts[i] : 0; }), backgroundColor: EMB_COLOR + '66', borderColor: EMB_COLOR, borderWidth: 1 },
+        { label: 'Clusters', data: allLabels.map((l) => { const i = hC.labels.indexOf(l); return i >= 0 ? hC.counts[i] : 0; }), backgroundColor: CLU_COLOR + '66', borderColor: CLU_COLOR, borderWidth: 1 },
       ],
     },
     options: { responsive: true, maintainAspectRatio: false, ...chartTheme },
@@ -210,7 +222,7 @@ function OverviewPanel({ data }: { data: DashboardData }) {
     type: 'bar',
     data: {
       labels: data.clusterHist.map((h) => `${h.bucket}-${h.bucket + 4}`),
-      datasets: [{ label: 'Clusters', data: data.clusterHist.map((h) => h.count), backgroundColor: 'rgba(139,92,246,0.5)', borderColor: '#8b5cf6', borderWidth: 1 }],
+      datasets: [{ label: 'Clusters', data: data.clusterHist.map((h) => h.count), backgroundColor: CLU_COLOR + '80', borderColor: CLU_COLOR, borderWidth: 1 }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -225,24 +237,24 @@ function OverviewPanel({ data }: { data: DashboardData }) {
     <>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 20 }}>
         <Card>
-          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>v3 Average Match Score</h3>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#8b5cf6' }}>{avgV3.toFixed(1)}</div>
-          <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>+{(avgV3 - avgV2).toFixed(1)} vs v2 ({avgV2.toFixed(1)}) · σ={std(v3s).toFixed(1)}</div>
+          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>LLM (Signal Matching)</h3>
+          <div style={{ fontSize: 36, fontWeight: 700, color: LLM_COLOR }}>{avgLlm.toFixed(1)}</div>
+          <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>avg score · σ={std(llms).toFixed(1)} · range {Math.min(...llms).toFixed(0)}–{Math.max(...llms).toFixed(0)}</div>
         </Card>
         <Card>
-          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>Score Range (v3)</h3>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#06b6d4' }}>{Math.min(...v3s).toFixed(1)}–{Math.max(...v3s).toFixed(1)}</div>
-          <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>v2 range: {Math.min(...v2s).toFixed(1)}–{Math.max(...v2s).toFixed(1)}</div>
+          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>Embedding (136-dim)</h3>
+          <div style={{ fontSize: 36, fontWeight: 700, color: EMB_COLOR }}>{avgEmb.toFixed(1)}</div>
+          <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>avg score · σ={std(embs).toFixed(1)} · range {Math.min(...embs).toFixed(1)}–{Math.max(...embs).toFixed(1)}</div>
         </Card>
         <Card>
-          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>Median Rank Change</h3>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#f59e0b' }}>±{medChange}</div>
-          <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>Average absolute rank shift between v2→v3</div>
+          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>Clusters (408-dim)</h3>
+          <div style={{ fontSize: 36, fontWeight: 700, color: CLU_COLOR }}>{avgClu.toFixed(1)}</div>
+          <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>avg score · σ={std(clus).toFixed(1)} · range {Math.min(...clus).toFixed(1)}–{Math.max(...clus).toFixed(1)}</div>
         </Card>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <Card title="Score Distribution — v2 vs v3">
+        <Card title="Score Distribution — All Three Approaches">
           <div style={{ position: 'relative', height: 300 }}><canvas ref={distRef} /></div>
         </Card>
         <Card title="Domain Coverage (clusters per domain)">
@@ -271,14 +283,15 @@ function OverviewPanel({ data }: { data: DashboardData }) {
 
 // ═══ COMPARISON ═══
 function ComparisonPanel({ data }: { data: DashboardData }) {
-  const scatterRef = useChart('scatter', {
+  // Scatter: Embedding vs Clusters
+  const scatterEmbCluRef = useChart('scatter-emb-clu', {
     type: 'scatter',
     data: {
       datasets: [{
         label: 'Properties',
-        data: data.properties.map((d) => ({ x: d.v2, y: d.v3, name: d.name })),
-        backgroundColor: data.properties.map((d) => d.v3 > d.v2 ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'),
-        borderColor: data.properties.map((d) => d.v3 > d.v2 ? '#22c55e' : '#ef4444'),
+        data: data.properties.map((d) => ({ x: d.embedding, y: d.clusters, name: d.name })),
+        backgroundColor: data.properties.map((d) => d.clusters > d.embedding ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'),
+        borderColor: data.properties.map((d) => d.clusters > d.embedding ? '#22c55e' : '#ef4444'),
         borderWidth: 1, pointRadius: 3, pointHoverRadius: 6,
       }],
     },
@@ -286,60 +299,55 @@ function ComparisonPanel({ data }: { data: DashboardData }) {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx: any) => { const d = ctx.raw; return `${d.name}: v2=${d.x}, v3=${d.y} (${d.y > d.x ? '+' : ''}${(d.y - d.x).toFixed(1)})`; } } },
+        tooltip: { callbacks: { label: (ctx: any) => { const d = ctx.raw; return `${d.name}: Emb=${d.x}, Clu=${d.y}`; } } },
       },
       scales: {
-        x: { title: { display: true, text: 'v2 Score', color: '#a1a1aa' }, ...chartTheme.scales.x, min: 10, max: 90 },
-        y: { title: { display: true, text: 'v3 Score', color: '#a1a1aa' }, ...chartTheme.scales.y, min: 20, max: 90 },
+        x: { title: { display: true, text: 'Embedding Score', color: '#a1a1aa' }, ...chartTheme.scales.x },
+        y: { title: { display: true, text: 'Clusters Score', color: '#a1a1aa' }, ...chartTheme.scales.y },
       },
     },
-    plugins: [{
-      id: 'diagonal',
-      afterDraw(chart: any) {
-        const { ctx, scales: { x, y } } = chart;
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(x.getPixelForValue(Math.max(x.min, y.min)), y.getPixelForValue(Math.max(x.min, y.min)));
-        ctx.lineTo(x.getPixelForValue(Math.min(x.max, y.max)), y.getPixelForValue(Math.min(x.max, y.max)));
-        ctx.stroke();
-        ctx.restore();
-      },
-    }],
+    plugins: [diagonalPlugin],
   });
 
-  const deltas = data.properties.map((d) => d.v3 - d.v2);
-  const dHist = makeHist(deltas, 2);
-  const deltaRef = useChart('delta', {
-    type: 'bar',
+  // Scatter: LLM vs Clusters
+  const scatterLlmCluRef = useChart('scatter-llm-clu', {
+    type: 'scatter',
     data: {
-      labels: dHist.labels,
       datasets: [{
-        label: 'Count', data: dHist.counts,
-        backgroundColor: dHist.labels.map((l) => parseInt(l) >= 0 ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.5)'),
-        borderColor: dHist.labels.map((l) => parseInt(l) >= 0 ? '#22c55e' : '#ef4444'),
-        borderWidth: 1,
+        label: 'Properties',
+        data: data.properties.map((d) => ({ x: d.llm, y: d.clusters, name: d.name })),
+        backgroundColor: data.properties.map((d) => d.clusters > d.llm ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'),
+        borderColor: data.properties.map((d) => d.clusters > d.llm ? '#22c55e' : '#ef4444'),
+        borderWidth: 1, pointRadius: 3, pointHoverRadius: 6,
       }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, title: { display: true, text: 'Score difference (v3 − v2) per property', color: '#a1a1aa', font: { size: 12 } } },
-      scales: { x: { title: { display: true, text: 'Score Change', color: '#a1a1aa' }, ...chartTheme.scales.x }, y: { title: { display: true, text: 'Properties', color: '#a1a1aa' }, ...chartTheme.scales.y } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx: any) => { const d = ctx.raw; return `${d.name}: LLM=${d.x}, Clu=${d.y}`; } } },
+      },
+      scales: {
+        x: { title: { display: true, text: 'LLM Score', color: '#a1a1aa' }, ...chartTheme.scales.x },
+        y: { title: { display: true, text: 'Clusters Score', color: '#a1a1aa' }, ...chartTheme.scales.y },
+      },
     },
+    plugins: [diagonalPlugin],
   });
 
-  const sorted = [...data.properties].sort((a, b) => b.rc - a.rc);
+  // Rank change: Embedding → Clusters
+  const embCluRc = data.properties.map((d) => ({ ...d, rc: d.embR - d.cluR }));
+  const sorted = [...embCluRc].sort((a, b) => b.rc - a.rc);
   const risers = sorted.slice(0, 10);
   const fallers = sorted.slice(-10).reverse();
 
-  const MoverList = ({ items, isUp }: { items: Property[]; isUp: boolean }) => (
+  const MoverList = ({ items, isUp }: { items: typeof embCluRc; isUp: boolean }) => (
     <>
       {items.map((d, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #2a2d3a', fontSize: 13 }}>
           <span style={{ color: isUp ? '#22c55e' : '#ef4444', fontWeight: 600, width: 50 }}>{isUp ? '↑' : '↓'}{Math.abs(d.rc)}</span>
           <span style={{ flex: 1 }}>{d.name}</span>
-          <span style={{ color: '#a1a1aa', fontSize: 12 }}>#{d.v2r} → #{d.v3r}</span>
+          <span style={{ color: '#a1a1aa', fontSize: 12 }}>Emb #{d.embR} → Clu #{d.cluR}</span>
         </div>
       ))}
     </>
@@ -348,14 +356,14 @@ function ComparisonPanel({ data }: { data: DashboardData }) {
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-        <Card title="v2 vs v3 Score Scatter (each dot = 1 property)">
-          <div style={{ position: 'relative', height: 400 }}><canvas ref={scatterRef} /></div>
+        <Card title="Embedding vs Clusters (each dot = 1 property)">
+          <div style={{ position: 'relative', height: 400 }}><canvas ref={scatterEmbCluRef} /></div>
         </Card>
-        <Card title="Score Change Distribution (v3 − v2)">
-          <div style={{ position: 'relative', height: 400 }}><canvas ref={deltaRef} /></div>
+        <Card title="LLM vs Clusters (each dot = 1 property)">
+          <div style={{ position: 'relative', height: 400 }}><canvas ref={scatterLlmCluRef} /></div>
         </Card>
       </div>
-      <Card title="Biggest Rank Movers (v2 → v3)">
+      <Card title="Biggest Rank Movers (Embedding → Clusters)">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
           <div>
             <h3 style={{ color: '#22c55e', fontSize: 14, marginBottom: 8 }}>⬆ Biggest Risers</h3>
@@ -370,6 +378,22 @@ function ComparisonPanel({ data }: { data: DashboardData }) {
     </>
   );
 }
+
+/** Shared Chart.js plugin to draw y=x diagonal line */
+const diagonalPlugin = {
+  id: 'diagonal',
+  afterDraw(chart: any) {
+    const { ctx, scales: { x, y } } = chart;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(x.getPixelForValue(Math.max(x.min, y.min)), y.getPixelForValue(Math.max(x.min, y.min)));
+    ctx.lineTo(x.getPixelForValue(Math.min(x.max, y.max)), y.getPixelForValue(Math.min(x.max, y.max)));
+    ctx.stroke();
+    ctx.restore();
+  },
+};
 
 // ═══ CLUSTER EXPLORER ═══
 function ClusterPanel({ data }: { data: DashboardData }) {
@@ -447,14 +471,14 @@ function ClusterPanel({ data }: { data: DashboardData }) {
 // ═══ RANKINGS TABLE ═══
 function RankingsPanel({ data }: { data: DashboardData }) {
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState('v3-desc');
+  const [sort, setSort] = useState('clu-desc');
 
   const sortFns: Record<string, (a: Property, b: Property) => number> = {
-    'v3-desc': (a, b) => b.v3 - a.v3,
-    'v2-desc': (a, b) => b.v2 - a.v2,
-    'rc-desc': (a, b) => b.rc - a.rc,
-    'rc-asc': (a, b) => a.rc - b.rc,
-    'delta-desc': (a, b) => (b.v3 - b.v2) - (a.v3 - a.v2),
+    'clu-desc': (a, b) => b.clusters - a.clusters,
+    'emb-desc': (a, b) => b.embedding - a.embedding,
+    'llm-desc': (a, b) => b.llm - a.llm,
+    'delta-emb-clu': (a, b) => (b.clusters - b.embedding) - (a.clusters - a.embedding),
+    'delta-llm-clu': (a, b) => (b.clusters - b.llm) - (a.clusters - a.llm),
     'signals-desc': (a, b) => b.signals - a.signals,
   };
 
@@ -462,7 +486,7 @@ function RankingsPanel({ data }: { data: DashboardData }) {
     let rows = query
       ? data.properties.filter((d) => d.name.toLowerCase().includes(query.toLowerCase()))
       : [...data.properties];
-    rows.sort(sortFns[sort] || sortFns['v3-desc']);
+    rows.sort(sortFns[sort] || sortFns['clu-desc']);
     return rows.slice(0, 200);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.properties, query, sort]);
@@ -478,11 +502,11 @@ function RankingsPanel({ data }: { data: DashboardData }) {
         />
         <label style={{ fontSize: 12, color: '#a1a1aa' }}>Sort by:</label>
         <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ background: '#0f1117', border: '1px solid #2a2d3a', color: '#e4e4e7', padding: '6px 10px', borderRadius: 6, fontSize: 12 }}>
-          <option value="v3-desc">v3 Score (high→low)</option>
-          <option value="v2-desc">v2 Score (high→low)</option>
-          <option value="rc-desc">Biggest Rise</option>
-          <option value="rc-asc">Biggest Fall</option>
-          <option value="delta-desc">Score Gain (v3−v2)</option>
+          <option value="clu-desc">Clusters Score ↓</option>
+          <option value="emb-desc">Embedding Score ↓</option>
+          <option value="llm-desc">LLM Score ↓</option>
+          <option value="delta-emb-clu">Gain (Clusters−Embedding)</option>
+          <option value="delta-llm-clu">Gain (Clusters−LLM)</option>
           <option value="signals-desc">Most Signals</option>
         </select>
         <span style={{ marginLeft: 'auto', fontSize: 12, color: '#a1a1aa' }}>
@@ -494,36 +518,37 @@ function RankingsPanel({ data }: { data: DashboardData }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
-                {['#', 'Property', 'v2 Score', 'v3 Score', 'Δ Score', 'v2 Rank', 'v3 Rank', 'Rank Change', 'Signals'].map((h) => (
+                {['#', 'Property', 'LLM', 'Embedding', 'Clusters', 'Δ Emb→Clu', 'LLM Rank', 'Emb Rank', 'Clu Rank', 'Signals'].map((h) => (
                   <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: '#a1a1aa', fontWeight: 500, borderBottom: '1px solid #2a2d3a', position: 'sticky', top: 0, background: '#1a1d27' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map((d, i) => {
-                const delta = (d.v3 - d.v2).toFixed(1);
-                const dNum = Number(delta);
-                const rcText = d.rc > 0 ? `↑${d.rc}` : d.rc < 0 ? `↓${Math.abs(d.rc)}` : '—';
+                const deltaEC = (d.clusters - d.embedding).toFixed(1);
+                const dNum = Number(deltaEC);
                 return (
                   <tr key={i} style={{ borderBottom: '1px solid #2a2d3a' }}>
                     <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>{i + 1}</td>
                     <td style={{ padding: '6px 12px' }}>{d.name}</td>
                     <td style={{ padding: '6px 12px' }}>
-                      <span style={{ display: 'inline-block', height: 6, borderRadius: 3, width: d.v2, background: '#8b5cf6', verticalAlign: 'middle', marginRight: 6 }} />
-                      {d.v2}
+                      <span style={{ display: 'inline-block', height: 6, borderRadius: 3, width: Math.max(d.llm * 0.8, 2), background: LLM_COLOR, verticalAlign: 'middle', marginRight: 6 }} />
+                      {d.llm}
                     </td>
                     <td style={{ padding: '6px 12px' }}>
-                      <span style={{ display: 'inline-block', height: 6, borderRadius: 3, width: d.v3, background: '#06b6d4', verticalAlign: 'middle', marginRight: 6 }} />
-                      {d.v3}
+                      <span style={{ display: 'inline-block', height: 6, borderRadius: 3, width: Math.max(d.embedding * 0.8, 2), background: EMB_COLOR, verticalAlign: 'middle', marginRight: 6 }} />
+                      {d.embedding}
+                    </td>
+                    <td style={{ padding: '6px 12px' }}>
+                      <span style={{ display: 'inline-block', height: 6, borderRadius: 3, width: Math.max(d.clusters * 0.8, 2), background: CLU_COLOR, verticalAlign: 'middle', marginRight: 6 }} />
+                      {d.clusters}
                     </td>
                     <td style={{ padding: '6px 12px', fontWeight: 600, fontSize: 12, color: dNum > 0 ? '#22c55e' : dNum < 0 ? '#ef4444' : '#a1a1aa' }}>
-                      {dNum > 0 ? '+' : ''}{delta}
+                      {dNum > 0 ? '+' : ''}{deltaEC}
                     </td>
-                    <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>#{d.v2r}</td>
-                    <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>#{d.v3r}</td>
-                    <td style={{ padding: '6px 12px', fontWeight: 600, fontSize: 12, color: d.rc > 0 ? '#22c55e' : d.rc < 0 ? '#ef4444' : '#a1a1aa' }}>
-                      {rcText}
-                    </td>
+                    <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>#{d.llmR}</td>
+                    <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>#{d.embR}</td>
+                    <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>#{d.cluR}</td>
                     <td style={{ padding: '6px 12px', color: '#a1a1aa' }}>{d.signals}</td>
                   </tr>
                 );

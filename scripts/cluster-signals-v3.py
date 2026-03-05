@@ -297,53 +297,94 @@ def cluster_with_k(target_k, verbose=True):
     avg_sil = float(np.mean(all_silhouettes)) if all_silhouettes else 0
     sizes = [c['size'] for c in clusters.values()]
 
-    # ── Compute cluster neighbors (soft activation / bleed) ──────────────
-    # For each cluster, find top-3 most similar clusters within same domain
-    # by cosine similarity of K-means centroids
+    # ── Compute cluster neighbors (two-tier: intra-domain + cross-domain) ─
+    # Tier 1 (intra): top-3 within same domain, similarity > 0.3
+    #   Bleed weight = similarity * INTRA_BLEED_SCALE (0.30)
+    # Tier 2 (cross): top-2 across different domains, similarity > 0.5
+    #   Bleed weight = similarity * CROSS_BLEED_SCALE (0.10)
     cluster_neighbors = {}
-    NEIGHBOR_COUNT = 3
-    NEIGHBOR_DECAY = 0.25  # activation weight for neighbors
+    INTRA_NEIGHBOR_COUNT = 3
+    CROSS_NEIGHBOR_COUNT = 2
+    INTRA_SIM_THRESHOLD = 0.3
+    CROSS_SIM_THRESHOLD = 0.5
 
     # Group clusters by domain
     domain_clusters = defaultdict(list)
     for cid, dom in cluster_domain_map.items():
         domain_clusters[dom].append(cid)
 
+    # ── Tier 1: intra-domain neighbors ──
     for domain, cids in domain_clusters.items():
         if len(cids) < 2:
             continue
-        # Build centroid matrix for this domain's clusters
         centroids = np.array([cluster_centroids_map[cid] for cid in cids])
-        # Cosine similarity matrix
         norms = np.linalg.norm(centroids, axis=1, keepdims=True)
         norms = np.maximum(norms, 1e-10)
         normed = centroids / norms
         sim_matrix = normed @ normed.T
 
         for idx, cid in enumerate(cids):
-            # Zero out self-similarity
             sims = sim_matrix[idx].copy()
             sims[idx] = -1
-            # Top-N neighbors
-            top_indices = np.argsort(sims)[-NEIGHBOR_COUNT:][::-1]
+            top_indices = np.argsort(sims)[-INTRA_NEIGHBOR_COUNT:][::-1]
             neighbors = []
             for ni in top_indices:
-                if sims[ni] > 0.3:  # minimum similarity threshold
+                if sims[ni] > INTRA_SIM_THRESHOLD:
                     neighbors.append({
                         "cluster": int(cids[ni]),
                         "similarity": round(float(sims[ni]), 4),
-                        "weight": NEIGHBOR_DECAY
+                        "tier": "intra"
                     })
             if neighbors:
                 cluster_neighbors[cid] = neighbors
 
+    # ── Tier 2: cross-domain neighbors ──
+    # Build full centroid matrix across all clusters
+    all_cids = sorted(cluster_centroids_map.keys())
+    all_centroids = np.array([cluster_centroids_map[cid] for cid in all_cids])
+    all_norms = np.linalg.norm(all_centroids, axis=1, keepdims=True)
+    all_norms = np.maximum(all_norms, 1e-10)
+    all_normed = all_centroids / all_norms
+    full_sim_matrix = all_normed @ all_normed.T
+
+    cross_count = 0
+    for idx, cid in enumerate(all_cids):
+        my_domain = cluster_domain_map[cid]
+        sims = full_sim_matrix[idx].copy()
+        sims[idx] = -1  # exclude self
+
+        # Mask out same-domain clusters (already handled by tier 1)
+        for jdx, other_cid in enumerate(all_cids):
+            if cluster_domain_map[other_cid] == my_domain:
+                sims[jdx] = -1
+
+        top_indices = np.argsort(sims)[-CROSS_NEIGHBOR_COUNT:][::-1]
+        cross_neighbors = []
+        for ni in top_indices:
+            if sims[ni] > CROSS_SIM_THRESHOLD:
+                cross_neighbors.append({
+                    "cluster": int(all_cids[ni]),
+                    "similarity": round(float(sims[ni]), 4),
+                    "tier": "cross"
+                })
+
+        if cross_neighbors:
+            if cid not in cluster_neighbors:
+                cluster_neighbors[cid] = []
+            cluster_neighbors[cid].extend(cross_neighbors)
+            cross_count += len(cross_neighbors)
+
     if verbose:
         micro = sum(1 for s in sizes if s <= 5)
         with_neighbors = sum(1 for cid in range(global_cluster_id) if cid in cluster_neighbors)
+        intra_total = sum(1 for cid in cluster_neighbors for n in cluster_neighbors[cid] if n['tier'] == 'intra')
+        cross_total = sum(1 for cid in cluster_neighbors for n in cluster_neighbors[cid] if n['tier'] == 'cross')
         print(f"\n  Avg silhouette: {avg_sil:.4f}")
         print(f"  Cluster sizes: min={min(sizes)}, max={max(sizes)}, avg={np.mean(sizes):.1f}, median={np.median(sizes):.1f}")
         print(f"  Micro-clusters (≤5 members): {micro}")
         print(f"  Clusters with neighbors: {with_neighbors}/{global_cluster_id}")
+        print(f"  Intra-domain neighbor links: {intra_total}")
+        print(f"  Cross-domain neighbor links: {cross_total}")
         avg_neighbors = np.mean([len(v) for v in cluster_neighbors.values()]) if cluster_neighbors else 0
         print(f"  Avg neighbors per cluster: {avg_neighbors:.1f}")
 
@@ -405,13 +446,14 @@ elif args.k > 0:
     from datetime import date
     neighbor_map = {str(k): v for k, v in r.get('cluster_neighbors', {}).items()}
     output = {
-        "version": "v3.2",
+        "version": "v3.3",
         "method": "domain-hierarchical-openai-kmeans",
         "embedding_model": EMBEDDING_MODEL,
         "k": r['k'],
         "avg_silhouette": r['avg_silhouette'],
         "total_signals": len(r['signal_to_cluster']),
-        "neighbor_decay": 0.25,
+        "intra_bleed_scale": 0.30,
+        "cross_bleed_scale": 0.10,
         "created": str(date.today()),
         "domain_silhouettes": r['domain_silhouettes'],
         "clusters": {str(k): v for k, v in r['clusters'].items()},
@@ -437,7 +479,9 @@ elif args.k > 0:
     sizes = r['sizes']
     print(f"Cluster sizes: min={min(sizes)}, max={max(sizes)}, avg={np.mean(sizes):.1f}")
     neighbors = r.get('cluster_neighbors', {})
-    print(f"Clusters with neighbors: {len(neighbors)}/{r['k']}")
+    intra = sum(1 for ns in neighbors.values() for n in ns if n.get('tier') == 'intra')
+    cross = sum(1 for ns in neighbors.values() for n in ns if n.get('tier') == 'cross')
+    print(f"Clusters with neighbors: {len(neighbors)}/{r['k']} ({intra} intra + {cross} cross links)")
     print(f"{'='*60}")
     print(f"\nVector dimension will be: {8 + r['k']} (8 domains + {r['k']} clusters)")
 
@@ -462,13 +506,14 @@ else:
     from datetime import date
     neighbor_map = {str(k): v for k, v in r.get('cluster_neighbors', {}).items()}
     output = {
-        "version": "v3.2",
+        "version": "v3.3",
         "method": "domain-hierarchical-openai-kmeans",
         "embedding_model": EMBEDDING_MODEL,
         "k": r['k'],
         "avg_silhouette": r['avg_silhouette'],
         "total_signals": len(r['signal_to_cluster']),
-        "neighbor_decay": 0.25,
+        "intra_bleed_scale": 0.30,
+        "cross_bleed_scale": 0.10,
         "created": str(date.today()),
         "clusters": {str(k): v for k, v in r['clusters'].items()},
         "signalToCluster": r['signal_to_cluster'],
