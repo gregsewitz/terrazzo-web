@@ -125,7 +125,9 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   const resolvedPlaceType = mapGoogleTypeToPlaceType(googleResult.primaryType);
   const intelligenceId = await ensureEnrichment(googlePlaceId, resolvedName, user.id, 'user_import', resolvedPlaceType);
 
-  // 3a. Store canonical googleData on PlaceIntelligence (if it doesn't have it yet)
+  // 3a. Store canonical googleData on PlaceIntelligence as fallback
+  //     The pipeline worker is the primary writer of PI.googleData (via its google_places stage).
+  //     This acts as a safety net for cases where the pipeline hasn't run yet or failed.
   if (intelligenceId) {
     const existingIntel = await prisma.placeIntelligence.findUnique({
       where: { id: intelligenceId },
