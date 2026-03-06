@@ -28,6 +28,8 @@ interface DomainGapCheckRequest {
   signals: TasteSignal[];
   radarData: Array<{ axis: string; value: number }>;
   existingAnchorIds?: string[];
+  targetDomains?: string[];
+  maxExemplars?: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -37,36 +39,54 @@ export async function POST(req: NextRequest) {
 
   try {
     const body: DomainGapCheckRequest = await req.json();
-    const { signals, radarData, existingAnchorIds = [] } = body;
+    const { signals, radarData = [], existingAnchorIds = [], targetDomains, maxExemplars } = body;
 
-    if (!signals?.length || !radarData?.length) {
-      return NextResponse.json({ error: 'signals and radarData are required' }, { status: 400 });
+    if (!signals?.length) {
+      return NextResponse.json({ error: 'signals are required' }, { status: 400 });
     }
 
-    // Build micro-taste signals map for computeUserTasteVectorV3
-    const microTasteSignals: Record<string, string[]> = {};
-    for (const sig of signals) {
-      const cat = sig.cat || 'uncategorized';
-      if (!microTasteSignals[cat]) microTasteSignals[cat] = [];
-      microTasteSignals[cat].push(sig.tag);
+    // Early onboarding (Act 0): radarData is empty, not enough signal for gap
+    // analysis. Just spread exemplars across all core domains for diverse first
+    // impressions. targetDomains from the client can still override.
+    const ALL_CORE_DOMAINS = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
+    const earlyOnboarding = radarData.length === 0;
+
+    let coverage: CoverageAnalysis | null = null;
+    let domainsToQuery: string[];
+
+    if (targetDomains?.length) {
+      // Explicit target domains always win
+      domainsToQuery = targetDomains;
+    } else if (earlyOnboarding) {
+      // Act 0: spread across all core domains for diverse first impressions
+      domainsToQuery = ALL_CORE_DOMAINS;
+    } else {
+      // Later acts: use gap analysis
+      const microTasteSignals: Record<string, string[]> = {};
+      for (const sig of signals) {
+        const cat = sig.cat || 'uncategorized';
+        if (!microTasteSignals[cat]) microTasteSignals[cat] = [];
+        microTasteSignals[cat].push(sig.tag);
+      }
+
+      const vector = computeUserTasteVectorV3({
+        radarData,
+        microTasteSignals,
+        allSignals: signals.map((s) => ({ tag: s.tag, cat: s.cat, confidence: s.confidence })),
+      });
+
+      coverage = analyzeDomainCoverage(vector);
+      domainsToQuery = coverage.gapDomains;
     }
 
-    // Compute preliminary vector from current signals
-    const vector = computeUserTasteVectorV3({
-      radarData,
-      microTasteSignals,
-      allSignals: signals.map((s) => ({ tag: s.tag, cat: s.cat, confidence: s.confidence })),
-    });
+    const perDomainLimit = maxExemplars ? Math.ceil(maxExemplars / Math.max(1, domainsToQuery.length)) : 2;
 
-    // Analyze coverage
-    const coverage = analyzeDomainCoverage(vector);
-
-    // For each gap domain, find exemplar properties
+    // For each domain, find exemplar properties
     const exemplars: Record<string, PropertyExemplar[]> = {};
 
-    if (coverage.gapDomains.length > 0) {
-      const exemplarPromises = coverage.gapDomains.map(async (domain) => {
-        const results = await findDomainExemplars(domain, 2, existingAnchorIds);
+    if (domainsToQuery.length > 0) {
+      const exemplarPromises = domainsToQuery.map(async (domain) => {
+        const results = await findDomainExemplars(domain, perDomainLimit, existingAnchorIds);
         exemplars[domain] = results.map((r) => ({
           googlePlaceId: r.googlePlaceId,
           propertyName: r.propertyName,
@@ -78,7 +98,18 @@ export async function POST(req: NextRequest) {
       await Promise.all(exemplarPromises);
     }
 
-    return NextResponse.json({ coverage, exemplars });
+    // Flatten to array format: [{ domain, exemplar }]
+    let flatExemplars: { domain: string; exemplar: PropertyExemplar }[] = [];
+    for (const [domain, items] of Object.entries(exemplars)) {
+      for (const exemplar of items) {
+        flatExemplars.push({ domain, exemplar });
+      }
+    }
+    if (maxExemplars) {
+      flatExemplars = flatExemplars.slice(0, maxExemplars);
+    }
+
+    return NextResponse.json({ coverage, exemplars: flatExemplars });
   } catch (error) {
     console.error('[domain-gap-check] Error:', error);
     return NextResponse.json(
