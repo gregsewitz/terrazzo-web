@@ -1,9 +1,9 @@
 /**
- * Taste Intelligence — Vector Similarity Queries (v3: Semantic Clusters)
+ * Taste Intelligence — Vector Similarity Queries (v3.4: Signal-Only)
  *
  * Mirrors queries.ts but uses v3 columns:
- *   - "embeddingV3" vector(408) instead of "embedding" vector(136)
- *   - "tasteVectorV3" vector(408) instead of "tasteVector" vector(136)
+ *   - "embeddingV3" vector(400) — signal-only, no domain dims
+ *   - "tasteVectorV3" vector(400) — signal-only, no domain dims
  *
  * Same query patterns, same pgvector <=> operator, different columns.
  */
@@ -126,52 +126,147 @@ export async function findSimilarPropertiesToPropertyV3(
   }));
 }
 
-// ─── PE-09: Domain Slice Queries (v3) ──────────────────────────────────────
+// ─── PE-09: Domain Slice Queries (v3.4) ─────────────────────────────────────
+// With signal-only vectors, domain queries activate all clusters belonging to a domain.
+// Cluster-to-domain mapping comes from signal-clusters.json.
+
+import clusterMap from './signal-clusters.json';
+
+const clusterInfoForDomain: Record<string, { domain?: string }> =
+  (clusterMap as any).clusters ?? {};
+
+/** Build a set of cluster indices belonging to a given domain */
+function clusterIndicesForDomain(domain: string): number[] {
+  const indices: number[] = [];
+  for (const [cidStr, info] of Object.entries(clusterInfoForDomain)) {
+    if (info.domain === domain) {
+      indices.push(parseInt(cidStr, 10));
+    }
+  }
+  return indices;
+}
 
 export async function findPropertiesByDomainV3(
   domain: string,
   limit: number = 10,
 ): Promise<VectorMatch[]> {
-  const DOMAIN_INDICES: Record<string, number> = {
-    Design: 0, Atmosphere: 1, Character: 2, Service: 3,
-    FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
-  };
-  const idx = DOMAIN_INDICES[domain];
-  if (idx === undefined) return [];
+  const indices = clusterIndicesForDomain(domain);
+  if (indices.length === 0) return [];
 
+  // Create probe vector with uniform activation on all clusters in this domain
   const probe = new Array(VECTOR_DIM_V3).fill(0);
-  probe[idx] = 1.0;
+  const value = 1.0 / Math.sqrt(indices.length); // L2-normalized uniform
+  for (const idx of indices) {
+    probe[idx] = value;
+  }
 
   return findSimilarPropertiesV3(probe, limit);
+}
+
+/**
+ * Find properties that are strong exemplars of a specific domain.
+ * Used for gap-fill reaction cards — shows properties that maximally
+ * activate clusters in the target domain, with enough variety to
+ * cover different sub-tastes.
+ *
+ * Excludes properties the user has already anchored (via their googlePlaceIds).
+ */
+export async function findDomainExemplars(
+  domain: string,
+  limit: number = 3,
+  excludeGooglePlaceIds: string[] = [],
+): Promise<Array<VectorMatch & { placeType: string | null; locationHint: string | null }>> {
+  const indices = clusterIndicesForDomain(domain);
+  if (indices.length === 0) return [];
+
+  // Create probe vector strongly biased toward this domain
+  const probe = new Array(VECTOR_DIM_V3).fill(0);
+  const value = 1.0 / Math.sqrt(indices.length);
+  for (const idx of indices) {
+    probe[idx] = value;
+  }
+  const vecSql = vectorToSqlV3(probe);
+
+  // Fetch more than needed so we can exclude and diversify
+  const fetchLimit = limit * 4;
+
+  const excludeClause = excludeGooglePlaceIds.length > 0
+    ? `AND "googlePlaceId" NOT IN (${excludeGooglePlaceIds.map((_, i) => `$${i + 2}`).join(',')})`
+    : '';
+
+  const params: (string | number)[] = [vecSql, fetchLimit];
+  if (excludeGooglePlaceIds.length > 0) {
+    // Re-order: vecSql first, then excludes, then limit at end
+    params.length = 0;
+    params.push(vecSql, ...excludeGooglePlaceIds, fetchLimit);
+  }
+
+  const results = await prisma.$queryRawUnsafe<Array<{
+    id: string;
+    googlePlaceId: string;
+    propertyName: string;
+    placeType: string | null;
+    locationHint: string | null;
+    distance: number;
+  }>>(
+    `SELECT
+       "id",
+       "googlePlaceId",
+       "propertyName",
+       "placeType",
+       "facts"->>'location' as "locationHint",
+       ("embeddingV3" <=> $1::vector) as distance
+     FROM "PlaceIntelligence"
+     WHERE "status" = 'complete'
+       AND "embeddingV3" IS NOT NULL
+       AND "signalCount" > 0
+       ${excludeClause}
+     ORDER BY "embeddingV3" <=> $1::vector
+     LIMIT $${excludeGooglePlaceIds.length + 2}`,
+    ...params,
+  );
+
+  // Return top N with score
+  return results.slice(0, limit).map((r) => {
+    const similarity = Math.round((1 - r.distance) * 100) / 100;
+    return {
+      id: r.id,
+      googlePlaceId: r.googlePlaceId,
+      propertyName: r.propertyName,
+      similarity,
+      score: Math.round(similarity * 100),
+      placeType: r.placeType,
+      locationHint: r.locationHint,
+    };
+  });
 }
 
 export async function findPropertiesByDomainWeightsV3(
   weights: Partial<Record<string, number>>,
   limit: number = 10,
 ): Promise<VectorMatch[]> {
-  const DOMAIN_INDICES: Record<string, number> = {
-    Design: 0, Atmosphere: 1, Character: 2, Service: 3,
-    FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
-  };
-
   const probe = new Array(VECTOR_DIM_V3).fill(0);
-  let magnitude = 0;
 
   for (const [domain, weight] of Object.entries(weights)) {
-    const idx = DOMAIN_INDICES[domain];
-    if (idx !== undefined && weight) {
-      probe[idx] = weight;
-      magnitude += weight * weight;
+    if (!weight) continue;
+    const indices = clusterIndicesForDomain(domain);
+    const perCluster = weight / Math.sqrt(indices.length || 1);
+    for (const idx of indices) {
+      probe[idx] += perCluster;
     }
   }
 
-  if (magnitude > 0) {
-    const norm = Math.sqrt(magnitude);
-    for (let i = 0; i < probe.length; i++) {
-      probe[i] /= norm;
-    }
-  } else {
-    return [];
+  // L2 normalize the combined probe
+  let magnitude = 0;
+  for (let i = 0; i < probe.length; i++) {
+    magnitude += probe[i] * probe[i];
+  }
+
+  if (magnitude === 0) return [];
+
+  const norm = Math.sqrt(magnitude);
+  for (let i = 0; i < probe.length; i++) {
+    probe[i] /= norm;
   }
 
   return findSimilarPropertiesV3(probe, limit);

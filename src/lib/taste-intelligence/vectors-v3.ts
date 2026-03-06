@@ -1,5 +1,5 @@
 /**
- * Taste Intelligence — Vector Computation (v3.3: Similarity-Scaled Two-Tier Neighbor Bleed)
+ * Taste Intelligence — Vector Computation (v3.5: Anti-Signal Integration)
  *
  * Uses learned semantic clusters with two-tier neighbor bleed for smoother taste matching.
  * Each of the 400 signal dimensions represents a meaningful taste concept.
@@ -8,35 +8,47 @@
  *   - Intra-domain neighbors (up to 3): weight = similarity × 0.30
  *   - Cross-domain neighbors (up to 2): weight = similarity × 0.10
  *
- * Vector layout (408 dimensions):
- *   [0-7]     : 8 taste domains
- *   [8-407]   : 400 semantic cluster features (signal → cluster + neighbor bleed, IDF-weighted)
+ * Vector layout (400 dimensions):
+ *   [0-399]   : 400 semantic cluster features (signal → cluster + neighbor bleed, IDF-weighted)
+ *              Dimensions can be negative when anti-signals dominate a cluster.
  *
- * Changes from v3.2:
- *   - Flat 0.25 neighbor decay → similarity-scaled bleed (high-sim neighbors bleed more)
- *   - Within-domain-only → two-tier: intra-domain (scale 0.30) + cross-domain (scale 0.10)
- *   - Cross-domain neighbors bridge hard domain walls for co-occurring taste patterns
+ * Domain information is implicitly encoded via cluster-to-domain assignments.
+ *
+ * Changes from v3.4:
+ *   - Anti-signal integration: rejection signals and property antiSignals now create
+ *     negative cluster activations at ANTI_SIGNAL_SCALE (0.5×), pushing vectors apart
+ *     in clusters the user/property explicitly dislikes
+ *   - Symmetric feature clamping: [-1.0, +1.0] instead of [0, +1.0]
+ *   - User rejection signals (cat='Rejection') no longer filtered out
+ *   - Property antiSignals parameter now used in computePropertyEmbeddingV3
+ *
+ * Changes from v3.3 (v3.4):
+ *   - Dropped 8 domain dims (408 → 400 dimensions)
+ *   - Removed triple-normalization (domain + signal + combined); now single L2 norm
+ *   - Domain weighting for users preserved via signal confidence boosting (domainWeight multiplier)
  */
 
-import type { TasteDomain, TasteProfile, BriefingSignal, GeneratedTasteProfile } from '@/types';
-import { DIMENSION_TO_DOMAIN, ALL_TASTE_DOMAINS } from '@/types';
+import type { TasteDomain, BriefingSignal, GeneratedTasteProfile } from '@/types';
 import clusterMap from './signal-clusters.json';
 
 // ─── Vector dimensions ──────────────────────────────────────────────────────
 
-export const VECTOR_DIM_V3 = 408;
-const DOMAIN_DIMS = 8;
+export const VECTOR_DIM_V3 = 400;
 const SIGNAL_DIMS_V3 = 400;
 
-const DOMAIN_WEIGHT = 0.30;
-const SIGNAL_WEIGHT = 1.0 - DOMAIN_WEIGHT;
+/**
+ * Anti-signal scale factor. Rejection/anti-signals contribute at this fraction
+ * of their confidence as negative activations. 0.5 means a rejection at confidence
+ * 0.97 acts like a -0.485 activation — strong enough to meaningfully push the vector
+ * away from that cluster without overwhelming positive signals.
+ */
+export const ANTI_SIGNAL_SCALE = 0.5;
 
+/** Domain index used for user domain-weight boosting (radarData → signal confidence) */
 const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Design: 0, Atmosphere: 1, Character: 2, Service: 3,
   FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
 };
-
-const ALL_DOMAINS: TasteDomain[] = ALL_TASTE_DOMAINS;
 
 // ─── IDF (shared with v2.1) ─────────────────────────────────────────────────
 
@@ -143,6 +155,8 @@ export function lookupSignalCluster(signal: string): number {
 }
 
 // ─── Signal features (cluster lookup + similarity-scaled two-tier neighbor bleed) ─
+// Confidence can be negative (anti-signals). Negative values create negative cluster
+// activations that push vectors apart in cosine similarity.
 
 function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
   const features = new Array(SIGNAL_DIMS_V3).fill(0);
@@ -153,24 +167,25 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
     const idf = getIdfWeight(text);
     const weightedConfidence = confidence * idf;
 
-    // Primary cluster gets full weight
+    // Primary cluster gets full weight (can be negative for anti-signals)
     features[bucket] += weightedConfidence;
-    totalWeights[bucket] += idf;
+    totalWeights[bucket] += Math.abs(confidence) * idf; // absolute weight for normalization
 
-    // Neighbor bleed: spread decayed energy to 3 nearest clusters
+    // Neighbor bleed: spread energy (positive or negative) to nearest clusters
     const neighbors = neighborMap.get(bucket);
     if (neighbors) {
       for (const { idx, weight } of neighbors) {
         features[idx] += weightedConfidence * weight;
-        totalWeights[idx] += idf * weight;
+        totalWeights[idx] += Math.abs(confidence) * idf * weight;
       }
     }
   }
 
+  // Normalize and clamp symmetrically to [-1.0, +1.0]
   for (let i = 0; i < SIGNAL_DIMS_V3; i++) {
     if (totalWeights[i] > 0) {
       features[i] = features[i] / totalWeights[i];
-      features[i] = Math.min(features[i], 1.0);
+      features[i] = Math.max(-1.0, Math.min(features[i], 1.0));
     }
   }
 
@@ -185,15 +200,7 @@ function l2Normalize(vec: number[]): number[] {
   return vec.map((v) => v / magnitude);
 }
 
-function normalizeWithWeighting(domainDims: number[], signalDims: number[]): number[] {
-  const normDomains = l2Normalize(domainDims);
-  const normSignals = l2Normalize(signalDims);
-  const weighted = [
-    ...normDomains.map((v) => v * DOMAIN_WEIGHT),
-    ...normSignals.map((v) => v * SIGNAL_WEIGHT),
-  ];
-  return l2Normalize(weighted);
-}
+/** @deprecated v3.3 used domain+signal weighting; v3.4 uses signal-only with single L2 norm */
 
 // ─── User Taste Vector ──────────────────────────────────────────────────────
 
@@ -204,7 +211,8 @@ export interface UserVectorInputV3 {
 }
 
 export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
-  const domainDims = new Array(DOMAIN_DIMS).fill(0);
+  // Build domain weight lookup from radarData (used to boost signal confidence)
+  const domainWeights = new Array(8).fill(0);
 
   const axisToIndex: Record<string, number> = {
     design: 0, 'design language': 0,
@@ -220,7 +228,7 @@ export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
   for (const { axis, value } of input.radarData) {
     const idx = axisToIndex[axis.toLowerCase()];
     if (idx !== undefined) {
-      domainDims[idx] = Math.max(domainDims[idx], value);
+      domainWeights[idx] = Math.max(domainWeights[idx], value);
     }
   }
 
@@ -237,25 +245,34 @@ export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
     rejection_signals: 'Character',
   };
 
+  // Domain preference weighting: boost signal confidence by the user's domain affinity
   for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
     for (const sig of signals) {
       const resolvedDomain = signalCategoryToDomain[domain] || (domain as TasteDomain);
       const domainIdx = DOMAIN_INDEX[resolvedDomain];
-      const domainWeight = domainIdx !== undefined ? domainDims[domainIdx] : 0.5;
+      const domainWeight = domainIdx !== undefined ? domainWeights[domainIdx] : 0.5;
       signalInputs.push({ text: sig, confidence: domainWeight });
     }
   }
 
   if (input.allSignals) {
     for (const sig of input.allSignals) {
-      if (sig.cat !== 'Rejection' && sig.cat !== 'Context') {
+      if (sig.cat === 'Context') {
+        // Context signals (life/personal) are not taste-relevant — skip
+        continue;
+      }
+      if (sig.cat === 'Rejection') {
+        // Rejection signals become negative activations at ANTI_SIGNAL_SCALE
+        // e.g. "Anti-Instagram-aesthetic" at confidence 0.97 → -0.485
+        signalInputs.push({ text: sig.tag, confidence: -sig.confidence * ANTI_SIGNAL_SCALE });
+      } else {
         signalInputs.push({ text: sig.tag, confidence: sig.confidence });
       }
     }
   }
 
   const signalDims = buildSignalFeaturesV3(signalInputs);
-  return normalizeWithWeighting(domainDims, signalDims);
+  return l2Normalize(signalDims);
 }
 
 // ─── Property Embedding ─────────────────────────────────────────────────────
@@ -266,45 +283,84 @@ export interface PropertyEmbeddingInputV3 {
 }
 
 export function computePropertyEmbeddingV3(input: PropertyEmbeddingInputV3): number[] {
-  const domainDims = new Array(DOMAIN_DIMS).fill(0);
-  const { signals, antiSignals = [] } = input;
+  const { signals, antiSignals } = input;
 
-  const domainSignals: Record<TasteDomain, BriefingSignal[]> = {
-    Design: [], Atmosphere: [], Character: [], Service: [],
-    FoodDrink: [], Setting: [], Wellness: [], Sustainability: [],
-  };
-
-  for (const sig of signals) {
-    const domain = DIMENSION_TO_DOMAIN[sig.dimension];
-    if (domain) domainSignals[domain].push(sig);
-  }
-
-  for (const domain of ALL_DOMAINS) {
-    const sigs = domainSignals[domain];
-    if (sigs.length === 0) continue;
-    const avgConf = sigs.reduce((sum, s) => {
-      const boost = s.review_corroborated ? 0.05 : 0;
-      return sum + Math.min(s.confidence + boost, 1.0);
-    }, 0) / sigs.length;
-    const density = Math.min(sigs.length / 20, 1.0);
-    domainDims[DOMAIN_INDEX[domain]] = avgConf * 0.6 + density * 0.4;
-  }
-
-  for (const anti of antiSignals) {
-    const domain = DIMENSION_TO_DOMAIN[anti.dimension];
-    if (domain) {
-      const idx = DOMAIN_INDEX[domain];
-      domainDims[idx] = Math.max(0, domainDims[idx] - anti.confidence * 0.1);
-    }
-  }
-
-  const signalInputs = signals.map((s) => ({
+  const signalInputs: Array<{ text: string; confidence: number }> = signals.map((s) => ({
     text: s.signal,
     confidence: s.confidence,
   }));
 
+  // Anti-signals create negative cluster activations at ANTI_SIGNAL_SCALE
+  if (antiSignals && antiSignals.length > 0) {
+    for (const anti of antiSignals) {
+      signalInputs.push({
+        text: anti.signal,
+        confidence: -anti.confidence * ANTI_SIGNAL_SCALE,
+      });
+    }
+  }
+
   const signalDims = buildSignalFeaturesV3(signalInputs);
-  return normalizeWithWeighting(domainDims, signalDims);
+  return l2Normalize(signalDims);
+}
+
+// ─── Property Anchor Blending ────────────────────────────────────────────────
+// When users mention real places during onboarding ("I love Aman Tokyo"),
+// those resolved property embeddings are blended into the user's taste vector.
+// This provides a strong "show, don't tell" signal — actual property preferences
+// are far more informative than abstract taste descriptions.
+
+export interface PropertyAnchorForBlending {
+  embedding: number[];  // 400-dim V3 embedding
+  blendWeight: number;  // sentiment-derived: love=0.8, like=0.5, visited=0.3, dislike=-0.3
+}
+
+/**
+ * Blend property anchor embeddings into a base user taste vector.
+ *
+ * Algorithm:
+ *   1. Start with the user's signal-derived taste vector (computed normally)
+ *   2. For each property anchor, add its embedding scaled by blendWeight
+ *   3. The USER_SIGNAL_WEIGHT controls how much the original signal-based
+ *      vector dominates vs. property anchors (default: 0.6 = 60% signal, 40% anchors)
+ *   4. Re-normalize to unit length
+ *
+ * Dislike anchors (negative blendWeight) push the user vector AWAY from
+ * those properties in embedding space — "I don't like The Standard" makes
+ * the user vector less similar to The Standard's embedding.
+ */
+export const USER_SIGNAL_WEIGHT = 0.6;
+
+export function blendPropertyAnchors(
+  baseVector: number[],
+  anchors: PropertyAnchorForBlending[],
+): number[] {
+  if (anchors.length === 0) return baseVector;
+
+  const blended = new Array(VECTOR_DIM_V3).fill(0);
+
+  // Base vector contribution (weighted)
+  for (let i = 0; i < VECTOR_DIM_V3; i++) {
+    blended[i] = baseVector[i] * USER_SIGNAL_WEIGHT;
+  }
+
+  // Anchor contributions — distribute remaining weight across all anchors
+  // Total anchor budget = 1 - USER_SIGNAL_WEIGHT
+  const anchorBudget = 1 - USER_SIGNAL_WEIGHT;
+  const totalAbsWeight = anchors.reduce((sum, a) => sum + Math.abs(a.blendWeight), 0);
+
+  if (totalAbsWeight > 0) {
+    for (const anchor of anchors) {
+      // Each anchor gets a share of the anchor budget proportional to its |blendWeight|
+      // The sign of blendWeight determines whether we add or subtract
+      const share = (anchor.blendWeight / totalAbsWeight) * anchorBudget;
+      for (let i = 0; i < VECTOR_DIM_V3; i++) {
+        blended[i] += anchor.embedding[i] * share;
+      }
+    }
+  }
+
+  return l2Normalize(blended);
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
@@ -336,4 +392,155 @@ export function getAllClusterLabels(): Array<{ id: number; label: string; domain
     domain: (info as any).domain,
     size: (info as any).size ?? 0,
   }));
+}
+
+// ─── Domain Coverage Analysis ──────────────────────────────────────────────
+
+/** Pre-computed domain → cluster indices mapping (built once at import time) */
+const domainClusterIndices: Map<string, number[]> = new Map();
+for (const [cidStr, info] of Object.entries(clusterInfo)) {
+  if (info.domain) {
+    const existing = domainClusterIndices.get(info.domain) || [];
+    existing.push(parseInt(cidStr, 10));
+    domainClusterIndices.set(info.domain, existing);
+  }
+}
+
+/** Get cluster indices for a domain (exposed for queries) */
+export function getClusterIndicesForDomain(domain: string): number[] {
+  return domainClusterIndices.get(domain) || [];
+}
+
+/** All 8 taste domains */
+export const ALL_DOMAINS = Array.from(domainClusterIndices.keys());
+
+export interface DomainCoverage {
+  domain: string;
+  /** Total clusters in this domain */
+  totalClusters: number;
+  /** Clusters with |activation| > threshold */
+  activatedClusters: number;
+  /** Coverage ratio: activatedClusters / totalClusters (0-1) */
+  coverage: number;
+  /** Mean |activation| across all domain clusters */
+  meanActivation: number;
+  /** Std dev of activations within domain (higher = more specific taste) */
+  spread: number;
+  /** Strongest activated cluster labels in this domain (top 3) */
+  strongestClusters: Array<{ label: string; activation: number }>;
+  /** Weakest / zero clusters that could be gap-filled */
+  coldClusters: Array<{ index: number; label: string }>;
+}
+
+export interface CoverageAnalysis {
+  domains: DomainCoverage[];
+  /** Overall coverage (weighted mean across domains) */
+  overallCoverage: number;
+  /** Domains sorted by coverage ascending (worst first) */
+  gapDomains: string[];
+  /** Total activated clusters across all domains */
+  totalActivated: number;
+}
+
+export const ACTIVATION_THRESHOLD = 0.03; // Cluster is "activated" if |value| > this
+
+/**
+ * Analyze domain-level coverage of a 400-dim V3 taste vector.
+ * Returns per-domain coverage metrics + overall gaps.
+ *
+ * Use cases:
+ *   - After Act 1 to decide if gap-fill questions are needed
+ *   - After each phase to track signal accumulation
+ *   - At onboarding completion to compute TasteStructure
+ */
+export function analyzeDomainCoverage(vector: number[]): CoverageAnalysis {
+  const domains: DomainCoverage[] = [];
+
+  for (const [domain, indices] of domainClusterIndices) {
+    const activations = indices.map((idx) => vector[idx] || 0);
+    const absActivations = activations.map(Math.abs);
+
+    const activated = absActivations.filter((v) => v > ACTIVATION_THRESHOLD).length;
+    const total = indices.length;
+    const coverage = total > 0 ? activated / total : 0;
+
+    const sum = absActivations.reduce((a, b) => a + b, 0);
+    const mean = total > 0 ? sum / total : 0;
+
+    // Std dev
+    const variance = total > 0
+      ? absActivations.reduce((acc, v) => acc + (v - mean) ** 2, 0) / total
+      : 0;
+    const spread = Math.sqrt(variance);
+
+    // Top 3 strongest clusters
+    const indexedActivations = indices.map((idx, i) => ({
+      index: idx,
+      label: clusterInfo[String(idx)]?.label || `cluster-${idx}`,
+      activation: absActivations[i],
+    }));
+    indexedActivations.sort((a, b) => b.activation - a.activation);
+
+    const strongestClusters = indexedActivations.slice(0, 3).map((c) => ({
+      label: c.label,
+      activation: c.activation,
+    }));
+
+    // Cold clusters — zero or near-zero activation, good candidates for gap-fill
+    const coldClusters = indexedActivations
+      .filter((c) => c.activation <= ACTIVATION_THRESHOLD)
+      .slice(0, 10) // Cap at 10 to keep payload reasonable
+      .map((c) => ({ index: c.index, label: c.label }));
+
+    domains.push({
+      domain,
+      totalClusters: total,
+      activatedClusters: activated,
+      coverage,
+      meanActivation: mean,
+      spread,
+      strongestClusters,
+      coldClusters,
+    });
+  }
+
+  // Sort by coverage ascending (worst gaps first)
+  domains.sort((a, b) => a.coverage - b.coverage);
+
+  const totalActivated = domains.reduce((sum, d) => sum + d.activatedClusters, 0);
+  const overallCoverage = VECTOR_DIM_V3 > 0
+    ? totalActivated / VECTOR_DIM_V3
+    : 0;
+
+  // Domains below 30% coverage are considered gap domains
+  const gapDomains = domains
+    .filter((d) => d.coverage < 0.30)
+    .map((d) => d.domain);
+
+  return {
+    domains,
+    overallCoverage,
+    gapDomains,
+    totalActivated,
+  };
+}
+
+/**
+ * Compute effective activation including neighbor-received energy.
+ * A cluster may have zero direct activation but receive significant
+ * energy from activated neighbors — this corrects for that.
+ */
+export function computeEffectiveActivation(vector: number[]): number[] {
+  const effective = [...vector];
+
+  for (let i = 0; i < VECTOR_DIM_V3; i++) {
+    const neighbors = neighborMap.get(i);
+    if (neighbors) {
+      for (const { idx, weight } of neighbors) {
+        effective[i] += vector[idx] * weight;
+      }
+    }
+  }
+
+  return effective;
 }

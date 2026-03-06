@@ -9,7 +9,7 @@ import { ALL_TASTE_DOMAINS } from '@/types';
  *
  * Returns all data needed by the taste-intelligence dashboard:
  *   - v1 (LLM signal matching) scores for every property
- *   - v2 (Embedding 136-dim) vs v3 (Cluster 408-dim) match scores
+ *   - v2 (Embedding 136-dim) vs v3 (Cluster 400-dim, signal-only) match scores
  *   - cluster size distribution
  *   - domain statistics
  */
@@ -184,7 +184,7 @@ export async function GET() {
       meta: {
         propertyCount: enriched.length,
         clusterCount: 400,
-        dimensions: 408,
+        dimensions: 400,
         mappedSignals: clusterRows.reduce((s, r) => s + Number(r.signal_count), 0),
         generatedAt: new Date().toISOString(),
       },

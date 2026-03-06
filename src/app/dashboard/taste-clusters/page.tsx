@@ -8,7 +8,7 @@ import Script from 'next/script';
    Compares three scoring approaches:
      • LLM     — signal-based scoring via computeMatchFromSignals
      • Embedding — 136-dim vectors (v2)
-     • Clusters  — 408-dim vectors with neighbor bleed (v3)
+     • Clusters  — 400-dim signal-only vectors with neighbor bleed (v3.4)
    ═══════════════════════════════════════════════════════════ */
 
 // Types
@@ -247,7 +247,7 @@ function OverviewPanel({ data }: { data: DashboardData }) {
           <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>avg score · σ={std(embs).toFixed(1)} · range {Math.min(...embs).toFixed(1)}–{Math.max(...embs).toFixed(1)}</div>
         </Card>
         <Card>
-          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>Clusters (408-dim)</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 500, color: '#a1a1aa', marginBottom: 8 }}>Clusters (400-dim)</h3>
           <div style={{ fontSize: 36, fontWeight: 700, color: CLU_COLOR }}>{avgClu.toFixed(1)}</div>
           <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>avg score · σ={std(clus).toFixed(1)} · range {Math.min(...clus).toFixed(1)}–{Math.max(...clus).toFixed(1)}</div>
         </Card>

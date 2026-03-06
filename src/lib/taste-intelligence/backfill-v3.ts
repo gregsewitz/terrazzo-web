@@ -1,8 +1,11 @@
 /**
  * Taste Intelligence — Backfill Pipeline (v3: Semantic Clustering)
  *
- * Computes v3.2 vectors (408-dim, 400 semantic clusters + neighbor bleed) and stores them
- * in parallel columns: embeddingV3, tasteVectorV3.
+ * Computes v3.5 vectors (400-dim, signal-only with neighbor bleed + anti-signals)
+ * and stores them in parallel columns: embeddingV3, tasteVectorV3.
+ *
+ * v3.5: Anti-signals now create negative cluster activations, improving discrimination
+ * by pushing vectors apart where rejection preferences exist.
  *
  * Reuses IDF computation from v2.1 backfill.
  * Does NOT touch user graph (TasteNode, ContradictionNode) — only vectors.
@@ -12,14 +15,18 @@ import { prisma } from '@/lib/prisma';
 import {
   computeUserTasteVectorV3,
   computePropertyEmbeddingV3,
+  blendPropertyAnchors,
   vectorToSqlV3,
   setIdfWeightsV3,
+  VECTOR_DIM_V3,
 } from './vectors-v3';
+import type { PropertyAnchorForBlending } from './vectors-v3';
 import type {
   TasteSignal,
   GeneratedTasteProfile,
   BriefingSignal,
   BriefingAntiSignal,
+  PropertyAnchor,
 } from '@/types';
 
 // ─── IDF Computation (shared logic, sets v3 IDF state) ──────────────────────
@@ -56,7 +63,7 @@ export async function computeAndSetIdfWeightsV3(): Promise<{ totalDocs: number; 
 
 // ─── User vectors (v3) ──────────────────────────────────────────────────────
 
-export async function backfillUserV3(userId: string): Promise<{ vectorComputed: boolean }> {
+export async function backfillUserV3(userId: string): Promise<{ vectorComputed: boolean; anchorsBlended: number }> {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: {
@@ -68,16 +75,70 @@ export async function backfillUserV3(userId: string): Promise<{ vectorComputed: 
 
   const profile = user.tasteProfile as unknown as GeneratedTasteProfile | null;
   if (!profile?.radarData || profile.radarData.length === 0) {
-    return { vectorComputed: false };
+    return { vectorComputed: false, anchorsBlended: 0 };
   }
 
   const signals = (user.allSignals as unknown as TasteSignal[]) || [];
 
-  const vector = computeUserTasteVectorV3({
+  // Step 1: Compute base taste vector from signals
+  let vector = computeUserTasteVectorV3({
     radarData: profile.radarData,
     microTasteSignals: profile.microTasteSignals || {},
     allSignals: signals.length > 0 ? signals : undefined,
   });
+
+  // Step 2: Blend property anchor embeddings if available
+  // Use raw query to fetch propertyAnchors JSON column (avoids Prisma client regeneration requirement)
+  const anchorRows = await prisma.$queryRawUnsafe<Array<{ propertyAnchors: PropertyAnchor[] | null }>>(
+    `SELECT "propertyAnchors" FROM "User" WHERE "id" = $1`,
+    userId,
+  );
+  const rawAnchors = (anchorRows[0]?.propertyAnchors as PropertyAnchor[]) || [];
+  let anchorsBlended = 0;
+
+  if (rawAnchors.length > 0) {
+    // Fetch V3 embeddings for all anchored properties
+    const anchorGooglePlaceIds = rawAnchors.map((a) => a.googlePlaceId);
+    const anchorEmbeddings = await prisma.$queryRawUnsafe<Array<{
+      googlePlaceId: string;
+      embeddingV3: string;
+    }>>(
+      `SELECT "googlePlaceId", "embeddingV3"::text
+       FROM "PlaceIntelligence"
+       WHERE "googlePlaceId" = ANY($1)
+         AND "embeddingV3" IS NOT NULL`,
+      anchorGooglePlaceIds,
+    );
+
+    const embeddingMap = new Map<string, number[]>();
+    for (const row of anchorEmbeddings) {
+      // Parse pgvector text representation: "[0.1,0.2,...]"
+      const nums = row.embeddingV3
+        .replace(/^\[/, '').replace(/\]$/, '')
+        .split(',')
+        .map(Number);
+      if (nums.length === VECTOR_DIM_V3) {
+        embeddingMap.set(row.googlePlaceId, nums);
+      }
+    }
+
+    const anchorsForBlending: PropertyAnchorForBlending[] = [];
+    for (const anchor of rawAnchors) {
+      const embedding = embeddingMap.get(anchor.googlePlaceId);
+      if (embedding) {
+        anchorsForBlending.push({
+          embedding,
+          blendWeight: anchor.blendWeight,
+        });
+      }
+    }
+
+    if (anchorsForBlending.length > 0) {
+      vector = blendPropertyAnchors(vector, anchorsForBlending);
+      anchorsBlended = anchorsForBlending.length;
+      console.log(`[v3-backfill] Blended ${anchorsBlended} property anchor(s) for user ${userId}`);
+    }
+  }
 
   const vecSql = vectorToSqlV3(vector);
 
@@ -87,7 +148,7 @@ export async function backfillUserV3(userId: string): Promise<{ vectorComputed: 
     userId,
   );
 
-  return { vectorComputed: true };
+  return { vectorComputed: true, anchorsBlended };
 }
 
 export async function backfillAllUsersV3(): Promise<{ total: number; computed: number }> {
@@ -179,7 +240,7 @@ export async function backfillAllPropertyEmbeddingsV3(): Promise<{
 // ─── Full v3 backfill ───────────────────────────────────────────────────────
 
 export async function runFullBackfillV3() {
-  console.log('═══ V3.2 Semantic Clustering Backfill (408-dim, 400 clusters + neighbor bleed) ═══\n');
+  console.log('═══ V3.5 Semantic Clustering Backfill (400-dim, anti-signals + property anchor blending) ═══\n');
 
   console.log('── Step 0: IDF Weights ──');
   const idf = await computeAndSetIdfWeightsV3();

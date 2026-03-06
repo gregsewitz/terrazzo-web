@@ -41,8 +41,22 @@ export {
   getSignalClusterLabel,
   getAllClusterLabels,
   VECTOR_DIM_V3,
+  blendPropertyAnchors,
+  USER_SIGNAL_WEIGHT,
+  ANTI_SIGNAL_SCALE,
+  analyzeDomainCoverage,
+  computeEffectiveActivation,
+  getClusterIndicesForDomain,
+  ALL_DOMAINS,
+  ACTIVATION_THRESHOLD,
 } from './vectors-v3';
-export type { UserVectorInputV3, PropertyEmbeddingInputV3 } from './vectors-v3';
+export type {
+  UserVectorInputV3,
+  PropertyEmbeddingInputV3,
+  PropertyAnchorForBlending,
+  DomainCoverage,
+  CoverageAnalysis,
+} from './vectors-v3';
 
 // Database queries (v2.1)
 export {
@@ -63,6 +77,7 @@ export {
   findSimilarPropertiesToPropertyV3,
   findPropertiesByDomainV3,
   findPropertiesByDomainWeightsV3,
+  findDomainExemplars,
 } from './queries-v3';
 
 // Backfill pipeline (v2.1)
