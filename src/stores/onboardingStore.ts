@@ -511,6 +511,11 @@ export const useOnboardingStore = create<OnboardingState>()(
         completedPhaseIds: [],
         currentPhaseProgress: 0,
         onboardingDepth: null,
+        // Reset V3 act-routing state so redo starts fresh
+        currentAct: 0 as ActNumber,
+        skippedPhaseIds: [],
+        act0GapResult: null,
+        act1GapResult: null,
         // Everything else (signals, messages, contradictions, generatedProfile,
         // mosaicAnswers, mosaicAxes, lifeContext, seedTrips, trustedSources,
         // goBackPlace, certainties) is intentionally preserved
