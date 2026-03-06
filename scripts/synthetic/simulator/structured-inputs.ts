@@ -111,14 +111,15 @@ function extractImagePairSignals(
     const pair = IMAGE_PAIRS.find(p => p.id === pairId);
     if (!pair) continue;
 
+    const domain = (pair.domain || 'Design') as TasteDomain;
     const winnerSignals = choice === 'a' ? pair.aSignals : pair.bSignals;
     const loserSignals = choice === 'a' ? pair.bSignals : pair.aSignals;
 
     for (const tag of winnerSignals) {
-      signals.push({ tag, cat: 'Design' as TasteDomain, confidence: 0.7 });
+      signals.push({ tag, cat: domain, confidence: 0.7 });
     }
     for (const tag of loserSignals) {
-      signals.push({ tag, cat: 'Design' as TasteDomain, confidence: 0.3 });
+      signals.push({ tag, cat: domain, confidence: 0.3 });
     }
   }
 
@@ -171,12 +172,18 @@ function extractDiagnosticSignals(
 
     const winnerSignals = choice === 'a' ? question.aSignals : question.bSignals;
     const loserSignals = choice === 'a' ? question.bSignals : question.aSignals;
+    const winnerDomain = (choice === 'a'
+      ? (question.aDomain || 'Design')
+      : (question.bDomain || question.aDomain || 'Design')) as TasteDomain;
+    const loserDomain = (choice === 'a'
+      ? (question.bDomain || question.aDomain || 'Design')
+      : (question.aDomain || 'Design')) as TasteDomain;
 
     for (const tag of winnerSignals) {
-      signals.push({ tag, cat: 'Design' as TasteDomain, confidence: 0.7 });
+      signals.push({ tag, cat: winnerDomain, confidence: 0.7 });
     }
     for (const tag of loserSignals) {
-      signals.push({ tag, cat: 'Design' as TasteDomain, confidence: 0.3 });
+      signals.push({ tag, cat: loserDomain, confidence: 0.3 });
     }
   }
 

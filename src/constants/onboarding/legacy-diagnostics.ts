@@ -9,6 +9,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: 'Walk to a local café',
     aSignals: ['Room-service-ritual', 'Cocoon-morning'],
     bSignals: ['Local-café-seeker', 'Neighborhood-explorer'],
+    aDomain: 'Service',
+    bDomain: 'FoodDrink',
   },
   {
     q: 'Hotel pool',
@@ -16,6 +18,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: 'Natural pool, hidden',
     aSignals: ['Pool-as-scene', 'Social-energy'],
     bSignals: ['Natural-pool-preference', 'Anti-resort-pool'],
+    aDomain: 'Wellness',
+    bDomain: 'Wellness',
   },
   {
     q: 'Restaurant discovery',
@@ -23,6 +27,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: 'The place with no sign on the door',
     aSignals: ['Fine-dining-curious', 'Chef-driven'],
     bSignals: ['Hidden-gem-hunter', 'Anti-obvious'],
+    aDomain: 'FoodDrink',
+    bDomain: 'FoodDrink',
   },
   {
     q: 'Travel pace',
@@ -30,6 +36,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: 'No plans, follow your nose',
     aSignals: ['Planned-itinerary', 'Structure-seeker'],
     bSignals: ['Spontaneous-discovery', 'Anti-scheduled'],
+    aDomain: 'Atmosphere',
+    bDomain: 'Atmosphere',
   },
   {
     q: 'Room vibe',
@@ -37,6 +45,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: "Lived-in, someone's beautiful home",
     aSignals: ['Design-museum-aesthetic', 'Curated-space'],
     bSignals: ['Lived-in-warmth', 'Home-feeling'],
+    aDomain: 'Design',
+    bDomain: 'Character',
   },
   {
     q: 'Neighborhood',
@@ -44,6 +54,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: 'Deliberately removed',
     aSignals: ['Walkable-radius', 'Urban-embedded'],
     bSignals: ['Remote-isolated', 'Destination-property'],
+    aDomain: 'Setting',
+    bDomain: 'Setting',
   },
   {
     q: 'Check-in',
@@ -51,6 +63,8 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     b: 'Drink at the bar while they prepare',
     aSignals: ['Efficiency-valued', 'Anti-lobby'],
     bSignals: ['Arrival-ritual', 'Lobby-matters'],
+    aDomain: 'Service',
+    bDomain: 'Service',
   },
 ];
 
@@ -64,6 +78,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Minimal' },
     aSignals: ['Curated-density', 'Maximalist-warmth'],
     bSignals: ['Warm-minimal', 'Edited-space'],
+    domain: 'Design',
   },
   {
     id: 2,
@@ -72,6 +87,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Polished / Sleek' },
     aSignals: ['Raw-stone', 'Natural-materials', 'Wabi-sabi-warmth'],
     bSignals: ['Polished-surfaces', 'Contemporary-sleek'],
+    domain: 'Design',
   },
   {
     id: 3,
@@ -80,6 +96,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Dark and moody' },
     aSignals: ['Morning-light-drawn', 'Airy-space'],
     bSignals: ['Moody-intimate', 'Candlelit-evening'],
+    domain: 'Atmosphere',
   },
   {
     id: 4,
@@ -88,6 +105,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Intimate' },
     aSignals: ['Grand-hotel-lover', 'Scale-as-drama'],
     bSignals: ['Intimate-under-20', 'Micro-property'],
+    domain: 'Character',
   },
   {
     id: 5,
@@ -96,6 +114,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Historic / Layered' },
     aSignals: ['Contemporary-design', 'Clean-lines'],
     bSignals: ['Layered-patina', 'Historic-character'],
+    domain: 'Character',
   },
   {
     id: 6,
@@ -104,6 +123,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Indoor-outdoor flow' },
     aSignals: ['Interior-focused', 'Enclosed-warmth'],
     bSignals: ['Indoor-outdoor-flow', 'Terrace-living'],
+    domain: 'Setting',
   },
   {
     id: 7,
@@ -112,6 +132,7 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Found objects' },
     aSignals: ['Curated-art', 'Gallery-aesthetic'],
     bSignals: ['Found-objects', 'Handmade-over-manufactured'],
+    domain: 'Design',
   },
   {
     id: 8,
@@ -120,5 +141,6 @@ export const IMAGE_PAIRS: ImagePair[] = [
     b: { label: 'Wabi-sabi' },
     aSignals: ['Symmetry-valued', 'Order-oriented'],
     bSignals: ['Wabi-sabi-warmth', 'Imperfection-valued'],
+    domain: 'Design',
   },
 ];

@@ -777,6 +777,10 @@ export interface DiagnosticQuestion {
   b: string;
   aSignals: string[];
   bSignals: string[];
+  /** Taste domain for "a" choice signals (defaults to 'Design' for backward compat) */
+  aDomain?: string;
+  /** Taste domain for "b" choice signals (defaults to aDomain ?? 'Design') */
+  bDomain?: string;
 }
 
 export interface ImagePair {
@@ -786,6 +790,8 @@ export interface ImagePair {
   b: { label: string; imageUrl?: string };
   aSignals: string[];
   bSignals: string[];
+  /** Taste domain for signals from this pair (defaults to 'Design' for backward compat) */
+  domain?: string;
 }
 
 // ─── Elo-Ranked Comparison Types ───
