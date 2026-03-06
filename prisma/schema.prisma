@@ -25,9 +25,12 @@ model User {
   seedTrips            Json?        // SeedTripInput[]
   trustedSources       Json?        // TrustedSource[]
   mosaicData           Json?        // { answers: MosaicAnswer[], axes: Record<string,number> }
+  propertyAnchors      Json?        // PropertyAnchor[] — resolved place mentions from voice onboarding
+  tasteStructure       Json?        // TasteStructure — rich per-domain coverage, signals, gaps for explanations
   isOnboardingComplete Boolean      @default(false)
   onboardingDepth      String?      // shallow | standard | deep
   completedPhaseIds    String[]     @default([])
+  onboardingRouting    Json?        // V3 act-routing: { currentAct, skippedPhaseIds, act0GapResult, act1GapResult }
 
   // Taste trajectory (computed by signal decay route)
   tasteTrajectoryDirection  String?   // REFINING | EXPANDING | SHIFTING | STABLE
@@ -52,8 +55,8 @@ model User {
   tasteVector          Unsupported("vector(136)")?
   tasteVectorUpdatedAt DateTime?
 
-  // Taste Intelligence v3 (semantic clusters, 408-dim = 8 domains + 400 clusters + neighbor bleed)
-  tasteVectorV3        Unsupported("vector(408)")?
+  // Taste Intelligence v3.4 (semantic clusters, 400-dim signal-only + neighbor bleed)
+  tasteVectorV3        Unsupported("vector(400)")?
 
   // Taste graph relations
   tasteNodes           TasteNode[]
@@ -610,8 +613,8 @@ model PlaceIntelligence {
   embedding          Unsupported("vector(136)")?
   embeddingUpdatedAt DateTime?
 
-  // Taste Intelligence v3 (semantic clusters, 408-dim = 8 domains + 400 clusters + neighbor bleed)
-  embeddingV3        Unsupported("vector(408)")?
+  // Taste Intelligence v3.4 (semantic clusters, 400-dim signal-only + neighbor bleed)
+  embeddingV3        Unsupported("vector(400)")?
 
   // Relations
   pipelineRuns    PipelineRun[]

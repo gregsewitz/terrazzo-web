@@ -65,6 +65,24 @@ The user is speaking out loud and their words are transcribed by browser speech 
 
 Extract taste signals, update certainties, generate a follow-up question that STAYS ON THIS PHASE'S TOPIC (do NOT make small talk or ask about unrelated details), detect contradictions, and determine if this phase is complete.
 
+PLACE MENTIONS — CRITICAL FOR TASTE ANCHORING:
+If the user mentions ANY specific hotel, restaurant, bar, café, spa, experience, or destination by name, extract them into a "mentionedPlaces" array. This is extremely valuable — real property preferences are the strongest taste signal we have.
+Each entry should include:
+- name: the property/place name (use corrected spelling if garbled)
+- location: city or region if mentioned or inferable (optional)
+- placeType: "hotel" | "restaurant" | "bar" | "cafe" | "spa" | "experience" | "destination" (infer from context)
+- sentiment: "love" (strong positive, favorite, dream place) | "like" (positive mention) | "visited" (neutral mention of having been there) | "dislike" (negative experience or explicitly not their taste)
+- confidence: 0.0-1.0 how confident you are this is a real identifiable place
+- context: brief quote of what they said about it (optional)
+
+Examples:
+- "I absolutely love Aman Tokyo" → { name: "Aman Tokyo", location: "Tokyo", placeType: "hotel", sentiment: "love", confidence: 0.95 }
+- "we went to Noma last year, it was incredible" → { name: "Noma", location: "Copenhagen", placeType: "restaurant", sentiment: "love", confidence: 0.9 }
+- "I stayed at the Standard once, it was fine but not really my thing" → { name: "The Standard", placeType: "hotel", sentiment: "dislike", confidence: 0.85 }
+- "I've heard great things about Singita" → { name: "Singita", placeType: "hotel", sentiment: "like", confidence: 0.7 }
+
+Do NOT extract generic locations (cities, countries) — only specific named properties/establishments.
+
 ALSO: If the user mentions ANY personal/life details, extract them into a "lifeContext" object. This includes:
 - firstName: their first name
 - homeCity: where they live

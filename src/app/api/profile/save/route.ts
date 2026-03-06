@@ -22,10 +22,33 @@ export const POST = apiHandler(async (req: NextRequest) => {
       ...(body.mosaicData !== undefined && { mosaicData: body.mosaicData }),
       ...(body.isOnboardingComplete !== undefined && { isOnboardingComplete: body.isOnboardingComplete }),
       ...(body.onboardingDepth !== undefined && { onboardingDepth: body.onboardingDepth }),
-      // Sustainability signals (raw from spectrum phase)
-      // Note: sustainabilityProfile is synthesized inside tasteProfile JSON, not as separate columns
-      ...(body.sustainabilitySignals !== undefined && { sustainabilitySignals: body.sustainabilitySignals }),
       ...(body.completedPhaseIds !== undefined && { completedPhaseIds: body.completedPhaseIds }),
+      ...(body.propertyAnchors !== undefined && { propertyAnchors: body.propertyAnchors }),
+      ...(body.tasteStructure !== undefined && { tasteStructure: body.tasteStructure }),
+      // Sustainability signals — relation, so use deleteMany + createMany
+      ...(body.sustainabilitySignals !== undefined && {
+        sustainabilitySignals: {
+          deleteMany: {},
+          createMany: {
+            data: (body.sustainabilitySignals as Array<{ tag: string; confidence: number; dimension: string }>).map(
+              (s) => ({
+                tag: s.tag,
+                confidence: s.confidence,
+                dimension: s.dimension,
+              }),
+            ),
+          },
+        },
+      }),
+      // V3 act-routing state — pack into single JSON column for cross-device resume
+      ...((body.currentAct !== undefined || body.skippedPhaseIds !== undefined) && {
+        onboardingRouting: {
+          currentAct: body.currentAct ?? 0,
+          skippedPhaseIds: body.skippedPhaseIds ?? [],
+          act0GapResult: body.act0GapResult ?? null,
+          act1GapResult: body.act1GapResult ?? null,
+        },
+      }),
     },
   });
 

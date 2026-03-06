@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import type { AnalysisResult, ConversationMessage, TasteSignal, TasteContradiction } from '@/types';
+import type { AnalysisResult, ConversationMessage, TasteSignal, TasteContradiction, MentionedPlace, PropertyAnchor } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
 interface UseConversationPhaseOptions {
@@ -32,6 +32,7 @@ export function useConversationPhase({
     setLifeContext,
     addTrustedSource,
     setGoBackPlace,
+    addPropertyAnchors,
     setCurrentPhaseProgress,
     allMessages: storedMessages,
     completedPhaseIds,
@@ -117,7 +118,7 @@ export function useConversationPhase({
       if (!res.ok) throw new Error('Analysis failed');
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result: AnalysisResult & { lifeContext?: Record<string, any>; trustedSource?: any; trustedSources?: any[]; goBackPlace?: any; contextModifiers?: any[]; partnerTravelDynamic?: string; soloTravelIdentity?: string; emotionalDriverPrimary?: string; emotionalDriverSecondary?: string; correctedTranscript?: string; userRequestedSkip?: boolean } = await res.json();
+      const result: AnalysisResult & { lifeContext?: Record<string, any>; trustedSource?: any; trustedSources?: any[]; goBackPlace?: any; contextModifiers?: any[]; partnerTravelDynamic?: string; soloTravelIdentity?: string; emotionalDriverPrimary?: string; emotionalDriverSecondary?: string; correctedTranscript?: string; userRequestedSkip?: boolean; mentionedPlaces?: MentionedPlace[] } = await res.json();
 
       // If Claude corrected garbled speech-to-text (e.g. "I'm on Geary" → "Amangiri"),
       // update the user's message bubble to show the corrected version
@@ -175,6 +176,39 @@ export function useConversationPhase({
       // Phase 10: Emotional drivers — store as life context
       if (result.emotionalDriverPrimary) {
         setLifeContext({ emotionalDriverPrimary: result.emotionalDriverPrimary, emotionalDriverSecondary: result.emotionalDriverSecondary || null });
+      }
+
+      // Property anchors: resolve mentioned places to real properties
+      // Shows inline verification cards so the user can confirm/dismiss before blending
+      if (result.mentionedPlaces?.length) {
+        fetch('/api/onboarding/resolve-places', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mentionedPlaces: result.mentionedPlaces,
+            phaseId,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data: { anchors: PropertyAnchor[] }) => {
+            if (data.anchors?.length) {
+              addPropertyAnchors(data.anchors);
+              // Inject inline verification cards so user can confirm/dismiss each anchor
+              const verificationMsg: ConversationMessage = {
+                role: 'ai',
+                text: data.anchors.length === 1
+                  ? 'I found this place you mentioned:'
+                  : 'I found these places you mentioned:',
+                phaseId,
+                anchorsToVerify: data.anchors,
+              };
+              setMessages((prev) => [...prev, verificationMsg]);
+              console.log(`[onboarding] Resolved ${data.anchors.length} property anchor(s):`, data.anchors.map((a) => a.propertyName));
+            }
+          })
+          .catch((err) => {
+            console.warn('[onboarding] Place resolution failed (non-blocking):', err);
+          });
       }
 
       // Exchange guards:
@@ -246,7 +280,7 @@ export function useConversationPhase({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace]);
+  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, addPropertyAnchors, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace]);
 
   return {
     messages,

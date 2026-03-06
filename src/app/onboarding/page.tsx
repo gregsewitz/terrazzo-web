@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ALL_PHASE_IDS } from '@/constants/onboarding';
+import { ALL_PHASE_IDS_V2 } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
 
@@ -24,35 +24,31 @@ export default function OnboardingIntro() {
 
   // Wait for zustand hydration from localStorage before showing resume UI
   useEffect(() => {
-    // Check if already hydrated (StoreHydration component triggers this in layout)
     const check = () => {
       if (useOnboardingStore.persist.hasHydrated()) {
         setHydrated(true);
       } else {
-        // Not yet — listen for hydration finish
         const unsub = useOnboardingStore.persist.onFinishHydration(() => {
           setHydrated(true);
           unsub();
         });
       }
     };
-    // Small delay to let StoreHydration run first
     const timer = setTimeout(check, 50);
     return () => clearTimeout(timer);
   }, []);
 
   const hasInProgressSession = hydrated && !isComplete && completedPhaseIds.length > 0;
-  // Redo mode: user already has a profile but came back to do more phases
   const isRedoSession = hydrated && !isComplete && generatedProfile !== null;
-  const currentPhaseId = ALL_PHASE_IDS[currentPhaseIndex] || ALL_PHASE_IDS[0];
+  const currentPhaseId = ALL_PHASE_IDS_V2[currentPhaseIndex] || ALL_PHASE_IDS_V2[0];
 
   const handleStart = () => {
     if (!isRedoSession) {
-      reset(); // only wipe data for truly fresh starts, not redos
+      reset();
     }
     setIsStarting(true);
     setTimeout(() => {
-      router.push(`/onboarding/phase/${ALL_PHASE_IDS[0]}`);
+      router.push(`/onboarding/phase/${ALL_PHASE_IDS_V2[0]}`);
     }, 400);
   };
 
@@ -88,7 +84,7 @@ export default function OnboardingIntro() {
           {hasInProgressSession ? (
             <>
               <p className="text-[17px] leading-relaxed text-[var(--t-ink)]/80">
-                Welcome back — you&apos;re {completedPhaseIds.length} of {ALL_PHASE_IDS.length} sections
+                Welcome back — you&apos;re {completedPhaseIds.length} of {ALL_PHASE_IDS_V2.length} sections
                 into building your taste profile.
               </p>
               <p className="text-[15px] leading-relaxed text-[var(--t-ink)]/50">
@@ -102,7 +98,7 @@ export default function OnboardingIntro() {
                 the places that stuck with you, the things that drive you crazy.
               </p>
               <p className="text-[15px] leading-relaxed text-[var(--t-ink)]/50">
-                Takes about 5 minutes. You can talk or type — whatever feels natural.
+                Takes about 12 minutes across three acts. You can talk or type — whatever feels natural.
               </p>
             </>
           )}

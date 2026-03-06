@@ -767,6 +767,8 @@ export interface ConversationMessage {
   role: 'ai' | 'user' | 'system';
   text: string;
   phaseId?: string;
+  /** Resolved property anchors the user should verify before they're used for vector blending */
+  anchorsToVerify?: PropertyAnchor[];
 }
 
 export interface DiagnosticQuestion {
@@ -835,7 +837,18 @@ export interface EloState {
   round: number;
 }
 
-export type OnboardingPhaseModality = 'voice' | 'cards' | 'visual' | 'voice+cards' | 'trip-seed' | 'slider' | 'swipe' | 'spectrum';
+export type OnboardingPhaseModality =
+  | 'voice'
+  | 'cards'
+  | 'visual'
+  | 'voice+cards'
+  | 'trip-seed'
+  | 'slider'
+  | 'swipe'
+  | 'spectrum'
+  | 'form'                // Quick bio form (Act 0)
+  | 'property-reactions'  // Property reaction card phase (Act 0 + Act 2 gap-fill)
+  | 'scale';              // Single-question selector (sustainability check)
 
 export interface OnboardingPhase {
   id: string;
@@ -843,7 +856,7 @@ export interface OnboardingPhase {
   title: string;
   subtitle: string;
   modality: OnboardingPhaseModality;
-  act: 1 | 2;
+  act: 0 | 1 | 2;
   aiPrompt: string;
   followUps: string[];
   sampleUserResponses: string[];
@@ -857,6 +870,12 @@ export interface OnboardingPhase {
   sliderDefs?: { id: string; leftLabel: string; rightLabel: string; leftSignals: string[]; rightSignals: string[]; domain: string }[];
   /** Custom swipe card definitions — passed to SwipePhaseView when modality is 'swipe' */
   swipeCards?: { id: number; prompt: string; optionA: { label: string; description?: string }; optionB: { label: string; description?: string }; aSignals: string[]; bSignals: string[]; domain: string }[];
+  /** Whether this phase can be skipped based on domain gap analysis */
+  isAdaptive?: boolean;
+  /** Domains this phase targets — used for adaptive routing and property-reactions phases */
+  targetDomains?: TasteDomain[];
+  /** Number of cards to show in property-reactions phases */
+  cardCount?: number;
 }
 
 export interface TrustedSource {
@@ -907,7 +926,7 @@ export interface OnboardingLifeContext {
   [key: string]: unknown;
 }
 
-export type OnboardingDepth = 'act_1_only' | 'full_flow';
+export type OnboardingDepth = 'full_flow';
 
 // ─── Deletion Impact Types ───
 
@@ -934,4 +953,105 @@ export interface AnalysisResult {
   // Expanded ontology
   sustainabilitySignals?: SustainabilitySignal[];
   emotionalDriverHint?: string;
+  /** Places mentioned by user, extracted by LLM for property-anchored preference capture */
+  mentionedPlaces?: MentionedPlace[];
+}
+
+// ─── Property-Anchored Preference Capture ────────────────────────────────────
+
+/** Place mentioned by user during onboarding (extracted by LLM) */
+export interface MentionedPlace {
+  name: string;
+  location?: string;
+  placeType?: string;
+  sentiment: 'love' | 'like' | 'visited' | 'dislike';
+  confidence: number;
+  context?: string;
+}
+
+/** Resolved property anchor — a mentioned place matched to a real PlaceIntelligence record */
+export interface PropertyAnchor {
+  googlePlaceId: string;
+  propertyName: string;
+  placeType?: string;
+  sentiment: 'love' | 'like' | 'visited' | 'dislike';
+  /** Blend weight for vector computation: positive pulls toward, negative pushes away */
+  blendWeight: number;
+  /** Source phase where this anchor was mentioned */
+  sourcePhaseId?: string;
+  /** Whether the property has a computed embedding we can use */
+  hasEmbedding: boolean;
+  resolvedAt: string; // ISO timestamp
+}
+
+// ─── Taste Structure (Richer Structured Data) ────────────────────────────────
+
+/** Per-domain coverage and signal summary — computed from vector analysis */
+export interface DomainTasteProfile {
+  /** Coverage ratio: fraction of domain clusters activated (0-1) */
+  coverage: number;
+  /** Top signals by confidence in this domain */
+  strongestSignals: string[];
+  /** Cluster names with low/zero activation — candidates for gap-fill */
+  weakestAreas: string[];
+  /** Anti-signals / rejections in this domain */
+  rejections: string[];
+}
+
+/**
+ * Rich structured representation of a user's taste preferences.
+ * Stored alongside the vector for non-vector features:
+ *   - Taste explanations ("You love raw concrete and natural materials")
+ *   - Recommendation explanations ("This matches your Setting preferences")
+ *   - Taste evolution tracking over time
+ *   - Gap-fill guidance during onboarding
+ */
+export interface TasteStructure {
+  /** Per-domain summary */
+  domains: Record<string, DomainTasteProfile>;
+  /** Radar-derived domain priority weights (normalized 0-1) */
+  domainPriorities: Record<string, number>;
+  /** Anchor properties with resolved data */
+  anchorProperties: Array<{
+    googlePlaceId: string;
+    name: string;
+    sentiment: string;
+    /** Which domains this property's embedding covers */
+    domains: string[];
+    /** How many clusters this anchor activated */
+    activatedClusters: number;
+  }>;
+  /** Weighted mean of domain coverages (0-1) */
+  overallConfidence: number;
+  /** Domains still below the gap threshold */
+  gapDomains: string[];
+  /** When this structure was last computed */
+  computedAt: string;
+}
+
+/** A real property exemplifying a taste domain — used for gap-fill reaction cards */
+export interface PropertyExemplar {
+  googlePlaceId: string;
+  propertyName: string;
+  placeType: string | null;
+  locationHint: string | null;
+  /** Cosine similarity to domain probe vector */
+  domainScore: number;
+}
+
+/** Result of the domain gap check — coverage analysis + exemplar properties */
+export interface DomainGapCheckResult {
+  coverage: {
+    domains: Array<{
+      domain: string;
+      totalClusters: number;
+      activatedClusters: number;
+      coverage: number;
+      meanActivation: number;
+    }>;
+    overallCoverage: number;
+    gapDomains: string[];
+    totalActivated: number;
+  };
+  exemplars: Record<string, PropertyExemplar[]>;
 }

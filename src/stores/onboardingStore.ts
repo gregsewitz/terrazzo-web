@@ -6,10 +6,19 @@ import type {
   TasteSignal, TasteContradiction, ConversationMessage,
   GeneratedTasteProfile, TrustedSource, GoBackPlace,
   SeedTripInput, OnboardingLifeContext, OnboardingDepth,
-  SustainabilitySignal, TasteDomain,
+  SustainabilitySignal, TasteDomain, PropertyAnchor,
+  DomainGapCheckResult,
 } from '@/types';
 import { ALL_TASTE_DOMAINS, CORE_TASTE_DOMAINS, PREFERENCE_DIMENSIONS } from '@/types';
 import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
+import {
+  ACT_0_PHASE_IDS,
+  ACT_1_PHASE_IDS_V2,
+  ACT_2_PHASE_IDS_V2,
+  ALL_PHASE_IDS_V2,
+  ADAPTIVE_PHASE_IDS,
+} from '@/constants/onboarding';
+import type { ActNumber } from '@/constants/onboarding';
 
 // ─── V1→V2 Domain Migration (one-time) ─────────────────────────────────────
 // Maps legacy v1 domain/category names to canonical v2 TasteDomain keys.
@@ -108,6 +117,19 @@ interface OnboardingState {
   // ─── Go-Back Place ───
   goBackPlace: GoBackPlace | null;
 
+  // ─── Property Anchors (resolved place mentions from voice onboarding) ───
+  propertyAnchors: PropertyAnchor[];
+
+  // ─── Domain Gap Analysis (computed after Act 1) ───
+  gapCheckResult: DomainGapCheckResult | null;
+  gapCheckLoading: boolean;
+
+  // ─── 3-Act Adaptive Routing (v3) ───
+  currentAct: ActNumber;
+  skippedPhaseIds: string[];
+  act0GapResult: DomainGapCheckResult | null;
+  act1GapResult: DomainGapCheckResult | null;
+
   // ─── Hydration ───
   /** True once DB profile data has been loaded (or skipped for unauth users) */
   dbHydrated: boolean;
@@ -126,6 +148,12 @@ interface OnboardingState {
   addSeedTrip: (trip: SeedTripInput) => void;
   addTrustedSource: (source: TrustedSource) => void;
   setGoBackPlace: (place: GoBackPlace) => void;
+  addPropertyAnchors: (anchors: PropertyAnchor[]) => void;
+  removePropertyAnchor: (googlePlaceId: string) => void;
+  runDomainGapCheck: () => Promise<DomainGapCheckResult | null>;
+  setCurrentAct: (act: ActNumber) => void;
+  /** Run gap analysis after completing an act — determines which adaptive phases to skip */
+  runGapAnalysisForActTransition: (completedAct: 0 | 1) => Promise<void>;
   finishOnboarding: (depth: OnboardingDepth) => Promise<void>;
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   /** Manually trigger a full re-synthesis of the taste profile (e.g. after prompt updates) */
@@ -171,6 +199,13 @@ export const useOnboardingStore = create<OnboardingState>()(
       seedTrips: [],
       trustedSources: [],
       goBackPlace: null,
+      propertyAnchors: [],
+      gapCheckResult: null,
+      gapCheckLoading: false,
+      currentAct: 0 as ActNumber,
+      skippedPhaseIds: [] as string[],
+      act0GapResult: null,
+      act1GapResult: null,
       dbHydrated: false,
 
       // ─── Actions ───
@@ -224,6 +259,107 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       setGoBackPlace: (place) => set({ goBackPlace: place }),
 
+      addPropertyAnchors: (anchors) => set((state) => {
+        // Deduplicate by googlePlaceId — keep the highest blendWeight
+        const existing = new Map(state.propertyAnchors.map((a) => [a.googlePlaceId, a]));
+        for (const anchor of anchors) {
+          const prev = existing.get(anchor.googlePlaceId);
+          if (!prev || Math.abs(anchor.blendWeight) > Math.abs(prev.blendWeight)) {
+            existing.set(anchor.googlePlaceId, anchor);
+          }
+        }
+        return { propertyAnchors: Array.from(existing.values()) };
+      }),
+
+      removePropertyAnchor: (googlePlaceId) => set((state) => ({
+        propertyAnchors: state.propertyAnchors.filter((a) => a.googlePlaceId !== googlePlaceId),
+      })),
+
+      runDomainGapCheck: async () => {
+        const state = get();
+        if (!state.allSignals.length || !state.generatedProfile?.radarData?.length) {
+          console.warn('[gap-check] Skipping — insufficient data');
+          return null;
+        }
+        set({ gapCheckLoading: true });
+        try {
+          const result = await apiFetch<DomainGapCheckResult>('/api/onboarding/domain-gap-check', {
+            method: 'POST',
+            body: JSON.stringify({
+              signals: state.allSignals,
+              radarData: state.generatedProfile.radarData,
+              existingAnchorIds: state.propertyAnchors.map((a) => a.googlePlaceId),
+            }),
+          });
+          set({ gapCheckResult: result, gapCheckLoading: false });
+          console.log('[gap-check] Result:', result?.coverage?.gapDomains?.length, 'gap domains');
+          return result;
+        } catch (err) {
+          console.error('[gap-check] Failed:', err);
+          set({ gapCheckLoading: false });
+          return null;
+        }
+      },
+
+      setCurrentAct: (act) => set({ currentAct: act }),
+
+      runGapAnalysisForActTransition: async (completedAct) => {
+        const state = get();
+        set({ gapCheckLoading: true });
+
+        try {
+          // Lightweight gap check — works from raw signals without full profile synthesis.
+          // The endpoint should handle missing radarData gracefully and compute
+          // coverage directly from signals when radarData is empty.
+          const result = await apiFetch<DomainGapCheckResult>('/api/onboarding/domain-gap-check', {
+            method: 'POST',
+            body: JSON.stringify({
+              signals: state.allSignals,
+              radarData: state.generatedProfile?.radarData ?? [],
+              existingAnchorIds: state.propertyAnchors.map((a) => a.googlePlaceId),
+            }),
+          });
+
+          if (completedAct === 0) {
+            set({ act0GapResult: result });
+
+            // If no cold domains after Act 0, skip adaptive-conversation in Act 1
+            const gapDomains = result?.coverage?.gapDomains ?? [];
+            if (gapDomains.length === 0) {
+              set((s) => ({
+                skippedPhaseIds: [...s.skippedPhaseIds, 'adaptive-conversation'],
+              }));
+              console.log('[gap-analysis] Act 0 → no cold domains, skipping adaptive-conversation');
+            } else {
+              console.log('[gap-analysis] Act 0 → cold domains:', gapDomains);
+            }
+          } else if (completedAct === 1) {
+            set({ act1GapResult: result, gapCheckResult: result });
+
+            // If no cold domains after Act 1, skip gap-fill-reactions in Act 2
+            const gapDomains = result?.coverage?.gapDomains ?? [];
+            if (gapDomains.length === 0) {
+              set((s) => ({
+                skippedPhaseIds: [...s.skippedPhaseIds, 'gap-fill-reactions'],
+              }));
+              console.log('[gap-analysis] Act 1 → no cold domains, skipping gap-fill-reactions');
+            } else {
+              console.log('[gap-analysis] Act 1 → cold domains:', gapDomains);
+            }
+          }
+        } catch (err) {
+          console.error('[gap-analysis] Failed (fail-open — not skipping adaptive phases):', err);
+          // Fail-open: don't add any phases to skip list if gap check fails
+          if (completedAct === 0) {
+            set({ act0GapResult: null });
+          } else {
+            set({ act1GapResult: null });
+          }
+        } finally {
+          set({ gapCheckLoading: false });
+        }
+      },
+
       finishOnboarding: async (depth) => {
         set({ isComplete: true, onboardingDepth: depth });
         const state = get();
@@ -232,14 +368,27 @@ export const useOnboardingStore = create<OnboardingState>()(
           lifeContext: state.lifeContext,
           allSignals: state.allSignals,
           allContradictions: state.allContradictions,
+          sustainabilitySignals: state.sustainabilitySignals,
           seedTrips: state.seedTrips,
           trustedSources: state.trustedSources,
+          propertyAnchors: state.propertyAnchors,
           completedPhaseIds: state.completedPhaseIds,
           isOnboardingComplete: true,
           onboardingDepth: depth,
+          // V3 act-routing state for DB persistence
+          currentAct: state.currentAct,
+          skippedPhaseIds: state.skippedPhaseIds,
+          act0GapResult: state.act0GapResult,
+          act1GapResult: state.act1GapResult,
         });
         // Wait for all pending saves to complete — this is the critical moment
         await flushSaves();
+
+        // Fire-and-forget: compute taste vectors (v2.1 + v3) now that all data is persisted.
+        // v3 blends property anchor embeddings into the user's vector.
+        apiFetch('/api/onboarding/compute-vectors', { method: 'POST' })
+          .then((res) => console.log('[onboarding] Vectors computed:', res))
+          .catch((err) => console.warn('[onboarding] Vector computation failed (non-blocking):', err));
       },
 
       recordMosaicAnswer: (questionId, axes, signals) => {
@@ -346,6 +495,13 @@ export const useOnboardingStore = create<OnboardingState>()(
         seedTrips: [],
         trustedSources: [],
         goBackPlace: null,
+        propertyAnchors: [],
+        gapCheckResult: null,
+        gapCheckLoading: false,
+        currentAct: 0 as ActNumber,
+        skippedPhaseIds: [],
+        act0GapResult: null,
+        act1GapResult: null,
       }),
 
       resetForRedo: () => set({
@@ -386,6 +542,12 @@ export const useOnboardingStore = create<OnboardingState>()(
         seedTrips: state.seedTrips,
         trustedSources: state.trustedSources,
         goBackPlace: state.goBackPlace,
+        propertyAnchors: state.propertyAnchors,
+        gapCheckResult: state.gapCheckResult,
+        currentAct: state.currentAct,
+        skippedPhaseIds: state.skippedPhaseIds,
+        act0GapResult: state.act0GapResult,
+        act1GapResult: state.act1GapResult,
       }),
     }
   )
@@ -448,3 +610,25 @@ export const selectNeedsV2Migration = (state: OnboardingState): boolean => {
 
   return false;
 };
+
+// ─── V3 (3-Act) Selectors ───
+
+/** Current phase ID using v3 phase list */
+export const selectCurrentPhaseIdV2 = (state: OnboardingState) =>
+  ALL_PHASE_IDS_V2[state.currentPhaseIndex] ?? null;
+
+/** Whether Act 0 is complete (all 4 structured phases done) */
+export const selectIsAct0Complete = (state: OnboardingState) =>
+  ACT_0_PHASE_IDS.every((id) => state.completedPhaseIds.includes(id));
+
+/** Whether Act 1 is complete (v3 — 5 targeted depth phases) */
+export const selectIsAct1CompleteV2 = (state: OnboardingState) =>
+  ACT_1_PHASE_IDS_V2.every((id) =>
+    state.completedPhaseIds.includes(id) || state.skippedPhaseIds.includes(id)
+  );
+
+/** Whether Act 2 is complete (v3 — 3 deep taste phases) */
+export const selectIsAct2Complete = (state: OnboardingState) =>
+  ACT_2_PHASE_IDS_V2.every((id) =>
+    state.completedPhaseIds.includes(id) || state.skippedPhaseIds.includes(id)
+  );

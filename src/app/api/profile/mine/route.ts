@@ -7,24 +7,34 @@ export const GET = apiHandler(async (req: NextRequest) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
-  // Cast to access mosaicData (may not exist in generated Prisma client yet)
-  const userData = user as Record<string, unknown>;
+  // Re-fetch with sustainability signals relation included
+  const fullUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { sustainabilitySignals: true },
+  });
+  if (!fullUser) return unauthorized();
+
+  // Cast to access columns that may not be in generated Prisma client yet
+  const userData = fullUser as Record<string, unknown>;
 
   return Response.json({
     user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      tasteProfile: user.tasteProfile,
-      lifeContext: user.lifeContext,
-      allSignals: user.allSignals,
-      allContradictions: user.allContradictions,
-      seedTrips: user.seedTrips,
-      trustedSources: user.trustedSources,
+      id: fullUser.id,
+      email: fullUser.email,
+      name: fullUser.name,
+      tasteProfile: fullUser.tasteProfile,
+      lifeContext: fullUser.lifeContext,
+      allSignals: fullUser.allSignals,
+      allContradictions: fullUser.allContradictions,
+      sustainabilitySignals: fullUser.sustainabilitySignals ?? [],
+      seedTrips: fullUser.seedTrips,
+      trustedSources: fullUser.trustedSources,
       mosaicData: userData.mosaicData ?? null,
-      isOnboardingComplete: user.isOnboardingComplete,
-      onboardingDepth: user.onboardingDepth,
-      completedPhaseIds: (user as Record<string, unknown>).completedPhaseIds ?? [],
+      propertyAnchors: userData.propertyAnchors ?? null,
+      onboardingRouting: userData.onboardingRouting ?? null,
+      isOnboardingComplete: fullUser.isOnboardingComplete,
+      onboardingDepth: fullUser.onboardingDepth,
+      completedPhaseIds: userData.completedPhaseIds ?? [],
     },
   }, {
     headers: { 'Cache-Control': 'private, no-cache' }
