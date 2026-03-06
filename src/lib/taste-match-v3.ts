@@ -7,6 +7,15 @@
  * for ALL archetypes, Service=0.95-1.0 for all. The alignment transform
  * `0.30 + 0.70 * w` barely differentiates when most weights are 0.8-1.0.
  *
+ * v3.2.1 changes:
+ * 1. Absent-domain skip: Domains with zero signals are excluded from the
+ *    geometric mean entirely instead of contributing a 10% penalty. "No data"
+ *    ≠ "bad" — a store with no Atmosphere signals scores on its merits.
+ * 2. Signal distribution guard: When userSignalDistribution is empty (micro
+ *    signal keys don't map to domain names), falls back to raw radar weights
+ *    instead of crushing every domain to 30%. Fixes FoodDrink/Sustainability
+ *    being zeroed out for all places.
+ *
  * v3.2 changes:
  * 1. Signal-density weighted profile enhancement (new Step 0): When user's
  *    allSignals distribution is provided, modulate flat radar weights:
@@ -265,12 +274,13 @@ export function computeMatchFromSignals(
     const sharpWeight = Math.pow(weight, 2.0);
 
     if (score <= 0) {
-      // No signal data — use 10% of the sharpened weight with a neutral floor.
-      // This barely affects the geometric mean, so missing domains don't
-      // crush specialized properties that are strong where it matters.
-      const reducedWeight = sharpWeight * 0.1;
-      logSum += reducedWeight * Math.log(40);
-      weightSum += reducedWeight;
+      // v3.2.1: Skip domains with zero signals entirely.
+      // "No data" ≠ "bad" — a store with no Atmosphere signals shouldn't be
+      // penalized for it. The geometric mean is computed only over domains
+      // where the property actually has signal coverage. This lets specialized
+      // places (stores, activities, experiences) score on their merits without
+      // being dragged down by legitimately absent domains.
+      continue;
     } else {
       logSum += sharpWeight * Math.log(score);
       weightSum += sharpWeight;

@@ -362,12 +362,18 @@ async function generateGroundedFeed(
   }
 
   // v3.2: Derive signal distribution from microTasteSignals (count per domain)
+  // NOTE: microTasteSignals keys are category names (e.g. "service_ideals",
+  // "material_obsessions") NOT domain names ("Design", "FoodDrink"). Only keys
+  // that happen to match a valid TasteDomain are counted. When no keys match
+  // (the common case), we pass undefined to fall back to raw radar weights
+  // rather than crushing every domain to 30% via empty-distribution enhancement.
   const userSignalDistribution: Record<string, number> = {};
   for (const [domain, signals] of Object.entries(userMicroSignals)) {
     if (validDomains.has(domain) && Array.isArray(signals)) {
       userSignalDistribution[domain] = signals.length;
     }
   }
+  const hasSignalDistribution = Object.keys(userSignalDistribution).length > 0;
 
   // v3.2: Extract rejection keywords from contradictions (stated preferences)
   // In production, explicit rejection keywords come from the contradictions' "stated" side
@@ -380,7 +386,7 @@ async function generateGroundedFeed(
   // 3. Score all candidates — use vector-enhanced scoring when available
   const scoringContext = {
     applyDecay: true,
-    userSignalDistribution,
+    userSignalDistribution: hasSignalDistribution ? userSignalDistribution : undefined,
     userRejectionKeywords: userRejectionKeywords.length > 0 ? userRejectionKeywords : undefined,
   };
 
