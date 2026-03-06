@@ -99,19 +99,31 @@ Return valid JSON only matching the specified schema.`;
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: [{ type: 'text', text: PROFILE_SYNTHESIS_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],
     });
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
+
+    if (response.stop_reason === 'max_tokens') {
+      console.error('[synthesis] Response truncated by max_tokens — output may be incomplete');
+    }
+
     const jsonMatch = text.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Failed to synthesize profile' }, { status: 500 });
     }
 
-    const profile = JSON.parse(jsonMatch[0]);
+    let profile;
+    try {
+      profile = JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+      console.error('[synthesis] JSON parse failed:', (parseErr as Error).message);
+      console.error('[synthesis] Raw text length:', text.length, 'stop_reason:', response.stop_reason);
+      return NextResponse.json({ error: 'Failed to parse synthesis response' }, { status: 500 });
+    }
 
     // Pre-resolve matched properties: attach googlePlaceIds before responding
     // so the client can link directly to place detail pages.

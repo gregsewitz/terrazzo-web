@@ -82,6 +82,8 @@ async function callSynthesizeEndpoint(
 
   if (!res.ok) {
     const text = await res.text();
+    console.error(`      Synthesize response body: ${text.slice(0, 500)}`);
+    console.error(`      Payload size: ${JSON.stringify(payload).length} chars, ${payload.signals.length} signals, ${payload.messages.length} messages`);
     throw new Error(`Synthesize API returned ${res.status}: ${text}`);
   }
 

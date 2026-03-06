@@ -14,6 +14,8 @@
  *   extraction-audit — Persona generation → real extraction → compare vs expected signals
  */
 
+import 'dotenv/config';
+
 import { DEFAULT_CONFIG, parseCliArgs, type SyntheticConfig } from './config';
 import { loadArchetypes, listArchetypeIds, type TasteArchetype } from './archetypes';
 import { runArchetypeVariations, type SyntheticUserResult } from './simulator/orchestrator';
