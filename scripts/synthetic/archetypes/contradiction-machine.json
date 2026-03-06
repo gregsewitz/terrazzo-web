@@ -117,14 +117,28 @@
       "5": "a",
       "6": "b",
       "7": "a"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 50,
+      "formality": 50,
+      "anticipation": 50,
+      "programming": 50
+    },
+    "sustainabilityScale": 35
+  },
+
+  "microSignals": {
+    "Design": ["Eclectic-appreciator", "Warm-minimal", "Maximalist-joy"],
+    "Atmosphere": ["Mood-dependent", "Social-energy", "Contemplative-space"],
+    "Character": ["Curious-but-uncommitted", "Neighborhood-explorer"],
+    "FoodDrink": ["Omnivore-adventurer", "Comfort-food"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Names wildly different properties with equal enthusiasm. 'I loved this tiny ryokan in Kyoto — three rooms, paper walls, absolute silence. But also? The Ace Hotel in New York. Completely different energy but I loved it just as much. Oh, and my grandparents' farmhouse in Tuscany.' Does NOT try to reconcile these.",
     "anti-stay": "Hard to articulate. 'I don't know exactly. Maybe places that are trying to be one thing but are actually another? Like a boutique hotel that's actually a Holiday Inn with exposed brick?'",
-    "go-back-place": "Changes their answer mid-sentence. 'Probably... actually no. Maybe Istanbul? No, wait — honestly it depends when you ask me. Right now I'd say Lisbon. Last week I'd have said Marrakech.'",
-    "cultural-engagement": "Inconsistent. Museums one trip, street food the next, sitting in a park reading the third. 'I don't have a pattern. I just follow whatever feels right that day.'",
+    "adaptive-conversation": "Contradicts previous answers depending on domain probed. If food: 'I love omakase... but also, honestly, sometimes a really good burger is all I want.' If atmosphere: 'I said I like quiet, right? I do. But also I spent three hours in a packed mezcal bar in Oaxaca last month and it was the highlight of my year.'",
+    "details-matter": "Inconsistent but observant. 'I notice weird things. Like the way the light hits the tiles in a bathroom. Or how a bartender arranges bottles. I don't have a system — things just catch my eye.'",
     "emotional-core": "Can't articulate a single driver. 'I think I travel to surprise myself? I like not knowing what I want until I find it.' SHAPESHIFTER."
   }
 }

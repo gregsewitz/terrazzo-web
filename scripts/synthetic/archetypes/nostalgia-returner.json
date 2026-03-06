@@ -104,14 +104,28 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 70,
+      "formality": 40,
+      "anticipation": 10,
+      "programming": 30
+    },
+    "sustainabilityScale": 30
+  },
+
+  "microSignals": {
+    "Atmosphere": ["Familiar-comfort", "Lived-in-warmth", "Ritual-meal"],
+    "Character": ["Personal-history", "Generational-continuity", "Owner-operated"],
+    "Service": ["They-know-my-name", "Personal-recognition"],
+    "FoodDrink": ["Ritual-meal", "House-wine", "Kitchen-garden"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Tells long stories about the SAME places visited many times. 'We've been going to this hotel in Positano for eleven years. The owner knows our kids' names. We always get the room on the third floor with the lemon tree outside.' Every memory is layered with previous visits.",
     "anti-stay": "Anywhere that tries too hard to be new or trendy. 'We tried this new place in Barcelona everyone was raving about. It felt like a stage set. No soul. We went back to our usual place the next night.'",
-    "go-back-place": "Immediately and with zero hesitation — their place. 'Our village in Umbria. Not even a question. I could tell you the name of every shopkeeper.'",
-    "cultural-engagement": "Deep but narrow. Knows one place extremely well rather than many places superficially. 'I don't need to see the world. I need to know a few places deeply enough that they feel like home.'",
+    "adaptive-conversation": "Every answer circles back to their known places. If food: 'There's a bistro in Lyon where the patron has been serving the same menu for 30 years. The duck is exactly the same every time. That's what I want from food.' If design: 'I like places that look like they've been lived in. Worn leather, faded curtains, a crack in the tile someone decided to keep.'",
+    "details-matter": "Notices continuity and change. 'I track what's different each year. Did they repaint the shutters? Is the olive tree bigger? Is the same family running the kitchen? These small changes against the backdrop of sameness — that's what matters to me.'",
     "emotional-core": "Travels to return to a feeling. Continuity, memory, belonging. MEMORY_KEEPER."
   }
 }

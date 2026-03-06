@@ -116,14 +116,27 @@
       "5": "a",
       "6": "b",
       "7": "a"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 10,
+      "formality": 25,
+      "anticipation": 10,
+      "programming": 20
+    },
+    "sustainabilityScale": 50
+  },
+
+  "microSignals": {
+    "Design": ["Warm-minimal", "Edited-space", "Light-as-material", "Material-obsessive", "Monastic-restraint", "Natural-materials"],
+    "Atmosphere": ["Ritual-calm", "Slow-travel", "Contemplative-space"],
+    "Setting": ["Landscape-architecture", "Remote-isolated", "Elemental-rawness"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Should mention Aman Tokyo or similar minimal luxury properties. Focus on light, materials, proportion. Describe the feeling of space rather than amenities. Mention specific sensory details — the grain of timber, the weight of a door handle, how sound travels.",
     "anti-stay": "Describe a maximalist or themed hotel that felt oppressive — too much pattern, too much gold, too much performance. Should mention feeling overwhelmed or unable to think clearly.",
-    "go-back-place": "A place where the architecture seemed to disappear and the landscape took over. Probably remote. Mention the quality of silence.",
-    "cultural-engagement": "Values deep connection but through design and landscape rather than explicit cultural programming. Drawn to craft traditions, not tourist experiences.",
+    "adaptive-conversation": "Every response returns to materiality and space. If food: 'I want a kitchen that respects ingredients the way a good architect respects materials. Simplicity, precision, nothing wasted.' If atmosphere: 'Silence is a texture. The best spaces I've been in felt like the silence had weight.'",
+    "details-matter": "Obsessive about proportions, materials, and light. 'I notice the gap between the wall and the floor. The way a door handle sits in your palm. Whether the concrete is board-formed or poured. These things tell you everything about the mind behind the space.'",
     "emotional-core": "Travels to find clarity. The primary driver is aesthetic/spiritual — AESTHETIC_PILGRIM or TRANSFORMATION_SEEKER."
   }
 }

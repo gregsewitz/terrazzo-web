@@ -106,14 +106,28 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 25,
+      "formality": 50,
+      "anticipation": 55,
+      "programming": 45
+    },
+    "sustainabilityScale": 30
+  },
+
+  "microSignals": {
+    "Atmosphere": ["Dramatic-mood", "Candlelit-intimacy", "Storm-watching", "Golden-hour"],
+    "Setting": ["Landscape-drama", "Cliff-edge", "Coastal-wild", "Ancient-landscape"],
+    "Character": ["Storied-history", "Crumbling-grandeur", "Literary-association"],
+    "Design": ["Wabi-sabi-patina", "Faded-elegance"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Every description sounds like a novel opening. 'We found this crumbling palazzo on the Amalfi coast — the kind of place where the shutters don't quite close and you can hear the sea all night. The walls were this faded terra cotta and there were bougainvillea growing through the bathroom window. We drank wine on the terrace and watched a storm come in over Capri.'",
     "anti-stay": "Anything soulless or generic. 'A new-build hotel in Dubai. Everything was marble and gold leaf. It was like being inside a shopping mall. No weather, no history, no imperfection. I felt like I was nowhere.'",
-    "go-back-place": "Somewhere with dramatic natural beauty and history layered together. 'The Scottish Highlands. There's a loch where I once watched the mist come down and the whole world disappeared. It felt like time didn't exist.'",
-    "cultural-engagement": "Through landscape, architecture, and story. Wanders ruins, reads local history, sits in old churches. 'I want to feel the weight of a place. Who lived here, who loved here, who left.'",
+    "adaptive-conversation": "Everything becomes poetic. If food: 'I want to eat dinner outside as the sun sets and the candles take over. The food should match the landscape — rough bread, local wine, fish from that morning. Nothing refined, everything honest.' If design: 'I want a room that looks like it's been loved and let go. Cracked plaster. Original tiles. A window that frames something worth staring at for an hour.'",
+    "details-matter": "Notices the emotional texture of details. 'I pay attention to the quality of light at different hours. The way old stone changes color. Whether a door creaks or whispers. Whether the bed faces the window. These aren't details — they're the whole experience.'",
     "emotional-core": "Travels to feel deeply. Seeks beauty that aches. ROMANTIC_SEEKER."
   }
 }

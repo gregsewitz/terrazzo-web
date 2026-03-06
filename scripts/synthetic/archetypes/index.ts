@@ -38,7 +38,15 @@ export interface TasteArchetype {
     imagePairChoices: Record<string, 'a' | 'b'>;
     designerSelections: string[];
     diagnosticChoices: Record<string, 'a' | 'b'>;
+    /** v3: Service-style slider positions (0-100), keyed by slider id */
+    sliderPositions?: Record<string, number>;
+    /** v3: Sustainability scale position (0-100) */
+    sustainabilityScale?: number;
+    /** v3: Property reaction choices for property-reactions phases */
+    propertyReactions?: Record<string, 'love' | 'like' | 'meh' | 'nope'>;
   };
+  /** v3: Micro-signals by domain for keyword resonance in matching */
+  microSignals?: Record<string, string[]>;
   voiceAnswerGuidance: Record<string, string>;
 }
 

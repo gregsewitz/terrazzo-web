@@ -9,7 +9,8 @@
  *   2. Fixture mode: Load from a local JSON fixture (for CI/offline testing)
  */
 
-import { computeMatchFromSignals, computeMatchScore, isStretchPick } from '../../../src/lib/taste-match';
+import { computeMatchFromSignals } from '../../../src/lib/taste-match-v3';
+import type { MatchOptions } from '../../../src/lib/taste-match-v3';
 import type { TasteProfile, TasteDomain } from '../../../src/types';
 import type { SyntheticUserResult } from './orchestrator';
 import {
@@ -29,7 +30,7 @@ import type { SyntheticConfig } from '../config';
 
 export interface EnrichedProperty {
   id: string;
-  name: string;
+  propertyName: string;
   googlePlaceId: string;
   signals: Array<{
     dimension: string;
@@ -44,8 +45,8 @@ export interface EnrichedProperty {
     confidence: number;
     signal: string;
   }>;
-  /** Flat profile if available (fallback scoring) */
-  profile?: TasteProfile;
+  sustainabilityScore?: number;
+  placeType?: string;
 }
 
 export interface PropertyMatch {
@@ -98,7 +99,7 @@ export async function loadPropertiesFromFixture(fixturePath: string): Promise<En
  * Queries the placeIntelligence table for all places with signals.
  */
 export async function loadPropertiesFromDb(supabaseUrl: string, supabaseKey: string): Promise<EnrichedProperty[]> {
-  const res = await fetch(`${supabaseUrl}/rest/v1/placeIntelligence?select=id,name,googlePlaceId,signals,antiSignals,profile&signals=not.is.null`, {
+  const res = await fetch(`${supabaseUrl}/rest/v1/PlaceIntelligence?select=id,propertyName,googlePlaceId,signals,antiSignals,sustainabilityScore,placeType&signals=not.is.null`, {
     headers: {
       'apikey': supabaseKey,
       'Authorization': `Bearer ${supabaseKey}`,
@@ -112,11 +113,12 @@ export async function loadPropertiesFromDb(supabaseUrl: string, supabaseKey: str
   const rows = await res.json();
   return rows.map((row: Record<string, unknown>) => ({
     id: row.id as string,
-    name: row.name as string,
+    propertyName: row.propertyName as string,
     googlePlaceId: row.googlePlaceId as string,
     signals: (row.signals || []) as EnrichedProperty['signals'],
     antiSignals: (row.antiSignals || []) as EnrichedProperty['antiSignals'],
-    profile: row.profile as TasteProfile | undefined,
+    sustainabilityScore: row.sustainabilityScore as number | undefined,
+    placeType: row.placeType as string | undefined,
   }));
 }
 
@@ -124,10 +126,12 @@ export async function loadPropertiesFromDb(supabaseUrl: string, supabaseKey: str
 
 /**
  * Score a synthetic user against all properties.
+ * Uses taste-match-v3 with geometric mean, no neutral floor, and keyword resonance.
  */
 export function scoreUserAgainstProperties(
   user: SyntheticUserResult,
   properties: EnrichedProperty[],
+  userMicroSignals?: Record<string, string[]>,
 ): PropertyMatch[] {
   // Extract the user's taste profile from synthesized profile
   const profile = user.synthesizedProfile;
@@ -139,22 +143,32 @@ export function scoreUserAgainstProperties(
   // Build TasteProfile from synthesized radarData or flat profile
   const userProfile = extractTasteProfile(profile);
 
+  // Build v3 match options with keyword resonance
+  const matchOptions: MatchOptions = {
+    applyDecay: false, // synthetic properties don't have real timestamps
+    applySourceCredibility: true,
+    userMicroSignals,
+  };
+
   return properties.map(prop => {
     const matchResult = computeMatchFromSignals(
       prop.signals,
       prop.antiSignals,
       userProfile,
+      matchOptions,
     );
 
-    const stretch = prop.profile
-      ? isStretchPick(userProfile, prop.profile)
-      : false;
+    // v3: stretch picks determined by score pattern, not profile comparison
+    // A property is a stretch pick if it scores well overall but has a contrarian
+    // top dimension (one where the user is below median)
+    const stretch = matchResult.overallScore >= 55 &&
+      (userProfile[matchResult.topDimension] ?? 0.5) < 0.45;
 
     return {
       propertyId: prop.id,
-      propertyName: prop.name,
+      propertyName: prop.propertyName,
       overallScore: matchResult.overallScore,
-      breakdown: matchResult.breakdown,
+      breakdown: matchResult.breakdown as Record<TasteDomain, number>,
       topDimension: matchResult.topDimension,
       isStretchPick: stretch,
     };
@@ -216,6 +230,21 @@ function fillDefaults(partial: Partial<TasteProfile>): TasteProfile {
   };
 }
 
+/**
+ * Extract micro-signals grouped by domain from the user's accumulated signals.
+ * These feed v3's keyword resonance bonus — direct signal name overlap between
+ * user and property signals adds points.
+ */
+function extractMicroSignals(user: SyntheticUserResult): Record<string, string[]> {
+  const byDomain: Record<string, string[]> = {};
+  for (const sig of user.allSignals) {
+    const domain = sig.cat;
+    if (!byDomain[domain]) byDomain[domain] = [];
+    byDomain[domain].push(sig.tag);
+  }
+  return byDomain;
+}
+
 // ─── Full Evaluation ──────────────────────────────────────────────────────────
 
 /**
@@ -238,7 +267,9 @@ export function evaluateAllMatches(
       byArchetype[user.archetypeId] = [];
     }
 
-    const matches = scoreUserAgainstProperties(user, properties);
+    // Extract micro-signals from the user's synthesized profile for keyword resonance
+    const userMicroSignals = extractMicroSignals(user);
+    const matches = scoreUserAgainstProperties(user, properties, userMicroSignals);
     const scores = matches.map(m => m.overallScore);
     const distribution = analyzeScoreDistribution(scores, config.thresholds.minScoreSpan);
 

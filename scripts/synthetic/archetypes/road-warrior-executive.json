@@ -106,14 +106,27 @@
       "5": "a",
       "6": "a",
       "7": "a"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 40,
+      "formality": 20,
+      "anticipation": 5,
+      "programming": 15
+    },
+    "sustainabilityScale": 10
+  },
+
+  "microSignals": {
+    "Service": ["Smooth-check-in", "White-glove-precision", "Express-service", "Loyalty-recognition"],
+    "Atmosphere": ["Cocoon-evening", "Early-to-bed", "Quiet-room"],
+    "Wellness": ["Gym-essential", "Sleep-quality"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Brief, efficiency-focused. 'Park Hyatt Tokyo. Quiet room, great gym, Girandole for breakfast, 10 minutes from my meetings. That's all I need.' Might mention points and status unprompted. Names chain properties, not boutiques.",
     "anti-stay": "A trendy boutique where the room key was a puzzle, the shower had no curtain, the bed was on the floor, and there was no desk. 'I had a 6am call and couldn't find the light switch.'",
-    "go-back-place": "A specific hotel in a city they work in frequently — chosen for reliability. 'The Mandarin Oriental in Hong Kong. Same room every time if I can.'",
-    "cultural-engagement": "Minimal during work travel. 'I know every good steak restaurant in a 5-block radius of the major convention centers.' On vacation, defers to spouse.",
+    "adaptive-conversation": "Responds in efficiency terms. If food: 'Room service that arrives in 20 minutes and is actually hot. A good steak within walking distance. I don't need a food experience, I need fuel.' If atmosphere: 'Quiet. Dark. Cool. Good blackout curtains. That's the whole list.'",
+    "details-matter": "Notices operational details. 'I can tell you the exact time check-in takes at every Park Hyatt in Asia. The shower pressure at the Mandarin Oriental Hong Kong is 30% better than the Tokyo property. I notice these things because I've tested them 50 times.'",
     "emotional-core": "Honestly, travel is mostly obligation. When pressed about why personal travel matters: 'I just want to stop moving and be somewhere beautiful with my wife.' Reluctant CONTROL_ARCHITECT."
   }
 }

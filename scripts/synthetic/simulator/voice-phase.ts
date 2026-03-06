@@ -47,15 +47,10 @@ interface VoicePhaseConfig {
 }
 
 const VOICE_PHASE_IDS = [
-  'welcome',
   'memorable-stays',
-  'companion-context',
   'anti-stay',
-  'trusted-sources',
-  'go-back-place',
-  'cultural-engagement',
-  'food-drink-values',
-  'sustainability-pulse',
+  'adaptive-conversation',
+  'details-matter',
   'emotional-core',
 ] as const;
 

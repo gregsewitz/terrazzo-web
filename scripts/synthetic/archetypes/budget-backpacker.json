@@ -108,14 +108,27 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 25,
+      "formality": 85,
+      "anticipation": 95,
+      "programming": 15
+    },
+    "sustainabilityScale": 75
+  },
+
+  "microSignals": {
+    "community": ["Social-energy", "Neighborhood-explorer", "Local-café-seeker"],
+    "authenticity": ["Street-food-seeker", "Local-economy", "Community-integrated"],
+    "accessibility": ["Urban-embedded", "Intimate-scale"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Stories about people, not properties. 'The best place I stayed was this family guesthouse in Hoi An — the grandmother cooked breakfast every morning and taught me how to make banh xeo. The room was $12 a night and had a fan, not AC, but I stayed for three weeks.' Names neighborhoods, not hotels.",
     "anti-stay": "An all-inclusive resort. 'Everything was fake — fake beach, fake friendliness, fake food. I was surrounded by tourists who never left the compound. I escaped on day 2 and found a hostel in town.'",
-    "go-back-place": "A neighborhood in a specific city — not a property. 'Cihangir in Istanbul. I know every bakery, every tea house, every rooftop. My friend has an apartment there and the door's always open.'",
-    "cultural-engagement": "Total immersion — learns basic language, eats only local food, makes friends with neighbors. Disdainful of tourist infrastructure.",
+    "adaptive-conversation": "A neighborhood in a specific city — not a property. 'Cihangir in Istanbul. I know every bakery, every tea house, every rooftop. My friend has an apartment there and the door's always open.'",
+    "details-matter": "Total immersion — learns basic language, eats only local food, makes friends with neighbors. Disdainful of tourist infrastructure.",
     "emotional-core": "Travels to feel part of the human story. Connection, not consumption. STORY_COLLECTOR."
   }
 }

@@ -221,6 +221,8 @@ export async function runSyntheticUser(
   console.log(`      Image Pairs: ${structured.breakdown.imagePairs.length} signals`);
   console.log(`      Designer Pool: ${structured.breakdown.designerSelections.length} signals`);
   console.log(`      Diagnostics: ${structured.breakdown.diagnostics.length} signals`);
+  console.log(`      Service Sliders: ${structured.breakdown.sliders.length} signals`);
+  console.log(`      Sustainability Scale: ${structured.breakdown.sustainabilityScale.length} signals`);
 
   // ─── Phase 3: Profile Synthesis (real API) ─────────────────────────────────
 

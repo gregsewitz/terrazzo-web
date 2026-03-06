@@ -110,14 +110,28 @@
       "5": "b",
       "6": "a",
       "7": "a"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 40,
+      "formality": 60,
+      "anticipation": 45,
+      "programming": 85
+    },
+    "sustainabilityScale": 55
+  },
+
+  "microSignals": {
+    "Character": ["Historic-character", "Layered-patina", "Inherited-grandeur", "Living-history"],
+    "Setting": ["Walkable-radius", "Urban-embedded", "Heritage-district"],
+    "FoodDrink": ["Local-café-seeker", "Market-grazer", "Cultural-cuisine"],
+    "Atmosphere": ["Slow-travel", "Intellectual-stimulation"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Long, story-rich answers. Describes the history of the building, the neighborhood's layers, what happened there in the 15th century. Might mention a converted convent in Lisbon, a riad in Fez, a palazzo in Rome. The hotel experience is inseparable from the place's history.",
     "anti-stay": "A brand-new glass tower that could have been anywhere. 'I was in Istanbul — one of the most historically rich cities on earth — and the hotel could have been in Dallas. No sense of place whatsoever.'",
-    "go-back-place": "A city, not a hotel. 'Kyoto. I've been four times and I haven't scratched the surface. Each temple is a semester of study.'",
-    "cultural-engagement": "This IS the trip. Museums, walking tours, architectural tours, talking to locals about neighborhood history, reading about the city before arriving. Might bring specific books.",
+    "adaptive-conversation": "Responds with encyclopedic depth on whatever is probed. If food: 'Food is archaeology. In Sicily, you can taste the Arab influence in the caponata, the Spanish in the arancini. I choose restaurants by history, not reviews.' If design: 'I appreciate architecture as cultural evidence. A Moorish arch tells me more about a city than any guidebook.'",
+    "details-matter": "Notices historical layers others miss. 'I read the building dates on lintels. I look at how the stonework changes between floors — that tells you which century each addition was built. The tiny details are where the real story lives.'",
     "emotional-core": "Travels to understand the human story across time and place. STORY_COLLECTOR."
   }
 }

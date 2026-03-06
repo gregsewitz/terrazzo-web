@@ -105,14 +105,27 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 40,
+      "formality": 50,
+      "anticipation": 70,
+      "programming": 85
+    },
+    "sustainabilityScale": 55
+  },
+
+  "microSignals": {
+    "expertise": ["Chef-follower", "Tasting-menu-devotee", "Wine-knowledge"],
+    "discovery": ["Neighborhood-explorer", "Market-pilgrim", "Local-food-scene"],
+    "authenticity": ["Restaurant-atmosphere", "Farm-to-table", "Seasonal-cooking"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Barely mentions the hotel — immediately pivots to the restaurants. 'I stayed somewhere in San Sebastián — honestly can't remember the name — but Mugaritz that trip was a religious experience. The fermented plum course changed how I think about acidity.' Names specific dishes, chefs, vintages.",
     "anti-stay": "A place with bad food. 'Resort in Cancún where every restaurant was a buffet. The 'fine dining' option was a steak house with pre-made Caesar salad. I nearly cried. We found a taco stand on the highway and ate there every night.'",
-    "go-back-place": "Tokyo, San Sebastián, Mexico City, or Lyon — food capitals. 'Tokyo. Easily. I could eat there for a year and never repeat a meal. The izakayas alone...'",
-    "cultural-engagement": "Through food exclusively. Markets at dawn, street food for lunch, tasting menu for dinner. 'Food IS culture. You can learn more about a place from one meal at a family restaurant than a week in museums.'",
+    "adaptive-conversation": "Tokyo, San Sebastián, Mexico City, or Lyon — food capitals. 'Tokyo. Easily. I could eat there for a year and never repeat a meal. The izakayas alone...'",
+    "details-matter": "Through food exclusively. Markets at dawn, street food for lunch, tasting menu for dinner. 'Food IS culture. You can learn more about a place from one meal at a family restaurant than a week in museums.'",
     "emotional-core": "Travels to eat. Food as the purest form of place-making. TASTE_PILGRIM."
   }
 }

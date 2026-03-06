@@ -27,7 +27,7 @@ console.log('Key type:', env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : 'anon'
 
 // Query placeIntelligence for all properties with signals
 const res = await fetch(
-  `${supabaseUrl}/rest/v1/placeIntelligence?select=id,name,googlePlaceId,signals,antiSignals,profile&signals=not.is.null&limit=1000`,
+  `${supabaseUrl}/rest/v1/PlaceIntelligence?select=id,propertyName,googlePlaceId,signals,antiSignals,sustainabilityScore,placeType&signals=not.is.null&limit=1000`,
   {
     headers: {
       'apikey': supabaseKey,
@@ -59,19 +59,20 @@ fs.writeFileSync(fixturePath, JSON.stringify(rows, null, 2));
 console.log(`Saved to ${fixturePath}`);
 
 // Quick stats
-const withProfile = rows.filter(r => r.profile).length;
 const avgSignals = rows.length > 0
   ? (rows.reduce((s, r) => s + (r.signals?.length || 0), 0) / rows.length).toFixed(1)
   : 0;
 const withAntiSignals = rows.filter(r => r.antiSignals?.length > 0).length;
+const placeTypes = {};
+for (const r of rows) { placeTypes[r.placeType || 'unknown'] = (placeTypes[r.placeType || 'unknown'] || 0) + 1; }
 
 console.log(`\nStats:`);
-console.log(`  Properties with profile: ${withProfile}/${rows.length}`);
 console.log(`  Properties with anti-signals: ${withAntiSignals}/${rows.length}`);
 console.log(`  Avg signals per property: ${avgSignals}`);
+console.log(`  Place types:`, placeTypes);
 
 // Show a few names
 console.log(`\nSample properties:`);
 for (const row of rows.slice(0, 10)) {
-  console.log(`  ${row.name} — ${row.signals?.length || 0} signals`);
+  console.log(`  ${row.propertyName} — ${row.signals?.length || 0} signals`);
 }

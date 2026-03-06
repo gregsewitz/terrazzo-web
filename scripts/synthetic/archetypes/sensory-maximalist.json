@@ -117,14 +117,27 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 75,
+      "formality": 70,
+      "anticipation": 25,
+      "programming": 90
+    },
+    "sustainabilityScale": 25
+  },
+
+  "microSignals": {
+    "sensory": ["Bold-color", "Pattern-maximalism", "Maximalist-warmth", "Curated-density"],
+    "energy": ["Pool-as-scene", "Social-energy", "Late-energy", "Theatrical-service"],
+    "culinary": ["Chef-tasting-seeker", "Cinematic-narrative"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Should describe properties with overwhelming sensory detail — the smell of the lobby, the live music leaking from the bar, the hand-painted tiles in the bathroom, the cocktail list that read like a novel. Name-drops specific restaurants and bars within hotels. Long, effusive answers.",
     "anti-stay": "A sterile, over-designed modern hotel with no soul — all white, no texture, no smell, no music. Should describe it as 'dead' or 'like sleeping in a rendering.' Might mention a specific chain that felt corporate.",
-    "go-back-place": "Somewhere with layers — a hotel where every visit reveals something new. Probably describes the restaurant, the pool scene, the rooftop, the neighborhood bar all in one answer.",
-    "cultural-engagement": "Experiences culture through food, nightlife, and street energy. Wants to be in the thick of it, not observing from a distance.",
+    "adaptive-conversation": "Somewhere with layers — a hotel where every visit reveals something new. Probably describes the restaurant, the pool scene, the rooftop, the neighborhood bar all in one answer.",
+    "details-matter": "Experiences culture through food, nightlife, and street energy. Wants to be in the thick of it, not observing from a distance.",
     "emotional-core": "Travels to feel alive. Primary driver is SENSORY_HEDONIST."
   }
 }

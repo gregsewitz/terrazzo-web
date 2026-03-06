@@ -106,14 +106,27 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 15,
+      "formality": 80,
+      "anticipation": 30,
+      "programming": 25
+    },
+    "sustainabilityScale": 98
+  },
+
+  "microSignals": {
+    "sustainability": ["Carbon-conscious", "Certified-eco", "Low-impact"],
+    "authenticity": ["Local-economy", "Community-integrated", "Nature-immersed"],
+    "integrity": ["Anti-Greenwashing", "Biodiversity-focused", "Off-grid"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Immediately mentions sustainability credentials. 'There's this eco-lodge in Costa Rica — fully off-grid, solar powered, they grow 80% of the food on-site. The rooms are bamboo and reclaimed teak. You fall asleep to howler monkeys.' Always knows the environmental certifications.",
     "anti-stay": "A place with performative sustainability. 'A resort that had 'eco' in the name but plastic water bottles everywhere, a massive pool in the desert, and a helicopter pad. The greenwashing made me angrier than if they'd just been honest about not caring.'",
-    "go-back-place": "A specific eco-lodge or nature reserve. 'The Azores. The biodiversity, the whale watching, the volcanic hot springs. And the tourism model is actually sustainable — small operators, local guides, strict visitor limits.'",
-    "cultural-engagement": "Through environmental and community lens. Volunteering, conservation projects, farm stays. 'I want to leave a place better than I found it, or at minimum not worse.'",
+    "adaptive-conversation": "A specific eco-lodge or nature reserve. 'The Azores. The biodiversity, the whale watching, the volcanic hot springs. And the tourism model is actually sustainable — small operators, local guides, strict visitor limits.'",
+    "details-matter": "Through environmental and community lens. Volunteering, conservation projects, farm stays. 'I want to leave a place better than I found it, or at minimum not worse.'",
     "emotional-core": "Travels to feel aligned with their values. Every trip is a moral calculation. ETHICAL_TRAVELER."
   }
 }

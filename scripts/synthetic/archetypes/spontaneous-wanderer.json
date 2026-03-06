@@ -105,14 +105,27 @@
       "5": "a",
       "6": "b",
       "7": "a"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 20,
+      "formality": 90,
+      "anticipation": 90,
+      "programming": 25
+    },
+    "sustainabilityScale": 30
+  },
+
+  "microSignals": {
+    "Character": ["Serendipity-seeker", "Neighborhood-explorer", "Hidden-gem"],
+    "Atmosphere": ["Unscripted-energy", "Street-life", "Local-vibe"],
+    "Setting": ["Walkable-discovery", "Urban-embedded"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Stories are about what happened, not where they stayed. 'I was in Lisbon — don't even remember the hotel name, somewhere in Alfama — and I wandered into this tiny bar where a woman was singing fado. Spent the whole night there. That's what I remember, not the room.'",
     "anti-stay": "Over-programmed experiences. 'A resort where every hour was scheduled. Yoga at 7, breakfast buffet 7:30-9, pool opens at 10. I felt like I was in school. I checked out early and walked to the next town.'",
-    "go-back-place": "Not a specific place but a type of moment. 'Anywhere I've gotten lost and found something I wasn't looking for. That could be Oaxaca, Tbilisi, Porto — the city matters less than the feeling of not knowing what's next.'",
-    "cultural-engagement": "Entirely unstructured. Wanders, follows noise, says yes to invitations from strangers. 'I don't research. I just walk. The city tells you where to go if you listen.'",
+    "adaptive-conversation": "Resists specificity, answers in feelings not facts. If food: 'I don't plan meals. I follow my nose. The best things I've eaten were accidents — a grandma making soup in an alley in Hanoi, a cheese shop I stumbled into in Lyon.' If design: 'I don't care what a room looks like. I care what the street outside sounds like at midnight.'",
+    "details-matter": "Notices atmosphere and energy more than specifics. 'I pay attention to how a neighborhood feels at different hours. Where do people sit in the evening? When do the shops close? Which street gets the morning light? That's how I navigate.'",
     "emotional-core": "Travels to feel alive through uncertainty. Routine is the enemy. FREEDOM_SEEKER."
   }
 }

@@ -105,14 +105,27 @@
       "5": "a",
       "6": "b",
       "7": "a"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 70,
+      "formality": 75,
+      "anticipation": 40,
+      "programming": 65
+    },
+    "sustainabilityScale": 20
+  },
+
+  "microSignals": {
+    "visual": ["Photogenic-spaces", "Golden-hour-chaser", "Iconic-backdrop"],
+    "curation": ["Curated-vibe", "Statement-pool", "Design-forward"],
+    "shareability": ["Instagram-ready", "Social-moment", "Trending-destination"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Describes places in visual terms — 'the light', 'the colors', 'the pool overlooking the ocean'. Names trendy properties (Amangiri, Cavo Tagoo, Aman Tokyo) but describes them in terms of the experience of being seen there, not the craftsmanship. 'The bathtub had this view and I just sat there for an hour taking photos.'",
     "anti-stay": "A place that was ugly or generic. 'The room looked like every other Hilton. The lobby had carpet. There was nothing to photograph. I wanted to leave immediately.'",
-    "go-back-place": "Santorini, Bali, or Amalfi Coast — classic visual destinations. Describes the setting and light, not the people or culture.",
-    "cultural-engagement": "Picks experiences that are photogenic — lantern festivals, colorful markets, scenic hikes. Doesn't seek depth. 'I love finding those hidden spots that look incredible but aren't overrun yet.'",
+    "adaptive-conversation": "Santorini, Bali, or Amalfi Coast — classic visual destinations. Describes the setting and light, not the people or culture.",
+    "details-matter": "Picks experiences that are photogenic — lantern festivals, colorful markets, scenic hikes. Doesn't seek depth. 'I love finding those hidden spots that look incredible but aren't overrun yet.'",
     "emotional-core": "Travels to create a visual diary of their life. Beauty as meaning. VISUAL_CURATOR."
   }
 }

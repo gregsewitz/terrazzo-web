@@ -95,14 +95,28 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 55,
+      "formality": 45,
+      "anticipation": 40,
+      "programming": 50
+    },
+    "sustainabilityScale": 15
+  },
+
+  "microSignals": {
+    "Service": ["Smooth-check-in", "Reliable-dining"],
+    "FoodDrink": ["Reliable-dining", "Good-breakfast"],
+    "Design": ["Contemporary-sleek"],
+    "Setting": ["Walkable-radius"]
   },
 
   "voiceAnswerGuidance": {
     "memorable-stays": "Short, generic answers. 'We stayed at the Four Seasons in Maui and it was great — beautiful pool, good food, the kids loved it.' No design language, no specific sensory details. Uses words like 'nice,' 'great,' 'beautiful' without specificity.",
     "anti-stay": "Complains about practical failures — bad wifi, rude staff, dirty room — not aesthetic failures. Wouldn't notice or care about design problems.",
-    "go-back-place": "Somewhere with reliable quality and good weather. Probably a well-known resort destination. Answer is 1-2 sentences.",
-    "cultural-engagement": "Does the standard tourist things — visits the famous sites, eats at Tripadvisor recommendations. No strong cultural curiosity.",
+    "adaptive-conversation": "Generic regardless of domain probed. If food: 'We like trying local restaurants but nothing too adventurous. The hotel restaurant is usually fine.' If design: 'I don't really notice design? As long as it's clean and modern, I'm happy.'",
+    "details-matter": "Doesn't notice details. 'I couldn't tell you what the bathroom looked like. I remember the pool was nice and the wifi worked. That's about it.'",
     "emotional-core": "Travels to relax and spend time with family. No deeper driver. If pressed, might say CONTROL_ARCHITECT (wants things to go smoothly)."
   }
 }

@@ -106,14 +106,28 @@
       "5": "b",
       "6": "a",
       "7": "b"
-    }
+    },
+    "sliderPositions": {
+      "visibility": 15,
+      "formality": 30,
+      "anticipation": 10,
+      "programming": 35
+    },
+    "sustainabilityScale": 60
+  },
+
+  "microSignals": {
+    "Design": ["Material-connoisseur", "Restraint-as-luxury", "Wabi-sabi", "Natural-materials"],
+    "Service": ["Anticipatory-invisible", "Detail-remembered", "Privacy-first"],
+    "Atmosphere": ["Hushed-refinement", "Contemplative-space"],
+    "Setting": ["Remote-beauty", "Nature-immersion"]
   },
 
   "voiceAnswerGuidance": {
-    "memorable-stays": "Short, precise, authoritative. 'Aman Tokyo. Benesse House in Naoshima. La Colombe d'Or.' Doesn't explain why — expects you to understand. If pressed: 'Everything was considered. Nothing was wasted. You could feel the intention in every surface.'",
+    "memorable-stays": "Short, precise, authoritative. 'Aman Tokyo. Benesse House in Naoshima. La Colombe d'Or.' Doesn't explain why — expects you to understand. If pressed: 'Everything was considered. Nothing was wasted. You could feel the intention in every surface.' Mentions a small hotel in the Iya Valley, Shikoku — run by an architect, eight rooms, extraordinary use of cypress.",
     "anti-stay": "One word could suffice. 'Vegas.' If pressed: 'Anything that confuses volume with quality. Gold taps. Marble lobbies. A concierge who calls you by name too eagerly.'",
-    "go-back-place": "Somewhere specific and unexpected. 'A small hotel in the Iya Valley, Shikoku. Run by an architect. Eight rooms. The most extraordinary use of cypress I've ever seen.'",
-    "cultural-engagement": "Quiet, private, connoisseurial. Gallery visits arranged by the owner. A private tea ceremony. 'I don't want the tourist version of anything.'",
+    "adaptive-conversation": "Responds precisely to whatever gap-fill domain is probed. If food: 'I want a kitchen that has a point of view, not a greatest-hits menu.' If character: 'I don't want the tourist version of anything. Gallery visits arranged by the owner. A private tea ceremony.'",
+    "details-matter": "Obsessive about materials and light. 'The sheets — not thread count, more like have they been washed a hundred times. And the light — I notice the quality of light before anything else. First thing I do? Open the curtains.'",
     "emotional-core": "Travels to encounter quality. Not escape, not adventure — refinement. 'I want to be in a space where someone has thought deeply about every decision.' CONNOISSEUR."
   }
 }
