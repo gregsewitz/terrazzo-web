@@ -10,7 +10,7 @@
 import type { DaySuggestionContext, SuggestionItem, DayWeather } from '@/types';
 import type { TasteProfile } from '@/types';
 import { TERRAZZO_VOICE } from '@/types';
-import { getTopAxes } from '@/lib/taste-match';
+import { getTopAxes } from '@/lib/taste-match-v3';
 
 // ─── Prompt templates ─────────────────────────────────────────────────────────
 

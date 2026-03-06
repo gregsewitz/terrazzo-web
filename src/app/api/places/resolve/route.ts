@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
-import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match';
+import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
 import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
 import type { User, Prisma } from '@prisma/client';

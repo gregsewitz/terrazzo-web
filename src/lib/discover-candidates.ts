@@ -6,8 +6,8 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { computeMatchFromSignals } from '@/lib/taste-match';
-import type { MatchOptions } from '@/lib/taste-match';
+import { computeMatchFromSignals, normalizeScoresForDisplay } from '@/lib/taste-match-v3';
+import type { MatchOptions } from '@/lib/taste-match-v3';
 import {
   findSimilarProperties,
   sqlToVector,
@@ -51,11 +51,15 @@ export interface ScoredCandidate extends CandidateProperty {
   sustainabilityScore?: number;
 }
 
-/** Extended scoring context for v2 matching */
+/** Extended scoring context for v3.2 matching */
 export interface ScoringContext {
   sustainabilityProfile?: SustainabilityProfile;
   propertySustainabilitySignals?: Map<string, SustainabilitySignal[]>;
   applyDecay?: boolean;
+  /** v3.2: Signal count per domain — used for signal-density weighted profile enhancement */
+  userSignalDistribution?: Record<string, number>;
+  /** v3.2: Keywords from user's rejection signals — triggers anti-keyword penalty */
+  userRejectionKeywords?: string[];
 }
 
 // ─── In-memory cache (upgrade to Upstash Redis when traffic justifies it) ───
@@ -126,8 +130,10 @@ export function scoreCandidate(
   userContradictions: TasteContradiction[],
   scoringContext?: ScoringContext,
 ): ScoredCandidate {
-  // Build match options from scoring context
-  const matchOptions: MatchOptions = {};
+  // Build match options from scoring context (v3.2)
+  const matchOptions: MatchOptions = {
+    userMicroSignals,
+  };
   if (scoringContext?.applyDecay !== undefined) {
     matchOptions.applyDecay = scoringContext.applyDecay;
   }
@@ -136,8 +142,14 @@ export function scoreCandidate(
     matchOptions.propertySustainabilitySignals =
       scoringContext.propertySustainabilitySignals?.get(candidate.googlePlaceId);
   }
+  if (scoringContext?.userSignalDistribution) {
+    matchOptions.userSignalDistribution = scoringContext.userSignalDistribution;
+  }
+  if (scoringContext?.userRejectionKeywords) {
+    matchOptions.userRejectionKeywords = scoringContext.userRejectionKeywords;
+  }
 
-  // Core match scoring (reuse existing logic, now with v2 options)
+  // Core match scoring (v3.2: signal-density weighted profiles, w² alignment)
   const match = computeMatchFromSignals(
     candidate.signals,
     candidate.antiSignals,
@@ -170,6 +182,7 @@ export function scoreCandidate(
 
 /**
  * Score all candidates against a user profile. Returns sorted by overallScore descending.
+ * v3.2: Applies per-user percentile normalization so top match → ~93, bottom → ~35.
  */
 export function scoreAllCandidates(
   candidates: CandidateProperty[],
@@ -178,9 +191,12 @@ export function scoreAllCandidates(
   userContradictions: TasteContradiction[],
   scoringContext?: ScoringContext,
 ): ScoredCandidate[] {
-  return candidates
-    .map((c) => scoreCandidate(c, userProfile, userMicroSignals, userContradictions, scoringContext))
-    .sort((a, b) => b.overallScore - a.overallScore);
+  const raw = candidates
+    .map((c) => scoreCandidate(c, userProfile, userMicroSignals, userContradictions, scoringContext));
+
+  // v3.2: Curve raw scores into user-friendly display range
+  const normalized = normalizeScoresForDisplay(raw);
+  return normalized.sort((a, b) => b.overallScore - a.overallScore);
 }
 
 // ─── Vector-Enhanced Scoring ─────────────────────────────────────────────────
@@ -201,6 +217,7 @@ export async function scoreWithVectors(
   userProfile: TasteProfile,
   userMicroSignals: Record<string, string[]>,
   userContradictions: TasteContradiction[],
+  scoringContext?: ScoringContext,
 ): Promise<{ results: ScoredCandidate[]; vectorEnabled: boolean }> {
   // Check if this user has a taste vector
   // Note: tasteVector uses Prisma's Unsupported("vector(32)") type, so we must
@@ -213,7 +230,7 @@ export async function scoreWithVectors(
   if (!tasteVectorRaw) {
     // No vector — fall back to signal-based scoring
     console.log('[discover] No taste vector for user, using signal-only scoring');
-    const results = scoreAllCandidates(candidates, userProfile, userMicroSignals, userContradictions);
+    const results = scoreAllCandidates(candidates, userProfile, userMicroSignals, userContradictions, scoringContext);
     return { results, vectorEnabled: false };
   }
 
@@ -229,8 +246,8 @@ export async function scoreWithVectors(
   }
 
   // Score all candidates with signal-based approach + blend in vector scores
-  const scored = candidates.map((c) => {
-    const signalScored = scoreCandidate(c, userProfile, userMicroSignals, userContradictions);
+  const rawScored = candidates.map((c) => {
+    const signalScored = scoreCandidate(c, userProfile, userMicroSignals, userContradictions, scoringContext);
     const vectorScore = vectorScoreMap.get(c.googlePlaceId);
 
     if (vectorScore !== undefined) {
@@ -251,6 +268,8 @@ export async function scoreWithVectors(
     };
   });
 
+  // v3.2: Curve raw scores into user-friendly display range
+  const scored = normalizeScoresForDisplay(rawScored);
   scored.sort((a, b) => b.overallScore - a.overallScore);
 
   console.log(

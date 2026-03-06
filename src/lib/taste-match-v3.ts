@@ -1,26 +1,25 @@
 /**
- * Taste Match v3 — Improved signal-based scoring with better discrimination.
+ * Taste Match v3.2 — Signal-density weighted profiles for real cross-archetype discrimination.
  *
- * Addresses the score compression problem in v2 where 64% of properties
- * scored 80-84 due to double-averaging and high neutral floors.
+ * v3.1 introduced profile alignment but synthetic testing with 5 archetypes
+ * revealed it couldn't differentiate because LLM-generated radar profiles are
+ * nearly flat (cosine similarity 0.95-0.99 between all pairs). Character=1.0
+ * for ALL archetypes, Service=0.95-1.0 for all. The alignment transform
+ * `0.30 + 0.70 * w` barely differentiates when most weights are 0.8-1.0.
  *
- * Key changes from v2:
- * 1. Logarithmic density curve instead of linear cap — rewards signal richness
- *    without hard ceiling at 20 signals
- * 2. No neutral floor for empty domains — missing data is penalized, not rewarded
- * 3. Geometric mean for overall score instead of weighted arithmetic mean —
- *    a weakness in any important domain drags the score down meaningfully
- * 4. Top-domain bonus: exceptional alignment in the user's #1 domain lifts the score
- * 5. Anti-signal penalties are proportional to domain importance
- * 6. Keyword resonance bonus: direct overlap between user micro-signals and
- *    property signals adds points on top (the "aha, this is for me" factor)
- *
- * Tested against 360 enriched properties:
- *   v2: mean=80.3, σ=6.2, 64.4% compressed in 80-84 band
- *   v3: mean=70.3, σ=6.3, only 3.3% in 80-84 band, full range 27-82
- *
- * Blended with vectors (60% vec + 40% signal), the v3 top-15 includes
- * a healthy mix of design-forward, experiential, and cultural properties.
+ * v3.2 changes:
+ * 1. Signal-density weighted profile enhancement (new Step 0): When user's
+ *    allSignals distribution is provided, modulate flat radar weights:
+ *    enhancedWeight = radarWeight × (0.3 + 0.7 × signalShare)
+ *    This drops inter-archetype cosine similarity from 0.95-0.99 to 0.77-0.98.
+ * 2. Sharper alignment transform: w² instead of 0.30+0.70*w. With enhanced
+ *    weights ranging 0.3-1.0, w² gives 0.09-1.0 (11x range vs 3x before).
+ * 3. Sharper geometric mean: w^2.0 instead of w^1.5 for stronger top-domain focus.
+ * 4. Increased keyword resonance: cap raised from 8 to 15 points.
+ * 5. Anti-keyword penalty (new Step 4.5): User rejection keywords matched against
+ *    property signal text. Budget backpacker's "anti-luxury" hits luxury properties.
+ * 6. All v3.1 foundations retained: confidence-dominant domain scoring, evidence
+ *    multiplier, reduced missing-domain weight, top-domain bonus, anti-signal penalty.
  */
 
 import { TasteDomain, TasteProfile, DIMENSION_TO_DOMAIN, ALL_TASTE_DOMAINS } from '@/types';
@@ -54,6 +53,18 @@ export interface MatchOptions {
   applySourceCredibility?: boolean;
   /** User's micro-taste signals — enables keyword resonance bonus */
   userMicroSignals?: Record<string, string[]>;
+  /**
+   * v3.2: Signal count per domain from user's allSignals.
+   * Used to modulate flat radar weights with actual signal density,
+   * creating much sharper cross-archetype differentiation.
+   * Keys should be TasteDomain values, values are signal counts.
+   */
+  userSignalDistribution?: Record<string, number>;
+  /**
+   * v3.2: Keywords extracted from user's rejection signals (cat === 'Rejection').
+   * Matched against property signal text to create anti-keyword penalty.
+   */
+  userRejectionKeywords?: string[];
 }
 
 interface MatchResult {
@@ -62,12 +73,17 @@ interface MatchResult {
   topDimension: TasteDomain;
   /** Debug: individual scoring components */
   _debug?: {
+    rawDomainScores: Record<string, number>;
+    enhancedWeights?: Record<string, number>;
+    alignedDomainScores: Record<string, number>;
     geometricBase: number;
     topDomainBonus: number;
     resonanceBonus: number;
+    antiKeywordPenalty: number;
     antiSignalPenalty: number;
     sustainabilityBonus: number;
-    coveragePenalty: number;
+    /** Raw combined score before rescaling to user-facing range */
+    rawCombined: number;
   };
 }
 
@@ -88,13 +104,16 @@ const SOURCE_CREDIBILITY: Record<string, number> = {
  * Compute taste match score from signals + user profile.
  *
  * Scoring pipeline:
- *   1. Per-domain raw scores (confidence × density curve)
- *   2. Weighted geometric mean across domains
- *   3. Top-domain bonus (if user's #1 domain scores exceptionally)
- *   4. Keyword resonance bonus (micro-signal overlap)
- *   5. Anti-signal penalty (proportional to domain importance)
- *   6. Coverage penalty (many empty domains = unreliable match)
- *   7. Sustainability bonus (unchanged from v2)
+ *   0.  Profile enhancement (signal-density weighted radar weights)
+ *   1.  Per-domain raw scores (confidence × evidence multiplier)
+ *   1.5 Profile alignment transform (w² of enhanced weights)
+ *   2.  Weighted geometric mean (w^2.0, reduced missing-domain weight)
+ *   3.  Top-domain bonus (if user's #1 domain scores exceptionally)
+ *   4.  Keyword resonance bonus (micro-signal overlap, cap 15)
+ *   4.5 Anti-keyword penalty (rejection keyword matches)
+ *   5.  Anti-signal penalty (proportional to domain importance)
+ *   6.  (removed in v3.1 — coverage handled by geometric mean)
+ *   7.  Sustainability bonus (unchanged from v2)
  */
 export function computeMatchFromSignals(
   signals: Signal[],
@@ -107,7 +126,36 @@ export function computeMatchFromSignals(
     decayReferenceTime = new Date(),
     applySourceCredibility = true,
     userMicroSignals,
+    userSignalDistribution,
+    userRejectionKeywords,
   } = options;
+
+  // ── Step 0: Profile enhancement (v3.2) ─────────────────────────────────
+  //
+  // LLM-generated radar profiles are nearly flat (cosine sim 0.95-0.99).
+  // When userSignalDistribution is provided, we modulate radar weights by
+  // actual signal density: enhancedWeight = radar × (0.3 + 0.7 × signalShare).
+  // This uses the user's actual conversation emphasis to differentiate profiles.
+
+  let enhancedProfile: Record<string, number> = {};
+  const debugEnhancedWeights: Record<string, number> = {};
+
+  if (userSignalDistribution) {
+    const maxSignalCount = Math.max(...Object.values(userSignalDistribution), 1);
+    for (const domain of ALL_DOMAINS) {
+      const radarWeight = userProfile[domain] || 0;
+      const signalCount = userSignalDistribution[domain] || 0;
+      const signalShare = signalCount / maxSignalCount;
+      const enhanced = radarWeight * (0.3 + 0.7 * signalShare);
+      enhancedProfile[domain] = enhanced;
+      debugEnhancedWeights[domain] = Math.round(enhanced * 100) / 100;
+    }
+  } else {
+    // Fallback: use raw radar weights (v3.1 behavior)
+    for (const domain of ALL_DOMAINS) {
+      enhancedProfile[domain] = userProfile[domain] || 0;
+    }
+  }
 
   // ── Step 1: Per-domain raw scoring ──────────────────────────────────────
 
@@ -153,32 +201,59 @@ export function computeMatchFromSignals(
       effectiveConfidences.reduce((sum, c) => sum + c * c, 0) / effectiveConfidences.length
     );
 
-    // Logarithmic density: rewards signal richness without hard cap.
-    // log₂(1) = 0, log₂(5) ≈ 2.3, log₂(20) ≈ 4.3, log₂(50) ≈ 5.6
-    // Normalized so 20 signals ≈ 0.75, 50 signals ≈ 0.97
-    const density = Math.min(Math.log2(domainSignals.length + 1) / Math.log2(60), 1.0);
+    // v3.1: Density as evidence multiplier, not score component.
+    // Saturates at 20 signals (vs 60 in v3.0). After 20 signals per domain,
+    // more data doesn't meaningfully increase our confidence in the assessment.
+    // At 5 signals: 0.60, 10: 0.80, 20: 1.0, 40+: 1.0
+    const density = Math.min(Math.log2(domainSignals.length + 1) / Math.log2(20), 1.0);
 
-    // Domain score: confidence matters more for sparse data, density matters more for rich data.
-    // Dynamic weighting: as density grows, we trust confidence more (more data = better estimate).
-    const confWeight = 0.5 + density * 0.2; // ranges 0.5 → 0.7
-    const densWeight = 1 - confWeight;       // ranges 0.5 → 0.3
-
-    const rawScore = rmsConfidence * confWeight + density * densWeight;
+    // v3.1: Confidence dominates (85%), density provides a small evidence multiplier (15%).
+    // Previously density could contribute ~50% of the domain score, causing signal-rich
+    // properties to outscore signal-sparse ones by 20+ points regardless of quality.
+    // Now: 5 signals at 0.90 conf ≈ 40 signals at 0.80 conf. Quality over quantity.
+    const rawScore = rmsConfidence * (0.85 + density * 0.15);
     breakdown[domain] = Math.round(rawScore * 100);
   }
 
-  // ── Step 2: Weighted geometric mean ─────────────────────────────────────
+  // ── Step 1.5: Profile alignment transform (v3.2: w² of enhanced weights) ─
   //
-  // Why geometric instead of arithmetic? With arithmetic mean, a property that
-  // scores 90/90/90/50/50/50 across 6 domains gets the same score as one that
-  // scores 70/70/70/70/70/70. Geometric mean rewards consistent strength and
-  // penalizes gaps — which is what we want for taste matching.
+  // v3.2: Use enhanced weights (signal-density modulated) squared.
+  // With enhanced weights ranging 0.3-1.0, w² gives 0.09-1.0 (11x range).
+  // Previously with flat radar weights 0.8-1.0, alignment was 0.86-1.0 (1.2x).
   //
-  // We only include domains that have data AND that the user cares about (weight > 0.2).
+  // Example: budget-backpacker enhanced weights:
+  //   Character=1.00 → alignment 1.00, Setting=0.44 → alignment 0.19
+  //   A property scoring 80 in both: Char stays 80, Setting drops to 15.
+
+  const rawDomainScores: Record<string, number> = {};
+  for (const domain of ALL_DOMAINS) {
+    rawDomainScores[domain] = breakdown[domain];
+  }
+
+  for (const domain of ALL_DOMAINS) {
+    if (breakdown[domain] > 0) {
+      const w = enhancedProfile[domain] || 0;
+      // w² alignment: 1.0→1.0, 0.7→0.49, 0.5→0.25, 0.3→0.09
+      const alignmentFactor = w * w;
+      breakdown[domain] = Math.round(breakdown[domain] * Math.max(alignmentFactor, 0.05));
+    }
+  }
+
+  const alignedDomainScores: Record<string, number> = {};
+  for (const domain of ALL_DOMAINS) {
+    alignedDomainScores[domain] = breakdown[domain];
+  }
+
+  // ── Step 2: Weighted geometric mean (v3.2: enhanced weights, w^2.0) ─────
+  //
+  // v3.2: Uses enhanced weights (signal-density modulated) with w^2.0 exponent.
+  // With enhanced weights 0.3-1.0: w^2.0 gives 0.09-1.0 (11x range).
+  // Previously with flat radar weights 0.8-1.0 and w^1.5: 0.72-1.0 (1.4x).
+  // Missing domains still use 10% weight factor.
 
   const userDomainPriority = ALL_DOMAINS
-    .map((d) => ({ domain: d, weight: userProfile[d] || 0 }))
-    .filter((d) => d.weight > 0.15) // ignore domains user barely cares about
+    .map((d) => ({ domain: d, weight: enhancedProfile[d] || 0 }))
+    .filter((d) => d.weight > 0.10) // lower threshold since enhanced weights can be small
     .sort((a, b) => b.weight - a.weight);
 
   let logSum = 0;
@@ -186,15 +261,20 @@ export function computeMatchFromSignals(
 
   for (const { domain, weight } of userDomainPriority) {
     const score = breakdown[domain];
+    // v3.2: w^2.0 for much sharper top-domain focus with enhanced weights
+    const sharpWeight = Math.pow(weight, 2.0);
+
     if (score <= 0) {
-      // No signal data for a domain the user cares about.
-      // Use a floor of 30 (weak but not zero — avoids log(0)).
-      // This penalizes missing data proportional to how much the user cares.
-      logSum += weight * Math.log(30);
+      // No signal data — use 10% of the sharpened weight with a neutral floor.
+      // This barely affects the geometric mean, so missing domains don't
+      // crush specialized properties that are strong where it matters.
+      const reducedWeight = sharpWeight * 0.1;
+      logSum += reducedWeight * Math.log(40);
+      weightSum += reducedWeight;
     } else {
-      logSum += weight * Math.log(score);
+      logSum += sharpWeight * Math.log(score);
+      weightSum += sharpWeight;
     }
-    weightSum += weight;
   }
 
   const geometricBase = weightSum > 0
@@ -203,23 +283,23 @@ export function computeMatchFromSignals(
 
   // ── Step 3: Top-domain bonus ────────────────────────────────────────────
   //
-  // If the user's highest-priority domain has an exceptional score (>85),
-  // add a bonus. This captures the "this place is PERFECT for what I care
-  // about most" feeling.
+  // If the user's highest-priority domain has an exceptional aligned score (>60),
+  // add a bonus. Threshold lowered from 85 because w² alignment compresses scores.
 
   const topUserDomain = userDomainPriority[0];
   let topDomainBonus = 0;
   if (topUserDomain) {
     const topScore = breakdown[topUserDomain.domain];
-    if (topScore > 85) {
-      topDomainBonus = Math.round((topScore - 85) * 0.3 * topUserDomain.weight);
+    if (topScore > 60) {
+      topDomainBonus = Math.round((topScore - 60) * 0.25 * topUserDomain.weight);
     }
   }
 
   // ── Step 4: Keyword resonance bonus ─────────────────────────────────────
   //
   // Direct keyword overlap between user micro-signals and property signals.
-  // This is the "I see myself in this place" factor. Limited to 8 points max.
+  // v3.2: Cap raised from 8 to 15 — with sharper alignment compressing the
+  // geometric base, resonance needs more headroom to differentiate.
 
   let resonanceBonus = 0;
   if (userMicroSignals) {
@@ -244,8 +324,41 @@ export function computeMatchFromSignals(
     }
 
     // Diminishing returns: first matches worth more than later ones
-    // 1 match = 2pts, 3 matches = 5pts, 6 matches = 7pts, 10+ = 8pts
-    resonanceBonus = Math.min(Math.round(Math.log2(matchCount + 1) * 2.5), 8);
+    // v3.2: 1 match = 3pts, 3 matches = 6pts, 6 matches = 10pts, 10+ = 15pts
+    resonanceBonus = Math.min(Math.round(Math.log2(matchCount + 1) * 4.5), 15);
+  }
+
+  // ── Step 4.5: Anti-keyword penalty (v3.2) ───────────────────────────────
+  //
+  // Match user's rejection keywords against property signal text.
+  // A budget backpacker with rejection tags like "anti-luxury-amenities" or
+  // "anti-pretentious-service" gets penalized when property signals contain
+  // those keywords (e.g., "luxury", "premium", "butler service").
+  // Max 12 points penalty.
+
+  let antiKeywordPenalty = 0;
+  if (userRejectionKeywords && userRejectionKeywords.length > 0 && signals.length > 0) {
+    const rejectionWords = new Set<string>();
+    for (const keyword of userRejectionKeywords) {
+      // Split compound keywords like "anti-luxury-amenities" into searchable parts
+      for (const part of keyword.toLowerCase().replace(/^anti-/, '').split(/[-_\s]+/)) {
+        if (part.length > 3) rejectionWords.add(part);
+      }
+    }
+
+    let matchCount = 0;
+    const matchedWords = new Set<string>();
+    for (const sig of signals) {
+      for (const word of sig.signal.toLowerCase().split(/[\s-_]+/)) {
+        if (rejectionWords.has(word) && !matchedWords.has(word)) {
+          matchedWords.add(word);
+          matchCount++;
+        }
+      }
+    }
+
+    // Diminishing returns: 1 match = 3pts, 3 = 6pts, 5+ = 10pts, 8+ = 12pts
+    antiKeywordPenalty = Math.min(Math.round(Math.log2(matchCount + 1) * 3.5), 12);
   }
 
   // ── Step 5: Ratio-based anti-signal penalty ─────────────────────────────
@@ -262,7 +375,7 @@ export function computeMatchFromSignals(
     for (const anti of antiSignals) {
       const domain = DIMENSION_TO_DOMAIN[anti.dimension];
       if (domain) {
-        const domainWeight = userProfile[domain] || 0.5;
+        const domainWeight = enhancedProfile[domain] || 0.5;
         antiWeightedSum += anti.confidence * domainWeight;
 
         // Still reduce domain breakdown for interpretability
@@ -280,20 +393,11 @@ export function computeMatchFromSignals(
 
   // ── Step 6: Coverage penalty ────────────────────────────────────────────
   //
-  // If a property has signal data in only 2 of 6 domains the user cares about,
-  // we're less confident in the match. Small penalty for low coverage.
-
-  const importantDomains = userDomainPriority.filter((d) => d.weight > 0.3).length;
-  const coveredImportant = userDomainPriority
-    .filter((d) => d.weight > 0.3 && breakdown[d.domain] > 0).length;
-
-  let coveragePenalty = 0;
-  if (importantDomains > 0) {
-    const coverageRatio = coveredImportant / importantDomains;
-    if (coverageRatio < 0.5) {
-      coveragePenalty = Math.round((0.5 - coverageRatio) * 20); // max 10 points
-    }
-  }
+  // v3.1: Removed the explicit coverage penalty. Missing domains are now
+  // handled by the geometric mean with 10% weight factor, which provides
+  // a natural, proportional penalty without crushing specialized properties.
+  // A property covering 3 of 6 important domains gets a mild implicit drag
+  // from the reduced-weight missing domains, but isn't hard-penalized.
 
   // ── Step 7: Sustainability bonus (unchanged from v2) ────────────────────
 
@@ -307,14 +411,17 @@ export function computeMatchFromSignals(
 
   // ── Combine ─────────────────────────────────────────────────────────────
 
-  const overallScore = Math.max(0, Math.min(100, Math.round(
-    geometricBase
+  const rawCombined = geometricBase
     + topDomainBonus
     + resonanceBonus
+    - antiKeywordPenalty
     - antiSignalPenalty
-    - coveragePenalty
-    + sustainabilityBonus
-  )));
+    + sustainabilityBonus;
+
+  // NOTE: Raw score is returned directly. Call `normalizeScoresForDisplay()`
+  // on the full batch of scores to curve them into a user-friendly range
+  // where the top match lands at ~93 and the distribution feels intuitive.
+  const overallScore = Math.max(0, Math.min(100, Math.round(rawCombined)));
 
   const topDimension = ALL_DOMAINS.reduce((best, d) =>
     breakdown[d] > breakdown[best] ? d : best
@@ -325,14 +432,103 @@ export function computeMatchFromSignals(
     breakdown: breakdown as Record<TasteDomain, number>,
     topDimension,
     _debug: {
+      rawDomainScores,
+      enhancedWeights: Object.keys(debugEnhancedWeights).length > 0 ? debugEnhancedWeights : undefined,
+      alignedDomainScores,
       geometricBase: Math.round(geometricBase),
       topDomainBonus,
       resonanceBonus,
+      antiKeywordPenalty,
       antiSignalPenalty: Math.round(antiSignalPenalty),
       sustainabilityBonus,
-      coveragePenalty,
+      rawCombined: Math.round(rawCombined),
     },
   };
+}
+
+// ─── Per-user score normalization (v3.2) ─────────────────────────────────────
+
+/**
+ * Curve raw v3.2 scores into a user-friendly display range.
+ *
+ * The w² alignment produces raw scores in a compressed ~25-50 range. Users
+ * expect their top match out of hundreds of properties to show ~90+, with a
+ * natural spread down from there. This function maps each user's raw score
+ * distribution into a display range using percentile-based curving:
+ *
+ *   - The #1 match maps to `ceiling` (default 93)
+ *   - The lowest match maps to `floor` (default 35)
+ *   - Scores in between are placed by their percentile position using a
+ *     power curve (exponent 0.7) that stretches the top end — most of the
+ *     display range goes to the top quartile where users actually browse.
+ *
+ * Call this after scoring all properties for a single user.
+ *
+ * @param scores Array of {id, rawScore} (or any object with overallScore)
+ * @param ceiling Display score for the top match (default 93)
+ * @param floor Display score for the worst match (default 35)
+ * @returns Same array with overallScore replaced by curved display scores
+ */
+export function normalizeScoresForDisplay<T extends { overallScore: number }>(
+  scores: T[],
+  ceiling = 93,
+  floor = 35,
+): T[] {
+  if (scores.length === 0) return scores;
+  if (scores.length === 1) {
+    return [{ ...scores[0], overallScore: ceiling }];
+  }
+
+  // Sort descending to find min/max
+  const rawScores = scores.map(s => s.overallScore);
+  const maxRaw = Math.max(...rawScores);
+  const minRaw = Math.min(...rawScores);
+  const rawRange = maxRaw - minRaw;
+
+  if (rawRange === 0) {
+    // All scores identical — put them at the ceiling
+    return scores.map(s => ({ ...s, overallScore: ceiling }));
+  }
+
+  const displayRange = ceiling - floor;
+
+  return scores.map(s => {
+    // Percentile position: 0 (worst) to 1 (best)
+    const pct = (s.overallScore - minRaw) / rawRange;
+
+    // Power curve with exponent < 1 stretches the top end.
+    // pct=1.0 → 1.0, pct=0.5 → 0.62, pct=0.25 → 0.47, pct=0.0 → 0.0
+    // This means the top half of raw scores gets ~62% of the display range.
+    const curved = Math.pow(pct, 0.7);
+
+    const displayScore = Math.round(floor + curved * displayRange);
+
+    return {
+      ...s,
+      overallScore: Math.max(floor, Math.min(ceiling, displayScore)),
+    };
+  });
+}
+
+// ─── Utility exports ─────────────────────────────────────────────────────────
+
+/** Default taste profile for users without a computed profile */
+export const DEFAULT_USER_PROFILE: TasteProfile = {
+  Design: 0.85,
+  Atmosphere: 0.75,
+  Character: 0.8,
+  Service: 0.6,
+  FoodDrink: 0.75,
+  Setting: 0.7,
+  Wellness: 0.4,
+  Sustainability: 0.3,
+};
+
+/** Get the top N taste domains sorted by weight */
+export function getTopAxes(profile: TasteProfile, count: number = 3): TasteDomain[] {
+  return [...ALL_DOMAINS]
+    .sort((a, b) => profile[b] - profile[a])
+    .slice(0, count);
 }
 
 // ─── Sustainability (unchanged from v2) ─────────────────────────────────────

@@ -14,7 +14,17 @@ import type {
   OnboardingLifeContext,
 } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
-import { DEFAULT_USER_PROFILE } from '@/lib/taste-match';
+// v3.2: Default user profile for when radarData is missing
+const DEFAULT_USER_PROFILE: TasteProfile = {
+  Design: 0.85,
+  Atmosphere: 0.75,
+  Character: 0.8,
+  Service: 0.6,
+  FoodDrink: 0.75,
+  Setting: 0.7,
+  Wellness: 0.4,
+  Sustainability: 0.3,
+};
 
 // RAG-grounded discover modules
 import {
@@ -351,7 +361,29 @@ async function generateGroundedFeed(
     }
   }
 
+  // v3.2: Derive signal distribution from microTasteSignals (count per domain)
+  const userSignalDistribution: Record<string, number> = {};
+  for (const [domain, signals] of Object.entries(userMicroSignals)) {
+    if (validDomains.has(domain) && Array.isArray(signals)) {
+      userSignalDistribution[domain] = signals.length;
+    }
+  }
+
+  // v3.2: Extract rejection keywords from contradictions (stated preferences)
+  // In production, explicit rejection keywords come from the contradictions' "stated" side
+  // and any microTasteSignals key containing "rejection" or "anti" patterns
+  const userRejectionKeywords: string[] = [];
+  for (const c of userContradictions) {
+    if (c.stated) userRejectionKeywords.push(c.stated);
+  }
+
   // 3. Score all candidates — use vector-enhanced scoring when available
+  const scoringContext = {
+    applyDecay: true,
+    userSignalDistribution,
+    userRejectionKeywords: userRejectionKeywords.length > 0 ? userRejectionKeywords : undefined,
+  };
+
   let scored;
   if (userId) {
     const { results, vectorEnabled } = await scoreWithVectors(
@@ -360,6 +392,7 @@ async function generateGroundedFeed(
       userTasteProfile,
       userMicroSignals,
       userContradictions,
+      scoringContext,
     );
     scored = results;
     if (vectorEnabled) {
@@ -371,6 +404,7 @@ async function generateGroundedFeed(
       userTasteProfile,
       userMicroSignals,
       userContradictions,
+      scoringContext,
     );
   }
 

@@ -9,7 +9,7 @@
 
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { computeMatchFromSignals } from '@/lib/taste-match';
+import { computeMatchFromSignals } from '@/lib/taste-match-v3';
 import { findSimilarProperties } from '@/lib/taste-intelligence/queries';
 import { findSimilarPropertiesV3 } from '@/lib/taste-intelligence/queries-v3';
 import { sqlToVector } from '@/lib/taste-intelligence/vectors';

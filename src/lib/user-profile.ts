@@ -4,7 +4,7 @@
  */
 import { NextRequest } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
-import { DEFAULT_USER_PROFILE } from '@/lib/taste-match';
+import { DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
 import type { TasteProfile, TasteDomain } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
 

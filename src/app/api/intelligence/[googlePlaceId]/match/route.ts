@@ -10,7 +10,7 @@
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { computeMatchFromSignals } from '@/lib/taste-match';
+import { computeMatchFromSignals } from '@/lib/taste-match-v3';
 
 export async function POST(
   req: Request,

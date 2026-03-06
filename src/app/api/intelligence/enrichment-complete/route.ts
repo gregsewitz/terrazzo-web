@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { backfillPropertyEmbedding } from '@/lib/taste-intelligence/backfill';
-import { computeMatchFromSignals } from '@/lib/taste-match';
+import { computeMatchFromSignals } from '@/lib/taste-match-v3';
 import { completeTasteFields } from '@/lib/taste-completion';
 import type { TasteProfile } from '@/types';
 

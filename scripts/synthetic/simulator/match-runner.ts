@@ -9,7 +9,7 @@
  *   2. Fixture mode: Load from a local JSON fixture (for CI/offline testing)
  */
 
-import { computeMatchFromSignals } from '../../../src/lib/taste-match-v3';
+import { computeMatchFromSignals, normalizeScoresForDisplay } from '../../../src/lib/taste-match-v3';
 import type { MatchOptions } from '../../../src/lib/taste-match-v3';
 import type { TasteProfile, TasteDomain } from '../../../src/types';
 import type { SyntheticUserResult } from './orchestrator';
@@ -126,7 +126,8 @@ export async function loadPropertiesFromDb(supabaseUrl: string, supabaseKey: str
 
 /**
  * Score a synthetic user against all properties.
- * Uses taste-match-v3 with geometric mean, no neutral floor, and keyword resonance.
+ * Uses taste-match-v3.2 with signal-density weighted profiles, w² alignment,
+ * keyword resonance, and anti-keyword penalty.
  */
 export function scoreUserAgainstProperties(
   user: SyntheticUserResult,
@@ -143,14 +144,20 @@ export function scoreUserAgainstProperties(
   // Build TasteProfile from synthesized radarData or flat profile
   const userProfile = extractTasteProfile(profile);
 
-  // Build v3 match options with keyword resonance
+  // v3.2: Extract signal distribution per domain and rejection keywords
+  const userSignalDistribution = extractSignalDistribution(user);
+  const userRejectionKeywords = extractRejectionKeywords(user);
+
+  // Build v3.2 match options
   const matchOptions: MatchOptions = {
     applyDecay: false, // synthetic properties don't have real timestamps
     applySourceCredibility: true,
     userMicroSignals,
+    userSignalDistribution,
+    userRejectionKeywords,
   };
 
-  return properties.map(prop => {
+  const rawMatches = properties.map(prop => {
       const matchResult = computeMatchFromSignals(
         prop.signals ?? [],
         prop.antiSignals ?? [],
@@ -172,7 +179,11 @@ export function scoreUserAgainstProperties(
         topDimension: matchResult.topDimension,
         isStretchPick: stretch,
       };
-    }).sort((a, b) => b.overallScore - a.overallScore);
+    });
+
+  // v3.2: Curve raw scores into user-friendly display range (top → ~93, bottom → ~35)
+  const normalized = normalizeScoresForDisplay(rawMatches);
+  return normalized.sort((a, b) => b.overallScore - a.overallScore);
 }
 
 /**
@@ -243,6 +254,35 @@ function extractMicroSignals(user: SyntheticUserResult): Record<string, string[]
     byDomain[domain].push(sig.tag);
   }
   return byDomain;
+}
+
+/**
+ * v3.2: Extract signal count per TasteDomain from the user's allSignals.
+ * Excludes "Rejection" and "Core" categories which aren't taste domains.
+ * This is used to modulate flat radar weights with actual signal density.
+ */
+function extractSignalDistribution(user: SyntheticUserResult): Record<string, number> {
+  const counts: Record<string, number> = {};
+  const excludedCats = new Set(['Rejection', 'Core']);
+
+  for (const sig of user.allSignals) {
+    if (excludedCats.has(sig.cat)) continue;
+    counts[sig.cat] = (counts[sig.cat] || 0) + 1;
+  }
+
+  return counts;
+}
+
+/**
+ * v3.2: Extract rejection keywords from the user's allSignals.
+ * Signals with cat === 'Rejection' have tags like "anti-luxury-amenities",
+ * "anti-pretentious-service", etc. We extract the tag text for matching
+ * against property signal text.
+ */
+function extractRejectionKeywords(user: SyntheticUserResult): string[] {
+  return user.allSignals
+    .filter(sig => sig.cat === 'Rejection')
+    .map(sig => sig.tag);
 }
 
 // ─── Full Evaluation ──────────────────────────────────────────────────────────

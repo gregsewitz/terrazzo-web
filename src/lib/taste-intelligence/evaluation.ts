@@ -26,7 +26,7 @@ import {
 } from '../discover-candidates';
 import type { TasteProfile, TasteDomain, TasteContradiction } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
-import { DEFAULT_USER_PROFILE } from '../taste-match';
+import { DEFAULT_USER_PROFILE } from '../taste-match-v3';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

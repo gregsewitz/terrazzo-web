@@ -1,11 +1,8 @@
 /**
- * @deprecated Import directly from '@/lib/taste-match' instead.
+ * @deprecated Import directly from '@/lib/taste-match-v3' instead.
  * This barrel re-exports for backward compatibility.
  */
 export {
-  computeMatch,
-  computeMatchScore,
   getTopAxes,
-  isStretchPick,
   DEFAULT_USER_PROFILE,
-} from './taste-match';
+} from './taste-match-v3';

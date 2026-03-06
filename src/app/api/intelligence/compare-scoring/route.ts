@@ -10,7 +10,7 @@
 
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { computeMatchFromSignals } from '@/lib/taste-match';
+import { computeMatchFromSignals } from '@/lib/taste-match-v3';
 import { findSimilarProperties } from '@/lib/taste-intelligence/queries';
 import { sqlToVector } from '@/lib/taste-intelligence/vectors';
 import type { TasteProfile, TasteDomain, BriefingSignal, BriefingAntiSignal } from '@/types';

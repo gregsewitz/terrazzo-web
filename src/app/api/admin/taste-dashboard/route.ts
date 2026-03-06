@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { computeMatchFromSignals } from '@/lib/taste-match';
+import { computeMatchFromSignals } from '@/lib/taste-match-v3';
 import type { TasteProfile } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
 
