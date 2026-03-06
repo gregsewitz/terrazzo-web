@@ -150,12 +150,10 @@ export function scoreUserAgainstProperties(
     userMicroSignals,
   };
 
-  return properties
-    .filter(prop => (prop.signals?.length ?? 0) > 0) // skip properties with no signals
-    .map(prop => {
+  return properties.map(prop => {
       const matchResult = computeMatchFromSignals(
-        prop.signals || [],
-        prop.antiSignals || [],
+        prop.signals ?? [],
+        prop.antiSignals ?? [],
         userProfile,
         matchOptions,
       );
