@@ -26,7 +26,7 @@ import {
   type EnrichedProperty,
   type CrossArchetypeReport,
 } from './simulator/match-runner';
-import { checkExtractionAccuracy } from './evaluator/metrics';
+import { checkExtractionAccuracy, auditDomainDistribution } from './evaluator/metrics';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -289,7 +289,9 @@ async function runExtractionAudit(archetypes: TasteArchetype[], config: Syntheti
     allResults.push(...results);
   }
 
-  console.log('\n── STEP 2: Comparing extracted signals vs expectations ──\n');
+  console.log('\n── STEP 2: Domain distribution audit ──\n');
+
+  const auditResults: Record<string, unknown>[] = [];
 
   for (const result of allResults) {
     const archetype = archetypes.find(a => a.id === result.archetypeId);
@@ -297,7 +299,28 @@ async function runExtractionAudit(archetypes: TasteArchetype[], config: Syntheti
 
     console.log(`▸ ${archetype.name} (${archetype.id}):`);
 
-    // Check extraction accuracy
+    // Domain-level audit
+    const domainAudit = auditDomainDistribution(
+      archetype.expectedProfile,
+      result.allSignals,
+      result.synthesizedProfile,
+    );
+
+    console.log(`  Synthesized archetype: ${domainAudit.synthesizedArchetype || '(none — synthesis failed)'}`);
+    console.log(`  Expected top domains: ${domainAudit.expectedTopDomains.join(', ')}`);
+    console.log(`  Actual top domains:   ${domainAudit.actualTopDomains.join(', ')}`);
+    console.log(`  Domain overlap: ${(domainAudit.domainOverlap * 100).toFixed(0)}%`);
+
+    console.log(`  Signal counts by domain:`);
+    const sortedDomains = Object.entries(domainAudit.domainCounts)
+      .sort(([, a], [, b]) => b - a);
+    for (const [domain, count] of sortedDomains) {
+      const antiCount = domainAudit.antiSignalCounts[domain] || 0;
+      const antiStr = antiCount > 0 ? ` (+ ${antiCount} anti)` : '';
+      console.log(`    ${domain}: ${count}${antiStr}`);
+    }
+
+    // Signal-level fuzzy matching
     const accuracy = checkExtractionAccuracy(
       archetype.expectedSignals,
       result.allSignals,
@@ -309,7 +332,7 @@ async function runExtractionAudit(archetypes: TasteArchetype[], config: Syntheti
     const totalExpected = accuracy.expectedSignals.length;
     const hitRate = totalExpected > 0 ? (hitCount / totalExpected * 100).toFixed(0) : '0';
 
-    console.log(`  Signal recall: ${hitRate}% (${hitCount}/${totalExpected} expected signals found)`);
+    console.log(`  Signal recall (fuzzy): ${hitRate}% (${hitCount}/${totalExpected})`);
 
     if (accuracy.missedSignals.length > 0) {
       console.log(`  Missed signals:`);
@@ -319,15 +342,32 @@ async function runExtractionAudit(archetypes: TasteArchetype[], config: Syntheti
     }
 
     if (accuracy.unexpectedAntiSignals.length > 0) {
-      console.log(`  Unexpected anti-signals:`);
-      for (const anti of accuracy.unexpectedAntiSignals) {
-        console.log(`    ⚠ ${anti}`);
-      }
+      console.log(`  Unexpected anti-signals in non-rejection domains: ${accuracy.unexpectedAntiSignals.length}`);
     }
 
     console.log(`  Contradictions: found ${accuracy.contradictionsFound} / expected ${accuracy.contradictionsExpected}`);
-    console.log(`  Pass: ${accuracy.pass ? '✓' : '✗'}`);
+    console.log(`  Total signals: ${result.allSignals.length} | Voice: ${result.timing.voiceMs}ms | Synthesis: ${result.timing.synthesisMs}ms`);
+
+    const overallPass = domainAudit.pass && accuracy.pass;
+    console.log(`  Pass: ${overallPass ? '✓' : '✗'}${!domainAudit.profileSynthesized ? ' (synthesis failed)' : ''}`);
     console.log('');
+
+    auditResults.push({
+      archetypeId: result.archetypeId,
+      domainAudit,
+      accuracy: {
+        signalRecall: hitRate + '%',
+        missedSignals: accuracy.missedSignals,
+        unexpectedAntiSignalCount: accuracy.unexpectedAntiSignals.length,
+      },
+      signalCount: result.allSignals.length,
+      signals: result.allSignals,
+      synthesizedProfile: result.synthesizedProfile,
+      contradictions: result.contradictions,
+      messages: result.allMessages,
+      timing: result.timing,
+      estimatedCost: result.estimatedCost,
+    });
   }
 
   // Save audit report
@@ -335,14 +375,7 @@ async function runExtractionAudit(archetypes: TasteArchetype[], config: Syntheti
   const auditPath = path.join(RESULTS_DIR, `audit-${timestamp}.json`);
   fs.writeFileSync(auditPath, JSON.stringify({
     timestamp: new Date().toISOString(),
-    archetypes: allResults.map(r => ({
-      archetypeId: r.archetypeId,
-      signalCount: r.allSignals.length,
-      signals: r.allSignals,
-      contradictions: r.contradictions,
-      timing: r.timing,
-      estimatedCost: r.estimatedCost,
-    })),
+    archetypes: auditResults,
   }, null, 2));
 
   console.log(`  Audit data saved to: ${auditPath}\n`);
