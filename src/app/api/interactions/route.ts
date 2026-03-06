@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
-import { getSignalWeight } from '@/lib/interaction-tracker';
 import type { InteractionEventType, InteractionSurface, InteractionMetadata } from '@/types/interactions';
 import { INTERACTION_WEIGHTS } from '@/types/interactions';
 
@@ -66,7 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Recompute weight server-side (don't trust client-sent weight)
-    const signalWeight = getSignalWeight(eventType);
+    const signalWeight = INTERACTION_WEIGHTS[eventType];
 
     // Write to database
     await prisma.$executeRawUnsafe(
