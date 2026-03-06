@@ -25,6 +25,7 @@ import {
   loadPropertiesFromDb,
   type EnrichedProperty,
   type CrossArchetypeReport,
+  type PropertyMatch,
 } from './simulator/match-runner';
 import { checkExtractionAccuracy, auditDomainDistribution } from './evaluator/metrics';
 import * as fs from 'fs';
@@ -431,54 +432,204 @@ function generateMarkdownReport(
     }
   }
 
-  // ── Per-archetype results ──
-  lines.push('## Per-Archetype Results');
+  // ── Per-archetype results with top matches ──
+  lines.push('## Per-Archetype Top Matches');
   lines.push('');
+  lines.push('The heart of the report: what does each archetype *actually see*? Review these to confirm different users get meaningfully different property rankings.');
+  lines.push('');
+
+  // Collect top-15 per archetype for cross-reference later
+  const top15PerArchetype: Record<string, PropertyMatch[]> = {};
 
   for (const archetype of archetypes) {
     const reports = report.byArchetype[archetype.id];
     if (!reports || reports.length === 0) continue;
 
+    const top15 = reports[0].matches.slice(0, 15);
+    top15PerArchetype[archetype.id] = top15;
+
     lines.push(`### ${archetype.name} (\`${archetype.id}\`)`);
     lines.push('');
 
+    // Quick score stats
     const dist = reports[0].distribution;
-    lines.push(`| Metric | Value |`);
-    lines.push(`|--------|-------|`);
-    lines.push(`| Mean score | ${dist.mean.toFixed(1)} |`);
-    lines.push(`| Median score | ${dist.median.toFixed(1)} |`);
-    lines.push(`| Std deviation | ${dist.stdDev.toFixed(1)} |`);
-    lines.push(`| Min / Max | ${dist.min.toFixed(1)} / ${dist.max.toFixed(1)} |`);
-    lines.push(`| Span | ${dist.span.toFixed(1)} |`);
-    lines.push(`| Pass (span ≥ threshold) | ${dist.pass ? '✓' : '✗'} |`);
+    lines.push(`Score range: ${dist.min.toFixed(1)} – ${dist.max.toFixed(1)} (mean ${dist.mean.toFixed(1)}, span ${dist.span.toFixed(1)}) ${dist.pass ? '✓' : '⚠️ COMPRESSED'}`);
     lines.push('');
 
-    // Top 5 matches for first variation
-    if (reports[0].matches.length > 0) {
-      lines.push('**Top 5 matches (variation 1):**');
-      lines.push('');
-      lines.push('| Rank | Property | Score | Top Dimension | Stretch? |');
-      lines.push('|------|----------|-------|---------------|----------|');
-      for (let i = 0; i < Math.min(5, reports[0].matches.length); i++) {
-        const match = reports[0].matches[i];
-        lines.push(`| ${i + 1} | ${match.propertyName} | ${match.overallScore.toFixed(1)} | ${match.topDimension} | ${match.isStretchPick ? '✓' : ''} |`);
+    // Top 15 matches
+    if (top15.length > 0) {
+      lines.push('| # | Property | Score | Top Domain | Stretch? |');
+      lines.push('|---|----------|-------|------------|----------|');
+      for (let i = 0; i < top15.length; i++) {
+        const match = top15[i];
+        lines.push(`| ${i + 1} | ${match.propertyName} | ${match.overallScore.toFixed(1)} | ${match.topDimension} | ${match.isStretchPick ? '🔀' : ''} |`);
       }
       lines.push('');
     }
 
+    // Bottom 5 matches (what they'd never see)
+    if (reports[0].matches.length > 5) {
+      lines.push('**Bottom 5 (lowest scores):**');
+      lines.push('');
+      const bottom5 = reports[0].matches.slice(-5).reverse();
+      lines.push('| Property | Score | Top Domain |');
+      lines.push('|----------|-------|------------|');
+      for (const match of bottom5) {
+        lines.push(`| ${match.propertyName} | ${match.overallScore.toFixed(1)} | ${match.topDimension} |`);
+      }
+      lines.push('');
+    }
+
+    // Domain distribution in top-15
+    const domainCounts: Record<string, number> = {};
+    for (const m of top15) {
+      domainCounts[m.topDimension] = (domainCounts[m.topDimension] || 0) + 1;
+    }
+    const domainStr = Object.entries(domainCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([d, c]) => `${d}: ${c}`)
+      .join(', ');
+    lines.push(`**Top-15 domain mix**: ${domainStr}`);
+    lines.push('');
+
     // Profile deviation
     if (reports[0].profileDeviation) {
       const dev = reports[0].profileDeviation;
-      lines.push(`**Profile deviation** (expected vs synthesized): avg = ${dev.avgDeviation.toFixed(3)}, max = ${dev.maxDeviation.toFixed(3)} (${dev.maxDeviationDomain}), pass = ${dev.pass ? '✓' : '✗'}`);
+      lines.push(`**Profile deviation**: avg = ${dev.avgDeviation.toFixed(3)}, max = ${dev.maxDeviation.toFixed(3)} (${dev.maxDeviationDomain}) ${dev.pass ? '✓' : '⚠️'}`);
       lines.push('');
     }
 
     // Feed health
     const health = report.feedHealth[archetype.id];
     if (health) {
-      lines.push(`**Feed health**: ${health.sectionsPopulated} sections populated, stretch picks = ${health.hasStretchPick ? '✓' : '✗'}, duplicates = ${health.duplicateProperties}, pass = ${health.pass ? '✓' : '✗'}`);
+      lines.push(`**Feed health**: ${health.sectionsPopulated}/8 sections, stretch picks = ${health.hasStretchPick ? '✓' : '✗'}, duplicates = ${health.duplicateProperties} ${health.pass ? '✓' : '⚠️'}`);
       lines.push('');
     }
+  }
+
+  // ── Signature Properties: unique to each archetype ──
+  if (Object.keys(top15PerArchetype).length >= 2) {
+    lines.push('## Signature Properties (Unique to Each Archetype)');
+    lines.push('');
+    lines.push('Properties in an archetype\'s top 15 that don\'t appear in ANY other archetype\'s top 15. These are the clearest taste signals — what makes each archetype *distinct*.');
+    lines.push('');
+
+    const allTop15Ids: Record<string, Set<string>> = {};
+    for (const [aid, matches] of Object.entries(top15PerArchetype)) {
+      allTop15Ids[aid] = new Set(matches.map(m => m.propertyId));
+    }
+
+    for (const archetype of archetypes) {
+      const myTop15 = top15PerArchetype[archetype.id];
+      if (!myTop15) continue;
+
+      const otherIds = new Set<string>();
+      for (const [aid, ids] of Object.entries(allTop15Ids)) {
+        if (aid !== archetype.id) {
+          for (const id of ids) otherIds.add(id);
+        }
+      }
+
+      const signature = myTop15.filter(m => !otherIds.has(m.propertyId));
+
+      if (signature.length > 0) {
+        lines.push(`**${archetype.name}** (${signature.length} unique):`);
+        for (const m of signature) {
+          const rank = myTop15.findIndex(x => x.propertyId === m.propertyId) + 1;
+          lines.push(`- #${rank} ${m.propertyName} (${m.overallScore.toFixed(1)}, ${m.topDimension})`);
+        }
+        lines.push('');
+      } else {
+        lines.push(`**${archetype.name}**: ⚠️ No unique properties in top 15 — too much overlap with other archetypes`);
+        lines.push('');
+      }
+    }
+  }
+
+  // ── Head-to-Head: same property, different scores ──
+  if (Object.keys(top15PerArchetype).length >= 2) {
+    lines.push('## Head-to-Head: Biggest Score Swings');
+    lines.push('');
+    lines.push('Properties where archetypes disagree most. A property should score high for one archetype and low for another — these are the discriminating properties.');
+    lines.push('');
+
+    // Build a property → archetype → score lookup from the full match set
+    const archetypeIds = Object.keys(report.byArchetype);
+    const allPropertyScores: Record<string, Record<string, number>> = {};
+
+    for (const aid of archetypeIds) {
+      const reports = report.byArchetype[aid];
+      if (!reports || reports.length === 0) continue;
+      for (const match of reports[0].matches) {
+        if (!allPropertyScores[match.propertyId]) {
+          allPropertyScores[match.propertyId] = {};
+          (allPropertyScores[match.propertyId] as any).__name = match.propertyName;
+        }
+        allPropertyScores[match.propertyId][aid] = match.overallScore;
+      }
+    }
+
+    // Find properties with the biggest max-min spread across archetypes
+    const swings: { propertyId: string; name: string; highArch: string; highScore: number; lowArch: string; lowScore: number; swing: number }[] = [];
+
+    for (const [pid, scores] of Object.entries(allPropertyScores)) {
+      const name = (scores as any).__name;
+      let highArch = '', lowArch = '';
+      let highScore = -Infinity, lowScore = Infinity;
+
+      for (const aid of archetypeIds) {
+        const s = scores[aid];
+        if (s === undefined) continue;
+        if (s > highScore) { highScore = s; highArch = aid; }
+        if (s < lowScore) { lowScore = s; lowArch = aid; }
+      }
+
+      if (highArch !== lowArch) {
+        swings.push({ propertyId: pid, name, highArch, highScore, lowArch, lowScore, swing: highScore - lowScore });
+      }
+    }
+
+    swings.sort((a, b) => b.swing - a.swing);
+
+    // Show top 20 biggest swings
+    lines.push('| Property | Loves It | Score | Hates It | Score | Swing |');
+    lines.push('|----------|----------|-------|----------|-------|-------|');
+    for (const s of swings.slice(0, 20)) {
+      lines.push(`| ${s.name} | ${s.highArch} | ${s.highScore.toFixed(1)} | ${s.lowArch} | ${s.lowScore.toFixed(1)} | ${s.swing.toFixed(1)} |`);
+    }
+    lines.push('');
+
+    if (swings.length > 0) {
+      const avgSwing = swings.slice(0, 50).reduce((s, x) => s + x.swing, 0) / Math.min(50, swings.length);
+      lines.push(`Average swing (top 50 properties): ${avgSwing.toFixed(1)}`);
+      lines.push('');
+    }
+  }
+
+  // ── Overlap Analysis: shared top matches ──
+  if (Object.keys(top15PerArchetype).length >= 2) {
+    lines.push('## Overlap Analysis');
+    lines.push('');
+    lines.push('How many of each pair\'s top-15 properties overlap? Lower is better — high overlap means the archetypes are seeing too-similar feeds.');
+    lines.push('');
+
+    const archetypeIds = Object.keys(top15PerArchetype);
+    lines.push('| Archetype A | Archetype B | Shared in Top 15 | Overlap % |');
+    lines.push('|-------------|-------------|-------------------|-----------|');
+
+    for (let i = 0; i < archetypeIds.length; i++) {
+      for (let j = i + 1; j < archetypeIds.length; j++) {
+        const aId = archetypeIds[i];
+        const bId = archetypeIds[j];
+        const aIds = new Set(top15PerArchetype[aId].map(m => m.propertyId));
+        const bIds = new Set(top15PerArchetype[bId].map(m => m.propertyId));
+        const shared = [...aIds].filter(id => bIds.has(id)).length;
+        const overlapPct = (shared / 15 * 100).toFixed(0);
+        const flag = shared > 5 ? ' ⚠️' : '';
+        lines.push(`| ${aId} | ${bId} | ${shared} | ${overlapPct}%${flag} |`);
+      }
+    }
+    lines.push('');
   }
 
   // ── Score compression check ──
