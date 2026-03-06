@@ -150,29 +150,31 @@ export function scoreUserAgainstProperties(
     userMicroSignals,
   };
 
-  return properties.map(prop => {
-    const matchResult = computeMatchFromSignals(
-      prop.signals,
-      prop.antiSignals,
-      userProfile,
-      matchOptions,
-    );
+  return properties
+    .filter(prop => (prop.signals?.length ?? 0) > 0) // skip properties with no signals
+    .map(prop => {
+      const matchResult = computeMatchFromSignals(
+        prop.signals || [],
+        prop.antiSignals || [],
+        userProfile,
+        matchOptions,
+      );
 
-    // v3: stretch picks determined by score pattern, not profile comparison
-    // A property is a stretch pick if it scores well overall but has a contrarian
-    // top dimension (one where the user is below median)
-    const stretch = matchResult.overallScore >= 55 &&
-      (userProfile[matchResult.topDimension] ?? 0.5) < 0.45;
+      // v3: stretch picks determined by score pattern, not profile comparison
+      // A property is a stretch pick if it scores well overall but has a contrarian
+      // top dimension (one where the user is below median)
+      const stretch = matchResult.overallScore >= 55 &&
+        (userProfile[matchResult.topDimension] ?? 0.5) < 0.45;
 
-    return {
-      propertyId: prop.id,
-      propertyName: prop.propertyName,
-      overallScore: matchResult.overallScore,
-      breakdown: matchResult.breakdown as Record<TasteDomain, number>,
-      topDimension: matchResult.topDimension,
-      isStretchPick: stretch,
-    };
-  }).sort((a, b) => b.overallScore - a.overallScore);
+      return {
+        propertyId: prop.id,
+        propertyName: prop.propertyName,
+        overallScore: matchResult.overallScore,
+        breakdown: matchResult.breakdown as Record<TasteDomain, number>,
+        topDimension: matchResult.topDimension,
+        isStretchPick: stretch,
+      };
+    }).sort((a, b) => b.overallScore - a.overallScore);
 }
 
 /**
