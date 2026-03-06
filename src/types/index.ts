@@ -926,7 +926,7 @@ export interface OnboardingLifeContext {
   [key: string]: unknown;
 }
 
-export type OnboardingDepth = 'full_flow';
+export type OnboardingDepth = 'full_flow' | 'act_1_only';
 
 // ─── Deletion Impact Types ───
 
