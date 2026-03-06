@@ -2,6 +2,7 @@ import { ImportedPlace, PlaceRating, QuickEntry } from '@/types';
 import { StateCreator } from 'zustand';
 import { updateCurrentTrip, mapDaySlots, mapAllSlots, debouncedTripSave } from './tripHelpers';
 import type { TripState } from './types';
+import { trackInteraction } from '@/lib/interaction-tracker';
 
 // ═══════════════════════════════════════════
 // Placement slice state
@@ -34,6 +35,19 @@ export interface TripPlacementState {
 
 export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacementState> = (set, get) => ({
   placeItem: (itemId, day, slotId) => {
+    // Track add_to_trip interaction
+    const trip0 = get().currentTrip();
+    const poolItem = trip0?.pool.find(p => p.id === itemId);
+    const gpid = poolItem?.google?.placeId;
+    if (gpid) {
+      trackInteraction('add_to_trip', gpid, 'trip', {
+        tripId: get().currentTripId || undefined,
+        tripDay: day,
+        slotId,
+        placeType: poolItem?.type,
+      });
+    }
+
     set(state =>
       updateCurrentTrip(state, trip => {
         // Look in pool first, then in saved places (myPlaces) via the picks list
@@ -87,6 +101,25 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   unplaceFromSlot: (day, slotId, placeId) => {
+    // Track remove_from_trip interaction
+    const trip0 = get().currentTrip();
+    if (trip0) {
+      for (const d of trip0.days) {
+        for (const s of d.slots) {
+          const placed = s.places.find(p => p.id === placeId);
+          if (placed?.google?.placeId) {
+            trackInteraction('remove_from_trip', placed.google.placeId, 'trip', {
+              tripId: get().currentTripId || undefined,
+              tripDay: day,
+              slotId,
+              placeType: placed.type,
+            });
+            break;
+          }
+        }
+      }
+    }
+
     set(state =>
       updateCurrentTrip(state, trip => {
         const days = mapDaySlots(trip.days, day, s => {
@@ -123,6 +156,17 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   placeFromSaved: (place, dayNumber, slotId) => {
+    // Track add_to_trip interaction
+    const gpid = place.google?.placeId;
+    if (gpid) {
+      trackInteraction('add_to_trip', gpid, 'trip', {
+        tripId: get().currentTripId || undefined,
+        tripDay: dayNumber,
+        slotId,
+        placeType: place.type,
+      });
+    }
+
     set(state =>
       updateCurrentTrip(state, trip => {
         // Check if this item is already placed somewhere on the board
@@ -200,6 +244,24 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   confirmGhost: (dayNumber, slotId, ghostId) => {
+    // Track add_to_trip for ghost confirmation
+    const trip0 = get().currentTrip();
+    if (trip0) {
+      for (const d of trip0.days) {
+        const slot = d.slots.find(s => s.id === slotId && d.dayNumber === dayNumber);
+        const ghost = slot?.ghostItems?.find(g => g.id === ghostId);
+        if (ghost?.google?.placeId) {
+          trackInteraction('add_to_trip', ghost.google.placeId, 'trip_map', {
+            tripId: get().currentTripId || undefined,
+            tripDay: dayNumber,
+            slotId,
+            placeType: ghost.type,
+          });
+          break;
+        }
+      }
+    }
+
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
@@ -223,6 +285,24 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   dismissGhost: (dayNumber, slotId, ghostId) => {
+    // Track ghost_dismiss interaction
+    const trip0 = get().currentTrip();
+    if (trip0) {
+      for (const d of trip0.days) {
+        const slot = d.slots.find(s => s.id === slotId && d.dayNumber === dayNumber);
+        const ghost = slot?.ghostItems?.find(g => g.id === ghostId);
+        if (ghost?.google?.placeId) {
+          trackInteraction('ghost_dismiss', ghost.google.placeId, 'trip_map', {
+            tripId: get().currentTripId || undefined,
+            tripDay: dayNumber,
+            slotId,
+            placeType: ghost.type,
+          });
+          break;
+        }
+      }
+    }
+
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,

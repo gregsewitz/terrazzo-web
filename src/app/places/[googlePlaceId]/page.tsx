@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
 import { FONT, INK } from '@/constants/theme';
 import type { ImportedPlace, PlaceType, GooglePlaceData } from '@/types';
+import { trackPropertyVisit, startDwellTracker, stopDwellTracker } from '@/lib/interaction-tracker';
 
 // ─── Types for the resolve API response ──────────────────────────────────────
 
@@ -229,6 +230,12 @@ export default function PlaceDetailPage() {
           }),
         });
         setResolved(data);
+
+        // Track property view + return visit detection
+        if (data.googlePlaceId) {
+          trackPropertyVisit(data.googlePlaceId, 'place_detail');
+          startDwellTracker(data.googlePlaceId, 'place_detail');
+        }
       } catch (err) {
         console.error('Failed to resolve place:', err);
         setError('Failed to load place details');
@@ -237,6 +244,13 @@ export default function PlaceDetailPage() {
       }
     }
     load();
+
+    // Stop dwell tracking on unmount
+    return () => {
+      if (resolved?.googlePlaceId) {
+        stopDwellTracker(resolved.googlePlaceId);
+      }
+    };
   }, [slug]);
 
   // ── Save to library ──

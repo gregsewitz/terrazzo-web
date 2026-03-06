@@ -3,6 +3,7 @@ import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
 import { dbWrite } from './savedHelpers';
 import type { SavedState } from './savedTypes';
+import { trackInteraction } from '@/lib/interaction-tracker';
 
 // ═══════════════════════════════════════════
 // Pending place ID tracking
@@ -68,6 +69,13 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
     }
 
     set((state) => ({ myPlaces: [stamped, ...state.myPlaces] }));
+
+    // Track interaction
+    if (googlePlaceId) {
+      trackInteraction('save_to_library', googlePlaceId, 'library', {
+        placeType: place.type,
+      });
+    }
 
     // Mark this client ID as pending — mutations (ratePlace, etc.) will
     // queue their server writes until the real ID arrives.
@@ -195,6 +203,14 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
   removePlace: (id) => {
     // Strip ghost-prefixed IDs (e.g. "ghost-claude-xxx" → "xxx")
     const realId = id.replace(/^ghost-(?:claude|friend|maps)-/, '');
+
+    // Track interaction before removing (need googlePlaceId from store)
+    const place = get().myPlaces.find(p => p.id === realId);
+    const gpid = place?.google?.placeId;
+    if (gpid) {
+      trackInteraction('remove_from_library', gpid, 'library', { placeType: place?.type });
+    }
+
     set((state) => ({
       myPlaces: state.myPlaces.filter((p) => p.id !== realId),
       collections: state.collections.map(sl => ({
@@ -212,6 +228,23 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
         p.id === id ? { ...p, rating } : p
       ),
     }));
+
+    // Track rating interaction
+    const place = get().myPlaces.find(p => p.id === id);
+    const gpid = place?.google?.placeId;
+    if (gpid && rating.reaction) {
+      // ReactionId: 'myPlace' | 'enjoyed' | 'mixed' | 'notMe'
+      const eventType = rating.reaction === 'myPlace' ? 'rate_love' as const
+        : rating.reaction === 'enjoyed' ? 'rate_enjoy' as const
+        : rating.reaction === 'notMe' ? 'rate_not_me' as const
+        : 'rate_skip' as const; // 'mixed'
+      trackInteraction(eventType, gpid, 'library', {
+        reaction: rating.reaction,
+        ratingTags: rating.tags,
+        returnIntent: rating.returnIntent,
+        placeType: place?.type,
+      });
+    }
 
     // If this place still has a pending temp ID, queue the server write
     // until addPlace completes the ID swap and flushes the queue.

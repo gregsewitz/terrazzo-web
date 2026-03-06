@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
+import { trackInteraction } from '@/lib/interaction-tracker';
 
 // ─── Types for shared data ───
 
@@ -119,6 +120,19 @@ export default function SharedViewPage() {
         body: JSON.stringify({ saveAll: true, createCollection: true }),
       });
       setSaved(true);
+
+      // Track save_from_shared for each place with a googlePlaceId
+      if (data?.type === 'collection') {
+        data.data.places.forEach(place => {
+          const gpid = (place.googleData as Record<string, unknown> | null)?.placeId as string | undefined;
+          if (gpid) {
+            trackInteraction('save_from_shared', gpid, 'shared', {
+              shareToken: token,
+              placeType: place.type,
+            });
+          }
+        });
+      }
     } catch {
       // show error inline
     }
@@ -136,10 +150,22 @@ export default function SharedViewPage() {
         body: JSON.stringify({ placeIds: [placeId] }),
       });
       setSavedIndividual(prev => new Set(prev).add(placeId));
+
+      // Track save_from_shared for this specific place
+      if (data?.type === 'collection') {
+        const place = data.data.places.find(p => p.id === placeId);
+        const gpid = (place?.googleData as Record<string, unknown> | null)?.placeId as string | undefined;
+        if (gpid) {
+          trackInteraction('save_from_shared', gpid, 'shared', {
+            shareToken: token,
+            placeType: place?.type,
+          });
+        }
+      }
     } catch {
       // ignore
     }
-  }, [isAuthenticated, token, router]);
+  }, [isAuthenticated, token, router, data]);
 
   // ─── Loading ───
   if (loading) {

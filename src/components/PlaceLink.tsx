@@ -3,6 +3,7 @@
 import React, { useContext } from 'react';
 import { usePlaceResolver } from '@/hooks/usePlaceResolver';
 import type { ImportedPlace, PlaceType } from '@/types';
+import { trackInteraction } from '@/lib/interaction-tracker';
 
 // Import the context directly to avoid the "must be within Provider" throw
 // from usePlaceDetail(). We want optional usage — return null when no provider.
@@ -59,6 +60,13 @@ export default function PlaceLink({
     <button
       onClick={(e) => {
         e.stopPropagation();
+
+        // Track discover_tap interaction
+        if (googlePlaceId) {
+          trackInteraction('discover_tap', googlePlaceId, 'discover', {
+            placeType: type,
+          });
+        }
 
         // If we have a sheet callback and a googlePlaceId, open in overlay
         if (openHandler && googlePlaceId) {

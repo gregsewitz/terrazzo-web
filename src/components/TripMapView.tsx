@@ -11,6 +11,7 @@ import { DEST_COLORS, SOURCE_STYLES, GhostSourceType, SLOT_ICONS, ImportedPlace,
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
+import { trackInteraction } from '@/lib/interaction-tracker';
 
 // ─── Types ───
 interface TripMapViewProps {
@@ -257,7 +258,18 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
     // Determine if this is a ghost
     const isGhost = ghostCandidates.some(g => g.place.id === id);
     setActivePlaceIsGhost(isGhost);
-  }, [ghostCandidates]);
+
+    // Track map_pin_tap interaction
+    const allItems = [...filteredItems, ...ghostCandidates];
+    const tapped = allItems.find(i => i.place.id === id);
+    const gpid = tapped?.place.google?.placeId;
+    if (gpid) {
+      trackInteraction('map_pin_tap', gpid, 'trip_map', {
+        tripId: trip?.id,
+        placeType: tapped?.place.type,
+      });
+    }
+  }, [ghostCandidates, filteredItems, trip?.id]);
 
   const handleOpenDetail = useCallback(() => {
     if (activeItem) onTapDetail(activeItem.place);

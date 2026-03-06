@@ -4,6 +4,7 @@ import { apiFetch } from '@/lib/api-client';
 import { dbWrite, deriveCities } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { SavedState } from './savedTypes';
+import { trackInteraction } from '@/lib/interaction-tracker';
 
 /** Sanitize emoji to a valid Perriand icon name, defaulting to 'pin' */
 function safeEmoji(raw?: string): string {
@@ -206,6 +207,18 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   addPlaceToCollection: (collectionId, placeId) => {
+    // Track interaction — resolve googlePlaceId from library
+    const place = get().myPlaces.find(p => p.id === placeId);
+    const gpid = place?.google?.placeId;
+    if (gpid) {
+      const col = get().collections.find(c => c.id === collectionId);
+      trackInteraction('add_to_collection', gpid, 'collection', {
+        collectionId,
+        collectionName: col?.name,
+        placeType: place?.type,
+      });
+    }
+
     set((state) => {
       return {
         collections: state.collections.map(sl => {
@@ -234,6 +247,18 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
   },
 
   removePlaceFromCollection: (collectionId, placeId) => {
+    // Track interaction — resolve googlePlaceId from library
+    const place = get().myPlaces.find(p => p.id === placeId);
+    const gpid = place?.google?.placeId;
+    if (gpid) {
+      const col = get().collections.find(c => c.id === collectionId);
+      trackInteraction('remove_from_collection', gpid, 'collection', {
+        collectionId,
+        collectionName: col?.name,
+        placeType: place?.type,
+      });
+    }
+
     set((state) => {
       return {
         collections: state.collections.map(sl => {
