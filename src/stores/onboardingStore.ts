@@ -119,6 +119,8 @@ interface OnboardingState {
 
   // ─── Property Anchors (resolved place mentions from voice onboarding) ───
   propertyAnchors: PropertyAnchor[];
+  /** Anchors resolved during conversation but not yet shown to user for verification */
+  pendingAnchors: PropertyAnchor[];
 
   // ─── Domain Gap Analysis (computed after Act 1) ───
   gapCheckResult: DomainGapCheckResult | null;
@@ -150,6 +152,12 @@ interface OnboardingState {
   setGoBackPlace: (place: GoBackPlace) => void;
   addPropertyAnchors: (anchors: PropertyAnchor[]) => void;
   removePropertyAnchor: (googlePlaceId: string) => void;
+  /** Queue anchors for end-of-phase batch verification (don't show inline) */
+  addPendingAnchors: (anchors: PropertyAnchor[]) => void;
+  /** Move all pending anchors into propertyAnchors and return them for display */
+  flushPendingAnchors: () => PropertyAnchor[];
+  /** Remove a pending anchor (user dismissed before verification) */
+  removePendingAnchor: (googlePlaceId: string) => void;
   runDomainGapCheck: () => Promise<DomainGapCheckResult | null>;
   setCurrentAct: (act: ActNumber) => void;
   /** Run gap analysis after completing an act — determines which adaptive phases to skip */
@@ -200,6 +208,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       trustedSources: [],
       goBackPlace: null,
       propertyAnchors: [],
+      pendingAnchors: [],
       gapCheckResult: null,
       gapCheckLoading: false,
       currentAct: 0 as ActNumber,
@@ -273,6 +282,38 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       removePropertyAnchor: (googlePlaceId) => set((state) => ({
         propertyAnchors: state.propertyAnchors.filter((a) => a.googlePlaceId !== googlePlaceId),
+      })),
+
+      addPendingAnchors: (anchors) => set((state) => {
+        // Deduplicate by googlePlaceId within pending list
+        const existing = new Map(state.pendingAnchors.map((a) => [a.googlePlaceId, a]));
+        for (const anchor of anchors) {
+          const prev = existing.get(anchor.googlePlaceId);
+          if (!prev || Math.abs(anchor.blendWeight) > Math.abs(prev.blendWeight)) {
+            existing.set(anchor.googlePlaceId, anchor);
+          }
+        }
+        return { pendingAnchors: Array.from(existing.values()) };
+      }),
+
+      flushPendingAnchors: () => {
+        const state = get();
+        const pending = state.pendingAnchors;
+        if (!pending.length) return [];
+        // Move pending into confirmed property anchors
+        const existingMap = new Map(state.propertyAnchors.map((a) => [a.googlePlaceId, a]));
+        for (const anchor of pending) {
+          const prev = existingMap.get(anchor.googlePlaceId);
+          if (!prev || Math.abs(anchor.blendWeight) > Math.abs(prev.blendWeight)) {
+            existingMap.set(anchor.googlePlaceId, anchor);
+          }
+        }
+        set({ propertyAnchors: Array.from(existingMap.values()), pendingAnchors: [] });
+        return pending;
+      },
+
+      removePendingAnchor: (googlePlaceId) => set((state) => ({
+        pendingAnchors: state.pendingAnchors.filter((a) => a.googlePlaceId !== googlePlaceId),
       })),
 
       runDomainGapCheck: async () => {
@@ -496,6 +537,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         trustedSources: [],
         goBackPlace: null,
         propertyAnchors: [],
+        pendingAnchors: [],
         gapCheckResult: null,
         gapCheckLoading: false,
         currentAct: 0 as ActNumber,
@@ -548,6 +590,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         trustedSources: state.trustedSources,
         goBackPlace: state.goBackPlace,
         propertyAnchors: state.propertyAnchors,
+        pendingAnchors: state.pendingAnchors,
         gapCheckResult: state.gapCheckResult,
         currentAct: state.currentAct,
         skippedPhaseIds: state.skippedPhaseIds,

@@ -854,7 +854,9 @@ export type OnboardingPhaseModality =
   | 'spectrum'
   | 'form'                // Quick bio form (Act 0)
   | 'property-reactions'  // Property reaction card phase (Act 0 + Act 2 gap-fill)
-  | 'scale';              // Single-question selector (sustainability check)
+  | 'scale'               // Single-question selector (sustainability check)
+  | 'force-rank'          // Rank items by personal importance (Act 2 details-matter)
+  | 'quick-choice';       // Pick from curated options (Act 2 emotional-core)
 
 export interface OnboardingPhase {
   id: string;
@@ -882,6 +884,28 @@ export interface OnboardingPhase {
   targetDomains?: TasteDomain[];
   /** Number of cards to show in property-reactions phases */
   cardCount?: number;
+  /** Force-rank items — user ranks these by personal importance */
+  forceRankItems?: ForceRankItem[];
+  /** Quick-choice options — user picks from curated options */
+  quickChoiceOptions?: QuickChoiceOption[];
+  /** Max selections allowed for quick-choice (defaults to 3) */
+  quickChoiceMax?: number;
+}
+
+export interface ForceRankItem {
+  id: string;
+  label: string;
+  description?: string;
+  signals: string[];
+  domain: string;
+}
+
+export interface QuickChoiceOption {
+  id: string;
+  label: string;
+  description?: string;
+  signals: string[];
+  domain: string;
 }
 
 export interface TrustedSource {

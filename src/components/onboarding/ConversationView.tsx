@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useConversationPhase } from '@/hooks/useConversationPhase';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useTTS } from '@/hooks/useTTS';
-import { useOnboardingStore } from '@/stores/onboardingStore';
 import AnchorVerificationCard from './AnchorVerificationCard';
 import type { OnboardingPhase } from '@/types';
 
@@ -21,7 +20,6 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const spokenCountRef = useRef(0);
   const sendingRef = useRef(false);
-  const removePropertyAnchor = useOnboardingStore((s) => s.removePropertyAnchor);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const holdingRef = useRef(false); // tracks whether user is actively holding the mic button
   const mountedRef = useRef(true); // tracks if component is still mounted
@@ -30,6 +28,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     messages,
     isAnalyzing,
     isPhaseComplete,
+    anchorsForReview,
+    confirmAnchor,
+    dismissAnchor,
+    reResolvePlace,
     sendMessage,
   } = useConversationPhase({
     phaseId: phase.id,
@@ -255,14 +257,6 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                 <p className="text-[15px] leading-relaxed text-[var(--t-ink)]">
                   {msg.text}
                 </p>
-                {msg.anchorsToVerify?.map((anchor) => (
-                  <AnchorVerificationCard
-                    key={anchor.googlePlaceId}
-                    anchor={anchor}
-                    onConfirm={() => {/* anchor already in store — no-op */}}
-                    onDismiss={(id) => removePropertyAnchor(id)}
-                  />
-                ))}
               </div>
             ) : (
               <div
@@ -296,6 +290,24 @@ export default function ConversationView({ phase, onComplete }: ConversationView
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-honey)] animate-pulse" />
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-honey)] animate-pulse [animation-delay:0.2s]" />
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-honey)] animate-pulse [animation-delay:0.4s]" />
+          </div>
+        )}
+
+        {/* End-of-phase anchor verification — batched */}
+        {isPhaseComplete && anchorsForReview.length > 0 && (
+          <div className="mr-auto max-w-[85%] space-y-2 message-enter">
+            <p className="text-[15px] leading-relaxed text-[var(--t-ink)]">
+              Before we move on — you mentioned {anchorsForReview.length === 1 ? 'a place' : 'a few places'}. Just want to make sure I caught {anchorsForReview.length === 1 ? 'it' : 'them'} right.
+            </p>
+            {anchorsForReview.map((anchor) => (
+              <AnchorVerificationCard
+                key={anchor.googlePlaceId}
+                anchor={anchor}
+                onConfirm={() => confirmAnchor(anchor.googlePlaceId)}
+                onDismiss={() => dismissAnchor(anchor.googlePlaceId)}
+                onClarify={(name) => reResolvePlace(name, anchor.sentiment)}
+              />
+            ))}
           </div>
         )}
       </div>

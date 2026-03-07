@@ -14,6 +14,14 @@ interface UseConversationPhaseReturn {
   messages: ConversationMessage[];
   isAnalyzing: boolean;
   isPhaseComplete: boolean;
+  /** Anchors awaiting user verification at end of phase */
+  anchorsForReview: PropertyAnchor[];
+  /** Confirm one anchor (keeps it in store) */
+  confirmAnchor: (googlePlaceId: string) => void;
+  /** Dismiss one anchor and prompt user to type correct name */
+  dismissAnchor: (googlePlaceId: string) => void;
+  /** Re-resolve a dismissed place by name typed by user */
+  reResolvePlace: (name: string, originalSentiment: string) => void;
   sendMessage: (text: string) => Promise<void>;
   currentFollowUpIndex: number;
 }
@@ -33,6 +41,10 @@ export function useConversationPhase({
     addTrustedSource,
     setGoBackPlace,
     addPropertyAnchors,
+    removePropertyAnchor,
+    addPendingAnchors,
+    flushPendingAnchors,
+    removePendingAnchor,
     setCurrentPhaseProgress,
     allMessages: storedMessages,
     completedPhaseIds,
@@ -54,6 +66,7 @@ export function useConversationPhase({
   );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPhaseComplete, setIsPhaseComplete] = useState(wasAlreadyCompleted);
+  const [anchorsForReview, setAnchorsForReview] = useState<PropertyAnchor[]>([]);
   const followUpIndex = useRef(0);
 
   const sendMessage = useCallback(async (text: string) => {
@@ -179,7 +192,7 @@ export function useConversationPhase({
       }
 
       // Property anchors: resolve mentioned places to real properties
-      // Shows inline verification cards so the user can confirm/dismiss before blending
+      // Accumulate silently — shown at end of phase for batch verification
       if (result.mentionedPlaces?.length) {
         fetch('/api/onboarding/resolve-places', {
           method: 'POST',
@@ -192,18 +205,9 @@ export function useConversationPhase({
           .then((r) => r.json())
           .then((data: { anchors: PropertyAnchor[] }) => {
             if (data.anchors?.length) {
-              addPropertyAnchors(data.anchors);
-              // Inject inline verification cards so user can confirm/dismiss each anchor
-              const verificationMsg: ConversationMessage = {
-                role: 'ai',
-                text: data.anchors.length === 1
-                  ? 'I found this place you mentioned:'
-                  : 'I found these places you mentioned:',
-                phaseId,
-                anchorsToVerify: data.anchors,
-              };
-              setMessages((prev) => [...prev, verificationMsg]);
-              console.log(`[onboarding] Resolved ${data.anchors.length} property anchor(s):`, data.anchors.map((a) => a.propertyName));
+              // Queue for end-of-phase verification instead of showing inline
+              addPendingAnchors(data.anchors);
+              console.log(`[onboarding] Queued ${data.anchors.length} anchor(s) for verification:`, data.anchors.map((a) => a.propertyName));
             }
           })
           .catch((err) => {
@@ -233,6 +237,11 @@ export function useConversationPhase({
       let nextText: string;
       if (result.phaseComplete) {
         setIsPhaseComplete(true);
+        // Surface any pending anchors for batch verification
+        const flushed = flushPendingAnchors();
+        if (flushed.length > 0) {
+          setAnchorsForReview(flushed);
+        }
         // The transition message should NEVER contain a question — the next phase's
         // opening prompt will serve as the first question. If Claude included a question
         // (e.g. forced-complete via MAX_EXCHANGES, or Claude ignored the prompt rule),
@@ -257,6 +266,8 @@ export function useConversationPhase({
         // All scripted follow-ups exhausted — gracefully wrap up
         nextText = "This has been really revealing — I've picked up a lot from what you've shared. Let's keep the momentum going.";
         setIsPhaseComplete(true);
+        const flushedFallback = flushPendingAnchors();
+        if (flushedFallback.length > 0) setAnchorsForReview(flushedFallback);
       }
 
       const aiMsg: ConversationMessage = { role: 'ai', text: nextText, phaseId };
@@ -280,12 +291,49 @@ export function useConversationPhase({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, addPropertyAnchors, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace]);
+  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, addPendingAnchors, flushPendingAnchors, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace]);
+
+  const confirmAnchor = useCallback((googlePlaceId: string) => {
+    // Anchor is already in propertyAnchors from flushPendingAnchors — just remove from review list
+    setAnchorsForReview((prev) => prev.filter((a) => a.googlePlaceId !== googlePlaceId));
+  }, []);
+
+  const dismissAnchor = useCallback((googlePlaceId: string) => {
+    // Remove from both review list and store
+    removePropertyAnchor(googlePlaceId);
+    setAnchorsForReview((prev) => prev.filter((a) => a.googlePlaceId !== googlePlaceId));
+  }, [removePropertyAnchor]);
+
+  const reResolvePlace = useCallback((name: string, originalSentiment: string) => {
+    fetch('/api/onboarding/resolve-places', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mentionedPlaces: [{ name, sentiment: originalSentiment, confidence: 1.0 }],
+        phaseId,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data: { anchors: PropertyAnchor[] }) => {
+        if (data.anchors?.length) {
+          addPropertyAnchors(data.anchors);
+          // Add to review list so user can verify the new match
+          setAnchorsForReview((prev) => [...prev, ...data.anchors]);
+        }
+      })
+      .catch((err) => {
+        console.warn('[onboarding] Re-resolve failed:', err);
+      });
+  }, [phaseId, addPropertyAnchors]);
 
   return {
     messages,
     isAnalyzing,
     isPhaseComplete,
+    anchorsForReview,
+    confirmAnchor,
+    dismissAnchor,
+    reResolvePlace,
     sendMessage,
     currentFollowUpIndex: followUpIndex.current,
   };

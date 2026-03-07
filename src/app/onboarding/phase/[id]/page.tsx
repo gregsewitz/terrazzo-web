@@ -16,6 +16,8 @@ import SpectrumPhaseView from '@/components/onboarding/SpectrumPhaseView';
 import QuickBioFormView from '@/components/onboarding/QuickBioFormView';
 import SustainabilityScaleView from '@/components/onboarding/SustainabilityScaleView';
 import PropertyReactionPhaseView from '@/components/onboarding/PropertyReactionPhaseView';
+import ForceRankView from '@/components/onboarding/ForceRankView';
+import QuickChoiceView from '@/components/onboarding/QuickChoiceView';
 import { apiFetch } from '@/lib/api-client';
 
 const ACT_LABELS: Record<number, string> = { 0: 'Act 0', 1: 'Act I', 2: 'Act II' };
@@ -203,6 +205,23 @@ export default function PhasePage() {
             onComplete={handlePhaseComplete}
             targetDomains={phase.targetDomains}
             cardCount={phase.cardCount ?? 10}
+          />
+        )}
+
+        {/* ── NEW: Force Rank ── */}
+        {phase.modality === 'force-rank' && phase.forceRankItems && (
+          <ForceRankView
+            onComplete={handlePhaseComplete}
+            items={phase.forceRankItems}
+          />
+        )}
+
+        {/* ── NEW: Quick Choice ── */}
+        {phase.modality === 'quick-choice' && phase.quickChoiceOptions && (
+          <QuickChoiceView
+            onComplete={handlePhaseComplete}
+            options={phase.quickChoiceOptions}
+            maxSelections={phase.quickChoiceMax ?? 3}
           />
         )}
       </div>
