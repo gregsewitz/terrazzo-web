@@ -214,7 +214,7 @@ export async function findDomainExemplars(
        "googlePlaceId",
        "propertyName",
        "placeType",
-       "facts"->>'location' as "locationHint",
+       "facts"->'location'->>'address' as "locationHint",
        ("embeddingV3" <=> $1::vector) as distance
      FROM "PlaceIntelligence"
      WHERE "status" = 'complete'

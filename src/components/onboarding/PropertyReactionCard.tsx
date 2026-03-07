@@ -5,10 +5,10 @@ import type { PropertyExemplar } from '@/types';
 
 /** Reaction sentiments the user can choose — mapped to blend weights */
 const REACTIONS = [
-  { key: 'love', label: 'Love it', emoji: '❤️', blendWeight: 0.8 },
-  { key: 'like', label: 'Nice', emoji: '👍', blendWeight: 0.5 },
-  { key: 'meh', label: 'Meh', emoji: '😐', blendWeight: 0.0 },
-  { key: 'not-me', label: 'Not me', emoji: '✕', blendWeight: -0.3 },
+  { key: 'love', label: 'Love it', blendWeight: 0.8 },
+  { key: 'like', label: 'Nice', blendWeight: 0.5 },
+  { key: 'meh', label: 'Meh', blendWeight: 0.0 },
+  { key: 'not-me', label: 'Not me', blendWeight: -0.3 },
 ] as const;
 
 type ReactionKey = typeof REACTIONS[number]['key'];
@@ -31,6 +31,15 @@ interface PropertyReactionCardProps {
     propertyName: string,
     placeType: string | null,
   ) => void;
+}
+
+/** Extract a short location hint from a full address, e.g. "London, UK" from "192a Brick Ln, London E1 6SA, UK" */
+function shortLocation(address: string | null | undefined): string | null {
+  if (!address) return null;
+  const parts = address.split(',').map((s) => s.trim()).filter(Boolean);
+  if (parts.length <= 2) return address;
+  // Take last 2 meaningful parts (typically city/region + country)
+  return parts.slice(-2).join(', ');
 }
 
 /** Domain display names */
@@ -104,15 +113,15 @@ export default function PropertyReactionCard({
             {exemplar.placeType}
           </span>
         )}
-        {exemplar.placeType && exemplar.locationHint && (
+        {exemplar.placeType && shortLocation(exemplar.locationHint) && (
           <span style={{ color: 'var(--t-ink)', opacity: 0.2 }}>·</span>
         )}
-        {exemplar.locationHint && (
+        {shortLocation(exemplar.locationHint) && (
           <span
             className="text-[11px]"
             style={{ color: 'var(--t-ink)', opacity: 0.4 }}
           >
-            {exemplar.locationHint}
+            {shortLocation(exemplar.locationHint)}
           </span>
         )}
       </div>
@@ -140,7 +149,6 @@ export default function PropertyReactionCard({
                 color: 'var(--t-ink)',
               }}
             >
-              <span className="mr-1">{reaction.emoji}</span>
               {reaction.label}
             </button>
           );
