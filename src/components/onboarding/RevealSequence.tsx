@@ -105,6 +105,9 @@ const RevealSequence = memo(function RevealSequence({ profile, onComplete }: Rev
         padding: '16px 24px 20px',
         borderTop: '1px solid var(--t-linen)',
         flexShrink: 0,
+        maxWidth: 520,
+        margin: '0 auto',
+        width: '100%',
       }}>
         <motion.button
           onClick={advance}

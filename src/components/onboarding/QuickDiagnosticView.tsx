@@ -115,12 +115,18 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
 
   const [itemA, itemB] = currentPair;
 
-  // Phase-aware prompt text
-  const promptText = round < 3
+  // Phase-aware prompt text — varies across all 10 rounds, no repeats
+  const promptText = round < 2
     ? 'Which sounds more like you?'
-    : round < 7
+    : round < 4
       ? 'Which world would you choose?'
-      : 'One last instinct —';
+      : round < 6
+        ? 'Quick — which one?'
+        : round < 8
+          ? 'Almost there — pick one'
+          : round === 8
+            ? 'Two more —'
+            : 'Last one —';
 
   // Dimension label from the current pair
   const dimensionLabel = (itemA.metadata?.dimension as string) || '';
@@ -139,6 +145,12 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
             {promptText}
           </h2>
         </div>
+        {/* Elo ranking hint — shown only on the first round */}
+        {round === 0 && (
+          <p className="hidden sm:block text-[10px] text-[var(--t-ink)]/30 font-mono whitespace-nowrap">
+            Some options may reappear — that&apos;s how we rank them
+          </p>
+        )}
         {/* Thin progress bar */}
         <div className="flex-1 flex gap-0.5 items-center">
           {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => (
@@ -159,6 +171,16 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
           {round + 1}/{TOTAL_ROUNDS}
         </span>
       </div>
+
+      {/* Elo hint — mobile-friendly, fades out after round 2 */}
+      {round < 2 && (
+        <p
+          className="sm:hidden text-center text-[10px] text-[var(--t-ink)]/30 font-mono px-4 -mt-1 mb-1"
+          style={{ transition: 'opacity 500ms ease', opacity: round === 0 ? 1 : 0.5 }}
+        >
+          Some options may reappear — that&apos;s how we rank them
+        </p>
+      )}
 
       {/* Two atmosphere cards — stacked on mobile, side-by-side on desktop */}
       <div

@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import {
-  ACT_0_PHASE_IDS, ACT_1_PHASE_IDS_V2, ACT_2_PHASE_IDS_V2, ALL_PHASE_IDS_V2,
-} from '@/constants/onboarding';
+import { ACT_1_PHASE_IDS, ACT_2_PHASE_IDS, ALL_PHASE_IDS } from '@/constants/onboarding';
 
 /** Friendly domain display names */
 const DOMAIN_DISPLAY: Record<string, string> = {
@@ -19,76 +17,74 @@ const DOMAIN_DISPLAY: Record<string, string> = {
   Sustainability: 'Sustainability',
 };
 
-export default function Act1CompletePage() {
+export default function Act0CompletePage() {
   const router = useRouter();
   const {
-    setPhaseIndex, allSignals, certainties,
+    setPhaseIndex, allSignals, certainties, propertyAnchors,
     act1GapResult, setCurrentAct, skippedPhaseIds,
   } = useOnboardingStore();
-  const [stage, setStage] = useState(0); // 0=entering, 1=stats visible, 2=message visible, 3=button visible
+  const [stage, setStage] = useState(0); // 0=entering, 1=stats, 2=message, 3=button
 
   // Count unique signal tags
   const signalCount = new Set(allSignals.map((s) => s.tag)).size;
-  // Count how many taste dimensions have meaningful certainty (> 0)
+  // Count taste dimensions with meaningful certainty
   const dimensionsCovered = Object.values(certainties).filter((v) => v > 0).length;
+  // Anchor count
+  const anchorCount = propertyAnchors.length;
 
   // Staggered reveal animation
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStage(1), 600),   // stats appear
-      setTimeout(() => setStage(2), 1800),  // motivational message
-      setTimeout(() => setStage(3), 2800),  // continue button
+      setTimeout(() => setStage(1), 500),
+      setTimeout(() => setStage(2), 1600),
+      setTimeout(() => setStage(3), 2400),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  // Use pre-computed gap result from act transition (no need to call runDomainGapCheck on mount)
+  // Identify strong and gap domains from pre-computed Act 0 gap result
   const gapDomains = act1GapResult?.coverage?.gapDomains ?? [];
+  // Derive strong domains: those with coverage >= 30% that aren't in gapDomains
+  const strongDomains = (act1GapResult?.coverage?.domains ?? [])
+    .filter((d) => d.coverage >= 0.3 && !gapDomains.includes(d.domain))
+    .map((d) => d.domain);
   const hasGaps = gapDomains.length > 0;
 
   const handleContinue = () => {
-    setCurrentAct(2);
-    // Find first non-skipped Act 2 phase
+    setCurrentAct(1);
+    // Find first non-skipped Act 1 phase
     const store = useOnboardingStore.getState();
-    for (let i = 0; i < ACT_2_PHASE_IDS_V2.length; i++) {
-      const phaseId = ACT_2_PHASE_IDS_V2[i];
+    for (let i = 0; i < ACT_2_PHASE_IDS.length; i++) {
+      const phaseId = ACT_2_PHASE_IDS[i];
       if (!store.skippedPhaseIds.includes(phaseId)) {
-        const globalIdx = (ALL_PHASE_IDS_V2 as readonly string[]).indexOf(phaseId);
+        const globalIdx = (ALL_PHASE_IDS as readonly string[]).indexOf(phaseId);
         setPhaseIndex(globalIdx);
         router.push(`/onboarding/phase/${phaseId}`);
         return;
       }
     }
-    // All Act 2 phases skipped (unlikely) — go to processing
-    router.push('/onboarding/processing');
+    // Fallback — shouldn't happen but route to first Act 1 phase
+    router.push(`/onboarding/phase/${ACT_2_PHASE_IDS[0]}`);
   };
 
-  // Progress ring (Acts 0 + 1 completed)
-  const completedPhaseCount = ACT_0_PHASE_IDS.length + ACT_1_PHASE_IDS_V2.length;
-  const progress = completedPhaseCount / ALL_PHASE_IDS_V2.length;
-  const circumference = 2 * Math.PI * 44; // radius = 44
+  // Progress ring (Act 0 = ~33% of total)
+  const progress = ACT_1_PHASE_IDS.length / ALL_PHASE_IDS.length;
+  const circumference = 2 * Math.PI * 44;
   const strokeDashoffset = circumference * (1 - progress);
-
-  // Count remaining Act 2 phases (excluding skipped)
-  const remainingAct2 = ACT_2_PHASE_IDS_V2.length - skippedPhaseIds.filter((id) =>
-    (ACT_2_PHASE_IDS_V2 as readonly string[]).includes(id)
-  ).length;
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
       <div className="max-w-lg w-full flex flex-col items-center">
 
-        {/* Animated progress ring with checkmark */}
+        {/* Animated progress ring */}
         <div className="relative w-28 h-28 mb-8">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-            {/* Background ring */}
             <circle
               cx="50" cy="50" r="44"
               fill="none"
               stroke="var(--t-travertine)"
               strokeWidth="4"
             />
-            {/* Progress arc — animates in */}
             <circle
               cx="50" cy="50" r="44"
               fill="none"
@@ -100,7 +96,6 @@ export default function Act1CompletePage() {
               className="transition-all duration-[1.5s] ease-out"
             />
           </svg>
-          {/* Center content — animated checkmark */}
           <div className={`
             absolute inset-0 flex flex-col items-center justify-center
             transition-all duration-700
@@ -121,7 +116,7 @@ export default function Act1CompletePage() {
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
-          Act I complete
+          Ground truth captured
         </p>
 
         <h1 className={`
@@ -129,7 +124,7 @@ export default function Act1CompletePage() {
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
-          Your taste profile is taking shape
+          Already know a lot about your taste
         </h1>
 
         {/* Stats row */}
@@ -139,10 +134,10 @@ export default function Act1CompletePage() {
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}
         `}>
           {[
-            { value: `${completedPhaseCount} of ${ALL_PHASE_IDS_V2.length}`, label: 'Phases complete' },
             { value: signalCount, label: 'Taste signals' },
             { value: `${dimensionsCovered} of 8`, label: 'Dimensions' },
-          ].map((stat) => (
+            { value: anchorCount, label: 'Property anchors' },
+          ].map((stat, i) => (
             <div
               key={stat.label}
               className="flex-1 text-center py-3 rounded-xl"
@@ -158,21 +153,39 @@ export default function Act1CompletePage() {
           ))}
         </div>
 
-        {/* Gap check results — show domain coverage insight */}
-        {stage >= 2 && hasGaps && (
-          <div className={`
-            w-full mb-6 px-4 py-3 rounded-xl
-            transition-all duration-700
-            ${stage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-          `}
+        {/* Domain coverage insight */}
+        {stage >= 2 && strongDomains.length > 0 && (
+          <div
+            className={`
+              w-full mb-4 px-4 py-3 rounded-xl
+              transition-all duration-700
+              ${stage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+            `}
             style={{ backgroundColor: 'var(--t-travertine)', border: '1px solid rgba(28, 26, 23, 0.06)' }}
           >
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/40 mb-2">
-              Still developing
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-verde)] mb-2">
+              Strong coverage
             </p>
             <p className="text-[14px] text-[var(--t-ink)]/70 leading-relaxed">
-              {gapDomains.map((d) => DOMAIN_DISPLAY[d] || d).join(', ')}
-              {' '}&mdash; Act II will deepen these areas.
+              {strongDomains.map((d) => DOMAIN_DISPLAY[d] || d).join(', ')}
+            </p>
+          </div>
+        )}
+
+        {stage >= 2 && hasGaps && (
+          <div
+            className={`
+              w-full mb-6 px-4 py-3 rounded-xl
+              transition-all duration-700
+              ${stage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+            `}
+            style={{ backgroundColor: 'var(--t-warm-white)', border: '1px solid rgba(28, 26, 23, 0.06)' }}
+          >
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/40 mb-2">
+              Needs more depth
+            </p>
+            <p className="text-[14px] text-[var(--t-ink)]/50 leading-relaxed">
+              {gapDomains.map((d: string) => DOMAIN_DISPLAY[d] || d).join(', ')}
             </p>
           </div>
         )}
@@ -184,8 +197,8 @@ export default function Act1CompletePage() {
           ${stage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
           {hasGaps
-            ? "Almost there — the final act digs into the emotional details and nuance that make your profile truly yours."
-            : "One last act — we\u2019ll explore the finer details and emotional instincts that separate a good match from a perfect one."
+            ? "Next up: a few focused questions and a conversation about the stays that shaped your taste."
+            : "Great foundation. Now let\u2019s go deeper — the service details, the memorable stays, and the emotional side of how you travel."
           }
         </p>
 
@@ -201,7 +214,7 @@ export default function Act1CompletePage() {
           style={{ backgroundColor: 'var(--t-ink)' }}
           disabled={stage < 3}
         >
-          Continue to Act II
+          Continue to Act I
         </button>
 
         <p className={`
@@ -209,7 +222,9 @@ export default function Act1CompletePage() {
           transition-all duration-500
           ${stage >= 3 ? 'opacity-100' : 'opacity-0'}
         `}>
-          {remainingAct2} more phase{remainingAct2 !== 1 ? 's' : ''} to go
+          {ACT_2_PHASE_IDS.length - skippedPhaseIds.filter((id) =>
+            (ACT_2_PHASE_IDS as readonly string[]).includes(id)
+          ).length} phases in Act I
         </p>
       </div>
     </div>

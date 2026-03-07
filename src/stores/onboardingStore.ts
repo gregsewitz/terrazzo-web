@@ -10,12 +10,11 @@ import type {
   DomainGapCheckResult,
 } from '@/types';
 import { ALL_TASTE_DOMAINS, CORE_TASTE_DOMAINS, PREFERENCE_DIMENSIONS } from '@/types';
-import { ALL_PHASE_IDS, ACT_1_PHASE_IDS } from '@/constants/onboarding';
 import {
-  ACT_0_PHASE_IDS,
-  ACT_1_PHASE_IDS_V2,
-  ACT_2_PHASE_IDS_V2,
-  ALL_PHASE_IDS_V2,
+  ACT_1_PHASE_IDS,
+  ACT_2_PHASE_IDS,
+  ACT_3_PHASE_IDS,
+  ALL_PHASE_IDS,
   ADAPTIVE_PHASE_IDS,
 } from '@/constants/onboarding';
 import type { ActNumber } from '@/constants/onboarding';
@@ -129,8 +128,8 @@ interface OnboardingState {
   // ─── 3-Act Adaptive Routing (v3) ───
   currentAct: ActNumber;
   skippedPhaseIds: string[];
-  act0GapResult: DomainGapCheckResult | null;
   act1GapResult: DomainGapCheckResult | null;
+  act2GapResult: DomainGapCheckResult | null;
 
   // ─── Hydration ───
   /** True once DB profile data has been loaded (or skipped for unauth users) */
@@ -161,8 +160,9 @@ interface OnboardingState {
   runDomainGapCheck: () => Promise<DomainGapCheckResult | null>;
   setCurrentAct: (act: ActNumber) => void;
   /** Run gap analysis after completing an act — determines which adaptive phases to skip */
-  runGapAnalysisForActTransition: (completedAct: 0 | 1) => Promise<void>;
+  runGapAnalysisForActTransition: (completedAct: 1 | 2) => Promise<void>;
   finishOnboarding: (depth: OnboardingDepth) => Promise<void>;
+  setMosaicAxes: (axes: Record<string, number>) => void;
   recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
   /** Manually trigger a full re-synthesis of the taste profile (e.g. after prompt updates) */
   triggerResynthesis: () => Promise<boolean>;
@@ -211,10 +211,10 @@ export const useOnboardingStore = create<OnboardingState>()(
       pendingAnchors: [],
       gapCheckResult: null,
       gapCheckLoading: false,
-      currentAct: 0 as ActNumber,
+      currentAct: 1 as ActNumber,
       skippedPhaseIds: [] as string[],
-      act0GapResult: null,
       act1GapResult: null,
+      act2GapResult: null,
       dbHydrated: false,
 
       // ─── Actions ───
@@ -361,40 +361,31 @@ export const useOnboardingStore = create<OnboardingState>()(
             }),
           });
 
-          if (completedAct === 0) {
-            set({ act0GapResult: result });
-
-            // If no cold domains after Act 0, skip adaptive-conversation in Act 1
+          if (completedAct === 1) {
+            set({ act1GapResult: result });
             const gapDomains = result?.coverage?.gapDomains ?? [];
-            if (gapDomains.length === 0) {
-              set((s) => ({
-                skippedPhaseIds: [...s.skippedPhaseIds, 'adaptive-conversation'],
-              }));
-              console.log('[gap-analysis] Act 0 → no cold domains, skipping adaptive-conversation');
-            } else {
-              console.log('[gap-analysis] Act 0 → cold domains:', gapDomains);
-            }
-          } else if (completedAct === 1) {
-            set({ act1GapResult: result, gapCheckResult: result });
+            console.log('[gap-analysis] After Act 1 → cold domains:', gapDomains.length > 0 ? gapDomains : 'none');
+          } else if (completedAct === 2) {
+            set({ act2GapResult: result, gapCheckResult: result });
 
-            // If no cold domains after Act 1, skip gap-fill-reactions in Act 2
+            // If no cold domains after Act 2, skip gap-fill-reactions in Act 3
             const gapDomains = result?.coverage?.gapDomains ?? [];
             if (gapDomains.length === 0) {
               set((s) => ({
                 skippedPhaseIds: [...s.skippedPhaseIds, 'gap-fill-reactions'],
               }));
-              console.log('[gap-analysis] Act 1 → no cold domains, skipping gap-fill-reactions');
+              console.log('[gap-analysis] After Act 2 → no cold domains, skipping gap-fill-reactions');
             } else {
-              console.log('[gap-analysis] Act 1 → cold domains:', gapDomains);
+              console.log('[gap-analysis] After Act 2 → cold domains:', gapDomains);
             }
           }
         } catch (err) {
           console.error('[gap-analysis] Failed (fail-open — not skipping adaptive phases):', err);
           // Fail-open: don't add any phases to skip list if gap check fails
-          if (completedAct === 0) {
-            set({ act0GapResult: null });
-          } else {
+          if (completedAct === 1) {
             set({ act1GapResult: null });
+          } else {
+            set({ act2GapResult: null });
           }
         } finally {
           set({ gapCheckLoading: false });
@@ -419,8 +410,8 @@ export const useOnboardingStore = create<OnboardingState>()(
           // V3 act-routing state for DB persistence
           currentAct: state.currentAct,
           skippedPhaseIds: state.skippedPhaseIds,
-          act0GapResult: state.act0GapResult,
           act1GapResult: state.act1GapResult,
+          act2GapResult: state.act2GapResult,
         });
         // Wait for all pending saves to complete — this is the critical moment
         await flushSaves();
@@ -430,6 +421,15 @@ export const useOnboardingStore = create<OnboardingState>()(
         apiFetch('/api/onboarding/compute-vectors', { method: 'POST' })
           .then((res) => console.log('[onboarding] Vectors computed:', res))
           .catch((err) => console.warn('[onboarding] Vector computation failed (non-blocking):', err));
+      },
+
+      setMosaicAxes: (axes) => {
+        set({ mosaicAxes: axes });
+        // Persist to DB alongside existing mosaic data
+        const state = get();
+        saveProfileToDB({
+          mosaicData: { answers: state.mosaicAnswers, axes },
+        });
       },
 
       recordMosaicAnswer: (questionId, axes, signals) => {
@@ -540,10 +540,10 @@ export const useOnboardingStore = create<OnboardingState>()(
         pendingAnchors: [],
         gapCheckResult: null,
         gapCheckLoading: false,
-        currentAct: 0 as ActNumber,
+        currentAct: 1 as ActNumber,
         skippedPhaseIds: [],
-        act0GapResult: null,
         act1GapResult: null,
+        act2GapResult: null,
       }),
 
       resetForRedo: () => set({
@@ -554,10 +554,10 @@ export const useOnboardingStore = create<OnboardingState>()(
         currentPhaseProgress: 0,
         onboardingDepth: null,
         // Reset V3 act-routing state so redo starts fresh
-        currentAct: 0 as ActNumber,
+        currentAct: 1 as ActNumber,
         skippedPhaseIds: [],
-        act0GapResult: null,
         act1GapResult: null,
+        act2GapResult: null,
         // Everything else (signals, messages, contradictions, generatedProfile,
         // mosaicAnswers, mosaicAxes, lifeContext, seedTrips, trustedSources,
         // goBackPlace, certainties) is intentionally preserved
@@ -594,8 +594,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         gapCheckResult: state.gapCheckResult,
         currentAct: state.currentAct,
         skippedPhaseIds: state.skippedPhaseIds,
-        act0GapResult: state.act0GapResult,
         act1GapResult: state.act1GapResult,
+        act2GapResult: state.act2GapResult,
       }),
     }
   )
@@ -659,24 +659,24 @@ export const selectNeedsV2Migration = (state: OnboardingState): boolean => {
   return false;
 };
 
-// ─── V3 (3-Act) Selectors ───
+// ─── Act-Completion Selectors ───
 
-/** Current phase ID using v3 phase list */
+/** Current phase ID */
 export const selectCurrentPhaseIdV2 = (state: OnboardingState) =>
-  ALL_PHASE_IDS_V2[state.currentPhaseIndex] ?? null;
+  ALL_PHASE_IDS[state.currentPhaseIndex] ?? null;
 
-/** Whether Act 0 is complete (all 4 structured phases done) */
-export const selectIsAct0Complete = (state: OnboardingState) =>
-  ACT_0_PHASE_IDS.every((id) => state.completedPhaseIds.includes(id));
+/** Whether Act 1 "Quick Read" is complete (all 4 structured phases done) */
+export const selectIsAct1Complete2 = (state: OnboardingState) =>
+  ACT_1_PHASE_IDS.every((id) => state.completedPhaseIds.includes(id));
 
-/** Whether Act 1 is complete (v3 — 5 targeted depth phases) */
-export const selectIsAct1CompleteV2 = (state: OnboardingState) =>
-  ACT_1_PHASE_IDS_V2.every((id) =>
+/** Whether Act 2 "Your Story" is complete (7 voice + structured phases) */
+export const selectIsAct2Complete2 = (state: OnboardingState) =>
+  ACT_2_PHASE_IDS.every((id) =>
     state.completedPhaseIds.includes(id) || state.skippedPhaseIds.includes(id)
   );
 
-/** Whether Act 2 is complete (v3 — 3 deep taste phases) */
-export const selectIsAct2Complete = (state: OnboardingState) =>
-  ACT_2_PHASE_IDS_V2.every((id) =>
+/** Whether Act 3 "Deep Taste" is complete (14 deep taste phases) */
+export const selectIsAct3Complete = (state: OnboardingState) =>
+  ACT_3_PHASE_IDS.every((id) =>
     state.completedPhaseIds.includes(id) || state.skippedPhaseIds.includes(id)
   );

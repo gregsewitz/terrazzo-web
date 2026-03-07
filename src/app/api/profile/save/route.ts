@@ -43,10 +43,10 @@ export const POST = apiHandler(async (req: NextRequest) => {
       // V3 act-routing state — pack into single JSON column for cross-device resume
       ...((body.currentAct !== undefined || body.skippedPhaseIds !== undefined) && {
         onboardingRouting: {
-          currentAct: body.currentAct ?? 0,
+          currentAct: body.currentAct ?? 1,
           skippedPhaseIds: body.skippedPhaseIds ?? [],
-          act0GapResult: body.act0GapResult ?? null,
           act1GapResult: body.act1GapResult ?? null,
+          act2GapResult: body.act2GapResult ?? null,
         },
       }),
     },

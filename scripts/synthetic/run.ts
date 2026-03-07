@@ -5,12 +5,18 @@
  * Usage:
  *   npx tsx scripts/synthetic/run.ts --mode full --archetypes 10 --variations 5
  *   npx tsx scripts/synthetic/run.ts --mode matching-only
+ *   npx tsx scripts/synthetic/run.ts --mode structured-only
+ *   npx tsx scripts/synthetic/run.ts --mode vector-cosine
  *   npx tsx scripts/synthetic/run.ts --mode extraction-audit --archetype minimalist-pilgrim
  *
  * Modes:
  *   full             — Persona generation → real onboarding extraction → post-onboarding
  *                      behavior → match scoring → feed allocation → diagnostics
  *   matching-only    — Load cached profiles → match scoring → feed allocation → diagnostics
+ *   structured-only  — Structured inputs only (no LLM) → expectedProfile → match scoring
+ *                      Zero API calls. Fast-track for tuning scoring algorithm.
+ *   vector-cosine    — Structured inputs → 400-dim semantic cluster vector cosine scoring.
+ *                      Zero API calls. Tests content-based matching (signal clusters).
  *   extraction-audit — Persona generation → real extraction → compare vs expected signals
  */
 
@@ -19,14 +25,19 @@ import 'dotenv/config';
 import { DEFAULT_CONFIG, parseCliArgs, type SyntheticConfig } from './config';
 import { loadArchetypes, listArchetypeIds, type TasteArchetype } from './archetypes';
 import { runArchetypeVariations, type SyntheticUserResult } from './simulator/orchestrator';
+import { computeStructuredSignals } from './simulator/structured-inputs';
 import {
   evaluateAllMatches,
+  evaluateAllMatchesVector,
   loadPropertiesFromFixture,
   loadPropertiesFromDb,
   type EnrichedProperty,
   type CrossArchetypeReport,
   type PropertyMatch,
 } from './simulator/match-runner';
+import { generateSignalsV2 } from './simulator/signal-generator-v2';
+import { scoreAllArchetypes } from './simulator/vector-scorer';
+import { evaluate as evaluateVectors, generateReport as generateVectorReport } from './simulator/vector-evaluation';
 import { checkExtractionAccuracy, auditDomainDistribution } from './evaluator/metrics';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -114,6 +125,12 @@ async function main() {
       break;
     case 'matching-only':
       await runMatchingOnly(archetypes, config);
+      break;
+    case 'structured-only':
+      await runStructuredOnly(archetypes, config);
+      break;
+    case 'vector-cosine':
+      await runVectorCosine(archetypes, config);
       break;
     case 'extraction-audit':
       await runExtractionAudit(archetypes, config);
@@ -260,6 +277,392 @@ async function runMatchingOnly(archetypes: TasteArchetype[], config: SyntheticCo
 
   console.log(`  Report saved to: ${reportPath}`);
   console.log(`  Raw data saved to: ${jsonPath}\n`);
+}
+
+// ─── MODE: STRUCTURED ONLY ──────────────────────────────────────────────────
+//
+// Fast-track mode: structured onboarding inputs only (no LLM calls).
+// Uses computeStructuredSignals() to generate signals from archetype onboarding
+// inputs, then scores against all properties using the archetype's expectedProfile.
+// Zero API calls — runs all 17 archetypes in seconds.
+
+async function runStructuredOnly(archetypes: TasteArchetype[], config: SyntheticConfig) {
+  ensureResultsDir();
+
+  console.log('── STRUCTURED-ONLY: Generating signals from onboarding inputs ──\n');
+
+  const allResults: SyntheticUserResult[] = [];
+
+  for (const archetype of archetypes) {
+    console.log(`  ▸ ${archetype.name} (${archetype.id})`);
+
+    const structured = computeStructuredSignals(archetype);
+
+    // Build a minimal SyntheticUserResult with just the structured signals
+    const result: SyntheticUserResult = {
+      archetypeId: archetype.id,
+      variation: { seed: 0, degree: 0 },
+      allSignals: structured.signals,
+      sustainabilitySignals: [],
+      allMessages: [],
+      contradictions: [],
+      certainties: {},
+      lifeContext: {},
+      synthesizedProfile: archetype.expectedProfile as unknown as Record<string, unknown>,
+      phaseResults: {},
+      structuredBreakdown: structured.breakdown,
+      timing: { totalMs: 0, voiceMs: 0, synthesisMs: 0, phases: {} },
+      estimatedCost: { voiceGenerationCalls: 0, analyzeApiCalls: 0, synthesizeApiCalls: 0 },
+    };
+
+    const totalSignals = structured.signals.length;
+    const domainCounts: Record<string, number> = {};
+    for (const sig of structured.signals) {
+      domainCounts[sig.cat] = (domainCounts[sig.cat] || 0) + 1;
+    }
+    const domainSummary = Object.entries(domainCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([d, c]) => `${d}:${c}`)
+      .join(', ');
+    console.log(`    ${totalSignals} signals → ${domainSummary}`);
+
+    allResults.push(result);
+  }
+
+  console.log(`\n  Generated ${allResults.length} synthetic users (0 API calls)\n`);
+
+  // ── Match scoring ──
+  console.log('── Evaluating matches ──\n');
+
+  const properties = await loadProperties();
+  console.log(`  Loaded ${properties.length} enriched properties\n`);
+
+  if (properties.length === 0) {
+    console.error('  No properties found. Cannot score without properties.');
+    process.exit(1);
+  }
+
+  const report = evaluateAllMatches(allResults, archetypes, properties, config);
+
+  console.log('── Generating diagnostics report ──\n');
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const reportPath = path.join(RESULTS_DIR, `report-structured-${timestamp}.md`);
+  const jsonPath = path.join(RESULTS_DIR, `report-structured-${timestamp}.json`);
+
+  const markdown = generateMarkdownReport(report, archetypes, properties.length, allResults);
+  fs.writeFileSync(reportPath, markdown);
+  fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
+
+  console.log(`  Report saved to: ${reportPath}`);
+  console.log(`  Raw data saved to: ${jsonPath}\n`);
+}
+
+// ─── MODE: VECTOR COSINE ─────────────────────────────────────────────────────
+//
+// Uses the 400-dim semantic cluster vector system (vectors-v3) for scoring.
+// Same structured signal generation as structured-only, but scores via cosine
+// similarity of 400-dim vectors instead of the domain-level taste-match-v3 scorer.
+// This is the content-based matching path — signals map to learned clusters,
+// so different signal content produces genuinely different scores.
+
+async function runVectorCosine(archetypes: TasteArchetype[], config: SyntheticConfig) {
+  ensureResultsDir();
+  const startTime = Date.now();
+
+  console.log('── VECTOR-COSINE v2: Signal generation (asymmetric A/B) ──\n');
+
+  // 1. Generate signals for each archetype
+  const signalResults = new Map<string, ReturnType<typeof generateSignalsV2>>();
+  const signalMap = new Map<string, import('../../src/types').TasteSignal[]>();
+
+  for (const archetype of archetypes) {
+    const result = generateSignalsV2(archetype);
+    signalResults.set(archetype.id, result);
+    signalMap.set(archetype.id, result.signals);
+
+    const s = result.stats;
+    console.log(`  ▸ ${(archetype as any).name || archetype.id}: ${s.total} signals (${s.positive}+ / ${s.rejection}−), ${s.uniqueTags} unique tags`);
+  }
+
+  console.log(`\n  Generated signals for ${archetypes.length} archetypes (0 API calls)\n`);
+
+  // 2. Load properties and score
+  console.log('── Scoring via 400-dim vector cosine ──\n');
+
+  const properties = await loadProperties();
+  console.log(`  Loaded ${properties.length} enriched properties\n`);
+
+  if (properties.length === 0) {
+    console.error('  No properties found. Cannot score without properties.');
+    process.exit(1);
+  }
+
+  const scoring = scoreAllArchetypes(archetypes, signalMap, properties);
+
+  // 3. Evaluate and generate report
+  console.log('\n── Evaluating discrimination ──\n');
+
+  const runtimeMs = Date.now() - startTime;
+  const evalReport = evaluateVectors(archetypes, scoring, signalResults, runtimeMs);
+  const markdown = generateVectorReport(evalReport);
+
+  // 4. Save
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const reportPath = path.join(RESULTS_DIR, `report-vector-v2-${timestamp}.md`);
+  fs.writeFileSync(reportPath, markdown);
+
+  console.log(markdown);
+  console.log(`\n  Report saved to: ${reportPath}\n`);
+}
+
+/**
+ * Generate a markdown report tailored for vector cosine results.
+ * Similar to generateMarkdownReport but notes that scores are cosine-based
+ * and omits domain-specific breakdown (not meaningful in vector mode).
+ */
+function generateVectorCosineReport(
+  report: CrossArchetypeReport,
+  archetypes: TasteArchetype[],
+  propertyCount: number,
+  userResults: SyntheticUserResult[],
+): string {
+  const lines: string[] = [];
+  const now = new Date().toISOString();
+
+  lines.push('# Terrazzo Synthetic Pipeline — Vector Cosine Report');
+  lines.push('');
+  lines.push(`Generated: ${now}`);
+  lines.push(`Scoring: **400-dim semantic cluster cosine similarity** (vectors-v3)`);
+  lines.push(`Archetypes: ${archetypes.length}`);
+  lines.push(`Synthetic users: ${userResults.length}`);
+  lines.push(`Properties scored: ${propertyCount}`);
+  lines.push('');
+  lines.push('> This report uses the 400-dim vector cosine path, not the domain-level');
+  lines.push('> taste-match-v3 scorer. Scores reflect semantic signal similarity — different');
+  lines.push('> signal content produces genuinely different rankings.');
+  lines.push('');
+
+  // ── Cross-archetype discrimination ──
+  lines.push('## Cross-Archetype Discrimination');
+  lines.push('');
+  lines.push('Raw scores = cosine similarity × 100. Higher mean Δ = better differentiation.');
+  lines.push('');
+
+  if (report.pairwiseDiscrimination.length > 0) {
+    lines.push('| Archetype A | Archetype B | Mean Δ | Max Δ | A Wins | B Wins | Tied | Pass |');
+    lines.push('|-------------|-------------|--------|-------|--------|--------|------|------|');
+
+    // Sort by meanScoreDifference ascending to show worst pairs first
+    const sorted = [...report.pairwiseDiscrimination].sort((a, b) =>
+      a.result.meanScoreDifference - b.result.meanScoreDifference
+    );
+
+    for (const pair of sorted) {
+      const r = pair.result;
+      lines.push(`| ${pair.archetypeA} | ${pair.archetypeB} | ${r.meanScoreDifference.toFixed(1)} | ${r.maxScoreDifference.toFixed(1)} | ${r.propertiesWhereAWins} | ${r.propertiesWhereBWins} | ${r.propertiesWhereTied} | ${r.pass ? '✓' : '✗'} |`);
+    }
+    lines.push('');
+
+    const avgMeanDiff = report.pairwiseDiscrimination.reduce((s, p) => s + p.result.meanScoreDifference, 0) / report.pairwiseDiscrimination.length;
+    const passRate = report.pairwiseDiscrimination.filter(p => p.result.pass).length / report.pairwiseDiscrimination.length;
+    const passCount = report.pairwiseDiscrimination.filter(p => p.result.pass).length;
+    lines.push(`**Average pairwise mean Δ:** ${avgMeanDiff.toFixed(1)}`);
+    lines.push(`**Discrimination pass rate:** ${(passRate * 100).toFixed(0)}% (${passCount}/${report.pairwiseDiscrimination.length} pairs)`);
+    lines.push('');
+
+    const worstPair = sorted[0];
+    if (worstPair) {
+      lines.push(`⚠️ Most similar pair: **${worstPair.archetypeA}** ↔ **${worstPair.archetypeB}** (mean Δ = ${worstPair.result.meanScoreDifference.toFixed(1)})`);
+      lines.push('');
+    }
+    const bestPair = sorted[sorted.length - 1];
+    if (bestPair) {
+      lines.push(`✅ Most differentiated pair: **${bestPair.archetypeA}** ↔ **${bestPair.archetypeB}** (mean Δ = ${bestPair.result.meanScoreDifference.toFixed(1)})`);
+      lines.push('');
+    }
+  }
+
+  // ── Per-archetype results with top matches ──
+  lines.push('## Per-Archetype Top Matches');
+  lines.push('');
+
+  const top15PerArchetype: Record<string, PropertyMatch[]> = {};
+
+  for (const archetype of archetypes) {
+    const reports = report.byArchetype[archetype.id];
+    if (!reports || reports.length === 0) continue;
+
+    const top15 = reports[0].matches.slice(0, 15);
+    top15PerArchetype[archetype.id] = top15;
+
+    lines.push(`### ${archetype.name} (\`${archetype.id}\`)`);
+    lines.push('');
+
+    const dist = reports[0].distribution;
+    lines.push(`Display score range: ${dist.min.toFixed(1)} – ${dist.max.toFixed(1)} (mean ${dist.mean.toFixed(1)})`);
+
+    // Show cosine similarity range from raw scores (÷100)
+    const rawScores = reports[0].matches.map(m => m.rawScore);
+    const maxCosine = Math.max(...rawScores) / 100;
+    const minCosine = Math.min(...rawScores) / 100;
+    lines.push(`Cosine similarity range: ${minCosine.toFixed(3)} – ${maxCosine.toFixed(3)}`);
+    lines.push('');
+
+    if (top15.length > 0) {
+      lines.push('| # | Property | Display Score | Cosine Sim |');
+      lines.push('|---|----------|---------------|------------|');
+      for (let i = 0; i < top15.length; i++) {
+        const match = top15[i];
+        lines.push(`| ${i + 1} | ${match.propertyName} | ${match.overallScore.toFixed(1)} | ${(match.rawScore / 100).toFixed(3)} |`);
+      }
+      lines.push('');
+    }
+
+    // Bottom 5
+    if (reports[0].matches.length > 5) {
+      lines.push('**Bottom 5 (lowest cosine similarity):**');
+      lines.push('');
+      const bottom5 = reports[0].matches.slice(-5).reverse();
+      lines.push('| Property | Display Score | Cosine Sim |');
+      lines.push('|----------|---------------|------------|');
+      for (const match of bottom5) {
+        lines.push(`| ${match.propertyName} | ${match.overallScore.toFixed(1)} | ${(match.rawScore / 100).toFixed(3)} |`);
+      }
+      lines.push('');
+    }
+  }
+
+  // ── Signature Properties ──
+  if (Object.keys(top15PerArchetype).length >= 2) {
+    lines.push('## Signature Properties (Unique to Each Archetype)');
+    lines.push('');
+
+    const allTop15Ids: Record<string, Set<string>> = {};
+    for (const [aid, matches] of Object.entries(top15PerArchetype)) {
+      allTop15Ids[aid] = new Set(matches.map(m => m.propertyId));
+    }
+
+    for (const archetype of archetypes) {
+      const myTop15 = top15PerArchetype[archetype.id];
+      if (!myTop15) continue;
+
+      const otherIds = new Set<string>();
+      for (const [aid, ids] of Object.entries(allTop15Ids)) {
+        if (aid !== archetype.id) {
+          for (const id of ids) otherIds.add(id);
+        }
+      }
+
+      const signature = myTop15.filter(m => !otherIds.has(m.propertyId));
+
+      if (signature.length > 0) {
+        lines.push(`**${archetype.name}** (${signature.length} unique):`);
+        for (const m of signature) {
+          const rank = myTop15.findIndex(x => x.propertyId === m.propertyId) + 1;
+          lines.push(`- #${rank} ${m.propertyName} (cosine ${(m.rawScore / 100).toFixed(3)})`);
+        }
+        lines.push('');
+      } else {
+        lines.push(`**${archetype.name}**: ⚠️ No unique properties in top 15`);
+        lines.push('');
+      }
+    }
+  }
+
+  // ── Head-to-Head Swings ──
+  if (Object.keys(top15PerArchetype).length >= 2) {
+    lines.push('## Head-to-Head: Biggest Cosine Swings');
+    lines.push('');
+
+    const archetypeIds = Object.keys(report.byArchetype);
+    const allPropertyScores: Record<string, Record<string, number>> = {};
+
+    for (const aid of archetypeIds) {
+      const reports = report.byArchetype[aid];
+      if (!reports || reports.length === 0) continue;
+      for (const match of reports[0].matches) {
+        if (!allPropertyScores[match.propertyId]) {
+          allPropertyScores[match.propertyId] = {};
+          (allPropertyScores[match.propertyId] as any).__name = match.propertyName;
+        }
+        allPropertyScores[match.propertyId][aid] = match.rawScore;
+      }
+    }
+
+    const swings: { name: string; highArch: string; highScore: number; lowArch: string; lowScore: number; swing: number }[] = [];
+
+    for (const [pid, scores] of Object.entries(allPropertyScores)) {
+      const name = (scores as any).__name;
+      let highArch = '', lowArch = '';
+      let highScore = -Infinity, lowScore = Infinity;
+
+      for (const aid of archetypeIds) {
+        const s = scores[aid];
+        if (s === undefined) continue;
+        if (s > highScore) { highScore = s; highArch = aid; }
+        if (s < lowScore) { lowScore = s; lowArch = aid; }
+      }
+
+      if (highArch !== lowArch) {
+        swings.push({ name, highArch, highScore, lowArch, lowScore, swing: highScore - lowScore });
+      }
+    }
+
+    swings.sort((a, b) => b.swing - a.swing);
+
+    lines.push('| Property | Loves It | Cosine | Hates It | Cosine | Swing |');
+    lines.push('|----------|----------|--------|----------|--------|-------|');
+    for (const s of swings.slice(0, 20)) {
+      lines.push(`| ${s.name} | ${s.highArch} | ${(s.highScore / 100).toFixed(3)} | ${s.lowArch} | ${(s.lowScore / 100).toFixed(3)} | ${(s.swing / 100).toFixed(3)} |`);
+    }
+    lines.push('');
+
+    if (swings.length > 0) {
+      const avgSwing = swings.slice(0, 50).reduce((s, x) => s + x.swing, 0) / Math.min(50, swings.length);
+      lines.push(`Average swing (top 50 properties): ${(avgSwing / 100).toFixed(3)} cosine`);
+      lines.push('');
+    }
+  }
+
+  // ── Overlap Analysis ──
+  if (Object.keys(top15PerArchetype).length >= 2) {
+    lines.push('## Overlap Analysis');
+    lines.push('');
+
+    const archetypeIds = Object.keys(top15PerArchetype);
+    lines.push('| Archetype A | Archetype B | Shared in Top 15 | Overlap % |');
+    lines.push('|-------------|-------------|-------------------|-----------|');
+
+    for (let i = 0; i < archetypeIds.length; i++) {
+      for (let j = i + 1; j < archetypeIds.length; j++) {
+        const aId = archetypeIds[i];
+        const bId = archetypeIds[j];
+        const aIds = new Set(top15PerArchetype[aId].map(m => m.propertyId));
+        const bIds = new Set(top15PerArchetype[bId].map(m => m.propertyId));
+        const shared = [...aIds].filter(id => bIds.has(id)).length;
+        const overlapPct = (shared / 15 * 100).toFixed(0);
+        const flag = shared > 5 ? ' ⚠️' : '';
+        lines.push(`| ${aId} | ${bId} | ${shared} | ${overlapPct}%${flag} |`);
+      }
+    }
+    lines.push('');
+  }
+
+  // ── User Vector Stats ──
+  lines.push('## Signal Coverage Summary');
+  lines.push('');
+  lines.push('| Archetype | Total Signals | Rejection Signals | Domains Active |');
+  lines.push('|-----------|---------------|-------------------|----------------|');
+  for (const user of userResults) {
+    const totalSigs = user.allSignals.length;
+    const rejectionSigs = user.allSignals.filter(s => s.cat === 'Rejection').length;
+    const domains = new Set(user.allSignals.map(s => s.cat));
+    lines.push(`| ${user.archetypeId} | ${totalSigs} | ${rejectionSigs} | ${domains.size} |`);
+  }
+  lines.push('');
+
+  return lines.join('\n');
 }
 
 // ─── MODE: EXTRACTION AUDIT ──────────────────────────────────────────────────
@@ -565,7 +968,7 @@ function generateMarkdownReport(
           allPropertyScores[match.propertyId] = {};
           (allPropertyScores[match.propertyId] as any).__name = match.propertyName;
         }
-        allPropertyScores[match.propertyId][aid] = match.overallScore;
+        allPropertyScores[match.propertyId][aid] = match.rawScore;
       }
     }
 

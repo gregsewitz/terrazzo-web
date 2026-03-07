@@ -856,7 +856,9 @@ export type OnboardingPhaseModality =
   | 'property-reactions'  // Property reaction card phase (Act 0 + Act 2 gap-fill)
   | 'scale'               // Single-question selector (sustainability check)
   | 'force-rank'          // Rank items by personal importance (Act 2 details-matter)
-  | 'quick-choice';       // Pick from curated options (Act 2 emotional-core)
+  | 'quick-choice'        // Pick from curated options (Act 2 emotional-core)
+  | 'scene'               // Single-select from 4 options, multi-question stepper
+  | 'image-pair';          // A/B photo comparison — tap to choose
 
 export interface OnboardingPhase {
   id: string;
@@ -864,7 +866,7 @@ export interface OnboardingPhase {
   title: string;
   subtitle: string;
   modality: OnboardingPhaseModality;
-  act: 0 | 1 | 2;
+  act: 1 | 2 | 3;
   aiPrompt: string;
   followUps: string[];
   sampleUserResponses: string[];
@@ -890,6 +892,25 @@ export interface OnboardingPhase {
   quickChoiceOptions?: QuickChoiceOption[];
   /** Max selections allowed for quick-choice (defaults to 3) */
   quickChoiceMax?: number;
+  /** Min selections required for quick-choice (defaults to 2) */
+  quickChoiceMin?: number;
+  /** Scene questions — single-select from 4 options, multi-question stepper */
+  sceneQuestions?: SceneQuestion[];
+  /** Image pair questions — A/B photo comparison stepper */
+  imagePairQuestions?: ImagePairQuestion[];
+}
+
+/** A/B photo comparison question — user taps the image that draws them in */
+export interface ImagePairQuestion {
+  id: string;
+  prompt: string;
+  a: { imageUrl: string; label: string };
+  b: { imageUrl: string; label: string };
+  aSignals: string[];
+  bSignals: string[];
+  domain: string;
+  /** If true, cross-checks against signals from earlier phases */
+  isValidator?: boolean;
 }
 
 export interface ForceRankItem {
@@ -904,6 +925,24 @@ export interface QuickChoiceOption {
   id: string;
   label: string;
   description?: string;
+  signals: string[];
+  domain: string;
+}
+
+/** A single scene question within a SceneChoiceView phase (multi-question stepper) */
+export interface SceneQuestion {
+  id: string;
+  prompt: string;
+  options: SceneOption[];
+  /** If true, this question validates/contradicts signals from another phase */
+  isValidator?: boolean;
+  /** Which domain(s) this question primarily targets */
+  domains: string[];
+}
+
+export interface SceneOption {
+  id: string;
+  label: string;
   signals: string[];
   domain: string;
 }

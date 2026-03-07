@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ALL_PHASE_IDS_V2 } from '@/constants/onboarding';
+import { ALL_PHASE_IDS } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
 
@@ -40,7 +40,7 @@ export default function OnboardingIntro() {
 
   const hasInProgressSession = hydrated && !isComplete && completedPhaseIds.length > 0;
   const isRedoSession = hydrated && !isComplete && generatedProfile !== null;
-  const currentPhaseId = ALL_PHASE_IDS_V2[currentPhaseIndex] || ALL_PHASE_IDS_V2[0];
+  const currentPhaseId = ALL_PHASE_IDS[currentPhaseIndex] || ALL_PHASE_IDS[0];
 
   const handleStart = () => {
     if (!isRedoSession) {
@@ -48,7 +48,7 @@ export default function OnboardingIntro() {
     }
     setIsStarting(true);
     setTimeout(() => {
-      router.push(`/onboarding/phase/${ALL_PHASE_IDS_V2[0]}`);
+      router.push(`/onboarding/phase/${ALL_PHASE_IDS[0]}`);
     }, 400);
   };
 
@@ -84,7 +84,7 @@ export default function OnboardingIntro() {
           {hasInProgressSession ? (
             <>
               <p className="text-[17px] leading-relaxed text-[var(--t-ink)]/80">
-                Welcome back — you&apos;re {completedPhaseIds.length} of {ALL_PHASE_IDS_V2.length} sections
+                Welcome back — you&apos;re {completedPhaseIds.length} of {ALL_PHASE_IDS.length} sections
                 into building your taste profile.
               </p>
               <p className="text-[15px] leading-relaxed text-[var(--t-ink)]/50">

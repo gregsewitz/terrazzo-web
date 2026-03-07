@@ -16,13 +16,14 @@ export default function ProcessingPage() {
   const hasSynthesized = useRef(false);
   const { allSignals, allMessages, allContradictions, certainties, setGeneratedProfile } = useOnboardingStore();
 
-  // Animate through processing steps — stagger timing so early steps feel snappy,
-  // middle steps feel like real work, and the last step holds until the API returns
+  // Animate through processing steps — stretched timing so the animation covers
+  // most of the API wait (~18-22s). Each step gets progressively longer so it
+  // feels like the work is getting deeper. The last step holds until the API returns.
   useEffect(() => {
     if (hasError) return; // pause animation on error
     if (currentStep < PROCESSING_STEPS.length - 1) {
-      // First couple steps go a bit faster, middle steps slower, creating a natural rhythm
-      const delay = currentStep < 2 ? 1200 : currentStep < 5 ? 1800 : 2200;
+      // Ramp: 1800 → 2200 → 2400 → 2600 → 2800 → 3000 → 3200 ≈ 18s total
+      const delay = 1800 + currentStep * 250;
       const timer = setTimeout(() => setCurrentStep((i) => i + 1), delay);
       return () => clearTimeout(timer);
     }
@@ -48,8 +49,11 @@ export default function ProcessingPage() {
       setGeneratedProfile(profile);
 
       // Wait for animation to finish before navigating
-      // Steps take ~14s total (variable timing), so allow up to that before proceeding
-      const minDelay = Math.max(0, PROCESSING_STEPS.length * 1800 - 2000);
+      // Steps take ~18s total (ramped timing), give a small buffer so the last check
+      // mark has time to appear before we transition
+      const totalAnimTime = Array.from({ length: PROCESSING_STEPS.length - 1 }, (_, i) => 1800 + i * 250)
+        .reduce((sum, d) => sum + d, 0);
+      const minDelay = Math.max(0, totalAnimTime + 800);
       setTimeout(() => setIsDone(true), minDelay);
     } catch (err) {
       console.error('Synthesis failed:', err);

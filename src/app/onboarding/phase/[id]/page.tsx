@@ -2,8 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
-import { ONBOARDING_PHASES, ALL_PHASE_IDS, ACT_1_PHASE_IDS, ACT_2_PHASE_IDS } from '@/constants/onboarding';
-import { ACT_0_PHASE_IDS, ACT_1_PHASE_IDS_V2, ACT_2_PHASE_IDS_V2, ALL_PHASE_IDS_V2, ACT_PHASE_MAP } from '@/constants/onboarding';
+import { ONBOARDING_PHASES, ACT_1_PHASE_IDS, ACT_2_PHASE_IDS, ACT_3_PHASE_IDS, ALL_PHASE_IDS, ACT_PHASE_MAP } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import CertaintyBar from '@/components/onboarding/CertaintyBar';
 import ConversationView from '@/components/onboarding/ConversationView';
@@ -18,9 +17,11 @@ import SustainabilityScaleView from '@/components/onboarding/SustainabilityScale
 import PropertyReactionPhaseView from '@/components/onboarding/PropertyReactionPhaseView';
 import ForceRankView from '@/components/onboarding/ForceRankView';
 import QuickChoiceView from '@/components/onboarding/QuickChoiceView';
+import SceneChoiceView from '@/components/onboarding/SceneChoiceView';
+import ImagePairView from '@/components/onboarding/ImagePairView';
 import { apiFetch } from '@/lib/api-client';
 
-const ACT_LABELS: Record<number, string> = { 0: 'Act 0', 1: 'Act I', 2: 'Act II' };
+const ACT_LABELS: Record<number, string> = { 1: 'Quick Read', 2: 'Your Story', 3: 'Deep Taste' };
 
 export default function PhasePage() {
   const params = useParams();
@@ -58,9 +59,9 @@ export default function PhasePage() {
   }, [phase, lifeContext.partnerName, lifeContext.primaryCompanions]);
 
   // Determine active phase count (excluding skipped)
-  const activePhaseCount = ALL_PHASE_IDS_V2.length - skippedPhaseIds.length;
+  const activePhaseCount = ALL_PHASE_IDS.length - skippedPhaseIds.length;
   const completedCount = completedPhaseIds.filter(
-    (id) => (ALL_PHASE_IDS_V2 as readonly string[]).includes(id)
+    (id) => (ALL_PHASE_IDS as readonly string[]).includes(id)
   ).length;
 
   const handlePhaseComplete = useCallback(async () => {
@@ -80,8 +81,8 @@ export default function PhasePage() {
         // V3 act-routing state — needed for cross-device resume
         currentAct: store.currentAct,
         skippedPhaseIds: store.skippedPhaseIds,
-        act0GapResult: store.act0GapResult,
         act1GapResult: store.act1GapResult,
+        act2GapResult: store.act2GapResult,
       }),
     }).catch((err) => console.error('Failed to save phase progress:', err));
 
@@ -95,7 +96,7 @@ export default function PhasePage() {
     for (let i = idxInAct + 1; i < actPhases.length; i++) {
       const nextId = actPhases[i];
       if (!store.skippedPhaseIds.includes(nextId)) {
-        const globalIdx = (ALL_PHASE_IDS_V2 as readonly string[]).indexOf(nextId);
+        const globalIdx = (ALL_PHASE_IDS as readonly string[]).indexOf(nextId);
         setPhaseIndex(globalIdx);
         router.push(`/onboarding/phase/${nextId}`);
         return;
@@ -103,16 +104,16 @@ export default function PhasePage() {
     }
 
     // End of act — run gap analysis and transition
-    if (phase.act === 0) {
-      await store.runGapAnalysisForActTransition(0);
-      store.setCurrentAct(1);
-      router.push('/onboarding/act0-complete');
-    } else if (phase.act === 1) {
+    if (phase.act === 1) {
       await store.runGapAnalysisForActTransition(1);
       store.setCurrentAct(2);
       router.push('/onboarding/act1-complete');
+    } else if (phase.act === 2) {
+      await store.runGapAnalysisForActTransition(2);
+      store.setCurrentAct(3);
+      router.push('/onboarding/act2-complete');
     } else {
-      // End of Act 2 → processing
+      // End of Act 3 → processing
       router.push('/onboarding/processing');
     }
   }, [phaseId, phase, completePhase, setPhaseIndex, router]);
@@ -132,7 +133,7 @@ export default function PhasePage() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
-              {ACT_LABELS[phase.act] ?? `Act ${phase.act}`} &middot; Phase {phase.phaseNumber}
+              {ACT_LABELS[phase.act] ?? `Act ${phase.act}`}
             </p>
             <h1 className="font-serif text-[22px] text-[var(--t-ink)] leading-tight">
               {phase.title}
@@ -222,6 +223,23 @@ export default function PhasePage() {
             onComplete={handlePhaseComplete}
             options={phase.quickChoiceOptions}
             maxSelections={phase.quickChoiceMax ?? 3}
+            minSelections={phase.quickChoiceMin ?? 2}
+          />
+        )}
+
+        {/* ── NEW: Scene Choice (multi-question stepper) ── */}
+        {phase.modality === 'scene' && phase.sceneQuestions && (
+          <SceneChoiceView
+            onComplete={handlePhaseComplete}
+            questions={phase.sceneQuestions}
+          />
+        )}
+
+        {/* ── NEW: Image Pair (A/B photo comparison) ── */}
+        {phase.modality === 'image-pair' && phase.imagePairQuestions && (
+          <ImagePairView
+            onComplete={handlePhaseComplete}
+            questions={phase.imagePairQuestions}
           />
         )}
       </div>

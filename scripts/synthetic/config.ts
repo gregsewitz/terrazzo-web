@@ -4,7 +4,7 @@
  * Controls runtime mode, archetype selection, and evaluation thresholds.
  */
 
-export type RunMode = 'full' | 'matching-only' | 'extraction-audit';
+export type RunMode = 'full' | 'matching-only' | 'structured-only' | 'vector-cosine' | 'extraction-audit';
 
 export interface SyntheticConfig {
   /** Which pipeline layers to run */

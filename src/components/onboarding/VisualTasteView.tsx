@@ -40,6 +40,7 @@ interface VisualTasteViewProps {
 
 export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
   const addSignals = useOnboardingStore((s) => s.addSignals);
+  const setMosaicAxes = useOnboardingStore((s) => s.setMosaicAxes);
   const setCurrentPhaseProgress = useOnboardingStore((s) => s.setCurrentPhaseProgress);
 
   const [eloState, setEloState] = useState<EloState>(() =>
@@ -85,6 +86,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
         const signals = extractSignals(nextState);
         addSignals(signals);
         const axes = extractTasteAxes(nextState, DESIGNER_POOL);
+        setMosaicAxes(axes); // Populate store so DesignLanguageReveal reads real values
         addSignals([{
           tag: `TasteAxes:${JSON.stringify(axes)}`,
           cat: 'TasteAxes',
@@ -103,6 +105,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
     const signals = extractSignals(eloState);
     addSignals(signals);
     const axes = extractTasteAxes(eloState, DESIGNER_POOL);
+    setMosaicAxes(axes); // Populate store so DesignLanguageReveal reads real values
     addSignals([{
       tag: `TasteAxes:${JSON.stringify(axes)}`,
       cat: 'TasteAxes',
@@ -193,11 +196,11 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
   const vibe = item.metadata.vibe as string;
   const allImageUrls = (item.metadata.imageUrls as string[]) || [];
 
-  // Shuffle images deterministically per item+comparisons
+  // Shuffle images deterministically per item (stable across comparison updates)
   const imageUrls = useMemo(() => {
-    const seed = item.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) + item.comparisons;
+    const seed = item.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     return seededShuffle(allImageUrls, seed);
-  }, [allImageUrls, item.id, item.comparisons]);
+  }, [allImageUrls, item.id]);
 
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);

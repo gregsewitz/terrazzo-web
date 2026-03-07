@@ -63,7 +63,7 @@ function extractExperienceSignals(
     const chosen = choice === 'a' ? itemA : itemB;
     const rejected = choice === 'a' ? itemB : itemA;
 
-    // Winner signals at 0.7 confidence, loser at 0.3
+    // Winner signals at 0.7 confidence — matches production Elo top-quartile behavior
     for (const sig of chosen.signals) {
       signals.push({
         tag: sig,
@@ -71,11 +71,14 @@ function extractExperienceSignals(
         confidence: 0.7,
       });
     }
+    // Rejected side emitted as rejection signals — same tag text so vectors-v3
+    // creates negative activation on the SAME cluster (Anti- prefix would map to
+    // different clusters since signal-clusters.json has no Anti- entries)
     for (const sig of rejected.signals) {
       signals.push({
         tag: sig,
-        cat: (rejected.category || 'Design') as TasteDomain,
-        confidence: 0.3,
+        cat: 'Rejection' as TasteDomain,
+        confidence: 0.7,
       });
     }
   }
@@ -99,7 +102,7 @@ function dimensionKeyToLabel(key: string): string {
 }
 
 // ─── Image Pairs (visual-taste) ─────────────────────────────────────────────
-// Binary A/B visual choice. Same card signal logic: winner at 0.7, loser at 0.3.
+// Binary A/B visual choice. Winner signals positive, loser as rejection.
 
 function extractImagePairSignals(
   choices: Record<string, 'a' | 'b'>,
@@ -118,8 +121,9 @@ function extractImagePairSignals(
     for (const tag of winnerSignals) {
       signals.push({ tag, cat: domain, confidence: 0.7 });
     }
+    // Rejected side — keep original tag text so vectors-v3 targets same clusters
     for (const tag of loserSignals) {
-      signals.push({ tag, cat: domain, confidence: 0.3 });
+      signals.push({ tag, cat: 'Rejection' as TasteDomain, confidence: 0.7 });
     }
   }
 
@@ -175,15 +179,13 @@ function extractDiagnosticSignals(
     const winnerDomain = (choice === 'a'
       ? (question.aDomain || 'Design')
       : (question.bDomain || question.aDomain || 'Design')) as TasteDomain;
-    const loserDomain = (choice === 'a'
-      ? (question.bDomain || question.aDomain || 'Design')
-      : (question.aDomain || 'Design')) as TasteDomain;
 
     for (const tag of winnerSignals) {
       signals.push({ tag, cat: winnerDomain, confidence: 0.7 });
     }
+    // Rejected side — keep original tag text so vectors-v3 targets same clusters
     for (const tag of loserSignals) {
-      signals.push({ tag, cat: loserDomain, confidence: 0.3 });
+      signals.push({ tag, cat: 'Rejection' as TasteDomain, confidence: 0.7 });
     }
   }
 
@@ -218,34 +220,35 @@ function extractSliderSignals(
     const domain = (sliderDef.domain || 'Service') as TasteDomain;
 
     if (normalized < 0.3) {
-      // Strong left preference
+      // Strong left preference — emit left as positive, right as rejection
       const conf = 0.6 + (0.3 - normalized) * 1.0; // 0.6 to 0.9
       for (const tag of sliderDef.leftSignals) {
         signals.push({ tag, cat: domain, confidence: Math.min(conf, 0.9) });
       }
-      // Weak right anti-preference
       for (const tag of sliderDef.rightSignals) {
-        signals.push({ tag, cat: domain, confidence: 0.2 });
+        signals.push({ tag, cat: 'Rejection' as TasteDomain, confidence: 0.6 });
       }
     } else if (normalized > 0.7) {
-      // Strong right preference
+      // Strong right preference — emit right as positive, left as rejection
       const conf = 0.6 + (normalized - 0.7) * 1.0; // 0.6 to 0.9
       for (const tag of sliderDef.rightSignals) {
         signals.push({ tag, cat: domain, confidence: Math.min(conf, 0.9) });
       }
-      // Weak left anti-preference
       for (const tag of sliderDef.leftSignals) {
-        signals.push({ tag, cat: domain, confidence: 0.2 });
+        signals.push({ tag, cat: 'Rejection' as TasteDomain, confidence: 0.6 });
       }
     } else {
-      // Moderate zone — both sides at medium confidence
+      // Moderate zone — only emit the leaning side at reduced confidence, skip other
       const leftConf = 0.3 + (0.5 - normalized) * 0.5;
       const rightConf = 0.3 + (normalized - 0.5) * 0.5;
-      for (const tag of sliderDef.leftSignals) {
-        signals.push({ tag, cat: domain, confidence: Math.max(0.25, leftConf) });
-      }
-      for (const tag of sliderDef.rightSignals) {
-        signals.push({ tag, cat: domain, confidence: Math.max(0.25, rightConf) });
+      if (leftConf > rightConf) {
+        for (const tag of sliderDef.leftSignals) {
+          signals.push({ tag, cat: domain, confidence: Math.max(0.4, leftConf) });
+        }
+      } else {
+        for (const tag of sliderDef.rightSignals) {
+          signals.push({ tag, cat: domain, confidence: Math.max(0.4, rightConf) });
+        }
       }
     }
   }

@@ -6,7 +6,7 @@ import { useSavedStore, DBSavedPlace, DBCollection } from '@/stores/savedStore';
 import { useTripStore, DBTrip } from '@/stores/tripStore';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
-import { ALL_PHASE_IDS, ALL_PHASE_IDS_V2 } from '@/constants/onboarding';
+import { ALL_PHASE_IDS } from '@/constants/onboarding';
 import type { OnboardingDepth } from '@/types';
 
 /**
@@ -97,14 +97,14 @@ async function loadUserData() {
       const routing = profile.user.onboardingRouting as {
         currentAct?: number;
         skippedPhaseIds?: string[];
-        act0GapResult?: unknown;
         act1GapResult?: unknown;
+        act2GapResult?: unknown;
       } | null;
       if (routing) {
         if (routing.currentAct !== undefined) updates.currentAct = routing.currentAct;
         if (routing.skippedPhaseIds) updates.skippedPhaseIds = routing.skippedPhaseIds;
-        if (routing.act0GapResult) updates.act0GapResult = routing.act0GapResult;
         if (routing.act1GapResult) updates.act1GapResult = routing.act1GapResult;
+        if (routing.act2GapResult) updates.act2GapResult = routing.act2GapResult;
       }
 
       // Merge completedPhaseIds from DB + localStorage (union — don't lose progress from either source)
@@ -114,12 +114,12 @@ async function loadUserData() {
         const merged = [...new Set([...localPhaseIds, ...dbPhaseIds])];
         updates.completedPhaseIds = merged;
         // Derive currentPhaseIndex from the furthest completed phase — try V2 list first, fall back to V1
-        const maxIdxV2 = Math.max(...merged.map(id => (ALL_PHASE_IDS_V2 as readonly string[]).indexOf(id)).filter(i => i >= 0));
-        if (maxIdxV2 >= 0 && maxIdxV2 + 1 < ALL_PHASE_IDS_V2.length) {
+        const maxIdxV2 = Math.max(...merged.map(id => (ALL_PHASE_IDS as readonly string[]).indexOf(id)).filter(i => i >= 0));
+        if (maxIdxV2 >= 0 && maxIdxV2 + 1 < ALL_PHASE_IDS.length) {
           updates.currentPhaseIndex = maxIdxV2 + 1;
         } else {
           // Fall back to legacy phase list for old sessions
-          const maxIdx = Math.max(...merged.map(id => ALL_PHASE_IDS.indexOf(id)).filter(i => i >= 0));
+          const maxIdx = Math.max(...merged.map(id => (ALL_PHASE_IDS as readonly string[]).indexOf(id)).filter(i => i >= 0));
           if (maxIdx >= 0 && maxIdx + 1 < ALL_PHASE_IDS.length) {
             updates.currentPhaseIndex = maxIdx + 1;
           }

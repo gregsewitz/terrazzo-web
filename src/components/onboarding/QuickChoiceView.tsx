@@ -11,6 +11,8 @@ interface QuickChoiceViewProps {
   options: QuickChoiceOption[];
   /** Max number of selections allowed (defaults to 3) */
   maxSelections?: number;
+  /** Min number of selections required (defaults to 2) */
+  minSelections?: number;
 }
 
 /**
@@ -19,7 +21,7 @@ interface QuickChoiceViewProps {
  * Signal emission: selected items emit at confidence 0.88-0.92.
  * Order doesn't matter here (unlike ForceRank).
  */
-export default function QuickChoiceView({ onComplete, options, maxSelections = 3 }: QuickChoiceViewProps) {
+export default function QuickChoiceView({ onComplete, options, maxSelections = 3, minSelections = 2 }: QuickChoiceViewProps) {
   const addSignals = useOnboardingStore((s) => s.addSignals);
   const updateCertainties = useOnboardingStore((s) => s.updateCertainties);
   const setCurrentPhaseProgress = useOnboardingStore((s) => s.setCurrentPhaseProgress);
@@ -27,7 +29,7 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
 
-  const MIN_SELECTIONS = 2;
+  const MIN_SELECTIONS = minSelections;
 
   const handleTap = useCallback((optionId: string) => {
     if (submitted) return;

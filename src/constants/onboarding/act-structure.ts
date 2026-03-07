@@ -1,46 +1,59 @@
 // ─── 3-Act Onboarding Structure ───
-// Act 0: Ground Truth (~3 min) — fast structured signal capture
-// Act 1: Targeted Depth (~5 min) — voice + adaptive conversation
-// Act 2: Deep Taste (~4 min) — voice + adaptive gap-fill
+// Act 1: Quick Read (~3 min) — fast structured signal capture
+// Act 2: Your Story (~5 min) — behavioral anchoring + voice + personal download
+// Act 3: Deep Taste (~6 min) — structured depth + adaptive gap-fill
 
-export const ACT_0_PHASE_IDS = [
+export const ACT_1_PHASE_IDS = [
   'quick-bio',
   'instinct-round',
   'visual-taste',
   'property-reactions-0',
 ] as const;
 
-export const ACT_1_PHASE_IDS_V2 = [
+export const ACT_2_PHASE_IDS = [
+  'behavioral-anchoring',
   'service-style',
   'sustainability-check',
   'memorable-stays',
   'anti-stay',
-  'adaptive-conversation',
+  'last-trip',
+  'nobody-asks',
 ] as const;
 
-export const ACT_2_PHASE_IDS_V2 = [
+export const ACT_3_PHASE_IDS = [
+  'food-and-senses',
+  'visual-pairs',
   'details-matter',
   'emotional-core',
+  'travel-scenarios',
+  'dining-depth',
+  'cultural-immersion',
+  'rhythm-and-pace',
+  'movement-and-wellness',
+  'scent-and-texture',
+  'browsing-and-discovery',
+  'trade-offs',
+  'deal-breakers',
+  'consistency-check',
   'gap-fill-reactions',
 ] as const;
 
-export const ALL_PHASE_IDS_V2 = [
-  ...ACT_0_PHASE_IDS,
-  ...ACT_1_PHASE_IDS_V2,
-  ...ACT_2_PHASE_IDS_V2,
+export const ALL_PHASE_IDS = [
+  ...ACT_1_PHASE_IDS,
+  ...ACT_2_PHASE_IDS,
+  ...ACT_3_PHASE_IDS,
 ] as const;
 
 /** Phases that may be skipped based on domain gap analysis */
 export const ADAPTIVE_PHASE_IDS = [
-  'adaptive-conversation',
   'gap-fill-reactions',
 ] as const;
 
 /** Act boundary helpers */
 export const ACT_PHASE_MAP = {
-  0: ACT_0_PHASE_IDS,
-  1: ACT_1_PHASE_IDS_V2,
-  2: ACT_2_PHASE_IDS_V2,
+  1: ACT_1_PHASE_IDS,
+  2: ACT_2_PHASE_IDS,
+  3: ACT_3_PHASE_IDS,
 } as const;
 
-export type ActNumber = 0 | 1 | 2;
+export type ActNumber = 1 | 2 | 3;
