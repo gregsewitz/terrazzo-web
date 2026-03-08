@@ -20,6 +20,8 @@ import {
   backfillAllPropertyEmbeddingsV3,
 } from '@/lib/taste-intelligence';
 
+export const maxDuration = 300; // 5 min — backfill may process hundreds of records
+
 export async function POST(req: NextRequest) {
   // Simple auth check — skip if CRON_SECRET isn't configured
   const authHeader = req.headers.get('authorization');
