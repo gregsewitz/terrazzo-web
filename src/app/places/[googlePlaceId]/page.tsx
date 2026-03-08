@@ -37,6 +37,10 @@ interface ResolvedPlace {
   isInLibrary: boolean;
   matchScore: number | null;
   matchBreakdown: Record<string, number> | null;
+  matchExplanation?: {
+    topClusters: Array<{ label: string; domain: string; score: number; signals: string[] }>;
+    narrative: string;
+  } | null;
   tasteNote: string | null;
   intelligenceId: string | null;
   intelligenceStatus: string;
@@ -72,6 +76,7 @@ function toImportedPlace(resolved: ResolvedPlace): ImportedPlace {
     source: { type: 'url', name: 'Discover' },
     matchScore: resolved.matchScore || 0,
     matchBreakdown: (resolved.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
+    matchExplanation: resolved.matchExplanation || undefined,
     tasteNote: resolved.tasteNote || '',
     google,
     status: 'available',

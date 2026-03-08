@@ -13,8 +13,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { backfillPropertyEmbedding } from '@/lib/taste-intelligence/backfill';
+import { backfillPropertyEmbeddingV3 } from '@/lib/taste-intelligence/backfill-v3';
 import { computeMatchFromSignals } from '@/lib/taste-match-v3';
+import { computeVectorMatchFromDb, breakdownToNormalized } from '@/lib/taste-match-vectors';
 import { completeTasteFields } from '@/lib/taste-completion';
 import type { TasteProfile } from '@/types';
 
@@ -40,16 +41,15 @@ export async function POST(req: NextRequest) {
 
     console.log(`[enrichment-complete] Processing post-enrichment for ${googlePlaceId}`);
 
-    // ── 1. Compute property embedding ──────────────────────────────────────
+    // ── 1. Compute property embedding (V3 — 400-dim semantic clusters) ────
     let embeddingComputed = false;
     try {
-      const result = await backfillPropertyEmbedding(placeIntelligenceId);
-      embeddingComputed = result.embeddingComputed;
+      embeddingComputed = await backfillPropertyEmbeddingV3(placeIntelligenceId);
       console.log(
-        `[enrichment-complete] Embedding: ${embeddingComputed ? 'computed' : 'skipped (no signals)'} for ${result.propertyName}`,
+        `[enrichment-complete] V3 Embedding: ${embeddingComputed ? 'computed' : 'skipped (no signals)'} for ${googlePlaceId}`,
       );
     } catch (err) {
-      console.error(`[enrichment-complete] Embedding computation failed:`, err);
+      console.error(`[enrichment-complete] V3 embedding computation failed:`, err);
     }
 
     // ── 2. Promote synthesis fields from PlaceIntelligence → SavedPlace ──────
@@ -143,20 +143,40 @@ export async function POST(req: NextRequest) {
         if (signals.length > 0) {
           for (const sp of savedPlaces) {
             try {
-              // Extract the user's taste profile (radarData → TasteProfile shape)
+              // v4: Try vector-first scoring
+              const vectorMatch = await computeVectorMatchFromDb(sp.user.id, googlePlaceId);
+
+              if (vectorMatch) {
+                // Vector match available — use as sole scoring source
+                const normalizedBreakdown = breakdownToNormalized(vectorMatch.breakdown);
+
+                await prisma.savedPlace.update({
+                  where: { id: sp.id },
+                  // matchExplanation: added in v4 migration — Prisma types update on next `prisma generate`
+                  data: {
+                    matchScore: vectorMatch.overallScore,
+                    matchBreakdown: normalizedBreakdown,
+                    matchExplanation: vectorMatch.explanation,
+                  } as any,
+                });
+
+                matchesUpdated++;
+                continue;
+              }
+
+              // Fallback: signal-based scoring (user has no V3 vector)
               const profileData = sp.user.tasteProfile as any;
               if (!profileData?.radarData) continue;
 
               const userProfile: TasteProfile = {} as TasteProfile;
               for (const item of profileData.radarData) {
                 if (item.axis && typeof item.value === 'number') {
-                  (userProfile as any)[item.axis] = item.value / 100; // radarData is 0-100, profile is 0-1
+                  (userProfile as any)[item.axis] = item.value / 100;
                 }
               }
 
               const match = computeMatchFromSignals(signals, antiSignals, userProfile);
 
-              // Convert breakdown from 0-100 to 0-1 to match import convention
               const normalizedBreakdown: Record<string, number> = {};
               for (const [domain, score] of Object.entries(match.breakdown)) {
                 normalizedBreakdown[domain] = Math.round(score) / 100;

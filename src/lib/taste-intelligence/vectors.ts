@@ -1,4 +1,7 @@
 /**
+ * @deprecated v2.1 vectors replaced by V3 (400-dim semantic clusters) in v4 architecture.
+ * This file is preserved for reference only. Use vectors-v3.ts for all new code.
+ *
  * Taste Intelligence — Vector Computation (v2.1: High-Res Vectors)
  *
  * Converts user taste profiles and property signals into 136-dimensional vectors

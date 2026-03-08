@@ -4,6 +4,7 @@ import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
 import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
+import { computeVectorMatchFromDb, breakdownToNormalized } from '@/lib/taste-match-vectors';
 import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
 import type { User, Prisma } from '@prisma/client';
@@ -74,6 +75,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   }
 
   // 2. Check if user already has this place in their library
+  // Note: matchExplanation added in v4 migration — Prisma types update on next `prisma generate`
   const savedPlaceSelect = {
     id: true,
     name: true,
@@ -81,6 +83,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     location: true,
     matchScore: true,
     matchBreakdown: true,
+    matchExplanation: true as any, // v4: pending prisma generate
     tasteNote: true,
     enrichment: true,
     googleData: true,
@@ -181,22 +184,30 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // If SavedPlace doesn't have scores but intelligence is complete, compute them now
     if (intel?.status === 'complete' && !savedPlace?.matchScore) {
       try {
-        // Get user's taste profile to compute match
-        const userRecord = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { tasteProfile: true },
-        });
-        const generated = userRecord?.tasteProfile as unknown as GeneratedTasteProfile | null;
-        const tasteProfile = generated ? buildTasteProfile(generated) : DEFAULT_USER_PROFILE;
+        // v4: Try vector-first scoring
+        const vectorMatch = await computeVectorMatchFromDb(user.id, googlePlaceId);
 
-        const signals = (intel.signals as any[]) || [];
-        const antiSignals = (intel.antiSignals as any[]) || [];
-        const match = computeMatchFromSignals(signals, antiSignals, tasteProfile);
+        if (vectorMatch) {
+          computedMatchScore = vectorMatch.overallScore;
+          computedMatchBreakdown = vectorMatch.breakdown;
+        } else {
+          // Fallback: signal-based scoring (no V3 vectors available)
+          const userRecord = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { tasteProfile: true },
+          });
+          const generated = userRecord?.tasteProfile as unknown as GeneratedTasteProfile | null;
+          const tasteProfile = generated ? buildTasteProfile(generated) : DEFAULT_USER_PROFILE;
 
-        computedMatchScore = match.overallScore;
-        computedMatchBreakdown = match.breakdown;
+          const signals = (intel.signals as any[]) || [];
+          const antiSignals = (intel.antiSignals as any[]) || [];
+          const match = computeMatchFromSignals(signals, antiSignals, tasteProfile);
+
+          computedMatchScore = match.overallScore;
+          computedMatchBreakdown = match.breakdown;
+        }
       } catch (err) {
-        console.error(`[resolve] Failed to compute match from intelligence:`, err);
+        console.error(`[resolve] Failed to compute match:`, err);
       }
     }
   }
@@ -230,6 +241,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     isInLibrary: savedPlace ? savedPlace.deletedAt === null : false,
     matchScore: savedPlace?.matchScore || computedMatchScore || null,
     matchBreakdown: savedPlace?.matchBreakdown || computedMatchBreakdown || null,
+    matchExplanation: savedPlace?.matchExplanation || null,
     tasteNote: savedPlace?.tasteNote || null,
     // Intelligence state
     intelligenceId: intelligenceId || null,

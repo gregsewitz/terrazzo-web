@@ -1,4 +1,7 @@
 /**
+ * @deprecated v2.1 queries replaced by queries-v3.ts in v4 architecture.
+ * This file is preserved for reference only. Use queries-v3.ts for all new code.
+ *
  * Taste Intelligence — Vector Similarity Queries
  *
  * Database queries using pgvector for:

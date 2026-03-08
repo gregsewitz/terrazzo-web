@@ -27,6 +27,7 @@ import {
   ImportedPlace,
 } from '@/types';
 import { FONT, INK } from '@/constants/theme';
+import { ClusterInsightCard } from '@/components/ClusterInsightCard';
 
 interface BriefingViewProps {
   googlePlaceId: string;
@@ -476,6 +477,37 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                           );
                         })}
                       </div>
+                    </div>
+                  </FadeInSection>
+                )}
+
+                {/* Why This Matches — cluster explanation */}
+                {place.matchExplanation && place.matchExplanation.topClusters?.length > 0 && (
+                  <FadeInSection delay={0.2} direction="up" distance={14}>
+                    <div className="mb-6">
+                      <div
+                        className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
+                        style={{ color: INK['60'], fontFamily: FONT.mono, letterSpacing: '1px' }}
+                      >
+                        Why This Matches
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {place.matchExplanation.topClusters.slice(0, 3).map((cluster, i) => (
+                          <ClusterInsightCard
+                            key={i}
+                            label={cluster.label}
+                            domain={cluster.domain}
+                            score={cluster.score}
+                            signals={cluster.signals}
+                            index={i}
+                          />
+                        ))}
+                      </div>
+                      {place.matchExplanation.narrative && (
+                        <p className="text-[11px] mt-2.5 leading-relaxed" style={{ color: INK['70'] }}>
+                          {place.matchExplanation.narrative}
+                        </p>
+                      )}
                     </div>
                   </FadeInSection>
                 )}

@@ -4,13 +4,16 @@
  * Compute taste match between a user's profile and a property's intelligence.
  * Returns per-dimension scores and an overall match score.
  *
- * Body: { tasteProfile: TasteProfile }
- * (Pass the user's profile directly — avoids needing auth for now)
+ * v4: Uses vector cosine similarity when userId is provided and both vectors exist.
+ * Falls back to signal-based scoring when vectors aren't available.
+ *
+ * Body: { tasteProfile: TasteProfile, userId?: string }
  */
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { computeMatchFromSignals } from '@/lib/taste-match-v3';
+import { computeVectorMatchFromDb } from '@/lib/taste-match-vectors';
 
 export async function POST(
   req: Request,
@@ -18,11 +21,11 @@ export async function POST(
 ) {
   try {
     const { googlePlaceId } = await params;
-    const { tasteProfile } = await req.json();
+    const { tasteProfile, userId } = await req.json();
 
-    if (!tasteProfile) {
+    if (!tasteProfile && !userId) {
       return NextResponse.json(
-        { error: 'tasteProfile is required in request body' },
+        { error: 'tasteProfile or userId is required in request body' },
         { status: 400 }
       );
     }
@@ -38,7 +41,32 @@ export async function POST(
       );
     }
 
-    // Prisma Json columns return JsonValue; cast to the shapes computeMatchFromSignals expects
+    // v4: Try vector-first scoring when userId is available
+    if (userId) {
+      const vectorMatch = await computeVectorMatchFromDb(userId, googlePlaceId);
+      if (vectorMatch) {
+        return NextResponse.json({
+          googlePlaceId,
+          propertyName: intel.propertyName,
+          overallScore: vectorMatch.overallScore,
+          breakdown: vectorMatch.breakdown,
+          topDimension: vectorMatch.topDimension,
+          explanation: vectorMatch.explanation,
+          signalCount: intel.signalCount,
+          reliabilityScore: intel.reliabilityScore,
+          scoringMethod: 'vector',
+        });
+      }
+    }
+
+    // Fallback: signal-based scoring
+    if (!tasteProfile) {
+      return NextResponse.json(
+        { error: 'Vector scoring unavailable and no tasteProfile provided' },
+        { status: 400 }
+      );
+    }
+
     const signals = intel.signals as any[];
     const antiSignals = (intel.antiSignals ?? []) as any[];
     const match = computeMatchFromSignals(signals, antiSignals, tasteProfile);
@@ -51,6 +79,7 @@ export async function POST(
       topDimension: match.topDimension,
       signalCount: intel.signalCount,
       reliabilityScore: intel.reliabilityScore,
+      scoringMethod: 'signal',
     });
   } catch (error) {
     console.error('Match computation error:', error);

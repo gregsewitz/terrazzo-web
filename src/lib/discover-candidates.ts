@@ -9,9 +9,9 @@ import { prisma } from '@/lib/prisma';
 import { computeMatchFromSignals, normalizeScoresForDisplay } from '@/lib/taste-match-v3';
 import type { MatchOptions } from '@/lib/taste-match-v3';
 import {
-  findSimilarProperties,
-  sqlToVector,
+  findSimilarPropertiesV3,
 } from '@/lib/taste-intelligence';
+import { normalizeVectorScoresForDisplay } from '@/lib/taste-match-vectors';
 import type {
   TasteDomain,
   TasteProfile,
@@ -199,17 +199,18 @@ export function scoreAllCandidates(
   return normalized.sort((a, b) => b.overallScore - a.overallScore);
 }
 
-// ─── Vector-Enhanced Scoring ─────────────────────────────────────────────────
+// ─── Vector-First Scoring (v4) ──────────────────────────────────────────────
 
 /**
- * Score candidates using both signal-based matching AND vector similarity.
+ * Score candidates using 100% vector cosine similarity (v4).
  *
- * When a user has a computed tasteVector:
- * 1. Fetch top-K vector matches from pgvector (fast ANN via HNSW)
- * 2. Run signal-based scoring on those candidates
- * 3. Blend both scores: 60% vector + 40% signal (vector is more reliable)
+ * Uses the 400-dim V3 taste vectors as the sole scoring mechanism:
+ * 1. Fetch user's tasteVectorV3 (400-dim semantic cluster vector)
+ * 2. Query pgvector HNSW index for top-K nearest property embeddings
+ * 3. Score = vector cosine similarity (no signal blending)
  *
- * Falls back to pure signal-based scoring when vectors aren't available.
+ * Signal-based scoring preserved only as a tiebreaker for equal vector scores.
+ * Falls back to pure signal-based scoring when V3 vectors aren't available.
  */
 export async function scoreWithVectors(
   userId: string,
@@ -219,61 +220,60 @@ export async function scoreWithVectors(
   userContradictions: TasteContradiction[],
   scoringContext?: ScoringContext,
 ): Promise<{ results: ScoredCandidate[]; vectorEnabled: boolean }> {
-  // Check if this user has a taste vector
-  // Note: tasteVector uses Prisma's Unsupported("vector(32)") type, so we must
-  // query it via raw SQL instead of the typed client.
-  const vectorResult = await prisma.$queryRaw<{ tasteVector: string | null }[]>`
-    SELECT "tasteVector"::text FROM "User" WHERE id = ${userId} LIMIT 1
+  // Check if this user has a V3 taste vector (400-dim semantic clusters)
+  const vectorResult = await prisma.$queryRaw<{ tasteVectorV3: string | null }[]>`
+    SELECT "tasteVectorV3"::text FROM "User" WHERE id = ${userId} LIMIT 1
   `;
-  const tasteVectorRaw = vectorResult[0]?.tasteVector ?? null;
+  const tasteVectorRaw = vectorResult[0]?.tasteVectorV3 ?? null;
 
   if (!tasteVectorRaw) {
-    // No vector — fall back to signal-based scoring
-    console.log('[discover] No taste vector for user, using signal-only scoring');
+    // No V3 vector — fall back to signal-based scoring
+    console.log('[discover] No V3 taste vector for user, using signal-only scoring');
     const results = scoreAllCandidates(candidates, userProfile, userMicroSignals, userContradictions, scoringContext);
     return { results, vectorEnabled: false };
   }
 
-  const userVector = sqlToVector(tasteVectorRaw);
+  // Parse pgvector text format → number[]
+  const userVector = tasteVectorRaw.replace(/[\[\]]/g, '').split(',').map(Number);
 
-  // Get vector-based rankings from pgvector (top 100 nearest)
-  const vectorMatches = await findSimilarProperties(userVector, 100);
+  // Get vector-based rankings from pgvector V3 (top 200 nearest via HNSW)
+  const vectorMatches = await findSimilarPropertiesV3(userVector, 200);
 
-  // Build a lookup: googlePlaceId → vectorScore
+  // Build a lookup: googlePlaceId → vectorScore (0-100)
   const vectorScoreMap = new Map<string, number>();
   for (const match of vectorMatches) {
     vectorScoreMap.set(match.googlePlaceId, match.score);
   }
 
-  // Score all candidates with signal-based approach + blend in vector scores
+  // Score all candidates — vector score is primary, signal score is tiebreaker only
   const rawScored = candidates.map((c) => {
+    // Always compute signal-based scoring for domain breakdown + matching signals
     const signalScored = scoreCandidate(c, userProfile, userMicroSignals, userContradictions, scoringContext);
     const vectorScore = vectorScoreMap.get(c.googlePlaceId);
 
     if (vectorScore !== undefined) {
-      // Blend: 60% vector, 40% signal
-      const blended = Math.round(vectorScore * 0.6 + signalScored.overallScore * 0.4);
+      // v4: 100% vector scoring — vector IS the score
       return {
         ...signalScored,
         vectorScore,
-        blendedScore: blended,
-        overallScore: blended, // override overallScore with blended
+        blendedScore: vectorScore,
+        overallScore: vectorScore, // vector is sole ranking signal
       };
     }
 
-    // Property has no embedding — use signal score alone
+    // Property has no V3 embedding — use signal score as fallback
     return {
       ...signalScored,
       blendedScore: signalScored.overallScore,
     };
   });
 
-  // v3.2: Curve raw scores into user-friendly display range
-  const scored = normalizeScoresForDisplay(rawScored);
+  // Curve raw scores into user-friendly display range
+  const scored = normalizeVectorScoresForDisplay(rawScored);
   scored.sort((a, b) => b.overallScore - a.overallScore);
 
   console.log(
-    `[discover] Vector-enhanced scoring: ${vectorScoreMap.size} properties with embeddings, ` +
+    `[discover] V4 vector-first scoring: ${vectorScoreMap.size} properties with V3 embeddings, ` +
     `${scored.filter(s => s.vectorScore !== undefined).length} candidates enriched`
   );
 

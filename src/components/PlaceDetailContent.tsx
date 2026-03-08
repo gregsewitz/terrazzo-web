@@ -83,6 +83,7 @@ function PlaceDetailContent({
         website?: string | null; phone?: string | null; lat?: number | null; lng?: number | null;
         category?: string | null };
       matchScore: number | null; matchBreakdown: Record<string, number> | null;
+      matchExplanation?: ImportedPlace['matchExplanation'] | null;
       tasteNote: string | null; intelligenceStatus: string;
       savedPlaceId: string | null; isInLibrary: boolean;
     }>('/api/places/resolve', {
@@ -104,6 +105,7 @@ function PlaceDetailContent({
         ...prev,
         matchScore: data.matchScore || prev.matchScore || 0,
         matchBreakdown: (data.matchBreakdown || prev.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
+        matchExplanation: data.matchExplanation || prev.matchExplanation,
         tasteNote: data.tasteNote || prev.tasteNote || '',
         google,
         location: data.location || prev.location,

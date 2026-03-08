@@ -15,9 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  runFullBackfill,
-  backfillUser,
-  backfillAllPropertyEmbeddings,
+  runFullBackfillV3,
+  backfillUserV3,
+  backfillAllPropertyEmbeddingsV3,
 } from '@/lib/taste-intelligence';
 
 export async function POST(req: NextRequest) {
@@ -37,34 +37,23 @@ export async function POST(req: NextRequest) {
     };
 
     if (mode === 'user' && userId) {
-      const result = await backfillUser(userId);
+      const result = await backfillUserV3(userId);
       return NextResponse.json({ ok: true, mode: 'user', result });
     }
 
     if (mode === 'properties') {
-      const result = await backfillAllPropertyEmbeddings();
+      const result = await backfillAllPropertyEmbeddingsV3();
       return NextResponse.json({ ok: true, mode: 'properties', result });
     }
 
-    // Default: full backfill (Phase 1 + Phase 2)
-    const result = await runFullBackfill();
+    // Default: full V3 backfill (Phase 1 + Phase 2)
+    const result = await runFullBackfillV3();
     return NextResponse.json({
       ok: true,
       mode: 'full',
-      users: {
-        processed: result.userResults.length,
-        nodesCreated: result.userResults.reduce(
-          (sum, r) => sum + r.nodesCreated,
-          0,
-        ),
-        contradictionsCreated: result.userResults.reduce(
-          (sum, r) => sum + r.contradictionsCreated,
-          0,
-        ),
-        vectorsComputed: result.userResults.filter((r) => r.vectorComputed)
-          .length,
-      },
-      properties: result.propResults,
+      idf: result.idf,
+      users: result.users,
+      properties: result.props,
     });
   } catch (err) {
     console.error('[taste-backfill] Error:', err);

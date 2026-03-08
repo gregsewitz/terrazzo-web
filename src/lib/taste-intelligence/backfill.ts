@@ -1,4 +1,7 @@
 /**
+ * @deprecated v2.1 backfill pipeline replaced by backfill-v3.ts in v4 architecture.
+ * This file is preserved for reference only. Use backfill-v3.ts for all new code.
+ *
  * Taste Intelligence — Backfill Pipeline
  *
  * TG-02:  Extract signals from User.allSignals JSON → TasteNode rows

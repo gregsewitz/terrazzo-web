@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { backfillAllUsers, backfillAllPropertyEmbeddings } from '@/lib/taste-intelligence';
+import { backfillAllUsersV3, backfillAllPropertyEmbeddingsV3 } from '@/lib/taste-intelligence';
 
 export const maxDuration = 300; // 5 min — may need to process many users/properties
 
@@ -22,24 +22,21 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Phase 1: Refresh user taste vectors
-    const userResults = await backfillAllUsers();
-    const usersSuccessful = userResults.filter(r => r.vectorComputed).length;
-    const usersFailed = userResults.filter(r => !r.vectorComputed).length;
+    // Phase 1: Refresh user V3 taste vectors (400-dim semantic clusters)
+    const userResults = await backfillAllUsersV3();
 
-    console.log(`[cron/vector-refresh] Users: ${usersSuccessful} success, ${usersFailed} failed out of ${userResults.length}`);
+    console.log(`[cron/vector-refresh] Users: ${userResults.computed} computed out of ${userResults.total}`);
 
-    // Phase 2: Refresh property embeddings
-    const propResults = await backfillAllPropertyEmbeddings();
+    // Phase 2: Refresh V3 property embeddings
+    const propResults = await backfillAllPropertyEmbeddingsV3();
 
     console.log(`[cron/vector-refresh] Properties: ${propResults.computed} computed, ${propResults.skipped} skipped out of ${propResults.total}`);
 
     return NextResponse.json({
       success: true,
       users: {
-        total: userResults.length,
-        successful: usersSuccessful,
-        failed: usersFailed,
+        total: userResults.total,
+        computed: userResults.computed,
       },
       properties: {
         total: propResults.total,

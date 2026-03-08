@@ -8,17 +8,15 @@
 import { NextRequest } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { apiHandler } from '@/lib/api-handler';
-import {
-  findTasteNeighbors,
-  findContradictionNeighbors,
-} from '@/lib/taste-intelligence';
+import { findTasteNeighborsV3 } from '@/lib/taste-intelligence';
+import { findContradictionNeighbors } from '@/lib/taste-intelligence/queries';
 
 export const GET = apiHandler(async (req: NextRequest) => {
   const user = await getUser(req);
   if (!user) return unauthorized();
 
-  // Get real taste neighbors from pgvector
-  const vectorNeighbors = await findTasteNeighbors(user.id, 10);
+  // Get real taste neighbors from pgvector (V3: 400-dim semantic clusters)
+  const vectorNeighbors = await findTasteNeighborsV3(user.id, 10);
 
   // Get contradiction-based neighbors (different signal — shared tensions)
   const contradictionNeighbors = await findContradictionNeighbors(user.id, 5);

@@ -1,4 +1,8 @@
 /**
+ * @deprecated FALLBACK ONLY — v4 architecture uses vector cosine similarity (taste-match-vectors.ts)
+ * as the sole scoring/ranking mechanism. This signal-based pipeline is only called when
+ * a user or property lacks V3 vectors (tasteVectorV3 / embeddingV3).
+ *
  * Taste Match v3.2 — Signal-density weighted profiles for real cross-archetype discrimination.
  *
  * v3.1 introduced profile alignment but synthetic testing with 5 archetypes

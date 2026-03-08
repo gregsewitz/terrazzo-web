@@ -13,13 +13,6 @@
 
 import { prisma } from '@/lib/prisma';
 import {
-  computeUserTasteVector,
-  findSimilarProperties,
-  cosineSimilarity,
-  computePropertyEmbedding,
-  sqlToVector,
-} from './index';
-import {
   fetchCandidateProperties,
   scoreAllCandidates,
   scoreWithVectors,

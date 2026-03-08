@@ -225,6 +225,7 @@ model SavedPlace {
   // Taste matching
   matchScore          Int?
   matchBreakdown      Json?    // { Design, Character, Service, Food, Location, Wellness }
+  matchExplanation    Json?    // { topClusters: [{label, domain, score, signals}], narrative: string }
   tasteNote           String?
   terrazzoInsight     Json?    // { why, caveat }
 
