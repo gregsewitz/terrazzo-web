@@ -24,6 +24,11 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   const holdingRef = useRef(false); // tracks whether user is actively holding the mic button
   const mountedRef = useRef(true); // tracks if component is still mounted
 
+  // Refs for TTS queue integration (set after useTTS initializes)
+  const queueSentenceRef = useRef<((s: string) => void) | null>(null);
+  const finishQueueRef = useRef<(() => void) | null>(null);
+  const ttsEnabledRef = useRef(true);
+
   const {
     messages,
     isAnalyzing,
@@ -37,6 +42,17 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     phaseId: phase.id,
     aiPrompt: phase.aiPrompt,
     followUps: phase.followUps,
+    // Progressive TTS: queue each sentence as it arrives from streaming LLM
+    onSentence: (sentence) => {
+      if (ttsEnabledRef.current && queueSentenceRef.current) {
+        queueSentenceRef.current(sentence);
+      }
+    },
+    onResponseComplete: () => {
+      if (ttsEnabledRef.current && finishQueueRef.current) {
+        finishQueueRef.current();
+      }
+    },
   });
 
   // Track mounted state for safe async operations
@@ -108,10 +124,15 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   const resetTranscriptRef = useRef(resetTranscript);
   resetTranscriptRef.current = resetTranscript;
 
-  const { isSpeaking, speak, stop: stopTTS, enabled: ttsEnabled, setEnabled: setTTSEnabled } = useTTS({
+  const { isSpeaking, speak, queueSentence, finishQueue, stop: stopTTS, enabled: ttsEnabled, setEnabled: setTTSEnabled } = useTTS({
     voice: 'nova',
     onDone: handleTTSDone,
   });
+
+  // Wire up refs so the streaming onSentence callback can access TTS queue
+  queueSentenceRef.current = queueSentence;
+  finishQueueRef.current = finishQueue;
+  ttsEnabledRef.current = ttsEnabled;
 
   const stopTTSRef = useRef(stopTTS);
   stopTTSRef.current = stopTTS;
@@ -123,30 +144,46 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     };
   }, []);
 
-  // Speak new AI messages automatically
+  // Speak new AI messages — for the opening prompt use batch speak(),
+  // for streamed responses TTS is already handled via onSentence → queueSentence
   useEffect(() => {
+    const newMessages = messages.slice(spokenCountRef.current);
+    const latestAI = [...newMessages].reverse().find((m) => m.role === 'ai');
+    const prevCount = spokenCountRef.current;
+    spokenCountRef.current = messages.length;
+
+    if (!latestAI) return;
+
     if (!ttsEnabled) {
-      const newMessages = messages.slice(spokenCountRef.current);
-      const latestAI = [...newMessages].reverse().find((m) => m.role === 'ai');
-      spokenCountRef.current = messages.length;
-      if (latestAI) {
-        if (isPhaseComplete) {
-          const readTime = Math.max(2000, latestAI.text.split(/\s+/).length * 40);
-          setTimeout(() => {
-            if (mountedRef.current) triggerAutoAdvance();
-          }, readTime);
-        }
-        // No auto-start mic — hold-to-speak mode
+      // TTS off — handle auto-advance via read-time estimate
+      if (isPhaseComplete) {
+        const readTime = Math.max(2000, latestAI.text.split(/\s+/).length * 40);
+        setTimeout(() => {
+          if (mountedRef.current) triggerAutoAdvance();
+        }, readTime);
       }
       return;
     }
-    const newMessages = messages.slice(spokenCountRef.current);
-    const latestAI = [...newMessages].reverse().find((m) => m.role === 'ai');
-    spokenCountRef.current = messages.length;
-    if (latestAI) {
+
+    // Use batch speak() for the opening prompt AND for any message that wasn't
+    // handled by the streaming pipeline (error fallbacks, scripted follow-ups).
+    // The streaming pipeline handles messages via onSentence → queueSentence,
+    // but if the stream fails, the message still needs to be spoken.
+    const isOpeningPrompt = prevCount === 0 && messages.length === 1;
+    if (isOpeningPrompt) {
       speak(latestAI.text);
+    } else if (!isSpeaking && latestAI) {
+      // If TTS isn't already speaking (i.e., streaming pipeline didn't handle this),
+      // use batch speak as fallback. This catches error fallback messages.
+      // Small delay to avoid racing with the sentence queue on success path.
+      const fallbackTimer = setTimeout(() => {
+        if (!isSpeaking && mountedRef.current) {
+          speak(latestAI.text);
+        }
+      }, 300);
+      return () => clearTimeout(fallbackTimer);
     }
-  }, [messages, ttsEnabled, speak, voiceMode, isPhaseComplete, isAnalyzing, triggerAutoAdvance]);
+  }, [messages, ttsEnabled, speak, isSpeaking, isPhaseComplete, triggerAutoAdvance]);
 
   // Stop TTS when user starts talking (holds mic button)
   useEffect(() => {
@@ -218,13 +255,13 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (!holdingRef.current) return;
     holdingRef.current = false;
     stopListening();
-    // Small delay to let final recognition results come in before sending
+    // Brief delay to let final recognition results arrive (reduced from 150ms)
     setTimeout(() => {
       const text = (latestTranscriptForSendRef.current || inputText).trim();
       if (text && !sendingRef.current) {
         handleSendTranscript(text);
       }
-    }, 150);
+    }, 50);
   }, [stopListening, inputText, handleSendTranscript]);
 
   // We need a ref to get the latest transcript at send time

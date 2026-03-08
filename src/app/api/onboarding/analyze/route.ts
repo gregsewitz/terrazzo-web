@@ -8,7 +8,7 @@ const anthropic = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
-  const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });
+  const rl = rateLimit(ip + ':analyze', { maxRequests: 20, windowMs: 60000 });
   if (!rl.success) return rateLimitResponse();
 
   try {
