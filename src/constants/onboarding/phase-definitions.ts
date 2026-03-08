@@ -55,28 +55,22 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     imagePairs: IMAGE_PAIRS,
     designerPool: DESIGNER_POOL,
   },
-  {
-    id: 'property-reactions-0',
-    phaseNumber: 3,
-    title: 'First Impressions',
-    subtitle: 'Real hotels — react honestly',
-    modality: 'property-reactions',
-    act: 1,
-    aiPrompt: '',
-    followUps: [],
-    sampleUserResponses: [],
-    extractedSignals: [],
-    certaintyAfter: { Design: 65, Atmosphere: 50, Character: 45, Service: 35, FoodDrink: 25, Setting: 48, Wellness: 20, Sustainability: 5 },
-    cardCount: 10,
-    // targetDomains set at runtime after instinct-round + visual-taste signals
-  },
+  // {
+  //   id: 'property-reactions-0',
+  //   phaseNumber: 3,
+  //   title: 'First Impressions',
+  //   subtitle: 'Real hotels — react honestly',
+  //   modality: 'property-reactions',
+  //   act: 1,
+  //   ... TODO: re-enable once Gmail/Nylas email parsing surfaces real places
+  // },
 
   // ═══════════════════════════════════════
   // ACT 2 — "Your Story" (voice + structured + behavioral anchoring)
   // ═══════════════════════════════════════
   {
     id: 'behavioral-anchoring',
-    phaseNumber: 4,
+    phaseNumber: 3,
     title: 'Your Last Trip',
     subtitle: 'Not the dream one — the one that actually happened',
     modality: 'scene',
@@ -149,7 +143,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'service-style',
-    phaseNumber: 5,
+    phaseNumber: 4,
     title: 'How You Like to Be Taken Care Of',
     subtitle: 'Service that fits, not service that performs',
     modality: 'slider',
@@ -199,7 +193,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'sustainability-check',
-    phaseNumber: 6,
+    phaseNumber: 5,
     title: 'Values & Impact',
     subtitle: 'One question — how much this matters to you',
     modality: 'scale',
@@ -214,7 +208,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'memorable-stays',
-    phaseNumber: 7,
+    phaseNumber: 6,
     title: 'Memorable Stays',
     subtitle: 'Places that stuck with you — the open canvas',
     modality: 'voice',
@@ -243,7 +237,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'anti-stay',
-    phaseNumber: 8,
+    phaseNumber: 7,
     title: 'The Anti-Stay',
     subtitle: 'What looked perfect but felt wrong',
     modality: 'voice',
@@ -270,7 +264,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'last-trip',
-    phaseNumber: 9,
+    phaseNumber: 8,
     title: 'Your Last Trip',
     subtitle: 'Not the best one — the most recent one',
     modality: 'voice',
@@ -298,7 +292,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── The Thing Nobody Asks (open voice — captures signals that don't fit any box) ───
   {
     id: 'nobody-asks',
-    phaseNumber: 10,
+    phaseNumber: 9,
     title: 'The Thing Nobody Asks',
     subtitle: 'The detail only you would notice',
     modality: 'voice',
@@ -328,7 +322,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ═══════════════════════════════════════
   {
     id: 'food-and-senses',
-    phaseNumber: 11,
+    phaseNumber: 10,
     title: 'Food & Senses',
     subtitle: 'How you taste the world',
     modality: 'scene',
@@ -399,7 +393,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'visual-pairs',
-    phaseNumber: 12,
+    phaseNumber: 11,
     title: 'What Draws You In',
     subtitle: 'Two images — tap the one that pulls you',
     modality: 'image-pair',
@@ -461,7 +455,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'details-matter',
-    phaseNumber: 13,
+    phaseNumber: 12,
     title: 'The Details That Matter',
     subtitle: 'Rank what changes everything for you',
     modality: 'force-rank',
@@ -534,7 +528,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'emotional-core',
-    phaseNumber: 14,
+    phaseNumber: 13,
     title: 'Why You Travel',
     subtitle: 'What a great trip actually gives you',
     modality: 'quick-choice',
@@ -608,7 +602,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'travel-scenarios',
-    phaseNumber: 15,
+    phaseNumber: 14,
     title: 'How You Travel',
     subtitle: 'Real situations, honest answers',
     modality: 'scene',
@@ -681,7 +675,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Dining & Drink Depth (expands FoodDrink signal for restaurants, bars, cafés) ───
   {
     id: 'dining-depth',
-    phaseNumber: 16,
+    phaseNumber: 15,
     title: 'How You Eat',
     subtitle: 'Restaurants, markets, bars — not just hotel food',
     modality: 'scene',
@@ -754,7 +748,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Cultural Immersion (strong signal for neighborhoods, experiences, activities) ───
   {
     id: 'cultural-immersion',
-    phaseNumber: 17,
+    phaseNumber: 16,
     title: 'How Deep You Go',
     subtitle: 'Culture, language, neighborhoods',
     modality: 'scene',
@@ -847,7 +841,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Rhythm & Pace (sliders + scenes for travel style) ───
   {
     id: 'rhythm-and-pace',
-    phaseNumber: 18,
+    phaseNumber: 17,
     title: 'Your Rhythm',
     subtitle: 'How you move through a trip',
     modality: 'slider',
@@ -919,7 +913,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Movement & Wellness (non-hotel signal: spas, activities, outdoor venues) ───
   {
     id: 'movement-and-wellness',
-    phaseNumber: 19,
+    phaseNumber: 18,
     title: 'Body & Movement',
     subtitle: 'How you take care of yourself on the road',
     modality: 'quick-choice',
@@ -943,7 +937,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Scent & Texture (sensory depth for place matching) ───
   {
     id: 'scent-and-texture',
-    phaseNumber: 20,
+    phaseNumber: 19,
     title: 'Scent & Texture',
     subtitle: 'The sensory details that make a place yours',
     modality: 'quick-choice',
@@ -967,7 +961,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Browsing & Discovery (shops, markets, browsing style — fills shop/market signal gap) ───
   {
     id: 'browsing-and-discovery',
-    phaseNumber: 21,
+    phaseNumber: 20,
     title: 'Browsing & Discovery',
     subtitle: 'How you find things worth bringing home',
     modality: 'scene',
@@ -1027,7 +1021,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Trade-offs & Compromises (what they'll sacrifice — strong sorting signal) ───
   {
     id: 'trade-offs',
-    phaseNumber: 22,
+    phaseNumber: 21,
     title: 'Trade-offs',
     subtitle: 'What you\'ll give up — and what you won\'t',
     modality: 'scene',
@@ -1086,7 +1080,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'deal-breakers',
-    phaseNumber: 23,
+    phaseNumber: 22,
     title: 'Deal-Breakers',
     subtitle: 'The things that genuinely ruin a stay',
     modality: 'quick-choice',
@@ -1111,7 +1105,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'consistency-check',
-    phaseNumber: 24,
+    phaseNumber: 23,
     title: 'Final Reads',
     subtitle: 'A few gut checks before we build your profile',
     modality: 'scene',
@@ -1170,7 +1164,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'gap-fill-reactions',
-    phaseNumber: 25,
+    phaseNumber: 24,
     title: 'Last Reactions',
     subtitle: 'Places chosen just for you — we want to nail this',
     modality: 'property-reactions',
