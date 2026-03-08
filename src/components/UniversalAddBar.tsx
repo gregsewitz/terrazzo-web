@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useAddBarStore } from '@/stores/addBarStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { streamImport } from '@/lib/importService';
-import { detectInputType, DEMO_IMPORT_RESULTS } from '@/lib/import-helpers';
+import { streamImport, streamMapsImport } from '@/lib/importService';
+import { detectInputType } from '@/lib/import-helpers';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
@@ -30,10 +30,10 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   const {
     isOpen, mode, query, tripContext,
     libraryResults, googleResults, importProgress, importLabel, importResults,
-    importSelectedIds,
+    importSelectedIds, importError,
     previewPlace, selectedCollectionIds,
     close, setQuery, setMode, setLibraryResults, setGoogleResults,
-    setImportProgress, setImportResults,
+    setImportProgress, setImportResults, setImportError,
     toggleImportSelected, selectAllImports, deselectAllImports,
     setPreviewPlace, toggleCollection,
   } = useAddBarStore();
@@ -66,6 +66,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
       if (e.key === 'Escape') {
         if (mode === 'collections') setMode('preview');
         else if (mode === 'preview') { setImportResults([]); setMode('search'); }
+        else if (mode === 'error') setMode('search');
         else close();
       }
     };
@@ -102,7 +103,16 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     return () => clearTimeout(timer);
   }, [query, mode, setGoogleResults]);
 
-  // ─── Input detection + action ──────────────────────────────────────────
+  // ─── Input detection + smart routing ───────────────────────────────────
+  //
+  // The UAB is the single entry point for all import types.
+  // detectInputType() classifies the input, then we route to the
+  // correct streaming endpoint:
+  //
+  //   'google-maps'  → streamMapsImport()  → /api/import/maps-list
+  //   'url'          → streamImport()      → /api/import
+  //   'text' (multi) → streamImport()      → /api/import
+  //
   const handleInputSubmit = useCallback(async (overrideText?: string) => {
     const trimmed = (overrideText ?? query).trim();
     if (!trimmed) return;
@@ -110,21 +120,52 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     const inputType = detectInputType(trimmed);
     const isMultiLine = inputType === 'text' && trimmed.split('\n').filter(l => l.trim()).length >= 2;
 
-    if (inputType === 'url' || inputType === 'google-maps' || isMultiLine) {
-      setMode('importing');
-      setImportProgress(0, isMultiLine ? 'Parsing list...' : 'Starting...');
-      try {
-        await streamImport(trimmed, {
-          onProgress: (percent, label) => setImportProgress(percent, label),
-          onResult: (places) => { setImportResults(places); setMode('preview'); },
-          onError: () => { setImportResults(DEMO_IMPORT_RESULTS); setMode('preview'); },
+    // Only proceed for importable input (URLs, maps links, multi-line lists)
+    if (inputType !== 'url' && inputType !== 'google-maps' && !isMultiLine) return;
+
+    setMode('importing');
+    setImportProgress(0,
+      inputType === 'google-maps' ? 'Loading saved places...'
+        : isMultiLine ? 'Parsing list...'
+        : 'Starting...'
+    );
+
+    try {
+      if (inputType === 'google-maps') {
+        // Google Maps saved lists → dedicated fast endpoint with lazy enrichment
+        await streamMapsImport(trimmed, {
+          onProgress: (percent: number, label: string) => setImportProgress(percent, label),
+          onPreview: (places: ImportedPlace[]) => {
+            // Show basic results immediately while enrichment continues
+            setImportResults(places);
+            setMode('preview');
+          },
+          onResult: (places: ImportedPlace[]) => {
+            // Replace with fully enriched results
+            setImportResults(places);
+            setMode('preview');
+          },
+          onError: (err: string) => {
+            setImportError(err || 'Could not load places from this Google Maps link');
+            setMode('error');
+          },
         });
-      } catch {
-        setImportResults(DEMO_IMPORT_RESULTS);
-        setMode('preview');
+      } else {
+        // Article URLs, text lists → general import pipeline
+        await streamImport(trimmed, {
+          onProgress: (percent: number, label: string) => setImportProgress(percent, label),
+          onResult: (places: ImportedPlace[]) => { setImportResults(places); setMode('preview'); },
+          onError: (err: string) => {
+            setImportError(err || 'Could not extract places from this link');
+            setMode('error');
+          },
+        });
       }
+    } catch {
+      setImportError('Something went wrong — please try again');
+      setMode('error');
     }
-  }, [query, setMode, setImportProgress, setImportResults]);
+  }, [query, setMode, setImportProgress, setImportResults, setImportError]);
 
   // ─── Save a single place ──────────────────────────────────────────────
   const handleSavePlace = useCallback((place: ImportedPlace) => {
@@ -273,7 +314,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
           </div>
 
           {/* ── SEARCH INPUT ── */}
-          {(mode === 'search' || mode === 'importing') && (
+          {(mode === 'search' || mode === 'importing' || mode === 'error') && (
             <div className="px-5 pt-4 pb-2 flex-shrink-0">
               <div
                 className="flex items-center gap-2.5 rounded-xl px-3.5"
@@ -342,6 +383,41 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 importProgress={importProgress}
                 importLabel={importLabel}
               />
+            )}
+
+            {mode === 'error' && (
+              <div className="py-6 text-center">
+                <div
+                  className="flex items-center justify-center mx-auto mb-3 rounded-full"
+                  style={{ width: 40, height: 40, background: 'var(--t-linen)' }}
+                >
+                  <PerriandIcon name="close" size={16} color={INK['40']} />
+                </div>
+                <p style={{
+                  fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+                  color: 'var(--t-ink)', margin: '0 0 4px',
+                }}>
+                  Import failed
+                </p>
+                <p style={{
+                  fontFamily: FONT.sans, fontSize: 13,
+                  color: INK['60'], margin: '0 0 16px',
+                  lineHeight: 1.4, maxWidth: 320, marginInline: 'auto',
+                }}>
+                  {importError || 'Something went wrong'}
+                </p>
+                <button
+                  onClick={() => { setMode('search'); inputRef.current?.focus(); }}
+                  className="rounded-lg px-4 py-2"
+                  style={{
+                    fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+                    background: 'var(--t-ink)', color: 'white',
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >
+                  Try again
+                </button>
+              </div>
             )}
 
             {mode === 'preview' && (

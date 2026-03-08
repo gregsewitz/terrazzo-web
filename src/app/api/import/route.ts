@@ -4,9 +4,8 @@ import { getUserTasteProfile } from '@/lib/user-profile';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { getUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { detectInputType } from '@/lib/detect-input';
 import {
-  detectInputType,
-  extractFromGoogleMaps,
   fetchAndClean,
   enrichWithGooglePlaces,
   deduplicatePlaces,
@@ -46,12 +45,20 @@ export async function POST(request: NextRequest) {
       try {
         // ── 1. Detect input type ────────────────────────────────────────────
         const detectedType = detectInputType(trimmed);
+
+        // Google Maps links should be routed to /api/import/maps-list by the client.
+        // If one arrives here, reject it rather than silently failing.
+        if (detectedType === 'google-maps') {
+          send({ type: 'error', error: 'Google Maps links should use the maps-list endpoint' });
+          controller.close();
+          return;
+        }
+
+        const isUrl = detectedType === 'url';
         send({
           type: 'progress',
           stage: 'detecting',
-          label: detectedType === 'url' ? 'Link detected — fetching article…'
-            : detectedType === 'google-maps' ? 'Google Maps link detected…'
-            : 'Reading your text…',
+          label: isUrl ? 'Link detected — fetching article…' : 'Reading your text…',
           percent: 5,
         });
 
@@ -59,44 +66,38 @@ export async function POST(request: NextRequest) {
         let extracted: any[] = [];
         let inferredRegion: string | null = null;
 
-        if (detectedType === 'google-maps') {
-          // Google Maps URLs don't go through Claude — just scrape place names
-          extracted = await extractFromGoogleMaps(trimmed);
-        } else {
-          // For URLs, fetch the article text first
-          let textContent = trimmed;
-          const isUrl = detectedType === 'url';
+        // For URLs, fetch the article text first
+        let textContent = trimmed;
 
-          if (isUrl) {
-            const hasFirecrawl = !!process.env.FIRECRAWL_API_KEY;
-            send({ type: 'progress', stage: 'fetching', label: hasFirecrawl ? 'Reading article with Firecrawl…' : 'Fetching article content…', percent: 10 });
-            const articleText = await fetchAndClean(trimmed);
-            if (!articleText) {
-              send({ type: 'error', error: 'Could not fetch URL content' });
-              controller.close();
-              return;
-            }
-            textContent = articleText;
-          }
-
-          // Single Claude call: extract places AND generate taste scores together
-          send({
-            type: 'progress',
-            stage: 'extracting',
-            label: isUrl ? 'AI is reading & matching the article…' : 'AI is finding & matching places…',
-            percent: isUrl ? 20 : 15,
-          });
-
-          try {
-            const result = await extractAndMatchPlaces(textContent, isUrl, userProfile);
-            extracted = result.places;
-            inferredRegion = result.region;
-          } catch (e) {
-            console.error('Combined extraction failed:', e);
-            send({ type: 'error', error: 'AI extraction failed' });
+        if (isUrl) {
+          const hasFirecrawl = !!process.env.FIRECRAWL_API_KEY;
+          send({ type: 'progress', stage: 'fetching', label: hasFirecrawl ? 'Reading article with Firecrawl…' : 'Fetching article content…', percent: 10 });
+          const articleText = await fetchAndClean(trimmed);
+          if (!articleText) {
+            send({ type: 'error', error: 'Could not fetch URL content' });
             controller.close();
             return;
           }
+          textContent = articleText;
+        }
+
+        // Single Claude call: extract places AND generate taste scores together
+        send({
+          type: 'progress',
+          stage: 'extracting',
+          label: isUrl ? 'AI is reading & matching the article…' : 'AI is finding & matching places…',
+          percent: isUrl ? 20 : 15,
+        });
+
+        try {
+          const result = await extractAndMatchPlaces(textContent, isUrl, userProfile);
+          extracted = result.places;
+          inferredRegion = result.region;
+        } catch (e) {
+          console.error('Combined extraction failed:', e);
+          send({ type: 'error', error: 'AI extraction failed' });
+          controller.close();
+          return;
         }
 
         if (!extracted || extracted.length === 0) {

@@ -7,7 +7,7 @@ import { streamImport, streamMapsImport } from '@/lib/importService';
 import { ImportedPlace } from '@/types';
 import { FONT, INK } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import { detectInputType, DEMO_IMPORT_RESULTS } from '@/lib/import-helpers';
+import { detectInputType } from '@/lib/import-helpers';
 import { ImportInputStep } from '@/components/import/ImportInputStep';
 import { ImportProcessingStep } from '@/components/import/ImportProcessingStep';
 import { ImportResultsStep } from '@/components/import/ImportResultsStep';
@@ -87,36 +87,50 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   async function handleImport() {
     if (!inputValue.trim()) return;
     const detectedMode = detectInputType(inputValue);
-    patch({ mode: detectedMode, error: null });
-    patch({ isProcessing: true });
-    patch({ error: null });
-    patch({ backgroundError: null });
+    patch({ mode: detectedMode, error: null, backgroundError: null, isProcessing: true, discoveredNames: [], importResults: [] });
     setProgress(0, 'Starting…');
-    patch({ discoveredNames: [] });
-    patch({ importResults: [] });
 
     // Minimize and close drawer — import runs in background
     patch({ isMinimized: true });
     onClose();
 
     try {
-      await streamImport(inputValue, {
-        onProgress: (percent, label, placeNames) => {
-          setProgress(percent, label);
-          if (placeNames) patch({ discoveredNames: placeNames });
-        },
-        onResult: (places) => {
-          patch({ importResults: places, selectedIds: places.map(p => p.id), isProcessing: false });
-          setProgress(100, 'Ready to review');
-        },
-        onError: () => {
-          patch({ importResults: DEMO_IMPORT_RESULTS, selectedIds: DEMO_IMPORT_RESULTS.map(r => r.id), isProcessing: false });
-          setProgress(100, 'Ready to review');
-        },
-      });
-    } catch {
-      patch({ importResults: DEMO_IMPORT_RESULTS, selectedIds: DEMO_IMPORT_RESULTS.map(r => r.id), isProcessing: false });
-      setProgress(100, 'Ready to review');
+      // Route to the correct endpoint based on input type
+      if (detectedMode === 'google-maps') {
+        await streamMapsImport(inputValue, {
+          onProgress: (percent, label, placeNames) => {
+            setProgress(percent, label);
+            if (placeNames) patch({ discoveredNames: placeNames });
+          },
+          onPreview: (places) => {
+            patch({ importResults: places, selectedIds: places.map(p => p.id) });
+            setProgress(50, 'Enriching with Google details…');
+          },
+          onResult: (places) => {
+            patch({ importResults: places, selectedIds: places.map(p => p.id), isProcessing: false });
+            setProgress(100, 'Ready to review');
+          },
+          onError: (errorMsg) => {
+            patch({ backgroundError: errorMsg || 'Could not load places from this Google Maps link', isProcessing: false });
+          },
+        });
+      } else {
+        await streamImport(inputValue, {
+          onProgress: (percent, label, placeNames) => {
+            setProgress(percent, label);
+            if (placeNames) patch({ discoveredNames: placeNames });
+          },
+          onResult: (places) => {
+            patch({ importResults: places, selectedIds: places.map(p => p.id), isProcessing: false });
+            setProgress(100, 'Ready to review');
+          },
+          onError: (errorMsg) => {
+            patch({ backgroundError: errorMsg || 'Could not extract places from this link', isProcessing: false });
+          },
+        });
+      }
+    } catch (err) {
+      patch({ backgroundError: (err as Error).message || 'Import failed', isProcessing: false });
     }
   }
 

@@ -3,7 +3,7 @@ import type { ImportedPlace } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type AddBarMode = 'idle' | 'search' | 'importing' | 'preview' | 'collections';
+export type AddBarMode = 'idle' | 'search' | 'importing' | 'preview' | 'collections' | 'error';
 
 export interface AddBarState {
   // Visibility
@@ -27,6 +27,7 @@ export interface AddBarState {
   importProgress: number;
   importLabel: string;
   importResults: ImportedPlace[];
+  importError: string | null;
 
   // Import curation (select which imported places to save)
   importSelectedIds: Set<string>;
@@ -53,6 +54,7 @@ export interface AddBarState {
   setGoogleResults: (results: AddBarState['googleResults']) => void;
   setImportProgress: (percent: number, label: string) => void;
   setImportResults: (results: ImportedPlace[]) => void;
+  setImportError: (error: string) => void;
   toggleImportSelected: (id: string) => void;
   selectAllImports: () => void;
   deselectAllImports: () => void;
@@ -73,6 +75,7 @@ const DEFAULTS = {
   importProgress: 0,
   importLabel: '',
   importResults: [] as ImportedPlace[],
+  importError: null as string | null,
   importSelectedIds: new Set<string>() as Set<string>,
   previewPlace: null as ImportedPlace | null,
   selectedCollectionIds: [] as string[],
@@ -104,9 +107,12 @@ export const useAddBarStore = create<AddBarState>((set) => ({
 
   setImportResults: (importResults) => set({
     importResults,
+    importError: null,
     // Auto-select all on new import results
     importSelectedIds: new Set(importResults.map(p => p.id)),
   }),
+
+  setImportError: (importError) => set({ importError }),
 
   toggleImportSelected: (id) => set((s) => {
     const next = new Set(s.importSelectedIds);

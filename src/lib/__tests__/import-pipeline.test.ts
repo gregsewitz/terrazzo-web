@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { detectInputType } from '../detect-input';
 import {
   parallelMap,
-  detectInputType,
   normalizeForDedup,
   deduplicatePlaces,
 } from '../import-pipeline';

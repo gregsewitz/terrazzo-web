@@ -30,17 +30,8 @@ export async function parallelMap<T, R>(
   return results;
 }
 
-// ─── Input type detection ───────────────────────────────────────────────────────
-
-export function detectInputType(input: string): 'url' | 'google-maps' | 'text' {
-  if (/^https?:\/\//i.test(input) || /^www\./i.test(input)) {
-    if (/google\.com\/maps/i.test(input) || /maps\.app\.goo/i.test(input)) {
-      return 'google-maps';
-    }
-    return 'url';
-  }
-  return 'text';
-}
+// Re-export from shared module (was duplicated here and in import-helpers.ts)
+export { detectInputType } from './detect-input';
 
 // ─── Google Maps extraction ─────────────────────────────────────────────────────
 
