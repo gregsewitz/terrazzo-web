@@ -1,9 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authHandler } from '@/lib/api-auth-handler';
 import { searchPlace, getPhotoUrl, resolveGooglePlaceType, priceLevelToString } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
-import type { User } from '@prisma/client';
 
 /**
  * POST /api/places/backfill-resolve
@@ -13,10 +11,12 @@ import type { User } from '@prisma/client';
  * Google Places text search (name + lat/lng), updates the DB record,
  * and triggers the enrichment pipeline.
  *
+ * No auth — temporary one-off endpoint. Delete after backfill is complete.
+ *
  * Processes in batches with rate-limiting to stay within API quotas.
  * Returns { resolved, failed, skipped } counts.
  */
-export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
+export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const batchSize = Math.min(body.batchSize || 20, 50);
   const offset = body.offset || 0;
@@ -24,12 +24,12 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   // Find places without googlePlaceId
   const places = await prisma.savedPlace.findMany({
     where: {
-      userId: user.id,
       googlePlaceId: null,
       deletedAt: null,
     },
     select: {
       id: true,
+      userId: true,
       name: true,
       location: true,
       googleData: true,
@@ -75,7 +75,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
       // Check for duplicate — another saved place may already have this googlePlaceId
       const existingWithGpid = await prisma.savedPlace.findUnique({
         where: {
-          userId_googlePlaceId: { userId: user.id, googlePlaceId: result.id },
+          userId_googlePlaceId: { userId: place.userId, googlePlaceId: result.id },
         },
         select: { id: true },
       });
@@ -130,7 +130,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
       });
 
       // Trigger the enrichment pipeline (taste match, intelligence, etc.)
-      ensureEnrichment(result.id, place.name, user.id, 'backfill', resolvedType).catch(() => {});
+      ensureEnrichment(result.id, place.name, place.userId, 'backfill', resolvedType).catch(() => {});
 
       resolved++;
 
@@ -144,7 +144,6 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
   const remaining = await prisma.savedPlace.count({
     where: {
-      userId: user.id,
       googlePlaceId: null,
       deletedAt: null,
     },
@@ -157,4 +156,4 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     remaining,
     done: remaining === 0,
   });
-});
+}
