@@ -858,7 +858,8 @@ export type OnboardingPhaseModality =
   | 'force-rank'          // Rank items by personal importance (Act 2 details-matter)
   | 'quick-choice'        // Pick from curated options (Act 2 emotional-core)
   | 'scene'               // Single-select from 4 options, multi-question stepper
-  | 'image-pair';          // A/B photo comparison — tap to choose
+  | 'image-pair'           // A/B photo comparison — tap to choose
+  | 'email-connect';       // Gmail/Nylas OAuth connect prompt
 
 export interface OnboardingPhase {
   id: string;

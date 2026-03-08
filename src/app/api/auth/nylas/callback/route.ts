@@ -55,8 +55,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // ── Also set httpOnly cookie (session fallback) ────────────────────────
-    const redirectUrl = new URL('/trips?email_connected=1', request.url);
+    // ── Determine redirect destination ─────────────────────────────────────
+    // If a return_to was passed via state, redirect there (e.g. onboarding flow)
+    const state = request.nextUrl.searchParams.get('state');
+    const returnTo = state ? decodeURIComponent(state) : null;
+    const redirectPath = returnTo || '/trips?email_connected=1';
+    const redirectUrl = new URL(redirectPath, request.url);
+    // Add email_connected flag so the component knows OAuth succeeded
+    if (!redirectUrl.searchParams.has('email_connected')) {
+      redirectUrl.searchParams.set('email_connected', '1');
+    }
     const res = NextResponse.redirect(redirectUrl);
     res.cookies.set('nylas_grant_id', grantId, {
       httpOnly: true,

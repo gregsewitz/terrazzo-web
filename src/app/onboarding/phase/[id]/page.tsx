@@ -19,6 +19,7 @@ import ForceRankView from '@/components/onboarding/ForceRankView';
 import QuickChoiceView from '@/components/onboarding/QuickChoiceView';
 import SceneChoiceView from '@/components/onboarding/SceneChoiceView';
 import ImagePairView from '@/components/onboarding/ImagePairView';
+import EmailConnectView from '@/components/onboarding/EmailConnectView';
 import { apiFetch } from '@/lib/api-client';
 
 const ACT_LABELS: Record<number, string> = { 1: 'Quick Read', 2: 'Your Story', 3: 'Deep Taste' };
@@ -29,6 +30,24 @@ export default function PhasePage() {
   const phaseId = params.id as string;
 
   const { completePhase, setPhaseIndex, completedPhaseIds, lifeContext, skippedPhaseIds } = useOnboardingStore();
+
+  // Back navigation: find the previous non-skipped phase
+  const handleBack = useCallback(() => {
+    const globalIdx = (ALL_PHASE_IDS as readonly string[]).indexOf(phaseId);
+    if (globalIdx <= 0) return; // already at first phase
+
+    const store = useOnboardingStore.getState();
+    for (let i = globalIdx - 1; i >= 0; i--) {
+      const prevId = ALL_PHASE_IDS[i];
+      if (!store.skippedPhaseIds.includes(prevId)) {
+        setPhaseIndex(i);
+        router.push(`/onboarding/phase/${prevId}`);
+        return;
+      }
+    }
+  }, [phaseId, setPhaseIndex, router]);
+
+  const isFirstPhase = (ALL_PHASE_IDS as readonly string[]).indexOf(phaseId) === 0;
 
   const phase = useMemo(
     () => ONBOARDING_PHASES.find((p) => p.id === phaseId),
@@ -131,18 +150,31 @@ export default function PhasePage() {
       {/* Phase header */}
       <div className="flex-shrink-0 px-5 pt-5 pb-3 w-full max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
-              {ACT_LABELS[phase.act] ?? `Act ${phase.act}`}
-            </p>
-            <h1 className="font-serif text-[22px] text-[var(--t-ink)] leading-tight">
-              {phase.title}
-            </h1>
-            {phase.subtitle && (
-              <p className="text-[12px] text-[var(--t-ink)]/40 mt-0.5">
-                {phase.subtitle}
-              </p>
+          <div className="flex items-center gap-3">
+            {!isFirstPhase && (
+              <button
+                onClick={handleBack}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--t-ink)]/5 hover:bg-[var(--t-ink)]/10 transition-colors"
+                aria-label="Go back"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-[var(--t-ink)]/50">
+                  <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
             )}
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
+                {ACT_LABELS[phase.act] ?? `Act ${phase.act}`}
+              </p>
+              <h1 className="font-serif text-[22px] text-[var(--t-ink)] leading-tight">
+                {phase.title}
+              </h1>
+              {phase.subtitle && (
+                <p className="text-[12px] text-[var(--t-ink)]/40 mt-0.5">
+                  {phase.subtitle}
+                </p>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <span className="font-mono text-[10px] text-[var(--t-ink)]/30">
@@ -241,6 +273,11 @@ export default function PhasePage() {
             onComplete={handlePhaseComplete}
             questions={phase.imagePairQuestions}
           />
+        )}
+
+        {/* ── NEW: Email Connect (Nylas OAuth) ── */}
+        {phase.modality === 'email-connect' && (
+          <EmailConnectView onComplete={handlePhaseComplete} />
         )}
       </div>
     </div>

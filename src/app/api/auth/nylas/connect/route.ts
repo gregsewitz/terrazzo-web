@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const clientId = process.env.NYLAS_CLIENT_ID;
     const redirectUri = process.env.NYLAS_REDIRECT_URI || 'http://localhost:3000/api/auth/nylas/callback';
@@ -9,7 +9,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Nylas not configured' }, { status: 500 });
     }
 
-    const authUrl = `https://api.us.nylas.com/v3/connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&provider=google&access_type=online&scope=https://www.googleapis.com/auth/gmail.readonly`;
+    // Pass return_to through the OAuth state param so callback knows where to redirect
+    const returnTo = request.nextUrl.searchParams.get('return_to') || '';
+    const state = returnTo ? encodeURIComponent(returnTo) : '';
+
+    const authUrl = `https://api.us.nylas.com/v3/connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&provider=google&access_type=online&scope=https://www.googleapis.com/auth/gmail.readonly${state ? `&state=${state}` : ''}`;
 
     return NextResponse.redirect(authUrl);
   } catch (error) {
