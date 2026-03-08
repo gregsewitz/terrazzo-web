@@ -52,6 +52,9 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   // Local UI state
   const [saving, setSaving] = useState(false);
 
+  // Track client IDs saved during enrichment so onResult can back-fill
+  const savedDuringEnrichRef = useRef<Map<string, string>>(new Map()); // clientId → name
+
   // ─── Auto-focus input when opened ──────────────────────────────────────
   useEffect(() => {
     if (isOpen && mode === 'search') {
@@ -134,19 +137,70 @@ const UniversalAddBar = memo(function UniversalAddBar() {
       if (inputType === 'google-maps') {
         // Google Maps saved lists → dedicated fast endpoint with lazy enrichment
         setIsEnriching(true);
+        savedDuringEnrichRef.current = new Map();
         await streamMapsImport(trimmed, {
           onProgress: (percent: number, label: string) => setImportProgress(percent, label),
           onPreview: (places: ImportedPlace[]) => {
             // Show basic results immediately while enrichment continues
             setImportResults(places);
             setMode('preview');
-            // isEnriching stays true — user sees results but Save waits for enrichment
           },
           onResult: (places: ImportedPlace[]) => {
-            // Replace with fully enriched results — now safe to save
-            setImportResults(places);
             setIsEnriching(false);
-            setMode('preview');
+            const savedMap = savedDuringEnrichRef.current;
+
+            if (savedMap.size > 0) {
+              // User already saved during preview — back-fill enriched data
+              // into the store (match by name) and update DB records
+              const currentPlaces = useSavedStore.getState().myPlaces;
+              const patches: Partial<ImportedPlace>[] = [];
+              const dbUpdates: Array<{ name: string; location?: string; enriched: Partial<ImportedPlace> }> = [];
+
+              for (const enriched of places) {
+                if (!savedMap.has(enriched.id)) continue;
+                // Find in store by name (ID may have been swapped to server ID)
+                const match = currentPlaces.find(
+                  p => p.name === enriched.name && (p.location === enriched.location || !p.location)
+                );
+                if (match) {
+                  const patch: Partial<ImportedPlace> = {
+                    id: match.id,
+                    type: enriched.type,
+                    google: enriched.google,
+                    matchScore: enriched.matchScore,
+                    matchBreakdown: enriched.matchBreakdown,
+                    tasteNote: enriched.tasteNote,
+                    terrazzoInsight: enriched.terrazzoInsight,
+                    enrichment: enriched.enrichment,
+                    whatToOrder: enriched.whatToOrder,
+                    tips: enriched.tips,
+                    alsoKnownAs: enriched.alsoKnownAs,
+                  };
+                  patches.push(patch);
+                  dbUpdates.push({
+                    name: enriched.name,
+                    location: enriched.location,
+                    enriched: patch,
+                  });
+                }
+              }
+
+              if (patches.length > 0) {
+                useSavedStore.getState().patchPlaces(patches);
+                // Fire-and-forget DB back-fill
+                fetch('/api/places/backfill-enrichment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ updates: dbUpdates }),
+                }).catch(() => {});
+              }
+
+              savedDuringEnrichRef.current = new Map();
+            } else {
+              // User hasn't saved yet — just replace preview with enriched results
+              setImportResults(places);
+              setMode('preview');
+            }
           },
           onError: (err: string) => {
             setIsEnriching(false);
@@ -211,6 +265,13 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   // ─── Save selected import results ────────────────────────────────────
   const handleSaveSelected = useCallback((collectionIds: string[]) => {
     const selected = importResults.filter(p => importSelectedIds.has(p.id));
+
+    // If enrichment is still running, record which client IDs were saved
+    // so onResult can back-fill enriched data into these places later.
+    if (isEnriching) {
+      selected.forEach(p => savedDuringEnrichRef.current.set(p.id, p.name));
+    }
+
     selected.forEach(place => addPlace(place));
     collectionIds.forEach(slId => {
       selected.forEach(place => addPlaceToCollection(slId, place.id));
@@ -221,7 +282,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     setImportResults([]);
     setMode('search');
     setQuery('');
-  }, [importResults, importSelectedIds, tripContext, addPlace, addPlaceToCollection, addToPool, setImportResults, setMode, setQuery]);
+  }, [importResults, importSelectedIds, isEnriching, tripContext, addPlace, addPlaceToCollection, addToPool, setImportResults, setMode, setQuery]);
 
   if (!isOpen) return null;
 
