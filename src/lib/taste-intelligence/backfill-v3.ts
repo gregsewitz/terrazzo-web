@@ -208,21 +208,25 @@ export async function backfillAllPropertyEmbeddingsV3(): Promise<{
   computed: number;
   skipped: number;
 }> {
-  const records = await prisma.placeIntelligence.findMany({
+  // Only fetch records that are missing V3 embeddings (pgvector column not queryable via Prisma)
+  const missing = await prisma.$queryRaw<Array<{ id: string; propertyName: string | null }>>`
+    SELECT "id", "propertyName"
+    FROM "PlaceIntelligence"
+    WHERE "status" = 'complete'
+      AND "signalCount" > 0
+      AND "embeddingV3" IS NULL
+  `;
+
+  // Also count total eligible for reporting
+  const totalEligible = await prisma.placeIntelligence.count({
     where: { status: 'complete', signalCount: { gt: 0 } },
-    select: { id: true, propertyName: true, signals: true },
   });
 
-  const valid = records.filter((r) => {
-    const signals = r.signals as unknown as unknown[];
-    return Array.isArray(signals) && signals.length > 0;
-  });
-
-  console.log(`[v3-backfill] Computing v3 embeddings for ${valid.length} properties...`);
+  console.log(`[v3-backfill] ${missing.length} properties missing v3 embeddings (${totalEligible} total eligible)`);
   let computed = 0;
   let skipped = 0;
 
-  for (const record of valid) {
+  for (const record of missing) {
     try {
       const success = await backfillPropertyEmbeddingV3(record.id);
       if (success) computed++;
@@ -234,7 +238,7 @@ export async function backfillAllPropertyEmbeddingsV3(): Promise<{
   }
 
   console.log(`[v3-backfill] Done: ${computed} v3 embeddings, ${skipped} skipped`);
-  return { total: valid.length, computed, skipped };
+  return { total: totalEligible, computed, skipped };
 }
 
 // ─── Full v3 backfill ───────────────────────────────────────────────────────
