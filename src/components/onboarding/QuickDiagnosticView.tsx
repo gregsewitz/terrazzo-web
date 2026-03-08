@@ -6,7 +6,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 import { EXPERIENCE_POOL } from '@/constants/onboarding';
 import { initEloState, pickNextPair, recordChoice, extractSignals } from '@/lib/elo';
 
-const TOTAL_ROUNDS = 10;
+const TOTAL_ROUNDS = 14;
 
 /**
  * Cluster-based warm gradients — muted, editorial tones
@@ -23,6 +23,7 @@ const CLUSTER_GRADIENTS: Record<string, string> = {
   urban:           'linear-gradient(145deg, #bdbdbd 0%, #eeeeee 50%, #fafafa 100%)',
   efficiency:      'linear-gradient(145deg, #b0bec5 0%, #eceff1 50%, #fafafa 100%)',
   ritual:          'linear-gradient(145deg, #d7ccc8 0%, #efebe9 50%, #fafafa 100%)',
+  service:         'linear-gradient(145deg, #bcaaa4 0%, #efebe9 50%, #fafafa 100%)',
 };
 
 /** Accent dot color per cluster */
@@ -115,16 +116,16 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
 
   const [itemA, itemB] = currentPair;
 
-  // Phase-aware prompt text — varies across all 10 rounds, no repeats
-  const promptText = round < 2
+  // Phase-aware prompt text — varies across all 14 rounds
+  const promptText = round < 3
     ? 'Which sounds more like you?'
-    : round < 4
+    : round < 6
       ? 'Which world would you choose?'
-      : round < 6
+      : round < 9
         ? 'Quick — which one?'
-        : round < 8
+        : round < 12
           ? 'Almost there — pick one'
-          : round === 8
+          : round === 12
             ? 'Two more —'
             : 'Last one —';
 

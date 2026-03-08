@@ -405,6 +405,10 @@ export function useConversationPhase({
           setLifeContext({ emotionalDriverPrimary: extractResult.emotionalDriverPrimary, emotionalDriverSecondary: extractResult.emotionalDriverSecondary || null });
         }
 
+        if (extractResult.dreamDestinations?.length) {
+          setLifeContext({ dreamDestinations: extractResult.dreamDestinations });
+        }
+
         if (extractResult.mentionedPlaces?.length) {
           fetch('/api/onboarding/resolve-places', {
             method: 'POST',

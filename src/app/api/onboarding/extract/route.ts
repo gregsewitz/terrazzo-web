@@ -74,6 +74,9 @@ ${phaseId === 'trusted-sources' ? '- Extract trustedSource/trustedSources: { typ
 ${phaseId === 'go-back-place' ? '- Extract goBackPlace: { placeName, location?, reason }' : ''}
 ${phaseId === 'companion-context' || phaseId === 'memorable-stays' ? '- Extract contextModifiers: [{ companion, preferences }], partnerTravelDynamic?, soloTravelIdentity?' : ''}
 ${phaseId === 'emotional-core' ? '- Extract emotionalDriverPrimary, emotionalDriverSecondary' : ''}
+${phaseId === 'dream-destinations' ? `- Extract dreamDestinations: array of places the user dreams of visiting.
+  Each: { name: string, location?: string (country/region), placeType?: "city"|"country"|"hotel"|"restaurant"|"region", appeal: string (1-2 sentences why they want to go), confidence: 0-1 }
+  Include ALL destinations mentioned, even brief mentions. Confidence: 0.9+ explicit dream, 0.7-0.89 strong interest, 0.5-0.69 passing mention.` : ''}
 
 Return valid JSON:
 {
@@ -84,6 +87,7 @@ Return valid JSON:
   "contradictions": [],
   "mentionedPlaces": [],
   "lifeContext": {},
+  ${phaseId === 'dream-destinations' ? '"dreamDestinations": [],' : ''}
   ... (phase-specific fields as applicable)
 }`;
 

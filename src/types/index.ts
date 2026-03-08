@@ -771,29 +771,6 @@ export interface ConversationMessage {
   anchorsToVerify?: PropertyAnchor[];
 }
 
-export interface DiagnosticQuestion {
-  q: string;
-  a: string;
-  b: string;
-  aSignals: string[];
-  bSignals: string[];
-  /** Taste domain for "a" choice signals (defaults to 'Design' for backward compat) */
-  aDomain?: string;
-  /** Taste domain for "b" choice signals (defaults to aDomain ?? 'Design') */
-  bDomain?: string;
-}
-
-export interface ImagePair {
-  id: number;
-  prompt: string;
-  a: { label: string; imageUrl?: string };
-  b: { label: string; imageUrl?: string };
-  aSignals: string[];
-  bSignals: string[];
-  /** Taste domain for signals from this pair (defaults to 'Design' for backward compat) */
-  domain?: string;
-}
-
 // ─── Elo-Ranked Comparison Types ───
 
 export type TasteAxes = {
@@ -873,8 +850,6 @@ export interface OnboardingPhase {
   sampleUserResponses: string[];
   extractedSignals: TasteSignal[];
   certaintyAfter: Record<string, number>;
-  diagnosticQuestions?: DiagnosticQuestion[];
-  imagePairs?: ImagePair[];
   experiencePool?: ExperienceItem[];
   designerPool?: DesignerItem[];
   /** Custom slider definitions — passed to SliderPhaseView when modality is 'slider' */
@@ -994,6 +969,14 @@ export interface OnboardingLifeContext {
   // Phase 10: Emotional drivers
   emotionalDriverPrimary?: string;
   emotionalDriverSecondary?: string | null;
+  // Dream destinations from conversation
+  dreamDestinations?: Array<{
+    name: string;
+    location?: string;
+    placeType?: 'city' | 'country' | 'hotel' | 'restaurant' | 'region';
+    appeal: string;
+    confidence: number;
+  }>;
   // Allow dynamic fields from AI extraction
   [key: string]: unknown;
 }

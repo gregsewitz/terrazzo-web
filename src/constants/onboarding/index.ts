@@ -2,7 +2,6 @@
 
 export { EXPERIENCE_POOL } from './experience-pool';
 export { DESIGNER_POOL } from './designer-pool';
-export { DIAGNOSTIC_QUESTIONS, IMAGE_PAIRS } from './legacy-diagnostics';
 export { ONBOARDING_PHASES, MAX_ADAPTIVE_PHASES } from './phase-definitions';
 export {
   ACT_1_PHASE_IDS,

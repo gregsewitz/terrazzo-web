@@ -9,7 +9,7 @@ import RevealSequence from '@/components/onboarding/RevealSequence';
 
 export default function RevealPage() {
   const router = useRouter();
-  const { generatedProfile, finishOnboarding, onboardingDepth, seedTrips } = useOnboardingStore();
+  const { generatedProfile, finishOnboarding, onboardingDepth, seedTrips, lifeContext, addSeedTrip } = useOnboardingStore();
   const createTrip = useTripStore((s) => s.createTrip);
   const hasCreatedTrips = useRef(false);
 
@@ -18,10 +18,25 @@ export default function RevealPage() {
       finishOnboarding('full_flow');
     }
 
+    // Auto-seed a "dreaming" trip from dream destinations conversation
+    if (lifeContext.dreamDestinations?.length && !seedTrips.some(s => s.seedSource === 'onboarding_dream')) {
+      const top = [...lifeContext.dreamDestinations].sort((a, b) => b.confidence - a.confidence)[0];
+      addSeedTrip({
+        name: top.location ? `${top.name}, ${top.location}` : top.name,
+        destinations: [{
+          name: top.location ? `${top.name}, ${top.location}` : top.name,
+        }],
+        status: 'dreaming',
+        seedSource: 'onboarding_dream',
+        rawUserInput: `Dream destination: ${top.name}${top.appeal ? ` — ${top.appeal}` : ''}`,
+      });
+    }
+
     // Create seed trips from onboarding data
-    if (!hasCreatedTrips.current && seedTrips.length > 0) {
+    const currentSeedTrips = useOnboardingStore.getState().seedTrips;
+    if (!hasCreatedTrips.current && currentSeedTrips.length > 0) {
       hasCreatedTrips.current = true;
-      seedTrips.forEach((seed) => {
+      currentSeedTrips.forEach((seed) => {
         const data = seedTripToCreationData(seed);
         createTrip(data);
       });

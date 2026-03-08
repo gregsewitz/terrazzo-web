@@ -66,6 +66,31 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
 
   const round = eloState.round;
 
+  // ── Preload next pair's images during selection animation ──
+  // Peek at what the next pair would be after either item wins, and start
+  // loading their hero images so they're cached by the time we transition.
+  const preloadedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!currentPair) return;
+    const [a, b] = currentPair;
+    // Simulate both outcomes and preload hero images for each possible next pair
+    for (const [winner, loser] of [[a, b], [b, a]]) {
+      const hypothetical = recordChoice(eloState, winner.id, loser.id, TOTAL_ROUNDS);
+      const nextPair = pickNextPair(hypothetical, TOTAL_ROUNDS);
+      if (nextPair) {
+        for (const item of nextPair) {
+          const urls = (item.metadata.imageUrls as string[]) || [];
+          const heroUrl = urls[0]; // Preload at least the first (hero) image
+          if (heroUrl && !preloadedRef.current.has(heroUrl)) {
+            preloadedRef.current.add(heroUrl);
+            const img = new Image();
+            img.src = heroUrl;
+          }
+        }
+      }
+    }
+  }, [currentPair, eloState]);
+
   const handleSelect = useCallback((winner: EloItem, loser: EloItem) => {
     if (isAnimating) return;
     setSelectedId(winner.id);
@@ -203,6 +228,7 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
   }, [allImageUrls, item.id]);
 
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Track whether user swiped (to suppress click-to-select on swipe end)
@@ -229,9 +255,10 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
     return () => observer.disconnect();
   }, [imageUrls.length]);
 
-  // Reset gallery position when item changes (new round)
+  // Reset gallery position and loaded state when item changes (new round)
   useEffect(() => {
     setActiveIndex(0);
+    setLoadedImages(new Set());
     if (scrollRef.current) scrollRef.current.scrollLeft = 0;
   }, [item.id, item.comparisons]);
 
@@ -290,19 +317,24 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
             data-idx={i}
             className="flex-shrink-0 w-full h-full snap-center relative"
           >
-            {!failedImages.has(i) ? (
+            {/* Gradient placeholder — always rendered underneath */}
+            <div
+              className="absolute inset-0"
+              style={{ background: getGradient(item.cluster) }}
+            />
+            {!failedImages.has(i) && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={url}
                 alt={`${hotel} ${i + 1}`}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 draggable={false}
+                style={{
+                  opacity: loadedImages.has(i) ? 1 : 0,
+                  transition: 'opacity 200ms ease-in',
+                }}
+                onLoad={() => setLoadedImages(prev => new Set(prev).add(i))}
                 onError={() => setFailedImages(prev => new Set(prev).add(i))}
-              />
-            ) : (
-              <div
-                className="w-full h-full"
-                style={{ background: getGradient(item.cluster) }}
               />
             )}
           </div>

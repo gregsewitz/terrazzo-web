@@ -121,7 +121,7 @@ export function pickNextPair(state: EloState, totalRounds: number = 10): [EloIte
       ([a, b]) => a.metadata?.pairWith !== b.id && b.metadata?.pairWith !== a.id
     );
 
-    // Always prefer natural pairs first (covers all 8 dimensions in ~8 rounds)
+    // Always prefer natural pairs first (covers all 9 dimensions in ~9 rounds)
     if (naturalPairs.length > 0) {
       // Score by fewest comparisons (ensure coverage) + some randomness
       const scored = naturalPairs.map(([a, b]) => ({
