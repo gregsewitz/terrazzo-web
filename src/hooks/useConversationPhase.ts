@@ -128,7 +128,10 @@ export function useConversationPhase({
         }),
       });
 
-      if (!res.ok) throw new Error('Analysis failed');
+      if (!res.ok) {
+        console.error('[conversation-phase] API returned', res.status, res.statusText);
+        throw new Error(`Analysis failed: ${res.status}`);
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result: AnalysisResult & { lifeContext?: Record<string, any>; trustedSource?: any; trustedSources?: any[]; goBackPlace?: any; contextModifiers?: any[]; partnerTravelDynamic?: string; soloTravelIdentity?: string; emotionalDriverPrimary?: string; emotionalDriverSecondary?: string; correctedTranscript?: string; userRequestedSkip?: boolean; mentionedPlaces?: MentionedPlace[] } = await res.json();
@@ -260,7 +263,11 @@ export function useConversationPhase({
       } else if (result.followUp) {
         nextText = result.followUp;
       } else if (followUpIndex.current < followUps.length) {
-        nextText = followUps[followUpIndex.current];
+        // API succeeded but returned no followUp — use scripted fallback with acknowledgment
+        console.warn('[conversation-phase] API returned no followUp — using scripted fallback');
+        const acks = ["That's really interesting.", "Thanks for sharing that.", "I appreciate you telling me that."];
+        const ack = acks[Math.floor(Math.random() * acks.length)];
+        nextText = `${ack} ${followUps[followUpIndex.current]}`;
         followUpIndex.current += 1;
       } else {
         // All scripted follow-ups exhausted — gracefully wrap up
@@ -275,11 +282,21 @@ export function useConversationPhase({
 
       // Persist messages to store
       addMessages([userMsg, aiMsg]);
-    } catch {
-      // Fallback: use predefined follow-ups
+    } catch (err) {
+      console.error('[conversation-phase] API call failed — falling back to scripted follow-up:', err);
+      // Build a contextual fallback rather than using a blind scripted follow-up.
+      // Prefix with a brief acknowledgment so the user feels heard, then ask the scripted question.
       let fallbackText: string;
+      const acknowledgments = [
+        "That's really interesting.",
+        "I love that.",
+        "Thanks for sharing that.",
+        "That gives me a lot to work with.",
+      ];
+      const ack = acknowledgments[Math.floor(Math.random() * acknowledgments.length)];
+
       if (followUpIndex.current < followUps.length) {
-        fallbackText = followUps[followUpIndex.current];
+        fallbackText = `${ack} ${followUps[followUpIndex.current]}`;
         followUpIndex.current += 1;
       } else {
         fallbackText = "I think I've got what I need here — let's keep going.";

@@ -32,8 +32,10 @@ PHASE PURPOSE: ${phase?.subtitle || 'General taste profiling'}
 OPENING QUESTION FOR THIS PHASE: ${phase?.aiPrompt || ''}
 ${isLastPhase ? 'This is the final phase.' : ''}
 
-SCRIPTED FOLLOW-UPS (use these as your guide for what to ask next — rephrase naturally based on what the user actually said, but stay on topic and don't invent tangential questions):
-${phase?.followUps?.map((f, i) => `${i + 1}. ${f}`).join('\n') || 'None'}
+SCRIPTED FOLLOW-UP TOPICS (these define WHAT to explore — but you must phrase your question as a DIRECT response to what the user just said, referencing their specific words, places, and details. NEVER use these verbatim — always adapt them to the conversation):
+${phase?.followUps?.map((f, i) => `${i + 1}. Topic: ${f}`).join('\n') || 'None'}
+
+CRITICAL: Your "followUp" response MUST directly reference something specific the user just said. If they mentioned 3 hotels, pick one and ask about it by name. If they asked you a question, ANSWER it. Generic responses that could apply to anyone's answer are unacceptable.
 
 Current certainties: ${JSON.stringify(certainties)}
 USER MESSAGE COUNT SO FAR: ${userMessageCount || 0} (phaseComplete MUST be false if < 3, and you SHOULD wrap up by 4-5 — the system will force-complete at 6)
@@ -133,10 +135,34 @@ Return valid JSON only.`;
     // Extract JSON from response (handle markdown code blocks)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return NextResponse.json({ error: 'Failed to parse analysis' }, { status: 500 });
+      console.error('[onboarding/analyze] Failed to extract JSON from Claude response. Raw text:', text.slice(0, 500));
+      // Return graceful fallback instead of 500 — the client will use scripted follow-ups
+      return NextResponse.json({
+        signals: [],
+        sustainabilitySignals: [],
+        emotionalDriverHint: null,
+        certainties: {},
+        followUp: null,
+        contradictions: [],
+        phaseComplete: false,
+      });
     }
 
-    const result = JSON.parse(jsonMatch[0]);
+    let result;
+    try {
+      result = JSON.parse(jsonMatch[0]);
+    } catch (parseError) {
+      console.error('[onboarding/analyze] JSON parse failed. Matched text:', jsonMatch[0].slice(0, 500), parseError);
+      return NextResponse.json({
+        signals: [],
+        sustainabilitySignals: [],
+        emotionalDriverHint: null,
+        certainties: {},
+        followUp: null,
+        contradictions: [],
+        phaseComplete: false,
+      });
+    }
 
     // Normalize: ensure new fields exist even if Claude omits them
     if (!result.sustainabilitySignals) result.sustainabilitySignals = [];
@@ -144,8 +170,8 @@ Return valid JSON only.`;
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Onboarding analysis error:', error);
-    // Return a graceful fallback
+    console.error('[onboarding/analyze] Unhandled error:', error instanceof Error ? { message: error.message, stack: error.stack?.slice(0, 300) } : error);
+    // Return a graceful fallback (200 so client doesn't throw)
     return NextResponse.json({
       signals: [],
       sustainabilitySignals: [],
