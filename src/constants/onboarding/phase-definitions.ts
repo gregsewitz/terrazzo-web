@@ -1178,8 +1178,8 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   {
     id: 'gap-fill-reactions',
     phaseNumber: 25,
-    title: 'Last Reactions',
-    subtitle: 'Places chosen just for you — we want to nail this',
+    title: 'Places You Know',
+    subtitle: 'Rate places from your recent travels',
     modality: 'property-reactions',
     act: 3,
     isAdaptive: true,
@@ -1188,7 +1188,8 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     sampleUserResponses: [],
     extractedSignals: [],
     certaintyAfter: { Design: 98, Atmosphere: 96, Character: 96, Service: 95, FoodDrink: 91, Setting: 95, Wellness: 85, Sustainability: 46 },
-    cardCount: 8,
+    cardCount: 12,
+    propertySource: 'email', // Pull from parsed email history (past hotels & restaurants)
     // targetDomains set at runtime from Act 1 gap analysis
   },
 ];

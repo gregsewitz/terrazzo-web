@@ -238,6 +238,7 @@ export default function PhasePage() {
             onComplete={handlePhaseComplete}
             targetDomains={phase.targetDomains}
             cardCount={phase.cardCount ?? 10}
+            source={phase.propertySource ?? 'db'}
           />
         )}
 

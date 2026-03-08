@@ -31,6 +31,8 @@ interface PropertyReactionCardProps {
     propertyName: string,
     placeType: string | null,
   ) => void;
+  /** Optional dismiss handler — when provided, shows an × button to skip this card */
+  onDismiss?: (googlePlaceId: string) => void;
 }
 
 /** Extract a short location hint from a full address, e.g. "London, UK" from "192a Brick Ln, London E1 6SA, UK" */
@@ -58,6 +60,7 @@ export default function PropertyReactionCard({
   exemplar,
   domain,
   onReact,
+  onDismiss,
 }: PropertyReactionCardProps) {
   const [selected, setSelected] = useState<ReactionKey | null>(null);
 
@@ -76,7 +79,7 @@ export default function PropertyReactionCard({
   return (
     <div
       className={`
-        w-full rounded-2xl px-5 py-4 mb-3
+        w-full rounded-2xl px-5 py-4 mb-3 relative
         transition-all duration-500
         ${selected ? 'opacity-70' : ''}
       `}
@@ -87,6 +90,20 @@ export default function PropertyReactionCard({
           : '1px solid rgba(28, 26, 23, 0.06)',
       }}
     >
+      {/* Dismiss button — only shown when onDismiss is provided and card not yet reacted to */}
+      {onDismiss && !selected && (
+        <button
+          onClick={() => onDismiss(exemplar.googlePlaceId)}
+          className="absolute top-3 right-3 flex items-center justify-center w-6 h-6 rounded-full hover:bg-[rgba(28,26,23,0.06)] transition-colors"
+          style={{ color: 'var(--t-ink)', opacity: 0.25 }}
+          aria-label={`Dismiss ${exemplar.propertyName}`}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        </button>
+      )}
+
       {/* Domain chip */}
       <p
         className="font-mono text-[9px] uppercase tracking-widest mb-2"

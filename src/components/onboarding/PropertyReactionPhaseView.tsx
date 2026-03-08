@@ -14,6 +14,8 @@ interface PropertyReactionPhaseViewProps {
   targetDomains?: TasteDomain[];
   /** Number of property cards to show (default: 10) */
   cardCount?: number;
+  /** Where to source properties: 'db' (PlaceIntelligence) or 'email' (parsed email history) */
+  source?: 'db' | 'email';
 }
 
 /** Response shape from the domain-gap-check endpoint */
@@ -21,10 +23,18 @@ interface GapCheckResponse {
   exemplars: { domain: string; exemplar: PropertyExemplar }[];
 }
 
+/** Response shape from the email-places endpoint */
+interface EmailPlacesResponse {
+  places: (PropertyExemplar & { reservationId: string; provider?: string; visitDate?: string | null })[];
+  total: number;
+  scanComplete: boolean;
+}
+
 export default function PropertyReactionPhaseView({
   onComplete,
   targetDomains,
   cardCount = 10,
+  source = 'db',
 }: PropertyReactionPhaseViewProps) {
   const addPropertyAnchors = useOnboardingStore((s) => s.addPropertyAnchors);
   const setCurrentPhaseProgress = useOnboardingStore((s) => s.setCurrentPhaseProgress);
@@ -32,11 +42,17 @@ export default function PropertyReactionPhaseView({
   const propertyAnchors = useOnboardingStore((s) => s.propertyAnchors);
 
   const [exemplars, setExemplars] = useState<{ domain: string; exemplar: PropertyExemplar }[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reactedCount, setReactedCount] = useState(0);
 
-  // Fetch exemplar properties for target domains
+  // Visible exemplars (filtering out dismissed)
+  const visibleExemplars = exemplars.filter(
+    (item) => !dismissedIds.has(item.exemplar.googlePlaceId)
+  );
+
+  // Fetch exemplar properties — from email history or PlaceIntelligence DB
   useEffect(() => {
     let cancelled = false;
 
@@ -45,20 +61,43 @@ export default function PropertyReactionPhaseView({
         setLoading(true);
         setError(null);
 
-        const result = await apiFetch<GapCheckResponse>('/api/onboarding/domain-gap-check', {
-          method: 'POST',
-          body: JSON.stringify({
-            signals: allSignals,
-            // No radarData yet (Act 0) — endpoint should handle gracefully
-            radarData: [],
-            existingAnchorIds: propertyAnchors.map((a) => a.googlePlaceId),
-            targetDomains: targetDomains ?? undefined,
-            maxExemplars: cardCount,
-          }),
-        });
+        if (source === 'email') {
+          // ── Email-sourced: past hotels & restaurants from Gmail ──
+          const result = await apiFetch<EmailPlacesResponse>('/api/onboarding/email-places');
 
-        if (!cancelled && result?.exemplars) {
-          setExemplars(result.exemplars.slice(0, cardCount));
+          if (!cancelled && result?.places?.length) {
+            setExemplars(
+              result.places.slice(0, cardCount).map((p) => ({
+                domain: p.placeType === 'hotel' ? 'Setting' : 'FoodDrink',
+                exemplar: {
+                  googlePlaceId: p.googlePlaceId,
+                  propertyName: p.propertyName,
+                  placeType: p.placeType,
+                  locationHint: p.locationHint,
+                  domainScore: p.domainScore,
+                },
+              }))
+            );
+          } else if (!cancelled) {
+            // No email places found — auto-skip this phase
+            setExemplars([]);
+          }
+        } else {
+          // ── DB-sourced: PlaceIntelligence vector search ──
+          const result = await apiFetch<GapCheckResponse>('/api/onboarding/domain-gap-check', {
+            method: 'POST',
+            body: JSON.stringify({
+              signals: allSignals,
+              radarData: [],
+              existingAnchorIds: propertyAnchors.map((a) => a.googlePlaceId),
+              targetDomains: targetDomains ?? undefined,
+              maxExemplars: cardCount,
+            }),
+          });
+
+          if (!cancelled && result?.exemplars) {
+            setExemplars(result.exemplars.slice(0, cardCount));
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -75,6 +114,20 @@ export default function PropertyReactionPhaseView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount — signals are stable at this point
 
+  // Dismiss a card (remove from view without rating)
+  const handleDismiss = useCallback((googlePlaceId: string) => {
+    setDismissedIds((prev) => new Set(prev).add(googlePlaceId));
+  }, []);
+
+  // Auto-complete when all cards have been dismissed
+  useEffect(() => {
+    if (!loading && visibleExemplars.length === 0 && exemplars.length > 0) {
+      setCurrentPhaseProgress(1);
+      const t = setTimeout(onComplete, 300);
+      return () => clearTimeout(t);
+    }
+  }, [loading, visibleExemplars.length, exemplars.length, setCurrentPhaseProgress, onComplete]);
+
   const handleReact = useCallback((
     googlePlaceId: string,
     sentiment: string,
@@ -89,7 +142,7 @@ export default function PropertyReactionPhaseView({
       placeType: placeType ?? undefined,
       sentiment: sentiment as PropertyAnchor['sentiment'],
       blendWeight,
-      sourcePhaseId: 'onboarding-reaction',
+      sourcePhaseId: source === 'email' ? 'email-history-reaction' : 'onboarding-reaction',
       hasEmbedding: false, // Will be resolved by backend
       resolvedAt: new Date().toISOString(),
     };
@@ -97,14 +150,16 @@ export default function PropertyReactionPhaseView({
 
     const newCount = reactedCount + 1;
     setReactedCount(newCount);
-    setCurrentPhaseProgress(newCount / Math.max(1, exemplars.length));
 
-    // Auto-complete when all cards reacted to
-    if (newCount >= exemplars.length) {
+    const totalActive = visibleExemplars.length;
+    setCurrentPhaseProgress(newCount / Math.max(1, totalActive));
+
+    // Auto-complete when all visible cards reacted to
+    if (newCount >= totalActive) {
       setCurrentPhaseProgress(1);
       setTimeout(onComplete, 600);
     }
-  }, [reactedCount, exemplars.length, addPropertyAnchors, setCurrentPhaseProgress, onComplete]);
+  }, [reactedCount, visibleExemplars.length, addPropertyAnchors, setCurrentPhaseProgress, onComplete, source]);
 
   // Loading state
   if (loading) {
@@ -133,6 +188,49 @@ export default function PropertyReactionPhaseView({
         }}>
           Finding properties for you…
         </p>
+      </div>
+    );
+  }
+
+  // Email source: no places found — auto-skip gracefully
+  if (!loading && source === 'email' && exemplars.length === 0) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '60px 20px',
+        flex: 1,
+        gap: 16,
+      }}>
+        <p style={{
+          fontSize: 14,
+          color: INK['50'],
+          fontFamily: FONT.sans,
+          textAlign: 'center',
+          maxWidth: 320,
+          lineHeight: 1.5,
+        }}>
+          No past stays or restaurants found yet — your email is still being scanned in the background.
+        </p>
+        <button
+          onClick={onComplete}
+          className="btn-hover"
+          style={{
+            padding: '12px 32px',
+            background: T.ink,
+            color: T.cream,
+            border: 'none',
+            borderRadius: 100,
+            fontSize: 14,
+            fontWeight: 500,
+            fontFamily: FONT.sans,
+            cursor: 'pointer',
+          }}
+        >
+          Continue
+        </button>
       </div>
     );
   }
@@ -199,11 +297,11 @@ export default function PropertyReactionPhaseView({
           marginBottom: 16,
           letterSpacing: '0.04em',
         }}>
-          {reactedCount} / {exemplars.length}
+          {reactedCount} / {visibleExemplars.length}
         </p>
 
         {/* Property cards */}
-        {exemplars.map((item, i) => (
+        {visibleExemplars.map((item, i) => (
           <div
             key={item.exemplar.googlePlaceId}
             style={{
@@ -214,12 +312,13 @@ export default function PropertyReactionPhaseView({
               exemplar={item.exemplar}
               domain={item.domain}
               onReact={handleReact}
+              onDismiss={source === 'email' ? handleDismiss : undefined}
             />
           </div>
         ))}
 
         {/* Skip remaining button (shows after 3+ reactions) */}
-        {reactedCount >= 3 && reactedCount < exemplars.length && (
+        {reactedCount >= 3 && reactedCount < visibleExemplars.length && (
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <button
               onClick={() => {

@@ -887,6 +887,8 @@ export interface OnboardingPhase {
   targetDomains?: TasteDomain[];
   /** Number of cards to show in property-reactions phases */
   cardCount?: number;
+  /** Where to source properties: 'db' (PlaceIntelligence) or 'email' (parsed email history) */
+  propertySource?: 'db' | 'email';
   /** Force-rank items — user ranks these by personal importance */
   forceRankItems?: ForceRankItem[];
   /** Quick-choice options — user picks from curated options */
