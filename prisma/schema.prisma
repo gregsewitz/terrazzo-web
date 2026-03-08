@@ -100,7 +100,7 @@ model EmailScan {
 
   // Scan metadata
   status        String   @default("running") // running | completed | failed
-  scanType      String   @default("full")    // full | incremental
+  scanType      String   @default("full")    // full | incremental | webhook
   emailsFound   Int      @default(0)
   emailsParsed  Int      @default(0)
   reservationsFound Int  @default(0)
