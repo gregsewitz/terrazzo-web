@@ -73,7 +73,7 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       autocompleteService.current!.getPlacePredictions(
-        { input, types: ['(cities)'] },
+        { input, types: ['(regions)'] },
         (results, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results?.length) {
             setCityPredictions(results);
@@ -192,7 +192,7 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
         </div>
 
         {/* Home City — Google Places Autocomplete */}
-        <div style={{ animation: 'fadeInUp 0.4s ease 0.06s both', position: 'relative' }}>
+        <div style={{ animation: 'fadeInUp 0.4s ease 0.06s both', position: 'relative', zIndex: 10 }}>
           <label style={labelStyle}>Home base</label>
           <input
             type="text"
