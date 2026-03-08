@@ -21,6 +21,7 @@ export interface DBSavedPlace {
   rating?: Record<string, unknown> | null;
   matchScore?: number | null;
   matchBreakdown?: Record<string, number> | null;
+  matchExplanation?: Record<string, unknown> | null;
   tasteNote?: string | null;
   terrazzoInsight?: Record<string, unknown> | null;
   enrichment?: Record<string, unknown> | null;
@@ -99,6 +100,7 @@ export interface SavedState {
   setSearchQuery: (query: string) => void;
   setCityFilter: (city: string | 'all') => void;
   addPlace: (place: ImportedPlace) => void;
+  patchPlaces: (updates: Partial<ImportedPlace>[]) => void;
   removePlace: (id: string) => void;
   ratePlace: (id: string, rating: PlaceRating) => void;
 

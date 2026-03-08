@@ -4,6 +4,7 @@ import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
 import UniversalAddBar from "@/components/UniversalAddBar";
 import StoreHydration from "@/components/StoreHydration";
+import EnrichmentWatcher from "@/components/EnrichmentWatcher";
 import SaveIndicator from "@/components/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
 import MapsProvider from "@/components/MapsProvider";
@@ -49,6 +50,7 @@ export default function RootLayout({
         <AuthProvider>
           <MapsProvider>
             <StoreHydration />
+            <EnrichmentWatcher />
             {children}
             <GlobalImportUI />
             <UniversalAddBar />

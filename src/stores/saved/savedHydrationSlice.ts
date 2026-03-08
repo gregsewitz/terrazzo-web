@@ -30,6 +30,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
         : { type: 'email' as const, name: dp.ghostSource || 'manual' },
       matchScore: dp.matchScore || 0,
       matchBreakdown: (dp.matchBreakdown as ImportedPlace['matchBreakdown']) || { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
+      matchExplanation: dp.matchExplanation as ImportedPlace['matchExplanation'],
       tasteNote: dp.tasteNote || dp.intelligence?.description || '',
       status: 'available' as const,
       ghostSource: (dp.ghostSource || 'manual') as GhostSourceType,

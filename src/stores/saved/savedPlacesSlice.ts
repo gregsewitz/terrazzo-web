@@ -36,6 +36,7 @@ export interface SavedPlacesState {
   setSearchQuery: (query: string) => void;
   setCityFilter: (city: string | 'all') => void;
   addPlace: (place: ImportedPlace) => void;
+  patchPlaces: (updates: Partial<ImportedPlace>[]) => void;
   removePlace: (id: string) => void;
   ratePlace: (id: string, rating: PlaceRating) => void;
 }
@@ -198,6 +199,28 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
         console.error('[addPlace] Failed to save on server:', err);
       }
     })();
+  },
+
+  /**
+   * Merge enrichment updates into existing places in the store.
+   * Each update must include an `id` — only matching places are patched.
+   * Shallow-merges top-level fields and deep-merges the `google` object.
+   */
+  patchPlaces: (updates) => {
+    if (!updates.length) return;
+    const byId = new Map(updates.map(u => [u.id, u]));
+    set((state) => ({
+      myPlaces: state.myPlaces.map(p => {
+        const patch = byId.get(p.id);
+        if (!patch) return p;
+        return {
+          ...p,
+          ...patch,
+          // Deep-merge google data so we don't lose existing fields
+          google: patch.google ? { ...p.google, ...patch.google } : p.google,
+        };
+      }),
+    }));
   },
 
   removePlace: (id) => {

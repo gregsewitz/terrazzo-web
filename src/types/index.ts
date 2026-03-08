@@ -281,6 +281,10 @@ export interface ImportedPlace {
   source: ImportSource;
   matchScore: number;
   matchBreakdown: TasteProfile;
+  matchExplanation?: {
+    topClusters: Array<{ label: string; domain: string; score: number; signals: string[] }>;
+    narrative: string;
+  };
   tasteNote: string;
   google?: GooglePlaceData;
   enrichment?: PlaceEnrichment;

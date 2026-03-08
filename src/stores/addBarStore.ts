@@ -28,6 +28,7 @@ export interface AddBarState {
   importLabel: string;
   importResults: ImportedPlace[];
   importError: string | null;
+  isEnriching: boolean; // true while waiting for enriched results after preview
 
   // Import curation (select which imported places to save)
   importSelectedIds: Set<string>;
@@ -55,6 +56,7 @@ export interface AddBarState {
   setImportProgress: (percent: number, label: string) => void;
   setImportResults: (results: ImportedPlace[]) => void;
   setImportError: (error: string) => void;
+  setIsEnriching: (v: boolean) => void;
   toggleImportSelected: (id: string) => void;
   selectAllImports: () => void;
   deselectAllImports: () => void;
@@ -76,6 +78,7 @@ const DEFAULTS = {
   importLabel: '',
   importResults: [] as ImportedPlace[],
   importError: null as string | null,
+  isEnriching: false,
   importSelectedIds: new Set<string>() as Set<string>,
   previewPlace: null as ImportedPlace | null,
   selectedCollectionIds: [] as string[],
@@ -113,6 +116,7 @@ export const useAddBarStore = create<AddBarState>((set) => ({
   }),
 
   setImportError: (importError) => set({ importError }),
+  setIsEnriching: (isEnriching) => set({ isEnriching }),
 
   toggleImportSelected: (id) => set((s) => {
     const next = new Set(s.importSelectedIds);

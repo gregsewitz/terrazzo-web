@@ -29,6 +29,7 @@ interface AddBarPreviewProps {
   selectedIds: Set<string>;
   collections: Collection[];
   tripContext: TripContext | null;
+  isEnriching?: boolean;
   onToggleSelect: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
@@ -42,6 +43,7 @@ export default function AddBarPreview({
   selectedIds,
   collections,
   tripContext,
+  isEnriching = false,
   onToggleSelect,
   onSelectAll,
   onDeselectAll,
@@ -311,20 +313,35 @@ export default function AddBarPreview({
       {/* ── Save CTA ── */}
       <button
         onClick={() => onSaveSelected(collectionIds)}
-        disabled={selectedCount === 0}
+        disabled={selectedCount === 0 || isEnriching}
         className="w-full mt-5 py-3.5 rounded-2xl border-none cursor-pointer transition-all flex items-center justify-center gap-2"
         style={{
-          background: selectedCount > 0 ? 'var(--t-ink)' : INK['10'],
-          color: selectedCount > 0 ? 'white' : INK['50'],
+          background: isEnriching ? INK['10'] : selectedCount > 0 ? 'var(--t-ink)' : INK['10'],
+          color: isEnriching ? INK['50'] : selectedCount > 0 ? 'white' : INK['50'],
           fontFamily: FONT.sans,
           fontSize: 14,
           fontWeight: 600,
         }}
       >
-        Save {selectedCount} place{selectedCount === 1 ? '' : 's'}
-        {tripContext && ' to Trip'}
-        {collectionIds.length > 0 && ` + ${collectionIds.length} collection${collectionIds.length > 1 ? 's' : ''}`}
-        <PerriandIcon name="terrazzo" size={16} color={selectedCount > 0 ? 'white' : INK['50']} />
+        {isEnriching ? (
+          <>
+            Enriching details…
+            <span
+              className="inline-block w-3.5 h-3.5 rounded-full border-2 border-current"
+              style={{
+                borderTopColor: 'transparent',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+          </>
+        ) : (
+          <>
+            Save {selectedCount} place{selectedCount === 1 ? '' : 's'}
+            {tripContext && ' to Trip'}
+            {collectionIds.length > 0 && ` + ${collectionIds.length} collection${collectionIds.length > 1 ? 's' : ''}`}
+            <PerriandIcon name="terrazzo" size={16} color={selectedCount > 0 ? 'white' : INK['50']} />
+          </>
+        )}
       </button>
     </>
   );

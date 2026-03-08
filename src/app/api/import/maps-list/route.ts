@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, importMapsListSchema } from '@/lib/api-validation';
-import { searchPlace, priceLevelToString } from '@/lib/places';
+import { searchPlace, priceLevelToString, getPhotoUrl, resolveGooglePlaceType } from '@/lib/places';
 import { generateTasteMatchBatch } from '@/lib/anthropic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { getUserTasteProfile } from '@/lib/user-profile';
@@ -161,8 +161,11 @@ export async function POST(request: NextRequest) {
 
         // ── 5. Send IMMEDIATE results with getlist data (no enrichment yet) ──
         // This is the "lazy enrichment" approach — user sees results in <2s
+        // Generate stable IDs ONCE — reused by both preview and enriched results
+        // so the client's importSelectedIds remain valid when onResult replaces onPreview.
+        const batchTs = Date.now();
         const basePlaces = mapsPlaces.map((mp, i) => ({
-          id: `maps-list-${Date.now()}-${i}`,
+          id: `maps-list-${batchTs}-${i}`,
           name: mp.name,
           type: guessTypeFromCategory(mp.category),
           location: mp.address,
@@ -227,11 +230,16 @@ export async function POST(request: NextRequest) {
               }
 
               if (googleResult) {
+                const photoUrl = googleResult.photos?.[0]?.name
+                  ? getPhotoUrl(googleResult.photos[0].name, 400)
+                  : undefined;
+
                 return {
-                  id: `maps-list-${Date.now()}-${i}`,
+                  id: basePlaces[i].id, // Stable ID — matches preview
                   name: googleResult.displayName?.text || mp.name,
-                  type: mapGoogleTypeToPlaceType(
-                    googleResult.primaryType || googleResult.types?.[0]
+                  type: resolveGooglePlaceType(
+                    googleResult.primaryType,
+                    googleResult.types,
                   ),
                   location: googleResult.formattedAddress || mp.address,
                   source: { type: 'google-maps' as const, name: 'Google Maps' },
@@ -250,6 +258,7 @@ export async function POST(request: NextRequest) {
                       ? priceLevelToString(googleResult.priceLevel).length
                       : undefined,
                     hours: googleResult.regularOpeningHours?.weekdayDescriptions,
+                    photoUrl,
                     address: googleResult.formattedAddress,
                     lat: googleResult.location?.latitude,
                     lng: googleResult.location?.longitude,
@@ -344,28 +353,15 @@ function extractListId(url: string): string | null {
   return null;
 }
 
-function mapGoogleTypeToPlaceType(googleType?: string): string {
-  if (!googleType) return 'activity';
-  const type = googleType.toLowerCase();
-  if (type.includes('restaurant') || type.includes('food')) return 'restaurant';
-  if (type.includes('bar') || type.includes('night_club') || type.includes('pub')) return 'bar';
-  if (type.includes('cafe') || type.includes('coffee') || type.includes('bakery')) return 'cafe';
-  if (type.includes('hotel') || type.includes('lodging') || type.includes('resort')) return 'hotel';
-  if (type.includes('museum') || type.includes('art_gallery') || type.includes('church') || type.includes('landmark')) return 'museum';
-  if (type.includes('store') || type.includes('shop') || type.includes('market')) return 'shop';
-  if (type.includes('park') || type.includes('neighborhood') || type.includes('locality')) return 'neighborhood';
-  return 'activity';
-}
-
 function guessTypeFromCategory(category?: string): string {
   if (!category) return 'activity';
   const c = category.toLowerCase();
-  if (c.includes('restaurant') || c.includes('food') || c.includes('kitchen') || c.includes('butcher')) return 'restaurant';
-  if (c.includes('bar') || c.includes('pub') || c.includes('inn') || c.includes('tavern')) return 'bar';
-  if (c.includes('cafe') || c.includes('coffee') || c.includes('bakery')) return 'cafe';
-  if (c.includes('hotel') || c.includes('lodging') || c.includes('resort') || c.includes('manor')) return 'hotel';
-  if (c.includes('museum') || c.includes('gallery') || c.includes('church') || c.includes('cathedral')) return 'museum';
-  if (c.includes('store') || c.includes('shop') || c.includes('market') || c.includes('antique')) return 'shop';
-  if (c.includes('kingdom') || c.includes('village') || c.includes('town') || c.includes('city')) return 'neighborhood';
+  if (c.includes('restaurant') || c.includes('food') || c.includes('kitchen') || c.includes('butcher') || c.includes('sushi') || c.includes('grill') || c.includes('diner') || c.includes('bistro') || c.includes('brasserie') || c.includes('trattoria')) return 'restaurant';
+  if (c.includes('bar') || c.includes('pub') || c.includes('inn') || c.includes('tavern') || c.includes('brewery') || c.includes('wine') || c.includes('cocktail') || c.includes('club') || c.includes('arms')) return 'bar';
+  if (c.includes('cafe') || c.includes('café') || c.includes('coffee') || c.includes('bakery') || c.includes('tea')) return 'cafe';
+  if (c.includes('hotel') || c.includes('lodging') || c.includes('resort') || c.includes('manor') || c.includes('hostel') || c.includes('guest house') || c.includes('b&b')) return 'hotel';
+  if (c.includes('museum') || c.includes('gallery') || c.includes('church') || c.includes('cathedral') || c.includes('castle') || c.includes('palace') || c.includes('monument')) return 'museum';
+  if (c.includes('store') || c.includes('shop') || c.includes('market') || c.includes('antique') || c.includes('boutique')) return 'shop';
+  if (c.includes('kingdom') || c.includes('village') || c.includes('town') || c.includes('city') || c.includes('park') || c.includes('garden')) return 'neighborhood';
   return 'activity';
 }

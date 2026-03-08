@@ -282,19 +282,68 @@ export function getPhotoUrl(photoName: string, maxWidth: number = 400): string {
 }
 
 /**
- * Map Google Places type to our internal PlaceType.
+ * Map a single Google Places type string to our internal PlaceType.
  * Shared between import route and quick-add search.
+ *
+ * Google Places API (New) returns `primaryType` values like:
+ *   british_restaurant, sushi_restaurant, bar, pub, wine_bar,
+ *   cocktail_bar, night_club, cafe, coffee_shop, bakery, hotel,
+ *   bed_and_breakfast, museum, art_gallery, store, shopping_mall, etc.
  */
 export function mapGoogleTypeToPlaceType(googleType?: string): string {
   if (!googleType) return 'activity';
-  const type = googleType.toLowerCase();
-  if (type.includes('restaurant') || type.includes('food')) return 'restaurant';
-  if (type.includes('bar') || type.includes('night_club') || type.includes('pub')) return 'bar';
-  if (type.includes('cafe') || type.includes('coffee') || type.includes('bakery')) return 'cafe';
-  if (type.includes('hotel') || type.includes('lodging') || type.includes('resort')) return 'hotel';
-  if (type.includes('museum') || type.includes('art_gallery') || type.includes('church') || type.includes('landmark')) return 'museum';
-  if (type.includes('store') || type.includes('shop') || type.includes('market')) return 'shop';
-  if (type.includes('park') || type.includes('neighborhood') || type.includes('locality')) return 'neighborhood';
+  const t = googleType.toLowerCase();
+
+  // Restaurant — covers *_restaurant, food_court, meal_delivery, meal_takeaway, steak_house, etc.
+  if (t.includes('restaurant') || t.includes('food') || t.includes('meal_') || t.includes('steak_house') || t.includes('pizza') || t.includes('seafood') || t.includes('brunch')) return 'restaurant';
+
+  // Bar — covers bar, pub, wine_bar, cocktail_bar, night_club, brewery, tavern, inn
+  if (t.includes('bar') || t.includes('night_club') || t.includes('pub') || t.includes('brewery') || t.includes('tavern') || t.includes('inn') || t === 'winery') return 'bar';
+
+  // Cafe — covers cafe, coffee_shop, bakery, tea_house, ice_cream, juice
+  if (t.includes('cafe') || t.includes('coffee') || t.includes('bakery') || t.includes('tea_house') || t.includes('ice_cream') || t.includes('juice')) return 'cafe';
+
+  // Hotel — covers hotel, lodging, resort, motel, hostel, bed_and_breakfast, guest_house
+  if (t.includes('hotel') || t.includes('lodging') || t.includes('resort') || t.includes('motel') || t.includes('hostel') || t.includes('bed_and_breakfast') || t.includes('guest_house')) return 'hotel';
+
+  // Museum — covers museum, art_gallery, church, landmark, historical, monument, castle, palace
+  if (t.includes('museum') || t.includes('art_gallery') || t.includes('church') || t.includes('landmark') || t.includes('historical') || t.includes('monument') || t.includes('castle') || t.includes('palace') || t.includes('cathedral') || t.includes('temple')) return 'museum';
+
+  // Shop — covers store, shop, market, shopping_mall, supermarket, boutique
+  if (t.includes('store') || t.includes('shop') || t.includes('market') || t.includes('boutique') || t.includes('mall')) return 'shop';
+
+  // Neighborhood — covers park, neighborhood, locality, sublocality, garden
+  if (t.includes('park') || t.includes('neighborhood') || t.includes('locality') || t.includes('garden') || t.includes('beach') || t.includes('trail')) return 'neighborhood';
+
+  // Private / members clubs — common in London
+  if (t.includes('private') || t.includes('club')) return 'bar';
+
+  return 'activity';
+}
+
+/**
+ * Try to resolve a PlaceType from the full `types` array.
+ * Tries primaryType first, then walks the types array looking for the
+ * first non-generic match (skipping 'point_of_interest', 'establishment', etc.).
+ */
+export function resolveGooglePlaceType(
+  primaryType?: string,
+  types?: string[],
+): string {
+  // Try primaryType first
+  const fromPrimary = mapGoogleTypeToPlaceType(primaryType);
+  if (fromPrimary !== 'activity') return fromPrimary;
+
+  // Walk types array for a better match
+  if (types?.length) {
+    for (const t of types) {
+      // Skip overly generic Google types
+      if (t === 'point_of_interest' || t === 'establishment' || t === 'political') continue;
+      const mapped = mapGoogleTypeToPlaceType(t);
+      if (mapped !== 'activity') return mapped;
+    }
+  }
+
   return 'activity';
 }
 

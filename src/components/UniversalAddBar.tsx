@@ -33,7 +33,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     importSelectedIds, importError,
     previewPlace, selectedCollectionIds,
     close, setQuery, setMode, setLibraryResults, setGoogleResults,
-    setImportProgress, setImportResults, setImportError,
+    setImportProgress, setImportResults, setImportError, isEnriching, setIsEnriching,
     toggleImportSelected, selectAllImports, deselectAllImports,
     setPreviewPlace, toggleCollection,
   } = useAddBarStore();
@@ -133,23 +133,29 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     try {
       if (inputType === 'google-maps') {
         // Google Maps saved lists → dedicated fast endpoint with lazy enrichment
+        setIsEnriching(true);
         await streamMapsImport(trimmed, {
           onProgress: (percent: number, label: string) => setImportProgress(percent, label),
           onPreview: (places: ImportedPlace[]) => {
             // Show basic results immediately while enrichment continues
             setImportResults(places);
             setMode('preview');
+            // isEnriching stays true — user sees results but Save waits for enrichment
           },
           onResult: (places: ImportedPlace[]) => {
-            // Replace with fully enriched results
+            // Replace with fully enriched results — now safe to save
             setImportResults(places);
+            setIsEnriching(false);
             setMode('preview');
           },
           onError: (err: string) => {
+            setIsEnriching(false);
             setImportError(err || 'Could not load places from this Google Maps link');
             setMode('error');
           },
         });
+        // Safety: if stream completes without onResult (e.g. network glitch), unlock save
+        setIsEnriching(false);
       } else {
         // Article URLs, text lists → general import pipeline
         await streamImport(trimmed, {
@@ -165,7 +171,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
       setImportError('Something went wrong — please try again');
       setMode('error');
     }
-  }, [query, setMode, setImportProgress, setImportResults, setImportError]);
+  }, [query, setMode, setImportProgress, setImportResults, setImportError, setIsEnriching]);
 
   // ─── Save a single place ──────────────────────────────────────────────
   const handleSavePlace = useCallback((place: ImportedPlace) => {
@@ -426,6 +432,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 selectedIds={importSelectedIds}
                 collections={collections}
                 tripContext={tripContext}
+                isEnriching={isEnriching}
                 onToggleSelect={toggleImportSelected}
                 onSelectAll={selectAllImports}
                 onDeselectAll={deselectAllImports}
