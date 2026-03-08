@@ -68,9 +68,7 @@ export async function POST(request: NextRequest) {
     webhook_url: webhookUrl,
     trigger_types: [
       'message.created',
-      'message.created.truncated',
     ],
-    // Requesting only the fields we need reduces payload size
     notification_email_addresses: [],
   };
 
