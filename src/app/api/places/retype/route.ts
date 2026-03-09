@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
       type: 'activity',
       googlePlaceId: { not: null },
       deletedAt: null,
+      // Skip places already checked in a previous retype run
+      NOT: {
+        googleData: { path: ['_retypeChecked'], equals: true },
+      },
     },
     select: {
       id: true,
@@ -51,7 +55,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const newType = resolveGooglePlaceType(result.primaryType, result.types || []);
+      const newType = resolveGooglePlaceType(result.primaryType, result.types || [], place.name || undefined);
 
       if (newType === 'activity') {
         // Google still says activity — leave it, but mark as checked so we don't keep retrying
@@ -105,6 +109,9 @@ export async function POST(req: NextRequest) {
       type: 'activity',
       googlePlaceId: { not: null },
       deletedAt: null,
+      NOT: {
+        googleData: { path: ['_retypeChecked'], equals: true },
+      },
     },
   });
 

@@ -294,26 +294,27 @@ export function mapGoogleTypeToPlaceType(googleType?: string): string {
   if (!googleType) return 'activity';
   const t = googleType.toLowerCase();
 
-  // Restaurant — covers *_restaurant, food_court, meal_delivery, meal_takeaway, steak_house, etc.
-  if (t.includes('restaurant') || t.includes('food') || t.includes('meal_') || t.includes('steak_house') || t.includes('pizza') || t.includes('seafood') || t.includes('brunch')) return 'restaurant';
+  // Restaurant — covers *_restaurant, food_court, meal_delivery, meal_takeaway, steak_house,
+  // deli, ramen, sushi, noodle, hamburger, sandwich, taco, kebab, dumpling, etc.
+  if (t.includes('restaurant') || t.includes('food') || t.includes('meal_') || t.includes('steak_house') || t.includes('pizza') || t.includes('seafood') || t.includes('brunch') || t === 'deli' || t.includes('ramen') || t.includes('sushi') || t.includes('noodle') || t.includes('hamburger') || t.includes('sandwich') || t.includes('taco') || t.includes('kebab') || t.includes('dumpling') || t === 'bistro' || t === 'trattoria') return 'restaurant';
 
-  // Bar — covers bar, pub, wine_bar, cocktail_bar, night_club, brewery, tavern, inn
-  if (t.includes('bar') || t.includes('night_club') || t.includes('pub') || t.includes('brewery') || t.includes('tavern') || t.includes('inn') || t === 'winery') return 'bar';
+  // Bar — covers bar, pub, wine_bar, cocktail_bar, night_club, brewery, tavern, inn, vineyard, winery, distillery
+  if (t.includes('bar') || t.includes('night_club') || t.includes('pub') || t.includes('brewery') || t.includes('tavern') || t.includes('inn') || t === 'winery' || t === 'vineyard' || t.includes('distiller')) return 'bar';
 
-  // Cafe — covers cafe, coffee_shop, bakery, tea_house, ice_cream, juice
-  if (t.includes('cafe') || t.includes('coffee') || t.includes('bakery') || t.includes('tea_house') || t.includes('ice_cream') || t.includes('juice')) return 'cafe';
+  // Cafe — covers cafe, coffee_shop, bakery, tea_house, ice_cream, juice, gelato, patisserie
+  if (t.includes('cafe') || t.includes('coffee') || t.includes('bakery') || t.includes('tea_house') || t.includes('ice_cream') || t.includes('juice') || t.includes('gelato') || t.includes('patisserie') || t.includes('dessert')) return 'cafe';
 
-  // Hotel — covers hotel, lodging, resort, motel, hostel, bed_and_breakfast, guest_house
-  if (t.includes('hotel') || t.includes('lodging') || t.includes('resort') || t.includes('motel') || t.includes('hostel') || t.includes('bed_and_breakfast') || t.includes('guest_house')) return 'hotel';
+  // Hotel — covers hotel, lodging, resort, motel, hostel, bed_and_breakfast, guest_house, cottage, villa, retreat, cabin, chalet
+  if (t.includes('hotel') || t.includes('lodging') || t.includes('resort') || t.includes('motel') || t.includes('hostel') || t.includes('bed_and_breakfast') || t.includes('guest_house') || t === 'cottage_rental' || t.includes('villa') || t.includes('retreat') || t.includes('cabin') || t.includes('chalet') || t.includes('farmstay')) return 'hotel';
 
-  // Museum — covers museum, art_gallery, church, landmark, historical, monument, castle, palace
-  if (t.includes('museum') || t.includes('art_gallery') || t.includes('church') || t.includes('landmark') || t.includes('historical') || t.includes('monument') || t.includes('castle') || t.includes('palace') || t.includes('cathedral') || t.includes('temple')) return 'museum';
+  // Museum — covers museum, art_gallery, church, landmark, historical, monument, castle, palace, tourist_attraction (architecture/culture)
+  if (t.includes('museum') || t.includes('art_gallery') || t.includes('church') || t.includes('landmark') || t.includes('historical') || t.includes('monument') || t.includes('castle') || t.includes('palace') || t.includes('cathedral') || t.includes('temple') || t.includes('library') || t.includes('theater') || t.includes('theatre') || t.includes('opera') || t.includes('cultural') || t.includes('heritage') || t.includes('memorial') || t.includes('aquarium') || t.includes('zoo') || t.includes('botanical')) return 'museum';
 
   // Shop — covers store, shop, market, shopping_mall, supermarket, boutique
-  if (t.includes('store') || t.includes('shop') || t.includes('market') || t.includes('boutique') || t.includes('mall')) return 'shop';
+  if (t.includes('store') || t.includes('shop') || t.includes('market') || t.includes('boutique') || t.includes('mall') || t.includes('grocery')) return 'shop';
 
-  // Neighborhood — covers park, neighborhood, locality, sublocality, garden
-  if (t.includes('park') || t.includes('neighborhood') || t.includes('locality') || t.includes('garden') || t.includes('beach') || t.includes('trail')) return 'neighborhood';
+  // Neighborhood — covers park, neighborhood, locality, sublocality, garden, natural features
+  if (t.includes('park') || t.includes('neighborhood') || t.includes('locality') || t.includes('garden') || t.includes('beach') || t.includes('trail') || t === 'natural_feature' || t.includes('nature_reserve') || t.includes('campground') || t.includes('marina')) return 'neighborhood';
 
   // Private / members clubs — common in London
   if (t.includes('private') || t.includes('club')) return 'bar';
@@ -329,6 +330,7 @@ export function mapGoogleTypeToPlaceType(googleType?: string): string {
 export function resolveGooglePlaceType(
   primaryType?: string,
   types?: string[],
+  placeName?: string,
 ): string {
   // Try primaryType first
   const fromPrimary = mapGoogleTypeToPlaceType(primaryType);
@@ -342,6 +344,18 @@ export function resolveGooglePlaceType(
       const mapped = mapGoogleTypeToPlaceType(t);
       if (mapped !== 'activity') return mapped;
     }
+  }
+
+  // Name-based fallback — catches obvious cases when Google types are unhelpful
+  if (placeName) {
+    const n = placeName.toLowerCase();
+    if (/\b(restaurant|ristorante|trattoria|osteria|bistro|brasserie|pizzeria|taqueria|cantina)\b/.test(n)) return 'restaurant';
+    if (/\b(bar|pub|brewery|brewing|tavern|wine\s?bar|cocktail)\b/.test(n)) return 'bar';
+    if (/\b(caf[eé]|coffee|bakery|gelat[eo]|patisserie|pâtisserie)\b/.test(n)) return 'cafe';
+    if (/\b(hotel|hostel|resort|lodge|inn|retreat|villa|b&b|guesthouse|guest\s?house|shelter)\b/.test(n)) return 'hotel';
+    if (/\b(museum|gallery|galleria|church|cathedral|temple|basilica|palazzo|castle|château)\b/.test(n)) return 'museum';
+    if (/\b(shop|store|market|mercado|marché|boutique|deli|emporium)\b/.test(n)) return 'shop';
+    if (/\b(park|garden|beach|plage|trail|bay|baie|playa)\b/.test(n)) return 'neighborhood';
   }
 
   return 'activity';
