@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { searchPlace, resolveGooglePlaceType, getPhotoUrl, priceLevelToString } from '@/lib/places';
+import { searchPlace, resolveGooglePlaceType, getPhotoUrl } from '@/lib/places';
+import type { Prisma } from '@prisma/client';
 
 /**
  * POST /api/places/cleanup-dupes
@@ -122,8 +123,9 @@ export async function POST() {
           );
 
           // Build updated googleData
-          const googleData: Record<string, unknown> = {
-            ...(typeof keeper.googleData === 'object' && keeper.googleData !== null ? keeper.googleData : {}),
+          const existingData = (typeof keeper.googleData === 'object' && keeper.googleData !== null ? keeper.googleData : {}) as Record<string, unknown>;
+          const googleData = {
+            ...existingData,
             category: googleResult.primaryType || googleResult.types?.[0],
             types: googleResult.types,
             primaryType: googleResult.primaryType,
@@ -132,12 +134,10 @@ export async function POST() {
             priceLevel: googleResult.priceLevel,
             formattedAddress: googleResult.formattedAddress,
             location: googleResult.location,
-          };
-
-          // Add photo if available
-          if (googleResult.photos?.[0]?.name) {
-            googleData.photoUrl = getPhotoUrl(googleResult.photos[0].name, 400);
-          }
+            ...(googleResult.photos?.[0]?.name
+              ? { photoUrl: getPhotoUrl(googleResult.photos[0].name, 400) }
+              : {}),
+          } as unknown as Prisma.InputJsonValue;
 
           await prisma.savedPlace.update({
             where: { id: keeper.id },
