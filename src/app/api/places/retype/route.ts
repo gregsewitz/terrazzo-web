@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
           // If still activity, mark as attempted so we skip next batch
           if (newType === 'activity') {
             updateData.googleData = {
-              ...(googleResult as Record<string, unknown> || {}),
+              ...(googleResult as unknown as Record<string, unknown> || {}),
               _retypeAttempted: true,
             } as unknown as Prisma.InputJsonValue;
           }
