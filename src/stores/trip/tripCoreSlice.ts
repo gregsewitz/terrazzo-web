@@ -74,7 +74,10 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
 
   unsortedCount: () => get().poolItems().length,
 
-  setCurrentTrip: (id) => set({ currentTripId: id }),
+  setCurrentTrip: (id) => {
+    set({ currentTripId: id });
+    get().clearHistory();
+  },
   setCurrentDay: (day) => set({ currentDay: day }),
 
   deleteTrip: async (id: string) => {

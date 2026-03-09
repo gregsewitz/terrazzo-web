@@ -3,6 +3,7 @@ import { createCoreSlice, type TripCoreState, type DBTrip } from './trip/tripCor
 import { createPlacementSlice, type TripPlacementState } from './trip/tripPlacementSlice';
 import { createDaySlice, type TripDayState } from './trip/tripDaySlice';
 import { createDreamBoardSlice, type TripDreamBoardState } from './trip/tripDreamBoardSlice';
+import { createHistorySlice, type TripHistoryState } from './trip/tripHistorySlice';
 import type { TripState } from './trip/types';
 
 // ═══════════════════════════════════════════
@@ -14,6 +15,7 @@ export const useTripStore = create<TripState>((...args) => ({
   ...createPlacementSlice(...args),
   ...createDaySlice(...args),
   ...createDreamBoardSlice(...args),
+  ...createHistorySlice(...args),
 }));
 
 // ═══════════════════════════════════════════

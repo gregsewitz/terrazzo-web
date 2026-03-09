@@ -35,6 +35,7 @@ export interface TripPlacementState {
 
 export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacementState> = (set, get) => ({
   placeItem: (itemId, day, slotId) => {
+    get().pushSnapshot('Place item');
     // Track add_to_trip interaction
     const trip0 = get().currentTrip();
     const poolItem = trip0?.pool.find(p => p.id === itemId);
@@ -101,6 +102,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   unplaceFromSlot: (day, slotId, placeId) => {
+    get().pushSnapshot('Remove item');
     // Track remove_from_trip interaction
     const trip0 = get().currentTrip();
     if (trip0) {
@@ -156,6 +158,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   placeFromSaved: (place, dayNumber, slotId) => {
+    get().pushSnapshot('Place item');
     // Track add_to_trip interaction
     const gpid = place.google?.placeId;
     if (gpid) {
@@ -198,6 +201,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
 
   moveToSlot: (place, fromDay, fromSlotId, toDay, toSlotId) => {
     if (fromDay === toDay && fromSlotId === toSlotId) return;
+    get().pushSnapshot('Move item');
     const movedItem = { ...place, status: 'placed' as const, placedIn: { day: toDay, slot: toSlotId } };
     set(state => updateCurrentTrip(state, trip => ({
       ...trip,
@@ -244,6 +248,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   confirmGhost: (dayNumber, slotId, ghostId) => {
+    get().pushSnapshot('Confirm suggestion');
     // Track add_to_trip for ghost confirmation
     const trip0 = get().currentTrip();
     if (trip0) {
@@ -494,6 +499,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   // ─── Quick Entry CRUD ───────────────────────────────────────────────────
 
   addQuickEntry: (dayNumber, slotId, entry) => {
+    get().pushSnapshot('Add entry');
     const newEntry: QuickEntry = {
       ...entry,
       id: `qe-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -517,6 +523,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
   },
 
   removeQuickEntry: (dayNumber, slotId, entryId) => {
+    get().pushSnapshot('Remove entry');
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,

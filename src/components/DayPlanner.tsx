@@ -16,6 +16,7 @@ import { FONT, INK } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import EditableTripName from './EditableTripName';
 import DayContextMenu from './DayContextMenu';
+import UndoFloatingButton from './UndoFloatingButton';
 import type { Suggestion, Reaction } from '@/stores/collaborationStore';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
@@ -463,6 +464,9 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           );
         })}
       </div>
+
+      {/* Floating undo button — appears when undo is available */}
+      <UndoFloatingButton />
 
       </>}
 

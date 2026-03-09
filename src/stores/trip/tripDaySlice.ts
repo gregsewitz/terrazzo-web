@@ -34,6 +34,7 @@ export interface TripDayState {
 
 export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (set, get) => ({
   setDayDestination: (dayNumber, destination) => {
+    get().pushSnapshot('Change destination');
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
@@ -51,6 +52,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
 
   reorderDays: (fromDayNumber, toDayNumber) => {
     if (fromDayNumber === toDayNumber) return;
+    get().pushSnapshot('Reorder days');
     set(state =>
       updateCurrentTrip(state, trip => {
         const days = [...trip.days];
@@ -92,6 +94,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
     const state = get();
     const trip = state.trips.find(t => t.id === state.currentTripId);
     if (!trip || trip.days.length <= 1) return; // never delete the last day
+    get().pushSnapshot('Delete day');
 
     const dayToDelete = trip.days.find(d => d.dayNumber === dayNumber);
     if (!dayToDelete) return;
@@ -155,6 +158,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
     const state = get();
     const trip = state.trips.find(t => t.id === state.currentTripId);
     if (!trip) return;
+    get().pushSnapshot('Insert day');
 
     const refIdx = trip.days.findIndex(d => d.dayNumber === refDayNumber);
     if (refIdx === -1) return;
@@ -210,6 +214,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
     const state = get();
     const trip = state.trips.find(t => t.id === state.currentTripId);
     if (!trip) return;
+    get().pushSnapshot('Duplicate day');
 
     const srcDay = trip.days.find(d => d.dayNumber === dayNumber);
     if (!srcDay) return;
@@ -282,6 +287,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
       .map(p => ({ ...p, status: 'available' as const }));
 
     if (returnedItems.length === 0) return; // nothing to clear
+    get().pushSnapshot('Clear day');
 
     set(state2 => ({
       trips: state2.trips.map(t =>
@@ -313,6 +319,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
 
     // Guard: skip if destination already exists
     if (trip.destinations?.some(d => d.toLowerCase() === destination.toLowerCase())) return;
+    get().pushSnapshot('Add destination');
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -440,6 +447,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
 
   // ─── Transport ───
   addTransport: (dayNumber, transport) => {
+    get().pushSnapshot('Add transport');
     const newTransport: TransportEvent = {
       ...transport,
       id: `tr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -488,6 +496,7 @@ export const createDaySlice: StateCreator<TripState, [], [], TripDayState> = (se
   },
 
   removeTransport: (dayNumber, transportId) => {
+    get().pushSnapshot('Remove transport');
     set(state =>
       updateCurrentTrip(state, trip => ({
         ...trip,
