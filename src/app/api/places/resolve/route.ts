@@ -42,7 +42,7 @@ function buildTasteProfile(generated: GeneratedTasteProfile): TasteProfile {
  *   4. Return everything needed for the detail page
  */
 export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
-  const { name, location, googlePlaceId: providedId } = await req.json();
+  const { name, location, googlePlaceId: providedId, lat, lng } = await req.json();
 
   if (!name && !providedId) {
     return NextResponse.json({ error: 'name or googlePlaceId is required' }, { status: 400 });
@@ -54,9 +54,13 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // Pre-resolved: direct lookup by canonical ID
     googleResult = await getPlaceById(providedId);
   } else {
-    // Fallback: text search (may return wrong place)
+    // Fallback: text search — use lat/lng as locationBias when available
+    // to prevent ambiguous names (e.g. "Hunan") from resolving to wrong entities
     const query = location ? `${name}, ${location}` : name;
-    googleResult = await searchPlace(query);
+    const locationBias = (lat && lng)
+      ? { lat: Number(lat), lng: Number(lng), radiusMeters: 2000 }
+      : undefined;
+    googleResult = await searchPlace(query, locationBias, name);
   }
 
   if (!googleResult) {

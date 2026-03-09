@@ -180,12 +180,17 @@ export default function PlaceDetailPage() {
       let nameForSkeleton = decodedSlug;
       let locationForSkeleton = '';
 
+      let latHint: number | undefined;
+      let lngHint: number | undefined;
+
       if (resolveHintRaw) {
         try {
           const hint = JSON.parse(resolveHintRaw);
           googlePlaceIdToResolve = hint.googlePlaceId || slug;
           nameForSkeleton = hint.name || decodedSlug;
           locationForSkeleton = hint.location || '';
+          latHint = hint.lat;
+          lngHint = hint.lng;
         } catch {
           // Malformed — use slug as googlePlaceId
           googlePlaceIdToResolve = slug;
@@ -206,6 +211,8 @@ export default function PlaceDetailPage() {
           const pending = JSON.parse(pendingRaw);
           nameToResolve = pending.name || decodedSlug;
           locationToResolve = pending.location || '';
+          latHint = latHint || pending.lat;
+          lngHint = lngHint || pending.lng;
           setPendingName(nameToResolve);
           setPendingLocation(locationToResolve);
         } catch {
@@ -232,6 +239,8 @@ export default function PlaceDetailPage() {
             name: nameToResolve || undefined,
             location: locationToResolve || undefined,
             ...(googlePlaceIdToResolve ? { googlePlaceId: googlePlaceIdToResolve } : {}),
+            ...(latHint ? { lat: latHint } : {}),
+            ...(lngHint ? { lng: lngHint } : {}),
           }),
         });
         setResolved(data);

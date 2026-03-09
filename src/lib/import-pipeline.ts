@@ -166,10 +166,16 @@ export async function enrichWithGooglePlaces(
   // when two extracted names resolve to the same search query
   const googleCache = new Map<string, Awaited<ReturnType<typeof searchPlace>>>();
 
-  async function cachedSearchPlace(query: string) {
-    const key = query.toLowerCase().trim();
+  async function cachedSearchPlace(
+    query: string,
+    locationBias?: { lat: number; lng: number; radiusMeters?: number },
+    nameHint?: string,
+  ) {
+    // Include lat/lng in cache key so different locations don't collide
+    const biasKey = locationBias ? `@${locationBias.lat},${locationBias.lng}` : '';
+    const key = query.toLowerCase().trim() + biasKey;
     if (googleCache.has(key)) return googleCache.get(key)!;
-    const result = await searchPlace(query);
+    const result = await searchPlace(query, locationBias, nameHint);
     googleCache.set(key, result);
     // Also cache by placeId to catch different queries resolving to same place
     if (result?.id) {
@@ -186,7 +192,14 @@ export async function enrichWithGooglePlaces(
         // Build search query with location context for Google Places accuracy
         const locationHint = place.city || inferredRegion || '';
         const query = locationHint ? `${place.name} ${locationHint}` : place.name;
-        let googleResult = await cachedSearchPlace(query);
+
+        // Use lat/lng as locationBias when available (e.g. from Google Maps imports)
+        // This prevents ambiguous names like "Hunan" from resolving to the wrong entity
+        const locationBias = (place.lat && place.lng)
+          ? { lat: place.lat, lng: place.lng, radiusMeters: 2000 }
+          : undefined;
+
+        let googleResult = await cachedSearchPlace(query, locationBias, place.name);
 
         // ── Geographic fencing (soft) ─────────────────────────────────────
         // If the article has a regional context (e.g., "Europe") and Google
@@ -210,7 +223,7 @@ export async function enrichWithGooglePlaces(
           if (!addressMatchesContext) {
             // Retry with a more specific query: "Name, City, Region"
             const tighterQuery = `${place.name}, ${place.city}, ${inferredRegion}`;
-            const retry = await cachedSearchPlace(tighterQuery);
+            const retry = await cachedSearchPlace(tighterQuery, locationBias, place.name);
             if (retry) {
               const retryAddress = (retry.formattedAddress || '').toLowerCase();
               if (cityParts.some(part => retryAddress.includes(part)) || retryAddress.includes(regionLower)) {

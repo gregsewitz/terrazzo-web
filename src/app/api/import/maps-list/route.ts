@@ -240,6 +240,7 @@ export async function POST(request: NextRequest) {
                   type: resolveGooglePlaceType(
                     googleResult.primaryType,
                     googleResult.types,
+                    googleResult.displayName?.text || mp.name,
                   ),
                   location: googleResult.formattedAddress || mp.address,
                   source: { type: 'google-maps' as const, name: 'Google Maps' },

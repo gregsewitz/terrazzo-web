@@ -88,7 +88,13 @@ function PlaceDetailContent({
       savedPlaceId: string | null; isInLibrary: boolean;
     }>('/api/places/resolve', {
       method: 'POST',
-      body: JSON.stringify({ googlePlaceId, name: item.name, location: item.location }),
+      body: JSON.stringify({
+        googlePlaceId,
+        name: item.name,
+        location: item.location,
+        lat: item.google?.lat,
+        lng: item.google?.lng,
+      }),
     }).then(data => {
       if (cancelled) return;
       const g = data.googleData;

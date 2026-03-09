@@ -16,7 +16,7 @@ export function usePlaceResolver() {
   const router = useRouter();
 
   const navigateToPlace = useCallback(
-    (name: string, location: string, googlePlaceId?: string) => {
+    (name: string, location: string, googlePlaceId?: string, lat?: number, lng?: number) => {
       // Save scroll position so the profile page can restore it on back-nav
       sessionStorage.setItem('profile_scroll_y', String(window.scrollY));
 
@@ -25,7 +25,7 @@ export function usePlaceResolver() {
         // Stash the full resolved data so the detail page can hydrate from sessionStorage
         sessionStorage.setItem(
           `place_resolve_${googlePlaceId}`,
-          JSON.stringify({ googlePlaceId, name, location }),
+          JSON.stringify({ googlePlaceId, name, location, lat, lng }),
         );
         router.push(`/places/${googlePlaceId}`);
       } else {
@@ -33,7 +33,7 @@ export function usePlaceResolver() {
         const slug = encodeURIComponent(name);
         sessionStorage.setItem(
           `place_pending_${slug}`,
-          JSON.stringify({ name, location }),
+          JSON.stringify({ name, location, lat, lng }),
         );
         router.push(`/places/${slug}`);
       }

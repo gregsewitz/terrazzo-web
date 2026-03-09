@@ -62,6 +62,8 @@ export interface ExtractedPlace {
   name: string;
   type: string;
   city?: string;
+  lat?: number;
+  lng?: number;
   description?: string;
   userContext?: string;
   travelWith?: string;
