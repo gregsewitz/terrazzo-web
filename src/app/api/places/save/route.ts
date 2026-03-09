@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { validateBody, placeSchema } from '@/lib/api-validation';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
+import { searchPlace, resolveGooglePlaceType } from '@/lib/places';
 import type { User } from '@prisma/client';
 
 interface ImportSourceEntry {
@@ -153,7 +154,105 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     return Response.json({ place: savedPlace, alreadyInLibrary: false });
   }
 
-  // ── No googlePlaceId: dedup by (userId, name, location) to avoid duplicates ──
+  // ── No googlePlaceId: try to resolve via Google Places search first ──
+  let resolvedGooglePlaceId: string | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let resolvedGoogleData: any = null;
+  let resolvedType = place.type;
+
+  try {
+    const query = place.location ? `${place.name}, ${place.location}` : place.name;
+    const googleResult = await searchPlace(query, undefined, place.name);
+    if (googleResult?.id) {
+      resolvedGooglePlaceId = googleResult.id;
+      resolvedGoogleData = {
+        placeId: googleResult.id,
+        rating: googleResult.rating,
+        reviewCount: googleResult.userRatingCount,
+        category: googleResult.primaryTypeDisplayName?.text || googleResult.primaryType,
+        hours: googleResult.regularOpeningHours?.weekdayDescriptions,
+        address: googleResult.formattedAddress,
+        lat: googleResult.location?.latitude,
+        lng: googleResult.location?.longitude,
+      };
+      resolvedType = resolveGooglePlaceType(
+        googleResult.primaryType,
+        googleResult.types,
+        googleResult.displayName?.text || place.name,
+      );
+    }
+  } catch (err) {
+    console.warn(`[save] Failed to resolve Google Place for "${place.name}":`, err);
+  }
+
+  // If we resolved a googlePlaceId, use the full enrichment path instead
+  if (resolvedGooglePlaceId) {
+    // Check if already exists with this googlePlaceId
+    const existingByGpid = await prisma.savedPlace.findUnique({
+      where: {
+        userId_googlePlaceId: { userId: user.id, googlePlaceId: resolvedGooglePlaceId },
+      },
+      select: { id: true, deletedAt: true, importSources: true, source: true },
+    });
+
+    const intelligenceId = await ensureEnrichment(resolvedGooglePlaceId, place.name, user.id, 'user_import', resolvedType);
+
+    const resolvedEnrichmentData = {
+      ...enrichmentData,
+      type: resolvedType,
+      googleData: resolvedGoogleData,
+    };
+
+    if (existingByGpid) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const existingSources = (existingByGpid.importSources as any as ImportSourceEntry[]) || [];
+      let updatedSources = existingSources;
+      if (newSourceEntry) {
+        const alreadyLogged = existingSources.some(
+          (s) => s.type === newSourceEntry.type && s.name === newSourceEntry.name,
+        );
+        if (!alreadyLogged) {
+          updatedSources = [...existingSources, newSourceEntry];
+        }
+      }
+
+      const savedPlace = await prisma.savedPlace.update({
+        where: { id: existingByGpid.id },
+        data: {
+          ...resolvedEnrichmentData,
+          importSources: toJson(updatedSources),
+          deletedAt: null,
+          ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
+        },
+      });
+
+      return Response.json({ place: savedPlace, alreadyInLibrary: true, resolved: true });
+    }
+
+    const savedPlace = await prisma.savedPlace.upsert({
+      where: {
+        userId_googlePlaceId: { userId: user.id, googlePlaceId: resolvedGooglePlaceId },
+      },
+      create: {
+        userId: user.id,
+        googlePlaceId: resolvedGooglePlaceId,
+        ...provenanceData,
+        ...resolvedEnrichmentData,
+        ...userEditableData,
+        importSources: toJson(newSourceEntry ? [newSourceEntry] : []),
+        ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
+      },
+      update: {
+        ...resolvedEnrichmentData,
+        deletedAt: null,
+        ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
+      },
+    });
+
+    return Response.json({ place: savedPlace, alreadyInLibrary: false, resolved: true });
+  }
+
+  // ── Still no googlePlaceId: dedup by (userId, name, location) ──
   const existingByName = await prisma.savedPlace.findFirst({
     where: {
       userId: user.id,
@@ -166,7 +265,6 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   });
 
   if (existingByName) {
-    // Re-import: update enrichment, preserve provenance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingSources = (existingByName.importSources as any as ImportSourceEntry[]) || [];
     let updatedSources = existingSources;
