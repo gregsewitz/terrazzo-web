@@ -162,7 +162,12 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
   try {
     const query = place.location ? `${place.name}, ${place.location}` : place.name;
-    const googleResult = await searchPlace(query, undefined, place.name);
+    // Use lat/lng from googleData (e.g. from maps-list getlist) as locationBias
+    const gd = place.googleData as Record<string, unknown> | null | undefined;
+    const lat = gd?.lat as number | undefined;
+    const lng = gd?.lng as number | undefined;
+    const locationBias = (lat && lng) ? { lat, lng, radiusMeters: 2000 } : undefined;
+    const googleResult = await searchPlace(query, locationBias, place.name);
     if (googleResult?.id) {
       resolvedGooglePlaceId = googleResult.id;
       resolvedGoogleData = {

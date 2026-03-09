@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
                 ? { lat: mp.lat, lng: mp.lng, radiusMeters: 2000 }
                 : undefined;
 
-              const googleResult = await searchPlace(query, locationBias);
+              const googleResult = await searchPlace(query, locationBias, mp.name);
 
               enrichedCount++;
               if (enrichedCount % 8 === 0 || enrichedCount === totalPlaces) {

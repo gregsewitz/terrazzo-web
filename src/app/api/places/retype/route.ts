@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       id: true,
       name: true,
       googlePlaceId: true,
+      googleData: true,
       location: true,
       type: true,
     },
@@ -109,12 +110,18 @@ export async function POST(request: NextRequest) {
             // Already has a googlePlaceId — just fetch types
             googleResult = await getPlaceById(place.googlePlaceId);
           } else {
-            // No googlePlaceId — search by name + location
+            // No googlePlaceId — search by name + location with locationBias
             const query = place.location
               ? `${place.name}, ${place.location}`
               : place.name;
 
-            googleResult = await searchPlace(query, undefined, place.name);
+            // Extract lat/lng from stored googleData (from maps-list getlist)
+            const gd = place.googleData as Record<string, unknown> | null | undefined;
+            const lat = gd?.lat as number | undefined;
+            const lng = gd?.lng as number | undefined;
+            const locationBias = (lat && lng) ? { lat, lng, radiusMeters: 2000 } : undefined;
+
+            googleResult = await searchPlace(query, locationBias, place.name);
             if (googleResult?.id) {
               resolvedGpid = googleResult.id;
             }
