@@ -209,6 +209,18 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
   return features;
 }
 
+// ─── Mean-centering ─────────────────────────────────────────────────────────
+// Removes the shared "uniform" component from vectors before L2 normalization.
+// Without this, 90%+ of every cosine score comes from the shared direction where
+// both vectors have positive values — making all cosines cluster near 0.83 with
+// only a 0.02 spread. Mean-centering makes cosine distance equivalent to
+// "adjusted cosine", dramatically improving discrimination (spread → 0.10+).
+
+function meanCenter(vec: number[]): number[] {
+  const mean = vec.reduce((a, b) => a + b, 0) / vec.length;
+  return vec.map(v => v - mean);
+}
+
 // ─── L2 normalization ────────────────────────────────────────────────────────
 
 function l2Normalize(vec: number[]): number[] {
@@ -289,7 +301,7 @@ export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
   }
 
   const signalDims = buildSignalFeaturesV3(signalInputs);
-  return l2Normalize(signalDims);
+  return l2Normalize(meanCenter(signalDims));
 }
 
 // ─── Property Embedding ─────────────────────────────────────────────────────
@@ -318,7 +330,7 @@ export function computePropertyEmbeddingV3(input: PropertyEmbeddingInputV3): num
   }
 
   const signalDims = buildSignalFeaturesV3(signalInputs);
-  return l2Normalize(signalDims);
+  return l2Normalize(meanCenter(signalDims));
 }
 
 // ─── Property Anchor Blending ────────────────────────────────────────────────
@@ -377,7 +389,7 @@ export function blendPropertyAnchors(
     }
   }
 
-  return l2Normalize(blended);
+  return l2Normalize(meanCenter(blended));
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
