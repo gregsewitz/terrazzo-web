@@ -162,7 +162,6 @@ export function lookupSignalCluster(signal: string): number {
 
 function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
   const features = new Array(SIGNAL_DIMS_V3).fill(0);
-  const totalWeights = new Array(SIGNAL_DIMS_V3).fill(0);
   // Track which clusters have DIRECT signal hits (not just bleed)
   const directHits = new Set<number>();
 
@@ -173,7 +172,6 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
 
     // Primary cluster gets full weight (can be negative for anti-signals)
     features[bucket] += weightedConfidence;
-    totalWeights[bucket] += Math.abs(confidence) * idf;
     directHits.add(bucket);
 
     // Neighbor bleed: spread energy (positive or negative) to nearest clusters
@@ -181,16 +179,26 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
     if (neighbors) {
       for (const { idx, weight } of neighbors) {
         features[idx] += weightedConfidence * weight;
-        totalWeights[idx] += Math.abs(confidence) * idf * weight;
       }
     }
   }
 
-  // Normalize and clamp symmetrically to [-1.0, +1.0]
+  // Sublinear dampening (log1p) — replaces the old weighted-average normalization.
+  //
+  // The old approach divided each dimension by total weight, producing a weighted
+  // average that saturated to ~1.0 whenever ANY signal hit a cluster. This made
+  // property vectors binary: 80-88% of dims at max, no gradient.
+  //
+  // Log1p preserves signal DENSITY while preventing unbounded growth:
+  //   1 signal  (raw ≈ 0.8) → log1p(0.8) ≈ 0.59
+  //   5 signals (raw ≈ 4.0) → log1p(4.0) ≈ 1.61
+  //   20 signals (raw ≈ 16) → log1p(16)  ≈ 2.83
+  //
+  // This is the same principle behind BM25/TF-IDF sublinear term frequency:
+  // diminishing returns without information loss.
   for (let i = 0; i < SIGNAL_DIMS_V3; i++) {
-    if (totalWeights[i] > 0) {
-      features[i] = features[i] / totalWeights[i];
-      features[i] = Math.max(-1.0, Math.min(features[i], 1.0));
+    if (features[i] !== 0) {
+      features[i] = Math.sign(features[i]) * Math.log1p(Math.abs(features[i]));
     }
   }
 
