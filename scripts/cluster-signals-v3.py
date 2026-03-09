@@ -5,7 +5,13 @@ AI-powered signal clustering for Terrazzo v3 vectors (recluster edition).
 Uses OpenAI text-embedding-3-small to embed all signals, then
 domain-aware hierarchical K-means with silhouette sweep to find optimal K.
 
-Targets K=200-350 for a ~600-property catalog (up from 96 clusters on 3.3K signals).
+After clustering, also embeds singleton signals (freq == 1) and maps them
+to their nearest cluster centroid. This eliminates the word-overlap fallback
+that was causing systematic signal misrouting (e.g., "steam-room-offering"
+landing in the "room temperature issues" cluster because of the word "room").
+
+Outputs clusterCentroids in signal-clusters.json as a runtime fallback for
+truly novel signals that aren't in any lookup table.
 
 Usage:
   export OPENAI_API_KEY=sk-...
@@ -396,6 +402,7 @@ def cluster_with_k(target_k, verbose=True):
         'signal_to_cluster': signal_to_cluster,
         'sizes': sizes,
         'cluster_neighbors': cluster_neighbors,
+        'cluster_centroids_map': cluster_centroids_map,
     }
 
 
@@ -442,11 +449,89 @@ elif args.k > 0:
     print(f"\nClustering with forced K={target_k}")
     r = cluster_with_k(target_k, verbose=True)
 
+    # ── Map singleton signals to nearest cluster centroid ──────────────────
+    # Singletons (freq == 1) are not used for K-means but need proper cluster
+    # assignments. We embed them and find their nearest centroid by cosine sim,
+    # eliminating the word-overlap fallback that caused systematic misrouting.
+    singleton_path = project_dir / "signal-singletons.json"
+    if singleton_path.exists():
+        with open(singleton_path) as f:
+            singletons = json.load(f)
+        singleton_signals = [item['s'] for item in singletons]
+        print(f"\n{'='*60}")
+        print(f"Mapping {len(singleton_signals)} singleton signals to nearest centroids...")
+
+        # Embed singletons (uses same cache)
+        singleton_missing = [s for s in singleton_signals if s not in embeddings_dict]
+        if singleton_missing:
+            print(f"  Embedding {len(singleton_missing)} new singleton signals...")
+            for i in range(0, len(singleton_missing), BATCH_SIZE):
+                batch = singleton_missing[i:i + BATCH_SIZE]
+                texts = [s.replace('-', ' ').replace('_', ' ') for s in batch]
+                response = client.embeddings.create(model=EMBEDDING_MODEL, input=texts)
+                for j, item in enumerate(response.data):
+                    embeddings_dict[batch[j]] = item.embedding
+                done = min(i + BATCH_SIZE, len(singleton_missing))
+                if done % 2000 == 0 or done == len(singleton_missing):
+                    print(f"    Embedded {done}/{len(singleton_missing)}")
+                if i + BATCH_SIZE < len(singleton_missing):
+                    time.sleep(0.05)
+
+            # Update cache
+            print(f"  Updating embedding cache ({len(embeddings_dict)} total embeddings)")
+            with open(cache_path, 'w') as f:
+                json.dump({
+                    "model": EMBEDDING_MODEL,
+                    "dim": EMBEDDING_DIM,
+                    "count": len(embeddings_dict),
+                    "embeddings": embeddings_dict,
+                }, f)
+
+        # Build centroid matrix from clustering result
+        centroid_ids = sorted(r['clusters'].keys())
+        # Use the actual K-means centroids stored during clustering
+        centroid_matrix = np.array([r['cluster_centroids_map'][cid] for cid in centroid_ids])
+        centroid_norms = np.linalg.norm(centroid_matrix, axis=1, keepdims=True)
+        centroid_norms = np.maximum(centroid_norms, 1e-10)
+        normed_centroids = centroid_matrix / centroid_norms
+
+        # Map each singleton to nearest centroid
+        mapped_count = 0
+        for sig in singleton_signals:
+            if sig in r['signal_to_cluster']:
+                continue  # already mapped (shouldn't happen but safety check)
+            emb = embeddings_dict.get(sig)
+            if emb is None:
+                continue
+            emb_arr = np.array(emb)
+            emb_norm = np.linalg.norm(emb_arr)
+            if emb_norm < 1e-10:
+                continue
+            sims = normed_centroids @ (emb_arr / emb_norm)
+            best_idx = int(np.argmax(sims))
+            best_cid = centroid_ids[best_idx]
+            r['signal_to_cluster'][sig] = best_cid
+            mapped_count += 1
+
+        print(f"  Mapped {mapped_count} singletons to nearest centroids")
+        print(f"  Total signals in lookup: {len(r['signal_to_cluster'])}")
+    else:
+        print(f"\nNo signal-singletons.json found — skipping singleton mapping")
+        print(f"  Run: node scripts/extract-signal-corpus.mjs first")
+
+    # ── Export cluster centroids for runtime fallback ──────────────────────
+    # For truly novel signals (not in any lookup), the runtime can embed them
+    # and find nearest centroid. We export centroids as {clusterID: [1536-dim]}.
+    centroid_export = {}
+    for cid in sorted(r['clusters'].keys()):
+        if cid in r['cluster_centroids_map']:
+            centroid_export[str(cid)] = [round(float(x), 6) for x in r['cluster_centroids_map'][cid]]
+
     # Build output
     from datetime import date
     neighbor_map = {str(k): v for k, v in r.get('cluster_neighbors', {}).items()}
     output = {
-        "version": "v3.3",
+        "version": "v3.4",
         "method": "domain-hierarchical-openai-kmeans",
         "embedding_model": EMBEDDING_MODEL,
         "k": r['k'],
@@ -459,6 +544,7 @@ elif args.k > 0:
         "clusters": {str(k): v for k, v in r['clusters'].items()},
         "signalToCluster": r['signal_to_cluster'],
         "clusterNeighbors": neighbor_map,
+        "clusterCentroids": centroid_export,
     }
 
     output_path = project_dir / "src" / "lib" / "taste-intelligence" / "signal-clusters.json"
@@ -475,6 +561,8 @@ elif args.k > 0:
     print(f"Also saved to {root_copy}")
     print(f"Total clusters: {r['k']}")
     print(f"Total signals mapped: {len(r['signal_to_cluster'])}")
+    print(f"  (corpus: {len(all_signals)}, singletons: {len(r['signal_to_cluster']) - len(all_signals)})")
+    print(f"Cluster centroids exported: {len(centroid_export)}")
     print(f"Avg silhouette: {r['avg_silhouette']:.4f}")
     sizes = r['sizes']
     print(f"Cluster sizes: min={min(sizes)}, max={max(sizes)}, avg={np.mean(sizes):.1f}")
@@ -483,7 +571,7 @@ elif args.k > 0:
     cross = sum(1 for ns in neighbors.values() for n in ns if n.get('tier') == 'cross')
     print(f"Clusters with neighbors: {len(neighbors)}/{r['k']} ({intra} intra + {cross} cross links)")
     print(f"{'='*60}")
-    print(f"\nVector dimension will be: {8 + r['k']} (8 domains + {r['k']} clusters)")
+    print(f"\nVector dimension will be: {r['k']} signal clusters")
 
 else:
     # Default: sweep first, then cluster at best K

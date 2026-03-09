@@ -120,16 +120,27 @@ for (const [cidStr, neighbors] of Object.entries(clusterNeighborsRaw)) {
 
 /**
  * Look up which semantic cluster a signal belongs to.
- * Falls back to word-overlap matching with cluster top signals for unseen signals.
+ *
+ * Resolution order:
+ *   1. Direct lookup — covers corpus signals (freq >= 2) AND singleton signals
+ *      that were mapped to nearest centroid during clustering. After a re-cluster
+ *      with singleton mapping, this covers ~100% of known signals.
+ *   2. Word-overlap fallback — for truly novel signals not seen during clustering.
+ *      This is a last resort and known to produce poor results (e.g., routing
+ *      "steam-room-offering" to the "room temperature issues" cluster because
+ *      of the word "room"). It should rarely trigger after a proper re-cluster.
+ *
+ * For async embedding-based fallback (using clusterCentroids), use
+ * lookupSignalClusterAsync() which calls OpenAI to embed the signal.
  */
 export function lookupSignalCluster(signal: string): number {
   const normalized = signal.toLowerCase().trim();
 
-  // Direct lookup (covers all ~7,628 signals in the clustering corpus)
+  // Direct lookup — covers corpus + singleton signals mapped during clustering
   const directMatch = signalToCluster[normalized];
   if (directMatch !== undefined) return directMatch;
 
-  // Fallback: find the cluster whose top signals share the most words
+  // Fallback: word-overlap (last resort for truly novel signals)
   const signalWords = new Set(normalized.replace(/-/g, ' ').replace(/_/g, ' ').split(/\s+/));
 
   let bestCluster = 0;
@@ -148,7 +159,6 @@ export function lookupSignalCluster(signal: string): number {
       }
     }
 
-    // Bonus: if the cluster's domain matches signal words
     if (info.domain) {
       const domainLower = info.domain.toLowerCase();
       if (signalWords.has(domainLower)) overlap += 2;
@@ -161,6 +171,74 @@ export function lookupSignalCluster(signal: string): number {
   }
 
   return bestCluster;
+}
+
+/**
+ * Async embedding-based cluster lookup for novel signals.
+ * Uses OpenAI text-embedding-3-small to embed the signal, then finds the
+ * nearest cluster centroid by cosine similarity.
+ *
+ * Only call this for signals that aren't in signalToCluster (direct lookup).
+ * Requires clusterCentroids to be present in signal-clusters.json.
+ *
+ * Returns null if centroids aren't available or embedding fails.
+ */
+export async function lookupSignalClusterAsync(signal: string): Promise<number | null> {
+  if (!clusterCentroids) return null;
+
+  const normalized = signal.toLowerCase().trim();
+
+  // Check direct lookup first
+  const directMatch = signalToCluster[normalized];
+  if (directMatch !== undefined) return directMatch;
+
+  try {
+    // Call OpenAI embedding API directly to avoid requiring the openai package
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return null;
+
+    const res = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: [normalized.replace(/-/g, ' ').replace(/_/g, ' ')],
+      }),
+    });
+
+    if (!res.ok) return null;
+    const json = await res.json();
+    const embedding: number[] = json.data[0].embedding;
+
+    // Find nearest centroid by cosine similarity
+    let bestCluster = 0;
+    let bestSim = -Infinity;
+
+    for (const [cidStr, centroid] of Object.entries(clusterCentroids)) {
+      const cid = parseInt(cidStr, 10);
+      let dot = 0;
+      let normA = 0;
+      let normB = 0;
+      for (let i = 0; i < embedding.length && i < centroid.length; i++) {
+        dot += embedding[i] * centroid[i];
+        normA += embedding[i] * embedding[i];
+        normB += centroid[i] * centroid[i];
+      }
+      const sim = dot / (Math.sqrt(normA) * Math.sqrt(normB) + 1e-10);
+      if (sim > bestSim) {
+        bestSim = sim;
+        bestCluster = cid;
+      }
+    }
+
+    return bestCluster;
+  } catch {
+    // OpenAI unavailable or error — fall back to sync word-overlap
+    return null;
+  }
 }
 
 // ─── Signal features (cluster lookup + similarity-scaled two-tier neighbor bleed) ─

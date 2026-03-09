@@ -25,6 +25,7 @@ const pool = new pg.Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthor
 async function main() {
   console.log('Extracting signal corpus from PlaceIntelligence...\n');
 
+  // Extract ALL signals with their frequencies (no minimum threshold)
   const { rows } = await pool.query(`
     WITH exploded AS (
       SELECT
@@ -42,14 +43,13 @@ async function main() {
         COUNT(DISTINCT place_id) as doc_freq
       FROM exploded
       GROUP BY signal, dimension
-      HAVING COUNT(DISTINCT place_id) >= 2
     )
     SELECT signal, dimension, doc_freq::int as doc_freq
     FROM freq
     ORDER BY doc_freq DESC
   `);
 
-  console.log(`Extracted ${rows.length} signals (appearing in 2+ properties)\n`);
+  console.log(`Extracted ${rows.length} total unique signals\n`);
 
   // Domain distribution
   const domainCounts = {};
@@ -87,25 +87,34 @@ async function main() {
     'Amenity': null,      // skip
   };
 
-  const corpus = [];
-  const dimensions = [];
+  const corpus = [];       // freq >= 2: used for K-means clustering
+  const singletons = [];   // freq == 1: mapped to nearest centroid post-clustering
+  const dimensions = [];   // all signals with domain mapping
   for (const row of rows) {
     let dim = row.dimension;
     if (DOMAIN_MAP[dim] !== undefined) {
       dim = DOMAIN_MAP[dim];
       if (!dim) continue; // skip unmapped domains
     }
-    corpus.push({ s: row.signal, d: dim, df: row.doc_freq });
     dimensions.push({ s: row.signal, d: dim });
+    if (row.doc_freq >= 2) {
+      corpus.push({ s: row.signal, d: dim, df: row.doc_freq });
+    } else {
+      singletons.push({ s: row.signal, d: dim });
+    }
   }
 
-  // Save corpus
+  // Save corpus (for clustering)
   fs.writeFileSync('signal-corpus.json', JSON.stringify(corpus, null, 2));
-  console.log(`\nSaved signal-corpus.json (${corpus.length} signals)`);
+  console.log(`\nSaved signal-corpus.json (${corpus.length} signals, freq >= 2)`);
 
-  // Save dimensions
+  // Save singletons (for centroid mapping)
+  fs.writeFileSync('signal-singletons.json', JSON.stringify(singletons, null, 2));
+  console.log(`Saved signal-singletons.json (${singletons.length} signals, freq == 1)`);
+
+  // Save dimensions (all)
   fs.writeFileSync('signal-dimensions.json', JSON.stringify(dimensions, null, 2));
-  console.log(`Saved signal-dimensions.json (${dimensions.length} mappings)`);
+  console.log(`Saved signal-dimensions.json (${dimensions.length} total mappings)`);
 
   // Summary stats
   const totalProps = await pool.query(`
@@ -114,7 +123,8 @@ async function main() {
   `);
   console.log(`\nTotal enriched properties: ${totalProps.rows[0].n}`);
   console.log(`Signals in corpus (freq >= 2): ${corpus.length}`);
-  console.log(`Singletons excluded: ~${91000 - corpus.length} (handled by embedding fallback at runtime)`);
+  console.log(`Singletons (freq == 1): ${singletons.length}`);
+  console.log(`Total unique signals: ${dimensions.length}`);
 
   await pool.end();
 }
