@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { completeTasteFields } from '@/lib/taste-completion';
+import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
 
 /**
@@ -98,6 +99,17 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     );
     savedCount = created.length;
     newPlaceIds.push(...created.map(p => p.id));
+  }
+
+  // Ensure enrichment for any shared places with googlePlaceId (fire-and-forget)
+  // The source may have had a PI record, but if it didn't, this creates one
+  if (newPlaces.length > 0) {
+    for (const p of newPlaces) {
+      if (p.googlePlaceId) {
+        ensureEnrichment(p.googlePlaceId, p.name, user.id, 'shared_save', p.type || undefined)
+          .catch(err => console.error('[shared-save] enrichment error:', err));
+      }
+    }
   }
 
   // Re-personalize taste fields for the recipient (fire-and-forget)
