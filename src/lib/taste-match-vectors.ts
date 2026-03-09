@@ -247,6 +247,37 @@ function getTopSignalsForCluster(clusterId: number): string[] {
 
 // ─── Explanation generation ─────────────────────────────────────────────────
 
+/**
+ * Clean a raw cluster label like "Atmosphere:atmosphere-communal-dining"
+ * into a human-readable form like "communal dining atmosphere".
+ */
+function humanizeClusterLabel(rawLabel: string): string {
+  // Strip domain prefix (e.g. "Atmosphere:" or "Character:")
+  const stripped = rawLabel.includes(':') ? rawLabel.split(':').slice(1).join(':') : rawLabel;
+  // Remove the domain echo at the start (e.g. "atmosphere-communal-dining" → "communal-dining")
+  const domainPrefixes = ['atmosphere-', 'character-', 'design-', 'service-', 'setting-', 'fooddrink-', 'wellness-', 'sustainability-'];
+  let cleaned = stripped.toLowerCase();
+  for (const prefix of domainPrefixes) {
+    if (cleaned.startsWith(prefix)) {
+      cleaned = cleaned.slice(prefix.length);
+      break;
+    }
+  }
+  // Convert hyphens to spaces
+  return cleaned.replace(/-/g, ' ').trim();
+}
+
+/**
+ * Clean a raw signal name like "communal-dining-format" → "communal dining"
+ */
+function humanizeSignal(signal: string): string {
+  return signal
+    .replace(/-/g, ' ')
+    .replace(/\b(format|model|philosophy|positioning|aesthetic|ritual|program|programming|structure|operation|style|emphasis|approach|driven|focused|based|oriented)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function buildExplanation(
   topClusters: ClusterContribution[],
   overallScore: number,
@@ -258,27 +289,37 @@ function buildExplanation(
     signals: c.topSignals,
   }));
 
-  // Generate natural language narrative
+  // Generate natural language narrative from diverse clusters
   const parts: string[] = [];
 
   if (topClusters.length > 0) {
     const top = topClusters[0];
-    const signalStr = top.topSignals.slice(0, 2).join(' and ');
+    const humanLabel = humanizeClusterLabel(top.label);
+    const humanSignals = top.topSignals.slice(0, 2).map(humanizeSignal).filter(Boolean);
+    const signalStr = humanSignals.length > 0 ? humanSignals.join(' and ') : '';
+
     parts.push(
-      `Strong alignment on ${top.label.toLowerCase()}` +
-      (signalStr ? ` — you both value ${signalStr}` : ''),
+      `Strong match on ${humanLabel}` +
+      (signalStr ? ` — shared appreciation for ${signalStr}` : ''),
     );
   }
 
   if (topClusters.length > 1) {
     const second = topClusters[1];
-    parts.push(`Also resonates with your taste for ${second.label.toLowerCase()}`);
+    const humanLabel = humanizeClusterLabel(second.label);
+    const humanSignals = second.topSignals.slice(0, 1).map(humanizeSignal).filter(Boolean);
+    parts.push(
+      `Also aligns with your ${humanLabel}${humanSignals.length > 0 ? ` sensibility (${humanSignals[0]})` : ''} taste`,
+    );
   }
 
+  // Mention additional domains that appear in remaining clusters (if different from top 2)
   if (topClusters.length > 2) {
-    const domains = [...new Set(topClusters.slice(2).map((c) => c.domain))];
-    if (domains.length > 0) {
-      parts.push(`Additional overlap in ${domains.join(', ')}`);
+    const topDomains = new Set(topClusters.slice(0, 2).map((c) => c.domain));
+    const additionalDomains = [...new Set(topClusters.slice(2).map((c) => c.domain))]
+      .filter((d) => !topDomains.has(d));
+    if (additionalDomains.length > 0) {
+      parts.push(`Further overlap in ${additionalDomains.join(' and ')}`);
     }
   }
 
@@ -326,6 +367,117 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
     const displayScore = Math.round(floor + curved * displayRange);
     return { ...s, overallScore: Math.max(floor, Math.min(ceiling, displayScore)) };
   });
+}
+
+// ─── Batch rescore for a user ────────────────────────────────────────────────
+
+export interface RescoreResult {
+  total: number;
+  scored: number;
+  skipped: number;
+  vectorDrift: number | null; // cosine distance from previous vector, if applicable
+}
+
+/**
+ * Rescore ALL saved places for a user using V3 vector matching.
+ *
+ * Called after onboarding or "expand your mosaic" sessions whenever
+ * the user's taste vector may have changed.
+ *
+ * Flow:
+ *   1. Fetch user's V3 vector
+ *   2. Fetch all SavedPlaces with enriched PlaceIntelligence (embeddingV3 present)
+ *   3. Compute raw vector matches for each
+ *   4. Normalize scores across the full set
+ *   5. Write matchScore + matchBreakdown + matchExplanation to DB
+ */
+export async function rescoreAllSavedPlacesV3(userId: string): Promise<RescoreResult> {
+  // 1. Fetch user vector
+  const userRow = await prisma.$queryRawUnsafe<Array<{ vec: string | null }>>(
+    `SELECT "tasteVectorV3"::text as vec FROM "User" WHERE id = $1`,
+    userId,
+  );
+  const userVecRaw = userRow[0]?.vec;
+  if (!userVecRaw) {
+    console.warn(`[rescore] User ${userId} has no V3 vector — skipping`);
+    return { total: 0, scored: 0, skipped: 0, vectorDrift: null };
+  }
+  const userVector = sqlToVectorV3(userVecRaw);
+
+  // 2. Fetch all saved places with enriched property vectors
+  const places = await prisma.$queryRawUnsafe<
+    Array<{ spId: string; googlePlaceId: string; propVec: string }>
+  >(
+    `SELECT sp.id as "spId", sp."googlePlaceId", pi."embeddingV3"::text as "propVec"
+     FROM "SavedPlace" sp
+     JOIN "PlaceIntelligence" pi ON pi."googlePlaceId" = sp."googlePlaceId"
+     WHERE sp."userId" = $1
+       AND pi."status" = 'complete'
+       AND pi."embeddingV3" IS NOT NULL`,
+    userId,
+  );
+
+  console.log(`[rescore] User ${userId}: ${places.length} places with V3 embeddings`);
+
+  // 3. Compute raw matches
+  const rawMatches: Array<{
+    spId: string;
+    result: VectorMatchResult;
+  }> = [];
+
+  for (const place of places) {
+    try {
+      const propVector = sqlToVectorV3(place.propVec);
+      const result = computeVectorMatch(userVector, propVector);
+      rawMatches.push({ spId: place.spId, result });
+    } catch (err) {
+      console.error(`[rescore] Failed for ${place.googlePlaceId}:`, err);
+    }
+  }
+
+  // 4. Normalize scores across the full set
+  const normalized = normalizeVectorScoresForDisplay(
+    rawMatches.map((m) => ({ spId: m.spId, result: m.result, overallScore: m.result.overallScore })),
+  );
+
+  // 5. Write to DB in batches
+  let scored = 0;
+  for (const match of normalized) {
+    const raw = rawMatches.find((m) => m.spId === match.spId);
+    if (!raw) continue;
+
+    try {
+      await prisma.savedPlace.update({
+        where: { id: match.spId },
+        data: {
+          matchScore: match.overallScore,
+          matchBreakdown: breakdownToNormalized(raw.result.breakdown),
+          matchExplanation: raw.result.explanation,
+        } as any,
+      });
+      scored++;
+    } catch (err) {
+      console.error(`[rescore] DB write failed for ${match.spId}:`, err);
+    }
+  }
+
+  console.log(`[rescore] Done: ${scored} scored, ${places.length - scored} skipped`);
+  return {
+    total: places.length,
+    scored,
+    skipped: places.length - scored,
+    vectorDrift: null,
+  };
+}
+
+/**
+ * Compute cosine distance between two vectors.
+ * Returns 0 if identical, 2 if opposite. Useful for drift detection.
+ */
+export function vectorDrift(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 2;
+  const cosine = cosineSimilarityV3(a, b);
+  return 1 - cosine; // 0 = identical, 1 = orthogonal, 2 = opposite
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
