@@ -4,7 +4,7 @@ import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
 import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
-import { computeVectorMatchFromDb, breakdownToNormalized } from '@/lib/taste-match-vectors';
+import { computeVectorMatchFromDb, breakdownToNormalized, normalizeSingleVectorScore } from '@/lib/taste-match-vectors';
 import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
 import type { User, Prisma } from '@prisma/client';
@@ -192,7 +192,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         const vectorMatch = await computeVectorMatchFromDb(user.id, googlePlaceId);
 
         if (vectorMatch) {
-          computedMatchScore = vectorMatch.overallScore;
+          // Normalize raw cosine score to same 35-93 display range as discover feed
+          computedMatchScore = await normalizeSingleVectorScore(vectorMatch.overallScore, user.id);
           computedMatchBreakdown = vectorMatch.breakdown;
         } else {
           // Fallback: signal-based scoring (no V3 vectors available)

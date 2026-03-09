@@ -476,6 +476,66 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
   });
 }
 
+// ─── Single-score normalization ──────────────────────────────────────────────
+
+/**
+ * Normalize a single raw vector cosine score into the same 35-93 display range
+ * used by the discover feed's batch normalization.
+ *
+ * Since we don't have a batch to compute z-scores against, we fetch the
+ * population mean and stddev of this user's cosine similarities against all
+ * enriched properties. These are the same statistics the batch normalizer
+ * would see if it scored every property.
+ *
+ * Falls back to a fixed mapping if population stats can't be computed.
+ */
+export async function normalizeSingleVectorScore(
+  rawScore: number,
+  userId: string,
+  ceiling = 93,
+  floor = 35,
+): Promise<number> {
+  try {
+    // Fetch user vector and compute population stats in one query
+    const stats = await prisma.$queryRawUnsafe<Array<{
+      mean: number | null;
+      stddev: number | null;
+      cnt: number;
+    }>>(
+      `WITH uv AS (
+        SELECT "tasteVectorV3" as vec FROM "User" WHERE id = $1
+      )
+      SELECT
+        AVG((1 - (pi."embeddingV3" <=> uv.vec)) * 100)::float as mean,
+        STDDEV((1 - (pi."embeddingV3" <=> uv.vec)) * 100)::float as stddev,
+        COUNT(*)::int as cnt
+      FROM "PlaceIntelligence" pi, uv
+      WHERE pi.status = 'complete'
+        AND pi."embeddingV3" IS NOT NULL`,
+      userId,
+    );
+
+    const { mean, stddev, cnt } = stats[0] || {};
+
+    if (!mean || !stddev || stddev < 0.1 || !cnt || cnt < 5) {
+      // Not enough data for meaningful normalization — use fixed midpoint
+      return Math.round((ceiling + floor) / 2 + 10);
+    }
+
+    // Same tanh curve as normalizeVectorScoresForDisplay
+    const displayRange = ceiling - floor;
+    const medianDisplay = floor + displayRange * 0.50;
+    const z = (rawScore - mean) / stddev;
+    const curved = Math.tanh(z * 0.8);
+    const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
+    return Math.max(floor, Math.min(ceiling, displayScore));
+  } catch (err) {
+    console.error('[normalizeSingleVectorScore] Error computing population stats:', err);
+    // Fallback: fixed midpoint
+    return Math.round((ceiling + floor) / 2 + 10);
+  }
+}
+
 // ─── Batch rescore for a user ────────────────────────────────────────────────
 
 export interface RescoreResult {

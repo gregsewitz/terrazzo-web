@@ -4,7 +4,23 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
-import { TYPE_ICONS } from '@/constants/placeTypes';
+import { TYPE_ICONS, TYPE_COLORS_VIBRANT } from '@/constants/placeTypes';
+import type { PlaceType } from '@/constants/placeTypes';
+
+// ── Hook: track Google Maps zoom level reactively ──
+function useZoomLevel(defaultZoom = 13) {
+  const map = useMap();
+  const [zoom, setZoom] = useState(defaultZoom);
+  useEffect(() => {
+    if (!map) return;
+    setZoom(map.getZoom() ?? defaultZoom);
+    const listener = map.addListener('zoom_changed', () => {
+      setZoom(map.getZoom() ?? defaultZoom);
+    });
+    return () => google.maps.event.removeListener(listener);
+  }, [map, defaultZoom]);
+  return zoom;
+}
 
 // Well-known city coordinates for demo data
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -107,12 +123,13 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 // Muted map style — matches Terrazzo aesthetic
 const MAP_ID = 'terrazzo-map';
 
-function MarkerPin({ marker, isExpanded, isHighlighted, onToggle }: {
+function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
   marker: MapMarker & { lat: number; lng: number };
   isExpanded: boolean;
   /** External highlight — just glow the pin, don't expand into a card (prevents map re-layout/flash) */
   isHighlighted: boolean;
   onToggle: () => void;
+  zoom: number;
 }) {
   const icon = TYPE_ICONS[(marker.type || '') as keyof typeof TYPE_ICONS] || 'location';
   const isDashed = marker.isDashed;
@@ -121,6 +138,8 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle }: {
   // Confirmed pins use vibrant accent fill; ghost pins use cream
   const accentColor = marker.color || 'var(--t-ink)';
   const isVibrant = !isDashed && !!marker.color;
+  // Type-colored pin fill — use vibrant type color, fall back to accent
+  const typeColor = TYPE_COLORS_VIBRANT[(marker.type || '') as PlaceType] || accentColor;
 
   return (
     <AdvancedMarker
@@ -224,8 +243,34 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle }: {
               transition: 'all 200ms cubic-bezier(0.32, 0.72, 0, 1)',
             }}>{marker.name}</div>
           </div>
+        ) : zoom < 12 && !glowing ? (
+          /* ── Tier 1: Colored dot (zoomed far out) ── */
+          <div style={{
+            width: isDashed ? 7 : 9,
+            height: isDashed ? 7 : 9,
+            borderRadius: '50%',
+            background: isDashed ? INK['20'] : typeColor,
+            border: `1.5px solid white`,
+            boxShadow: `0 1px 3px ${INK['15']}`,
+            transition: 'all 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+          }} />
+        ) : zoom < 15 && !glowing ? (
+          /* ── Tier 2: Teardrop pin with type color (mid zoom) ── */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <svg width="24" height="32" viewBox="0 0 24 32" fill="none" style={{
+              filter: `drop-shadow(0 2px 4px ${INK['18']})`,
+            }}>
+              <path
+                d="M12 2C12 2 22 11.5 22 17.5C22 23 18.5 26 12 26C5.5 26 2 23 2 17.5C2 11.5 12 2 12 2Z"
+                fill={isDashed ? '#f0ebe2' : typeColor}
+                stroke="white"
+                strokeWidth="1.5"
+              />
+              <circle cx="12" cy="17" r="2.5" fill={isDashed ? INK['40'] : 'white'} opacity={isDashed ? 0.6 : 0.9} />
+            </svg>
+          </div>
         ) : (
-          /* Compact pill — vibrant accent fill for confirmed, cream+dashed for ghosts */
+          /* ── Tier 3: Full compact pill with icon + name (zoomed in / highlighted) ── */
           <div style={{
             background: isDashed ? '#f0ebe2' : isVibrant ? accentColor : 'white',
             borderRadius: 20,
@@ -259,8 +304,8 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle }: {
             }}>{marker.name}</span>
           </div>
         )}
-        {/* Pointer triangle — hide for numbered pins */}
-        {!hasCount && (
+        {/* Pointer triangle — only show for pill tier (zoom ≥ 15 or glowing) and non-numbered pins */}
+        {!hasCount && (zoom >= 15 || glowing) && !(zoom < 12 && !glowing) && (
           <div style={{
             width: 0, height: 0,
             borderLeft: '6px solid transparent',
@@ -359,6 +404,36 @@ function MapFitter({ coords, fallbackCenter }: {
   return null;
 }
 
+// Inner wrapper that can access useMap — renders markers with zoom awareness
+function MapMarkers({ resolved, activeMarkerId, onMarkerTap, expandedId, setInternalExpandedId }: {
+  resolved: (MapMarker & { lat: number; lng: number })[];
+  activeMarkerId?: string | null;
+  onMarkerTap?: (markerId: string) => void;
+  expandedId: string | null;
+  setInternalExpandedId: (fn: (prev: string | null) => string | null) => void;
+}) {
+  const zoom = useZoomLevel(13);
+  return (
+    <>
+      {resolved.map(m => (
+        <MarkerPin
+          key={m.id}
+          marker={m}
+          zoom={zoom}
+          isExpanded={activeMarkerId === undefined && expandedId === m.id}
+          isHighlighted={activeMarkerId !== undefined && activeMarkerId === m.id}
+          onToggle={() => {
+            if (activeMarkerId === undefined) {
+              setInternalExpandedId(prev => prev === m.id ? null : m.id);
+            }
+            if (onMarkerTap) onMarkerTap(m.id);
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
 export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords, onMarkerTap, activeMarkerId }: GoogleMapViewProps) {
   const [internalExpandedId, setInternalExpandedId] = useState<string | null>(null);
   // Use external activeMarkerId if provided, otherwise fall back to internal state
@@ -451,20 +526,13 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
         style={{ width: '100%', height: '100%' }}
       >
         <MapFitter coords={originalCoords} fallbackCenter={fallbackCenter} />
-        {resolved.map(m => (
-          <MarkerPin
-            key={m.id}
-            marker={m}
-            isExpanded={activeMarkerId === undefined && expandedId === m.id}
-            isHighlighted={activeMarkerId !== undefined && activeMarkerId === m.id}
-            onToggle={() => {
-              if (activeMarkerId === undefined) {
-                setInternalExpandedId(prev => prev === m.id ? null : m.id);
-              }
-              if (onMarkerTap) onMarkerTap(m.id);
-            }}
-          />
-        ))}
+        <MapMarkers
+          resolved={resolved}
+          activeMarkerId={activeMarkerId}
+          onMarkerTap={onMarkerTap}
+          expandedId={expandedId}
+          setInternalExpandedId={setInternalExpandedId}
+        />
       </Map>
     </div>
   );

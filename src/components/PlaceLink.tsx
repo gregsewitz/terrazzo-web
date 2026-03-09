@@ -72,13 +72,10 @@ export default function PlaceLink({
           });
         }
 
-        // If we have a sheet callback and a googlePlaceId, open in overlay
-        if (openHandler && googlePlaceId) {
-          // If the place is already in the user's library, open it as a
-          // library item (with real ID) instead of a preview with a synthetic
-          // discover-prefixed ID. This ensures rating/editing targets the
-          // correct DB record.
-          if (openDetailHandler) {
+        // If we have a sheet callback, open in overlay (with or without googlePlaceId)
+        if (openHandler) {
+          // If we have a googlePlaceId, check if it's already in the library
+          if (googlePlaceId && openDetailHandler) {
             const libraryPlace = myPlaces.find(p => p.google?.placeId === googlePlaceId);
             if (libraryPlace) {
               openDetailHandler(libraryPlace);
@@ -87,7 +84,7 @@ export default function PlaceLink({
           }
 
           const previewPlace: ImportedPlace = {
-            id: `discover-${googlePlaceId}`,
+            id: googlePlaceId ? `discover-${googlePlaceId}` : `discover-${name.replace(/\s+/g, '-').toLowerCase()}`,
             name,
             type: type || 'activity',
             location,
@@ -95,7 +92,7 @@ export default function PlaceLink({
             matchScore: matchScore || 0,
             matchBreakdown: (matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
             tasteNote: '',
-            google: { placeId: googlePlaceId },
+            google: googlePlaceId ? { placeId: googlePlaceId } : undefined,
             status: 'available',
             ghostSource: 'terrazzo',
           };
@@ -103,7 +100,7 @@ export default function PlaceLink({
           return;
         }
 
-        // Fallback: navigate to /places/[googlePlaceId]
+        // Fallback: navigate to /places/[googlePlaceId] (only when no overlay context)
         navigateToPlace(name, location, googlePlaceId);
       }}
       className={`place-link ${className}`}

@@ -55,25 +55,31 @@ function PlaceDetailContent({
   const memberCollections = collections.filter(sl => sl.placeIds.includes(item.id));
   const isInCollections = memberCollections.length > 0;
 
+  // ─── Hydrate preview places from the resolve API ───
+  // When opened from discover feed, the item only has name/location/googlePlaceId.
+  // Resolve fills in matchScore, matchBreakdown, google data, etc.
+  // Also handles editorial cards that only have name/location (no googlePlaceId) —
+  // the resolve endpoint supports name-based lookup as a fallback.
+  const [resolvedItem, setResolvedItem] = useState<ImportedPlace>(item);
+
   // Briefing polling for inline progress — always fetch intelligence when we have a googlePlaceId
+  // Use resolvedItem's googlePlaceId when available (editorial cards get resolved by name → googlePlaceId)
   const googlePlaceId = (item.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
-  const { data: intelData } = useBriefing(googlePlaceId);
+  const resolvedGooglePlaceId = (resolvedItem.google as Record<string, unknown> & { placeId?: string })?.placeId as string | undefined;
+  const effectiveGooglePlaceId = resolvedGooglePlaceId || googlePlaceId;
+  const { data: intelData } = useBriefing(effectiveGooglePlaceId);
   const isEnriching = intelData?.status === 'enriching' || intelData?.status === 'pending';
 
   // A place is a "private listing" (Airbnb/Vrbo) when the parser explicitly
   // classified it as a "rental" — a private vacation rental not on Google Maps.
   const isPrivateListing = item.type === 'rental';
-
-  // ─── Hydrate preview places from the resolve API ───
-  // When opened from discover feed, the item only has name/location/googlePlaceId.
-  // Resolve fills in matchScore, matchBreakdown, google data, etc.
-  const [resolvedItem, setResolvedItem] = useState<ImportedPlace>(item);
   useEffect(() => {
     setResolvedItem(item); // reset when item changes
-    if (!googlePlaceId) return;
     // Only resolve if the item looks under-populated (no match data, no google details)
     const needsResolve = !item.matchScore && !item.google?.rating;
-    if (!needsResolve) return;
+    if (!needsResolve && googlePlaceId) return;
+    // Need at least a name to resolve
+    if (!googlePlaceId && !item.name) return;
 
     let cancelled = false;
     apiFetch<{
@@ -119,7 +125,7 @@ function PlaceDetailContent({
       }));
     }).catch(err => console.error('Failed to resolve preview place:', err));
     return () => { cancelled = true; };
-  }, [googlePlaceId, item]);
+  }, [googlePlaceId, item.name, item.location, item]);
 
   // Hydrated values — prefer resolved data over the bare-bones item
   const hydratedMatchScore = resolvedItem.matchScore || item.matchScore || 0;

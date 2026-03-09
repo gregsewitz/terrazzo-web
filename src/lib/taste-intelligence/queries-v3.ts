@@ -10,7 +10,21 @@
 
 import { prisma } from '@/lib/prisma';
 import { vectorToSqlV3, VECTOR_DIM_V3 } from './vectors-v3';
-import type { VectorMatch, UserNeighbor } from './queries';
+
+// Types previously imported from ./queries (v2, now removed)
+export interface VectorMatch {
+  id: string;
+  googlePlaceId: string;
+  propertyName: string;
+  similarity: number;
+  score: number;
+}
+
+export interface UserNeighbor {
+  id: string;
+  name: string | null;
+  similarity: number;
+}
 
 // ─── PE-04: User-to-Property Matching (v3) ─────────────────────────────────
 

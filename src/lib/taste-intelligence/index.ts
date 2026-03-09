@@ -5,8 +5,7 @@
  * V3 vectors use 400 semantic signal clusters with L2-normalized embeddings and
  * pgvector HNSW indices for approximate nearest-neighbor queries.
  *
- * Note: v2.1 (136-dim FNV-1a hash) exports removed — v4 architecture uses V3 exclusively.
- * Legacy code preserved in vectors.ts, queries.ts, backfill.ts for reference only.
+ * v2.1 (136-dim FNV-1a hash) has been fully removed.
  */
 
 // Vector computation (v3 — 400-dim, semantic clusters)
@@ -59,9 +58,3 @@ export {
   runFullBackfillV3,
 } from './backfill-v3';
 
-// Evaluation harness (PE-10)
-export {
-  evaluateUser,
-  evaluateAll,
-} from './evaluation';
-export type { EvaluationResult } from './evaluation';
