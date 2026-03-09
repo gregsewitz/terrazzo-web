@@ -5,7 +5,7 @@ import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { TYPE_ICONS, TYPE_COLORS_VIBRANT } from '@/constants/placeTypes';
-import type { PlaceType } from '@/constants/placeTypes';
+import type { PlaceType } from '@/types';
 
 // ── Hook: track Google Maps zoom level reactively ──
 function useZoomLevel(defaultZoom = 13) {

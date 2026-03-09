@@ -620,6 +620,10 @@ function CollectionDetailContent() {
                   }))}
                   height={800}
                   fallbackDestination={collection.cities[0]}
+                  onMarkerTap={(id) => {
+                    const place = placesInCollection.find(p => p.id === id);
+                    if (place) openDetail(place);
+                  }}
                 />
               </div>
             )}
@@ -806,6 +810,10 @@ function CollectionDetailContent() {
               }))}
               height={typeof window !== 'undefined' ? window.innerHeight - 56 : 600}
               fallbackDestination={collection.cities[0]}
+              onMarkerTap={(id) => {
+                const place = placesInCollection.find(p => p.id === id);
+                if (place) openDetail(place);
+              }}
             />
 
             {/* Floating legend */}
