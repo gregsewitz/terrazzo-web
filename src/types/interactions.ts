@@ -108,7 +108,8 @@ export interface InteractionEvent {
 export interface InteractionMetadata {
   // For rating events — the specific reaction chosen
   reaction?: 'myPlace' | 'enjoyed' | 'mixed' | 'notMe';
-  ratingTags?: string[];            // Tags selected during rating
+  ratingTags?: string[];            // Positive tags selected during rating ("What stood out?")
+  shortcomingTags?: string[];       // Negative tags selected during rating ("What fell short?")
   returnIntent?: 'absolutely' | 'maybe' | 'probably_not';
 
   // For property_dwell

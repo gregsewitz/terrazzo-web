@@ -8,6 +8,7 @@ import {
   ReturnIntent,
   REACTIONS,
   STANDOUT_TAGS,
+  SHORTCOMING_TAGS,
   CONTEXT_TAGS,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -26,11 +27,22 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
   const [step, setStep] = useState<RatingStep>(initialStep || 'gut');
   const [reaction, setReaction] = useState<ReactionId | null>(item.rating?.reaction || null);
   const [selectedTags, setSelectedTags] = useState<string[]>(item.rating?.tags || []);
+  const [shortcomingTags, setShortcomingTags] = useState<string[]>(item.rating?.shortcomingTags || []);
   const [contextTags, setContextTags] = useState<string[]>(item.rating?.contextTags || []);
   const [returnIntent, setReturnIntent] = useState<ReturnIntent | null>(item.rating?.returnIntent || null);
   const [personalNote, setPersonalNote] = useState(item.rating?.personalNote || '');
 
   const standoutOptions = STANDOUT_TAGS[item.type] || STANDOUT_TAGS.restaurant;
+  const shortcomingOptions = SHORTCOMING_TAGS[item.type] || SHORTCOMING_TAGS.restaurant;
+
+  // Positive: Obsessed, Enjoyed it → show "What stood out?" only
+  // Mixed → show both "What stood out?" AND "What fell short?"
+  // Not me → show "What fell short?" only
+  const isPositive = reaction === 'myPlace' || reaction === 'enjoyed';
+  const isMixed = reaction === 'mixed';
+  const isNegative = reaction === 'notMe';
+  const showPositiveTags = isPositive || isMixed;
+  const showNegativeTags = isMixed || isNegative;
   const selectedReaction = REACTIONS.find(r => r.id === reaction);
 
   const toggleTag = (tag: string, list: string[], setter: (v: string[]) => void) => {
@@ -48,6 +60,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
     onSave({
       reaction,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
+      shortcomingTags: shortcomingTags.length > 0 ? shortcomingTags : undefined,
       contextTags: contextTags.length > 0 ? contextTags : undefined,
       returnIntent: returnIntent || undefined,
       personalNote: personalNote.trim() || undefined,
@@ -151,44 +164,79 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
           {/* Step 2: Details (tags + return intent) */}
           {step === 'details' && selectedReaction && (
             <div className="flex flex-col gap-6">
-              {/* What stood out? */}
-              <div>
-                <h3
-                  className="text-[10px] uppercase tracking-wider font-bold mb-3"
-                  style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
-                >
-                  What stood out?
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {standoutOptions.map(tag => {
-                    const isActive = selectedTags.includes(tag);
-                    return (
-                      <button
-                        key={tag}
-                        onClick={() => toggleTag(tag, selectedTags, setSelectedTags)}
-                        className="px-3 py-1.5 rounded-full border cursor-pointer transition-all text-[11px]"
-                        style={{
-                          background: isActive ? `${selectedReaction.color}12` : 'white',
-                          borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
-                          color: isActive ? selectedReaction.color : INK['90'],
-                          fontFamily: FONT.sans,
-                          fontWeight: isActive ? 600 : 400,
-                        }}
-                      >
-                        {tag}
-                      </button>
-                    );
-                  })}
+              {/* What stood out? — shown for positive and mixed reactions */}
+              {showPositiveTags && (
+                <div>
+                  <h3
+                    className="text-[10px] uppercase tracking-wider font-bold mb-3"
+                    style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
+                  >
+                    What stood out?
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {standoutOptions.map(tag => {
+                      const isActive = selectedTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTag(tag, selectedTags, setSelectedTags)}
+                          className="px-3 py-1.5 rounded-full border cursor-pointer transition-all text-[11px]"
+                          style={{
+                            background: isActive ? `${selectedReaction.color}12` : 'white',
+                            borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
+                            color: isActive ? selectedReaction.color : INK['90'],
+                            fontFamily: FONT.sans,
+                            fontWeight: isActive ? 600 : 400,
+                          }}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Perfect for... */}
+              {/* What fell short? — shown for mixed and negative reactions */}
+              {showNegativeTags && (
+                <div>
+                  <h3
+                    className="text-[10px] uppercase tracking-wider font-bold mb-3"
+                    style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
+                  >
+                    What fell short?
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {shortcomingOptions.map(tag => {
+                      const isActive = shortcomingTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTag(tag, shortcomingTags, setShortcomingTags)}
+                          className="px-3 py-1.5 rounded-full border cursor-pointer transition-all text-[11px]"
+                          style={{
+                            background: isActive ? `${selectedReaction.color}12` : 'white',
+                            borderColor: isActive ? selectedReaction.color : 'var(--t-linen)',
+                            color: isActive ? selectedReaction.color : INK['90'],
+                            fontFamily: FONT.sans,
+                            fontWeight: isActive ? 600 : 400,
+                          }}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Best suited for... */}
               <div>
                 <h3
                   className="text-[10px] uppercase tracking-wider font-bold mb-3"
                   style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}
                 >
-                  Perfect for...
+                  {isPositive ? 'Perfect for...' : 'Best suited for...'}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {CONTEXT_TAGS.map(tag => {

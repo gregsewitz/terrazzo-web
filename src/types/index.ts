@@ -452,8 +452,9 @@ export type ReturnIntent = 'absolutely' | 'maybe' | 'probably_not';
 
 export interface PlaceRating {
   reaction: ReactionId;
-  tags?: string[];           // "What stood out?" dimensional tags
-  contextTags?: string[];    // "Perfect for..." tags
+  tags?: string[];           // "What stood out?" dimensional tags (positive)
+  shortcomingTags?: string[]; // "What fell short?" tags (mixed/negative)
+  contextTags?: string[];    // "Perfect for..." / "Best suited for..." tags
   returnIntent?: ReturnIntent;
   personalNote?: string;
   ratedAt: string;           // ISO date
@@ -469,6 +470,18 @@ export const STANDOUT_TAGS: Record<string, string[]> = {
   activity: ['Unforgettable experience', 'Worth every penny', 'Great guide', 'Stunning scenery', 'Perfect atmosphere'],
   neighborhood: ['Great for walking', 'Hidden finds', 'Stunning architecture', 'Local feeling', 'Great food scene'],
   shop: ['Unique finds', 'Beautiful space', 'Friendly staff', 'Great quality', 'Good prices'],
+};
+
+// Negative/critical tags by place type — shown for Mixed and Not Me reactions
+export const SHORTCOMING_TAGS: Record<string, string[]> = {
+  restaurant: ['Overpriced', 'Underwhelming food', 'Poor service', 'Too loud', 'Long wait', 'Uncomfortable seating', 'Not worth the hype'],
+  hotel: ['Overpriced', 'Poor service', 'Underwhelming food', 'Too crowded', 'Dated/run-down', 'Bad location', 'Not as advertised', 'Noisy', 'Not clean'],
+  bar: ['Overpriced', 'Too crowded', 'Too loud', 'Weak drinks', 'Poor service', 'Bad atmosphere', 'Long wait'],
+  museum: ['Not worth the wait', 'Overpriced', 'Too crowded', 'Underwhelming collection', 'Poor layout', 'Bad signage'],
+  cafe: ['Mediocre coffee', 'Overpriced', 'Too crowded', 'Uncomfortable', 'Poor service', 'Noisy'],
+  activity: ['Not worth the price', 'Overhyped', 'Poor organization', 'Too crowded', 'Felt unsafe', 'Too touristy'],
+  neighborhood: ['Felt unsafe', 'Too touristy', 'Not much to see', 'Hard to navigate', 'Overhyped'],
+  shop: ['Overpriced', 'Poor quality', 'Pushy staff', 'Nothing unique', 'Disappointing selection'],
 };
 
 export const CONTEXT_TAGS = ['Solo', 'Couple', 'Friends', 'Family', 'Special occasion', 'Work trip'];

@@ -279,6 +279,7 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
       trackInteraction(eventType, gpid, 'library', {
         reaction: rating.reaction,
         ratingTags: rating.tags,
+        shortcomingTags: rating.shortcomingTags,
         returnIntent: rating.returnIntent,
         placeType: place?.type,
       });
