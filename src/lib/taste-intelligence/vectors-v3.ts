@@ -81,6 +81,13 @@ const signalToCluster: Record<string, number> = (clusterMap as any).signalToClus
 const clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[] }> =
   (clusterMap as any).clusters;
 
+// ─── Cluster centroid embeddings for semantic fallback ─────────────────────
+// When signal-clusters.json includes clusterCentroids (1536-dim OpenAI embeddings),
+// we use cosine similarity to map unknown signals instead of the crude word-overlap fallback.
+// Centroids are exported by cluster-signals-v3.py as a flat array of floats per cluster.
+const clusterCentroids: Record<string, number[]> | null =
+  (clusterMap as any).clusterCentroids ?? null;
+
 // Neighbor bleed map: cluster → [{cluster, similarity, tier}]
 // v3.5: Reduced bleed scales to prevent vector saturation.
 // Previous values (0.30/0.10) caused vectors with 300+ signals to become near-uniform

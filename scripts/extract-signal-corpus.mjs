@@ -2,11 +2,11 @@
 /**
  * extract-signal-corpus.mjs
  * Extracts the signal corpus from PlaceIntelligence for clustering.
- * Only includes signals appearing in 2+ properties (singletons handled by fallback).
  *
  * Outputs:
- *   signal-corpus.json   — [{s, d, df}, ...] for clustering script
- *   signal-dimensions.json — [{s, d}, ...] for domain mapping
+ *   signal-corpus.json      — [{s, d, df}, ...] signals with freq >= 2 (for K-means clustering)
+ *   signal-singletons.json  — [{s, d}, ...] signals with freq == 1 (for centroid mapping)
+ *   signal-dimensions.json  — [{s, d}, ...] all signals with domain mapping
  */
 import pg from 'pg';
 import fs from 'fs';
