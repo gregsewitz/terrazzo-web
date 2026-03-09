@@ -22,10 +22,6 @@ export async function POST(req: NextRequest) {
       type: 'activity',
       googlePlaceId: { not: null },
       deletedAt: null,
-      // Skip places already checked in a previous retype run
-      NOT: {
-        googleData: { path: ['_retypeChecked'], equals: true },
-      },
     },
     select: {
       id: true,
@@ -37,13 +33,13 @@ export async function POST(req: NextRequest) {
   });
 
   if (places.length === 0) {
-    return Response.json({ retyped: 0, unchanged: 0, failed: 0, remaining: 0, done: true });
+    return Response.json({ retyped: 0, skipped: 0, failed: 0, remaining: 0, done: true });
   }
 
   let retyped = 0;
-  let unchanged = 0;
+  let skipped = 0;
   let failed = 0;
-  const details: Array<{ name: string; from: string; to: string; primaryType?: string }> = [];
+  const details: Array<{ name: string; from: string; to: string; primaryType?: string; types?: string[] }> = [];
 
   for (const place of places) {
     try {
@@ -58,26 +54,13 @@ export async function POST(req: NextRequest) {
       const newType = resolveGooglePlaceType(result.primaryType, result.types || [], place.name || undefined);
 
       if (newType === 'activity') {
-        // Google still says activity — leave it, but mark as checked so we don't keep retrying
-        // We'll use the googleData.retypeChecked flag
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const existingData = (await prisma.savedPlace.findUnique({
-          where: { id: place.id },
-          select: { googleData: true },
-        }))?.googleData as any || {};
-
-        await prisma.savedPlace.update({
-          where: { id: place.id },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data: { googleData: { ...existingData, _retypeChecked: true } as any },
-        });
-
-        unchanged++;
+        skipped++;
         details.push({
           name: place.name || '?',
           from: 'activity',
-          to: 'activity (confirmed)',
+          to: 'activity (no match)',
           primaryType: result.primaryType,
+          types: result.types?.slice(0, 5),
         });
         continue;
       }
@@ -103,21 +86,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Count remaining (activity places with googlePlaceId that haven't been checked yet)
+  // Count remaining activity places with googlePlaceId
   const remaining = await prisma.savedPlace.count({
     where: {
       type: 'activity',
       googlePlaceId: { not: null },
       deletedAt: null,
-      NOT: {
-        googleData: { path: ['_retypeChecked'], equals: true },
-      },
     },
   });
 
   return Response.json({
     retyped,
-    unchanged,
+    skipped,
     failed,
     remaining,
     done: remaining === 0,
