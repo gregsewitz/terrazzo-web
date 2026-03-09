@@ -67,6 +67,9 @@ export async function POST(request: NextRequest) {
     where: {
       type: 'activity',
       deletedAt: null,
+      NOT: {
+        googleData: { path: ['_retypeAttempted'], equals: true },
+      },
     },
     select: {
       id: true,
@@ -130,25 +133,20 @@ export async function POST(request: NextRequest) {
           if (!googleResult) {
             // Try name-based fallback for type even without Google data
             const nameType = resolveGooglePlaceType(undefined, undefined, place.name);
-            if (nameType !== 'activity') {
-              await prisma.savedPlace.update({
-                where: { id: place.id },
-                data: { type: nameType },
-              });
-              return {
-                name: place.name,
-                googlePlaceId: place.googlePlaceId,
-                oldType: 'activity',
-                newType: nameType,
-                updated: true,
-              };
-            }
+            // Mark as attempted so we don't re-process in the next batch
+            await prisma.savedPlace.update({
+              where: { id: place.id },
+              data: {
+                ...(nameType !== 'activity' ? { type: nameType } : {}),
+                googleData: { ...(place.googleData as Record<string, unknown> || {}), _retypeAttempted: true } as unknown as Prisma.InputJsonValue,
+              },
+            });
             return {
               name: place.name,
               googlePlaceId: place.googlePlaceId,
               oldType: 'activity',
-              newType: 'activity',
-              updated: false,
+              newType: nameType,
+              updated: nameType !== 'activity',
             };
           }
 
@@ -170,6 +168,14 @@ export async function POST(request: NextRequest) {
             updateData.googleData = googleResult as unknown as Prisma.InputJsonValue;
           }
 
+          // If still activity, mark as attempted so we skip next batch
+          if (newType === 'activity') {
+            updateData.googleData = {
+              ...(googleResult as Record<string, unknown> || {}),
+              _retypeAttempted: true,
+            } as unknown as Prisma.InputJsonValue;
+          }
+
           if (Object.keys(updateData).length > 0) {
             try {
               await prisma.savedPlace.update({
@@ -178,15 +184,21 @@ export async function POST(request: NextRequest) {
               });
             } catch (dbErr: unknown) {
               // Unique constraint violation — another place already has this googlePlaceId for this user
+              // This means the user already has this place saved from a different import.
+              // Soft-delete this orphan duplicate.
               if (dbErr instanceof Error && dbErr.message.includes('Unique constraint')) {
+                await prisma.savedPlace.update({
+                  where: { id: place.id },
+                  data: { deletedAt: new Date() },
+                });
                 return {
                   name: place.name,
                   googlePlaceId: place.googlePlaceId,
                   newGooglePlaceId: resolvedGpid || undefined,
                   oldType: 'activity',
                   newType,
-                  updated: false,
-                  error: 'duplicate_gpid',
+                  updated: true,
+                  error: 'duplicate_gpid_deleted',
                 };
               }
               throw dbErr;
@@ -231,9 +243,15 @@ export async function POST(request: NextRequest) {
   const unchanged = results.filter(r => !r.updated && !r.error);
   const errors = results.filter(r => r.error);
 
-  // Get remaining count
+  // Get remaining count (excluding already-attempted ones)
   const remaining = await prisma.savedPlace.count({
-    where: { type: 'activity', deletedAt: null },
+    where: {
+      type: 'activity',
+      deletedAt: null,
+      NOT: {
+        googleData: { path: ['_retypeAttempted'], equals: true },
+      },
+    },
   });
 
   return NextResponse.json({
