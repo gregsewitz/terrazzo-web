@@ -9,6 +9,9 @@
  *   { mode: "full" }                     — run both phases (default)
  *   { mode: "user", userId: "..." }      — backfill a single user
  *   { mode: "properties" }               — backfill property embeddings only
+ *   { mode: "batch", offset: 0, limit: 100 } — batched property backfill (for large sets)
+ *   { mode: "idf" }                      — compute IDF weights only
+ *   { mode: "users" }                    — backfill all user vectors only
  *
  * Protected by CRON_SECRET bearer token when set.
  */
@@ -17,7 +20,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   runFullBackfillV3,
   backfillUserV3,
+  backfillAllUsersV3,
   backfillAllPropertyEmbeddingsV3,
+  backfillPropertyEmbeddingsBatchV3,
+  computeAndSetIdfWeightsV3,
 } from '@/lib/taste-intelligence';
 
 export const maxDuration = 300; // 5 min — backfill may process hundreds of records
@@ -33,14 +39,33 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { mode = 'full', userId } = body as {
+    const { mode = 'full', userId, offset = 0, limit = 100 } = body as {
       mode?: string;
       userId?: string;
+      offset?: number;
+      limit?: number;
     };
 
     if (mode === 'user' && userId) {
       const result = await backfillUserV3(userId);
       return NextResponse.json({ ok: true, mode: 'user', result });
+    }
+
+    if (mode === 'idf') {
+      const result = await computeAndSetIdfWeightsV3();
+      return NextResponse.json({ ok: true, mode: 'idf', result });
+    }
+
+    if (mode === 'users') {
+      await computeAndSetIdfWeightsV3();
+      const result = await backfillAllUsersV3();
+      return NextResponse.json({ ok: true, mode: 'users', result });
+    }
+
+    if (mode === 'batch') {
+      await computeAndSetIdfWeightsV3();
+      const result = await backfillPropertyEmbeddingsBatchV3(offset, limit);
+      return NextResponse.json({ ok: true, mode: 'batch', result });
     }
 
     if (mode === 'properties') {

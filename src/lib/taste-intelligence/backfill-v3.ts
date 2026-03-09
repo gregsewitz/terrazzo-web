@@ -241,6 +241,49 @@ export async function backfillAllPropertyEmbeddingsV3(): Promise<{
   return { total: totalEligible, computed, skipped };
 }
 
+// ─── Batched property backfill (for serverless environments) ─────────────────
+
+export async function backfillPropertyEmbeddingsBatchV3(
+  offset: number,
+  limit: number,
+): Promise<{ total: number; computed: number; skipped: number; offset: number; limit: number }> {
+  // Fetch ALL eligible records missing V3 embeddings, then slice
+  const missing = await prisma.$queryRaw<Array<{ id: string; propertyName: string | null }>>`
+    SELECT "id", "propertyName"
+    FROM "PlaceIntelligence"
+    WHERE "status" = 'complete'
+      AND "signalCount" > 0
+      AND "embeddingV3" IS NULL
+    ORDER BY "id"
+    OFFSET ${offset}
+    LIMIT ${limit}
+  `;
+
+  const totalMissing = await prisma.$queryRaw<Array<{ count: bigint }>>`
+    SELECT count(*) FROM "PlaceIntelligence"
+    WHERE "status" = 'complete' AND "signalCount" > 0 AND "embeddingV3" IS NULL
+  `;
+  const total = Number(totalMissing[0]?.count ?? 0);
+
+  console.log(`[v3-batch] Processing ${missing.length} properties (offset=${offset}, total missing=${total})`);
+  let computed = 0;
+  let skipped = 0;
+
+  for (const record of missing) {
+    try {
+      const success = await backfillPropertyEmbeddingV3(record.id);
+      if (success) computed++;
+      else skipped++;
+    } catch (err) {
+      console.error(`[v3-batch] Failed: ${record.propertyName}:`, err);
+      skipped++;
+    }
+  }
+
+  console.log(`[v3-batch] Done: ${computed} computed, ${skipped} skipped`);
+  return { total, computed, skipped, offset, limit };
+}
+
 // ─── Full v3 backfill ───────────────────────────────────────────────────────
 
 export async function runFullBackfillV3() {

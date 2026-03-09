@@ -23,8 +23,9 @@ interface PlaceDetailConfig {
   /** Called when user saves a rating — page wires this to the appropriate store.
    *  Receives the full place object so the page can do post-rating work (e.g. ghost injection). */
   onRate: (place: ImportedPlace, rating: PlaceRating) => void;
-  /** For search preview on saved/page — saves a preview place to the library */
-  onSavePreview?: (place: ImportedPlace) => void;
+  /** For search preview on saved/page — saves a preview place to the library.
+   *  Should return the server-assigned ID so the detail sheet can switch to the real record. */
+  onSavePreview?: (place: ImportedPlace) => Promise<string | void> | void;
   /** Get sibling places for the detail sheet (e.g. same import batch) */
   getSiblingPlaces?: (place: ImportedPlace) => ImportedPlace[];
 }
@@ -158,21 +159,43 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
     setCollectionPickerItem(place);
   }, []);
 
-  const handleSaveFromPreview = useCallback(() => {
+  const handleSaveFromPreview = useCallback(async () => {
     if (!detailItem || !config.onSavePreview) return;
-    config.onSavePreview(detailItem);
-    // After saving, transition out of preview — the page's onSavePreview
-    // should add the place and we re-open it as a library item
+    const realId = await config.onSavePreview(detailItem);
+    // After saving, transition out of preview — update the detailItem
+    // with the real server ID so that subsequent actions (rate, edit, etc.)
+    // target the correct SavedPlace record instead of the synthetic discover ID.
+    if (realId && realId !== detailItem.id) {
+      setDetailItem(prev => prev ? { ...prev, id: realId } : prev);
+    }
     setIsDetailPreview(false);
   }, [detailItem, config]);
 
   const handleRatingSave = useCallback((rating: PlaceRating) => {
     if (!ratingItem) return;
-    config.onRate(ratingItem, rating);
+
+    // Safety net: if the ratingItem has a synthetic ID (e.g. "discover-ChIJ...")
+    // that doesn't match any library place, resolve it to the real library ID
+    // by matching on googlePlaceId. This prevents "Place not found" errors when
+    // rating a place that was just saved from a Discover preview.
+    let resolvedItem = ratingItem;
+    if (ratingItem.id.startsWith('discover-')) {
+      const gpid = (ratingItem.google as Record<string, unknown> & { placeId?: string })?.placeId;
+      if (gpid) {
+        const libraryMatch = myPlaces.find(lp => lp.google?.placeId === gpid);
+        if (libraryMatch) {
+          resolvedItem = { ...ratingItem, id: libraryMatch.id };
+          // Also fix the detailItem so future actions use the correct ID
+          setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, id: libraryMatch.id } : prev);
+        }
+      }
+    }
+
+    config.onRate(resolvedItem, rating);
     // Update the detail item in-place so the badge refreshes
-    setDetailItem(prev => prev?.id === ratingItem.id ? { ...prev, rating } : prev);
+    setDetailItem(prev => prev?.id === resolvedItem.id ? { ...prev, rating } : prev);
     setRatingItem(null);
-  }, [ratingItem, config]);
+  }, [ratingItem, config, myPlaces]);
 
   const siblingPlaces = detailItem && config.getSiblingPlaces
     ? config.getSiblingPlaces(detailItem)

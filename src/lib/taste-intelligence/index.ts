@@ -54,6 +54,8 @@ export {
   backfillAllUsersV3,
   backfillPropertyEmbeddingV3,
   backfillAllPropertyEmbeddingsV3,
+  backfillPropertyEmbeddingsBatchV3,
+  computeAndSetIdfWeightsV3,
   runFullBackfillV3,
 } from './backfill-v3';
 

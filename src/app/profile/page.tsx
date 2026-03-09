@@ -111,12 +111,22 @@ type ProfileTab = 'discover' | 'profile';
 export default function ProfilePage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
 
-  const handleSavePreview = useCallback(async (place: ImportedPlace) => {
-    // Save to library via API — PlaceDetailContext will close the preview state
+  const addPlace = useSavedStore(s => s.addPlace);
+  const myPlaces = useSavedStore(s => s.myPlaces);
+
+  const handleSavePreview = useCallback(async (place: ImportedPlace): Promise<string | void> => {
+    // Save to library via API — returns the real server ID so PlaceDetailContext
+    // can update the detailItem and subsequent actions (rate, etc.) target the
+    // correct record instead of the synthetic discover-prefixed ID.
     try {
       const googlePlaceId = (place.google as Record<string, unknown> & { placeId?: string })?.placeId;
       if (!googlePlaceId) return;
-      await apiFetch('/api/places/save', {
+
+      // Check if already in library — if so, just return the existing ID
+      const existing = myPlaces.find(p => p.google?.placeId === googlePlaceId);
+      if (existing) return existing.id;
+
+      const res = await apiFetch<{ place?: { id: string } }>('/api/places/save', {
         method: 'POST',
         body: JSON.stringify({
           googlePlaceId,
@@ -126,10 +136,18 @@ export default function ProfilePage() {
           source: { type: 'url', name: 'Discover Feed' },
         }),
       });
+
+      const realId = res?.place?.id;
+      if (realId) {
+        // Add to Zustand store so the place appears in the library immediately
+        // and future actions resolve the correct ID.
+        addPlace({ ...place, id: realId });
+        return realId;
+      }
     } catch (err) {
       console.error('Failed to save discover place:', err);
     }
-  }, []);
+  }, [addPlace, myPlaces]);
 
   return (
     <PlaceDetailProvider config={{

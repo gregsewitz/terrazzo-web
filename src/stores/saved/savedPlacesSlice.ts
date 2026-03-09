@@ -245,15 +245,30 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
   },
 
   ratePlace: (id, rating) => {
+    // Resolve synthetic discover-prefixed IDs to real library IDs.
+    // This happens when a place was opened from Discover and the ID wasn't
+    // swapped to the server-assigned CUID before rating.
+    let resolvedId = id;
+    if (id.startsWith('discover-')) {
+      const googlePlaceId = id.replace('discover-', '');
+      const match = get().myPlaces.find(p => p.google?.placeId === googlePlaceId);
+      if (match) {
+        resolvedId = match.id;
+        console.log(`[ratePlace] Resolved discover ID → ${resolvedId}`);
+      } else {
+        console.warn(`[ratePlace] Could not resolve discover ID: ${id}`);
+      }
+    }
+
     // Update the store optimistically (always immediate).
     set((state) => ({
       myPlaces: state.myPlaces.map((p) =>
-        p.id === id ? { ...p, rating } : p
+        p.id === resolvedId ? { ...p, rating } : p
       ),
     }));
 
     // Track rating interaction
-    const place = get().myPlaces.find(p => p.id === id);
+    const place = get().myPlaces.find(p => p.id === resolvedId);
     const gpid = place?.google?.placeId;
     if (gpid && rating.reaction) {
       // ReactionId: 'myPlace' | 'enjoyed' | 'mixed' | 'notMe'
@@ -272,14 +287,14 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
     // If this place still has a pending temp ID, queue the server write
     // until addPlace completes the ID swap and flushes the queue.
     // The callback receives the resolved (real) server ID.
-    const pendingQueue = _pendingPlaceIds.get(id);
+    const pendingQueue = _pendingPlaceIds.get(resolvedId);
     if (pendingQueue) {
-      pendingQueue.push((resolvedId) => {
-        dbWrite(`/api/places/${resolvedId}`, 'PATCH', { rating });
+      pendingQueue.push((finalId) => {
+        dbWrite(`/api/places/${finalId}`, 'PATCH', { rating });
       });
       return;
     }
 
-    dbWrite(`/api/places/${id}`, 'PATCH', { rating });
+    dbWrite(`/api/places/${resolvedId}`, 'PATCH', { rating });
   },
 });
