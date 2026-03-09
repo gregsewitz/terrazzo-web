@@ -455,7 +455,7 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
 
   const displayRange = ceiling - floor;
   // Median display score — where an average property lands
-  const medianDisplay = floor + displayRange * 0.55; // ~67 for default floor=35, ceil=93
+  const medianDisplay = floor + displayRange * 0.50; // ~64 for default floor=35, ceil=93
 
   return scores.map((s) => {
     // Z-score: how many stddevs above/below mean
@@ -463,9 +463,15 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
 
     // Sigmoid-like mapping: z=0 → median, z=+2 → near ceiling, z=-2 → near floor
     // tanh gives us a nice smooth curve in [-1, 1]
-    const curved = Math.tanh(z * 0.6); // 0.6 controls spread — higher = more compressed
+    // Spread factor 0.8 gives better separation:
+    //   z=+2  → tanh(1.6)=0.92 → display ~91
+    //   z=+1  → tanh(0.8)=0.66 → display ~83
+    //   z=0   → tanh(0)=0      → display ~64
+    //   z=-1  → tanh(-0.8)=-0.66 → display ~45
+    //   z=-2  → tanh(-1.6)=-0.92 → display ~37
+    const curved = Math.tanh(z * 0.8);
 
-    const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.45));
+    const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
     return { ...s, overallScore: Math.max(floor, Math.min(ceiling, displayScore)) };
   });
 }
