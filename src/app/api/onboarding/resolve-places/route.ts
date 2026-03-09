@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
+import { getUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import type { MentionedPlace, PropertyAnchor } from '@/types';
 
@@ -39,8 +40,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const mentionedPlaces: MentionedPlace[] = body.mentionedPlaces || [];
-    const userId: string | undefined = body.userId;
     const phaseId: string | undefined = body.phaseId;
+
+    // Extract userId from auth session (preferred) or body (fallback for CRON/admin)
+    const authUser = await getUser(req);
+    const userId: string | undefined = authUser?.id || body.userId;
 
     if (!mentionedPlaces.length) {
       return NextResponse.json({ anchors: [] });
@@ -48,9 +52,26 @@ export async function POST(req: NextRequest) {
 
     const anchors: PropertyAnchor[] = [];
 
+    // Place types that represent specific properties (matchable) vs broad destinations (not)
+    const PROPERTY_PLACE_TYPES = new Set([
+      'hotel', 'restaurant', 'bar', 'cafe', 'spa', 'activity',
+      'lodging', 'resort', 'bed_and_breakfast', 'guest_house',
+    ]);
+    const DESTINATION_PLACE_TYPES = new Set([
+      'city', 'country', 'region', 'neighborhood', 'island', 'state', 'continent',
+    ]);
+
     // Process places in parallel (bounded concurrency via Promise.all)
     const resolvePromises = mentionedPlaces
       .filter((p) => p.confidence >= 0.5) // skip low-confidence mentions
+      .filter((p) => {
+        // Skip broad destinations — they're taste signals, not matchable properties
+        if (p.placeType && DESTINATION_PLACE_TYPES.has(p.placeType)) {
+          console.log(`[resolve-places] Skipping destination "${p.name}" (type=${p.placeType})`);
+          return false;
+        }
+        return true;
+      })
       .map(async (place): Promise<PropertyAnchor | null> => {
         try {
           // Build search query — combine name + location for better matching
@@ -68,6 +89,17 @@ export async function POST(req: NextRequest) {
           const googlePlaceId = result.id;
           const propertyName = result.displayName?.text || place.name;
           const resolvedPlaceType = mapGoogleTypeToPlaceType(result.primaryType);
+
+          // Post-resolution filter: skip if Google resolved this to a locality/region
+          // (e.g., user said "Komodo" and Google returned the administrative area)
+          const googleType = (result.primaryType || '').toLowerCase();
+          const LOCALITY_GOOGLE_TYPES = ['locality', 'administrative_area_level_1', 'administrative_area_level_2',
+            'country', 'sublocality', 'postal_code', 'geocode', 'natural_feature', 'archipelago',
+            'colloquial_area', 'administrative_area_level_3', 'administrative_area_level_4'];
+          if (LOCALITY_GOOGLE_TYPES.some(lt => googleType.includes(lt)) || (result.types || []).some((t: string) => t === 'locality' || t === 'country' || t === 'administrative_area_level_1')) {
+            console.log(`[resolve-places] Skipping locality "${propertyName}" (googleType=${result.primaryType})`);
+            return null;
+          }
 
           // Check if we already have an embedding for this property
           // Use raw query because embeddingV3 is an Unsupported("vector(400)") type
@@ -119,7 +151,33 @@ export async function POST(req: NextRequest) {
       if (anchor) anchors.push(anchor);
     }
 
-    return NextResponse.json({ anchors });
+    // Name-level dedup: if multiple anchors have very similar names (e.g., Google returned
+    // different IDs for "The Shelborne Apartments" vs "The Shelborne By Properties"),
+    // keep only the one with the highest blendWeight
+    const deduped: PropertyAnchor[] = [];
+    const normalizedNames = new Map<string, number>(); // normalized name → index in deduped
+    for (const anchor of anchors) {
+      const normalized = anchor.propertyName
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\b(hotel|resort|by|the|apartments?|suites?|inn|lodge|regency)\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const existingIdx = normalizedNames.get(normalized);
+      if (existingIdx !== undefined) {
+        // Keep higher blendWeight
+        if (Math.abs(anchor.blendWeight) > Math.abs(deduped[existingIdx].blendWeight)) {
+          deduped[existingIdx] = anchor;
+        }
+        console.log(`[resolve-places] Deduped "${anchor.propertyName}" (matches "${deduped[existingIdx].propertyName}")`);
+      } else {
+        normalizedNames.set(normalized, deduped.length);
+        deduped.push(anchor);
+      }
+    }
+
+    return NextResponse.json({ anchors: deduped });
   } catch (error) {
     console.error('[resolve-places] Error:', error);
     return NextResponse.json({ anchors: [] });

@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ConversationMessage, PropertyAnchor } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { apiFetch } from '@/lib/api-client';
 
 interface UseConversationPhaseOptions {
   phaseId: string;
@@ -217,6 +218,7 @@ export function useConversationPhase({
   const [isPhaseComplete, setIsPhaseComplete] = useState(wasAlreadyCompleted);
   const [anchorsForReview, setAnchorsForReview] = useState<PropertyAnchor[]>([]);
   const followUpIndex = useRef(0);
+  const phaseCompleteRef = useRef(wasAlreadyCompleted); // tracks phase completion for async callbacks
 
   const sendMessage = useCallback(async (text: string) => {
     if (isAnalyzing || isPhaseComplete) return;
@@ -335,6 +337,7 @@ export function useConversationPhase({
       let nextText: string;
       if (phaseComplete) {
         setIsPhaseComplete(true);
+        phaseCompleteRef.current = true;
         const flushed = flushPendingAnchors();
         if (flushed.length > 0) setAnchorsForReview(flushed);
 
@@ -356,6 +359,7 @@ export function useConversationPhase({
       } else {
         nextText = "This has been really revealing — I've picked up a lot from what you've shared. Let's keep the momentum going.";
         setIsPhaseComplete(true);
+        phaseCompleteRef.current = true;
         const flushedFallback = flushPendingAnchors();
         if (flushedFallback.length > 0) setAnchorsForReview(flushedFallback);
       }
@@ -410,15 +414,25 @@ export function useConversationPhase({
         }
 
         if (extractResult.mentionedPlaces?.length) {
-          fetch('/api/onboarding/resolve-places', {
+          apiFetch<{ anchors: PropertyAnchor[] }>('/api/onboarding/resolve-places', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mentionedPlaces: extractResult.mentionedPlaces, phaseId }),
           })
-            .then((r) => r.json())
-            .then((data: { anchors: PropertyAnchor[] }) => {
+            .then((data) => {
               if (data.anchors?.length) {
                 addPendingAnchors(data.anchors);
+                // If phase already completed (flush already happened), show late-arriving
+                // anchors directly — they missed the flush window
+                if (phaseCompleteRef.current) {
+                  const lateFlushed = flushPendingAnchors();
+                  if (lateFlushed.length > 0) {
+                    setAnchorsForReview((prev) => {
+                      const existingIds = new Set(prev.map((a) => a.googlePlaceId));
+                      const newAnchors = lateFlushed.filter((a) => !existingIds.has(a.googlePlaceId));
+                      return newAnchors.length > 0 ? [...prev, ...newAnchors] : prev;
+                    });
+                  }
+                }
               }
             })
             .catch((err) => console.warn('[onboarding] Place resolution failed:', err));
@@ -456,13 +470,11 @@ export function useConversationPhase({
   }, [removePropertyAnchor]);
 
   const reResolvePlace = useCallback((name: string, originalSentiment: string) => {
-    fetch('/api/onboarding/resolve-places', {
+    apiFetch<{ anchors: PropertyAnchor[] }>('/api/onboarding/resolve-places', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mentionedPlaces: [{ name, sentiment: originalSentiment, confidence: 1.0 }], phaseId }),
     })
-      .then((r) => r.json())
-      .then((data: { anchors: PropertyAnchor[] }) => {
+      .then((data) => {
         if (data.anchors?.length) {
           addPropertyAnchors(data.anchors);
           setAnchorsForReview((prev) => [...prev, ...data.anchors]);
