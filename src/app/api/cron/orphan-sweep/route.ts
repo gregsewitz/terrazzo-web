@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
         AND sp."deletedAt" IS NULL
         AND sp."placeIntelligenceId" IS NULL
         AND pi.id IS NULL
-      LIMIT 50
+      LIMIT 200
     `;
 
     for (const place of unenriched) {
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
         type: { notIn: ['flight', 'rental', 'car_rental'] },
       },
       select: { id: true, name: true, location: true, type: true, userId: true },
-      take: 30, // cap per run to avoid rate limiting Google
+      take: 50, // cap per run to avoid rate limiting Google
     });
 
     for (const place of unresolved) {
@@ -134,7 +134,7 @@ export async function GET(req: NextRequest) {
         ],
       },
       select: { id: true, googlePlaceId: true, propertyName: true, placeType: true },
-      take: 30,
+      take: 200,
     });
 
     for (const pi of stuck) {
