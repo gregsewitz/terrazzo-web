@@ -26,7 +26,6 @@ import {
   WEEKLY_COLLECTION,
   STRETCH_PICK,
   SUMMER_RECS,
-  FRIEND_SAVES,
   EDITORIAL_LETTER,
   SIGNAL_THREAD,
   TASTE_TENSION,
@@ -34,7 +33,6 @@ import {
   DEEP_MATCH,
   type BecauseYouCard,
   type CollectionPlace,
-  type FriendSave,
   type ContextRec,
   type EditorialLetter,
   type SignalThread,
@@ -225,6 +223,7 @@ function ProfilePageContent() {
     scanId?: string;
   }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const hasGoogleMapsImport = importHistory.some(h => h.title.toLowerCase().includes('google maps') || h.title.toLowerCase().includes('google-maps'));
 
   const { isAuthenticated, user, signOut } = useAuth();
   const resetForRedo = useOnboardingStore(s => s.resetForRedo);
@@ -274,8 +273,8 @@ function ProfilePageContent() {
   // DB is the source of truth — show loading until hydration completes,
   // then use the real profile (no hardcoded demo fallback for auth users)
   const profile = generatedProfile || TASTE_PROFILE;
-  const userName = lifeContext?.firstName || 'Greg';
-  const signalCount = allSignals?.length || 238;
+  const userName = lifeContext?.firstName || user?.email?.split('@')[0] || '';
+  const signalCount = allSignals?.length || 0;
 
   // Build numeric profile for mosaic visualization from radar data
   const numericProfile: NumericProfile = useMemo(() => {
@@ -315,8 +314,6 @@ function ProfilePageContent() {
     add(DEEP_MATCH.name, DEEP_MATCH.location, DEEP_MATCH.googlePlaceId);
     add(STRETCH_PICK.name, STRETCH_PICK.location, STRETCH_PICK.googlePlaceId);
     for (const r of SUMMER_RECS) add(r.name, r.location, r.googlePlaceId);
-    for (const f of FRIEND_SAVES) add(f.place, f.location, f.googlePlaceId);
-
     if (places.length > 0) {
       apiFetch('/api/profile/discover/ensure-places', {
         method: 'POST',
@@ -430,8 +427,8 @@ function ProfilePageContent() {
     setExpandedSection(next);
     // Fetch email status when accounts panel opens
     if (next === 'accounts' && !emailStatus) fetchEmailStatus();
-    // Fetch import history when history panel opens
-    if (next === 'history' && importHistory.length === 0) fetchImportHistory();
+    // Fetch import history when accounts or history panel opens (needed for Google Maps status)
+    if ((next === 'accounts' || next === 'history') && importHistory.length === 0) fetchImportHistory();
   };
 
   const fetchEmailStatus = async () => {
@@ -578,7 +575,6 @@ function ProfilePageContent() {
       <StretchPickSection stretch={discoverContent?.stretchPick} />
       <ContextModeSection recs={discoverContent?.contextRecs} contextLabel={discoverContent?.contextLabel} />
       <VocabTeaser profile={profile} />
-      <FriendsSavingSection />
 
       {/* Extra pages loaded via infinite scroll */}
       {extraPages.map((page, i) => (
@@ -662,11 +658,11 @@ function ProfilePageContent() {
                     <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
                   </div>
                   <div className="text-center">
-                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{profile.contradictions?.length || 3}</div>
+                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{profile.contradictions?.length || 0}</div>
                     <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
                   </div>
                   <div className="text-center">
-                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{Object.values(profile.microTasteSignals || {}).flat().length || 35}</div>
+                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
                     <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
                   </div>
                 </div>
@@ -769,7 +765,11 @@ function ProfilePageContent() {
                               <PerriandIcon name="pin" size={11} color="var(--t-ink)" />
                               <span style={{ color: 'var(--t-ink)' }}>Google Maps</span>
                             </div>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>Via import</span>
+                            {hasGoogleMapsImport ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>Imported</span>
+                            ) : (
+                              <Link href="/onboarding" className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--t-linen)', color: INK['60'], textDecoration: 'none' }}>Import</Link>
+                            )}
                           </div>
                         </div>
                       )}
@@ -884,7 +884,7 @@ function ProfilePageContent() {
                   className="text-[9px]"
                   style={{ color: 'rgba(245,245,240,0.45)', fontFamily: FONT.mono }}
                 >
-                  {signalCount} signals · {profile.contradictions?.length || 3} tensions
+                  {signalCount > 0 ? `${signalCount} signals` : 'Your signals'} · {profile.contradictions?.length || 0} tensions
                 </span>
               </div>
               <span
@@ -1768,7 +1768,11 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
             If you&apos;re traveling this {label.toLowerCase()}...
           </span>
         </div>
-        <p className="text-[11px] mb-4" style={{ color: INK['60'], fontFamily: FONT.mono }}>Indoor-outdoor flow · terrace dining · natural pool</p>
+        <p className="text-[11px] mb-4" style={{ color: INK['60'], fontFamily: FONT.mono }}>
+          {displayRecs.length > 0
+            ? displayRecs.slice(0, 3).map(r => r.name).join(' · ')
+            : 'Curated for your moment'}
+        </p>
         <div className="flex flex-col gap-2.5">
           {displayRecs.map((rec, idx) => {
             const imageUrl = getPlaceImage(rec.name);
@@ -1865,47 +1869,3 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
   );
 }
 
-// ── FRIENDS SAVING ──
-function FriendsSavingSection() {
-  return (
-    <SafeMotionDiv
-      className="px-5 mb-8"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true, margin: '-100px' }}
-    >
-      <SectionLabel>Friends are saving</SectionLabel>
-      <div className="flex flex-col gap-3 mt-3">
-        {FRIEND_SAVES.map((save, idx) => (
-          <PlaceLink key={save.place} name={save.place} location={save.location} googlePlaceId={save.googlePlaceId}>
-            <SafeMotionDiv
-              className="p-3.5 rounded-xl flex items-start gap-3"
-              style={{ background: 'white', border: '1px solid var(--t-linen)' }}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              viewport={{ once: true, margin: '-100px' }}
-            >
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: `${save.color}15`, color: save.color, fontFamily: FONT.mono }}>
-                {save.friendInitial}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{save.friendName}</span>
-                  <span className="text-[11px]" style={{ color: INK['60'] }}>saved</span>
-                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{save.place}</span>
-                </div>
-                <div className="text-[10px] mb-1" style={{ color: INK['60'] }}>{save.location} · {save.type}</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold" style={{ color: save.color, fontFamily: FONT.mono }}>{save.score <= 1 ? Math.round(save.score * 100) : save.score}% match</span>
-                  <span className="text-[10px]" style={{ color: INK['70'] }}>{save.whyMatches}</span>
-                </div>
-              </div>
-            </SafeMotionDiv>
-          </PlaceLink>
-        ))}
-      </div>
-    </SafeMotionDiv>
-  );
-}
