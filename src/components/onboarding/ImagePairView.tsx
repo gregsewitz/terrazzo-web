@@ -209,7 +209,7 @@ export default function ImagePairView({ onComplete, questions }: ImagePairViewPr
       <p style={{
         fontFamily: FONT.sans,
         fontSize: 13,
-        color: INK['50'],
+        color: T.ink,
         textAlign: 'center',
         margin: 0,
       }}>

@@ -167,7 +167,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Instruction */}
         <p style={{
-          color: INK['50'],
+          color: T.ink,
           fontSize: 14,
           margin: '0 0 16px',
           textAlign: 'center',

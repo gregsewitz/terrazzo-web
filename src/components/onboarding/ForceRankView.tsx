@@ -96,7 +96,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Instruction */}
         <p style={{
-          color: INK['50'],
+          color: T.ink,
           fontSize: 14,
           margin: '0 0 20px',
           textAlign: 'center',
@@ -148,7 +148,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
                 justifyContent: 'center',
                 flexShrink: 0,
                 background: isRanked ? T.verde : 'rgba(28, 26, 23, 0.04)',
-                color: isRanked ? T.cream : INK['30'],
+                color: isRanked ? T.cream : T.ink,
                 fontSize: 14,
                 fontWeight: 600,
                 fontFamily: FONT.mono,
@@ -171,7 +171,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
                 {item.description && (
                   <p style={{
                     fontSize: 12,
-                    color: INK['40'],
+                    color: T.ink,
                     fontFamily: FONT.sans,
                     margin: '3px 0 0',
                     lineHeight: 1.35,
@@ -193,7 +193,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
             marginTop: 24,
             padding: '15px 40px',
             background: (submitted || ranked.length < MAX_RANK) ? T.travertine : T.ink,
-            color: (submitted || ranked.length < MAX_RANK) ? INK['50'] : T.cream,
+            color: (submitted || ranked.length < MAX_RANK) ? T.ink : T.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

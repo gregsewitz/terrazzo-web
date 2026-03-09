@@ -16,8 +16,10 @@ export const ACT_2_PHASE_IDS = [
   'service-style',
   'sustainability-check',
   'memorable-stays',
+  'trip-memories',
   'anti-stay',
   'last-trip',
+  'companion-shifts',
   'dream-destinations',
   'nobody-asks',
 ] as const;

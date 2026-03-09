@@ -172,7 +172,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
             />
           ))}
         </div>
-        <span className="font-mono text-[10px] text-[var(--t-ink)]/30 whitespace-nowrap">
+        <span className="font-mono text-[10px] text-[var(--t-ink)] whitespace-nowrap">
           {round + 1}/{TOTAL_ROUNDS}
         </span>
       </div>

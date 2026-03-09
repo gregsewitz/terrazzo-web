@@ -121,7 +121,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
           style={{
             fontFamily: FONT.sans,
             fontSize: 14,
-            color: INK['50'],
+            color: T.ink,
             lineHeight: 1.6,
             marginBottom: 32,
             animation: 'fadeInUp 0.4s ease 0.1s both',
@@ -139,7 +139,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
             <>
               We can scan your booking confirmations to find hotels and restaurants you&apos;ve actually visited — so later we&apos;ll ask about real places, not random ones.
               <br /><br />
-              <span style={{ fontSize: 12, color: INK['35'] }}>
+              <span style={{ fontSize: 12, color: T.ink }}>
                 Read-only access. We only look for booking confirmations — nothing else.
               </span>
             </>
@@ -203,7 +203,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
                 style={{
                   padding: '10px 24px',
                   background: 'transparent',
-                  color: INK['40'],
+                  color: T.ink,
                   border: 'none',
                   borderRadius: 100,
                   fontSize: 13,

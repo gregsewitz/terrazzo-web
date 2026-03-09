@@ -166,7 +166,13 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
 
   // ── Queue a sentence for progressive playback ──
   const queueSentence = useCallback((sentence: string) => {
-    if (!enabled || !sentence.trim() || stoppedRef.current) return;
+    if (!enabled || !sentence.trim()) return;
+
+    // Reset stopped flag — a new response is being queued, so we should play it.
+    // This is critical because stop() sets stoppedRef=true (to silence current audio
+    // when user starts speaking), and the new SSE response arrives before anyone
+    // resets it. Without this, streamed sentences are silently dropped.
+    stoppedRef.current = false;
 
     // Immediately fire TTS request (don't wait for previous to finish)
     const audioPromise = fetchTTSBlob(sentence);

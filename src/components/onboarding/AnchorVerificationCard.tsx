@@ -82,7 +82,7 @@ export default function AnchorVerificationCard({
       >
         <p
           className="text-[12px] mb-2"
-          style={{ color: 'var(--t-ink)', opacity: 0.5 }}
+          style={{ color: 'var(--t-ink)' }}
         >
           What was the place you meant?
         </p>
@@ -137,7 +137,7 @@ export default function AnchorVerificationCard({
         {anchor.placeType && (
           <p
             className="text-[11px] tracking-wide uppercase mt-0.5 truncate"
-            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-ink)', opacity: 0.5 }}
+            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-ink)' }}
           >
             {anchor.placeType}
           </p>
@@ -157,23 +157,17 @@ export default function AnchorVerificationCard({
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={handleConfirm}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-            style={{ backgroundColor: 'rgba(42, 122, 86, 0.12)' }}
-            aria-label={`Confirm ${anchor.propertyName}`}
+            className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:scale-105 active:scale-95"
+            style={{ backgroundColor: 'rgba(42, 122, 86, 0.12)', color: 'var(--t-verde)' }}
           >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8.5L6.5 12L13 4" stroke="var(--t-verde)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            Yes
           </button>
           <button
             onClick={handleDismiss}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-            style={{ backgroundColor: 'rgba(214, 48, 32, 0.08)' }}
-            aria-label={`Not ${anchor.propertyName}`}
+            className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:scale-105 active:scale-95"
+            style={{ backgroundColor: 'rgba(214, 48, 32, 0.08)', color: 'var(--t-signal-red)' }}
           >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M4 4L12 12M12 4L4 12" stroke="var(--t-signal-red)" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            Wrong
           </button>
         </div>
       ) : (

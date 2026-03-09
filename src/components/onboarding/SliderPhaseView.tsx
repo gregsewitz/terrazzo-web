@@ -92,7 +92,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Instruction */}
         <p style={{
-          color: INK['50'],
+          color: T.ink,
           fontSize: 14,
           margin: '0 0 20px',
           textAlign: 'center',

@@ -191,6 +191,7 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
+        background: 'radial-gradient(ellipse at 50% 30%, rgba(201,171,113,0.06) 0%, transparent 70%)',
       }}
     >
       <SafeFadeIn delay={0.1} direction="up" distance={20} duration={0.6}>
@@ -221,7 +222,7 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
         <p
           style={{
             fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65,
-            color: INK['60'], maxWidth: 320, marginTop: 16,
+            color: INK['80'], maxWidth: 320, marginTop: 16,
           }}
         >
           {profile.archetypeDescription}
@@ -233,11 +234,12 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
           style={{
             marginTop: 24, padding: '10px 20px',
             borderRadius: 100,
-            border: '1px solid var(--t-linen)',
+            background: `${T.honey}08`,
+            border: `1px solid ${T.honey}15`,
           }}
         >
           <span style={{
-            fontFamily: FONT.sans, fontSize: 13, color: INK['50'],
+            fontFamily: FONT.sans, fontSize: 13, color: INK['70'],
           }}>
             <span style={{ color: T.honey, fontWeight: 600 }}>{profile.emotionalDriver.primary}</span>
             {' · '}
@@ -315,42 +317,55 @@ function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
         style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 24,
+          color: T.honey, marginBottom: 24,
         }}
         variants={labelVar}
       >
         The moment that told us the most
       </motion.div>
 
-      <motion.div variants={quoteMarkVar}>
-        <div style={{
-          fontFamily: FONT.serif, fontSize: 64, color: T.honey,
-          lineHeight: 0.6, marginBottom: 8,
-        }}>
-          &ldquo;
-        </div>
-      </motion.div>
+      <div style={{
+        background: 'var(--t-cream)', borderRadius: 20, padding: '32px 28px',
+        maxWidth: 400, width: '100%',
+      }}>
+        <motion.div variants={quoteMarkVar}>
+          <div style={{
+            fontFamily: FONT.serif, fontSize: 80, color: T.honey,
+            lineHeight: 0.6, marginBottom: 12, opacity: 0.3,
+          }}>
+            &ldquo;
+          </div>
+        </motion.div>
 
-      <motion.p
-        style={{
-          fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          lineHeight: 1.5, maxWidth: 380, margin: '0 auto',
-        }}
-        variants={quoteTextVar}
-      >
-        {profile.bestQuote.quote}
-      </motion.p>
+        <motion.p
+          style={{
+            fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            lineHeight: 1.5, margin: '0 auto',
+          }}
+          variants={quoteTextVar}
+        >
+          {profile.bestQuote.quote}
+        </motion.p>
+      </div>
 
-      <motion.p
+      <motion.div
         style={{
-          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-          color: INK['55'], maxWidth: 340, marginTop: 28,
+          borderTop: `2px solid ${T.honey}25`,
+          paddingTop: 20, marginTop: 24,
+          maxWidth: 340,
         }}
         variants={insightVar}
       >
-        {profile.bestQuote.insight}
-      </motion.p>
+        <p
+          style={{
+            fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
+            color: INK['75'], margin: 0,
+          }}
+        >
+          {profile.bestQuote.insight}
+        </p>
+      </motion.div>
     </motion.div>
   );
 }
@@ -414,7 +429,7 @@ function DesignLanguageReveal({
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 8,
+          color: T.honey, marginBottom: 8,
         }}>
           Your design language
         </div>
@@ -445,14 +460,14 @@ function DesignLanguageReveal({
               <span style={{
                 fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
                 textTransform: 'uppercase', letterSpacing: '0.06em',
-                color: INK['50'],
+                color: INK['70'],
               }}>
                 {spec.labels[0]}
               </span>
               <span style={{
                 fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
                 textTransform: 'uppercase', letterSpacing: '0.06em',
-                color: INK['50'],
+                color: INK['70'],
               }}>
                 {spec.labels[1]}
               </span>
@@ -461,8 +476,7 @@ function DesignLanguageReveal({
             {/* Bar */}
             <div style={{
               position: 'relative', height: 8, borderRadius: 4,
-              background: 'var(--t-linen)',
-              overflow: 'hidden',
+              background: 'rgba(28,26,23,0.06)',
             }}>
               <motion.div
                 style={{
@@ -474,13 +488,27 @@ function DesignLanguageReveal({
                 animate={{ width: `${Math.round(spec.value * 100)}%` }}
                 transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
               />
+              {/* Position dot */}
+              <motion.div
+                style={{
+                  position: 'absolute', top: '50%',
+                  width: 12, height: 12, borderRadius: '50%',
+                  background: T.honey,
+                  border: '2px solid white',
+                  boxShadow: '0 1px 3px rgba(28,26,23,0.15)',
+                  transform: 'translateY(-50%)',
+                }}
+                initial={{ left: '0%', opacity: 0 }}
+                animate={{ left: `calc(${Math.round(spec.value * 100)}% - 6px)`, opacity: 1 }}
+                transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
+              />
             </div>
 
             {/* Annotation */}
             {spec.note && (
               <p style={{
                 fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.5,
-                color: INK['45'], marginTop: 5, marginBottom: 0,
+                color: INK['70'], marginTop: 5, marginBottom: 0,
                 fontStyle: 'italic',
               }}>
                 {spec.note}
@@ -564,18 +592,22 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 8,
+          color: T.honey, marginBottom: 8,
         }}>
           Your taste fingerprint
         </div>
 
+      <div style={{
+        background: 'radial-gradient(circle, rgba(201,171,113,0.05) 0%, transparent 70%)',
+        padding: 16, borderRadius: '50%',
+      }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {/* Grid circles */}
         {[0.33, 0.66, 1].map((r) => (
           <circle
             key={r}
             cx={cx} cy={cy} r={maxR * r}
-            fill="none" stroke={INK['08']} strokeWidth={1}
+            fill="none" stroke={INK['06']} strokeWidth={1}
           />
         ))}
         {/* Grid lines */}
@@ -585,13 +617,13 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
             x1={cx} y1={cy}
             x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
             y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-            stroke={INK['06']} strokeWidth={1}
+            stroke={INK['05']} strokeWidth={1}
           />
         ))}
         {/* Shape with pathLength animation */}
         <motion.path
           d={pathD}
-          fill={`${T.honey}20`}
+          fill={`${T.honey}15`}
           stroke={T.honey}
           strokeWidth={2}
           strokeLinejoin="round"
@@ -614,6 +646,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
           ))}
         </motion.g>
       </svg>
+      </div>
 
       {/* Axis labels */}
       <div style={{
@@ -624,7 +657,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
           <span key={d.axis} style={{
             fontFamily: FONT.sans, fontSize: 11,
             fontWeight: top2.includes(d.axis) ? 700 : 400,
-            color: top2.includes(d.axis) ? T.honey : INK['45'],
+            color: top2.includes(d.axis) ? T.honey : INK['60'],
           }}>
             {d.axis}
           </span>
@@ -634,7 +667,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
       <motion.p
         style={{
           fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-          color: INK['55'], maxWidth: 320, marginTop: 20,
+          color: INK['80'], maxWidth: 320, marginTop: 20,
         }}
         variants={insightVar}
       >
@@ -726,14 +759,15 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
               style={{
                 fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
                 color: 'var(--t-ink)', textAlign: 'right', flex: 1,
+                background: 'rgba(201,171,113,0.06)', padding: '14px 18px', borderRadius: 12,
               }}
             >
               {c.stated}
             </span>
           </SafeFadeIn>
           <span style={{
-            fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-            color: INK['30'],
+            fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+            color: 'rgba(104,68,160,0.4)',
           }}>
             ×
           </span>
@@ -747,6 +781,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
               style={{
                 fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
                 color: 'var(--t-ink)', textAlign: 'left', flex: 1,
+                background: 'rgba(104,68,160,0.05)', padding: '14px 18px', borderRadius: 12,
               }}
             >
               {c.revealed}
@@ -764,14 +799,14 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
         >
           <div
             style={{
-              padding: '20px 24px', borderRadius: 16,
-              background: 'white', border: '1px solid var(--t-linen)',
+              padding: '24px 28px', borderRadius: 16,
+              background: 'rgba(28,26,23,0.02)',
               textAlign: 'left',
             }}
           >
             <p style={{
               fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-              color: INK['70'], margin: 0,
+              color: INK['85'], margin: 0,
             }}>
               {c.resolution}
             </p>
@@ -779,7 +814,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
 
         <p style={{
-          fontFamily: FONT.sans, fontSize: 13, color: INK['40'],
+          fontFamily: FONT.sans, fontSize: 13, color: INK['70'],
           marginTop: 16,
         }}>
           We&apos;ll find places that understand both sides.
@@ -796,9 +831,9 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.perfectDay) return null;
 
   const segments = [
-    { label: 'Morning', text: profile.perfectDay.morning, color: '#e8dcc8' },
-    { label: 'Afternoon', text: profile.perfectDay.afternoon, color: '#ddd5c4' },
-    { label: 'Evening', text: profile.perfectDay.evening, color: '#d0c4ae' },
+    { label: 'Morning', text: profile.perfectDay.morning, gradient: 'linear-gradient(135deg, rgba(201,171,113,0.04) 0%, white 100%)', accentOpacity: '40' },
+    { label: 'Afternoon', text: profile.perfectDay.afternoon, gradient: 'linear-gradient(135deg, rgba(201,171,113,0.07) 0%, white 100%)', accentOpacity: '60' },
+    { label: 'Evening', text: profile.perfectDay.evening, gradient: 'linear-gradient(135deg, rgba(201,171,113,0.10) 0%, rgba(28,26,23,0.02) 100%)', accentOpacity: '80' },
   ];
 
   const containerVar = {
@@ -826,7 +861,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 8,
+          color: T.honey, marginBottom: 8,
         }}>
           Your perfect day
         </div>
@@ -852,8 +887,10 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
           >
             <div
               style={{
-                padding: '20px 24px', borderRadius: 16,
-                background: 'white', border: '1px solid var(--t-linen)',
+                padding: '24px 28px', borderRadius: 16,
+                background: seg.gradient,
+                borderLeft: `3px solid ${T.honey}${seg.accentOpacity}`,
+                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
               }}
             >
             <div style={{
@@ -865,7 +902,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
             </div>
             <p style={{
               fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-              color: INK['75'], margin: 0,
+              color: INK['85'], margin: 0,
             }}>
               {seg.text}
             </p>
@@ -908,7 +945,7 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 8,
+          color: T.honey, marginBottom: 8,
         }}>
           How you shift
         </div>
@@ -924,7 +961,9 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
       <div
         style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
       >
-        {profile.howYouShift.map((shift, idx) => (
+        {profile.howYouShift.map((shift, idx) => {
+          const accentColors = [T.honey, 'var(--t-verde)', '#6844a0'];
+          return (
           <SafeFadeIn
             key={shift.context}
             delay={0.2 + idx * 0.12}
@@ -934,8 +973,11 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
           >
             <div
               style={{
-                padding: '20px 24px', borderRadius: 16,
-                background: 'white', border: '1px solid var(--t-linen)',
+                padding: '24px 28px', borderRadius: 16,
+                background: 'white',
+                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
+                border: '1px solid rgba(28,26,23,0.04)',
+                borderLeft: `3px solid ${accentColors[idx % accentColors.length]}`,
               }}
             >
             <div style={{
@@ -946,13 +988,14 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
             </div>
             <p style={{
               fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-              color: INK['60'], margin: 0,
+              color: INK['80'], margin: 0,
             }}>
               {shift.insight}
             </p>
             </div>
           </SafeFadeIn>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1014,7 +1057,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 24,
+          color: T.honey, marginBottom: 24,
         }}>
           Your taste neighbors
         </div>
@@ -1039,8 +1082,8 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
                   fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
                   color: 'var(--t-ink)',
                   padding: '8px 18px', borderRadius: 100,
-                  border: '1px solid var(--t-linen)',
-                  background: 'white',
+                  background: 'var(--t-cream)',
+                  boxShadow: '0 1px 4px rgba(28,26,23,0.06)',
                 }}
               >
                 {name}
@@ -1059,7 +1102,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
           <p
             style={{
               fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65,
-              color: INK['70'], maxWidth: 340, marginBottom: 24,
+              color: INK['85'], maxWidth: 340, marginBottom: 24,
             }}
           >
             {distinction}
@@ -1077,13 +1120,14 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
           <div
             style={{
               padding: '16px 24px', borderRadius: 14,
-              background: 'white', border: '1px solid var(--t-linen)',
+              background: `${T.honey}08`,
+              border: `1px solid ${T.honey}15`,
               maxWidth: 380,
             }}
           >
             <p style={{
               fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-              color: INK['55'], margin: 0, fontStyle: 'italic',
+              color: INK['75'], margin: 0, fontStyle: 'italic',
             }}>
               {rarityStat}
             </p>
@@ -1138,7 +1182,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
       <div style={{
         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
         letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: INK['45'], marginBottom: 8,
+        color: T.honey, marginBottom: 8,
       }}>
         Where you&apos;d thrive
       </div>
@@ -1169,8 +1213,9 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
               style={{
                 fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
                 color: 'var(--t-ink)', padding: '14px 20px',
-                borderRadius: 14, background: 'white',
-                border: '1px solid var(--t-linen)',
+                borderRadius: 14, background: 'rgba(201,171,113,0.03)',
+                borderLeft: `3px solid ${T.honey}`,
+                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
               }}
             >
               {dest}
@@ -1191,8 +1236,8 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
           style={{
             width: '100%', maxWidth: 360,
             padding: '18px 20px', borderRadius: 14,
-            background: `${T.honey}10`,
-            border: `1px solid ${T.honey}30`,
+            background: `${T.honey}12`,
+            border: `1px solid ${T.honey}40`,
           }}
         >
         <div style={{
@@ -1200,7 +1245,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
           textTransform: 'uppercase', letterSpacing: '0.08em',
           color: T.honey, marginBottom: 6,
         }}>
-          This one might surprise you
+          ✦ This one might surprise you
         </div>
         <div style={{
           fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
@@ -1210,7 +1255,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </div>
         <p style={{
           fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.55,
-          color: INK['55'], margin: 0,
+          color: INK['75'], margin: 0,
         }}>
           {surprise.reason}
         </p>
@@ -1249,7 +1294,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: INK['45'], marginBottom: 8,
+          color: T.honey, marginBottom: 8,
         }}>
           Already started
         </div>
@@ -1261,7 +1306,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
           I&apos;ve started filling these in
         </h2>
         <p style={{
-          fontFamily: FONT.sans, fontSize: 14, color: INK['50'],
+          fontFamily: FONT.sans, fontSize: 14, color: INK['70'],
           maxWidth: 320, margin: '0 auto',
         }}>
           Take a look — tell me if I&apos;m on the right track.
@@ -1281,8 +1326,10 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
           >
             <div
               style={{
-                padding: '20px 24px', borderRadius: 16,
-                background: 'white', border: '1px solid var(--t-linen)',
+                padding: '24px 28px', borderRadius: 16,
+                background: 'white',
+                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
+                border: '1px solid rgba(28,26,23,0.04)',
               }}
             >
             <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1295,7 +1342,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                 </div>
                 {trip.dates && (
                   <div style={{
-                    fontFamily: FONT.sans, fontSize: 12, color: INK['50'], marginTop: 2,
+                    fontFamily: FONT.sans, fontSize: 12, color: INK['70'], marginTop: 2,
                   }}>
                     {trip.dates}
                   </div>
@@ -1306,12 +1353,13 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                 padding: '3px 10px', borderRadius: 100,
                 background: trip.status === 'planning' ? T.verde : T.honey,
                 color: 'white',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
               }}>
                 {trip.status}
               </span>
             </div>
             <div style={{
-              fontFamily: FONT.sans, fontSize: 11, color: INK['45'],
+              fontFamily: FONT.sans, fontSize: 11, color: INK['70'],
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <span>{trip.travelContext}</span>

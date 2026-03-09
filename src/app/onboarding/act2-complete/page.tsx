@@ -63,7 +63,7 @@ export default function Act1CompletePage() {
     router.push('/onboarding/processing');
   };
 
-  // Progress ring (Acts 0 + 1 completed)
+  // Progress ring (Acts I + II completed)
   const completedPhaseCount = ACT_1_PHASE_IDS.length + ACT_2_PHASE_IDS.length;
   const progress = completedPhaseCount / ALL_PHASE_IDS.length;
   const circumference = 2 * Math.PI * 44; // radius = 44
@@ -121,7 +121,7 @@ export default function Act1CompletePage() {
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
-          Act I complete
+          Act II complete
         </p>
 
         <h1 className={`
@@ -172,7 +172,7 @@ export default function Act1CompletePage() {
             </p>
             <p className="text-[14px] text-[var(--t-ink)]/70 leading-relaxed">
               {gapDomains.map((d) => DOMAIN_DISPLAY[d] || d).join(', ')}
-              {' '}&mdash; Act II will deepen these areas.
+              {' '}&mdash; Act III will deepen these areas.
             </p>
           </div>
         )}
@@ -201,7 +201,7 @@ export default function Act1CompletePage() {
           style={{ backgroundColor: 'var(--t-ink)' }}
           disabled={stage < 3}
         >
-          Continue to Act II
+          Continue to Act III
         </button>
 
         <p className={`

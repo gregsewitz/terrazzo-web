@@ -256,7 +256,7 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
                     {p.structured_formatting?.main_text || p.description}
                   </span>
                   {p.structured_formatting?.secondary_text && (
-                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['40'], marginTop: 1 }}>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.ink, marginTop: 1 }}>
                       {p.structured_formatting.secondary_text}
                     </span>
                   )}
@@ -353,7 +353,7 @@ const labelStyle: React.CSSProperties = {
   fontWeight: 500,
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
-  color: INK['45'],
+  color: T.ink,
   fontFamily: FONT.mono,
   marginBottom: 8,
 };

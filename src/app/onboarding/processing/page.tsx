@@ -16,14 +16,14 @@ export default function ProcessingPage() {
   const hasSynthesized = useRef(false);
   const { allSignals, allMessages, allContradictions, certainties, setGeneratedProfile } = useOnboardingStore();
 
-  // Animate through processing steps — stretched timing so the animation covers
-  // most of the API wait (~18-22s). Each step gets progressively longer so it
-  // feels like the work is getting deeper. The last step holds until the API returns.
+  // Animate through processing steps — timing covers the API wait.
+  // Parallel synthesis takes ~8-12s, so steps ramp faster than before.
+  // The last step holds (spinner) until the API actually returns.
   useEffect(() => {
     if (hasError) return; // pause animation on error
     if (currentStep < PROCESSING_STEPS.length - 1) {
-      // Ramp: 1800 → 2200 → 2400 → 2600 → 2800 → 3000 → 3200 ≈ 18s total
-      const delay = 1800 + currentStep * 250;
+      // Ramp: 900 → 1050 → 1200 → 1350 → 1500 → 1650 → 1800 ≈ 9.5s total
+      const delay = 900 + currentStep * 150;
       const timer = setTimeout(() => setCurrentStep((i) => i + 1), delay);
       return () => clearTimeout(timer);
     }
@@ -49,9 +49,9 @@ export default function ProcessingPage() {
       setGeneratedProfile(profile);
 
       // Wait for animation to finish before navigating
-      // Steps take ~18s total (ramped timing), give a small buffer so the last check
+      // Steps take ~9.5s total (ramped timing), give a small buffer so the last check
       // mark has time to appear before we transition
-      const totalAnimTime = Array.from({ length: PROCESSING_STEPS.length - 1 }, (_, i) => 1800 + i * 250)
+      const totalAnimTime = Array.from({ length: PROCESSING_STEPS.length - 1 }, (_, i) => 900 + i * 150)
         .reduce((sum, d) => sum + d, 0);
       const minDelay = Math.max(0, totalAnimTime + 800);
       setTimeout(() => setIsDone(true), minDelay);

@@ -23,6 +23,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const holdingRef = useRef(false); // tracks whether user is actively holding the mic button
   const mountedRef = useRef(true); // tracks if component is still mounted
+  const isSpeakingRef = useRef(false); // mirrors isSpeaking for async callbacks
 
   // Refs for TTS queue integration (set after useTTS initializes)
   const queueSentenceRef = useRef<((s: string) => void) | null>(null);
@@ -66,7 +67,16 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (autoAdvanceTimerRef.current) return;
     setAutoAdvancing(true);
     autoAdvanceTimerRef.current = setTimeout(() => {
-      if (mountedRef.current) onComplete();
+      if (!mountedRef.current) return;
+      // Safety check: don't advance while TTS is still speaking.
+      // This prevents the fallback speak() from getting cut off by an early onComplete().
+      if (isSpeakingRef.current) {
+        // TTS still going — clear the timer and let handleTTSDone re-trigger when it finishes
+        autoAdvanceTimerRef.current = null;
+        setAutoAdvancing(false);
+        return;
+      }
+      onComplete();
     }, 1800);
   }, [onComplete]);
 
@@ -77,14 +87,16 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     };
   }, []);
 
-  // After TTS finishes speaking: auto-advance if phase is done, otherwise just idle (hold-to-speak)
+  // After TTS finishes speaking: auto-advance if phase is done (and no anchors to review),
+  // otherwise just idle (hold-to-speak)
   const handleTTSDone = useCallback(() => {
-    if (isPhaseComplete) {
+    if (isPhaseComplete && anchorsForReview.length === 0) {
       triggerAutoAdvance();
       return;
     }
+    // If anchors are present, skip auto-advance — let user interact with cards
     // In hold-to-speak mode, we do NOT auto-start the mic. User initiates.
-  }, [isPhaseComplete, triggerAutoAdvance]);
+  }, [isPhaseComplete, anchorsForReview.length, triggerAutoAdvance]);
 
   // Handle sending speech transcript (called when user releases hold-to-speak, or silence detection fires)
   const handleSendTranscript = useCallback(async (text: string) => {
@@ -136,6 +148,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
 
   const stopTTSRef = useRef(stopTTS);
   stopTTSRef.current = stopTTS;
+  isSpeakingRef.current = isSpeaking;
 
   // Stop TTS on unmount (prevents audio bleeding into next phase)
   useEffect(() => {
@@ -155,8 +168,8 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (!latestAI) return;
 
     if (!ttsEnabled) {
-      // TTS off — handle auto-advance via read-time estimate
-      if (isPhaseComplete) {
+      // TTS off — handle auto-advance via read-time estimate (only if no anchor cards)
+      if (isPhaseComplete && anchorsForReview.length === 0) {
         const readTime = Math.max(2000, latestAI.text.split(/\s+/).length * 40);
         setTimeout(() => {
           if (mountedRef.current) triggerAutoAdvance();
@@ -183,7 +196,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
       }, 300);
       return () => clearTimeout(fallbackTimer);
     }
-  }, [messages, ttsEnabled, speak, isSpeaking, isPhaseComplete, triggerAutoAdvance]);
+  }, [messages, ttsEnabled, speak, isSpeaking, isPhaseComplete, anchorsForReview.length, triggerAutoAdvance]);
 
   // Stop TTS when user starts talking (holds mic button)
   useEffect(() => {
@@ -464,7 +477,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
             </div>
 
             {/* Status text */}
-            <p className="text-[12px] font-mono text-[var(--t-ink)]/30">
+            <p className="text-[12px] font-mono text-[var(--t-ink)]">
               {voiceState === 'listening' && 'Listening...'}
               {voiceState === 'speaking' && 'Speaking...'}
               {voiceState === 'thinking' && 'Thinking...'}

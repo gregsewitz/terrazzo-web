@@ -182,7 +182,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
             {currentCard.optionA.description && (
               <span style={{
                 fontSize: 12,
-                color: INK['40'],
+                color: T.ink,
                 fontFamily: FONT.sans,
                 letterSpacing: '0.02em',
               }}>
@@ -225,7 +225,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
             {currentCard.optionB.description && (
               <span style={{
                 fontSize: 12,
-                color: INK['40'],
+                color: T.ink,
                 fontFamily: FONT.sans,
                 letterSpacing: '0.02em',
               }}>
@@ -238,7 +238,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
         {/* Card counter */}
         <p style={{
           fontSize: 11,
-          color: INK['30'],
+          color: T.ink,
           fontFamily: FONT.mono,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',

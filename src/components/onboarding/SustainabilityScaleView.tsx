@@ -179,7 +179,7 @@ export default function SustainabilityScaleView({ onComplete }: SustainabilitySc
               </span>
               <span style={{
                 fontSize: 13,
-                color: INK['50'],
+                color: T.ink,
                 fontFamily: FONT.sans,
                 lineHeight: 1.4,
               }}>

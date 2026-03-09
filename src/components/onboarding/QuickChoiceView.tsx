@@ -85,14 +85,14 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Instruction */}
         <p style={{
-          color: INK['50'],
+          color: T.ink,
           fontSize: 14,
           margin: '0 0 20px',
           textAlign: 'center',
           fontFamily: FONT.sans,
           letterSpacing: '0.01em',
         }}>
-          Pick {MIN_SELECTIONS}-{maxSelections} that resonate most
+          Pick {MIN_SELECTIONS === maxSelections ? MIN_SELECTIONS : `${MIN_SELECTIONS}–${maxSelections}`} that resonate most
         </p>
 
         {/* Options grid — 2 columns on wider screens, 1 on narrow */}
@@ -158,7 +158,7 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
                 {opt.description && (
                   <p style={{
                     fontSize: 12,
-                    color: INK['40'],
+                    color: T.ink,
                     fontFamily: FONT.sans,
                     margin: 0,
                     lineHeight: 1.35,
@@ -180,7 +180,7 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
             marginTop: 24,
             padding: '15px 40px',
             background: (submitted || selected.size < MIN_SELECTIONS) ? T.travertine : T.ink,
-            color: (submitted || selected.size < MIN_SELECTIONS) ? INK['50'] : T.cream,
+            color: (submitted || selected.size < MIN_SELECTIONS) ? T.ink : T.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

@@ -183,7 +183,7 @@ export default function PropertyReactionPhaseView({
         <p style={{
           marginTop: 16,
           fontSize: 14,
-          color: INK['45'],
+          color: T.ink,
           fontFamily: FONT.sans,
         }}>
           Finding properties for you…
@@ -206,7 +206,7 @@ export default function PropertyReactionPhaseView({
       }}>
         <p style={{
           fontSize: 14,
-          color: INK['50'],
+          color: T.ink,
           fontFamily: FONT.sans,
           textAlign: 'center',
           maxWidth: 320,
@@ -249,7 +249,7 @@ export default function PropertyReactionPhaseView({
       }}>
         <p style={{
           fontSize: 14,
-          color: INK['50'],
+          color: T.ink,
           fontFamily: FONT.sans,
           textAlign: 'center',
         }}>
@@ -291,7 +291,7 @@ export default function PropertyReactionPhaseView({
         {/* Progress indicator */}
         <p style={{
           fontSize: 12,
-          color: INK['40'],
+          color: T.ink,
           fontFamily: FONT.mono,
           textAlign: 'center',
           marginBottom: 16,
@@ -329,7 +329,7 @@ export default function PropertyReactionPhaseView({
               style={{
                 padding: '10px 24px',
                 background: 'transparent',
-                color: INK['45'],
+                color: T.ink,
                 border: `1px solid rgba(28,26,23,0.1)`,
                 borderRadius: 100,
                 fontSize: 13,

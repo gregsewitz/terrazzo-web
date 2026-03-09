@@ -138,13 +138,13 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
   // High discrimination: separates guests who want personal warmth from those who prefer seamless invisibility
   // Hits 5 clusters not reached by any other dimension — biggest gap-filler
   // Signals hit clusters: 304 (Service:first-name), 87 (Character:repeat-guest), 102 (Service:anticipatory)
-  { id: 'know-your-name', label: 'They remember your name, your drink, your table', cluster: 'warm',
+  { id: 'know-your-name', label: 'Staff who become friends — they ask about your kids, your trip, your life', cluster: 'warm',
     pairWith: 'invisible-service', dimension: 'Service Style',
-    scene: 'The bartender starts making your drink when you walk in',
+    scene: 'The concierge hugs you goodbye, the chef joins you for a glass after dinner',
     signals: ['first-name-basis-service', 'repeat-guest-recognition', 'anticipatory-service-culture'], category: 'Service' },
   // Signals hit clusters: 317 (Service:invisible), 279 (Service:transactional), 279 (same — strong activation)
-  { id: 'invisible-service', label: 'Everything just works — you never have to ask', cluster: 'efficiency',
+  { id: 'invisible-service', label: 'Left completely alone — no small talk, no fuss, total privacy', cluster: 'efficiency',
     pairWith: 'know-your-name', dimension: 'Service Style',
-    scene: 'Your coffee appears at exactly the right moment, without a word',
+    scene: 'You check in on your phone, never learn anyone\'s name, and that\'s perfect',
     signals: ['invisible-service-philosophy', 'self-service-model', 'transactional-efficiency-over-warmth'], category: 'Service' },
 ];

@@ -13,4 +13,4 @@ export {
 } from './act-structure';
 export type { ActNumber } from './act-structure';
 export { PROCESSING_STEPS } from './processing-steps';
-export { TASTE_ONTOLOGY_SYSTEM_PROMPT, PROFILE_SYNTHESIS_PROMPT } from './prompts';
+export { TASTE_ONTOLOGY_SYSTEM_PROMPT } from './prompts';

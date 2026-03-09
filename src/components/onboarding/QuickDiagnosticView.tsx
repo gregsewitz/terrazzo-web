@@ -148,7 +148,7 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
         </div>
         {/* Elo ranking hint — shown only on the first round */}
         {round === 0 && (
-          <p className="hidden sm:block text-[10px] text-[var(--t-ink)]/30 font-mono whitespace-nowrap">
+          <p className="hidden sm:block text-[10px] text-[var(--t-ink)] font-mono whitespace-nowrap">
             Some options may reappear — that&apos;s how we rank them
           </p>
         )}
@@ -168,7 +168,7 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
             />
           ))}
         </div>
-        <span className="font-mono text-[10px] text-[var(--t-ink)]/30 whitespace-nowrap">
+        <span className="font-mono text-[10px] text-[var(--t-ink)] whitespace-nowrap">
           {round + 1}/{TOTAL_ROUNDS}
         </span>
       </div>
@@ -176,7 +176,7 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
       {/* Elo hint — mobile-friendly, fades out after round 2 */}
       {round < 2 && (
         <p
-          className="sm:hidden text-center text-[10px] text-[var(--t-ink)]/30 font-mono px-4 -mt-1 mb-1"
+          className="sm:hidden text-center text-[10px] text-[var(--t-ink)] font-mono px-4 -mt-1 mb-1"
           style={{ transition: 'opacity 500ms ease', opacity: round === 0 ? 1 : 0.5 }}
         >
           Some options may reappear — that&apos;s how we rank them
@@ -284,7 +284,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
             className="font-serif italic leading-relaxed"
             style={{
               fontSize: 'clamp(13px, 2vw, 15px)',
-              color: 'rgba(28,26,23,0.45)',
+              color: 'var(--t-ink)',
               maxWidth: 320,
             }}
           >
@@ -314,7 +314,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
           className="font-mono uppercase tracking-wider"
           style={{
             fontSize: 10,
-            color: isSelected ? 'var(--t-ink)' : 'rgba(28,26,23,0.35)',
+            color: 'var(--t-ink)',
           }}
         >
           {isSelected ? 'Chosen' : 'Choose'}

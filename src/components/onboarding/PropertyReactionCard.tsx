@@ -107,7 +107,7 @@ export default function PropertyReactionCard({
       {/* Domain chip */}
       <p
         className="font-mono text-[9px] uppercase tracking-widest mb-2"
-        style={{ color: 'var(--t-ink)', opacity: 0.35 }}
+        style={{ color: 'var(--t-ink)' }}
       >
         {DOMAIN_DISPLAY[domain] || domain}
       </p>
@@ -125,7 +125,7 @@ export default function PropertyReactionCard({
         {exemplar.placeType && (
           <span
             className="text-[11px] tracking-wide uppercase"
-            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-ink)', opacity: 0.4 }}
+            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-ink)' }}
           >
             {exemplar.placeType}
           </span>
@@ -136,7 +136,7 @@ export default function PropertyReactionCard({
         {shortLocation(exemplar.locationHint) && (
           <span
             className="text-[11px]"
-            style={{ color: 'var(--t-ink)', opacity: 0.4 }}
+            style={{ color: 'var(--t-ink)' }}
           >
             {shortLocation(exemplar.locationHint)}
           </span>

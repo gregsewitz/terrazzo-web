@@ -215,7 +215,7 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
         <p style={{
           fontSize: 11,
           fontFamily: FONT.mono,
-          color: INK['30'],
+          color: T.ink,
           textAlign: 'center',
           margin: '20px 0 0',
           letterSpacing: '0.05em',

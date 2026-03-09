@@ -20,7 +20,7 @@ const DOMAIN_DISPLAY: Record<string, string> = {
 export default function Act0CompletePage() {
   const router = useRouter();
   const {
-    setPhaseIndex, allSignals, certainties, propertyAnchors,
+    setPhaseIndex, allSignals, certainties,
     act1GapResult, setCurrentAct, skippedPhaseIds,
   } = useOnboardingStore();
   const [stage, setStage] = useState(0); // 0=entering, 1=stats, 2=message, 3=button
@@ -29,8 +29,6 @@ export default function Act0CompletePage() {
   const signalCount = new Set(allSignals.map((s) => s.tag)).size;
   // Count taste dimensions with meaningful certainty
   const dimensionsCovered = Object.values(certainties).filter((v) => v > 0).length;
-  // Anchor count
-  const anchorCount = propertyAnchors.length;
 
   // Staggered reveal animation
   useEffect(() => {
@@ -67,7 +65,7 @@ export default function Act0CompletePage() {
     router.push(`/onboarding/phase/${ACT_2_PHASE_IDS[0]}`);
   };
 
-  // Progress ring (Act 0 = ~33% of total)
+  // Progress ring (Act I = ~33% of total)
   const progress = ACT_1_PHASE_IDS.length / ALL_PHASE_IDS.length;
   const circumference = 2 * Math.PI * 44;
   const strokeDashoffset = circumference * (1 - progress);
@@ -116,7 +114,7 @@ export default function Act0CompletePage() {
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
-          Ground truth captured
+          Act I complete
         </p>
 
         <h1 className={`
@@ -136,7 +134,6 @@ export default function Act0CompletePage() {
           {[
             { value: signalCount, label: 'Taste signals' },
             { value: `${dimensionsCovered} of 8`, label: 'Dimensions' },
-            { value: anchorCount, label: 'Property anchors' },
           ].map((stat, i) => (
             <div
               key={stat.label}
@@ -214,7 +211,7 @@ export default function Act0CompletePage() {
           style={{ backgroundColor: 'var(--t-ink)' }}
           disabled={stage < 3}
         >
-          Continue to Act I
+          Continue to Act II
         </button>
 
         <p className={`
@@ -224,7 +221,7 @@ export default function Act0CompletePage() {
         `}>
           {ACT_2_PHASE_IDS.length - skippedPhaseIds.filter((id) =>
             (ACT_2_PHASE_IDS as readonly string[]).includes(id)
-          ).length} phases in Act I
+          ).length} phases in Act II
         </p>
       </div>
     </div>

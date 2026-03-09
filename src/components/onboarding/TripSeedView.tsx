@@ -76,7 +76,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
     <div className="flex flex-col h-full px-5 py-6">
       {/* Header */}
       <div className="mb-6">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--t-ink)]/40 mb-2">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--t-ink)] mb-2">
           {isPlanning ? 'Trip you\'re planning' : 'Dream trip'}
         </p>
         <h2 className="font-serif text-[26px] text-[var(--t-ink)] leading-tight">
@@ -85,7 +85,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
             : 'What about a trip you\'ve always dreamed of?'
           }
         </h2>
-        <p className="text-[14px] text-[var(--t-ink)]/50 mt-2">
+        <p className="text-[14px] text-[var(--t-ink)] mt-2">
           {isPlanning
             ? 'Add one or more destinations — we\'ll build your itinerary from there.'
             : 'The one that\'s been on your list forever.'
@@ -97,7 +97,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
       <div className="flex-1 space-y-5">
         {/* Trip name (optional) */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
             Trip name (optional)
           </label>
           <input
@@ -117,7 +117,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
 
         {/* Destinations (Google autocomplete) */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
             Where?
           </label>
           <DestinationInput
@@ -129,7 +129,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
 
         {/* When */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
             When? (optional)
           </label>
           <input
@@ -146,7 +146,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
 
         {/* Who with */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
             Who with?
           </label>
           <div className="flex gap-2 flex-wrap">

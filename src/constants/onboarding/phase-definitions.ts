@@ -225,14 +225,12 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     act: 2,
     aiPrompt: "Let's start with the good stuff. Tell me about two or three hotel stays that really stuck with you — places you still think about, even years later. What made them special?",
     followUps: [
-      "What was it about that place — was it something physical, or more of a feeling?",
-      "If you went back tomorrow, what's the first thing you'd do when you arrived?",
-      "Do you travel differently depending on who you're with — does what you want from a hotel change?",
+      "TOPIC: Dig into the specifics of one place they mentioned — what made it special. Pick ONE by name and ask what it was about THAT place specifically. Was it the space, the people, a particular moment? Adapt to whatever they said.",
+      "TOPIC: Explore what they gravitate toward across those stays — do they notice a thread? Is it always the design, or the food, or how the staff made them feel? Let THEM identify the pattern if there is one.",
     ],
     sampleUserResponses: [
       "There was this masseria in Puglia — Masseria Moroseta. White stone, olive groves, communal dinners outside. The owners actually ate with you. And Aman Tokyo — the opposite vibe but equally perfect. That lobby with the ikebana and the paper screens.",
       "I'd go straight to the terrace with a glass of wine and just sit there. That view of the olive groves at sunset — that's the whole thing for me.",
-      "Definitely. With my partner it's more about the room, the restaurant, slowing down. With friends it's about the neighborhood — being close to bars, restaurants, being able to split up and reconvene.",
     ],
     extractedSignals: [
       { tag: 'Vernacular architecture', cat: 'Design', confidence: 0.92 },
@@ -245,18 +243,48 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     ],
     certaintyAfter: { Design: 75, Atmosphere: 58, Character: 60, Service: 75, FoodDrink: 40, Setting: 55, Wellness: 25, Sustainability: 30 },
   },
+  // ─── Trip Memories (voice — captures the feeling and random moments of whole trips, not specific hotels) ───
+  {
+    id: 'trip-memories',
+    phaseNumber: 8,
+    title: 'Trip Memories',
+    subtitle: 'The moments that stayed with you',
+    modality: 'voice',
+    act: 2,
+    aiPrompt: "Now zoom out from specific hotels. Think about entire trips — maybe the best trip you've ever taken, or just one that left a mark. Not the hotel, but the whole experience. What do you remember most? Could be a random moment, a meal, a walk, a feeling.",
+    followUps: [
+      "TOPIC: The texture of that trip — what did a day actually feel like? Were they rushing around or drifting? Eating at planned restaurants or stumbling into places? Reference the specific trip they mentioned.",
+      "TOPIC: Whether they traveled alone or with others on that trip, and how the company shaped the experience. Did they want more independence or more togetherness?",
+      "TOPIC: What made that trip different from others — was it the destination, the timing in their life, who they were with, or just how everything came together?",
+    ],
+    sampleUserResponses: [
+      "Honestly my best trip was two weeks driving through Portugal with my partner. No real plan. We'd just find a town, park, walk around, eat wherever the locals were eating. Slept at these random guesthouses. One night we ended up at this family's farm and they cooked us dinner.",
+      "It was so unstructured. We'd wake up and decide over coffee. Some days we'd drive three hours, some days we'd stay put. The freedom was the whole point.",
+      "I think it was the timing — we'd both just quit our jobs. There was no schedule to get back to. That feeling of not having an end date changed everything.",
+    ],
+    extractedSignals: [
+      { tag: 'Road-trip-rhythm', cat: 'Atmosphere', confidence: 0.92 },
+      { tag: 'Spontaneous-unplanned', cat: 'Atmosphere', confidence: 0.94 },
+      { tag: 'Local-dining-seeker', cat: 'FoodDrink', confidence: 0.90 },
+      { tag: 'Slow-travel-pace', cat: 'Atmosphere', confidence: 0.88 },
+      { tag: 'Authentic-local-experience', cat: 'Character', confidence: 0.91 },
+      { tag: 'Partner-travel-intimacy', cat: 'Context', confidence: 0.85 },
+    ],
+    certaintyAfter: { Design: 76, Atmosphere: 68, Character: 65, Service: 75, FoodDrink: 48, Setting: 60, Wellness: 26, Sustainability: 30 },
+  },
   {
     id: 'anti-stay',
-    phaseNumber: 8,
+    phaseNumber: 9,
+
     title: 'The Anti-Stay',
     subtitle: 'What looked perfect but felt wrong',
     modality: 'voice',
     act: 2,
     aiPrompt: "Now the opposite. Tell me about a stay that disappointed you — maybe it looked perfect online but something felt off when you got there. Or a place where one thing just ruined it. What happened?",
     followUps: [
-      "What was the moment you realized it wasn't working? Like, was there a specific thing or was it more of a feeling?",
-      "If you could change one thing about that place, what would have saved it?",
-      "Has that experience changed what you look for now — do you screen for something specific because of it?",
+      "TOPIC: The specific moment or detail that made it feel wrong. Reference the actual place they named and ask what tipped them off — a moment, a detail, a feeling when they walked in.",
+      "TOPIC: What would have fixed it — the one change that would have saved the stay. This reveals what they value most.",
+      "TOPIC: Whether that bad experience changed how they book now — do they screen for or against anything specific because of it?",
     ],
     sampleUserResponses: [
       "There was this design hotel in Lisbon — Instagrammed to death, every corner styled for photos. But it felt like a set. The staff were in these matching outfits reciting scripts.",
@@ -274,16 +302,16 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'last-trip',
-    phaseNumber: 9,
+    phaseNumber: 10,
     title: 'Your Last Trip',
     subtitle: 'Not the best one — the most recent one',
     modality: 'voice',
     act: 2,
     aiPrompt: "Tell me about your most recent trip — not necessarily the best one, just the last one. Where did you stay, and walk me through what a typical day looked like.",
     followUps: [
-      "What was the best part of that trip — the thing you'd keep if you could do it again?",
-      "And was there anything you'd do differently next time — about the hotel, the area, anything?",
-      "How did you find that place? Like, what made you book it over the other options?",
+      "TOPIC: The highlight — what was the best part of that specific trip? Reference the place or city they mentioned. What would they keep if they did it again?",
+      "TOPIC: What they'd change next time — about the hotel, the neighborhood, the pace, anything. This reveals gaps between expectation and reality.",
+      "TOPIC: How they found and chose that place — friend recommendation, reviews, photos, random find? What made them pull the trigger?",
     ],
     sampleUserResponses: [
       "We went to Barcelona last month. Stayed at this boutique place in El Born — small, maybe 20 rooms. We'd wake up, grab coffee at this place around the corner, then just walk for hours. Lunch wherever looked good. Back to the hotel for a nap, then out for dinner around 9.",
@@ -299,19 +327,49 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     ],
     certaintyAfter: { Design: 85, Atmosphere: 72, Character: 72, Service: 82, FoodDrink: 55, Setting: 62, Wellness: 35, Sustainability: 32 },
   },
+  // ─── Companion Shifts (voice — how preferences change based on travel companion) ───
+  {
+    id: 'companion-shifts',
+    phaseNumber: 11,
+    title: 'How You Shift',
+    subtitle: 'Same person, different traveler',
+    modality: 'voice',
+    act: 2,
+    aiPrompt: "Here's what I'm curious about — does the kind of trip you want change depending on who you're with? Like, do you want something completely different when you're solo versus with your partner or friends?",
+    followUps: [
+      "TOPIC: Go deeper on one specific companion dynamic they mentioned. If they talked about their partner, ask what that looks like concretely — the pace, the kind of hotel, what they prioritize together versus alone. Use names if they've shared them.",
+      "TOPIC: The solo version of them. What do they seek out when nobody else's preferences matter? Does solo travel feel like freedom or does it shift what kind of place they want?",
+      "TOPIC: Whether there's a version of travel they haven't done much of but are curious about — maybe they always travel with their partner but wonder what a solo trip would feel like, or vice versa.",
+    ],
+    sampleUserResponses: [
+      "Totally different. With my wife it's all about the room and the restaurant — we want to nest. Slower pace, longer breakfasts, a great spa. Solo or with friends, I barely use the room. It's all about the neighborhood and being out.",
+      "When I'm alone I become weirdly adventurous. I'll eat at some random counter spot, walk for hours, stay at a place that's more interesting than comfortable. With my partner I want guaranteed quality — I'm not experimenting with someone else's vacation.",
+      "I haven't really done a proper solo trip in years. I think I'd want something different from what I'd expect — probably something quieter, more structured. Like a retreat rather than a city trip.",
+    ],
+    extractedSignals: [
+      { tag: 'Partner-nesting-mode', cat: 'Context', confidence: 0.92 },
+      { tag: 'Solo-adventure-mode', cat: 'Context', confidence: 0.90 },
+      { tag: 'Friends-neighborhood-mode', cat: 'Context', confidence: 0.88 },
+      { tag: 'Companion-driven-pace-shift', cat: 'Behavior', confidence: 0.91 },
+      { tag: 'Partner-comfort-priority', cat: 'Preference', confidence: 0.87 },
+      { tag: 'Solo-curiosity-seeker', cat: 'Behavior', confidence: 0.85 },
+      { tag: 'Room-importance-varies', cat: 'Context', confidence: 0.83 },
+    ],
+    certaintyAfter: { Design: 87, Atmosphere: 78, Character: 76, Service: 84, FoodDrink: 60, Setting: 68, Wellness: 38, Sustainability: 34 },
+  },
   // ─── Dream Destinations (voice — captures aspirational places: cities, hotels, restaurants, countries) ───
   {
     id: 'dream-destinations',
-    phaseNumber: 10,
+    phaseNumber: 12,
     title: 'Dream Destinations',
     subtitle: 'The places you keep thinking about',
     modality: 'voice',
     act: 2,
     aiPrompt: "Now let's talk about places you dream about. Not where you've been — where you've always wanted to go. Could be a city, a country, a specific hotel you've bookmarked, a restaurant you've seen on someone's Instagram. What are the places that live in your head?",
     followUps: [
-      "What is it about those places that pulls you? Is it something specific you've seen, or more of a feeling?",
-      "If you could book one of those trips tomorrow, what would matter most — the destination itself, or the kind of experience you'd have there?",
-      "Are those dream places different from where you usually end up traveling? Like, is there a gap between what you dream about and what you actually book?",
+      "TOPIC: What specifically draws them to the places they named — pick one and dig in. Is it something they saw, read about, or just a feeling? Reference their actual words.",
+      "TOPIC: If they could book one of those trips tomorrow, what would matter most — the destination itself or the kind of experience they'd have there?",
+      "TOPIC: Whether there's a gap between what they dream about and what they actually book — do their real trips look different from their aspirations?",
     ],
     sampleUserResponses: [
       "Japan — Kyoto specifically. I've been saving posts about these tiny ryokans where someone curates your entire evening. And the food culture there just seems on another level.",
@@ -329,16 +387,15 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── The Thing Nobody Asks (open voice — captures signals that don't fit any box) ───
   {
     id: 'nobody-asks',
-    phaseNumber: 11,
+    phaseNumber: 13,
     title: 'The Thing Nobody Asks',
     subtitle: 'The detail only you would notice',
     modality: 'voice',
     act: 2,
-    aiPrompt: "We've asked you a lot of structured questions. But there's probably something about how you travel — some specific thing you care about — that none of those questions touched. A weird detail, a non-negotiable, a habit. What is it?",
+    aiPrompt: "Last thing before we shift gears — is there anything about how you travel that we haven't touched on? Could be a weird non-negotiable, a habit, a detail you always notice. Totally fine if nothing comes to mind.",
     followUps: [
-      "When did you realize that mattered to you — was there a specific trip?",
-      "Is that always the case, or does it depend on the kind of trip?",
-      "Anything else like that? Something you'd never see in a hotel review but you always notice?",
+      "TOPIC: When they realized this thing mattered — reference the specific detail they shared and ask if there was a trip or moment that crystallized it.",
+      "TOPIC: Whether this applies universally or depends on the kind of trip — does the context change it?",
     ],
     sampleUserResponses: [
       "I need a bathtub. Not a jacuzzi, not a rain shower — a real, deep bathtub. That's my end-of-day ritual and without it the whole trip feels off.",
@@ -359,7 +416,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ═══════════════════════════════════════
   {
     id: 'food-and-senses',
-    phaseNumber: 12,
+    phaseNumber: 14,
     title: 'Food & Senses',
     subtitle: 'How you taste the world',
     modality: 'scene',
@@ -430,7 +487,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'visual-pairs',
-    phaseNumber: 13,
+    phaseNumber: 15,
     title: 'What Draws You In',
     subtitle: 'Two images — tap the one that pulls you',
     modality: 'image-pair',
@@ -492,7 +549,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'details-matter',
-    phaseNumber: 14,
+    phaseNumber: 16,
     title: 'The Details That Matter',
     subtitle: 'Rank what changes everything for you',
     modality: 'force-rank',
@@ -565,7 +622,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'emotional-core',
-    phaseNumber: 15,
+    phaseNumber: 17,
     title: 'Why You Travel',
     subtitle: 'What a great trip actually gives you',
     modality: 'quick-choice',
@@ -639,7 +696,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'travel-scenarios',
-    phaseNumber: 16,
+    phaseNumber: 18,
     title: 'How You Travel',
     subtitle: 'Real situations, honest answers',
     modality: 'scene',
@@ -712,7 +769,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Dining & Drink Depth (expands FoodDrink signal for restaurants, bars, cafés) ───
   {
     id: 'dining-depth',
-    phaseNumber: 17,
+    phaseNumber: 19,
     title: 'How You Eat',
     subtitle: 'Restaurants, markets, bars — not just hotel food',
     modality: 'scene',
@@ -785,7 +842,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Cultural Immersion (strong signal for neighborhoods, experiences, activities) ───
   {
     id: 'cultural-immersion',
-    phaseNumber: 18,
+    phaseNumber: 20,
     title: 'How Deep You Go',
     subtitle: 'Culture, language, neighborhoods',
     modality: 'scene',
@@ -878,7 +935,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Rhythm & Pace (sliders + scenes for travel style) ───
   {
     id: 'rhythm-and-pace',
-    phaseNumber: 19,
+    phaseNumber: 21,
     title: 'Your Rhythm',
     subtitle: 'How you move through a trip',
     modality: 'slider',
@@ -950,7 +1007,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Movement & Wellness (non-hotel signal: spas, activities, outdoor venues) ───
   {
     id: 'movement-and-wellness',
-    phaseNumber: 20,
+    phaseNumber: 22,
     title: 'Body & Movement',
     subtitle: 'How you take care of yourself on the road',
     modality: 'quick-choice',
@@ -974,7 +1031,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Scent & Texture (sensory depth for place matching) ───
   {
     id: 'scent-and-texture',
-    phaseNumber: 21,
+    phaseNumber: 23,
     title: 'Scent & Texture',
     subtitle: 'The sensory details that make a place yours',
     modality: 'quick-choice',
@@ -998,7 +1055,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Browsing & Discovery (shops, markets, browsing style — fills shop/market signal gap) ───
   {
     id: 'browsing-and-discovery',
-    phaseNumber: 22,
+    phaseNumber: 24,
     title: 'Browsing & Discovery',
     subtitle: 'How you find things worth bringing home',
     modality: 'scene',
@@ -1058,7 +1115,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   // ─── New: Trade-offs & Compromises (what they'll sacrifice — strong sorting signal) ───
   {
     id: 'trade-offs',
-    phaseNumber: 23,
+    phaseNumber: 25,
     title: 'Trade-offs',
     subtitle: 'What you\'ll give up — and what you won\'t',
     modality: 'scene',
@@ -1117,7 +1174,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'deal-breakers',
-    phaseNumber: 24,
+    phaseNumber: 26,
     title: 'Deal-Breakers',
     subtitle: 'The things that genuinely ruin a stay',
     modality: 'quick-choice',
@@ -1142,7 +1199,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'consistency-check',
-    phaseNumber: 25,
+    phaseNumber: 27,
     title: 'Final Reads',
     subtitle: 'A few gut checks before we build your profile',
     modality: 'scene',
@@ -1201,7 +1258,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   },
   {
     id: 'gap-fill-reactions',
-    phaseNumber: 26,
+    phaseNumber: 28,
     title: 'Places You Know',
     subtitle: 'Rate places from your recent travels',
     modality: 'property-reactions',

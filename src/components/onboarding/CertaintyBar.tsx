@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { ONBOARDING_PHASES } from '@/constants/onboarding';
 import {
@@ -13,6 +14,7 @@ import {
 const MILESTONES: Record<string, string> = {
   // Act 1
   'quick-bio': 'The basics',
+  'email-connect': 'Email connect',
   'instinct-round': 'Quick instincts',
   'visual-taste': 'Visual eye',
   'property-reactions-0': 'First impressions',
@@ -21,11 +23,14 @@ const MILESTONES: Record<string, string> = {
   'service-style': 'Service style',
   'sustainability-check': 'Values',
   'memorable-stays': 'Your story',
+  'trip-memories': 'Trip memories',
   'anti-stay': 'The anti-stay',
   'last-trip': 'Your last trip',
+  'dream-destinations': 'Dream trips',
   'nobody-asks': 'Your detail',
   // Act 3
   'food-and-senses': 'Food & senses',
+  'visual-pairs': 'Design language',
   'details-matter': 'The details',
   'emotional-core': 'Why you travel',
   'travel-scenarios': 'How you travel',
@@ -42,20 +47,22 @@ const MILESTONES: Record<string, string> = {
 };
 
 export default function CertaintyBar() {
+  const pathname = usePathname();
   const { completedPhaseIds, currentPhaseProgress, skippedPhaseIds } = useOnboardingStore();
 
   // Find the current phase from whichever phase page is active
-  const currentPhaseId = typeof window !== 'undefined'
-    ? window.location.pathname.split('/').pop() ?? ''
-    : '';
+  const currentPhaseId = pathname?.split('/').pop() ?? '';
 
   // Determine which act this phase belongs to
   const currentPhase = ONBOARDING_PHASES.find((p) => p.id === currentPhaseId);
   const currentAct = currentPhase?.act ?? 1;
 
-  // Get phases for this act (excluding skipped)
+  // Utility phases that shouldn't appear as progress segments (not substantive taste phases)
+  const HIDDEN_FROM_PROGRESS = new Set(['email-connect']);
+
+  // Get phases for this act (excluding skipped and utility phases)
   const actPhaseIds = [...(ACT_PHASE_MAP[currentAct as keyof typeof ACT_PHASE_MAP] ?? ACT_1_PHASE_IDS)];
-  const visiblePhases = actPhaseIds.filter((id) => !skippedPhaseIds.includes(id));
+  const visiblePhases = actPhaseIds.filter((id) => !skippedPhaseIds.includes(id) && !HIDDEN_FROM_PROGRESS.has(id));
 
   return (
     <div className="flex gap-1 items-center">
@@ -67,7 +74,7 @@ export default function CertaintyBar() {
         const fillPercent = isDone ? 100 : isCurrent ? Math.round(currentPhaseProgress * 100) : 0;
 
         return (
-          <div key={id} className="flex-1 flex flex-col items-center gap-1">
+          <div key={id} className="flex-1">
             <div
               className="w-full h-1.5 rounded-full overflow-hidden"
               style={{
@@ -84,11 +91,6 @@ export default function CertaintyBar() {
                 }}
               />
             </div>
-            {isCurrent && (
-              <span className="text-[8px] font-mono uppercase tracking-wider text-[var(--t-ink)]/40 whitespace-nowrap">
-                {MILESTONES[id] || id}
-              </span>
-            )}
           </div>
         );
       })}

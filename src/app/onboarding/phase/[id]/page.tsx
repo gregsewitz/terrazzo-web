@@ -22,6 +22,8 @@ import ImagePairView from '@/components/onboarding/ImagePairView';
 import EmailConnectView from '@/components/onboarding/EmailConnectView';
 import { apiFetch } from '@/lib/api-client';
 
+// ACT_LABELS kept for potential future use but no longer rendered in the header
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACT_LABELS: Record<number, string> = { 1: 'Quick Read', 2: 'Your Story', 3: 'Deep Taste' };
 
 export default function PhasePage() {
@@ -140,47 +142,35 @@ export default function PhasePage() {
   if (!phase) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-[var(--t-cream)]">
-        <p className="text-[var(--t-ink)]/50">Phase not found</p>
+        <p className="text-[var(--t-ink)]">Phase not found</p>
       </div>
     );
   }
 
   return (
     <div className="h-dvh flex flex-col bg-[var(--t-cream)] overflow-hidden">
-      {/* Phase header */}
-      <div className="flex-shrink-0 px-5 pt-5 pb-3 w-full max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
+      {/* Phase header — compact 2-row: title row + progress bar */}
+      <div className="flex-shrink-0 px-5 pt-4 pb-2 w-full max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2.5">
             {!isFirstPhase && (
               <button
                 onClick={handleBack}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--t-ink)]/5 hover:bg-[var(--t-ink)]/10 transition-colors"
+                className="flex items-center justify-center w-7 h-7 rounded-full bg-[var(--t-ink)]/5 hover:bg-[var(--t-ink)]/10 transition-colors"
                 aria-label="Go back"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-[var(--t-ink)]/50">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[var(--t-ink)]">
                   <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
             )}
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
-                {ACT_LABELS[phase.act] ?? `Act ${phase.act}`}
-              </p>
-              <h1 className="font-serif text-[22px] text-[var(--t-ink)] leading-tight">
-                {phase.title}
-              </h1>
-              {phase.subtitle && (
-                <p className="text-[12px] text-[var(--t-ink)]/40 mt-0.5">
-                  {phase.subtitle}
-                </p>
-              )}
-            </div>
+            <h1 className="font-serif text-[20px] text-[var(--t-ink)] leading-tight">
+              {phase.title}
+            </h1>
           </div>
-          <div className="text-right">
-            <span className="font-mono text-[10px] text-[var(--t-ink)]/30">
-              {completedCount}/{activePhaseCount}
-            </span>
-          </div>
+          <span className="font-mono text-[10px] text-[var(--t-ink)] tabular-nums">
+            {completedCount}/{activePhaseCount}
+          </span>
         </div>
         <CertaintyBar />
       </div>
