@@ -240,6 +240,31 @@ const NOISE_CLUSTER_IDS = new Set([
   324,  // high-model-pressure (table turnover pressure)
 ]);
 
+/**
+ * Compute a "baseline" profile for a user vector — the expected contribution
+ * per cluster if a property had uniform activation. Used to identify which
+ * clusters are *distinctive* for a given property vs just globally strong.
+ *
+ * Cached per user vector identity (first 3 dims as a quick fingerprint).
+ */
+let cachedBaselineKey = '';
+let cachedBaseline: number[] = [];
+
+function getUserBaseline(userVector: number[]): number[] {
+  const key = `${userVector[0].toFixed(6)}_${userVector[1].toFixed(6)}_${userVector[2].toFixed(6)}`;
+  if (key === cachedBaselineKey) return cachedBaseline;
+
+  // Baseline = abs(userVector[i]) for each cluster — represents how much
+  // the user cares about each cluster regardless of property
+  const baseline = new Array(VECTOR_DIM_V3);
+  for (let i = 0; i < VECTOR_DIM_V3; i++) {
+    baseline[i] = Math.abs(userVector[i]);
+  }
+  cachedBaselineKey = key;
+  cachedBaseline = baseline;
+  return baseline;
+}
+
 function computeTopClusters(
   userVector: number[],
   propertyVector: number[],
@@ -247,19 +272,28 @@ function computeTopClusters(
 ): ClusterContribution[] {
   const allLabels = getAllClusterLabels();
   const labelMap = new Map(allLabels.map((c) => [c.id, c]));
+  const baseline = getUserBaseline(userVector);
 
   // Compute per-cluster contribution, filtering out noise clusters
-  const contributions: Array<{ idx: number; contribution: number }> = [];
+  // Use "distinctiveness" scoring: weight by how strong the PROPERTY is on
+  // this cluster relative to the user's baseline. This surfaces what makes
+  // this property special for the user, not just globally-dominant clusters.
+  const contributions: Array<{ idx: number; contribution: number; distinctiveness: number }> = [];
   for (let i = 0; i < VECTOR_DIM_V3; i++) {
-    if (NOISE_CLUSTER_IDS.has(i)) continue; // Skip infrastructure/noise clusters
+    if (NOISE_CLUSTER_IDS.has(i)) continue;
     const contribution = userVector[i] * propertyVector[i];
-    if (contribution > 0) {
-      contributions.push({ idx: i, contribution });
+    if (contribution > 0 && baseline[i] > 0.001) {
+      // distinctiveness = how strong the property is on this dimension
+      // relative to the user's strength. High = property is especially
+      // strong here; low = property is about as strong as user expects.
+      const propertyStrength = Math.abs(propertyVector[i]);
+      const distinctiveness = contribution * (propertyStrength / baseline[i]);
+      contributions.push({ idx: i, contribution, distinctiveness });
     }
   }
 
-  // Sort by contribution descending
-  contributions.sort((a, b) => b.contribution - a.contribution);
+  // Sort by distinctiveness — surfaces what makes THIS property special
+  contributions.sort((a, b) => b.distinctiveness - a.distinctiveness);
 
   // Ensure domain diversity: pick top clusters but avoid >2 from same domain
   const result: ClusterContribution[] = [];
@@ -270,7 +304,6 @@ function computeTopClusters(
     const info = labelMap.get(idx);
     const domain = info?.domain ?? 'Unknown';
 
-    // Allow at most 2 clusters per domain in explanations
     if ((domainCount[domain] ?? 0) >= 2) continue;
     domainCount[domain] = (domainCount[domain] ?? 0) + 1;
 
