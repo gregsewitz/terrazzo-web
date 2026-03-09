@@ -13,15 +13,43 @@ import { getPlaceById, resolveGooglePlaceType } from '@/lib/places';
  */
 
 export async function GET(request: NextRequest) {
-  const count = await prisma.savedPlace.count({
-    where: {
-      type: 'activity',
-      deletedAt: null,
-      googlePlaceId: { not: null },
-    },
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('userId');
+
+  const baseWhere = {
+    deletedAt: null,
+    ...(userId ? { userId } : {}),
+  };
+
+  const [withGpid, withoutGpid, totalPlaces, byType] = await Promise.all([
+    prisma.savedPlace.count({
+      where: { ...baseWhere, type: 'activity', googlePlaceId: { not: null } },
+    }),
+    prisma.savedPlace.count({
+      where: { ...baseWhere, type: 'activity', googlePlaceId: null },
+    }),
+    prisma.savedPlace.count({ where: baseWhere }),
+    prisma.savedPlace.groupBy({
+      by: ['type'],
+      where: baseWhere,
+      _count: true,
+      orderBy: { _count: { type: 'desc' } },
+    }),
+  ]);
+
+  // Also grab a sample of activity places to inspect
+  const activitySample = await prisma.savedPlace.findMany({
+    where: { ...baseWhere, type: 'activity' },
+    select: { id: true, name: true, type: true, googlePlaceId: true, location: true },
+    take: 20,
   });
 
-  return NextResponse.json({ activityCount: count });
+  return NextResponse.json({
+    activity: { withGooglePlaceId: withGpid, withoutGooglePlaceId: withoutGpid },
+    totalPlaces,
+    byType: byType.map(t => ({ type: t.type, count: t._count })),
+    activitySample,
+  });
 }
 
 export async function POST(request: NextRequest) {
