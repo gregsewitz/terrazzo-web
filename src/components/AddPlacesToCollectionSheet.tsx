@@ -7,6 +7,15 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
 import { THUMB_GRADIENTS } from '@/constants/placeTypes';
 import BaseSheet from '@/components/ui/BaseSheet';
+import SortPills from '@/components/ui/SortPills';
+
+type PlaceSortKey = 'match' | 'az' | 'type';
+
+const PLACE_SORT_OPTIONS: { id: PlaceSortKey; label: string }[] = [
+  { id: 'match', label: 'Match' },
+  { id: 'az', label: 'A–Z' },
+  { id: 'type', label: 'Type' },
+];
 
 /**
  * Bottom-sheet modal for adding existing library places to a collection.
@@ -25,6 +34,7 @@ export default function AddPlacesToCollectionSheet({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<PlaceSortKey>('match');
 
   // Places available to add (not already in the collection, minus just-added ones treated as in-collection)
   const availablePlaces = useMemo(() => {
@@ -39,8 +49,16 @@ export default function AddPlacesToCollectionSheet({
         p.tasteNote?.toLowerCase().includes(q)
       );
     }
-    return pool.sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
-  }, [myPlaces, collection.placeIds, searchQuery, justAdded]);
+    switch (sortBy) {
+      case 'az':
+        return pool.sort((a, b) => a.name.localeCompare(b.name));
+      case 'type':
+        return pool.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+      case 'match':
+      default:
+        return pool.sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
+    }
+  }, [myPlaces, collection.placeIds, searchQuery, justAdded, sortBy]);
 
   const handleAdd = (place: ImportedPlace) => {
     addPlaceToCollection(collection.id, place.id);
@@ -95,6 +113,16 @@ export default function AddPlacesToCollectionSheet({
         {/* Count summary */}
         <div className="mt-2 text-[10px]" style={{ fontFamily: FONT.mono, color: INK['70'] }}>
           {availablePlaces.length} available · {alreadyInCount} already in collection
+        </div>
+
+        {/* Sort pills */}
+        <div className="mt-2">
+          <SortPills
+            options={PLACE_SORT_OPTIONS}
+            value={sortBy}
+            onChange={setSortBy}
+            itemCount={availablePlaces.length}
+          />
         </div>
       </div>
 

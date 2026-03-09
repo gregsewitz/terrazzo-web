@@ -498,6 +498,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 onSelectAll={selectAllImports}
                 onDeselectAll={deselectAllImports}
                 onSaveSelected={handleSaveSelected}
+                onCreateCollection={createCollectionAsync}
               />
             )}
 

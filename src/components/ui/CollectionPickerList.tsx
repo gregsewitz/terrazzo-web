@@ -3,13 +3,14 @@
 import { useState, useMemo } from 'react';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK } from '@/constants/theme';
+import SortPills from '@/components/ui/SortPills';
 import type { Collection } from '@/types';
 
 // ─── Sort logic ───
 
 type CollectionSortKey = 'recent' | 'az' | 'most' | 'fewest';
 
-const SORT_OPTIONS: { id: CollectionSortKey; label: string }[] = [
+const COLLECTION_SORT_OPTIONS: { id: CollectionSortKey; label: string }[] = [
   { id: 'recent', label: 'Recent' },
   { id: 'az', label: 'A–Z' },
   { id: 'most', label: 'Most' },
@@ -76,29 +77,12 @@ export default function CollectionPickerList({
   return (
     <>
       {/* Sort pills */}
-      {collections.length > 2 && (
-        <div className="flex items-center gap-1.5 mb-3 pb-3" style={{ borderBottom: `1px solid var(--t-linen)` }}>
-          <span style={{ fontFamily: FONT.mono, fontSize: 8, letterSpacing: 1.5, color: INK['40'], textTransform: 'uppercase', marginRight: 4 }}>
-            Sort
-          </span>
-          {SORT_OPTIONS.map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => setSortBy(opt.id)}
-              className="px-2.5 py-1 rounded-full text-[10px] cursor-pointer transition-all"
-              style={{
-                background: sortBy === opt.id ? 'var(--t-ink)' : 'transparent',
-                color: sortBy === opt.id ? 'white' : INK['70'],
-                border: sortBy === opt.id ? '1px solid var(--t-ink)' : `1px solid ${INK['12']}`,
-                fontFamily: FONT.sans,
-                fontWeight: sortBy === opt.id ? 600 : 400,
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <SortPills
+        options={COLLECTION_SORT_OPTIONS}
+        value={sortBy}
+        onChange={setSortBy}
+        itemCount={collections.length}
+      />
 
       {/* Collection rows */}
       <div className={listClassName}>

@@ -4,8 +4,19 @@ import { useState, useMemo } from 'react';
 import { FONT, INK } from '@/constants/theme';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { TYPE_COLORS } from './AddBarShared';
+import SortPills from '@/components/ui/SortPills';
 import type { ImportedPlace, Collection, PerriandIconName } from '@/types';
 import type { AddBarState } from '@/stores/addBarStore';
+
+// ─── Sort logic for imported places ─────────────────────────────────────────────
+
+type PreviewSortKey = 'default' | 'az' | 'type';
+
+const PREVIEW_SORT_OPTIONS: { id: PreviewSortKey; label: string }[] = [
+  { id: 'default', label: 'Default' },
+  { id: 'az', label: 'A–Z' },
+  { id: 'type', label: 'Type' },
+];
 
 type TripContext = NonNullable<AddBarState['tripContext']>;
 
@@ -34,6 +45,7 @@ interface AddBarPreviewProps {
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onSaveSelected: (collectionIds: string[]) => void;
+  onCreateCollection?: (name: string, emoji?: string) => Promise<string>;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
@@ -48,20 +60,44 @@ export default function AddBarPreview({
   onSelectAll,
   onDeselectAll,
   onSaveSelected,
+  onCreateCollection,
 }: AddBarPreviewProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [showCollections, setShowCollections] = useState(false);
+  const [sortBy, setSortBy] = useState<PreviewSortKey>('default');
+  const [showCreateCollection, setShowCreateCollection] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
 
   // Group results by type, sorted by count (largest group first)
   const groupedResults = useMemo(() => {
+    // When sort is 'az', show flat list instead of groups
+    if (sortBy === 'az') {
+      const sorted = [...importResults].sort((a, b) => a.name.localeCompare(b.name));
+      return [['all', sorted] as [string, ImportedPlace[]]];
+    }
     const groups: Record<string, ImportedPlace[]> = {};
     importResults.forEach(item => {
       if (!groups[item.type]) groups[item.type] = [];
       groups[item.type].push(item);
     });
+    // Sort items within each group A-Z when type sort is active
+    if (sortBy === 'type') {
+      for (const key of Object.keys(groups)) {
+        groups[key].sort((a, b) => a.name.localeCompare(b.name));
+      }
+      return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+    }
     return Object.entries(groups).sort(([, a], [, b]) => b.length - a.length);
-  }, [importResults]);
+  }, [importResults, sortBy]);
+
+  const handleCreateCollection = async () => {
+    if (!newCollectionName.trim() || !onCreateCollection) return;
+    const newId = await onCreateCollection(newCollectionName.trim(), 'pin');
+    setCollectionIds(prev => [...prev, newId]);
+    setNewCollectionName('');
+    setShowCreateCollection(false);
+  };
 
   if (importResults.length === 0) return null;
 
@@ -100,17 +136,29 @@ export default function AddBarPreview({
         </div>
       </div>
 
+      {/* ── Sort pills ── */}
+      <SortPills
+        options={PREVIEW_SORT_OPTIONS}
+        value={sortBy}
+        onChange={setSortBy}
+        itemCount={importResults.length}
+      />
+
       {/* ── Category groups ── */}
       <div className="flex flex-col gap-3">
         {groupedResults.map(([type, items]) => {
-          const config = CATEGORY_CONFIG[type] || { icon: 'activity' as PerriandIconName, label: type };
+          const isAllGroup = type === 'all';
+          const config = isAllGroup
+            ? { icon: 'discover' as PerriandIconName, label: 'All places' }
+            : (CATEGORY_CONFIG[type] || { icon: 'activity' as PerriandIconName, label: type });
           const isExpanded = expandedCategory === type;
           const selectedInGroup = items.filter(i => selectedIds.has(i.id)).length;
-          const typeColor = TYPE_COLORS[type] || INK['40'];
+          const typeColor = isAllGroup ? INK['40'] : (TYPE_COLORS[type] || INK['40']);
 
           return (
             <div key={type}>
               {/* Category header */}
+              {!isAllGroup && (
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <PerriandIcon name={config.icon} size={16} color="var(--t-ink)" />
@@ -125,6 +173,7 @@ export default function AddBarPreview({
                   {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
                 </span>
               </div>
+              )}
 
               {/* Place cards */}
               <div className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
@@ -132,6 +181,7 @@ export default function AddBarPreview({
                   const isSelected = selectedIds.has(item.id);
                   const isAlreadyInLibrary = (item as any).alreadyInLibrary;
                   const isLowConfidence = item.enrichment?.confidence != null && item.enrichment.confidence < 0.5;
+                  const itemColor = isAllGroup ? (TYPE_COLORS[item.type] || INK['40']) : typeColor;
 
                   return (
                     <div
@@ -152,7 +202,7 @@ export default function AddBarPreview({
                       <div
                         className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0"
                         style={{
-                          background: isSelected ? typeColor : 'white',
+                          background: isSelected ? itemColor : 'white',
                           border: isSelected ? 'none' : `1.5px solid var(--t-linen)`,
                           transition: 'all 150ms ease',
                         }}
@@ -244,7 +294,7 @@ export default function AddBarPreview({
       </div>
 
       {/* ── Collection quick-assign (expandable) ── */}
-      {collections.length > 0 && (
+      {(collections.length > 0 || onCreateCollection) && (
         <div className="mt-4">
           <button
             onClick={() => setShowCollections(!showCollections)}
@@ -301,7 +351,59 @@ export default function AddBarPreview({
                     </button>
                   );
                 })}
+                {/* + New Collection chip */}
+                {onCreateCollection && !showCreateCollection && (
+                  <button
+                    onClick={() => setShowCreateCollection(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all"
+                    style={{
+                      background: 'transparent',
+                      border: `1.5px dashed ${INK['12']}`,
+                      fontSize: 12,
+                      fontFamily: FONT.sans,
+                      color: INK['70'],
+                    }}
+                  >
+                    <PerriandIcon name="add" size={10} color={INK['40']} />
+                    New
+                  </button>
+                )}
               </div>
+              {/* Inline create collection */}
+              {onCreateCollection && showCreateCollection && (
+                <div className="flex gap-2 items-center mt-2">
+                  <input
+                    type="text"
+                    placeholder="Collection name…"
+                    value={newCollectionName}
+                    onChange={(e) => setNewCollectionName(e.target.value)}
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateCollection(); }}
+                    className="flex-1 min-w-0 rounded-lg py-2 px-2.5 text-[11px]"
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--t-linen)',
+                      color: 'var(--t-ink)',
+                      fontFamily: FONT.sans,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    onClick={handleCreateCollection}
+                    disabled={!newCollectionName.trim()}
+                    className="px-2.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer"
+                    style={{
+                      background: newCollectionName.trim() ? 'var(--t-ink)' : INK['10'],
+                      color: newCollectionName.trim() ? 'white' : INK['30'],
+                      border: 'none',
+                      fontFamily: FONT.sans,
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
               <p style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['40'], margin: '6px 0 0' }}>
                 Applies to all selected places
               </p>
