@@ -203,6 +203,43 @@ export async function computeVectorMatchFromDb(
 
 // ─── Top cluster decomposition ──────────────────────────────────────────────
 
+/**
+ * Noise/infrastructure cluster IDs — these represent operational or environmental
+ * attributes rather than taste preferences. They're excluded from match explanations
+ * because surfacing "street-noise-penetration" or "mosquito-management" as a match
+ * reason confuses users even if the vectors align on those dimensions.
+ *
+ * These clusters DO still participate in scoring (they affect cosine similarity),
+ * they're just filtered from the explanation/narrative layer.
+ */
+const NOISE_CLUSTER_IDS = new Set([
+  5,    // adjacent-exposure-from (noise, construction complaints)
+  7,    // fire-high-pace (high-turnover-pressure)
+  13,   // balance-control-dependent (weather/temperature issues)
+  15,   // challenge-experience-grounds (mosquito management)
+  16,   // density-high-operation (high-density seating, overflow)
+  28,   // crowd-crowding-dependent (weekend crowding)
+  44,   // acceptance-culture-expectation (queue culture)
+  50,   // concerns-environment-high (high noise level)
+  88,   // challenges-control-heated (temperature control challenges)
+  109,  // cellular-connectivity-issues (wifi issues)
+  125,  // culture-execution-high (inconsistent execution, turnover)
+  131,  // buggy-intentionally-remote (buggy transport)
+  135,  // cash-coordination-only (cash-only, parking)
+  138,  // design-dual-issues (shower water pressure issues)
+  143,  // access-accessibility-challenge (steep hillside challenge)
+  163,  // communal-cramped-layout (cramped seating)
+  164,  // between-construction-noise (noise transfer, thin walls)
+  166,  // building-campus-elevator (slow elevator)
+  181,  // challenges-control-inconsistent (room temperature issues)
+  184,  // anti-connectivity-philosophy (wifi problems)
+  249,  // execution-inconsistent-pacing (inconsistent service)
+  266,  // deposit-difficulty-policy (reservation difficulty)
+  305,  // capacity-controlled-elevator (elevator wait times)
+  316,  // management-multi-progression (queue management)
+  324,  // high-model-pressure (table turnover pressure)
+]);
+
 function computeTopClusters(
   userVector: number[],
   propertyVector: number[],
@@ -211,9 +248,10 @@ function computeTopClusters(
   const allLabels = getAllClusterLabels();
   const labelMap = new Map(allLabels.map((c) => [c.id, c]));
 
-  // Compute per-cluster contribution
+  // Compute per-cluster contribution, filtering out noise clusters
   const contributions: Array<{ idx: number; contribution: number }> = [];
   for (let i = 0; i < VECTOR_DIM_V3; i++) {
+    if (NOISE_CLUSTER_IDS.has(i)) continue; // Skip infrastructure/noise clusters
     const contribution = userVector[i] * propertyVector[i];
     if (contribution > 0) {
       contributions.push({ idx: i, contribution });
@@ -223,16 +261,29 @@ function computeTopClusters(
   // Sort by contribution descending
   contributions.sort((a, b) => b.contribution - a.contribution);
 
-  return contributions.slice(0, count).map(({ idx, contribution }) => {
+  // Ensure domain diversity: pick top clusters but avoid >2 from same domain
+  const result: ClusterContribution[] = [];
+  const domainCount: Record<string, number> = {};
+
+  for (const { idx, contribution } of contributions) {
+    if (result.length >= count) break;
     const info = labelMap.get(idx);
-    return {
+    const domain = info?.domain ?? 'Unknown';
+
+    // Allow at most 2 clusters per domain in explanations
+    if ((domainCount[domain] ?? 0) >= 2) continue;
+    domainCount[domain] = (domainCount[domain] ?? 0) + 1;
+
+    result.push({
       clusterId: idx,
       label: info?.label ?? `cluster-${idx}`,
-      domain: info?.domain ?? 'Unknown',
+      domain,
       contribution,
       topSignals: getTopSignalsForCluster(idx),
-    };
-  });
+    });
+  }
+
+  return result;
 }
 
 function getTopSignalsForCluster(clusterId: number): string[] {
@@ -334,10 +385,17 @@ function buildExplanation(
 /**
  * Curve raw vector cosine scores into user-friendly display range.
  *
- * Same algorithm as taste-match-v3's normalizeScoresForDisplay:
- * - Top match maps to ceiling (default 93)
- * - Lowest match maps to floor (default 35)
- * - Power curve (exponent 0.7) stretches the top end
+ * Uses z-score normalization to preserve relative differences even when
+ * the raw score range is narrow (e.g., all cosines between 0.60–0.85).
+ *
+ * Algorithm:
+ *   1. Compute mean and stddev of raw scores
+ *   2. Convert each score to z-score (stddevs from mean)
+ *   3. Map z-scores to display range via sigmoid-like curve
+ *   4. Center the display range around the median (~65 display score)
+ *
+ * This replaces the previous min-max approach which compressed scores
+ * when all raw cosines clustered in a narrow band.
  */
 export function normalizeVectorScoresForDisplay<T extends { overallScore: number }>(
   scores: T[],
@@ -346,25 +404,35 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
 ): T[] {
   if (scores.length === 0) return scores;
   if (scores.length === 1) {
-    return [{ ...scores[0], overallScore: ceiling }];
+    return [{ ...scores[0], overallScore: Math.round((ceiling + floor) / 2 + 10) }];
   }
 
   const rawScores = scores.map((s) => s.overallScore);
-  const maxRaw = Math.max(...rawScores);
-  const minRaw = Math.min(...rawScores);
-  const rawRange = maxRaw - minRaw;
+  const n = rawScores.length;
 
-  if (rawRange === 0) {
-    return scores.map((s) => ({ ...s, overallScore: ceiling }));
+  // Compute mean and stddev
+  const mean = rawScores.reduce((a, b) => a + b, 0) / n;
+  const variance = rawScores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / n;
+  const stddev = Math.sqrt(variance);
+
+  // Edge case: all scores identical
+  if (stddev < 0.1) {
+    return scores.map((s) => ({ ...s, overallScore: Math.round((ceiling + floor) / 2 + 10) }));
   }
 
   const displayRange = ceiling - floor;
+  // Median display score — where an average property lands
+  const medianDisplay = floor + displayRange * 0.55; // ~67 for default floor=35, ceil=93
 
   return scores.map((s) => {
-    const pct = (s.overallScore - minRaw) / rawRange;
-    // Power curve: exponent < 1 stretches top end
-    const curved = Math.pow(pct, 0.7);
-    const displayScore = Math.round(floor + curved * displayRange);
+    // Z-score: how many stddevs above/below mean
+    const z = (s.overallScore - mean) / stddev;
+
+    // Sigmoid-like mapping: z=0 → median, z=+2 → near ceiling, z=-2 → near floor
+    // tanh gives us a nice smooth curve in [-1, 1]
+    const curved = Math.tanh(z * 0.6); // 0.6 controls spread — higher = more compressed
+
+    const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.45));
     return { ...s, overallScore: Math.max(floor, Math.min(ceiling, displayScore)) };
   });
 }

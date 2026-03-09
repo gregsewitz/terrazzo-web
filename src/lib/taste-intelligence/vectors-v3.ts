@@ -82,11 +82,13 @@ const clusterInfo: Record<string, { label: string; domain?: string; topSignals: 
   (clusterMap as any).clusters;
 
 // Neighbor bleed map: cluster → [{cluster, similarity, tier}]
-// v3.3: similarity-scaled weights replace flat 0.25 decay
-const INTRA_BLEED_SCALE = (clusterMap as any).intra_bleed_scale ?? 0.30;
-const CROSS_BLEED_SCALE = (clusterMap as any).cross_bleed_scale ?? 0.10;
+// v3.5: Reduced bleed scales to prevent vector saturation.
+// Previous values (0.30/0.10) caused vectors with 300+ signals to become near-uniform
+// across all 400 dims, destroying discriminative power. Reduced to preserve sparsity.
+const INTRA_BLEED_SCALE = (clusterMap as any).intra_bleed_scale ?? 0.15;
+const CROSS_BLEED_SCALE = (clusterMap as any).cross_bleed_scale ?? 0.03;
 // Backward compat: if signal-clusters.json is still v3.2 with flat weight/no tier
-const LEGACY_DECAY = (clusterMap as any).neighbor_decay ?? 0.25;
+const LEGACY_DECAY = (clusterMap as any).neighbor_decay ?? 0.12;
 
 const clusterNeighborsRaw: Record<string, Array<{ cluster: number; similarity: number; weight?: number; tier?: string }>> =
   (clusterMap as any).clusterNeighbors ?? {};
@@ -161,6 +163,8 @@ export function lookupSignalCluster(signal: string): number {
 function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
   const features = new Array(SIGNAL_DIMS_V3).fill(0);
   const totalWeights = new Array(SIGNAL_DIMS_V3).fill(0);
+  // Track which clusters have DIRECT signal hits (not just bleed)
+  const directHits = new Set<number>();
 
   for (const { text, confidence } of signals) {
     const bucket = lookupSignalCluster(text);
@@ -169,7 +173,8 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
 
     // Primary cluster gets full weight (can be negative for anti-signals)
     features[bucket] += weightedConfidence;
-    totalWeights[bucket] += Math.abs(confidence) * idf; // absolute weight for normalization
+    totalWeights[bucket] += Math.abs(confidence) * idf;
+    directHits.add(bucket);
 
     // Neighbor bleed: spread energy (positive or negative) to nearest clusters
     const neighbors = neighborMap.get(bucket);
@@ -186,6 +191,18 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
     if (totalWeights[i] > 0) {
       features[i] = features[i] / totalWeights[i];
       features[i] = Math.max(-1.0, Math.min(features[i], 1.0));
+    }
+  }
+
+  // Sparsity preservation: attenuate bleed-only clusters.
+  // Clusters that only received energy via neighbor bleed (no direct signal hit)
+  // get dampened to prevent vector saturation for users with 300+ signals.
+  // This ensures the vector retains discriminative structure even as signal
+  // count grows — direct preferences stay strong, inferred adjacencies stay weak.
+  const BLEED_ONLY_DAMPEN = 0.3; // bleed-only clusters retain 30% of their value
+  for (let i = 0; i < SIGNAL_DIMS_V3; i++) {
+    if (!directHits.has(i) && features[i] !== 0) {
+      features[i] *= BLEED_ONLY_DAMPEN;
     }
   }
 
