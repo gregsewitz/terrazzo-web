@@ -85,41 +85,55 @@ export default function AddBarCollections({
         listClassName="flex flex-col gap-1.5 mb-2"
       />
 
-      {/* Save CTA */}
-      <div className="mt-2">
-        <button
-          onClick={onConfirmSave}
-          disabled={saving}
-          className="w-full py-3.5 rounded-xl cursor-pointer transition-all"
-          style={{
-            background: saving ? 'var(--t-verde)' : 'var(--t-ink)',
-            color: 'white',
-            border: 'none',
-            fontFamily: FONT.sans,
-            fontSize: 14,
-            fontWeight: 600,
-            opacity: saving ? 0.7 : 1,
-          }}
-        >
-          {saving ? 'Saved' : tripContext
-            ? `Save to Library + Day ${tripContext.dayIndex + 1}`
-            : selectedCollectionIds.length > 0
-              ? `Save to Library + ${selectedCollectionIds.length} collection${selectedCollectionIds.length > 1 ? 's' : ''}`
-              : 'Save to Library'
-          }
-        </button>
-        <p style={{
-          fontFamily: FONT.sans,
-          fontSize: 11,
-          color: INK['40'],
-          textAlign: 'center',
-          marginTop: 6,
-        }}>
-          {tripContext
-            ? 'Saved to Library and added to your trip'
-            : 'Collections are optional — you can organize later'}
-        </p>
-      </div>
     </>
+  );
+}
+
+/** Sticky footer CTA — rendered outside the scroll area by UniversalAddBar */
+export function AddBarCollectionsCTA({
+  saving, tripContext, selectedCollectionIds, onConfirmSave,
+}: Pick<AddBarCollectionsProps, 'saving' | 'tripContext' | 'selectedCollectionIds' | 'onConfirmSave'>) {
+  return (
+    <div
+      className="px-5 pb-4 pt-2 flex-shrink-0"
+      style={{
+        borderTop: '1px solid var(--t-linen)',
+        background: 'var(--t-cream)',
+      }}
+    >
+      <button
+        onClick={onConfirmSave}
+        disabled={saving}
+        className="w-full py-3.5 rounded-xl cursor-pointer transition-all"
+        style={{
+          background: saving ? 'var(--t-verde)' : 'var(--t-ink)',
+          color: 'white',
+          border: 'none',
+          fontFamily: FONT.sans,
+          fontSize: 14,
+          fontWeight: 600,
+          opacity: saving ? 0.7 : 1,
+        }}
+      >
+        {saving ? 'Saved' : tripContext
+          ? `Save to Library + Day ${tripContext.dayIndex + 1}`
+          : selectedCollectionIds.length > 0
+            ? `Save to Library + ${selectedCollectionIds.length} collection${selectedCollectionIds.length > 1 ? 's' : ''}`
+            : 'Save to Library'
+        }
+      </button>
+      <p style={{
+        fontFamily: FONT.sans,
+        fontSize: 11,
+        color: INK['40'],
+        textAlign: 'center',
+        marginTop: 6,
+        marginBottom: 0,
+      }}>
+        {tripContext
+          ? 'Saved to Library and added to your trip'
+          : 'Collections are optional — you can organize later'}
+      </p>
+    </div>
   );
 }

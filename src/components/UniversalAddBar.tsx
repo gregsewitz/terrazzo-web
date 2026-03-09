@@ -16,7 +16,7 @@ import { searchLibrary } from './add-bar/AddBarShared';
 import AddBarSearch from './add-bar/AddBarSearch';
 import AddBarImport from './add-bar/AddBarImport';
 import AddBarPreview from './add-bar/AddBarPreview';
-import AddBarCollections from './add-bar/AddBarCollections';
+import AddBarCollections, { AddBarCollectionsCTA } from './add-bar/AddBarCollections';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -516,6 +516,16 @@ const UniversalAddBar = memo(function UniversalAddBar() {
             )}
 
           </div>
+
+          {/* ── STICKY SAVE CTA (collections mode) ── */}
+          {mode === 'collections' && previewPlace && (
+            <AddBarCollectionsCTA
+              saving={saving}
+              tripContext={tripContext}
+              selectedCollectionIds={selectedCollectionIds}
+              onConfirmSave={confirmSave}
+            />
+          )}
         </div>
       </div>
     </>
