@@ -211,7 +211,7 @@ function PlaceDetailContent({
           onMouseLeave={e => isDesktop && (e.currentTarget.style.background = 'rgba(28,26,23,0.45)')}
           aria-label="Close"
         >
-          {isDesktop ? '✕' : '←'}
+          {isDesktop ? 'x' : '<'}
         </button>
         {/* Overlaid name on photo for immersive feel */}
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-4" style={{ pointerEvents: 'none' }}>
@@ -363,7 +363,7 @@ function PlaceDetailContent({
           if (g.address) tiles.push(<div key="addr" className="flex items-start gap-2.5 p-3.5 min-w-0"><PerriandIcon name="pin" size={13} color={INK['50']} /><span className="text-[11px] leading-snug" style={{ color: INK['75'] }}>{g.address}</span></div>);
           if (g.website) tiles.push(<div key="web" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="discover" size={13} color={INK['50']} /><a href={g.website} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline truncate" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>{g.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></div>);
           if (g.phone) tiles.push(<div key="phone" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="sparkle" size={13} color={INK['50']} /><a href={`tel:${g.phone}`} className="text-[11px] no-underline" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>{g.phone}</a></div>);
-          tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={INK['50']} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>Google Maps ↗</a></div>);
+          tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={INK['50']} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>Google Maps</a></div>);
           return (
             <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.2}>
               <div className="mb-5 rounded-2xl overflow-hidden" style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length >= 2 ? 2 : 1}, 1fr)`, gap: 1, background: INK['06'], border: `1px solid ${INK['04']}` }}>
@@ -377,7 +377,7 @@ function PlaceDetailContent({
         {item.enrichment?.closedDays && item.enrichment.closedDays.length > 0 && (
           <SafeFadeIn direction="up" distance={10} duration={0.4}>
             <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-5" style={{ background: 'rgba(232,104,48,0.12)', border: '1px solid rgba(232,104,48,0.25)' }}>
-              <span>⚠️</span>
+              <PerriandIcon name="alert" size={14} color="#a04018" />
               <span className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-medium`} style={{ color: '#a04018' }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
             </div>
           </SafeFadeIn>
@@ -533,7 +533,7 @@ function PlaceDetailContent({
                     ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
                     : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: INK['40'], fontFamily: FONT.mono }}>Researching this place…</span></div>
                 )}
-                {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing →</button>)}
+                {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing</button>)}
               </div>
             </div>
           </FadeInSection>

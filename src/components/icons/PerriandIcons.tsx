@@ -47,6 +47,8 @@ export type PerriandIconName =
   // Collaboration / Activity
   | 'invite' | 'wave' | 'lightbulb' | 'acceptCircle' | 'rejectCircle'
   | 'chatBubble' | 'loveReaction' | 'unsure' | 'swap'
+  // Briefing / Intelligence
+  | 'alert' | 'currency' | 'calendar' | 'person' | 'quote'
   // Directional
   | 'arrow-left' | 'arrow-right';
 
@@ -117,6 +119,11 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   loveReaction: '#e87080',
   unsure:       '#6b8b9a',
   swap:         '#6366f1',
+  alert:        '#e86830',
+  currency:     '#a06c28',
+  calendar:     '#6b8b9a',
+  person:       '#6844a0',
+  quote:        '#c8923a',
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────
@@ -598,6 +605,49 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
       <path d="M24,20 L8,20" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
       <path d="M12,16 L8,20 L12,24" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <circle cx="16" cy="16" r="1" fill={a} />
+    </>
+  ),
+
+  // ── Briefing / Intelligence ──────────────────────────────────────────────
+
+  alert: (s, a) => (
+    <>
+      <line x1="16" y1="8" x2="16" y2="19" stroke={s} strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="16" cy="24" r="1.5" fill={a} />
+    </>
+  ),
+
+  currency: (s, a) => (
+    <>
+      <line x1="16" y1="7" x2="16" y2="25" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M20,11 C20,11 18,9 16,9 C13,9 11,11 11,13 C11,15 13,16 16,17 C19,18 21,19 21,21 C21,23 19,25 16,25 C13,25 11,23 11,23" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <circle cx="16" cy="16" r="1" fill={a} />
+    </>
+  ),
+
+  calendar: (s, a) => (
+    <>
+      <rect x="8" y="10" width="16" height="14" rx="2" stroke={s} strokeWidth="1.5" fill="none" />
+      <line x1="8" y1="15" x2="24" y2="15" stroke={s} strokeWidth="1.5" />
+      <line x1="13" y1="7" x2="13" y2="12" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="19" y1="7" x2="19" y2="12" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="16" cy="20" r="1.2" fill={a} />
+    </>
+  ),
+
+  person: (s, a) => (
+    <>
+      <circle cx="16" cy="11" r="4" stroke={s} strokeWidth="1.5" fill="none" />
+      <path d="M8,26 C8,21 11,18 16,18 C21,18 24,21 24,26" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <circle cx="16" cy="11" r="1" fill={a} />
+    </>
+  ),
+
+  quote: (s, a) => (
+    <>
+      <path d="M10,12 C10,12 10,18 14,18 C14,18 14,14 10,14" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M18,12 C18,12 18,18 22,18 C22,18 22,14 18,14" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <circle cx="16" cy="22" r="1" fill={a} />
     </>
   ),
 

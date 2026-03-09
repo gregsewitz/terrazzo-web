@@ -547,7 +547,7 @@ function CollectionDetailContent() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
+        <div className="flex flex-col items-center py-12">
           <PerriandIcon name="discover" size={32} color={INK['15']} />
           <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
             {collectionSearch || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all'

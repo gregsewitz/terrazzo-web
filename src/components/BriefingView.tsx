@@ -83,13 +83,13 @@ function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }) {
   }, [signals]);
 
   const corroboratedCount = signals.filter(s => s.review_corroborated).length;
-  const sourceLabels: Record<string, { icon: string; label: string }> = {
-    editorial: { icon: '✎', label: 'Editorial' },
-    review: { icon: '★', label: 'Reviews' },
-    instagram: { icon: '◎', label: 'Instagram' },
-    menu: { icon: '▤', label: 'Menu' },
-    awards: { icon: '◆', label: 'Awards' },
-    analysis: { icon: '◈', label: 'Analysis' },
+  const sourceLabels: Record<string, { iconName: string; label: string }> = {
+    editorial: { iconName: 'article', label: 'Editorial' },
+    review: { iconName: 'quote', label: 'Reviews' },
+    instagram: { iconName: 'discover', label: 'Instagram' },
+    menu: { iconName: 'restaurant', label: 'Menu' },
+    awards: { iconName: 'sparkle', label: 'Awards' },
+    analysis: { iconName: 'lightbulb', label: 'Analysis' },
   };
 
   return (
@@ -102,7 +102,7 @@ function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }) {
             className="text-[9px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1"
             style={{ background: INK['04'], color: INK['80'], fontFamily: FONT.mono }}
           >
-            <span style={{ fontSize: 10 }}>{meta.icon}</span>
+            <PerriandIcon name={meta.iconName as any} size={10} color={INK['60']} />
             {count} {meta.label}
           </span>
         );
@@ -200,7 +200,7 @@ function CompactSignal({ signal }: { signal: BriefingSignal }) {
 function InlineAntiSignal({ signal }: { signal: BriefingAntiSignal }) {
   return (
     <div className="flex items-start gap-2 py-1.5 px-3 rounded-lg mt-1.5" style={{ background: 'rgba(160,108,40,0.05)' }}>
-      <span className="text-[10px] flex-shrink-0 mt-0.5" style={{ color: 'var(--t-amber)' }}>⚠</span>
+      <PerriandIcon name="alert" size={12} color="var(--t-amber)" />
       <span className="text-[11px] leading-snug italic" style={{ color: INK['75'] }}>
         {signal.signal}
       </span>
@@ -208,25 +208,25 @@ function InlineAntiSignal({ signal }: { signal: BriefingAntiSignal }) {
   );
 }
 
-const FACT_ICONS: Record<string, string> = {
-  cuisine: '🍽', cuisineType: '🍽', type: '🍽',
-  priceRange: '💰', price: '💰', priceTier: '💰',
-  michelinStars: '⭐', michelin: '⭐', awards: '🏆',
-  yearOpened: '📅', established: '📅', opened: '📅',
-  capacity: '👥', seats: '👥', seating: '👥',
-  chef: '👨‍🍳', headChef: '👨‍🍳',
-  neighborhood: '📍', area: '📍', district: '📍',
-  style: '✦', ambiance: '✦', vibe: '✦',
-  reservations: '📞', booking: '📞',
-  dressCode: '👔', attire: '👔',
+const FACT_ICON_MAP: Record<string, string> = {
+  cuisine: 'restaurant', cuisinetype: 'restaurant', type: 'restaurant',
+  pricerange: 'currency', price: 'currency', pricetier: 'currency',
+  michelinstars: 'star', michelin: 'star', awards: 'sparkle',
+  yearopened: 'calendar', established: 'calendar', opened: 'calendar',
+  capacity: 'person', seats: 'person', seating: 'person',
+  chef: 'person', headchef: 'person',
+  neighborhood: 'pin', area: 'pin', district: 'pin',
+  style: 'design', ambiance: 'design', vibe: 'design',
+  reservations: 'bookmark', booking: 'bookmark',
+  dresscode: 'profile', attire: 'profile',
 };
 
-function getFactIcon(key: string): string {
+function getFactIconName(key: string): string {
   const lower = key.toLowerCase();
-  for (const [k, icon] of Object.entries(FACT_ICONS)) {
-    if (lower.includes(k.toLowerCase())) return icon;
+  for (const [k, iconName] of Object.entries(FACT_ICON_MAP)) {
+    if (lower.includes(k)) return iconName;
   }
-  return '●';
+  return 'sparkle';
 }
 
 // ─── Main Component ───
@@ -311,7 +311,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   className="text-[11px] mb-1.5 block"
                   style={{ color: '#8a6a2a', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT.mono }}
                 >
-                  ← Back to summary
+                  Back to summary
                 </button>
                 <h1
                   className="text-[22px] md:text-[26px] leading-tight italic"
@@ -434,7 +434,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                         className="p-4 rounded-2xl flex items-start gap-2.5"
                         style={{ background: 'rgba(160,108,40,0.04)', borderLeft: '3px solid var(--t-amber)' }}
                       >
-                        <span className="text-[12px] mt-0.5">⚠</span>
+                        <PerriandIcon name="alert" size={14} color={INK['60']} />
                         <p className="text-[12px] leading-relaxed" style={{ color: 'var(--t-ink)' }}>
                           {place.terrazzoInsight.caveat}
                         </p>
@@ -747,7 +747,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                               className="flex items-start gap-3 px-4 py-2.5"
                               style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--t-linen)' : 'none' }}
                             >
-                              <span className="text-[12px] flex-shrink-0 w-5 text-center mt-0.5">{getFactIcon(key)}</span>
+                              <span className="flex-shrink-0 w-5 flex justify-center mt-0.5"><PerriandIcon name={getFactIconName(key) as any} size={12} color={INK['45']} /></span>
                               <div className="flex-1 min-w-0">
                                 <div className="text-[9px] uppercase tracking-wider" style={{ color: INK['50'], fontFamily: FONT.mono }}>{displayKey}</div>
                                 <div className="text-[12px] font-medium mt-0.5" style={{ color: 'var(--t-ink)' }}>{String(value)}</div>
