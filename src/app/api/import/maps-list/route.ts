@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
 
               if (googleResult) {
                 const photoUrl = googleResult.photos?.[0]?.name
-                  ? getPhotoUrl(googleResult.photos[0].name, 400)
+                  ? getPhotoUrl(googleResult.photos[0].name, 800)
                   : undefined;
 
                 return {

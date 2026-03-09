@@ -39,12 +39,12 @@ export default function AddBarCollections({
         style={{ background: 'white', border: '1px solid var(--t-linen)' }}
       >
         {previewPlace.google?.photoUrl && (
-          <div style={{ position: 'relative', width: '100%', height: 140 }}>
+          <div style={{ position: 'relative', width: '100%', height: 180 }}>
             <PlacePhoto
               src={previewPlace.google.photoUrl}
               alt={previewPlace.name}
               fill
-              sizes="400px"
+              sizes="(max-width: 768px) 94vw, 640px"
             />
           </div>
         )}

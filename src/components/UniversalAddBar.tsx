@@ -290,7 +290,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════
 
-  const maxW = isDesktop ? 560 : 480;
+  const maxW = isDesktop ? 640 : 520;
 
   return (
     <>
@@ -318,8 +318,8 @@ const UniversalAddBar = memo(function UniversalAddBar() {
             pointerEvents: 'auto',
             width: '94vw',
             maxWidth: maxW,
-            maxHeight: isDesktop ? '80vh' : '85dvh',
-            marginTop: isDesktop ? '10vh' : '6dvh',
+            maxHeight: isDesktop ? '85vh' : '90dvh',
+            marginTop: isDesktop ? '7vh' : '4dvh',
             background: 'var(--t-cream)',
             boxShadow: '0 24px 64px rgba(0,0,0,0.16)',
             opacity: 0,

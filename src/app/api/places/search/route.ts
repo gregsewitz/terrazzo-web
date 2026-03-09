@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         type: mapGoogleTypeToPlaceType(r.primaryType),
         lat: r.location?.latitude,
         lng: r.location?.longitude,
-        photoUrl: r.photos?.[0]?.name ? getPhotoUrl(r.photos[0].name, 200) : undefined,
+        photoUrl: r.photos?.[0]?.name ? getPhotoUrl(r.photos[0].name, 800) : undefined,
       }));
       return NextResponse.json(mapped, {
         headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
