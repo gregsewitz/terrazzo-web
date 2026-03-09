@@ -119,6 +119,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
     score: 97,
     why: "Every room faces east. The tufa stone glows amber at breakfast. The architect designed around the sunrise.",
     bg: "#2d3a2d",
+    googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
   },
   {
     signal: "initiative without intrusion",
@@ -128,6 +129,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
     score: 89,
     why: "Staff remember your tea preference from day one. No check-in desk. The boat ride in is the welcome.",
     bg: "#3a2d2d",
+    googlePlaceId: "ChIJ9e5EmAWqAWARpQEhPRuq-Qw",
   },
   {
     signal: "communal dinner (long table)",
@@ -137,6 +139,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
     score: 94,
     why: "One long larch table, one menu, everyone sits together. The chef forages that morning. No choices, just trust.",
     bg: "#2d2d3a",
+    googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8",
   },
 ];
 
@@ -159,6 +162,7 @@ export const SIGNAL_THREAD: SignalThread = {
       type: "hotel",
       connection: "Larch wood walls and alpine stone — the building IS the landscape",
       score: 94,
+      googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8",
     },
     {
       name: "Septime",
@@ -166,6 +170,7 @@ export const SIGNAL_THREAD: SignalThread = {
       type: "restaurant",
       connection: "Bare tables, imperfect ceramics, wine in simple glasses — deliberate understatement",
       score: 91,
+      googlePlaceId: "ChIJE6kCUghy5kcRmWSg3RUHIwM",
     },
     {
       name: "Södermalm",
@@ -173,6 +178,7 @@ export const SIGNAL_THREAD: SignalThread = {
       type: "neighborhood",
       connection: "Where design-minded Stockholm actually lives — every cafe and shop reflects this signal",
       score: 88,
+      googlePlaceId: "ChIJc6euFuV3X0YRQmY6ng8b2Ho",
     },
   ],
 };
@@ -187,6 +193,7 @@ export const TASTE_TENSION: TasteTension = {
     name: "Ett Hem",
     location: "Stockholm, Sweden",
     how: "12 rooms, every surface layered — but nothing is accidental. Ilse Crawford designed a home, not a hotel.",
+    googlePlaceId: "ChIJ5dbUPWqdX0YRmE5enY3QHQk",
   },
 };
 
@@ -202,6 +209,7 @@ export const WEEKLY_COLLECTION = {
       signals: ["Vernacular modern", "Artisan ceramics", "Morning light"],
       signalDomain: "Design",
       note: "A white masseria where the architecture IS the experience — every surface is hand-finished local tufa",
+      googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
     },
     {
       name: "Forestis",
@@ -210,6 +218,7 @@ export const WEEKLY_COLLECTION = {
       signals: ["Neo-rustic refined", "Staff-as-host", "Fresh-air-obsessive"],
       signalDomain: "Design",
       note: "Built into the mountain at 1,800m. Larch wood, floor-to-ceiling glass, and air that tastes like pine",
+      googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8",
     },
     {
       name: "Ett Hem",
@@ -218,6 +227,7 @@ export const WEEKLY_COLLECTION = {
       signals: ["Curated density", "Domestic atmosphere", "Owner-operated"],
       signalDomain: "Character",
       note: "A townhouse that feels like staying at a brilliantly stylish friend's home — 12 rooms, no lobby",
+      googlePlaceId: "ChIJ5dbUPWqdX0YRmE5enY3QHQk",
     },
     {
       name: "Hoshinoya Kyoto",
@@ -226,6 +236,7 @@ export const WEEKLY_COLLECTION = {
       signals: ["Guided ritual", "Spatial precision", "Memory-driven"],
       signalDomain: "Service",
       note: "Accessible only by boat. Rooms designed around the river sounds. Service remembers everything",
+      googlePlaceId: "ChIJ9e5EmAWqAWARpQEhPRuq-Qw",
     },
     {
       name: "Can Ferrereta",
@@ -234,6 +245,7 @@ export const WEEKLY_COLLECTION = {
       signals: ["Natural pool", "Courtyard-centered", "Village-scale"],
       signalDomain: "Setting",
       note: "A 17th-century estate woven into Santanyí village — the natural pool is carved from the original cistern",
+      // googlePlaceId omitted — auto-resolved via ensure-places endpoint on first use
     },
   ] as CollectionPlace[],
 };
@@ -250,6 +262,7 @@ export const STRETCH_PICK = {
   weakScore: 28,
   why: "Your FoodDrink axis is 85% but this could crack it wide open. Etxebarri is a single-minded obsession with fire — every course, including dessert, touches the grill. It's the kind of place that permanently recalibrates what you think flavor can be.",
   tension: "It breaks your 'urban-walkable' signal (it's a 40-minute drive into the Basque hills) but the valley setting and zero pretension create the intimacy your profile craves.",
+  googlePlaceId: "ChIJfwMp6PLSTw0RFlSWXV3fkio",
 };
 
 // ── Context Mode recs ──
@@ -259,18 +272,21 @@ export const SUMMER_RECS: ContextRec[] = [
     location: "Mallorca, Spain",
     score: 87,
     whyFits: "Natural pool carved from stone, courtyard dining under fig trees",
+    // googlePlaceId omitted — auto-resolved via ensure-places endpoint on first use
   },
   {
     name: "Masseria Moroseta",
     location: "Puglia, Italy",
     score: 97,
     whyFits: "Outdoor breakfast terrace, grove walks, open-air rooftop at dusk",
+    googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
   },
   {
     name: "Belmond Grand Hotel Timeo",
     location: "Taormina, Sicily",
     score: 84,
     whyFits: "Terrace overlooking Etna, poolside lunch, evening passeggiata",
+    googlePlaceId: "ChIJ5QrHTJ8RFBMRUzfUaMkAT6o",
   },
 ];
 
@@ -281,9 +297,9 @@ export const MOOD_BOARDS: MoodBoard[] = [
     description: "Total sensory retreat — no decisions, no noise, just air and light.",
     color: "#4a6b8b",
     places: [
-      { name: "Forestis", location: "Dolomites, Italy", vibe: "Alpine silence at 1,800m", score: 94 },
-      { name: "Hoshinoya Kyoto", location: "Kyoto, Japan", vibe: "River sounds, paper walls", score: 89 },
-      { name: "Amangiri", location: "Canyon Point, Utah", vibe: "Desert emptiness as design", score: 82 },
+      { name: "Forestis", location: "Dolomites, Italy", vibe: "Alpine silence at 1,800m", score: 94, googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8" },
+      { name: "Hoshinoya Kyoto", location: "Kyoto, Japan", vibe: "River sounds, paper walls", score: 89, googlePlaceId: "ChIJ9e5EmAWqAWARpQEhPRuq-Qw" },
+      { name: "Amangiri", location: "Canyon Point, Utah", vibe: "Desert emptiness as design", score: 82, googlePlaceId: "ChIJq-qcNtwhNYcRazgIZDEKTIc" },
     ],
   },
   {
@@ -291,9 +307,9 @@ export const MOOD_BOARDS: MoodBoard[] = [
     description: "Walkable neighborhoods with your kind of places on every corner.",
     color: "#8b4a4a",
     places: [
-      { name: "11th Arrondissement", location: "Paris, France", vibe: "Natural wine, no-choice menus", score: 91 },
-      { name: "Södermalm", location: "Stockholm, Sweden", vibe: "Third-wave coffee, open sandwiches", score: 88 },
-      { name: "Roma Norte", location: "Mexico City, Mexico", vibe: "Mezcal bars, street food, roof terraces", score: 85 },
+      { name: "11th Arrondissement", location: "Paris, France", vibe: "Natural wine, no-choice menus", score: 91, googlePlaceId: "ChIJxSr71vZt5kcR8BqUaMOCCwU" },
+      { name: "Södermalm", location: "Stockholm, Sweden", vibe: "Third-wave coffee, open sandwiches", score: 88, googlePlaceId: "ChIJc6euFuV3X0YRQmY6ng8b2Ho" },
+      { name: "Roma Norte", location: "Mexico City, Mexico", vibe: "Mezcal bars, street food, roof terraces", score: 85, googlePlaceId: "ChIJzeSi8jn_0YURMiXDZ-gzmi0" },
     ],
   },
 ];
@@ -304,6 +320,7 @@ export const DEEP_MATCH: DeepMatch = {
   location: "Puglia, Italy",
   score: 97,
   headline: "This place was made for the way you travel.",
+  googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
   signalBreakdown: [
     { signal: "Vernacular modern", domain: "Design", strength: 98, note: "Local tufa stone, contemporary proportions — architecture rooted in place" },
     { signal: "Communal dinner", domain: "FoodDrink", strength: 95, note: "One long table, farm-sourced menu, everyone eats together" },
@@ -325,6 +342,7 @@ export const FRIEND_SAVES: FriendSave[] = [
     type: "cafe",
     whyMatches: "Matches your Character axis — serious about extraction, zero pretension",
     color: "#4a6741",
+    googlePlaceId: "ChIJ7QBKvuV3X0YRHP5IH4gh4jw",
   },
   {
     friendName: "Lizzie N.",
@@ -335,6 +353,7 @@ export const FRIEND_SAVES: FriendSave[] = [
     type: "restaurant",
     whyMatches: "Near-perfect Food & Drink alignment — natural wine, no-choice menu, intimate room",
     color: "#8b4a4a",
+    googlePlaceId: "ChIJE6kCUghy5kcRmWSg3RUHIwM",
   },
   {
     friendName: "Marcus T.",
@@ -345,5 +364,6 @@ export const FRIEND_SAVES: FriendSave[] = [
     type: "cafe",
     whyMatches: "A stretch pick for you — more scene than substance, but the morning light is unmatched",
     color: "#4a6b8b",
+    googlePlaceId: "ChIJq537gddx5kcR_3PhRd2muxg",
   },
 ];

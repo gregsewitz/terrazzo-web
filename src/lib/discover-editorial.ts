@@ -8,7 +8,17 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { GeneratedTasteProfile, OnboardingLifeContext } from '@/types';
-import type { AllocatedFeed } from './discover-allocation';
+import type {
+  AllocatedFeed,
+  AllocatedBecauseYou,
+  AllocatedSignalThread,
+  AllocatedTasteTension,
+  AllocatedWeeklyCollection,
+  AllocatedMoodBoard,
+  AllocatedStretchPick,
+  AllocatedContextRec,
+  AllocatedDeepMatch,
+} from './discover-allocation';
 
 const anthropic = new Anthropic();
 
@@ -306,4 +316,207 @@ export async function generateEditorialCopy(
 
   const result = JSON.parse(jsonMatch[0]) as EditorialFeed;
   return result;
+}
+
+// ─── /discover/more editorial generation ──────────────────────────────────────
+
+const MORE_EDITORIAL_PROMPT = `You are Terrazzo's editorial voice — a deeply tasteful, well-traveled curator who writes like the best travel magazines. You have intimate knowledge of both the user and the properties.
+
+CRITICAL: Most properties have been pre-selected by our matching engine with real scores. Use those EXACTLY as provided. However, you may also be asked to suggest a few FRESH PICKS — real places you know that aren't in our database yet. For fresh picks, you assign scores based on your best judgment of how well they match the user's profile.
+
+RULES:
+- For pre-selected properties: use the EXACT names, scores, and googlePlaceIds provided
+- For fresh picks: suggest REAL places that exist. Use realistic scores (75-95). Leave googlePlaceId empty — we'll resolve it
+- Reference specific signals in all copy. Never be generic or promotional
+- Write like a well-traveled friend with perfect recall. Warm, specific, editorial
+- bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a
+- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #8b6b4a
+- Return ONLY valid JSON, no wrapping text`;
+
+export interface MorePageConfig {
+  sections: string[];
+  instructions: string;
+  freshPickSlots?: number; // how many new places Claude can suggest (default 0)
+}
+
+/**
+ * Build a context message for a partial /more feed allocation.
+ * Only serializes the sections present in the allocation.
+ */
+function buildMoreContextMessage(
+  allocated: Partial<AllocatedFeed> & { contextLabel: string },
+  sections: string[],
+  configInstructions: string,
+  freshPickSlots: number,
+  userProfile: GeneratedTasteProfile,
+  lifeContext: OnboardingLifeContext | null,
+  excludePlaces: string[],
+): string {
+  const companion = lifeContext?.primaryCompanions?.[0] || 'solo';
+  const month = new Date().getMonth();
+  const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
+
+  let allocatedSection = '';
+
+  if (allocated.deepMatch) {
+    const c = allocated.deepMatch.candidate;
+    allocatedSection += `\nDEEP MATCH:\n  - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore} | Top: ${c.topDimension}\n  - Domain breakdown: ${JSON.stringify(c.domainBreakdown)}\n  - Top signals: ${c.topMatchingSignals.slice(0, 4).map(s => `"${s.signal}" (${s.dimension})`).join('; ')}\n`;
+  }
+
+  if (allocated.becauseYouCards && allocated.becauseYouCards.length > 0) {
+    allocatedSection += `\nBECAUSE YOU CARDS:\n`;
+    for (const b of allocated.becauseYouCards) {
+      allocatedSection += `  - ${b.candidate.propertyName} (${b.candidate.googlePlaceId}) — Score: ${b.candidate.overallScore} | Signal: "${b.signal}" | Domain: ${b.signalDomain}\n`;
+    }
+  }
+
+  if (allocated.signalThread) {
+    allocatedSection += `\nSIGNAL THREAD:\n  - Signal: "${allocated.signalThread.signal}" (${allocated.signalThread.domain})\n`;
+    for (const c of allocated.signalThread.candidates) {
+      allocatedSection += `  - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}\n`;
+    }
+  }
+
+  if (allocated.tasteTension) {
+    const tt = allocated.tasteTension;
+    allocatedSection += `\nTASTE TENSION:\n  - Contradiction: "${tt.contradiction.stated}" vs "${tt.contradiction.revealed}"\n  - Resolved by: ${tt.candidate.propertyName} (${tt.candidate.googlePlaceId}) — Score: ${tt.candidate.overallScore}\n`;
+  }
+
+  if (allocated.stretchPick) {
+    const sp = allocated.stretchPick;
+    allocatedSection += `\nSTRETCH PICK:\n  - ${sp.candidate.propertyName} (${sp.candidate.googlePlaceId}) — Score: ${sp.candidate.overallScore}\n  - Strong: ${sp.strongDomain} (${sp.candidate.domainBreakdown[sp.strongDomain]}) | Weak: ${sp.weakDomain} (${sp.candidate.domainBreakdown[sp.weakDomain]})\n`;
+  }
+
+  if (allocated.weeklyCollection) {
+    allocatedSection += `\nWEEKLY COLLECTION (domain: ${allocated.weeklyCollection.dominantDomain}):\n`;
+    for (const c of allocated.weeklyCollection.candidates) {
+      allocatedSection += `  - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}\n`;
+    }
+  }
+
+  if (allocated.moodBoards && allocated.moodBoards.length > 0) {
+    allocatedSection += `\nMOOD BOARDS:\n`;
+    for (const mb of allocated.moodBoards) {
+      allocatedSection += `  Board (${mb.domain}):\n`;
+      for (const c of mb.candidates) {
+        allocatedSection += `    - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}\n`;
+      }
+    }
+  }
+
+  if (allocated.contextRecs && allocated.contextRecs.length > 0) {
+    allocatedSection += `\nCONTEXT RECS:\n`;
+    for (const cr of allocated.contextRecs) {
+      allocatedSection += `  - ${cr.candidate.propertyName} (${cr.candidate.googlePlaceId}) — Score: ${cr.candidate.overallScore}\n`;
+    }
+  }
+
+  const freshPicksNote = freshPickSlots > 0
+    ? `\n\nFRESH PICKS: You may suggest up to ${freshPickSlots} additional REAL places that aren't in the pre-selected list above. These should be real, well-known places in the boutique/design travel world. For fresh picks, leave googlePlaceId as an empty string "" — we'll resolve it. Assign a realistic score based on how well you think it matches this user's profile. Weave fresh picks naturally into the sections above (e.g. add 1-2 to the weeklyCollection or moodBoard, or use one as a contextRec).`
+    : '';
+
+  const excludeNote = excludePlaces.length > 0
+    ? `\n\nALREADY SHOWN (do NOT repeat):\n${excludePlaces.slice(0, 50).join(', ')}`
+    : '';
+
+  // Build the JSON output schema based on requested sections
+  const sectionSet = new Set(sections);
+  const outputParts: string[] = [];
+  if (sectionSet.has('becauseYouCards')) outputParts.push('"becauseYouCards": [{ "signal": "...", "signalDomain": "...", "place": "property name", "location": "City, Country", "score": <computed>, "why": "2 sentences", "bg": "#hex", "googlePlaceId": "..." }]');
+  if (sectionSet.has('signalThread')) outputParts.push('"signalThread": { "signal": "...", "domain": "...", "thread": "1 sentence", "places": [{ "name": "...", "location": "...", "type": "hotel|restaurant|bar|cafe|neighborhood", "connection": "1 sentence", "score": <computed>, "googlePlaceId": "..." }] }');
+  if (sectionSet.has('tasteTension')) outputParts.push('"tasteTension": { "title": "4-6 words", "stated": "...", "revealed": "...", "editorial": "2-3 sentences", "resolvedBy": { "name": "...", "location": "...", "how": "1 sentence", "googlePlaceId": "..." } }');
+  if (sectionSet.has('weeklyCollection')) outputParts.push('"weeklyCollection": { "title": "Evocative theme (max 10 words)", "subtitle": "Filtered for: signal1 · signal2 · signal3", "places": [{ "name": "...", "location": "...", "score": <computed>, "signals": ["s1","s2"], "signalDomain": "...", "note": "1 sentence", "googlePlaceId": "..." }] }');
+  if (sectionSet.has('moodBoards')) outputParts.push('"moodBoards": [{ "mood": "When you... (max 8 words)", "description": "1 sentence", "color": "#hex", "places": [{ "name": "...", "location": "...", "vibe": "3-5 words", "score": <computed>, "googlePlaceId": "..." }] }]');
+  if (sectionSet.has('deepMatch')) outputParts.push('"deepMatch": { "name": "...", "location": "...", "score": <computed>, "headline": "max 12 words", "signalBreakdown": [{ "signal": "...", "domain": "...", "strength": <computed>, "note": "..." }], "tensionResolved": "1-2 sentences", "googlePlaceId": "..." }');
+  if (sectionSet.has('stretchPick')) outputParts.push('"stretchPick": { "name": "...", "location": "...", "score": <computed>, "type": "hotel|restaurant|...", "strongAxis": "...", "strongScore": <computed>, "weakAxis": "...", "weakScore": <computed>, "why": "2 sentences", "tension": "1 sentence", "googlePlaceId": "..." }');
+  if (sectionSet.has('contextRecs')) outputParts.push('"contextRecs": [{ "name": "...", "location": "...", "score": <computed>, "whyFits": "1 sentence", "googlePlaceId": "..." }]');
+
+  return `USER'S TASTE PROFILE:
+- Archetype: ${userProfile.overallArchetype}
+- Description: ${userProfile.archetypeDescription || ''}
+- Emotional driver: ${userProfile.emotionalDriver?.primary || 'Unknown'} / ${userProfile.emotionalDriver?.secondary || 'Unknown'}
+
+MICRO-SIGNALS BY DOMAIN:
+${Object.entries(userProfile.microTasteSignals || {}).map(([domain, signals]) => `${domain}: ${(signals as string[]).join(', ')}`).join('\n')}
+
+RADAR AXES:
+${(userProfile.radarData || []).map((r: { axis: string; value: number }) => `${r.axis}: ${Math.round(r.value * 100)}%`).join(', ')}
+
+CONTRADICTIONS:
+${(userProfile.contradictions || []).map((c) => `${c.stated} vs ${c.revealed} → ${c.resolution}`).join('\n') || 'None identified'}
+
+LIFE CONTEXT:
+- Primary companion: ${companion}
+- Current season: ${season}
+- Context label: "${allocated.contextLabel}"
+
+---
+
+EDITORIAL ANGLE FOR THIS PAGE:
+${configInstructions}
+
+---
+
+ALLOCATED PROPERTIES (pre-selected by matching engine — use exact scores and googlePlaceIds):
+${allocatedSection || '(No pre-allocated properties for this config — generate all fresh)'}
+${freshPicksNote}${excludeNote}
+
+---
+
+GENERATE ONLY THESE SECTIONS: ${sections.join(', ')}
+
+OUTPUT FORMAT:
+Return valid JSON with ONLY the requested sections:
+{
+  ${outputParts.join(',\n  ')}
+}
+
+IMPORTANT:
+- Use EXACT property names, scores, and googlePlaceIds from allocated properties
+- For fresh picks, use googlePlaceId: "" (empty string)
+- Reference specific user signals in all copy
+- Return ONLY valid JSON`;
+}
+
+/**
+ * Generate editorial copy for a /discover/more page.
+ * Takes a partial allocation (only the requested sections) and config-specific instructions.
+ */
+export async function generateMoreEditorialCopy(
+  allocated: Partial<AllocatedFeed> & { contextLabel: string },
+  config: MorePageConfig,
+  userProfile: GeneratedTasteProfile,
+  lifeContext: OnboardingLifeContext | null,
+  excludePlaces: string[],
+): Promise<Partial<EditorialFeed>> {
+  const contextMessage = buildMoreContextMessage(
+    allocated,
+    config.sections,
+    config.instructions,
+    config.freshPickSlots || 0,
+    userProfile,
+    lifeContext,
+    excludePlaces,
+  );
+
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    system: [
+      {
+        type: 'text',
+        text: MORE_EDITORIAL_PROMPT,
+        cache_control: { type: 'ephemeral' },
+      },
+    ],
+    messages: [{ role: 'user', content: contextMessage }],
+  });
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Failed to parse /more editorial content from Claude response');
+  }
+
+  return JSON.parse(jsonMatch[0]) as Partial<EditorialFeed>;
 }

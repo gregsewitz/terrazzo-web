@@ -432,6 +432,80 @@ async function generateGroundedFeed(
   return feed;
 }
 
+// ─── Universal enrichment trigger ─────────────────────────────────────────────
+
+export interface FeedPlace {
+  googlePlaceId?: string;
+  name?: string;
+  place?: string; // becauseYouCards use "place" instead of "name"
+  location?: string;
+  type?: string;
+}
+
+/**
+ * Walk ALL sections of a generated feed and collect every unique place.
+ * Mirrors the structure of `extractPlaces` / `attachPlaceIds` but collects
+ * googlePlaceIds for enrichment rather than attaching them.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractAllFeedPlaces(feed: any): FeedPlace[] {
+  const seen = new Set<string>();
+  const places: FeedPlace[] = [];
+
+  function add(obj: FeedPlace | undefined) {
+    if (!obj) return;
+    const name = obj.name || obj.place;
+    if (!name) return;
+    // Deduplicate by googlePlaceId when available, otherwise by name+location
+    const key = obj.googlePlaceId || `${name}||${obj.location || ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    places.push({ googlePlaceId: obj.googlePlaceId, name, location: obj.location, type: obj.type });
+  }
+
+  for (const card of feed.becauseYouCards || []) add(card);
+  for (const p of feed.signalThread?.places || []) add(p);
+  add(feed.tasteTension?.resolvedBy);
+  for (const p of feed.weeklyCollection?.places || []) add(p);
+  for (const board of feed.moodBoards || []) {
+    for (const p of board.places || []) add(p);
+  }
+  add(feed.deepMatch);
+  add(feed.stretchPick);
+  for (const rec of feed.contextRecs || []) add(rec);
+
+  return places;
+}
+
+/**
+ * Fire-and-forget: ensure enrichment is triggered for every place in the feed.
+ * Uses Promise.allSettled so one failure doesn't block others.
+ */
+export async function triggerEnrichmentBatch(
+  places: FeedPlace[],
+  userId: string,
+  trigger: string,
+): Promise<void> {
+  const withIds = places.filter(p => p.googlePlaceId);
+  if (withIds.length === 0) return;
+
+  const results = await Promise.allSettled(
+    withIds.map(p =>
+      ensureEnrichment(
+        p.googlePlaceId!,
+        p.name || p.place || '',
+        userId,
+        trigger,
+        (p.type as any) || undefined,
+      ),
+    ),
+  );
+
+  const triggered = results.filter(r => r.status === 'fulfilled' && r.value).length;
+  const skipped = withIds.length - triggered;
+  console.log(`[discover] Enrichment batch: ${triggered} triggered, ${skipped} already enriched (${places.length} total places, ${places.length - withIds.length} without googlePlaceId)`);
+}
+
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
@@ -456,7 +530,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
       );
 
       if (ragFeed) {
-        // RAG flow succeeded — googlePlaceIds are already attached
+        // Defensive: ensure all surfaced places have enrichment triggered
+        triggerEnrichmentBatch(extractAllFeedPlaces(ragFeed), user.id, 'discover_rag').catch(() => {});
         return NextResponse.json(ragFeed);
       }
     } catch (ragError) {
@@ -464,8 +539,11 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     }
 
     // Fallback: legacy LLM-only flow
+    // (resolveAllPlaces already calls ensureEnrichment per-place, but we add
+    //  the batch trigger for consistency and to catch any places missed)
     console.log('[discover] Using legacy LLM-only flow');
     const legacyFeed = await generateLegacyFeed(userProfile, lifeContext, user.id);
+    triggerEnrichmentBatch(extractAllFeedPlaces(legacyFeed), user.id, 'discover_legacy').catch(() => {});
 
     return NextResponse.json(legacyFeed);
   } catch (error) {

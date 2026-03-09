@@ -311,6 +311,179 @@ function allocateSignalThread(
   };
 }
 
+// ─── Partial allocation for /discover/more ────────────────────────────────────
+
+/**
+ * Partial feed allocation — only fills the sections listed in `requestedSections`.
+ * Same logic as allocateSlots() but scoped to the requested section types.
+ * Used by /discover/more to allocate different editorial templates per page.
+ */
+export function allocateMoreSlots(
+  scored: ScoredCandidate[],
+  requestedSections: string[],
+  userMicroSignals: Record<string, string[]>,
+  userContradictions: TasteContradiction[],
+  lifeContext: OnboardingLifeContext | null,
+): Partial<AllocatedFeed> & { contextLabel: string } {
+  const used = new Set<string>();
+  const sections = new Set(requestedSections);
+
+  function takeFirst(
+    candidates: ScoredCandidate[],
+    filter?: (c: ScoredCandidate) => boolean,
+  ): ScoredCandidate | null {
+    for (const c of candidates) {
+      if (used.has(c.googlePlaceId)) continue;
+      if (filter && !filter(c)) continue;
+      used.add(c.googlePlaceId);
+      return c;
+    }
+    return null;
+  }
+
+  function takeN(
+    candidates: ScoredCandidate[],
+    n: number,
+    filter?: (c: ScoredCandidate) => boolean,
+  ): ScoredCandidate[] {
+    const result: ScoredCandidate[] = [];
+    for (const c of candidates) {
+      if (result.length >= n) break;
+      if (used.has(c.googlePlaceId)) continue;
+      if (filter && !filter(c)) continue;
+      used.add(c.googlePlaceId);
+      result.push(c);
+    }
+    return result;
+  }
+
+  const result: Partial<AllocatedFeed> = {};
+
+  // Deep Match
+  if (sections.has('deepMatch')) {
+    const candidate = takeFirst(scored);
+    if (candidate) result.deepMatch = { candidate };
+  }
+
+  // Because You Cards
+  if (sections.has('becauseYouCards')) {
+    const cards: AllocatedBecauseYou[] = [];
+    const usedDomains = new Set<TasteDomain>();
+    for (const c of scored) {
+      if (cards.length >= 3) break;
+      if (used.has(c.googlePlaceId)) continue;
+      if (cards.length > 0 && usedDomains.has(c.topDimension)) continue;
+      used.add(c.googlePlaceId);
+      usedDomains.add(c.topDimension);
+      const topSig = c.topMatchingSignals[0];
+      cards.push({
+        candidate: c,
+        signal: topSig?.signal || `Strong ${c.topDimension} alignment`,
+        signalDomain: topSig?.dimension
+          ? (DIMENSION_TO_DOMAIN[topSig.dimension] || c.topDimension)
+          : c.topDimension,
+      });
+    }
+    // Fill remaining without domain constraint
+    for (const c of scored) {
+      if (cards.length >= 3) break;
+      if (used.has(c.googlePlaceId)) continue;
+      used.add(c.googlePlaceId);
+      const topSig = c.topMatchingSignals[0];
+      cards.push({
+        candidate: c,
+        signal: topSig?.signal || `Strong ${c.topDimension} alignment`,
+        signalDomain: topSig?.dimension
+          ? (DIMENSION_TO_DOMAIN[topSig.dimension] || c.topDimension)
+          : c.topDimension,
+      });
+    }
+    result.becauseYouCards = cards;
+  }
+
+  // Taste Tension
+  if (sections.has('tasteTension') && userContradictions.length > 0) {
+    const tensionCandidate = takeFirst(scored, (c) =>
+      c.contradictionRelevance?.coversBothSides === true,
+    );
+    if (tensionCandidate && tensionCandidate.contradictionRelevance) {
+      result.tasteTension = {
+        contradiction: tensionCandidate.contradictionRelevance.contradiction,
+        candidate: tensionCandidate,
+      };
+    }
+  }
+
+  // Signal Thread
+  if (sections.has('signalThread')) {
+    result.signalThread = allocateSignalThread(scored, used, userMicroSignals);
+  }
+
+  // Stretch Pick
+  if (sections.has('stretchPick')) {
+    const stretchCandidate = takeFirst(scored, (c) => {
+      if (c.overallScore > 60) return false;
+      const domains = Object.entries(c.domainBreakdown) as [TasteDomain, number][];
+      const strong = domains.find(([, v]) => v >= 75);
+      const weak = domains.find(([, v]) => v <= 40);
+      return !!strong && !!weak;
+    });
+    if (stretchCandidate) {
+      const domains = Object.entries(stretchCandidate.domainBreakdown) as [TasteDomain, number][];
+      const strong = domains.sort(([, a], [, b]) => b - a)[0];
+      const weak = domains.sort(([, a], [, b]) => a - b)[0];
+      result.stretchPick = {
+        candidate: stretchCandidate,
+        strongDomain: strong[0],
+        weakDomain: weak[0],
+      };
+    }
+  }
+
+  // Weekly Collection
+  if (sections.has('weeklyCollection')) {
+    const weeklyDomain = findDominantUnusedDomain(scored, used);
+    const collection: AllocatedWeeklyCollection = {
+      dominantDomain: weeklyDomain,
+      candidates: takeN(scored, 5, (c) => c.topDimension === weeklyDomain),
+    };
+    if (collection.candidates.length < 3) {
+      const extra = takeN(scored, 5 - collection.candidates.length);
+      collection.candidates.push(...extra);
+    }
+    result.weeklyCollection = collection;
+  }
+
+  // Mood Boards
+  if (sections.has('moodBoards')) {
+    const boards: AllocatedMoodBoard[] = [];
+    const allDomains = (['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'] as TasteDomain[]);
+    for (const domain of allDomains) {
+      if (boards.length >= 2) break;
+      const candidates = takeN(scored, 3, (c) => c.topDimension === domain);
+      if (candidates.length >= 2) {
+        boards.push({ domain, candidates });
+      }
+    }
+    result.moodBoards = boards;
+  }
+
+  // Context Recs
+  if (sections.has('contextRecs')) {
+    result.contextRecs = takeN(scored, 4).map((c) => ({ candidate: c }));
+  }
+
+  // Context label
+  const companion = lifeContext?.primaryCompanions?.[0] || 'solo';
+  const month = new Date().getMonth();
+  const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
+  const contextLabel = companion !== 'solo' ? `With ${companion}` : season;
+
+  return { ...result, contextLabel };
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 function findDominantUnusedDomain(
   scored: ScoredCandidate[],
   used: Set<string>,
