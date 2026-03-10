@@ -2,7 +2,7 @@ import type { ImportedPlace, PlaceRating, GhostSourceType, Collection } from '@/
 import { StateCreator } from 'zustand';
 import { deriveCities, dbWrite } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
-import { normalizeMatchScoreForDisplay } from '@/lib/taste-match-vectors';
+import { normalizeMatchScoreForDisplay } from '@/lib/normalize-score';
 import type { SavedState, DBSavedPlace, DBCollection } from './savedTypes';
 
 // ═══════════════════════════════════════════

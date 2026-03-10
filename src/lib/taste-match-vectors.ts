@@ -536,37 +536,8 @@ export async function normalizeSingleVectorScore(
   }
 }
 
-// ─── Client-safe score normalization (no DB) ────────────────────────────────
-
-/**
- * Pure function to normalize a raw cosine×100 matchScore into the 35-93
- * display range. Uses hardcoded population stats so it can run client-side
- * without a DB call. Same tanh curve as the batch/single normalizers above.
- *
- * Population stats are updated periodically; current values are from the
- * v3.6 backfill (Mar 2026).
- */
-export function normalizeMatchScoreForDisplay(
-  rawScore: number,
-  ceiling = 93,
-  floor = 35,
-): number {
-  // Hardcoded population stats (mean/stddev of cosine×100 across all user-property pairs)
-  // Updated after v3.6 backfill — regenerate via:
-  //   SELECT AVG((1-(u."tasteVectorV3" <=> pi."embeddingV3"))*100), STDDEV(...)
-  //   FROM "User" u, "PlaceIntelligence" pi WHERE both vectors NOT NULL
-  const POPULATION_MEAN = 7;
-  const POPULATION_STDDEV = 8.5;
-
-  if (POPULATION_STDDEV < 0.1) return Math.round((ceiling + floor) / 2 + 10);
-
-  const displayRange = ceiling - floor;
-  const medianDisplay = floor + displayRange * 0.50;
-  const z = (rawScore - POPULATION_MEAN) / POPULATION_STDDEV;
-  const curved = Math.tanh(z * 0.8);
-  const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
-  return Math.max(floor, Math.min(ceiling, displayScore));
-}
+// ─── Client-safe score normalization (re-exported from normalize-score.ts) ───
+export { normalizeMatchScoreForDisplay } from './normalize-score';
 
 // ─── Batch rescore for a user ────────────────────────────────────────────────
 
