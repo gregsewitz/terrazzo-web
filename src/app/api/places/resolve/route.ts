@@ -244,7 +244,10 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // Library state
     savedPlaceId: savedPlace?.deletedAt ? null : savedPlace?.id || null,
     isInLibrary: savedPlace ? savedPlace.deletedAt === null : false,
-    matchScore: savedPlace?.matchScore || computedMatchScore || null,
+    matchScore: computedMatchScore
+      || (savedPlace?.matchScore
+        ? await normalizeSingleVectorScore(savedPlace.matchScore, user.id)
+        : null),
     matchBreakdown: savedPlace?.matchBreakdown || computedMatchBreakdown || null,
     matchExplanation: savedPlace?.matchExplanation || null,
     tasteNote: savedPlace?.tasteNote || null,

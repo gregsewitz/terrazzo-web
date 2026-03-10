@@ -2,6 +2,7 @@ import type { ImportedPlace, PlaceRating, GhostSourceType, Collection } from '@/
 import { StateCreator } from 'zustand';
 import { deriveCities, dbWrite } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
+import { normalizeMatchScoreForDisplay } from '@/lib/taste-match-vectors';
 import type { SavedState, DBSavedPlace, DBCollection } from './savedTypes';
 
 // ═══════════════════════════════════════════
@@ -28,7 +29,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       source: dp.source
         ? (dp.source as unknown as ImportedPlace['source'])
         : { type: 'email' as const, name: dp.ghostSource || 'manual' },
-      matchScore: dp.matchScore || 0,
+      matchScore: dp.matchScore ? normalizeMatchScoreForDisplay(dp.matchScore) : 0,
       matchBreakdown: (dp.matchBreakdown as ImportedPlace['matchBreakdown']) || { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
       matchExplanation: dp.matchExplanation as ImportedPlace['matchExplanation'],
       tasteNote: dp.tasteNote || dp.intelligence?.description || '',
