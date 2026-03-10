@@ -17,13 +17,13 @@ export default function ProcessingPage() {
   const { allSignals, allMessages, allContradictions, certainties, setGeneratedProfile } = useOnboardingStore();
 
   // Animate through processing steps — timing covers the API wait.
-  // Parallel synthesis takes ~8-12s, so steps ramp faster than before.
+  // Parallel synthesis takes ~8-12s, so steps ramp at a leisurely pace.
   // The last step holds (spinner) until the API actually returns.
   useEffect(() => {
     if (hasError) return; // pause animation on error
     if (currentStep < PROCESSING_STEPS.length - 1) {
-      // Ramp: 900 → 1050 → 1200 → 1350 → 1500 → 1650 → 1800 ≈ 9.5s total
-      const delay = 900 + currentStep * 150;
+      // Ramp: 1800 → 2050 → 2300 → 2550 → 2800 → 3050 → 3300 ≈ 17.85s total
+      const delay = 1800 + currentStep * 250;
       const timer = setTimeout(() => setCurrentStep((i) => i + 1), delay);
       return () => clearTimeout(timer);
     }
@@ -49,11 +49,11 @@ export default function ProcessingPage() {
       setGeneratedProfile(profile);
 
       // Wait for animation to finish before navigating
-      // Steps take ~9.5s total (ramped timing), give a small buffer so the last check
+      // Steps take ~17.85s total (ramped timing), give a small buffer so the last check
       // mark has time to appear before we transition
-      const totalAnimTime = Array.from({ length: PROCESSING_STEPS.length - 1 }, (_, i) => 900 + i * 150)
+      const totalAnimTime = Array.from({ length: PROCESSING_STEPS.length - 1 }, (_, i) => 1800 + i * 250)
         .reduce((sum, d) => sum + d, 0);
-      const minDelay = Math.max(0, totalAnimTime + 800);
+      const minDelay = Math.max(0, totalAnimTime + 1000);
       setTimeout(() => setIsDone(true), minDelay);
     } catch (err) {
       console.error('Synthesis failed:', err);
@@ -101,6 +101,16 @@ export default function ProcessingPage() {
           >
             {hasError ? 'Hit a snag' : 'Building your profile'}
           </motion.h1>
+          {!hasError && (
+            <motion.p
+              className="text-[14px] text-[var(--t-ink)]/45 mt-2 font-serif italic"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              This may take a minute or two — please don&apos;t close this screen.
+            </motion.p>
+          )}
           {hasError && (
             <motion.p
               className="text-[15px] text-[var(--t-ink)]/60 mt-2"
@@ -130,7 +140,7 @@ export default function ProcessingPage() {
                       x: 0,
                     }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.4 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                     className="flex items-center gap-3"
                   >
                     <motion.div
@@ -143,8 +153,8 @@ export default function ProcessingPage() {
                             : 'bg-[var(--t-travertine)]'
                         }
                       `}
-                      animate={isActive && !isLastStep ? { scale: [1, 1.4, 1] } : {}}
-                      transition={isActive && !isLastStep ? { duration: 1.2, repeat: Infinity } : {}}
+                      animate={isActive && !isLastStep ? { scale: [1, 1.3, 1] } : {}}
+                      transition={isActive && !isLastStep ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' } : {}}
                     >
                       {isDoneStep ? (
                         <motion.svg
