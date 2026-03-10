@@ -73,16 +73,15 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   const triggerAutoAdvance = useCallback(() => {
     if (autoAdvanceTimerRef.current) return;
     setAutoAdvancing(true);
-    autoAdvanceTimerRef.current = setTimeout(() => {
+    autoAdvanceTimerRef.current = setTimeout(function check() {
       if (!mountedRef.current) return;
       // Safety check: don't advance while TTS is still speaking.
-      // This prevents the fallback speak() from getting cut off by an early onComplete().
+      // If still speaking, poll every 500ms until it finishes.
       if (isSpeakingRef.current) {
-        // TTS still going — clear the timer and let handleTTSDone re-trigger when it finishes
-        autoAdvanceTimerRef.current = null;
-        setAutoAdvancing(false);
+        autoAdvanceTimerRef.current = setTimeout(check, 500);
         return;
       }
+      autoAdvanceTimerRef.current = null;
       onComplete();
     }, 1800);
   }, [onComplete]);

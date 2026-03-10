@@ -495,8 +495,16 @@ export function useConversationPhase({
       const acks = ["That's really interesting.", "I love that.", "Thanks for sharing that.", "That gives me a lot to work with."];
       const ack = acks[Math.floor(Math.random() * acks.length)];
 
+      // followUps contain "TOPIC:" directives for the AI — internal prompting, not user-facing.
+      // Use warm generic transitions instead, and advance the follow-up index.
+      const errorTransitions = [
+        `${ack} Tell me more about what stands out to you.`,
+        `${ack} What else comes to mind?`,
+        `${ack} What's another detail that matters to you?`,
+        `${ack} I'm curious what else shaped that for you.`,
+      ];
       if (followUpIndex.current < followUps.length) {
-        fallbackText = `${ack} ${followUps[followUpIndex.current]}`;
+        fallbackText = errorTransitions[followUpIndex.current % errorTransitions.length];
         followUpIndex.current += 1;
       } else {
         fallbackText = "I think I've got what I need here — let's keep going.";
