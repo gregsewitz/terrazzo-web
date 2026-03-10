@@ -419,11 +419,29 @@ export function useConversationPhase({
       const MIN_EXCHANGES = 3;
       const MAX_EXCHANGES = 6;
       let phaseComplete = respondResult.phaseComplete;
+      const aiWantedComplete = phaseComplete; // remember the AI's original intent
       if (phaseComplete && userMessageCount < MIN_EXCHANGES && !respondResult.userRequestedSkip) {
         phaseComplete = false;
       }
       if (!phaseComplete && userMessageCount >= MAX_EXCHANGES) {
         phaseComplete = true;
+      }
+
+      // If we overrode the AI's phaseComplete=true to false (MIN_EXCHANGES guard),
+      // the AI's response is a wrap-up statement with no question — the user has nothing
+      // to respond to. Append a gentle continuation question so the conversation can flow.
+      if (aiWantedComplete && !phaseComplete && respondResult.followUp) {
+        const hasQuestion = /\?/.test(respondResult.followUp);
+        if (!hasQuestion) {
+          const continuations = [
+            "What else comes to mind about that?",
+            "Is there anything else that stood out to you?",
+            "Tell me more — what else sticks with you?",
+            "Anything else about that experience you want to share?",
+          ];
+          const pick = continuations[userMessageCount % continuations.length];
+          respondResult.followUp = respondResult.followUp.trimEnd() + ' ' + pick;
+        }
       }
 
       const expectedExchanges = Math.max(followUps.length + 1, MIN_EXCHANGES);
