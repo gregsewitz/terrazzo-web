@@ -11,7 +11,7 @@ import type { MatchOptions } from '@/lib/taste-match-v3';
 import {
   findSimilarPropertiesV3,
 } from '@/lib/taste-intelligence';
-import { normalizeVectorScoresForDisplay } from '@/lib/taste-match-vectors';
+import { normalizeVectorScoresForDisplay, computeVectorMatch } from '@/lib/taste-match-vectors';
 import type {
   TasteDomain,
   TasteProfile,
@@ -245,9 +245,12 @@ export async function scoreWithVectors(
     vectorScoreMap.set(match.googlePlaceId, match.score);
   }
 
-  // Score all candidates — vector score is primary, signal score is tiebreaker only
+  // Score all candidates — vector score is primary, signal scoring only for domain breakdown display
   const rawScored = candidates.map((c) => {
-    // Always compute signal-based scoring for domain breakdown + matching signals
+    // Signal-based scoring provides domain breakdown + matching signals for display.
+    // TODO: Replace with vector-derived domain breakdown (computeVectorMatch) once
+    // property vectors are available in the candidate cache. The signal scorer does
+    // NOT affect ranking — vector score overrides overallScore below.
     const signalScored = scoreCandidate(c, userProfile, userMicroSignals, userContradictions, scoringContext);
     const vectorScore = vectorScoreMap.get(c.googlePlaceId);
 

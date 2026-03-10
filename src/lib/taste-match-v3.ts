@@ -1,7 +1,15 @@
 /**
- * @deprecated FALLBACK ONLY — v4 architecture uses vector cosine similarity (taste-match-vectors.ts)
- * as the sole scoring/ranking mechanism. This signal-based pipeline is only called when
- * a user or property lacks V3 vectors (tasteVectorV3 / embeddingV3).
+ * @deprecated LEGACY FALLBACK — v4 architecture uses vector cosine similarity
+ * (taste-match-vectors.ts) as the sole scoring/ranking mechanism. Domain weighting
+ * was removed from vector computation in v3.6.
+ *
+ * This signal-based pipeline is only called when:
+ *   1. A user or property lacks V3 vectors (rare edge case during enrichment)
+ *   2. Domain breakdown display in discover-candidates.ts (to be replaced by
+ *      vector-derived breakdown — see computeVectorMatch in taste-match-vectors.ts)
+ *   3. Admin taste dashboard for v1-vs-v3 comparison
+ *
+ * DO NOT add new callers. Use taste-match-vectors.ts for all new scoring code.
  *
  * Taste Match v3.2 — Signal-density weighted profiles for real cross-archetype discrimination.
  *
@@ -128,6 +136,7 @@ const SOURCE_CREDIBILITY: Record<string, number> = {
  *   6.  (removed in v3.1 — coverage handled by geometric mean)
  *   7.  Sustainability bonus (unchanged from v2)
  */
+/** @deprecated Use computeVectorMatch from taste-match-vectors.ts for new code. */
 export function computeMatchFromSignals(
   signals: Signal[],
   antiSignals: AntiSignal[],

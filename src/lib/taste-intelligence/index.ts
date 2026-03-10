@@ -43,7 +43,6 @@ export {
   findTasteNeighborsV3,
   findSimilarPropertiesToPropertyV3,
   findPropertiesByDomainV3,
-  findPropertiesByDomainWeightsV3,
   findDomainExemplars,
 } from './queries-v3';
 

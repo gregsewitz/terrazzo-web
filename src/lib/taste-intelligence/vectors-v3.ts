@@ -22,10 +22,15 @@
  *   - User rejection signals (cat='Rejection') no longer filtered out
  *   - Property antiSignals parameter now used in computePropertyEmbeddingV3
  *
+ * Changes from v3.5 (v3.6):
+ *   - Removed domain weighting from computeUserTasteVectorV3(). MicroTasteSignals now
+ *     use uniform confidence (1.0) instead of radarData-derived domain weights.
+ *     Simulation showed cosine similarity 0.991, Spearman ρ 0.985 — negligible impact.
+ *   - radarData still used for front-end display (radar charts, domain coverage analysis)
+ *
  * Changes from v3.3 (v3.4):
  *   - Dropped 8 domain dims (408 → 400 dimensions)
  *   - Removed triple-normalization (domain + signal + combined); now single L2 norm
- *   - Domain weighting for users preserved via signal confidence boosting (domainWeight multiplier)
  */
 
 import type { TasteDomain, BriefingSignal, GeneratedTasteProfile } from '@/types';
@@ -44,7 +49,11 @@ const SIGNAL_DIMS_V3 = 400;
  */
 export const ANTI_SIGNAL_SCALE = 0.5;
 
-/** Domain index used for user domain-weight boosting (radarData → signal confidence) */
+/**
+ * Domain index mapping. Used by front-end display code (analyzeDomainCoverage,
+ * getClusterIndicesForDomain) — NOT used for scoring/weighting.
+ * Domain weighting was removed from scoring in v3.6 (see computeUserTasteVectorV3).
+ */
 const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Design: 0, Atmosphere: 1, Character: 2, Service: 3,
   FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
@@ -322,61 +331,31 @@ function l2Normalize(vec: number[]): number[] {
   return vec.map((v) => v / magnitude);
 }
 
-/** @deprecated v3.3 used domain+signal weighting; v3.4 uses signal-only with single L2 norm */
-
 // ─── User Taste Vector ──────────────────────────────────────────────────────
 
 export interface UserVectorInputV3 {
-  radarData: { axis: string; value: number }[];
+  /** @deprecated No longer used for scoring (v3.6). Kept for backward compat with callers. */
+  radarData?: { axis: string; value: number }[];
   microTasteSignals: Record<string, string[]>;
   allSignals?: Array<{ tag: string; cat: string; confidence: number }>;
 }
 
 export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
-  // Build domain weight lookup from radarData (used to boost signal confidence)
-  const domainWeights = new Array(8).fill(0);
-
-  const axisToIndex: Record<string, number> = {
-    design: 0, 'design language': 0,
-    atmosphere: 1, 'sensory environment': 1,
-    character: 2, 'character & identity': 2,
-    service: 3, 'service philosophy': 3,
-    fooddrink: 4, 'food & drink': 4, 'food & drink identity': 4, food: 4,
-    setting: 5, 'location & context': 5, 'location & setting': 5, location: 5,
-    wellness: 6, 'wellness & body': 6,
-    sustainability: 7,
-  };
-
-  for (const { axis, value } of input.radarData) {
-    const idx = axisToIndex[axis.toLowerCase()];
-    if (idx !== undefined) {
-      domainWeights[idx] = Math.max(domainWeights[idx], value);
-    }
-  }
+  // v3.6: All signals use uniform confidence (1.0) for microTasteSignals.
+  // Domain weighting has been removed from scoring — radarData is only used
+  // for front-end display (radar charts, domain coverage, editorial framing).
+  // Simulation confirmed negligible impact: cosine 0.991, Spearman ρ 0.985.
 
   const signalInputs: Array<{ text: string; confidence: number }> = [];
 
-  const signalCategoryToDomain: Record<string, TasteDomain> = {
-    architectural_attraction: 'Design',
-    material_obsessions: 'Design',
-    social_dynamics: 'Character',
-    service_ideals: 'Service',
-    cultural_indicators: 'Character',
-    spatial_preferences: 'Setting',
-    wellness_essentials: 'Wellness',
-    rejection_signals: 'Character',
-  };
-
-  // Domain preference weighting: boost signal confidence by the user's domain affinity
-  for (const [domain, signals] of Object.entries(input.microTasteSignals)) {
+  // MicroTasteSignals: uniform confidence (1.0) regardless of domain
+  for (const [, signals] of Object.entries(input.microTasteSignals)) {
     for (const sig of signals) {
-      const resolvedDomain = signalCategoryToDomain[domain] || (domain as TasteDomain);
-      const domainIdx = DOMAIN_INDEX[resolvedDomain];
-      const domainWeight = domainIdx !== undefined ? domainWeights[domainIdx] : 0.5;
-      signalInputs.push({ text: sig, confidence: domainWeight });
+      signalInputs.push({ text: sig, confidence: 1.0 });
     }
   }
 
+  // AllSignals from TasteNode table: use their own confidence values
   if (input.allSignals) {
     for (const sig of input.allSignals) {
       if (sig.cat === 'Context') {

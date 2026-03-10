@@ -255,33 +255,3 @@ export async function findDomainExemplars(
   });
 }
 
-export async function findPropertiesByDomainWeightsV3(
-  weights: Partial<Record<string, number>>,
-  limit: number = 10,
-): Promise<VectorMatch[]> {
-  const probe = new Array(VECTOR_DIM_V3).fill(0);
-
-  for (const [domain, weight] of Object.entries(weights)) {
-    if (!weight) continue;
-    const indices = clusterIndicesForDomain(domain);
-    const perCluster = weight / Math.sqrt(indices.length || 1);
-    for (const idx of indices) {
-      probe[idx] += perCluster;
-    }
-  }
-
-  // L2 normalize the combined probe
-  let magnitude = 0;
-  for (let i = 0; i < probe.length; i++) {
-    magnitude += probe[i] * probe[i];
-  }
-
-  if (magnitude === 0) return [];
-
-  const norm = Math.sqrt(magnitude);
-  for (let i = 0; i < probe.length; i++) {
-    probe[i] /= norm;
-  }
-
-  return findSimilarPropertiesV3(probe, limit);
-}
