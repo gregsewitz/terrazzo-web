@@ -222,11 +222,24 @@ async function consumeRespondStream(
     emitSentence(sentFragment.trim());
   }
 
+  // Diagnostic: log what we got from each source
+  if (!doneResult?.followUp) {
+    console.warn('[conversation-phase] doneResult.followUp is null/missing.', {
+      hasDoneResult: !!doneResult,
+      streamedSentences: streamedSentences.length,
+      fullTokensLen: fullTokens.length,
+      followUpDone,
+      insideFollowUp,
+      sseBufferRemainder: sseBuffer.length,
+    });
+  }
+
   // Use the done result if available, otherwise try to parse from accumulated tokens
   if (doneResult) {
     // Belt-and-suspenders: if the done event lost the followUp (server parse error)
     // but we successfully streamed text to TTS, use the streamed text so the chat matches the voice.
     if (!doneResult.followUp && streamedSentences.length > 0) {
+      console.warn('[conversation-phase] Substituting streamed text for lost followUp');
       doneResult.followUp = streamedSentences.join(' ');
     }
     return doneResult;
