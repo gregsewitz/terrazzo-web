@@ -210,10 +210,12 @@ const RevealSequence = memo(function RevealSequence({
           padding: isReplay ? '0 28px' : '32px 24px',
           cursor: isReplay && stageIndex < stages.length - 1 ? 'pointer' : 'default',
           display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: isReplay ? 'center' : 'flex-start',
+          alignItems: 'center', justifyContent: 'flex-start',
           maxWidth: 520, margin: '0 auto', width: '100%',
         }}
       >
+        {/* Auto-spacer pushes short content to vertical center; tall content scrolls naturally */}
+        {isReplay && <div style={{ flex: '1 1 0', minHeight: 0 }} />}
         <AnimatePresence mode="wait">
           <motion.div
             key={stage}
@@ -221,7 +223,7 @@ const RevealSequence = memo(function RevealSequence({
             initial="enter"
             animate="center"
             exit="exit"
-            style={{ width: '100%' }}
+            style={{ width: '100%', flexShrink: 0 }}
           >
             {stage === 'cover' && <CoverReveal firstName={lifeContext.firstName} />}
             {stage === 'archetype' && <ArchetypeReveal profile={profile} firstName={lifeContext.firstName} />}
@@ -246,6 +248,7 @@ const RevealSequence = memo(function RevealSequence({
             )}
           </motion.div>
         </AnimatePresence>
+        {isReplay && <div style={{ flex: '1 1 0', minHeight: 0 }} />}
       </div>
 
       {/* ── Replay tap hint ── */}
@@ -1454,41 +1457,37 @@ function CoverReveal({ firstName }: { firstName?: string }) {
 
 // ─── Observations Card (What We Noticed) ───
 
-function buildObservations(signals: Record<string, string[]>): string[] {
+function buildObservations(signals: Record<string, string[]> | undefined | null): string[] {
+  if (!signals || typeof signals !== 'object') return [];
   const observations: string[] = [];
+  const entries = Object.entries(signals).filter(([, v]) => Array.isArray(v) && v.length > 0);
 
-  const design = signals['Design'];
-  if (design?.length) {
-    const terms = design.slice(0, 2).map(t => t.replace(/-/g, ' ').toLowerCase());
-    observations.push(
-      `You\u2019re drawn to spaces with a ${terms[0]} sensibility${terms[1] ? ` \u2014 places where ${terms[1]} isn\u2019t just a style, it\u2019s a point of view` : ''}.`
-    );
+  // Try domain-specific phrasing first
+  const domainPhrasing: Record<string, (terms: string[]) => string> = {
+    Design: (t) => `You\u2019re drawn to spaces with a ${t[0]} sensibility${t[1] ? ` \u2014 places where ${t[1]} isn\u2019t just a style, it\u2019s a point of view` : ''}.`,
+    Character: (t) => `You notice the personality of a place before the amenities. You want somewhere that feels ${t[0]}.`,
+    FoodDrink: (t) => `Your palate gravitates toward ${t[0]}. The dining room matters as much as the menu.`,
+    Setting: () => `Neighborhood matters to you \u2014 you\u2019d rather be in the right quarter of town than the right hotel.`,
+    Atmosphere: (t) => `Atmosphere is everything for you \u2014 you\u2019re tuned into ${t[0]} before you even sit down.`,
+    Service: (t) => `You notice how a place makes you feel. Service that\u2019s ${t[0]} stays with you.`,
+  };
+
+  for (const [key, terms] of entries) {
+    const cleaned = terms.slice(0, 2).map(t => t.replace(/-/g, ' ').toLowerCase());
+    const phrasing = domainPhrasing[key];
+    if (phrasing) {
+      observations.push(phrasing(cleaned));
+    } else {
+      // Generic phrasing for AI-generated category names
+      const label = key.replace(/[-_]/g, ' ').toLowerCase();
+      observations.push(
+        `In ${label}, you\u2019re drawn to ${cleaned[0]}${cleaned[1] ? ` and ${cleaned[1]}` : ''}.`
+      );
+    }
+    if (observations.length >= 3) break;
   }
 
-  const character = signals['Character'];
-  if (character?.length) {
-    const term = character[0].replace(/-/g, ' ').toLowerCase();
-    observations.push(
-      `You notice the personality of a place before the amenities. You want somewhere that feels ${term}.`
-    );
-  }
-
-  const food = signals['FoodDrink'];
-  if (food?.length) {
-    const term = food[0].replace(/-/g, ' ').toLowerCase();
-    observations.push(
-      `Your palate gravitates toward ${term}. The dining room matters as much as the menu.`
-    );
-  }
-
-  const setting = signals['Setting'];
-  if (setting?.length) {
-    observations.push(
-      `Neighborhood matters to you \u2014 you\u2019d rather be in the right quarter of town than the right hotel.`
-    );
-  }
-
-  return observations.slice(0, 3);
+  return observations;
 }
 
 function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
