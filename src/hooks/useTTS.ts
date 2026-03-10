@@ -153,7 +153,12 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
       idx++;
     }
 
-    // All done
+    // All done — small delay so the browser audio system fully finishes
+    // the last sentence before we signal completion (prevents abrupt cutoff feel)
+    if (!stoppedRef.current) {
+      await new Promise((r) => setTimeout(r, 150));
+    }
+
     isPlayingQueueRef.current = false;
     queueRef.current = [];
     queueFinishedRef.current = false;
