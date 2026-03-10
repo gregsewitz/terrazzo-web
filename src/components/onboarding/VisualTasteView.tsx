@@ -69,6 +69,8 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
   // ── Preload next pair's images during selection animation ──
   // Peek at what the next pair would be after either item wins, and start
   // loading their hero images so they're cached by the time we transition.
+  // Important: preload the SHUFFLED first image (what the user sees first),
+  // not the original array order.
   const preloadedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!currentPair) return;
@@ -80,7 +82,11 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
       if (nextPair) {
         for (const item of nextPair) {
           const urls = (item.metadata.imageUrls as string[]) || [];
-          const heroUrl = urls[0]; // Preload at least the first (hero) image
+          // Apply the same seeded shuffle the SplashCard uses so we preload
+          // the image that actually appears first in the gallery
+          const seed = item.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+          const shuffled = seededShuffle(urls, seed);
+          const heroUrl = shuffled[0];
           if (heroUrl && !preloadedRef.current.has(heroUrl)) {
             preloadedRef.current.add(heroUrl);
             const img = new Image();
@@ -187,6 +193,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
         }}
       >
         <SplashCard
+          key={itemA.id}
           item={itemA}
           isSelected={selectedId === itemA.id}
           isDeselected={selectedId === itemB.id}
@@ -194,6 +201,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
           onSelect={() => handleSelect(itemA, itemB)}
         />
         <SplashCard
+          key={itemB.id}
           item={itemB}
           isSelected={selectedId === itemB.id}
           isDeselected={selectedId === itemA.id}
@@ -255,12 +263,14 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
     return () => observer.disconnect();
   }, [imageUrls.length]);
 
-  // Reset gallery position and loaded state when item changes (new round)
+  // Safety reset if the same item reappears in a different pair.
+  // Normally the key={item.id} on SplashCard handles remounting,
+  // but this catches edge cases where the same designer appears again.
   useEffect(() => {
     setActiveIndex(0);
     setLoadedImages(new Set());
     if (scrollRef.current) scrollRef.current.scrollLeft = 0;
-  }, [item.id, item.comparisons]);
+  }, [item.id]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0].clientX;
