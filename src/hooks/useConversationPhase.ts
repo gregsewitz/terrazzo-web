@@ -99,15 +99,60 @@ async function consumeRespondStream(
 
             // Track if we're inside the followUp string value in the JSON
             // We look for "followUp": " pattern to start capturing
-            if (!insideFollowUp && !followUpDone) {
+            //
+            // Three states:
+            //   1. Searching (!insideFollowUp && !followUpDone) — looking for "followUp": "
+            //   2. Tracking (insideFollowUp) — inside the value, accumulating until closing "
+            //   3. Done (followUpDone) — ignore all subsequent tokens
+            if (followUpDone) {
+              // Already extracted followUp — ignore remaining JSON tokens
+            } else if (insideFollowUp) {
+              // We're inside the followUp value — accumulate tokens
+              followUpBuffer += token;
+
+              // Check if we've hit the closing quote (end of followUp string)
+              // Must find an UNESCAPED quote — skip any \" sequences
+              let searchFrom = 0;
+              let closeQuoteIdx = -1;
+              const combined = sentFragment + token;
+              while (searchFrom < combined.length) {
+                const idx = combined.indexOf('"', searchFrom);
+                if (idx < 0) break;
+                let backslashCount = 0;
+                for (let i = idx - 1; i >= 0 && combined[i] === '\\'; i--) {
+                  backslashCount++;
+                }
+                if (backslashCount % 2 === 0) {
+                  closeQuoteIdx = idx;
+                  break;
+                }
+                searchFrom = idx + 1;
+              }
+
+              if (closeQuoteIdx >= 0) {
+                const lastBit = combined.slice(0, closeQuoteIdx);
+                if (lastBit.trim().length > 0) {
+                  onSentence(lastBit.trim());
+                }
+                insideFollowUp = false;
+                followUpDone = true;
+                sentFragment = '';
+              } else {
+                sentFragment = combined;
+                const [sentences, remaining] = splitSentences(sentFragment);
+                for (const s of sentences) {
+                  if (s.length > 0) onSentence(s);
+                }
+                sentFragment = remaining;
+              }
+            } else {
+              // Searching — look for the start of the followUp field
               const followUpStart = fullTokens.match(/"followUp"\s*:\s*"/);
               if (followUpStart) {
-                // Extract any text after the opening quote of the followUp value
                 const idx = fullTokens.indexOf(followUpStart[0]) + followUpStart[0].length;
                 let chunk = fullTokens.slice(idx);
 
                 // Check if the closing quote is already in this chunk
-                // (LLM may have output the entire followUp value in one burst)
                 let closingIdx = -1;
                 let searchPos = 0;
                 while (searchPos < chunk.length) {
@@ -120,17 +165,16 @@ async function consumeRespondStream(
                 }
 
                 if (closingIdx >= 0) {
-                  // The entire followUp is in this chunk — extract just the value
+                  // Entire followUp in one chunk
                   chunk = chunk.slice(0, closingIdx);
-                  // Send all sentences, then mark as done (don't enter insideFollowUp state)
                   const [sentences, remaining] = splitSentences(chunk);
                   for (const s of sentences) {
                     if (s.length > 0) onSentence(s);
                   }
                   if (remaining.trim().length > 0) onSentence(remaining.trim());
-                  followUpDone = true; // prevent re-detection on subsequent tokens
+                  followUpDone = true;
                 } else {
-                  // followUp value is still being streamed — enter tracking mode
+                  // Still streaming — enter tracking mode
                   insideFollowUp = true;
                   followUpBuffer = chunk;
                   const [sentences, remaining] = splitSentences(followUpBuffer);
@@ -139,52 +183,6 @@ async function consumeRespondStream(
                   }
                   sentFragment = remaining;
                 }
-              }
-            } else {
-              // We're inside the followUp value — accumulate tokens
-              followUpBuffer += token;
-
-              // Check if we've hit the closing quote (end of followUp string)
-              // Must find an UNESCAPED quote — skip any \" sequences
-              let searchFrom = 0;
-              let closeQuoteIdx = -1;
-              const combined = sentFragment + token;
-              while (searchFrom < combined.length) {
-                const idx = combined.indexOf('"', searchFrom);
-                if (idx < 0) break;
-                // Check if this quote is escaped (preceded by odd number of backslashes)
-                let backslashCount = 0;
-                for (let i = idx - 1; i >= 0 && combined[i] === '\\'; i--) {
-                  backslashCount++;
-                }
-                if (backslashCount % 2 === 0) {
-                  // Unescaped quote — this is the real end
-                  closeQuoteIdx = idx;
-                  break;
-                }
-                searchFrom = idx + 1;
-              }
-
-              if (closeQuoteIdx >= 0) {
-                // Everything before the closing quote is the final text
-                const lastBit = combined.slice(0, closeQuoteIdx);
-
-                // Send any remaining fragment as final sentence
-                if (lastBit.trim().length > 0) {
-                  onSentence(lastBit.trim());
-                }
-
-                insideFollowUp = false;
-                followUpDone = true; // prevent re-detection on subsequent tokens
-                sentFragment = '';
-              } else {
-                // Still inside — check for sentence boundaries
-                sentFragment = combined;
-                const [sentences, remaining] = splitSentences(sentFragment);
-                for (const s of sentences) {
-                  if (s.length > 0) onSentence(s);
-                }
-                sentFragment = remaining;
               }
             }
           }
