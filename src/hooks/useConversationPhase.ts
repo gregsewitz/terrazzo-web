@@ -62,6 +62,7 @@ async function consumeRespondStream(
   let fullTokens = '';
   let followUpBuffer = '';
   let insideFollowUp = false;
+  let followUpDone = false; // true once we've fully extracted the followUp value — prevents re-detection
   let sentFragment = ''; // un-sent partial sentence
   let doneResult: { followUp: string | null; phaseComplete: boolean; userRequestedSkip?: boolean; correctedTranscript?: string } | null = null;
 
@@ -98,7 +99,7 @@ async function consumeRespondStream(
 
             // Track if we're inside the followUp string value in the JSON
             // We look for "followUp": " pattern to start capturing
-            if (!insideFollowUp) {
+            if (!insideFollowUp && !followUpDone) {
               const followUpStart = fullTokens.match(/"followUp"\s*:\s*"/);
               if (followUpStart) {
                 // Extract any text after the opening quote of the followUp value
@@ -127,7 +128,7 @@ async function consumeRespondStream(
                     if (s.length > 0) onSentence(s);
                   }
                   if (remaining.trim().length > 0) onSentence(remaining.trim());
-                  // insideFollowUp stays false — we're done with followUp
+                  followUpDone = true; // prevent re-detection on subsequent tokens
                 } else {
                   // followUp value is still being streamed — enter tracking mode
                   insideFollowUp = true;
@@ -174,6 +175,7 @@ async function consumeRespondStream(
                 }
 
                 insideFollowUp = false;
+                followUpDone = true; // prevent re-detection on subsequent tokens
                 sentFragment = '';
               } else {
                 // Still inside — check for sentence boundaries
