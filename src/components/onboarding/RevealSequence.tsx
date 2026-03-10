@@ -1,29 +1,38 @@
 'use client';
 
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GeneratedTasteProfile, GoBackPlace, SeedTripInput } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, INK } from '@/constants/theme';
 import { T } from '@/types';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
+import { PerriandIcon } from '@/components/icons/PerriandIcons';
 
 interface RevealSequenceProps {
   profile: GeneratedTasteProfile;
   onComplete: () => void;
+  /** 'onboarding' = post-onboarding reveal (default), 'replay' = dossier replay from profile */
+  mode?: 'onboarding' | 'replay';
+  /** Called when user presses back on the first card (replay mode) */
+  onBack?: () => void;
 }
 
 type RevealStage =
+  | 'cover'
   | 'archetype'
   | 'quote'
   | 'design'
   | 'fingerprint'
   | 'contradiction'
+  | 'observations'
   | 'perfectday'
   | 'shift'
   | 'neighbors'
   | 'destinations'
-  | 'trips';
+  | 'matches'
+  | 'trips'
+  | 'share';
 
 // Animation constants
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
@@ -69,25 +78,34 @@ function SectionLabel({ children, color = T.honey, delay = 0.1 }: { children: st
 }
 
 
-const RevealSequence = memo(function RevealSequence({ profile, onComplete }: RevealSequenceProps) {
+const RevealSequence = memo(function RevealSequence({
+  profile, onComplete, mode = 'onboarding', onBack,
+}: RevealSequenceProps) {
   const { goBackPlace, seedTrips, lifeContext, mosaicAxes } = useOnboardingStore();
+  const isReplay = mode === 'replay';
 
   // Build dynamic stage list — skip stages with no data
   const stages = useMemo(() => {
-    const s: RevealStage[] = ['archetype'];
+    const s: RevealStage[] = [];
+    if (isReplay) s.push('cover');
+    s.push('archetype');
     if (profile.bestQuote?.quote) s.push('quote');
     if (profile.designInsight || Object.keys(mosaicAxes).length > 0) s.push('design');
     if (profile.radarData?.length > 0) s.push('fingerprint');
     if (profile.contradictions?.length > 0) s.push('contradiction');
+    if (profile.microTasteSignals && Object.keys(profile.microTasteSignals).length > 0) s.push('observations');
     if (profile.perfectDay) s.push('perfectday');
     if (profile.howYouShift?.length) s.push('shift');
     if (profile.tasteNeighbors) s.push('neighbors');
     if (profile.destinations) s.push('destinations');
+    if (profile.matchedProperties?.length > 0) s.push('matches');
     if (seedTrips?.length > 0) s.push('trips');
+    if (isReplay) s.push('share');
     return s;
-  }, [profile, mosaicAxes, seedTrips]);
+  }, [profile, mosaicAxes, seedTrips, isReplay]);
 
   const [stageIndex, setStageIndex] = useState(0);
+  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
   const stage = stages[stageIndex];
 
   const advance = () => {
@@ -98,76 +116,212 @@ const RevealSequence = memo(function RevealSequence({ profile, onComplete }: Rev
     setStageIndex((i) => i + 1);
   };
 
+  const goBackStep = useCallback(() => {
+    if (stageIndex > 0) {
+      setStageIndex((i) => i - 1);
+    } else if (onBack) {
+      onBack();
+    }
+  }, [stageIndex, onBack]);
+
+  const handleShare = useCallback(async () => {
+    const text = [
+      `My Terrazzo Taste Dossier`,
+      `I'm "${profile.overallArchetype}" — ${profile.archetypeDescription.slice(0, 120)}...`,
+      ``,
+      `Get your own taste profile at terrazzo.travel`,
+    ].join('\n');
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: 'My Taste Dossier — Terrazzo', text });
+        return;
+      } catch { /* user cancelled or not supported */ }
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2500);
+    } catch { /* clipboard not available */ }
+  }, [profile]);
+
+  // Accent colors per stage for replay dots
+  const REPLAY_ACCENTS: Record<string, string> = {
+    cover: T.honey, archetype: T.verde, quote: T.honey,
+    design: T.honey, fingerprint: T.verde, contradiction: '#6844a0',
+    observations: T.amber, perfectday: T.honey, shift: T.honey,
+    neighbors: T.verde, destinations: T.honey, matches: T.verde,
+    trips: T.honey, share: T.honey,
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <AnimatePresence mode="wait">
+      {/* ── Replay top bar with back + dots ── */}
+      {isReplay && (
         <motion.div
-          key={stage}
-          variants={stageVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
           style={{
-            flex: 1, overflowY: 'auto', padding: '32px 24px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '52px 20px 16px',
+            flexShrink: 0, position: 'relative', zIndex: 10,
           }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {stage === 'archetype' && <ArchetypeReveal profile={profile} firstName={lifeContext.firstName} />}
-          {stage === 'quote' && <QuoteReveal profile={profile} />}
-          {stage === 'design' && <DesignLanguageReveal profile={profile} mosaicAxes={mosaicAxes} />}
-          {stage === 'fingerprint' && <TasteFingerprintReveal profile={profile} />}
-          {stage === 'contradiction' && <ContradictionReveal profile={profile} />}
-          {stage === 'perfectday' && <PerfectDayReveal profile={profile} />}
-          {stage === 'shift' && <HowYouShiftReveal profile={profile} />}
-          {stage === 'neighbors' && <TasteNeighborsReveal profile={profile} />}
-          {stage === 'destinations' && <DestinationsReveal profile={profile} />}
-          {stage === 'trips' && <SeedTripsReveal seedTrips={seedTrips} />}
+          <motion.button
+            onClick={goBackStep}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: FONT.sans, fontSize: 13, color: INK['55'], padding: 0,
+            }}
+            whileHover={{ opacity: 0.7 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            ← {stageIndex === 0 ? 'Close' : 'Back'}
+          </motion.button>
+
+          <div style={{ display: 'flex', gap: 6 }}>
+            {stages.map((s, i) => (
+              <motion.div
+                key={i}
+                layout
+                style={{
+                  height: 6, borderRadius: 3,
+                  background: i === stageIndex
+                    ? (REPLAY_ACCENTS[s] || T.honey)
+                    : i < stageIndex ? INK['30'] : INK['12'],
+                }}
+                animate={{ width: i === stageIndex ? 18 : 6 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            ))}
+          </div>
+
+          <div style={{ width: 48 }} />
         </motion.div>
-      </AnimatePresence>
+      )}
 
-      <div style={{
-        padding: '16px 24px 20px',
-        borderTop: '1px solid var(--t-linen)',
-        flexShrink: 0,
-        maxWidth: 520,
-        margin: '0 auto',
-        width: '100%',
-      }}>
-        <motion.button
-          onClick={advance}
-          whileHover={{ scale: 1.02, y: -1 }}
-          whileTap={{ scale: 0.98 }}
-          style={{
-            width: '100%', padding: '14px 0',
-            borderRadius: 14, border: 'none',
-            background: 'var(--t-ink)', color: 'var(--t-cream)',
-            fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          {stageIndex >= stages.length - 1 ? 'Dive in' : 'Continue'}
-        </motion.button>
-
-        {/* Stage dots */}
-        <div style={{
-          display: 'flex', gap: 6, justifyContent: 'center', marginTop: 14,
-        }}>
-          {stages.map((_, i) => (
-            <motion.div
-              key={i}
-              layout
-              style={{
-                height: 6,
-                borderRadius: 3,
-                background: i === stageIndex ? T.honey : i < stageIndex ? INK['30'] : INK['12'],
-              }}
-              animate={{
-                width: i === stageIndex ? 18 : 6,
-              }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-            />
-          ))}
-        </div>
+      {/* ── Card content ── */}
+      <div
+        onClick={isReplay && stageIndex < stages.length - 1 ? advance : undefined}
+        style={{
+          flex: 1, overflowY: 'auto',
+          padding: isReplay ? '0 28px' : '32px 24px',
+          cursor: isReplay && stageIndex < stages.length - 1 ? 'pointer' : 'default',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: isReplay ? 'center' : 'flex-start',
+          maxWidth: 520, margin: '0 auto', width: '100%',
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stage}
+            variants={stageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            style={{ width: '100%' }}
+          >
+            {stage === 'cover' && <CoverReveal firstName={lifeContext.firstName} />}
+            {stage === 'archetype' && <ArchetypeReveal profile={profile} firstName={lifeContext.firstName} />}
+            {stage === 'quote' && <QuoteReveal profile={profile} />}
+            {stage === 'design' && <DesignLanguageReveal profile={profile} mosaicAxes={mosaicAxes} />}
+            {stage === 'fingerprint' && <TasteFingerprintReveal profile={profile} />}
+            {stage === 'contradiction' && <ContradictionReveal profile={profile} />}
+            {stage === 'observations' && <ObservationsReveal profile={profile} />}
+            {stage === 'perfectday' && <PerfectDayReveal profile={profile} />}
+            {stage === 'shift' && <HowYouShiftReveal profile={profile} />}
+            {stage === 'neighbors' && <TasteNeighborsReveal profile={profile} />}
+            {stage === 'destinations' && <DestinationsReveal profile={profile} />}
+            {stage === 'matches' && <MatchesReveal profile={profile} />}
+            {stage === 'trips' && <SeedTripsReveal seedTrips={seedTrips} />}
+            {stage === 'share' && (
+              <ShareReveal
+                profile={profile}
+                onViewProfile={onComplete}
+                onShare={handleShare}
+                shareState={shareState}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* ── Replay tap hint ── */}
+      {isReplay && (
+        <AnimatePresence>
+          {stageIndex < stages.length - 1 && (
+            <motion.div
+              style={{
+                paddingBottom: 32, textAlign: 'center',
+                flexShrink: 0, position: 'relative', zIndex: 10,
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.span
+                style={{
+                  fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: INK['30'], display: 'inline-block',
+                }}
+                animate={{ opacity: [1, 0.5, 1], y: [0, 2, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                Tap to continue
+              </motion.span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* ── Onboarding bottom bar (Continue button + dots) ── */}
+      {!isReplay && (
+        <div style={{
+          padding: '16px 24px 20px',
+          borderTop: '1px solid var(--t-linen)',
+          flexShrink: 0,
+          maxWidth: 520,
+          margin: '0 auto',
+          width: '100%',
+        }}>
+          <motion.button
+            onClick={advance}
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              width: '100%', padding: '14px 0',
+              borderRadius: 14, border: 'none',
+              background: 'var(--t-ink)', color: 'var(--t-cream)',
+              fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {stageIndex >= stages.length - 1 ? 'Dive in' : 'Continue'}
+          </motion.button>
+
+          <div style={{
+            display: 'flex', gap: 6, justifyContent: 'center', marginTop: 14,
+          }}>
+            {stages.map((_, i) => (
+              <motion.div
+                key={i}
+                layout
+                style={{
+                  height: 6,
+                  borderRadius: 3,
+                  background: i === stageIndex ? T.honey : i < stageIndex ? INK['30'] : INK['12'],
+                }}
+                animate={{ width: i === stageIndex ? 18 : 6 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
@@ -1240,6 +1394,328 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
           </SafeFadeIn>
         ))}
       </div>
+    </div>
+  );
+}
+
+
+// ─── Cover Card (replay mode) ───
+
+function CoverReveal({ firstName }: { firstName?: string }) {
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
+    }}>
+      <SafeFadeIn delay={0.1} direction="up" distance={10}>
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.2em', textTransform: 'uppercase',
+          color: INK['55'], marginBottom: 48,
+        }}>
+          Terrazzo
+        </div>
+      </SafeFadeIn>
+
+      <SafeFadeIn delay={0.18} direction="up" distance={20}>
+        <h1 style={{
+          fontFamily: FONT.serif, fontSize: 44, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--t-ink)',
+          margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
+        }}>
+          {firstName ? `${firstName}\u2019s` : 'Your'}<br />Taste Dossier
+        </h1>
+      </SafeFadeIn>
+
+      <SafeFadeIn delay={0.26}>
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 13, color: INK['60'], marginTop: 20,
+        }}>
+          Prepared {today}
+        </div>
+      </SafeFadeIn>
+
+      <GoldDivider width={40} delay={0.3} />
+
+      <SafeFadeIn delay={0.34} direction="up" distance={10}>
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+          color: INK['70'], marginTop: 24, maxWidth: 320,
+        }}>
+          We spent some time getting to know how you travel. Here&apos;s what we found.
+        </div>
+      </SafeFadeIn>
+    </div>
+  );
+}
+
+
+// ─── Observations Card (What We Noticed) ───
+
+function buildObservations(signals: Record<string, string[]>): string[] {
+  const observations: string[] = [];
+
+  const design = signals['Design'];
+  if (design?.length) {
+    const terms = design.slice(0, 2).map(t => t.replace(/-/g, ' ').toLowerCase());
+    observations.push(
+      `You\u2019re drawn to spaces with a ${terms[0]} sensibility${terms[1] ? ` \u2014 places where ${terms[1]} isn\u2019t just a style, it\u2019s a point of view` : ''}.`
+    );
+  }
+
+  const character = signals['Character'];
+  if (character?.length) {
+    const term = character[0].replace(/-/g, ' ').toLowerCase();
+    observations.push(
+      `You notice the personality of a place before the amenities. You want somewhere that feels ${term}.`
+    );
+  }
+
+  const food = signals['FoodDrink'];
+  if (food?.length) {
+    const term = food[0].replace(/-/g, ' ').toLowerCase();
+    observations.push(
+      `Your palate gravitates toward ${term}. The dining room matters as much as the menu.`
+    );
+  }
+
+  const setting = signals['Setting'];
+  if (setting?.length) {
+    observations.push(
+      `Neighborhood matters to you \u2014 you\u2019d rather be in the right quarter of town than the right hotel.`
+    );
+  }
+
+  return observations.slice(0, 3);
+}
+
+function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
+  const observations = useMemo(
+    () => buildObservations(profile.microTasteSignals),
+    [profile.microTasteSignals],
+  );
+
+  if (!observations.length) return null;
+
+  return (
+    <div>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <SectionLabel color={T.amber}>What we noticed</SectionLabel>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 8px',
+          }}>
+            The details that define you
+          </h2>
+        </SafeFadeIn>
+        <GoldDivider width={36} delay={0.3} />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 440, margin: '0 auto' }}>
+        {observations.map((obs, i) => (
+          <SafeFadeIn key={i} delay={0.35 + i * 0.1} direction="up" distance={20} duration={0.5}>
+            <div style={{
+              padding: '22px 26px', borderRadius: 18,
+              background: `linear-gradient(135deg, ${T.amber}06, white)`,
+              border: `1px solid ${INK['04']}`,
+              boxShadow: '0 2px 12px rgba(28,26,23,0.03)',
+            }}>
+              <p style={{
+                fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+                color: INK['85'], margin: 0,
+              }}>
+                {obs}
+              </p>
+            </div>
+          </SafeFadeIn>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Matches Card (Places We'd Send You) ───
+
+function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
+  if (!profile.matchedProperties?.length) return null;
+
+  return (
+    <div>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <SectionLabel color={T.verde}>Already thinking ahead</SectionLabel>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 8px',
+          }}>
+            Places we&apos;d send you
+          </h2>
+        </SafeFadeIn>
+        <GoldDivider width={36} delay={0.3} />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 440, margin: '0 auto' }}>
+        {profile.matchedProperties.slice(0, 3).map((m, i) => (
+          <SafeFadeIn key={i} delay={0.35 + i * 0.1} direction="up" distance={20} duration={0.5}>
+            <div style={{
+              padding: '24px 26px', borderRadius: 18,
+              background: `linear-gradient(135deg, ${T.verde}04, white)`,
+              border: `1px solid ${INK['04']}`,
+              boxShadow: '0 2px 12px rgba(28,26,23,0.03)',
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {/* Accent stripe */}
+              <div style={{
+                position: 'absolute', top: 0, left: 24, right: 24, height: 2,
+                background: `linear-gradient(90deg, ${T.verde}, transparent)`,
+                borderRadius: 1,
+              }} />
+
+              <div style={{
+                fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
+                color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.2, marginTop: 4,
+              }}>
+                {m.name}
+              </div>
+
+              <div style={{
+                fontFamily: FONT.sans, fontSize: 12, color: INK['60'], marginBottom: 14,
+              }}>
+                {m.location}
+              </div>
+
+              <div style={{
+                fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6, color: INK['80'],
+              }}>
+                {m.matchReasons.slice(0, 2).join(' · ')}
+              </div>
+
+              {m.tensionResolved && (
+                <div style={{
+                  marginTop: 14, paddingTop: 14,
+                  borderTop: `1px solid ${INK['06']}`,
+                  fontFamily: FONT.sans, fontSize: 12,
+                  color: INK['60'], fontStyle: 'italic',
+                }}>
+                  {m.tensionResolved}
+                </div>
+              )}
+            </div>
+          </SafeFadeIn>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Share Card (replay mode) ───
+
+function ShareReveal({
+  profile, onViewProfile, onShare, shareState,
+}: {
+  profile: GeneratedTasteProfile;
+  onViewProfile: () => void;
+  onShare: () => void;
+  shareState: 'idle' | 'copied';
+}) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
+    }}>
+      <GoldDivider width={40} delay={0} />
+
+      <SafeFadeIn delay={0.1} direction="up" distance={20}>
+        <h2 style={{
+          fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--t-ink)',
+          margin: '24px 0 12px', lineHeight: 1.15,
+        }}>
+          That&apos;s your dossier
+        </h2>
+      </SafeFadeIn>
+
+      <SafeFadeIn delay={0.18} direction="up" distance={10}>
+        <p style={{
+          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6,
+          color: INK['60'], marginBottom: 40,
+          maxWidth: 300,
+        }}>
+          We&apos;ll keep learning as you plan. Your taste profile gets sharper with every trip.
+        </p>
+      </SafeFadeIn>
+
+      {/* Share button */}
+      <motion.button
+        onClick={(e) => { e.stopPropagation(); onShare(); }}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          width: '100%', maxWidth: 320,
+          margin: '0 auto 14px',
+          padding: '14px 24px',
+          borderRadius: 14,
+          background: 'white',
+          border: `1px solid ${INK['06']}`,
+          cursor: 'pointer',
+          fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+          color: 'var(--t-ink)',
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.26, ...SPRING_GENTLE }}
+        whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <PerriandIcon name="invite" size={16} color="var(--t-ink)" />
+        {shareState === 'copied' ? 'Copied to clipboard!' : 'Share your dossier'}
+      </motion.button>
+
+      {/* See Full Profile */}
+      <motion.button
+        onClick={(e) => { e.stopPropagation(); onViewProfile(); }}
+        style={{
+          display: 'block',
+          width: '100%', maxWidth: 320,
+          margin: '0 auto 14px',
+          padding: '14px 24px',
+          borderRadius: 14,
+          background: 'var(--t-ink)',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+          color: 'var(--t-cream)',
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.34, ...SPRING_GENTLE }}
+        whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
+        whileTap={{ scale: 0.98 }}
+      >
+        See full profile
+      </motion.button>
+
+      {/* Footer */}
+      <SafeFadeIn delay={0.4} direction="up" distance={8}>
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+          letterSpacing: '0.16em', textTransform: 'uppercase',
+          color: INK['40'], marginTop: 32,
+        }}>
+          Terrazzo
+        </div>
+        <div style={{
+          fontFamily: FONT.sans, fontSize: 11, color: INK['45'], marginTop: 4,
+        }}>
+          Travel that matches your taste
+        </div>
+      </SafeFadeIn>
     </div>
   );
 }
