@@ -101,40 +101,83 @@ async function consumeRespondStream(
             if (!insideFollowUp) {
               const followUpStart = fullTokens.match(/"followUp"\s*:\s*"/);
               if (followUpStart) {
-                insideFollowUp = true;
-                // Extract any text after the opening quote
+                // Extract any text after the opening quote of the followUp value
                 const idx = fullTokens.indexOf(followUpStart[0]) + followUpStart[0].length;
-                followUpBuffer = fullTokens.slice(idx);
+                let chunk = fullTokens.slice(idx);
 
-                // Check for sentence boundaries in the initial chunk
-                const [sentences, remaining] = splitSentences(followUpBuffer);
-                for (const s of sentences) {
-                  if (s.length > 0) onSentence(s);
+                // Check if the closing quote is already in this chunk
+                // (LLM may have output the entire followUp value in one burst)
+                let closingIdx = -1;
+                let searchPos = 0;
+                while (searchPos < chunk.length) {
+                  const qi = chunk.indexOf('"', searchPos);
+                  if (qi < 0) break;
+                  let bs = 0;
+                  for (let i = qi - 1; i >= 0 && chunk[i] === '\\'; i--) bs++;
+                  if (bs % 2 === 0) { closingIdx = qi; break; }
+                  searchPos = qi + 1;
                 }
-                sentFragment = remaining;
+
+                if (closingIdx >= 0) {
+                  // The entire followUp is in this chunk — extract just the value
+                  chunk = chunk.slice(0, closingIdx);
+                  // Send all sentences, then mark as done (don't enter insideFollowUp state)
+                  const [sentences, remaining] = splitSentences(chunk);
+                  for (const s of sentences) {
+                    if (s.length > 0) onSentence(s);
+                  }
+                  if (remaining.trim().length > 0) onSentence(remaining.trim());
+                  // insideFollowUp stays false — we're done with followUp
+                } else {
+                  // followUp value is still being streamed — enter tracking mode
+                  insideFollowUp = true;
+                  followUpBuffer = chunk;
+                  const [sentences, remaining] = splitSentences(followUpBuffer);
+                  for (const s of sentences) {
+                    if (s.length > 0) onSentence(s);
+                  }
+                  sentFragment = remaining;
+                }
               }
             } else {
               // We're inside the followUp value — accumulate tokens
               followUpBuffer += token;
 
               // Check if we've hit the closing quote (end of followUp string)
-              // Look for unescaped quote
-              const closeQuoteIdx = token.indexOf('"');
+              // Must find an UNESCAPED quote — skip any \" sequences
+              let searchFrom = 0;
+              let closeQuoteIdx = -1;
+              const combined = sentFragment + token;
+              while (searchFrom < combined.length) {
+                const idx = combined.indexOf('"', searchFrom);
+                if (idx < 0) break;
+                // Check if this quote is escaped (preceded by odd number of backslashes)
+                let backslashCount = 0;
+                for (let i = idx - 1; i >= 0 && combined[i] === '\\'; i--) {
+                  backslashCount++;
+                }
+                if (backslashCount % 2 === 0) {
+                  // Unescaped quote — this is the real end
+                  closeQuoteIdx = idx;
+                  break;
+                }
+                searchFrom = idx + 1;
+              }
+
               if (closeQuoteIdx >= 0) {
-                // Remove the closing quote and everything after
-                const lastBit = token.slice(0, closeQuoteIdx);
-                sentFragment += lastBit;
+                // Everything before the closing quote is the final text
+                const lastBit = combined.slice(0, closeQuoteIdx);
 
                 // Send any remaining fragment as final sentence
-                if (sentFragment.trim().length > 0) {
-                  onSentence(sentFragment.trim());
+                if (lastBit.trim().length > 0) {
+                  onSentence(lastBit.trim());
                 }
 
                 insideFollowUp = false;
                 sentFragment = '';
               } else {
                 // Still inside — check for sentence boundaries
-                sentFragment += token;
+                sentFragment = combined;
                 const [sentences, remaining] = splitSentences(sentFragment);
                 for (const s of sentences) {
                   if (s.length > 0) onSentence(s);
@@ -352,9 +395,16 @@ export function useConversationPhase({
         nextText = respondResult.followUp;
       } else if (followUpIndex.current < followUps.length) {
         console.warn('[conversation-phase] No followUp — using scripted fallback');
-        const acks = ["That's really interesting.", "Thanks for sharing that.", "I appreciate you telling me that."];
-        const ack = acks[Math.floor(Math.random() * acks.length)];
-        nextText = `${ack} ${followUps[followUpIndex.current]}`;
+        // followUps contain "TOPIC:" directives for the AI — they're internal prompting
+        // instructions, not user-facing text. Don't display them.
+        // Instead use a generic warm transition and move to the next follow-up index.
+        const warmTransitions = [
+          "That's really interesting — tell me more about what stands out to you.",
+          "I love hearing that. What else comes to mind when you think about it?",
+          "That gives me a lot to work with. What's another detail that matters to you?",
+          "Thanks for sharing that — I'm curious what else shaped that experience for you.",
+        ];
+        nextText = warmTransitions[followUpIndex.current % warmTransitions.length];
         followUpIndex.current += 1;
       } else {
         nextText = "This has been really revealing — I've picked up a lot from what you've shared. Let's keep the momentum going.";
