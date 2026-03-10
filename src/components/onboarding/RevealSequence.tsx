@@ -32,21 +32,42 @@ const SPRING_BOUNCY = { type: 'spring' as const, stiffness: 300, damping: 20 };
 
 // Stage transition variants
 const stageVariants = {
-  enter: { opacity: 0, x: 50, scale: 0.97 },
-  center: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.5, ease: EASE_OUT_EXPO } },
-  exit: { opacity: 0, x: -50, scale: 0.97, transition: { duration: 0.25 } },
+  enter: { opacity: 0, y: 30, scale: 0.98 },
+  center: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
+  exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3 } },
 };
 
-// Stagger variants for child items
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
-};
+// ─── Shared decorative elements ───
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT_EXPO } },
-};
+function GoldDivider({ width = 40, delay = 0 }: { width?: number; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ scaleX: 0, opacity: 0 }}
+      animate={{ scaleX: 1, opacity: 1 }}
+      transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay }}
+      style={{
+        width, height: 1.5,
+        background: `linear-gradient(90deg, transparent, ${T.honey}, transparent)`,
+        margin: '0 auto',
+      }}
+    />
+  );
+}
+
+function SectionLabel({ children, color = T.honey, delay = 0.1 }: { children: string; color?: string; delay?: number }) {
+  return (
+    <SafeFadeIn delay={delay} direction="up" distance={12} duration={0.5}>
+      <div style={{
+        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        color, marginBottom: 16,
+      }}>
+        {children}
+      </div>
+    </SafeFadeIn>
+  );
+}
+
 
 const RevealSequence = memo(function RevealSequence({ profile, onComplete }: RevealSequenceProps) {
   const { goBackPlace, seedTrips, lifeContext, mosaicAxes } = useOnboardingStore();
@@ -79,27 +100,29 @@ const RevealSequence = memo(function RevealSequence({ profile, onComplete }: Rev
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <motion.div
-        key={stage}
-        variants={stageVariants}
-        initial="enter"
-        animate="center"
-        exit="exit"
-        style={{
-          flex: 1, overflowY: 'auto', padding: '32px 24px',
-        }}
-      >
-        {stage === 'archetype' && <ArchetypeReveal profile={profile} firstName={lifeContext.firstName} />}
-        {stage === 'quote' && <QuoteReveal profile={profile} />}
-        {stage === 'design' && <DesignLanguageReveal profile={profile} mosaicAxes={mosaicAxes} />}
-        {stage === 'fingerprint' && <TasteFingerprintReveal profile={profile} />}
-        {stage === 'contradiction' && <ContradictionReveal profile={profile} />}
-        {stage === 'perfectday' && <PerfectDayReveal profile={profile} />}
-        {stage === 'shift' && <HowYouShiftReveal profile={profile} />}
-        {stage === 'neighbors' && <TasteNeighborsReveal profile={profile} />}
-        {stage === 'destinations' && <DestinationsReveal profile={profile} />}
-        {stage === 'trips' && <SeedTripsReveal seedTrips={seedTrips} />}
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={stage}
+          variants={stageVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          style={{
+            flex: 1, overflowY: 'auto', padding: '32px 24px',
+          }}
+        >
+          {stage === 'archetype' && <ArchetypeReveal profile={profile} firstName={lifeContext.firstName} />}
+          {stage === 'quote' && <QuoteReveal profile={profile} />}
+          {stage === 'design' && <DesignLanguageReveal profile={profile} mosaicAxes={mosaicAxes} />}
+          {stage === 'fingerprint' && <TasteFingerprintReveal profile={profile} />}
+          {stage === 'contradiction' && <ContradictionReveal profile={profile} />}
+          {stage === 'perfectday' && <PerfectDayReveal profile={profile} />}
+          {stage === 'shift' && <HowYouShiftReveal profile={profile} />}
+          {stage === 'neighbors' && <TasteNeighborsReveal profile={profile} />}
+          {stage === 'destinations' && <DestinationsReveal profile={profile} />}
+          {stage === 'trips' && <SeedTripsReveal seedTrips={seedTrips} />}
+        </motion.div>
+      </AnimatePresence>
 
       <div style={{
         padding: '16px 24px 20px',
@@ -158,84 +181,79 @@ export default RevealSequence;
 function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfile; firstName?: string }) {
   const greeting = firstName ? `${firstName}, you're` : "You're";
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVar = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: EASE_OUT_EXPO },
-    },
-  };
-
-  const badgeVar = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { type: 'spring' as const, stiffness: 200, damping: 20 },
-    },
-  };
-
   return (
     <div
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
-        background: 'radial-gradient(ellipse at 50% 30%, rgba(201,171,113,0.06) 0%, transparent 70%)',
+        justifyContent: 'center', minHeight: '65vh', textAlign: 'center',
+        position: 'relative', overflow: 'hidden',
       }}
     >
-      <SafeFadeIn delay={0.1} direction="up" distance={20} duration={0.6}>
-        <div
+      {/* Subtle radial glow */}
+      <div style={{
+        position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: 500, height: 500, borderRadius: '50%',
+        background: `radial-gradient(circle, ${T.honey}08 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Decorative ring */}
+      <SafeFadeIn delay={0} direction="none" scale={0.6} duration={1}>
+        <motion.div
           style={{
-            fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: T.honey, marginBottom: 20,
+            width: 80, height: 80, borderRadius: '50%',
+            border: `1.5px solid ${T.honey}20`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 24,
           }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
         >
-          Your taste archetype
-        </div>
+          <div style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: T.honey,
+          }} />
+        </motion.div>
       </SafeFadeIn>
 
-      <SafeFadeIn delay={0.25} direction="up" distance={20} duration={0.6}>
+      <SectionLabel delay={0.15}>Your taste archetype</SectionLabel>
+
+      <SafeFadeIn delay={0.3} direction="up" distance={24} duration={0.7}>
         <h1
           style={{
-            fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
+            fontFamily: FONT.serif, fontSize: 42, fontStyle: 'italic',
             fontWeight: 400, color: 'var(--t-ink)',
-            margin: 0, lineHeight: 1.15,
+            margin: 0, lineHeight: 1.12,
+            maxWidth: 360,
           }}
         >
           {greeting} {profile.overallArchetype}
         </h1>
       </SafeFadeIn>
 
-      <SafeFadeIn delay={0.4} direction="up" distance={20} duration={0.6}>
+      <SafeFadeIn delay={0.5} direction="none" duration={0.8}>
+        <GoldDivider width={50} delay={0.5} />
+      </SafeFadeIn>
+
+      <SafeFadeIn delay={0.6} direction="up" distance={16} duration={0.6}>
         <p
           style={{
-            fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65,
-            color: INK['80'], maxWidth: 320, marginTop: 16,
+            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+            color: INK['75'], maxWidth: 300, marginTop: 20,
           }}
         >
           {profile.archetypeDescription}
         </p>
       </SafeFadeIn>
 
-      <SafeFadeIn delay={0.55} direction="up" distance={20} scale={0.8} duration={0.6}>
+      <SafeFadeIn delay={0.8} direction="up" distance={12} scale={0.9} duration={0.5}>
         <div
           style={{
-            marginTop: 24, padding: '10px 20px',
+            marginTop: 28, padding: '10px 24px',
             borderRadius: 100,
-            background: `${T.honey}08`,
-            border: `1px solid ${T.honey}15`,
+            background: `linear-gradient(135deg, ${T.honey}06, ${T.honey}12)`,
+            border: `1px solid ${T.honey}18`,
+            backdropFilter: 'blur(8px)',
           }}
         >
           <span style={{
@@ -257,116 +275,77 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
 function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.bestQuote) return null;
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const labelVar = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.5 },
-    },
-  };
-
-  const quoteMarkVar = {
-    hidden: { scale: 0, rotate: -10, opacity: 0 },
-    visible: {
-      scale: 1,
-      rotate: 0,
-      opacity: 0.5,
-      transition: { type: 'spring' as const, stiffness: 180, damping: 20, delay: 0.2 },
-    },
-  };
-
-  const quoteTextVar = {
-    hidden: { opacity: 0, y: 12 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.3 },
-    },
-  };
-
-  const insightVar = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.5, delay: 0.7 },
-    },
-  };
-
   return (
-    <motion.div
+    <div
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-        padding: '0 4px',
+        justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
+        padding: '0 4px', position: 'relative',
       }}
-      variants={containerVar}
-      initial="hidden"
-      animate="visible"
     >
-      <motion.div
-        style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 24,
-        }}
-        variants={labelVar}
-      >
-        The moment that told us the most
-      </motion.div>
+      <SectionLabel delay={0.1}>The moment that told us the most</SectionLabel>
 
-      <div style={{
-        background: 'var(--t-cream)', borderRadius: 20, padding: '32px 28px',
-        maxWidth: 400, width: '100%',
-      }}>
-        <motion.div variants={quoteMarkVar}>
-          <div style={{
-            fontFamily: FONT.serif, fontSize: 80, color: T.honey,
-            lineHeight: 0.6, marginBottom: 12, opacity: 0.3,
-          }}>
-            &ldquo;
-          </div>
-        </motion.div>
+      {/* Quote card with layered background */}
+      <SafeFadeIn delay={0.2} direction="up" distance={20} duration={0.7}>
+        <div style={{
+          position: 'relative',
+          borderRadius: 24, padding: '44px 32px 36px',
+          maxWidth: 420, width: '100%',
+          background: 'linear-gradient(165deg, rgba(201,171,113,0.04) 0%, var(--t-cream) 40%, rgba(201,171,113,0.06) 100%)',
+          border: `1px solid ${T.honey}12`,
+          boxShadow: `0 2px 24px rgba(201,171,113,0.06), 0 8px 32px rgba(28,26,23,0.03)`,
+        }}>
+          {/* Decorative quote mark */}
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 20, delay: 0.35 }}
+            style={{
+              position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)',
+              width: 36, height: 36, borderRadius: '50%',
+              background: `linear-gradient(135deg, ${T.honey}, ${T.honey}cc)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 4px 12px ${T.honey}30`,
+            }}
+          >
+            <span style={{
+              fontFamily: FONT.serif, fontSize: 28, color: 'white',
+              lineHeight: 1, marginTop: 4,
+            }}>
+              &ldquo;
+            </span>
+          </motion.div>
 
-        <motion.p
-          style={{
-            fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            lineHeight: 1.5, margin: '0 auto',
-          }}
-          variants={quoteTextVar}
-        >
-          {profile.bestQuote.quote}
-        </motion.p>
-      </div>
+          <motion.p
+            style={{
+              fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
+              fontWeight: 400, color: 'var(--t-ink)',
+              lineHeight: 1.5, margin: '8px 0 0',
+            }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.4 }}
+          >
+            {profile.bestQuote.quote}
+          </motion.p>
+        </div>
+      </SafeFadeIn>
 
-      <motion.div
-        style={{
-          borderTop: `2px solid ${T.honey}25`,
-          paddingTop: 20, marginTop: 24,
-          maxWidth: 340,
-        }}
-        variants={insightVar}
-      >
-        <p
-          style={{
-            fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-            color: INK['75'], margin: 0,
-          }}
-        >
-          {profile.bestQuote.insight}
-        </p>
-      </motion.div>
-    </motion.div>
+      {/* Insight below */}
+      <SafeFadeIn delay={0.7} direction="up" distance={10} duration={0.5}>
+        <div style={{ marginTop: 28, maxWidth: 360 }}>
+          <GoldDivider width={30} delay={0} />
+          <p
+            style={{
+              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+              color: INK['70'], margin: '16px 0 0',
+            }}
+          >
+            {profile.bestQuote.insight}
+          </p>
+        </div>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -380,7 +359,6 @@ function DesignLanguageReveal({
   profile: GeneratedTasteProfile;
   mosaicAxes: Record<string, number>;
 }) {
-  // Build spectrum data: merge ELO axes with profile annotations
   const spectrums = useMemo(() => {
     const axisOrder = ['volume', 'temperature', 'time', 'formality', 'culture', 'mood'];
     const defaultLabels: Record<string, [string, string]> = {
@@ -404,111 +382,100 @@ function DesignLanguageReveal({
     });
   }, [mosaicAxes, profile.designInsight]);
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const spectrumVar = {
-    hidden: { opacity: 0, y: 8 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: EASE_OUT_EXPO },
-    },
-  };
-
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 8,
-        }}>
-          Your design language
-        </div>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 4px',
-        }}>
-          {profile.designInsight?.headline ?? 'How you see space'}
-        </h2>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <SectionLabel>Your design language</SectionLabel>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 8px',
+          }}>
+            {profile.designInsight?.headline ?? 'How you see space'}
+          </h2>
+        </SafeFadeIn>
+        <GoldDivider width={36} delay={0.3} />
       </div>
 
       <motion.div
-        style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}
-        variants={containerVar}
-        initial="hidden"
-        animate="visible"
+        style={{
+          maxWidth: 440, margin: '0 auto',
+          display: 'flex', flexDirection: 'column', gap: 22,
+          padding: '24px 28px',
+          borderRadius: 20,
+          background: 'linear-gradient(180deg, rgba(201,171,113,0.02) 0%, rgba(28,26,23,0.01) 100%)',
+          border: `1px solid ${INK['04']}`,
+        }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.3 }}
       >
-        {spectrums.map((spec) => (
+        {spectrums.map((spec, idx) => (
           <motion.div
             key={spec.axis}
-            variants={spectrumVar}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.35 + idx * 0.08 }}
           >
             {/* Labels */}
             <div style={{
-              display: 'flex', justifyContent: 'space-between', marginBottom: 6,
+              display: 'flex', justifyContent: 'space-between', marginBottom: 8,
             }}>
               <span style={{
-                fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                color: INK['70'],
+                fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: INK['50'],
               }}>
                 {spec.labels[0]}
               </span>
               <span style={{
-                fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                color: INK['70'],
+                fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: INK['50'],
               }}>
                 {spec.labels[1]}
               </span>
             </div>
 
-            {/* Bar */}
+            {/* Track */}
             <div style={{
-              position: 'relative', height: 8, borderRadius: 4,
-              background: 'rgba(28,26,23,0.06)',
+              position: 'relative', height: 6, borderRadius: 3,
+              background: INK['06'],
+              overflow: 'hidden',
             }}>
+              {/* Filled portion with gradient */}
               <motion.div
                 style={{
                   position: 'absolute', top: 0, left: 0,
-                  height: '100%', borderRadius: 4,
-                  background: T.honey,
+                  height: '100%', borderRadius: 3,
+                  background: `linear-gradient(90deg, ${T.honey}90, ${T.honey})`,
                 }}
                 initial={{ width: '0%' }}
                 animate={{ width: `${Math.round(spec.value * 100)}%` }}
-                transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
+                transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.4 + idx * 0.08 }}
               />
               {/* Position dot */}
               <motion.div
                 style={{
                   position: 'absolute', top: '50%',
-                  width: 12, height: 12, borderRadius: '50%',
-                  background: T.honey,
-                  border: '2px solid white',
-                  boxShadow: '0 1px 3px rgba(28,26,23,0.15)',
+                  width: 14, height: 14, borderRadius: '50%',
+                  background: 'white',
+                  border: `2.5px solid ${T.honey}`,
+                  boxShadow: `0 1px 4px ${T.honey}30, 0 2px 8px rgba(28,26,23,0.08)`,
                   transform: 'translateY(-50%)',
                 }}
-                initial={{ left: '0%', opacity: 0 }}
-                animate={{ left: `calc(${Math.round(spec.value * 100)}% - 6px)`, opacity: 1 }}
-                transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
+                initial={{ left: '0%', opacity: 0, scale: 0 }}
+                animate={{ left: `calc(${Math.round(spec.value * 100)}% - 7px)`, opacity: 1, scale: 1 }}
+                transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.4 + idx * 0.08 }}
               />
             </div>
 
             {/* Annotation */}
             {spec.note && (
               <p style={{
-                fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.5,
-                color: INK['70'], marginTop: 5, marginBottom: 0,
+                fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.55,
+                color: INK['60'], marginTop: 6, marginBottom: 0,
                 fontStyle: 'italic',
               }}>
                 {spec.note}
@@ -528,15 +495,13 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
   const radar = profile.radarData;
   if (!radar?.length) return null;
 
-  // Find top 2 dimensions
   const sorted = [...radar].sort((a, b) => b.value - a.value);
   const top2 = sorted.slice(0, 2).map((d) => d.axis);
 
-  // SVG radar chart — organic shape
-  const size = 240;
+  const size = 260;
   const cx = size / 2;
   const cy = size / 2;
-  const maxR = size / 2 - 24;
+  const maxR = size / 2 - 28;
 
   const points = radar.map((d, i) => {
     const angle = (Math.PI * 2 * i) / radar.length - Math.PI / 2;
@@ -544,140 +509,131 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
     return {
       x: cx + r * Math.cos(angle),
       y: cy + r * Math.sin(angle),
-      labelX: cx + (maxR + 16) * Math.cos(angle),
-      labelY: cy + (maxR + 16) * Math.sin(angle),
       axis: d.axis,
       value: d.value,
     };
   });
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-  const totalLength = 200; // Approximate path length for animation
-
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.5,
-      },
-    },
-  };
-
-  const dotVar = {
-    hidden: { scale: 0, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: SPRING_BOUNCY,
-    },
-  };
-
-  const insightVar = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.5, delay: 0.8 },
-    },
-  };
 
   return (
-    <SafeFadeIn scale={0.9} delay={0.1} direction="none" duration={0.8}>
-      <div
-        style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-        }}
-      >
+    <div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
+        position: 'relative',
+      }}
+    >
+      <SectionLabel>Your taste fingerprint</SectionLabel>
+
+      {/* Chart with glow */}
+      <SafeFadeIn delay={0.15} direction="none" scale={0.85} duration={0.8}>
         <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 8,
+          position: 'relative',
+          padding: 24,
         }}>
-          Your taste fingerprint
-        </div>
+          {/* Ambient glow behind chart */}
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: size * 0.6, height: size * 0.6, borderRadius: '50%',
+            background: `radial-gradient(circle, ${T.honey}10 0%, transparent 70%)`,
+            filter: 'blur(30px)',
+            pointerEvents: 'none',
+          }} />
 
-      <div style={{
-        background: 'radial-gradient(circle, rgba(201,171,113,0.05) 0%, transparent 70%)',
-        padding: 16, borderRadius: '50%',
-      }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {/* Grid circles */}
-        {[0.33, 0.66, 1].map((r) => (
-          <circle
-            key={r}
-            cx={cx} cy={cy} r={maxR * r}
-            fill="none" stroke={INK['06']} strokeWidth={1}
-          />
-        ))}
-        {/* Grid lines */}
-        {points.map((p, i) => (
-          <line
-            key={i}
-            x1={cx} y1={cy}
-            x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-            y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-            stroke={INK['05']} strokeWidth={1}
-          />
-        ))}
-        {/* Shape with pathLength animation */}
-        <motion.path
-          d={pathD}
-          fill={`${T.honey}15`}
-          stroke={T.honey}
-          strokeWidth={2}
-          strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.2 }}
-          style={{ originX: '50%', originY: '50%' }}
-        />
-        {/* Dots with stagger */}
-        <motion.g variants={containerVar} initial="hidden" animate="visible">
-          {points.map((p, i) => (
-            <motion.circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r={4}
-              fill={T.honey}
-              variants={dotVar}
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            {/* Grid circles — softer */}
+            {[0.33, 0.66, 1].map((r) => (
+              <circle
+                key={r}
+                cx={cx} cy={cy} r={maxR * r}
+                fill="none" stroke={INK['05']} strokeWidth={0.75}
+                strokeDasharray={r < 1 ? '4 4' : 'none'}
+              />
+            ))}
+            {/* Grid lines */}
+            {points.map((_, i) => (
+              <line
+                key={i}
+                x1={cx} y1={cy}
+                x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
+                y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
+                stroke={INK['04']} strokeWidth={0.75}
+              />
+            ))}
+            {/* Filled shape with gradient */}
+            <defs>
+              <linearGradient id="radarFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={T.honey} stopOpacity={0.15} />
+                <stop offset="100%" stopColor={T.honey} stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
+            <motion.path
+              d={pathD}
+              fill="url(#radarFill)"
+              stroke={T.honey}
+              strokeWidth={2}
+              strokeLinejoin="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 1.2, ease: EASE_OUT_EXPO, delay: 0.3 }}
             />
+            {/* Dots with stagger */}
+            {points.map((p, i) => (
+              <motion.circle
+                key={i}
+                cx={p.x}
+                cy={p.y}
+                r={4.5}
+                fill="white"
+                stroke={T.honey}
+                strokeWidth={2}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ ...SPRING_BOUNCY, delay: 0.5 + i * 0.06 }}
+              />
+            ))}
+          </svg>
+        </div>
+      </SafeFadeIn>
+
+      {/* Axis labels — cleaner layout */}
+      <SafeFadeIn delay={0.6} direction="up" distance={10} duration={0.5}>
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+          gap: '8px 16px', marginTop: 8, maxWidth: 320,
+        }}>
+          {radar.map((d) => (
+            <span key={d.axis} style={{
+              fontFamily: FONT.sans, fontSize: 12,
+              fontWeight: top2.includes(d.axis) ? 700 : 400,
+              color: top2.includes(d.axis) ? T.honey : INK['50'],
+              letterSpacing: '0.01em',
+            }}>
+              {d.axis}
+            </span>
           ))}
-        </motion.g>
-      </svg>
-      </div>
+        </div>
+      </SafeFadeIn>
 
-      {/* Axis labels */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-        gap: '6px 14px', marginTop: 16, maxWidth: 280,
-      }}>
-        {radar.map((d) => (
-          <span key={d.axis} style={{
-            fontFamily: FONT.sans, fontSize: 11,
-            fontWeight: top2.includes(d.axis) ? 700 : 400,
-            color: top2.includes(d.axis) ? T.honey : INK['60'],
-          }}>
-            {d.axis}
-          </span>
-        ))}
-      </div>
-
-      <motion.p
-        style={{
-          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-          color: INK['80'], maxWidth: 320, marginTop: 20,
-        }}
-        variants={insightVar}
-      >
-        <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[0]}</span>
-        {' and '}
-        <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[1]}</span>
-        {' drive you. Most travelers lead with other dimensions — you lead with these.'}
-      </motion.p>
-      </div>
-    </SafeFadeIn>
+      <SafeFadeIn delay={0.75} direction="up" distance={10} duration={0.5}>
+        <div style={{ marginTop: 20 }}>
+          <GoldDivider width={30} delay={0} />
+          <p
+            style={{
+              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+              color: INK['75'], maxWidth: 320, marginTop: 14,
+            }}
+          >
+            <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[0]}</span>
+            {' and '}
+            <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[1]}</span>
+            {' drive you. Most travelers lead with other dimensions — you lead with these.'}
+          </p>
+        </div>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -688,137 +644,108 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
   const c = profile.contradictions[0];
   if (!c) return null;
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const poleVar = {
-    hidden: { opacity: 0, x: 0 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
-  };
-
-  const statedVar = {
-    hidden: { opacity: 0, x: -30 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
-  };
-
-  const revealedVar = {
-    hidden: { opacity: 0, x: 30 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
-  };
-
-  const resolutionVar = {
-    hidden: { opacity: 0, scale: 0.95, y: 12 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.3 },
-    },
-  };
+  const PURPLE = '#6844a0';
 
   return (
     <div
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
         padding: '0 4px',
       }}
     >
-      <SafeFadeIn delay={0.1} direction="up" distance={20} duration={0.6}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: '#6844a0', marginBottom: 24,
+      <SectionLabel color={PURPLE}>The interesting part</SectionLabel>
+
+      <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+        <h2 style={{
+          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--t-ink)',
+          margin: '0 0 28px', maxWidth: 300,
         }}>
-          The interesting part
-        </div>
+          You contain contradictions
+        </h2>
       </SafeFadeIn>
 
-      <div style={{
-        maxWidth: 420, width: '100%',
-      }}>
-        {/* The two poles */}
+      <div style={{ maxWidth: 420, width: '100%' }}>
+        {/* The two poles — side by side */}
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', alignItems: 'stretch', justifyContent: 'center',
           gap: 12, marginBottom: 24,
         }}>
-          <SafeFadeIn
-            delay={0.25}
-            direction="left"
-            distance={30}
-            duration={0.6}
-          >
-            <span
+          <SafeFadeIn delay={0.35} direction="left" distance={24} duration={0.6}>
+            <div
               style={{
+                flex: 1,
                 fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                color: 'var(--t-ink)', textAlign: 'right', flex: 1,
-                background: 'rgba(201,171,113,0.06)', padding: '14px 18px', borderRadius: 12,
+                color: 'var(--t-ink)', textAlign: 'center',
+                padding: '20px 20px',
+                borderRadius: 16,
+                background: `linear-gradient(135deg, ${T.honey}06, ${T.honey}10)`,
+                border: `1px solid ${T.honey}15`,
               }}
             >
               {c.stated}
-            </span>
+            </div>
           </SafeFadeIn>
-          <span style={{
-            fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-            color: 'rgba(104,68,160,0.4)',
-          }}>
-            ×
-          </span>
-          <SafeFadeIn
-            delay={0.25}
-            direction="right"
-            distance={30}
-            duration={0.6}
-          >
-            <span
+
+          <SafeFadeIn delay={0.4} direction="none" scale={0.5} duration={0.4}>
+            <div style={{
+              display: 'flex', alignItems: 'center',
+            }}>
+              <span style={{
+                fontFamily: FONT.sans, fontSize: 18, fontWeight: 300,
+                color: `${PURPLE}40`,
+              }}>
+                &times;
+              </span>
+            </div>
+          </SafeFadeIn>
+
+          <SafeFadeIn delay={0.35} direction="right" distance={24} duration={0.6}>
+            <div
               style={{
+                flex: 1,
                 fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                color: 'var(--t-ink)', textAlign: 'left', flex: 1,
-                background: 'rgba(104,68,160,0.05)', padding: '14px 18px', borderRadius: 12,
+                color: 'var(--t-ink)', textAlign: 'center',
+                padding: '20px 20px',
+                borderRadius: 16,
+                background: `linear-gradient(135deg, ${PURPLE}04, ${PURPLE}08)`,
+                border: `1px solid ${PURPLE}12`,
               }}
             >
               {c.revealed}
-            </span>
+            </div>
           </SafeFadeIn>
         </div>
 
         {/* Resolution */}
-        <SafeFadeIn
-          delay={0.4}
-          scale={0.95}
-          direction="up"
-          distance={12}
-          duration={0.6}
-        >
+        <SafeFadeIn delay={0.55} direction="up" distance={12} duration={0.6}>
           <div
             style={{
-              padding: '24px 28px', borderRadius: 16,
-              background: 'rgba(28,26,23,0.02)',
+              padding: '24px 28px', borderRadius: 18,
+              background: 'white',
+              boxShadow: `0 2px 16px rgba(28,26,23,0.04), 0 8px 24px rgba(28,26,23,0.02)`,
+              border: `1px solid ${INK['04']}`,
               textAlign: 'left',
             }}
           >
             <p style={{
-              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-              color: INK['85'], margin: 0,
+              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+              color: INK['80'], margin: 0,
             }}>
               {c.resolution}
             </p>
           </div>
         </SafeFadeIn>
 
-        <p style={{
-          fontFamily: FONT.sans, fontSize: 13, color: INK['70'],
-          marginTop: 16,
-        }}>
-          We&apos;ll find places that understand both sides.
-        </p>
+        <SafeFadeIn delay={0.7} direction="none" duration={0.5}>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 13, color: INK['55'],
+            marginTop: 18, fontStyle: 'italic',
+          }}>
+            We&apos;ll find places that understand both sides.
+          </p>
+        </SafeFadeIn>
       </div>
     </div>
   );
@@ -831,81 +758,98 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.perfectDay) return null;
 
   const segments = [
-    { label: 'Morning', text: profile.perfectDay.morning, gradient: 'linear-gradient(135deg, rgba(201,171,113,0.04) 0%, white 100%)', accentOpacity: '40' },
-    { label: 'Afternoon', text: profile.perfectDay.afternoon, gradient: 'linear-gradient(135deg, rgba(201,171,113,0.07) 0%, white 100%)', accentOpacity: '60' },
-    { label: 'Evening', text: profile.perfectDay.evening, gradient: 'linear-gradient(135deg, rgba(201,171,113,0.10) 0%, rgba(28,26,23,0.02) 100%)', accentOpacity: '80' },
+    {
+      label: 'Morning', text: profile.perfectDay.morning,
+      icon: '○', // abstract circle — dawn
+      gradient: `linear-gradient(135deg, ${T.honey}04, white)`,
+      accentColor: `${T.honey}50`,
+    },
+    {
+      label: 'Afternoon', text: profile.perfectDay.afternoon,
+      icon: '◐', // half circle — midday
+      gradient: `linear-gradient(135deg, ${T.honey}08, white)`,
+      accentColor: `${T.honey}80`,
+    },
+    {
+      label: 'Evening', text: profile.perfectDay.evening,
+      icon: '●', // full circle — evening
+      gradient: `linear-gradient(135deg, ${T.honey}12, rgba(28,26,23,0.02))`,
+      accentColor: T.honey,
+    },
   ];
-
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const cardVar = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { ...SPRING_GENTLE, delay: 0 },
-    },
-  };
 
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 8,
-        }}>
-          Your perfect day
-        </div>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: 0,
-        }}>
-          How a great day unfolds for you
-        </h2>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <SectionLabel>Your perfect day</SectionLabel>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 8px',
+          }}>
+            How a great day unfolds for you
+          </h2>
+        </SafeFadeIn>
+        <GoldDivider width={36} delay={0.3} />
       </div>
 
       <div
-        style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
+        style={{
+          maxWidth: 440, margin: '0 auto',
+          display: 'flex', flexDirection: 'column', gap: 14,
+          position: 'relative',
+        }}
       >
+        {/* Connecting line */}
+        <div style={{
+          position: 'absolute', left: 31, top: 36, bottom: 36,
+          width: 1.5,
+          background: `linear-gradient(to bottom, ${T.honey}15, ${T.honey}40, ${T.honey}15)`,
+          pointerEvents: 'none',
+        }} />
+
         {segments.map((seg, idx) => (
           <SafeFadeIn
             key={seg.label}
-            delay={0.2 + idx * 0.12}
+            delay={0.35 + idx * 0.15}
             direction="up"
             distance={16}
             duration={0.5}
           >
             <div
               style={{
-                padding: '24px 28px', borderRadius: 16,
+                display: 'flex', gap: 20, alignItems: 'flex-start',
+                padding: '22px 24px',
+                borderRadius: 18,
                 background: seg.gradient,
-                borderLeft: `3px solid ${T.honey}${seg.accentOpacity}`,
-                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
+                border: `1px solid ${INK['04']}`,
+                boxShadow: '0 1px 8px rgba(28,26,23,0.03)',
+                position: 'relative',
               }}
             >
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 11, fontWeight: 700,
-              textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: T.honey, marginBottom: 8,
-            }}>
-              {seg.label}
-            </div>
-            <p style={{
-              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-              color: INK['85'], margin: 0,
-            }}>
-              {seg.text}
-            </p>
+              {/* Time icon */}
+              <div style={{
+                width: 20, minWidth: 20, textAlign: 'center',
+                fontSize: 14, color: seg.accentColor, marginTop: 1,
+              }}>
+                {seg.icon}
+              </div>
+              <div>
+                <div style={{
+                  fontFamily: FONT.sans, fontSize: 11, fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                  color: T.honey, marginBottom: 6,
+                }}>
+                  {seg.label}
+                </div>
+                <p style={{
+                  fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+                  color: INK['80'], margin: 0,
+                }}>
+                  {seg.text}
+                </p>
+              </div>
             </div>
           </SafeFadeIn>
         ))}
@@ -920,80 +864,72 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
 function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.howYouShift?.length) return null;
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const cardVar = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { ...SPRING_GENTLE, delay: 0 },
-    },
-  };
+  const accentColors = [T.honey, T.verde, '#6844a0'];
+  const bgGradients = [
+    `linear-gradient(135deg, ${T.honey}06, white)`,
+    `linear-gradient(135deg, ${T.verde}06, white)`,
+    `linear-gradient(135deg, #6844a008, white)`,
+  ];
 
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 8,
-        }}>
-          How you shift
-        </div>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: 0,
-        }}>
-          You&apos;re not the same traveler every time
-        </h2>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <SectionLabel>How you shift</SectionLabel>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 8px',
+          }}>
+            You&apos;re not the same traveler every time
+          </h2>
+        </SafeFadeIn>
+        <GoldDivider width={36} delay={0.3} />
       </div>
 
       <div
-        style={{ maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}
+        style={{ maxWidth: 440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}
       >
         {profile.howYouShift.map((shift, idx) => {
-          const accentColors = [T.honey, 'var(--t-verde)', '#6844a0'];
+          const accent = accentColors[idx % accentColors.length];
           return (
-          <SafeFadeIn
-            key={shift.context}
-            delay={0.2 + idx * 0.12}
-            direction="up"
-            distance={16}
-            duration={0.5}
-          >
-            <div
-              style={{
-                padding: '24px 28px', borderRadius: 16,
-                background: 'white',
-                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
-                border: '1px solid rgba(28,26,23,0.04)',
-                borderLeft: `3px solid ${accentColors[idx % accentColors.length]}`,
-              }}
+            <SafeFadeIn
+              key={shift.context}
+              delay={0.35 + idx * 0.12}
+              direction="up"
+              distance={16}
+              duration={0.5}
             >
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
-              color: 'var(--t-ink)', marginBottom: 6,
-            }}>
-              {shift.context}
-            </div>
-            <p style={{
-              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
-              color: INK['80'], margin: 0,
-            }}>
-              {shift.insight}
-            </p>
-            </div>
-          </SafeFadeIn>
+              <div
+                style={{
+                  padding: '24px 28px', borderRadius: 18,
+                  background: bgGradients[idx % bgGradients.length],
+                  boxShadow: `0 2px 12px rgba(28,26,23,0.03)`,
+                  border: `1px solid ${INK['04']}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Accent bar at top */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 24, right: 24, height: 2,
+                  background: `linear-gradient(90deg, ${accent}, transparent)`,
+                  borderRadius: 1,
+                }} />
+                <div style={{
+                  fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
+                  color: 'var(--t-ink)', marginBottom: 8, marginTop: 4,
+                }}>
+                  {shift.context}
+                </div>
+                <p style={{
+                  fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+                  color: INK['75'], margin: 0,
+                }}>
+                  {shift.insight}
+                </p>
+              </div>
+            </SafeFadeIn>
           );
         })}
       </div>
@@ -1008,133 +944,91 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.tasteNeighbors) return null;
   const { nearbyArchetypes, distinction, rarityStat } = profile.tasteNeighbors;
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.15,
-      },
-    },
-  };
-
-  const tagVar = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: SPRING_BOUNCY,
-    },
-  };
-
-  const distinctionVar = {
-    hidden: { opacity: 0, y: 12 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.4 },
-    },
-  };
-
-  const rarityVar = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.6 },
-    },
-  };
-
   return (
-    <SafeFadeIn delay={0.15} direction="none" duration={0.4}>
+    <div
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
+        padding: '0 4px',
+      }}
+    >
+      <SectionLabel>Your taste neighbors</SectionLabel>
+
+      <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+        <h2 style={{
+          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--t-ink)',
+          margin: '0 0 24px',
+        }}>
+          Travelers with a similar lens
+        </h2>
+      </SafeFadeIn>
+
+      {/* Nearby archetypes as pills */}
       <div
         style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
-          padding: '0 4px',
+          display: 'flex', flexWrap: 'wrap', gap: 10,
+          justifyContent: 'center', marginBottom: 24,
         }}
       >
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 24,
-        }}>
-          Your taste neighbors
-        </div>
+        {nearbyArchetypes.map((name, idx) => (
+          <SafeFadeIn
+            key={name}
+            delay={0.35 + idx * 0.1}
+            scale={0.8}
+            direction="none"
+            duration={0.5}
+          >
+            <span
+              style={{
+                fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
+                color: 'var(--t-ink)',
+                padding: '10px 22px', borderRadius: 100,
+                background: 'white',
+                border: `1px solid ${INK['06']}`,
+                boxShadow: `0 2px 12px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.03)`,
+                display: 'inline-block',
+              }}
+            >
+              {name}
+            </span>
+          </SafeFadeIn>
+        ))}
+      </div>
 
-        {/* Nearby archetypes */}
-        <div
+      <GoldDivider width={30} delay={0.5} />
+
+      {/* Distinction */}
+      <SafeFadeIn delay={0.55} direction="up" distance={12} duration={0.5}>
+        <p
           style={{
-            display: 'flex', flexWrap: 'wrap', gap: 8,
-            justifyContent: 'center', marginBottom: 20,
+            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+            color: INK['80'], maxWidth: 340, margin: '20px 0 24px',
           }}
         >
-          {nearbyArchetypes.map((name, idx) => (
-            <SafeFadeIn
-              key={name}
-              delay={0.3 + idx * 0.08}
-              scale={0.8}
-              direction="none"
-              duration={0.5}
-            >
-              <span
-                style={{
-                  fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                  color: 'var(--t-ink)',
-                  padding: '8px 18px', borderRadius: 100,
-                  background: 'var(--t-cream)',
-                  boxShadow: '0 1px 4px rgba(28,26,23,0.06)',
-                }}
-              >
-                {name}
-              </span>
-            </SafeFadeIn>
-          ))}
-        </div>
+          {distinction}
+        </p>
+      </SafeFadeIn>
 
-        {/* Distinction */}
-        <SafeFadeIn
-          delay={0.4}
-          direction="up"
-          distance={12}
-          duration={0.5}
+      {/* Rarity stat — as a standout badge */}
+      <SafeFadeIn delay={0.65} scale={0.95} direction="up" distance={10} duration={0.5}>
+        <div
+          style={{
+            padding: '16px 28px', borderRadius: 16,
+            background: `linear-gradient(135deg, ${T.honey}06, ${T.honey}10)`,
+            border: `1px solid ${T.honey}15`,
+            maxWidth: 380,
+          }}
         >
-          <p
-            style={{
-              fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65,
-              color: INK['85'], maxWidth: 340, marginBottom: 24,
-            }}
-          >
-            {distinction}
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+            color: INK['70'], margin: 0, fontStyle: 'italic',
+          }}>
+            {rarityStat}
           </p>
-        </SafeFadeIn>
-
-        {/* Rarity stat */}
-        <SafeFadeIn
-          delay={0.5}
-          scale={0.95}
-          direction="up"
-          distance={12}
-          duration={0.5}
-        >
-          <div
-            style={{
-              padding: '16px 24px', borderRadius: 14,
-              background: `${T.honey}08`,
-              border: `1px solid ${T.honey}15`,
-              maxWidth: 380,
-            }}
-          >
-            <p style={{
-              fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-              color: INK['75'], margin: 0, fontStyle: 'italic',
-            }}>
-              {rarityStat}
-            </p>
-          </div>
-        </SafeFadeIn>
-      </div>
-    </SafeFadeIn>
+        </div>
+      </SafeFadeIn>
+    </div>
   );
 }
 
@@ -1145,79 +1039,54 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.destinations) return null;
   const { familiar, surprise } = profile.destinations;
 
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const familiarVar = {
-    hidden: { opacity: 0, y: 8 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: EASE_OUT_EXPO },
-    },
-  };
-
-  const surpriseVar = {
-    hidden: { opacity: 0, scale: 0.95, y: 12 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: { ...SPRING_BOUNCY, delay: Math.max(0, familiar.length * 120 - 100) / 1000 + 0.2 },
-    },
-  };
-
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '50vh', textAlign: 'center',
+      justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
     }}>
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: T.honey, marginBottom: 8,
-      }}>
-        Where you&apos;d thrive
-      </div>
-      <h2 style={{
-        fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-        fontWeight: 400, color: 'var(--t-ink)',
-        margin: '0 0 28px',
-      }}>
-        Your signals point toward
-      </h2>
+      <SectionLabel>Where you&apos;d thrive</SectionLabel>
+      <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+        <h2 style={{
+          fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--t-ink)',
+          margin: '0 0 8px',
+        }}>
+          Your signals point toward
+        </h2>
+      </SafeFadeIn>
+      <GoldDivider width={36} delay={0.3} />
 
       {/* Familiar destinations */}
       <div
         style={{
           display: 'flex', flexDirection: 'column', gap: 10,
-          marginBottom: 20, width: '100%', maxWidth: 360,
+          marginTop: 24, marginBottom: 20, width: '100%', maxWidth: 380,
         }}
       >
         {familiar.map((dest, idx) => (
           <SafeFadeIn
             key={dest}
-            delay={0.2 + idx * 0.12}
+            delay={0.35 + idx * 0.12}
             direction="up"
-            distance={8}
+            distance={10}
             duration={0.5}
           >
             <div
               style={{
                 fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-                color: 'var(--t-ink)', padding: '14px 20px',
-                borderRadius: 14, background: 'rgba(201,171,113,0.03)',
-                borderLeft: `3px solid ${T.honey}`,
-                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
+                color: 'var(--t-ink)', padding: '16px 24px',
+                borderRadius: 16,
+                background: 'white',
+                border: `1px solid ${INK['05']}`,
+                boxShadow: `0 2px 12px rgba(28,26,23,0.03)`,
+                display: 'flex', alignItems: 'center', gap: 12,
               }}
             >
+              <div style={{
+                width: 4, height: 28, borderRadius: 2,
+                background: T.honey,
+                flexShrink: 0,
+              }} />
               {dest}
             </div>
           </SafeFadeIn>
@@ -1227,38 +1096,48 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
       {/* Surprise destination */}
       <SafeFadeIn
         scale={0.95}
-        delay={0.2 + Math.max(0, familiar.length * 120 - 100) / 1000}
+        delay={0.35 + familiar.length * 0.12}
         direction="up"
-        distance={12}
-        duration={0.5}
+        distance={14}
+        duration={0.6}
       >
         <div
           style={{
-            width: '100%', maxWidth: 360,
-            padding: '18px 20px', borderRadius: 14,
-            background: `${T.honey}12`,
-            border: `1px solid ${T.honey}40`,
+            width: '100%', maxWidth: 380,
+            padding: '22px 24px', borderRadius: 18,
+            background: `linear-gradient(135deg, ${T.honey}08, ${T.honey}14)`,
+            border: `1px solid ${T.honey}25`,
+            boxShadow: `0 4px 20px ${T.honey}08`,
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          textTransform: 'uppercase', letterSpacing: '0.08em',
-          color: T.honey, marginBottom: 6,
-        }}>
-          ✦ This one might surprise you
-        </div>
-        <div style={{
-          fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-          color: 'var(--t-ink)', marginBottom: 6,
-        }}>
-          {surprise.name}
-        </div>
-        <p style={{
-          fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.55,
-          color: INK['75'], margin: 0,
-        }}>
-          {surprise.reason}
-        </p>
+          {/* Sparkle accent */}
+          <div style={{
+            position: 'absolute', top: -20, right: -20,
+            width: 80, height: 80, borderRadius: '50%',
+            background: `radial-gradient(circle, ${T.honey}12 0%, transparent 70%)`,
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+            textTransform: 'uppercase', letterSpacing: '0.1em',
+            color: T.honey, marginBottom: 8,
+          }}>
+            ✦ This one might surprise you
+          </div>
+          <div style={{
+            fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
+            color: 'var(--t-ink)', marginBottom: 8,
+          }}>
+            {surprise.name}
+          </div>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+            color: INK['70'], margin: 0,
+          }}>
+            {surprise.reason}
+          </p>
         </div>
       </SafeFadeIn>
     </div>
@@ -1269,103 +1148,94 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 // ─── Final: Your Trips ───
 
 function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
-  const containerVar = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const cardVar = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { ...SPRING_GENTLE, delay: 0 },
-    },
-  };
-
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: T.honey, marginBottom: 8,
-        }}>
-          Already started
-        </div>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 8px',
-        }}>
-          I&apos;ve started filling these in
-        </h2>
-        <p style={{
-          fontFamily: FONT.sans, fontSize: 14, color: INK['70'],
-          maxWidth: 320, margin: '0 auto',
-        }}>
-          Take a look — tell me if I&apos;m on the right track.
-        </p>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <SectionLabel>Already started</SectionLabel>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
+            fontWeight: 400, color: 'var(--t-ink)',
+            margin: '0 0 6px',
+          }}>
+            I&apos;ve started filling these in
+          </h2>
+        </SafeFadeIn>
+        <SafeFadeIn delay={0.3} direction="up" distance={10} duration={0.5}>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 14, color: INK['60'],
+            maxWidth: 320, margin: '0 auto 4px',
+          }}>
+            Take a look — tell me if I&apos;m on the right track.
+          </p>
+        </SafeFadeIn>
+        <GoldDivider width={30} delay={0.35} />
       </div>
 
       <div
-        style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420, margin: '0 auto' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 440, margin: '0 auto' }}
       >
         {seedTrips.map((trip, i) => (
           <SafeFadeIn
             key={i}
-            delay={0.2 + i * 0.15}
+            delay={0.4 + i * 0.12}
             direction="up"
             distance={16}
             duration={0.5}
           >
             <div
               style={{
-                padding: '24px 28px', borderRadius: 16,
+                padding: '22px 24px', borderRadius: 18,
                 background: 'white',
-                boxShadow: '0 1px 3px rgba(28,26,23,0.04), 0 4px 12px rgba(28,26,23,0.03)',
-                border: '1px solid rgba(28,26,23,0.04)',
+                boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
+                border: `1px solid ${INK['05']}`,
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-            <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div>
-                <div style={{
-                  fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-                  color: 'var(--t-ink)',
-                }}>
-                  {trip.destination}
-                </div>
-                {trip.dates && (
+              {/* Subtle accent stripe */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                background: trip.status === 'planning'
+                  ? `linear-gradient(90deg, ${T.verde}, transparent)`
+                  : `linear-gradient(90deg, ${T.honey}, transparent)`,
+              }} />
+
+              <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 8, marginTop: 4 }}>
+                <div>
                   <div style={{
-                    fontFamily: FONT.sans, fontSize: 12, color: INK['70'], marginTop: 2,
+                    fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
+                    color: 'var(--t-ink)',
                   }}>
-                    {trip.dates}
+                    {trip.destination}
                   </div>
-                )}
+                  {trip.dates && (
+                    <div style={{
+                      fontFamily: FONT.sans, fontSize: 12, color: INK['60'], marginTop: 3,
+                    }}>
+                      {trip.dates}
+                    </div>
+                  )}
+                </div>
+                <span style={{
+                  fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+                  padding: '4px 12px', borderRadius: 100,
+                  background: trip.status === 'planning'
+                    ? `${T.verde}12`
+                    : `${T.honey}12`,
+                  color: trip.status === 'planning' ? T.verde : T.honey,
+                }}>
+                  {trip.status}
+                </span>
               </div>
-              <span style={{
-                fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-                padding: '3px 10px', borderRadius: 100,
-                background: trip.status === 'planning' ? T.verde : T.honey,
-                color: 'white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              <div style={{
+                fontFamily: FONT.sans, fontSize: 12, color: INK['55'],
+                display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                {trip.status}
-              </span>
-            </div>
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 11, color: INK['70'],
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <span>{trip.travelContext}</span>
-              <span>·</span>
-              <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
-            </div>
+                <span>{trip.travelContext}</span>
+                <span style={{ color: INK['30'] }}>·</span>
+                <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
+              </div>
             </div>
           </SafeFadeIn>
         ))}
