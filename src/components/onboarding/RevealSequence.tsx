@@ -46,7 +46,124 @@ const stageVariants = {
   exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3 } },
 };
 
+// ─── Brand Palette ───
+const BRAND = {
+  signalRed: '#d63020',
+  chromeYellow: '#eeb420',
+  pantonOrange: '#e86830',
+  verde: '#2a7a56',
+  pantonViolet: '#6844a0',
+  royerePink: '#e87080',
+  ink: '#1c1a17',
+  warmWhite: '#f5f0e6',
+  travertine: '#e8dcc8',
+  cream: '#f8f3ea',
+};
+
 // ─── Shared decorative elements ───
+
+function WaveDivider({ from, to = BRAND.cream }: { from: string; to?: string }) {
+  return (
+    <div style={{ position: 'relative', marginTop: -1, lineHeight: 0, overflow: 'hidden' }}>
+      <svg viewBox="0 0 400 28" preserveAspectRatio="none" style={{ width: '100%', display: 'block', height: 28 }}>
+        <path d="M0,0 L400,0 L400,2 C320,26 80,26 0,2 Z" fill={from} />
+        <path d="M0,2 C80,26 320,26 400,2 L400,28 L0,28 Z" fill={to} />
+      </svg>
+    </div>
+  );
+}
+
+function OrgBlob({ color = 'rgba(255,255,255,0.08)', size = 180, style }: { color?: string; size?: number; style?: React.CSSProperties }) {
+  return (
+    <motion.div
+      style={{
+        position: 'absolute', width: size, height: size,
+        borderRadius: '42% 58% 35% 65% / 48% 32% 68% 52%',
+        background: color, pointerEvents: 'none',
+        ...style,
+      }}
+      animate={{
+        borderRadius: [
+          '42% 58% 35% 65% / 48% 32% 68% 52%',
+          '55% 45% 60% 40% / 35% 55% 45% 65%',
+          '42% 58% 35% 65% / 48% 32% 68% 52%',
+        ],
+      }}
+      transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+function HeroSection({
+  bg,
+  label,
+  children,
+  minHeight = 200,
+}: {
+  bg: string;
+  label?: string;
+  children: React.ReactNode;
+  minHeight?: number;
+}) {
+  return (
+    <div style={{
+      position: 'relative', overflow: 'hidden',
+      padding: '48px 28px 36px', background: bg,
+      minHeight,
+    }}>
+      <OrgBlob color="rgba(255,255,255,0.07)" size={200} style={{ top: -60, right: -40 }} />
+      <OrgBlob color="rgba(255,255,255,0.04)" size={140} style={{ bottom: -30, left: -30 }} />
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        {label && (
+          <SafeFadeIn delay={0.1} direction="up" distance={8} duration={0.4}>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.65)', marginBottom: 14,
+            }}>
+              {label}
+            </div>
+          </SafeFadeIn>
+        )}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ContentSection({ children, padding = '28px 28px 20px' }: { children: React.ReactNode; padding?: string }) {
+  return (
+    <div style={{ padding, background: BRAND.cream }}>
+      {children}
+    </div>
+  );
+}
+
+function CardShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      borderRadius: 24, overflow: 'hidden',
+      boxShadow: '0 4px 32px rgba(28,26,23,0.08), 0 1px 4px rgba(28,26,23,0.04)',
+      background: BRAND.cream,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ children, color = 'rgba(255,255,255,0.65)', delay = 0.1 }: { children: string; color?: string; delay?: number }) {
+  return (
+    <SafeFadeIn delay={delay} direction="up" distance={12} duration={0.5}>
+      <div style={{
+        fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        color, marginBottom: 14,
+      }}>
+        {children}
+      </div>
+    </SafeFadeIn>
+  );
+}
 
 function GoldDivider({ width = 40, delay = 0 }: { width?: number; delay?: number }) {
   return (
@@ -55,25 +172,11 @@ function GoldDivider({ width = 40, delay = 0 }: { width?: number; delay?: number
       animate={{ scaleX: 1, opacity: 1 }}
       transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay }}
       style={{
-        width, height: 1.5,
-        background: `linear-gradient(90deg, transparent, ${T.honey}, transparent)`,
+        width, height: 2,
+        background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
         margin: '0 auto',
       }}
     />
-  );
-}
-
-function SectionLabel({ children, color = T.honey, delay = 0.1 }: { children: string; color?: string; delay?: number }) {
-  return (
-    <SafeFadeIn delay={delay} direction="up" distance={12} duration={0.5}>
-      <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.18em', textTransform: 'uppercase',
-        color, marginBottom: 16,
-      }}>
-        {children}
-      </div>
-    </SafeFadeIn>
   );
 }
 
@@ -148,11 +251,11 @@ const RevealSequence = memo(function RevealSequence({
 
   // Accent colors per stage for replay dots
   const REPLAY_ACCENTS: Record<string, string> = {
-    cover: T.honey, archetype: T.verde, quote: T.honey,
-    design: T.honey, fingerprint: T.verde, contradiction: '#6844a0',
-    observations: T.amber, perfectday: T.honey, shift: T.honey,
-    neighbors: T.verde, destinations: T.honey, matches: T.verde,
-    trips: T.honey, share: T.honey,
+    cover: BRAND.ink, archetype: BRAND.signalRed, quote: BRAND.pantonOrange,
+    design: BRAND.verde, fingerprint: BRAND.ink, contradiction: BRAND.pantonViolet,
+    observations: BRAND.chromeYellow, perfectday: BRAND.pantonOrange, shift: BRAND.verde,
+    neighbors: BRAND.royerePink, destinations: BRAND.signalRed, matches: BRAND.verde,
+    trips: BRAND.chromeYellow, share: BRAND.ink,
   };
 
   return (
@@ -181,18 +284,18 @@ const RevealSequence = memo(function RevealSequence({
             ← {stageIndex === 0 ? 'Close' : 'Back'}
           </motion.button>
 
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 5 }}>
             {stages.map((s, i) => (
               <motion.div
                 key={i}
                 layout
                 style={{
-                  height: 6, borderRadius: 3,
+                  height: 5, borderRadius: 3,
                   background: i === stageIndex
-                    ? (REPLAY_ACCENTS[s] || T.honey)
+                    ? (REPLAY_ACCENTS[s] || BRAND.ink)
                     : i < stageIndex ? INK['30'] : INK['12'],
                 }}
-                animate={{ width: i === stageIndex ? 18 : 6 }}
+                animate={{ width: i === stageIndex ? 20 : 5 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               />
             ))}
@@ -207,7 +310,7 @@ const RevealSequence = memo(function RevealSequence({
         onClick={isReplay && stageIndex < stages.length - 1 ? advance : undefined}
         style={{
           flex: 1, overflowY: 'auto',
-          padding: isReplay ? '0 28px' : '32px 24px',
+          padding: isReplay ? '0 16px' : '24px 16px',
           cursor: isReplay && stageIndex < stages.length - 1 ? 'pointer' : 'default',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'flex-start',
@@ -307,18 +410,18 @@ const RevealSequence = memo(function RevealSequence({
           </motion.button>
 
           <div style={{
-            display: 'flex', gap: 6, justifyContent: 'center', marginTop: 14,
+            display: 'flex', gap: 5, justifyContent: 'center', marginTop: 14,
           }}>
-            {stages.map((_, i) => (
+            {stages.map((s, i) => (
               <motion.div
                 key={i}
                 layout
                 style={{
-                  height: 6,
+                  height: 5,
                   borderRadius: 3,
-                  background: i === stageIndex ? T.honey : i < stageIndex ? INK['30'] : INK['12'],
+                  background: i === stageIndex ? (REPLAY_ACCENTS[s] || BRAND.ink) : i < stageIndex ? INK['30'] : INK['12'],
                 }}
-                animate={{ width: i === stageIndex ? 18 : 6 }}
+                animate={{ width: i === stageIndex ? 20 : 5 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               />
             ))}
@@ -333,96 +436,132 @@ RevealSequence.displayName = 'RevealSequence';
 export default RevealSequence;
 
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  CARD COMPONENTS — Bold, high-contrast design
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+// ─── Cover Card (replay mode) ───
+
+function CoverReveal({ firstName }: { firstName?: string }) {
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  return (
+    <CardShell>
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        padding: '72px 28px 56px', background: BRAND.ink,
+        textAlign: 'center', minHeight: 360,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <OrgBlob color="rgba(255,255,255,0.03)" size={260} style={{ top: -80, right: -60 }} />
+        <OrgBlob color={`${BRAND.signalRed}10`} size={180} style={{ bottom: -40, left: -40 }} />
+        <OrgBlob color={`${BRAND.chromeYellow}06`} size={120} style={{ top: 20, left: -30 }} />
+
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <SafeFadeIn delay={0.1} direction="up" distance={10}>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.25em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.45)', marginBottom: 40,
+            }}>
+              Terrazzo
+            </div>
+          </SafeFadeIn>
+
+          <SafeFadeIn delay={0.18} direction="up" distance={20}>
+            <h1 style={{
+              fontFamily: FONT.serif, fontSize: 44, fontStyle: 'italic',
+              fontWeight: 400, color: '#fff',
+              margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
+            }}>
+              {firstName ? `${firstName}\u2019s` : 'Your'}<br />Taste Dossier
+            </h1>
+          </SafeFadeIn>
+
+          <SafeFadeIn delay={0.26}>
+            <GoldDivider width={50} delay={0.3} />
+          </SafeFadeIn>
+
+          <SafeFadeIn delay={0.32}>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 20,
+            }}>
+              Prepared {today}
+            </div>
+          </SafeFadeIn>
+
+          <SafeFadeIn delay={0.38} direction="up" distance={10}>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.65,
+              color: 'rgba(255,255,255,0.6)', marginTop: 28, maxWidth: 300,
+            }}>
+              We spent some time getting to know how you travel. Here&apos;s what we found.
+            </div>
+          </SafeFadeIn>
+        </div>
+      </div>
+    </CardShell>
+  );
+}
+
+
 // ─── Card 1: Archetype ───
 
 function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfile; firstName?: string }) {
-  const greeting = firstName ? `${firstName}, you're` : "You're";
+  const greeting = firstName ? `${firstName}, you\u2019re` : "You\u2019re";
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '65vh', textAlign: 'center',
-        position: 'relative', overflow: 'hidden',
-      }}
-    >
-      {/* Subtle radial glow */}
-      <div style={{
-        position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: 500, height: 500, borderRadius: '50%',
-        background: `radial-gradient(circle, ${T.honey}08 0%, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
-
-      {/* Decorative ring */}
-      <SafeFadeIn delay={0} direction="none" scale={0.6} duration={1}>
-        <motion.div
-          style={{
-            width: 80, height: 80, borderRadius: '50%',
-            border: `1.5px solid ${T.honey}20`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 24,
-          }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-        >
-          <div style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: T.honey,
-          }} />
-        </motion.div>
-      </SafeFadeIn>
-
-      <SectionLabel delay={0.15}>Your taste archetype</SectionLabel>
-
-      <SafeFadeIn delay={0.3} direction="up" distance={24} duration={0.7}>
-        <h1
-          style={{
-            fontFamily: FONT.serif, fontSize: 42, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
+    <CardShell>
+      <HeroSection bg={BRAND.signalRed} label="Your taste archetype" minHeight={240}>
+        <SafeFadeIn delay={0.25} direction="up" distance={24} duration={0.7}>
+          <h1 style={{
+            fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff',
             margin: 0, lineHeight: 1.12,
-            maxWidth: 360,
-          }}
-        >
-          {greeting} {profile.overallArchetype}
-        </h1>
-      </SafeFadeIn>
-
-      <SafeFadeIn delay={0.5} direction="none" duration={0.8}>
-        <GoldDivider width={50} delay={0.5} />
-      </SafeFadeIn>
-
-      <SafeFadeIn delay={0.6} direction="up" distance={16} duration={0.6}>
-        <p
-          style={{
-            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-            color: INK['75'], maxWidth: 300, marginTop: 20,
-          }}
-        >
-          {profile.archetypeDescription}
-        </p>
-      </SafeFadeIn>
-
-      <SafeFadeIn delay={0.8} direction="up" distance={12} scale={0.9} duration={0.5}>
-        <div
-          style={{
-            marginTop: 28, padding: '10px 24px',
-            borderRadius: 100,
-            background: `linear-gradient(135deg, ${T.honey}06, ${T.honey}12)`,
-            border: `1px solid ${T.honey}18`,
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <span style={{
-            fontFamily: FONT.sans, fontSize: 13, color: INK['70'],
           }}>
-            <span style={{ color: T.honey, fontWeight: 600 }}>{profile.emotionalDriver.primary}</span>
-            {' · '}
-            <span>{profile.emotionalDriver.secondary}</span>
-          </span>
-        </div>
-      </SafeFadeIn>
-    </div>
+            {greeting} {profile.overallArchetype}
+          </h1>
+        </SafeFadeIn>
+
+        <SafeFadeIn delay={0.45} direction="none" duration={0.6}>
+          <div style={{
+            width: 50, height: 2, margin: '20px 0',
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.5), transparent)',
+          }} />
+        </SafeFadeIn>
+
+        <SafeFadeIn delay={0.55} direction="up" distance={10} scale={0.9} duration={0.5}>
+          <div style={{
+            display: 'inline-flex', padding: '8px 20px',
+            borderRadius: 100,
+            background: 'rgba(255,255,255,0.12)',
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}>
+            <span style={{
+              fontFamily: FONT.sans, fontSize: 12, color: 'rgba(255,255,255,0.85)',
+            }}>
+              <span style={{ fontWeight: 700 }}>{profile.emotionalDriver.primary}</span>
+              {' · '}
+              <span style={{ opacity: 0.7 }}>{profile.emotionalDriver.secondary}</span>
+            </span>
+          </div>
+        </SafeFadeIn>
+      </HeroSection>
+
+      <WaveDivider from={BRAND.signalRed} />
+
+      <ContentSection>
+        <SafeFadeIn delay={0.65} direction="up" distance={16} duration={0.6}>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.75,
+            color: INK['80'], margin: 0, maxWidth: 380,
+          }}>
+            {profile.archetypeDescription}
+          </p>
+        </SafeFadeIn>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -433,76 +572,38 @@ function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.bestQuote) return null;
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
-        padding: '0 4px', position: 'relative',
-      }}
-    >
-      <SectionLabel delay={0.1}>The moment that told us the most</SectionLabel>
-
-      {/* Quote card with layered background */}
-      <SafeFadeIn delay={0.2} direction="up" distance={20} duration={0.7}>
-        <div style={{
-          position: 'relative',
-          borderRadius: 24, padding: '44px 32px 36px',
-          maxWidth: 420, width: '100%',
-          background: 'linear-gradient(165deg, rgba(201,171,113,0.04) 0%, var(--t-cream) 40%, rgba(201,171,113,0.06) 100%)',
-          border: `1px solid ${T.honey}12`,
-          boxShadow: `0 2px 24px rgba(201,171,113,0.06), 0 8px 32px rgba(28,26,23,0.03)`,
-        }}>
-          {/* Decorative quote mark */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 180, damping: 20, delay: 0.35 }}
-            style={{
-              position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)',
-              width: 36, height: 36, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${T.honey}, ${T.honey}cc)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 4px 12px ${T.honey}30`,
-            }}
-          >
-            <span style={{
-              fontFamily: FONT.serif, fontSize: 28, color: 'white',
-              lineHeight: 1, marginTop: 4,
-            }}>
-              &ldquo;
-            </span>
-          </motion.div>
-
-          <motion.p
-            style={{
-              fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
-              fontWeight: 400, color: 'var(--t-ink)',
-              lineHeight: 1.5, margin: '8px 0 0',
-            }}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.4 }}
-          >
+    <CardShell>
+      <HeroSection bg={BRAND.pantonOrange} label="The moment that told us the most" minHeight={200}>
+        <SafeFadeIn delay={0.2} direction="up" distance={20} duration={0.7}>
+          <div style={{
+            fontFamily: FONT.serif, fontSize: 14, color: 'rgba(255,255,255,0.5)',
+            marginBottom: 12,
+          }}>
+            &ldquo;
+          </div>
+          <p style={{
+            fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff',
+            lineHeight: 1.4, margin: 0,
+          }}>
             {profile.bestQuote.quote}
-          </motion.p>
-        </div>
-      </SafeFadeIn>
+          </p>
+        </SafeFadeIn>
+      </HeroSection>
 
-      {/* Insight below */}
-      <SafeFadeIn delay={0.7} direction="up" distance={10} duration={0.5}>
-        <div style={{ marginTop: 28, maxWidth: 360 }}>
-          <GoldDivider width={30} delay={0} />
-          <p
-            style={{
-              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-              color: INK['70'], margin: '16px 0 0',
-            }}
-          >
+      <WaveDivider from={BRAND.pantonOrange} />
+
+      <ContentSection>
+        <SafeFadeIn delay={0.6} direction="up" distance={12} duration={0.5}>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.75,
+            color: INK['75'], margin: 0,
+          }}>
             {profile.bestQuote.insight}
           </p>
-        </div>
-      </SafeFadeIn>
-    </div>
+        </SafeFadeIn>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -540,108 +641,95 @@ function DesignLanguageReveal({
   }, [mosaicAxes, profile.designInsight]);
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <SectionLabel>Your design language</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.verde} label="Your design language" minHeight={140}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
-            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: '0 0 8px',
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff',
+            margin: 0,
           }}>
             {profile.designInsight?.headline ?? 'How you see space'}
           </h2>
         </SafeFadeIn>
-        <GoldDivider width={36} delay={0.3} />
-      </div>
+      </HeroSection>
 
-      <motion.div
-        style={{
-          maxWidth: 440, margin: '0 auto',
-          display: 'flex', flexDirection: 'column', gap: 22,
-          padding: '24px 28px',
-          borderRadius: 20,
-          background: 'linear-gradient(180deg, rgba(201,171,113,0.02) 0%, rgba(28,26,23,0.01) 100%)',
-          border: `1px solid ${INK['04']}`,
-        }}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.3 }}
-      >
-        {spectrums.map((spec, idx) => (
-          <motion.div
-            key={spec.axis}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.35 + idx * 0.08 }}
-          >
-            {/* Labels */}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', marginBottom: 8,
-            }}>
-              <span style={{
-                fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-                textTransform: 'uppercase', letterSpacing: '0.08em',
-                color: INK['50'],
-              }}>
-                {spec.labels[0]}
-              </span>
-              <span style={{
-                fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-                textTransform: 'uppercase', letterSpacing: '0.08em',
-                color: INK['50'],
-              }}>
-                {spec.labels[1]}
-              </span>
-            </div>
+      <WaveDivider from={BRAND.verde} />
 
-            {/* Track */}
-            <div style={{
-              position: 'relative', height: 6, borderRadius: 3,
-              background: INK['06'],
-              overflow: 'hidden',
-            }}>
-              {/* Filled portion with gradient */}
-              <motion.div
-                style={{
-                  position: 'absolute', top: 0, left: 0,
-                  height: '100%', borderRadius: 3,
-                  background: `linear-gradient(90deg, ${T.honey}90, ${T.honey})`,
-                }}
-                initial={{ width: '0%' }}
-                animate={{ width: `${Math.round(spec.value * 100)}%` }}
-                transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.4 + idx * 0.08 }}
-              />
-              {/* Position dot */}
-              <motion.div
-                style={{
-                  position: 'absolute', top: '50%',
-                  width: 14, height: 14, borderRadius: '50%',
-                  background: 'white',
-                  border: `2.5px solid ${T.honey}`,
-                  boxShadow: `0 1px 4px ${T.honey}30, 0 2px 8px rgba(28,26,23,0.08)`,
-                  transform: 'translateY(-50%)',
-                }}
-                initial={{ left: '0%', opacity: 0, scale: 0 }}
-                animate={{ left: `calc(${Math.round(spec.value * 100)}% - 7px)`, opacity: 1, scale: 1 }}
-                transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.4 + idx * 0.08 }}
-              />
-            </div>
+      <ContentSection padding="20px 24px 24px">
+        <motion.div
+          style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.3 }}
+        >
+          {spectrums.map((spec, idx) => (
+            <motion.div
+              key={spec.axis}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.35 + idx * 0.08 }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{
+                  fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                  color: INK['55'],
+                }}>
+                  {spec.labels[0]}
+                </span>
+                <span style={{
+                  fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                  color: INK['55'],
+                }}>
+                  {spec.labels[1]}
+                </span>
+              </div>
 
-            {/* Annotation */}
-            {spec.note && (
-              <p style={{
-                fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.55,
-                color: INK['60'], marginTop: 6, marginBottom: 0,
-                fontStyle: 'italic',
+              <div style={{
+                position: 'relative', height: 6, borderRadius: 3,
+                background: INK['08'], overflow: 'hidden',
               }}>
-                {spec.note}
-              </p>
-            )}
-          </motion.div>
-        ))}
-      </motion.div>
-    </div>
+                <motion.div
+                  style={{
+                    position: 'absolute', top: 0, left: 0,
+                    height: '100%', borderRadius: 3,
+                    background: `linear-gradient(90deg, ${BRAND.verde}70, ${BRAND.verde})`,
+                  }}
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${Math.round(spec.value * 100)}%` }}
+                  transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.4 + idx * 0.08 }}
+                />
+                <motion.div
+                  style={{
+                    position: 'absolute', top: '50%',
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: 'white',
+                    border: `2.5px solid ${BRAND.verde}`,
+                    boxShadow: `0 1px 6px ${BRAND.verde}30`,
+                    transform: 'translateY(-50%)',
+                  }}
+                  initial={{ left: '0%', opacity: 0, scale: 0 }}
+                  animate={{ left: `calc(${Math.round(spec.value * 100)}% - 7px)`, opacity: 1, scale: 1 }}
+                  transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.4 + idx * 0.08 }}
+                />
+              </div>
+
+              {spec.note && (
+                <p style={{
+                  fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.55,
+                  color: INK['60'], marginTop: 6, marginBottom: 0,
+                  fontStyle: 'italic',
+                }}>
+                  {spec.note}
+                </p>
+              )}
+            </motion.div>
+          ))}
+        </motion.div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -655,7 +743,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
   const sorted = [...radar].sort((a, b) => b.value - a.value);
   const top2 = sorted.slice(0, 2).map((d) => d.axis);
 
-  const size = 260;
+  const size = 240;
   const cx = size / 2;
   const cy = size / 2;
   const maxR = size / 2 - 28;
@@ -663,134 +751,91 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
   const points = radar.map((d, i) => {
     const angle = (Math.PI * 2 * i) / radar.length - Math.PI / 2;
     const r = d.value * maxR;
-    return {
-      x: cx + r * Math.cos(angle),
-      y: cy + r * Math.sin(angle),
-      axis: d.axis,
-      value: d.value,
-    };
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle), axis: d.axis, value: d.value };
   });
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-        position: 'relative',
-      }}
-    >
-      <SectionLabel>Your taste fingerprint</SectionLabel>
-
-      {/* Chart with glow */}
-      <SafeFadeIn delay={0.15} direction="none" scale={0.85} duration={0.8}>
-        <div style={{
-          position: 'relative',
-          padding: 24,
-        }}>
-          {/* Ambient glow behind chart */}
+    <CardShell>
+      <HeroSection bg={BRAND.ink} label="Your taste fingerprint" minHeight={120}>
+        <SafeFadeIn delay={0.2} direction="up" distance={12} duration={0.5}>
           <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: size * 0.6, height: size * 0.6, borderRadius: '50%',
-            background: `radial-gradient(circle, ${T.honey}10 0%, transparent 70%)`,
-            filter: 'blur(30px)',
-            pointerEvents: 'none',
-          }} />
+            display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 4,
+          }}>
+            {radar.map((d) => (
+              <span key={d.axis} style={{
+                fontFamily: FONT.sans, fontSize: 12,
+                fontWeight: top2.includes(d.axis) ? 700 : 400,
+                color: top2.includes(d.axis) ? BRAND.chromeYellow : 'rgba(255,255,255,0.5)',
+              }}>
+                {d.axis}
+              </span>
+            ))}
+          </div>
+        </SafeFadeIn>
+      </HeroSection>
 
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            {/* Grid circles — softer */}
-            {[0.33, 0.66, 1].map((r) => (
-              <circle
-                key={r}
-                cx={cx} cy={cy} r={maxR * r}
-                fill="none" stroke={INK['05']} strokeWidth={0.75}
-                strokeDasharray={r < 1 ? '4 4' : 'none'}
-              />
-            ))}
-            {/* Grid lines */}
-            {points.map((_, i) => (
-              <line
-                key={i}
-                x1={cx} y1={cy}
-                x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-                y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
-                stroke={INK['04']} strokeWidth={0.75}
-              />
-            ))}
-            {/* Filled shape with gradient */}
-            <defs>
-              <linearGradient id="radarFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={T.honey} stopOpacity={0.15} />
-                <stop offset="100%" stopColor={T.honey} stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <motion.path
-              d={pathD}
-              fill="url(#radarFill)"
-              stroke={T.honey}
-              strokeWidth={2}
-              strokeLinejoin="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 1.2, ease: EASE_OUT_EXPO, delay: 0.3 }}
-            />
-            {/* Dots with stagger */}
-            {points.map((p, i) => (
-              <motion.circle
-                key={i}
-                cx={p.x}
-                cy={p.y}
-                r={4.5}
-                fill="white"
-                stroke={T.honey}
+      <WaveDivider from={BRAND.ink} />
+
+      <ContentSection padding="16px 24px 28px">
+        <SafeFadeIn delay={0.3} direction="none" scale={0.85} duration={0.8}>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              {[0.33, 0.66, 1].map((r) => (
+                <circle key={r} cx={cx} cy={cy} r={maxR * r}
+                  fill="none" stroke={INK['08']} strokeWidth={0.75}
+                  strokeDasharray={r < 1 ? '4 4' : 'none'}
+                />
+              ))}
+              {points.map((_, i) => (
+                <line key={i} x1={cx} y1={cy}
+                  x2={cx + maxR * Math.cos((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
+                  y2={cy + maxR * Math.sin((Math.PI * 2 * i) / radar.length - Math.PI / 2)}
+                  stroke={INK['06']} strokeWidth={0.75}
+                />
+              ))}
+              <defs>
+                <linearGradient id="radarFillBrand" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={BRAND.pantonOrange} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={BRAND.chromeYellow} stopOpacity={0.08} />
+                </linearGradient>
+              </defs>
+              <motion.path
+                d={pathD}
+                fill="url(#radarFillBrand)"
+                stroke={BRAND.pantonOrange}
                 strokeWidth={2}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ ...SPRING_BOUNCY, delay: 0.5 + i * 0.06 }}
+                strokeLinejoin="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 1.2, ease: EASE_OUT_EXPO, delay: 0.4 }}
               />
-            ))}
-          </svg>
-        </div>
-      </SafeFadeIn>
+              {points.map((p, i) => (
+                <motion.circle key={i} cx={p.x} cy={p.y} r={4.5}
+                  fill="white" stroke={BRAND.pantonOrange} strokeWidth={2}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ ...SPRING_BOUNCY, delay: 0.6 + i * 0.06 }}
+                />
+              ))}
+            </svg>
+          </div>
+        </SafeFadeIn>
 
-      {/* Axis labels — cleaner layout */}
-      <SafeFadeIn delay={0.6} direction="up" distance={10} duration={0.5}>
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-          gap: '8px 16px', marginTop: 8, maxWidth: 320,
-        }}>
-          {radar.map((d) => (
-            <span key={d.axis} style={{
-              fontFamily: FONT.sans, fontSize: 12,
-              fontWeight: top2.includes(d.axis) ? 700 : 400,
-              color: top2.includes(d.axis) ? T.honey : INK['50'],
-              letterSpacing: '0.01em',
-            }}>
-              {d.axis}
-            </span>
-          ))}
-        </div>
-      </SafeFadeIn>
-
-      <SafeFadeIn delay={0.75} direction="up" distance={10} duration={0.5}>
-        <div style={{ marginTop: 20 }}>
-          <GoldDivider width={30} delay={0} />
-          <p
-            style={{
-              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-              color: INK['75'], maxWidth: 320, marginTop: 14,
-            }}
-          >
-            <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[0]}</span>
+        <SafeFadeIn delay={0.8} direction="up" distance={10} duration={0.5}>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+            color: INK['75'], textAlign: 'center', margin: '12px 0 0',
+          }}>
+            <span style={{ fontWeight: 700, color: BRAND.pantonOrange }}>{top2[0]}</span>
             {' and '}
-            <span style={{ fontWeight: 600, color: 'var(--t-ink)' }}>{top2[1]}</span>
+            <span style={{ fontWeight: 700, color: BRAND.pantonOrange }}>{top2[1]}</span>
             {' drive you. Most travelers lead with other dimensions — you lead with these.'}
           </p>
-        </div>
-      </SafeFadeIn>
-    </div>
+        </SafeFadeIn>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -801,57 +846,45 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
   const c = profile.contradictions[0];
   if (!c) return null;
 
-  const PURPLE = '#6844a0';
-
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-        padding: '0 4px',
-      }}
-    >
-      <SectionLabel color={PURPLE}>The interesting part</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.pantonViolet} label="The interesting part" minHeight={140}>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
+          }}>
+            You contain contradictions
+          </h2>
+        </SafeFadeIn>
+      </HeroSection>
 
-      <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 28px', maxWidth: 300,
-        }}>
-          You contain contradictions
-        </h2>
-      </SafeFadeIn>
+      <WaveDivider from={BRAND.pantonViolet} />
 
-      <div style={{ maxWidth: 420, width: '100%' }}>
-        {/* The two poles — side by side */}
+      <ContentSection padding="24px 20px 24px">
+        {/* The two poles */}
         <div style={{
           display: 'flex', alignItems: 'stretch', justifyContent: 'center',
-          gap: 12, marginBottom: 24,
+          gap: 10, marginBottom: 20,
         }}>
           <SafeFadeIn delay={0.35} direction="left" distance={24} duration={0.6}>
-            <div
-              style={{
-                flex: 1,
-                fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                color: 'var(--t-ink)', textAlign: 'center',
-                padding: '20px 20px',
-                borderRadius: 16,
-                background: `linear-gradient(135deg, ${T.honey}06, ${T.honey}10)`,
-                border: `1px solid ${T.honey}15`,
-              }}
-            >
+            <div style={{
+              flex: 1,
+              fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
+              color: 'var(--t-ink)', textAlign: 'center',
+              padding: '18px 16px', borderRadius: 16,
+              background: `linear-gradient(135deg, ${BRAND.pantonOrange}08, white)`,
+              border: `1px solid ${BRAND.pantonOrange}20`,
+            }}>
               {c.stated}
             </div>
           </SafeFadeIn>
 
           <SafeFadeIn delay={0.4} direction="none" scale={0.5} duration={0.4}>
-            <div style={{
-              display: 'flex', alignItems: 'center',
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{
                 fontFamily: FONT.sans, fontSize: 18, fontWeight: 300,
-                color: `${PURPLE}40`,
+                color: `${BRAND.pantonViolet}50`,
               }}>
                 &times;
               </span>
@@ -859,17 +892,14 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
           </SafeFadeIn>
 
           <SafeFadeIn delay={0.35} direction="right" distance={24} duration={0.6}>
-            <div
-              style={{
-                flex: 1,
-                fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                color: 'var(--t-ink)', textAlign: 'center',
-                padding: '20px 20px',
-                borderRadius: 16,
-                background: `linear-gradient(135deg, ${PURPLE}04, ${PURPLE}08)`,
-                border: `1px solid ${PURPLE}12`,
-              }}
-            >
+            <div style={{
+              flex: 1,
+              fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
+              color: 'var(--t-ink)', textAlign: 'center',
+              padding: '18px 16px', borderRadius: 16,
+              background: `linear-gradient(135deg, ${BRAND.pantonViolet}06, white)`,
+              border: `1px solid ${BRAND.pantonViolet}15`,
+            }}>
               {c.revealed}
             </div>
           </SafeFadeIn>
@@ -877,15 +907,12 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
         {/* Resolution */}
         <SafeFadeIn delay={0.55} direction="up" distance={12} duration={0.6}>
-          <div
-            style={{
-              padding: '24px 28px', borderRadius: 18,
-              background: 'white',
-              boxShadow: `0 2px 16px rgba(28,26,23,0.04), 0 8px 24px rgba(28,26,23,0.02)`,
-              border: `1px solid ${INK['04']}`,
-              textAlign: 'left',
-            }}
-          >
+          <div style={{
+            padding: '22px 24px', borderRadius: 16,
+            background: 'white',
+            boxShadow: `0 2px 16px rgba(28,26,23,0.04)`,
+            border: `1px solid ${INK['05']}`,
+          }}>
             <p style={{
               fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
               color: INK['80'], margin: 0,
@@ -897,14 +924,14 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
         <SafeFadeIn delay={0.7} direction="none" duration={0.5}>
           <p style={{
-            fontFamily: FONT.sans, fontSize: 13, color: INK['55'],
-            marginTop: 18, fontStyle: 'italic',
+            fontFamily: FONT.sans, fontSize: 13, color: BRAND.pantonViolet,
+            marginTop: 16, fontStyle: 'italic', textAlign: 'center',
           }}>
             We&apos;ll find places that understand both sides.
           </p>
         </SafeFadeIn>
-      </div>
-    </div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -915,103 +942,78 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.perfectDay) return null;
 
   const segments = [
-    {
-      label: 'Morning', text: profile.perfectDay.morning,
-      icon: '○', // abstract circle — dawn
-      gradient: `linear-gradient(135deg, ${T.honey}04, white)`,
-      accentColor: `${T.honey}50`,
-    },
-    {
-      label: 'Afternoon', text: profile.perfectDay.afternoon,
-      icon: '◐', // half circle — midday
-      gradient: `linear-gradient(135deg, ${T.honey}08, white)`,
-      accentColor: `${T.honey}80`,
-    },
-    {
-      label: 'Evening', text: profile.perfectDay.evening,
-      icon: '●', // full circle — evening
-      gradient: `linear-gradient(135deg, ${T.honey}12, rgba(28,26,23,0.02))`,
-      accentColor: T.honey,
-    },
+    { label: 'Morning', text: profile.perfectDay.morning, color: BRAND.chromeYellow },
+    { label: 'Afternoon', text: profile.perfectDay.afternoon, color: BRAND.pantonOrange },
+    { label: 'Evening', text: profile.perfectDay.evening, color: BRAND.signalRed },
   ];
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <SectionLabel>Your perfect day</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.pantonOrange} label="Your perfect day" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
-            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: '0 0 8px',
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
           }}>
             How a great day unfolds for you
           </h2>
         </SafeFadeIn>
-        <GoldDivider width={36} delay={0.3} />
-      </div>
+      </HeroSection>
 
-      <div
-        style={{
-          maxWidth: 440, margin: '0 auto',
-          display: 'flex', flexDirection: 'column', gap: 14,
-          position: 'relative',
-        }}
-      >
-        {/* Connecting line */}
+      <WaveDivider from={BRAND.pantonOrange} />
+
+      <ContentSection padding="20px 20px 24px">
         <div style={{
-          position: 'absolute', left: 31, top: 36, bottom: 36,
-          width: 1.5,
-          background: `linear-gradient(to bottom, ${T.honey}15, ${T.honey}40, ${T.honey}15)`,
-          pointerEvents: 'none',
-        }} />
+          display: 'flex', flexDirection: 'column', gap: 12,
+          position: 'relative',
+        }}>
+          {/* Connecting line */}
+          <div style={{
+            position: 'absolute', left: 17, top: 32, bottom: 32,
+            width: 2, borderRadius: 1,
+            background: `linear-gradient(to bottom, ${BRAND.chromeYellow}40, ${BRAND.pantonOrange}60, ${BRAND.signalRed}40)`,
+            pointerEvents: 'none',
+          }} />
 
-        {segments.map((seg, idx) => (
-          <SafeFadeIn
-            key={seg.label}
-            delay={0.35 + idx * 0.15}
-            direction="up"
-            distance={16}
-            duration={0.5}
-          >
-            <div
-              style={{
-                display: 'flex', gap: 20, alignItems: 'flex-start',
-                padding: '22px 24px',
-                borderRadius: 18,
-                background: seg.gradient,
-                border: `1px solid ${INK['04']}`,
+          {segments.map((seg, idx) => (
+            <SafeFadeIn key={seg.label} delay={0.35 + idx * 0.15} direction="up" distance={16} duration={0.5}>
+              <div style={{
+                display: 'flex', gap: 16, alignItems: 'flex-start',
+                padding: '18px 20px', borderRadius: 16,
+                background: 'white',
+                border: `1px solid ${INK['05']}`,
                 boxShadow: '0 1px 8px rgba(28,26,23,0.03)',
                 position: 'relative',
-              }}
-            >
-              {/* Time icon */}
-              <div style={{
-                width: 20, minWidth: 20, textAlign: 'center',
-                fontSize: 14, color: seg.accentColor, marginTop: 1,
               }}>
-                {seg.icon}
-              </div>
-              <div>
+                {/* Time dot */}
                 <div style={{
-                  fontFamily: FONT.sans, fontSize: 11, fontWeight: 700,
-                  textTransform: 'uppercase', letterSpacing: '0.08em',
-                  color: T.honey, marginBottom: 6,
-                }}>
-                  {seg.label}
+                  width: 12, minWidth: 12, height: 12,
+                  borderRadius: '50%',
+                  background: seg.color,
+                  marginTop: 3,
+                  boxShadow: `0 2px 8px ${seg.color}30`,
+                }} />
+                <div>
+                  <div style={{
+                    fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+                    textTransform: 'uppercase', letterSpacing: '0.1em',
+                    color: seg.color, marginBottom: 6,
+                  }}>
+                    {seg.label}
+                  </div>
+                  <p style={{
+                    fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+                    color: INK['80'], margin: 0,
+                  }}>
+                    {seg.text}
+                  </p>
                 </div>
-                <p style={{
-                  fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-                  color: INK['80'], margin: 0,
-                }}>
-                  {seg.text}
-                </p>
               </div>
-            </div>
-          </SafeFadeIn>
-        ))}
-      </div>
-    </div>
+            </SafeFadeIn>
+          ))}
+        </div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -1021,76 +1023,63 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
 function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.howYouShift?.length) return null;
 
-  const accentColors = [T.honey, T.verde, '#6844a0'];
-  const bgGradients = [
-    `linear-gradient(135deg, ${T.honey}06, white)`,
-    `linear-gradient(135deg, ${T.verde}06, white)`,
-    `linear-gradient(135deg, #6844a008, white)`,
-  ];
+  const cardColors = [BRAND.signalRed, BRAND.verde, BRAND.pantonViolet];
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <SectionLabel>How you shift</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.verde} label="How you shift" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
-            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: '0 0 8px',
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
           }}>
             You&apos;re not the same traveler every time
           </h2>
         </SafeFadeIn>
-        <GoldDivider width={36} delay={0.3} />
-      </div>
+      </HeroSection>
 
-      <div
-        style={{ maxWidth: 440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}
-      >
-        {profile.howYouShift.map((shift, idx) => {
-          const accent = accentColors[idx % accentColors.length];
-          return (
-            <SafeFadeIn
-              key={shift.context}
-              delay={0.35 + idx * 0.12}
-              direction="up"
-              distance={16}
-              duration={0.5}
-            >
-              <div
-                style={{
-                  padding: '24px 28px', borderRadius: 18,
-                  background: bgGradients[idx % bgGradients.length],
-                  boxShadow: `0 2px 12px rgba(28,26,23,0.03)`,
-                  border: `1px solid ${INK['04']}`,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Accent bar at top */}
+      <WaveDivider from={BRAND.verde} />
+
+      <ContentSection padding="20px 20px 24px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {profile.howYouShift.map((shift, idx) => {
+            const accent = cardColors[idx % cardColors.length];
+            return (
+              <SafeFadeIn key={shift.context} delay={0.35 + idx * 0.12} direction="up" distance={16} duration={0.5}>
                 <div style={{
-                  position: 'absolute', top: 0, left: 24, right: 24, height: 2,
-                  background: `linear-gradient(90deg, ${accent}, transparent)`,
-                  borderRadius: 1,
-                }} />
-                <div style={{
-                  fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
-                  color: 'var(--t-ink)', marginBottom: 8, marginTop: 4,
+                  padding: '20px 22px', borderRadius: 16,
+                  background: 'white',
+                  boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
+                  border: `1px solid ${INK['05']}`,
+                  position: 'relative', overflow: 'hidden',
                 }}>
-                  {shift.context}
+                  {/* Bold left accent bar */}
+                  <div style={{
+                    position: 'absolute', top: 12, bottom: 12, left: 0, width: 4,
+                    background: accent,
+                    borderRadius: '0 2px 2px 0',
+                  }} />
+                  <div style={{ paddingLeft: 8 }}>
+                    <div style={{
+                      fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
+                      color: accent, marginBottom: 6,
+                    }}>
+                      {shift.context}
+                    </div>
+                    <p style={{
+                      fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
+                      color: INK['75'], margin: 0,
+                    }}>
+                      {shift.insight}
+                    </p>
+                  </div>
                 </div>
-                <p style={{
-                  fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-                  color: INK['75'], margin: 0,
-                }}>
-                  {shift.insight}
-                </p>
-              </div>
-            </SafeFadeIn>
-          );
-        })}
-      </div>
-    </div>
+              </SafeFadeIn>
+            );
+          })}
+        </div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -1102,90 +1091,69 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
   const { nearbyArchetypes, distinction, rarityStat } = profile.tasteNeighbors;
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-        padding: '0 4px',
-      }}
-    >
-      <SectionLabel>Your taste neighbors</SectionLabel>
-
-      <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 24px',
-        }}>
-          Travelers with a similar lens
-        </h2>
-      </SafeFadeIn>
-
-      {/* Nearby archetypes as pills */}
-      <div
-        style={{
-          display: 'flex', flexWrap: 'wrap', gap: 10,
-          justifyContent: 'center', marginBottom: 24,
-        }}
-      >
-        {nearbyArchetypes.map((name, idx) => (
-          <SafeFadeIn
-            key={name}
-            delay={0.35 + idx * 0.1}
-            scale={0.8}
-            direction="none"
-            duration={0.5}
-          >
-            <span
-              style={{
-                fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
-                color: 'var(--t-ink)',
-                padding: '10px 22px', borderRadius: 100,
-                background: 'white',
-                border: `1px solid ${INK['06']}`,
-                boxShadow: `0 2px 12px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.03)`,
-                display: 'inline-block',
-              }}
-            >
-              {name}
-            </span>
-          </SafeFadeIn>
-        ))}
-      </div>
-
-      <GoldDivider width={30} delay={0.5} />
-
-      {/* Distinction */}
-      <SafeFadeIn delay={0.55} direction="up" distance={12} duration={0.5}>
-        <p
-          style={{
-            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-            color: INK['80'], maxWidth: 340, margin: '20px 0 24px',
-          }}
-        >
-          {distinction}
-        </p>
-      </SafeFadeIn>
-
-      {/* Rarity stat — as a standout badge */}
-      <SafeFadeIn delay={0.65} scale={0.95} direction="up" distance={10} duration={0.5}>
-        <div
-          style={{
-            padding: '16px 28px', borderRadius: 16,
-            background: `linear-gradient(135deg, ${T.honey}06, ${T.honey}10)`,
-            border: `1px solid ${T.honey}15`,
-            maxWidth: 380,
-          }}
-        >
-          <p style={{
-            fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-            color: INK['70'], margin: 0, fontStyle: 'italic',
+    <CardShell>
+      <HeroSection bg={BRAND.royerePink} label="Your taste neighbors" minHeight={140}>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
           }}>
-            {rarityStat}
-          </p>
+            Travelers with a similar lens
+          </h2>
+        </SafeFadeIn>
+      </HeroSection>
+
+      <WaveDivider from={BRAND.royerePink} />
+
+      <ContentSection padding="24px 24px 28px">
+        {/* Nearby archetypes as pills */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 10,
+          justifyContent: 'center', marginBottom: 20,
+        }}>
+          {nearbyArchetypes.map((name, idx) => (
+            <SafeFadeIn key={name} delay={0.35 + idx * 0.1} scale={0.8} direction="none" duration={0.5}>
+              <span style={{
+                fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
+                color: 'var(--t-ink)', padding: '10px 22px', borderRadius: 100,
+                background: 'white',
+                border: `1px solid ${BRAND.royerePink}25`,
+                boxShadow: `0 2px 12px ${BRAND.royerePink}10`,
+                display: 'inline-block',
+              }}>
+                {name}
+              </span>
+            </SafeFadeIn>
+          ))}
         </div>
-      </SafeFadeIn>
-    </div>
+
+        {/* Distinction */}
+        <SafeFadeIn delay={0.55} direction="up" distance={12} duration={0.5}>
+          <p style={{
+            fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+            color: INK['80'], margin: '0 0 20px', textAlign: 'center',
+          }}>
+            {distinction}
+          </p>
+        </SafeFadeIn>
+
+        {/* Rarity stat */}
+        <SafeFadeIn delay={0.65} scale={0.95} direction="up" distance={10} duration={0.5}>
+          <div style={{
+            padding: '16px 24px', borderRadius: 14,
+            background: `${BRAND.royerePink}08`,
+            border: `1px solid ${BRAND.royerePink}18`,
+          }}>
+            <p style={{
+              fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+              color: INK['70'], margin: 0, fontStyle: 'italic', textAlign: 'center',
+            }}>
+              {rarityStat}
+            </p>
+          </div>
+        </SafeFadeIn>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -1197,272 +1165,178 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
   const { familiar, surprise } = profile.destinations;
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-    }}>
-      <SectionLabel>Where you&apos;d thrive</SectionLabel>
-      <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '0 0 8px',
-        }}>
-          Your signals point toward
-        </h2>
-      </SafeFadeIn>
-      <GoldDivider width={36} delay={0.3} />
+    <CardShell>
+      <HeroSection bg={BRAND.signalRed} label="Where you'd thrive" minHeight={120}>
+        <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
+          <h2 style={{
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
+          }}>
+            Your signals point toward
+          </h2>
+        </SafeFadeIn>
+      </HeroSection>
 
-      {/* Familiar destinations */}
-      <div
-        style={{
-          display: 'flex', flexDirection: 'column', gap: 10,
-          marginTop: 24, marginBottom: 20, width: '100%', maxWidth: 380,
-        }}
-      >
-        {familiar.map((dest, idx) => (
-          <SafeFadeIn
-            key={dest}
-            delay={0.35 + idx * 0.12}
-            direction="up"
-            distance={10}
-            duration={0.5}
-          >
-            <div
-              style={{
-                fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-                color: 'var(--t-ink)', padding: '16px 24px',
-                borderRadius: 16,
-                background: 'white',
-                border: `1px solid ${INK['05']}`,
-                boxShadow: `0 2px 12px rgba(28,26,23,0.03)`,
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}
-            >
+      <WaveDivider from={BRAND.signalRed} />
+
+      <ContentSection padding="20px 20px 24px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+          {familiar.map((dest, idx) => (
+            <SafeFadeIn key={dest} delay={0.35 + idx * 0.12} direction="up" distance={10} duration={0.5}>
               <div style={{
-                width: 4, height: 28, borderRadius: 2,
-                background: T.honey,
-                flexShrink: 0,
-              }} />
-              {dest}
-            </div>
-          </SafeFadeIn>
-        ))}
-      </div>
-
-      {/* Surprise destination */}
-      <SafeFadeIn
-        scale={0.95}
-        delay={0.35 + familiar.length * 0.12}
-        direction="up"
-        distance={14}
-        duration={0.6}
-      >
-        <div
-          style={{
-            width: '100%', maxWidth: 380,
-            padding: '22px 24px', borderRadius: 18,
-            background: `linear-gradient(135deg, ${T.honey}08, ${T.honey}14)`,
-            border: `1px solid ${T.honey}25`,
-            boxShadow: `0 4px 20px ${T.honey}08`,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Sparkle accent */}
-          <div style={{
-            position: 'absolute', top: -20, right: -20,
-            width: 80, height: 80, borderRadius: '50%',
-            background: `radial-gradient(circle, ${T.honey}12 0%, transparent 70%)`,
-            pointerEvents: 'none',
-          }} />
-          <div style={{
-            fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
-            textTransform: 'uppercase', letterSpacing: '0.1em',
-            color: T.honey, marginBottom: 8,
-          }}>
-            ✦ This one might surprise you
-          </div>
-          <div style={{
-            fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
-            color: 'var(--t-ink)', marginBottom: 8,
-          }}>
-            {surprise.name}
-          </div>
-          <p style={{
-            fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-            color: INK['70'], margin: 0,
-          }}>
-            {surprise.reason}
-          </p>
+                fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic',
+                color: 'var(--t-ink)', padding: '14px 20px', borderRadius: 14,
+                background: 'white',
+                border: `1px solid ${INK['06']}`,
+                boxShadow: '0 2px 10px rgba(28,26,23,0.03)',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{
+                  width: 4, height: 24, borderRadius: 2,
+                  background: BRAND.signalRed,
+                  flexShrink: 0,
+                }} />
+                {dest}
+              </div>
+            </SafeFadeIn>
+          ))}
         </div>
-      </SafeFadeIn>
-    </div>
+
+        {/* Surprise destination */}
+        <SafeFadeIn
+          scale={0.95}
+          delay={0.35 + familiar.length * 0.12}
+          direction="up" distance={14} duration={0.6}
+        >
+          <div style={{
+            padding: '20px 22px', borderRadius: 16,
+            background: `linear-gradient(135deg, ${BRAND.chromeYellow}10, ${BRAND.pantonOrange}08)`,
+            border: `1px solid ${BRAND.chromeYellow}30`,
+            boxShadow: `0 4px 20px ${BRAND.chromeYellow}10`,
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <OrgBlob color={`${BRAND.chromeYellow}08`} size={80} style={{ top: -20, right: -20 }} />
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{
+                fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '0.1em',
+                color: BRAND.pantonOrange, marginBottom: 8,
+              }}>
+                ✦ This one might surprise you
+              </div>
+              <div style={{
+                fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
+                color: 'var(--t-ink)', marginBottom: 8,
+              }}>
+                {surprise.name}
+              </div>
+              <p style={{
+                fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
+                color: INK['70'], margin: 0,
+              }}>
+                {surprise.reason}
+              </p>
+            </div>
+          </div>
+        </SafeFadeIn>
+      </ContentSection>
+    </CardShell>
   );
 }
 
 
-// ─── Final: Your Trips ───
+// ─── Seed Trips ───
 
 function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <SectionLabel>Already started</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.chromeYellow} label="Already started" minHeight={140}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
-            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: '0 0 6px',
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: '0 0 6px',
           }}>
             I&apos;ve started filling these in
           </h2>
         </SafeFadeIn>
         <SafeFadeIn delay={0.3} direction="up" distance={10} duration={0.5}>
           <p style={{
-            fontFamily: FONT.sans, fontSize: 14, color: INK['60'],
-            maxWidth: 320, margin: '0 auto 4px',
+            fontFamily: FONT.sans, fontSize: 14, color: 'rgba(255,255,255,0.7)',
+            margin: 0,
           }}>
             Take a look — tell me if I&apos;m on the right track.
           </p>
         </SafeFadeIn>
-        <GoldDivider width={30} delay={0.35} />
-      </div>
+      </HeroSection>
 
-      <div
-        style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 440, margin: '0 auto' }}
-      >
-        {seedTrips.map((trip, i) => (
-          <SafeFadeIn
-            key={i}
-            delay={0.4 + i * 0.12}
-            direction="up"
-            distance={16}
-            duration={0.5}
-          >
-            <div
-              style={{
-                padding: '22px 24px', borderRadius: 18,
+      <WaveDivider from={BRAND.chromeYellow} />
+
+      <ContentSection padding="20px 20px 24px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {seedTrips.map((trip, i) => (
+            <SafeFadeIn key={i} delay={0.4 + i * 0.12} direction="up" distance={16} duration={0.5}>
+              <div style={{
+                padding: '20px 22px', borderRadius: 16,
                 background: 'white',
                 boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
-                border: `1px solid ${INK['05']}`,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Subtle accent stripe */}
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                background: trip.status === 'planning'
-                  ? `linear-gradient(90deg, ${T.verde}, transparent)`
-                  : `linear-gradient(90deg, ${T.honey}, transparent)`,
-              }} />
-
-              <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 8, marginTop: 4 }}>
-                <div>
-                  <div style={{
-                    fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-                    color: 'var(--t-ink)',
-                  }}>
-                    {trip.destination}
-                  </div>
-                  {trip.dates && (
-                    <div style={{
-                      fontFamily: FONT.sans, fontSize: 12, color: INK['60'], marginTop: 3,
-                    }}>
-                      {trip.dates}
-                    </div>
-                  )}
-                </div>
-                <span style={{
-                  fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-                  padding: '4px 12px', borderRadius: 100,
-                  background: trip.status === 'planning'
-                    ? `${T.verde}12`
-                    : `${T.honey}12`,
-                  color: trip.status === 'planning' ? T.verde : T.honey,
-                }}>
-                  {trip.status}
-                </span>
-              </div>
-              <div style={{
-                fontFamily: FONT.sans, fontSize: 12, color: INK['55'],
-                display: 'flex', alignItems: 'center', gap: 6,
+                border: `1px solid ${INK['06']}`,
+                position: 'relative', overflow: 'hidden',
               }}>
-                <span>{trip.travelContext}</span>
-                <span style={{ color: INK['30'] }}>·</span>
-                <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                  background: trip.status === 'planning'
+                    ? `linear-gradient(90deg, ${BRAND.verde}, ${BRAND.verde}40)`
+                    : `linear-gradient(90deg, ${BRAND.chromeYellow}, ${BRAND.chromeYellow}40)`,
+                }} />
+
+                <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 6, marginTop: 4 }}>
+                  <div>
+                    <div style={{
+                      fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
+                      color: 'var(--t-ink)',
+                    }}>
+                      {trip.destination}
+                    </div>
+                    {trip.dates && (
+                      <div style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['60'], marginTop: 3 }}>
+                        {trip.dates}
+                      </div>
+                    )}
+                  </div>
+                  <span style={{
+                    fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+                    padding: '4px 12px', borderRadius: 100,
+                    background: trip.status === 'planning' ? `${BRAND.verde}12` : `${BRAND.chromeYellow}15`,
+                    color: trip.status === 'planning' ? BRAND.verde : BRAND.pantonOrange,
+                  }}>
+                    {trip.status}
+                  </span>
+                </div>
+                <div style={{
+                  fontFamily: FONT.sans, fontSize: 12, color: INK['55'],
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  <span>{trip.travelContext}</span>
+                  <span style={{ color: INK['30'] }}>·</span>
+                  <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
+                </div>
               </div>
-            </div>
-          </SafeFadeIn>
-        ))}
-      </div>
-    </div>
+            </SafeFadeIn>
+          ))}
+        </div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
 
-// ─── Cover Card (replay mode) ───
-
-function CoverReveal({ firstName }: { firstName?: string }) {
-  const today = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '60vh', textAlign: 'center',
-    }}>
-      <SafeFadeIn delay={0.1} direction="up" distance={10}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: INK['55'], marginBottom: 48,
-        }}>
-          Terrazzo
-        </div>
-      </SafeFadeIn>
-
-      <SafeFadeIn delay={0.18} direction="up" distance={20}>
-        <h1 style={{
-          fontFamily: FONT.serif, fontSize: 44, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
-        }}>
-          {firstName ? `${firstName}\u2019s` : 'Your'}<br />Taste Dossier
-        </h1>
-      </SafeFadeIn>
-
-      <SafeFadeIn delay={0.26}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 13, color: INK['60'], marginTop: 20,
-        }}>
-          Prepared {today}
-        </div>
-      </SafeFadeIn>
-
-      <GoldDivider width={40} delay={0.3} />
-
-      <SafeFadeIn delay={0.34} direction="up" distance={10}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-          color: INK['70'], marginTop: 24, maxWidth: 320,
-        }}>
-          We spent some time getting to know how you travel. Here&apos;s what we found.
-        </div>
-      </SafeFadeIn>
-    </div>
-  );
-}
-
-
-// ─── Observations Card (What We Noticed) ───
+// ─── Observations Card ───
 
 function buildObservations(signals: Record<string, string[]> | undefined | null): string[] {
   if (!signals || typeof signals !== 'object') return [];
   const observations: string[] = [];
   const entries = Object.entries(signals).filter(([, v]) => Array.isArray(v) && v.length > 0);
 
-  // Try domain-specific phrasing first
   const domainPhrasing: Record<string, (terms: string[]) => string> = {
     Design: (t) => `You\u2019re drawn to spaces with a ${t[0]} sensibility${t[1] ? ` \u2014 places where ${t[1]} isn\u2019t just a style, it\u2019s a point of view` : ''}.`,
     Character: (t) => `You notice the personality of a place before the amenities. You want somewhere that feels ${t[0]}.`,
@@ -1478,7 +1352,6 @@ function buildObservations(signals: Record<string, string[]> | undefined | null)
     if (phrasing) {
       observations.push(phrasing(cleaned));
     } else {
-      // Generic phrasing for AI-generated category names
       const label = key.replace(/[-_]/g, ' ').toLowerCase();
       observations.push(
         `In ${label}, you\u2019re drawn to ${cleaned[0]}${cleaned[1] ? ` and ${cleaned[1]}` : ''}.`
@@ -1499,117 +1372,118 @@ function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!observations.length) return null;
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <SectionLabel color={T.amber}>What we noticed</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.chromeYellow} label="What we noticed" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
-            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: '0 0 8px',
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
           }}>
             The details that define you
           </h2>
         </SafeFadeIn>
-        <GoldDivider width={36} delay={0.3} />
-      </div>
+      </HeroSection>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 440, margin: '0 auto' }}>
-        {observations.map((obs, i) => (
-          <SafeFadeIn key={i} delay={0.35 + i * 0.1} direction="up" distance={20} duration={0.5}>
-            <div style={{
-              padding: '22px 26px', borderRadius: 18,
-              background: `linear-gradient(135deg, ${T.amber}06, white)`,
-              border: `1px solid ${INK['04']}`,
-              boxShadow: '0 2px 12px rgba(28,26,23,0.03)',
-            }}>
-              <p style={{
-                fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-                color: INK['85'], margin: 0,
+      <WaveDivider from={BRAND.chromeYellow} />
+
+      <ContentSection padding="20px 20px 24px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {observations.map((obs, i) => (
+            <SafeFadeIn key={i} delay={0.35 + i * 0.1} direction="up" distance={20} duration={0.5}>
+              <div style={{
+                padding: '20px 22px', borderRadius: 16,
+                background: 'white',
+                border: `1px solid ${INK['05']}`,
+                boxShadow: '0 2px 12px rgba(28,26,23,0.03)',
               }}>
-                {obs}
-              </p>
-            </div>
-          </SafeFadeIn>
-        ))}
-      </div>
-    </div>
+                <p style={{
+                  fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
+                  color: INK['85'], margin: 0,
+                }}>
+                  {obs}
+                </p>
+              </div>
+            </SafeFadeIn>
+          ))}
+        </div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
 
-// ─── Matches Card (Places We'd Send You) ───
+// ─── Matches Card ───
 
 function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.matchedProperties?.length) return null;
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <SectionLabel color={T.verde}>Already thinking ahead</SectionLabel>
+    <CardShell>
+      <HeroSection bg={BRAND.verde} label="Already thinking ahead" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
-            fontFamily: FONT.serif, fontSize: 26, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--t-ink)',
-            margin: '0 0 8px',
+            fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
+            fontWeight: 400, color: '#fff', margin: 0,
           }}>
             Places we&apos;d send you
           </h2>
         </SafeFadeIn>
-        <GoldDivider width={36} delay={0.3} />
-      </div>
+      </HeroSection>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 440, margin: '0 auto' }}>
-        {profile.matchedProperties.slice(0, 3).map((m, i) => (
-          <SafeFadeIn key={i} delay={0.35 + i * 0.1} direction="up" distance={20} duration={0.5}>
-            <div style={{
-              padding: '24px 26px', borderRadius: 18,
-              background: `linear-gradient(135deg, ${T.verde}04, white)`,
-              border: `1px solid ${INK['04']}`,
-              boxShadow: '0 2px 12px rgba(28,26,23,0.03)',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              {/* Accent stripe */}
-              <div style={{
-                position: 'absolute', top: 0, left: 24, right: 24, height: 2,
-                background: `linear-gradient(90deg, ${T.verde}, transparent)`,
-                borderRadius: 1,
-              }} />
+      <WaveDivider from={BRAND.verde} />
 
+      <ContentSection padding="20px 20px 24px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {profile.matchedProperties.slice(0, 3).map((m, i) => (
+            <SafeFadeIn key={i} delay={0.35 + i * 0.1} direction="up" distance={20} duration={0.5}>
               <div style={{
-                fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic',
-                color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.2, marginTop: 4,
+                padding: '22px 22px', borderRadius: 16,
+                background: 'white',
+                border: `1px solid ${INK['05']}`,
+                boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
+                position: 'relative', overflow: 'hidden',
               }}>
-                {m.name}
-              </div>
-
-              <div style={{
-                fontFamily: FONT.sans, fontSize: 12, color: INK['60'], marginBottom: 14,
-              }}>
-                {m.location}
-              </div>
-
-              <div style={{
-                fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6, color: INK['80'],
-              }}>
-                {m.matchReasons.slice(0, 2).join(' · ')}
-              </div>
-
-              {m.tensionResolved && (
+                {/* Bold accent stripe */}
                 <div style={{
-                  marginTop: 14, paddingTop: 14,
-                  borderTop: `1px solid ${INK['06']}`,
-                  fontFamily: FONT.sans, fontSize: 12,
-                  color: INK['60'], fontStyle: 'italic',
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                  background: `linear-gradient(90deg, ${BRAND.verde}, ${BRAND.verde}40)`,
+                }} />
+
+                <div style={{
+                  fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
+                  color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.2, marginTop: 4,
                 }}>
-                  {m.tensionResolved}
+                  {m.name}
                 </div>
-              )}
-            </div>
-          </SafeFadeIn>
-        ))}
-      </div>
-    </div>
+
+                <div style={{
+                  fontFamily: FONT.sans, fontSize: 12, color: INK['55'], marginBottom: 12,
+                }}>
+                  {m.location}
+                </div>
+
+                <div style={{
+                  fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6, color: INK['75'],
+                }}>
+                  {m.matchReasons.slice(0, 2).join(' · ')}
+                </div>
+
+                {m.tensionResolved && (
+                  <div style={{
+                    marginTop: 14, paddingTop: 14,
+                    borderTop: `1px solid ${INK['06']}`,
+                    fontFamily: FONT.sans, fontSize: 12,
+                    color: BRAND.verde, fontStyle: 'italic',
+                  }}>
+                    {m.tensionResolved}
+                  </div>
+                )}
+              </div>
+            </SafeFadeIn>
+          ))}
+        </div>
+      </ContentSection>
+    </CardShell>
   );
 }
 
@@ -1625,96 +1499,106 @@ function ShareReveal({
   shareState: 'idle' | 'copied';
 }) {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '55vh', textAlign: 'center',
-    }}>
-      <GoldDivider width={40} delay={0} />
+    <CardShell>
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        padding: '56px 28px 48px', background: BRAND.ink,
+        textAlign: 'center',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: 380,
+      }}>
+        <OrgBlob color={`${BRAND.signalRed}08`} size={200} style={{ top: -60, right: -50 }} />
+        <OrgBlob color={`${BRAND.verde}06`} size={150} style={{ bottom: -40, left: -40 }} />
 
-      <SafeFadeIn delay={0.1} direction="up" distance={20}>
-        <h2 style={{
-          fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
-          margin: '24px 0 12px', lineHeight: 1.15,
-        }}>
-          That&apos;s your dossier
-        </h2>
-      </SafeFadeIn>
+        <div style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+          <GoldDivider width={40} delay={0} />
 
-      <SafeFadeIn delay={0.18} direction="up" distance={10}>
-        <p style={{
-          fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6,
-          color: INK['60'], marginBottom: 40,
-          maxWidth: 300,
-        }}>
-          We&apos;ll keep learning as you plan. Your taste profile gets sharper with every trip.
-        </p>
-      </SafeFadeIn>
+          <SafeFadeIn delay={0.1} direction="up" distance={20}>
+            <h2 style={{
+              fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
+              fontWeight: 400, color: '#fff',
+              margin: '24px 0 12px', lineHeight: 1.15,
+            }}>
+              That&apos;s your dossier
+            </h2>
+          </SafeFadeIn>
 
-      {/* Share button */}
-      <motion.button
-        onClick={(e) => { e.stopPropagation(); onShare(); }}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          width: '100%', maxWidth: 320,
-          margin: '0 auto 14px',
-          padding: '14px 24px',
-          borderRadius: 14,
-          background: 'white',
-          border: `1px solid ${INK['06']}`,
-          cursor: 'pointer',
-          fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-          color: 'var(--t-ink)',
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.26, ...SPRING_GENTLE }}
-        whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <PerriandIcon name="invite" size={16} color="var(--t-ink)" />
-        {shareState === 'copied' ? 'Copied to clipboard!' : 'Share your dossier'}
-      </motion.button>
+          <SafeFadeIn delay={0.18} direction="up" distance={10}>
+            <p style={{
+              fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6,
+              color: 'rgba(255,255,255,0.5)', marginBottom: 36,
+              maxWidth: 300, margin: '0 auto 36px',
+            }}>
+              We&apos;ll keep learning as you plan. Your taste profile gets sharper with every trip.
+            </p>
+          </SafeFadeIn>
 
-      {/* See Full Profile */}
-      <motion.button
-        onClick={(e) => { e.stopPropagation(); onViewProfile(); }}
-        style={{
-          display: 'block',
-          width: '100%', maxWidth: 320,
-          margin: '0 auto 14px',
-          padding: '14px 24px',
-          borderRadius: 14,
-          background: 'var(--t-ink)',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-          color: 'var(--t-cream)',
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.34, ...SPRING_GENTLE }}
-        whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-        whileTap={{ scale: 0.98 }}
-      >
-        See full profile
-      </motion.button>
+          {/* Share button */}
+          <motion.button
+            onClick={(e) => { e.stopPropagation(); onShare(); }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              width: '100%', maxWidth: 300,
+              margin: '0 auto 12px',
+              padding: '14px 24px',
+              borderRadius: 14,
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              cursor: 'pointer',
+              fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+              color: '#fff',
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.26, ...SPRING_GENTLE }}
+            whileHover={{ y: -2, background: 'rgba(255,255,255,0.15)' }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <PerriandIcon name="invite" size={16} color="#fff" />
+            {shareState === 'copied' ? 'Copied to clipboard!' : 'Share your dossier'}
+          </motion.button>
 
-      {/* Footer */}
-      <SafeFadeIn delay={0.4} direction="up" distance={8}>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.16em', textTransform: 'uppercase',
-          color: INK['40'], marginTop: 32,
-        }}>
-          Terrazzo
+          {/* See Full Profile */}
+          <motion.button
+            onClick={(e) => { e.stopPropagation(); onViewProfile(); }}
+            style={{
+              display: 'block',
+              width: '100%', maxWidth: 300,
+              margin: '0 auto 14px',
+              padding: '14px 24px',
+              borderRadius: 14,
+              background: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+              color: BRAND.ink,
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.34, ...SPRING_GENTLE }}
+            whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}
+            whileTap={{ scale: 0.98 }}
+          >
+            See full profile
+          </motion.button>
+
+          {/* Footer */}
+          <SafeFadeIn delay={0.4} direction="up" distance={8}>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.16em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.3)', marginTop: 28,
+            }}>
+              Terrazzo
+            </div>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 4,
+            }}>
+              Travel that matches your taste
+            </div>
+          </SafeFadeIn>
         </div>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 11, color: INK['45'], marginTop: 4,
-        }}>
-          Travel that matches your taste
-        </div>
-      </SafeFadeIn>
-    </div>
+      </div>
+    </CardShell>
   );
 }
