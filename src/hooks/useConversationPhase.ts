@@ -65,6 +65,13 @@ async function consumeRespondStream(
   let followUpDone = false; // true once we've fully extracted the followUp value — prevents re-detection
   let sentFragment = ''; // un-sent partial sentence
   let doneResult: { followUp: string | null; phaseComplete: boolean; userRequestedSkip?: boolean; correctedTranscript?: string } | null = null;
+  const streamedSentences: string[] = []; // accumulate all sentences sent to TTS
+
+  // Wrapper that sends to TTS AND records what was spoken
+  const emitSentence = (s: string) => {
+    streamedSentences.push(s);
+    onSentence(s);
+  };
 
   let sseBuffer = '';
 
@@ -132,7 +139,7 @@ async function consumeRespondStream(
               if (closeQuoteIdx >= 0) {
                 const lastBit = combined.slice(0, closeQuoteIdx);
                 if (lastBit.trim().length > 0) {
-                  onSentence(lastBit.trim());
+                  emitSentence(lastBit.trim());
                 }
                 insideFollowUp = false;
                 followUpDone = true;
@@ -141,7 +148,7 @@ async function consumeRespondStream(
                 sentFragment = combined;
                 const [sentences, remaining] = splitSentences(sentFragment);
                 for (const s of sentences) {
-                  if (s.length > 0) onSentence(s);
+                  if (s.length > 0) emitSentence(s);
                 }
                 sentFragment = remaining;
               }
@@ -169,9 +176,9 @@ async function consumeRespondStream(
                   chunk = chunk.slice(0, closingIdx);
                   const [sentences, remaining] = splitSentences(chunk);
                   for (const s of sentences) {
-                    if (s.length > 0) onSentence(s);
+                    if (s.length > 0) emitSentence(s);
                   }
-                  if (remaining.trim().length > 0) onSentence(remaining.trim());
+                  if (remaining.trim().length > 0) emitSentence(remaining.trim());
                   followUpDone = true;
                 } else {
                   // Still streaming — enter tracking mode
@@ -179,7 +186,7 @@ async function consumeRespondStream(
                   followUpBuffer = chunk;
                   const [sentences, remaining] = splitSentences(followUpBuffer);
                   for (const s of sentences) {
-                    if (s.length > 0) onSentence(s);
+                    if (s.length > 0) emitSentence(s);
                   }
                   sentFragment = remaining;
                 }
@@ -193,22 +200,56 @@ async function consumeRespondStream(
     }
   }
 
+  // Process any remaining data left in sseBuffer after the stream ended.
+  // The last chunk may not end with \n, leaving the done event's data line stuck.
+  if (sseBuffer.trim().length > 0) {
+    for (const line of sseBuffer.split('\n')) {
+      if (line.startsWith('data: ')) {
+        try {
+          const parsed = JSON.parse(line.slice(6));
+          if (parsed.followUp !== undefined) {
+            doneResult = parsed;
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+  }
+
   // If we have an unsent fragment and no done result yet, send it
   if (sentFragment.trim().length > 0 && insideFollowUp) {
-    onSentence(sentFragment.trim());
+    emitSentence(sentFragment.trim());
   }
 
   // Use the done result if available, otherwise try to parse from accumulated tokens
-  if (doneResult) return doneResult;
+  if (doneResult) {
+    // Belt-and-suspenders: if the done event lost the followUp (server parse error)
+    // but we successfully streamed text to TTS, use the streamed text so the chat matches the voice.
+    if (!doneResult.followUp && streamedSentences.length > 0) {
+      doneResult.followUp = streamedSentences.join(' ');
+    }
+    return doneResult;
+  }
 
   // Fallback: parse from full tokens
   const jsonMatch = fullTokens.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
-      return JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
+      // Same belt-and-suspenders: prefer streamed text over parsed followUp if it's null
+      if (!parsed.followUp && streamedSentences.length > 0) {
+        parsed.followUp = streamedSentences.join(' ');
+      }
+      return parsed;
     } catch {
       console.error('[conversation-phase] Failed to parse streamed JSON');
     }
+  }
+
+  // Last resort: if we streamed sentences to TTS, use them as the followUp
+  if (streamedSentences.length > 0) {
+    return { followUp: streamedSentences.join(' '), phaseComplete: false };
   }
 
   return { followUp: null, phaseComplete: false };
