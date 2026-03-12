@@ -17,6 +17,7 @@ import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContex
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
+import { FONT, INK, COLORS } from '@/constants/theme';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -185,41 +186,44 @@ function SavedPageContent() {
       <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 48px 48px' }}>
-          {/* ═══ Header row ═══ */}
-          <div className="flex items-end justify-between mb-6">
+          {/* ═══ Header row - Kinetic Dreamer editorial ═══ */}
+          <div className="flex items-end justify-between mb-10">
             <div>
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}>
                 <h1
                   style={{
-                    fontFamily: FONT.serif,
-                    fontStyle: 'italic',
-                    fontSize: 32,
-                    color: 'var(--t-ink)',
+                    fontFamily: FONT.display,
+                    fontSize: 48,
+                    color: COLORS.navy,
                     margin: 0,
-                    lineHeight: 1.2,
+                    lineHeight: 0.9,
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
                   }}
                 >
                   Collect
                 </h1>
               </motion.div>
-              <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
+              <p style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['60'], margin: '10px 0 0', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {myPlaces.length} places across {allCities.length} {allCities.length === 1 ? 'city' : 'cities'}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <PlaceSearchBar />
               <motion.button
                 onClick={() => setShowCreateCollection(true)}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-1.5 px-5 py-2.5 rounded-full cursor-pointer btn-hover"
+                className="flex items-center gap-2 px-6 py-3 cursor-pointer btn-hover"
                 style={{
-                  background: 'var(--t-ink)',
+                  background: COLORS.coral,
                   color: 'white',
                   border: 'none',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  fontFamily: FONT.sans,
+                  fontSize: 14,
+                  fontFamily: FONT.display,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  borderRadius: 0,
                 }}
               >
                 <span>+</span> New Collection
@@ -229,9 +233,9 @@ function SavedPageContent() {
 
           {/* ═══ Collections section ═══ */}
           {sortedCollections.length > 0 && (
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-5">
+                <h2 style={{ fontFamily: FONT.display, fontSize: 24, color: COLORS.navy, margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   Collections
                 </h2>
                 <FilterSortBar
@@ -250,8 +254,8 @@ function SavedPageContent() {
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="grid gap-3"
-                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+                className="grid gap-5"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
               >
                 {sortedCollections.map(sl => (
                   <motion.div key={sl.id} variants={cardVariants}>
@@ -268,10 +272,10 @@ function SavedPageContent() {
 
           {/* ═══ All Places grid ═══ */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 style={{ fontFamily: FONT.display, fontSize: 24, color: COLORS.navy, margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {typeFilter !== 'all' ? `${TYPE_CHIPS_WITH_ALL.find(c => c.value === typeFilter)?.label || 'Filtered'} places` : 'All places'}
-                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['50'], fontStyle: 'normal', marginLeft: 8 }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['50'], fontWeight: 'normal', marginLeft: 10, textTransform: 'none', letterSpacing: 0 }}>
                   {filteredPlaces.length}
                 </span>
               </h2>
@@ -338,8 +342,8 @@ function SavedPageContent() {
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
+                className="grid gap-5"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
               >
                 {filteredPlaces.map(place => (
                   <motion.div key={place.id} variants={cardVariants}>
@@ -367,14 +371,14 @@ function SavedPageContent() {
 
           {/* ═══ Uncollected section ═══ */}
           {uncollectedPlaces.length > 0 && uncollectedPlaces.length < filteredPlaces.length && typeFilter === 'all' && (
-            <div className="mt-10 pt-8" style={{ borderTop: '1px solid var(--t-linen)' }}>
-              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 18, color: INK['70'], margin: '0 0 12px' }}>
+            <div className="mt-12 pt-10" style={{ borderTop: `2px solid ${INK['10']}` }}>
+              <h2 style={{ fontFamily: FONT.display, fontSize: 20, color: INK['60'], margin: '0 0 12px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Uncollected
-                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['40'], fontStyle: 'normal', marginLeft: 8 }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['40'], fontWeight: 'normal', marginLeft: 10, textTransform: 'none', letterSpacing: 0 }}>
                   {uncollectedPlaces.length}
                 </span>
               </h2>
-              <p style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'], margin: '0 0 16px' }}>
+              <p style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['50'], margin: '0 0 20px' }}>
                 These places aren&apos;t in any collection yet
               </p>
               <motion.div
@@ -429,26 +433,27 @@ function SavedPageContent() {
     );
   }
 
-  /* ─── Mobile Library layout (unified) ─── */
+  /* ─── Mobile Library layout - Kinetic Dreamer ─── */
   return (
     <div className="min-h-screen" style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto', paddingBottom: 64, overflowX: 'hidden', boxSizing: 'border-box' }}>
-      <div className="px-4 pt-5">
+      <div className="px-4 pt-6">
         {/* ═══ Header ═══ */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1
               style={{
-                fontFamily: FONT.serif,
-                fontStyle: 'italic',
-                fontSize: 22,
-                color: 'var(--t-ink)',
+                fontFamily: FONT.display,
+                fontSize: 28,
+                color: COLORS.navy,
                 margin: 0,
-                lineHeight: 1.2,
+                lineHeight: 0.9,
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
               }}
             >
               Collect
             </h1>
-            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'], letterSpacing: '0.03em', textTransform: 'uppercase' }}>
               {myPlaces.length} places
             </span>
           </div>
@@ -456,34 +461,36 @@ function SavedPageContent() {
         </div>
 
         {/* ═══ Search ═══ */}
-        <div className="mb-3"><PlaceSearchBar /></div>
+        <div className="mb-4"><PlaceSearchBar /></div>
 
         {/* ═══ Collections section ═══ */}
         {sortedCollections.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: 'var(--t-ink)', margin: 0 }}>
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 style={{ fontFamily: FONT.display, fontSize: 18, color: COLORS.navy, margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Collections
-                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontStyle: 'normal', marginLeft: 6 }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontWeight: 'normal', marginLeft: 8, textTransform: 'none', letterSpacing: 0 }}>
                   {sortedCollections.length}
                 </span>
               </h2>
               <button
                 onClick={() => setShowCreateCollection(true)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 cursor-pointer"
                 style={{
-                  background: 'var(--t-ink)',
+                  background: COLORS.coral,
                   color: 'white',
                   border: 'none',
-                  fontFamily: FONT.sans,
-                  fontSize: 11,
-                  fontWeight: 600,
+                  fontFamily: FONT.display,
+                  fontSize: 12,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  borderRadius: 0,
                 }}
               >
-                <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>+</span> New
+                <span style={{ fontSize: 14, lineHeight: 1 }}>+</span> New
               </button>
             </div>
-            <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
               {sortedCollections.map(sl => (
                 <div key={sl.id}>
                   <CollectionCard collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
@@ -1281,7 +1288,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
 // ═══════════════════════════════════════════
 
 import type { Trip } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLORS } from '@/constants/theme';
 
 function AddToTripSheet({ place, trips, onClose, onAdd }: {
   place: ImportedPlace;

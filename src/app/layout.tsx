@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Space_Mono, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
 import UniversalAddBar from "@/components/UniversalAddBar";
@@ -8,6 +8,20 @@ import EnrichmentWatcher from "@/components/EnrichmentWatcher";
 import SaveIndicator from "@/components/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
 import MapsProvider from "@/components/MapsProvider";
+
+/* ─── Typography: Kinetic Dreamer Brand System ───
+ * Display: Bebas Neue - Condensed bold for headlines (Italian Futurist poster feel)
+ * Sans: DM Sans - Warm geometric for UI (mid-century modern warmth)
+ * Serif: DM Serif Display - Editorial accent
+ * Mono: Space Mono - Technical details & labels
+ */
+
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-bebas",
+  display: "swap",
+});
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -45,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceMono.variable}`}>
+    <html lang="en" className={`${bebasNeue.variable} ${dmSans.variable} ${dmSerif.variable} ${spaceMono.variable}`}>
       <body className="antialiased">
         <AuthProvider>
           <MapsProvider>

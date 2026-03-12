@@ -8,7 +8,7 @@ import TabBar from '@/components/TabBar';
 import DesktopNav from '@/components/DesktopNav';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLORS } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { DEST_COLORS } from '@/types';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
@@ -27,42 +27,43 @@ export default function TripsPage() {
       <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 48px 48px' }}>
-          {/* Header */}
-          <div className="flex items-end justify-between mb-8">
+          {/* Header - Kinetic Dreamer editorial style */}
+          <div className="flex items-end justify-between mb-10">
             <div>
               <SafeFadeIn direction="up" distance={10} duration={0.5}>
                 <h1
                   style={{
-                    fontFamily: FONT.serif,
-                    fontStyle: 'italic',
-                    fontSize: 32,
-                    color: 'var(--t-ink)',
+                    fontFamily: FONT.display,
+                    fontSize: 48,
+                    color: COLORS.navy,
                     margin: 0,
-                    lineHeight: 1.2,
+                    lineHeight: 0.9,
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
                   }}
                 >
                   Your Trips
                 </h1>
               </SafeFadeIn>
-              <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
+              <p style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['60'], margin: '10px 0 0', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {trips.length} {trips.length === 1 ? 'trip' : 'trips'} in progress
               </p>
             </div>
             <motion.button
               onClick={() => router.push('/trips/new')}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-1.5 px-6 py-3 rounded-full border-none cursor-pointer text-[13px] font-semibold btn-hover"
-              style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
+              className="flex items-center gap-2 px-7 py-3.5 border-none cursor-pointer text-[14px] font-medium btn-hover"
+              style={{ background: COLORS.coral, color: 'white', fontFamily: FONT.display, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 0 }}
             >
-              <span className="text-sm">+</span> New Trip
+              <span className="text-lg">+</span> New Trip
             </motion.button>
           </div>
 
-          {/* Trip cards grid */}
+          {/* Trip cards grid - Large image cards with generous spacing */}
           <div
-            className="grid gap-5"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}
+            className="grid gap-6"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))' }}
           >
             {trips.map((trip, index) => {
               const destKey = trip.destinations?.[0];
@@ -80,56 +81,59 @@ export default function TripsPage() {
                 >
                   <button
                     onClick={() => router.push(`/trips/${trip.id}`)}
-                    className="rounded-2xl border-none cursor-pointer text-left overflow-hidden card-hover w-full"
+                    className="border-none cursor-pointer text-left overflow-hidden card-hover w-full"
                     style={{
                       background: 'white',
-                      border: '1.5px solid var(--t-linen)',
+                      border: `2px solid ${COLORS.navy}`,
+                      borderRadius: 0,
                     }}
                   >
-                  {/* Color accent bar */}
+                  {/* Color accent bar - bold geometric */}
                   <motion.div
                     initial={{ scaleX: 0 }}
                     whileInView={{ scaleX: 1 }}
                     transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
                     style={{
-                      height: 6,
-                      background: destColor?.accent || 'var(--t-honey)',
-                      borderRadius: '14px 14px 0 0',
+                      height: 8,
+                      background: destColor?.accent || COLORS.coral,
                       originX: 0,
                     }}
                   />
-                  <div className="p-5">
-                    <div className="flex items-start gap-3">
+                  <div className="p-6">
+                    <div className="flex items-start gap-4">
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: destColor ? `${destColor.accent}15` : 'rgba(200,146,58,0.1)' }}
+                        className="w-14 h-14 flex items-center justify-center flex-shrink-0"
+                        style={{ background: destColor ? `${destColor.accent}20` : `${COLORS.peach}`, borderRadius: 0 }}
                       >
-                        <PerriandIcon name="plan" size={20} color={destColor?.accent || 'var(--t-honey)'} />
+                        <PerriandIcon name="plan" size={24} color={destColor?.accent || COLORS.coral} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div
-                          className="text-[16px] font-semibold truncate mb-0.5"
-                          style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
+                          className="text-[18px] truncate mb-1"
+                          style={{ fontFamily: FONT.display, color: COLORS.navy, letterSpacing: '0.02em', textTransform: 'uppercase' }}
                         >
                           {trip.name}
                         </div>
-                        <div className="text-[12px]" style={{ color: INK['70'] }}>
+                        <div className="text-[13px]" style={{ color: INK['70'], fontFamily: FONT.sans }}>
                           {trip.location}
                         </div>
                       </div>
                       {trip.status && (
                         <span
-                          className="text-[9px] px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1"
+                          className="text-[10px] px-3 py-1.5 flex-shrink-0 whitespace-nowrap flex items-center gap-1.5"
                           style={{
-                            background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)',
-                            color: trip.status === 'planning' ? 'var(--t-verde)' : '#8a6a2a',
+                            background: trip.status === 'planning' ? COLORS.mint : COLORS.ochre,
+                            color: COLORS.navy,
                             fontFamily: FONT.mono,
+                            borderRadius: 0,
+                            letterSpacing: '0.05em',
+                            textTransform: 'uppercase',
                           }}
                         >
                           <PerriandIcon
                             name={trip.status === 'planning' ? 'pin' : 'star'}
                             size={10}
-                            color={trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)'}
+                            color={COLORS.navy}
                           />
                           {trip.status === 'planning' ? 'Planning' : 'Dreaming'}
                         </span>
@@ -138,24 +142,24 @@ export default function TripsPage() {
 
                     {/* Stats row */}
                     <div
-                      className="flex items-center gap-4 mt-4 pt-3"
-                      style={{ borderTop: '1px solid var(--t-linen)' }}
+                      className="flex items-center gap-5 mt-5 pt-4"
+                      style={{ borderTop: `1px solid ${INK['10']}` }}
                     >
-                      <div className="flex items-center gap-1.5">
-                        <PerriandIcon name="plan" size={12} color={INK['40']} />
-                        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
+                      <div className="flex items-center gap-2">
+                        <PerriandIcon name="plan" size={14} color={INK['40']} />
+                        <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['60'], letterSpacing: '0.03em' }}>
                           {dayCount} {dayCount === 1 ? 'day' : 'days'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <PerriandIcon name="pin" size={12} color={INK['40']} />
-                        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
+                      <div className="flex items-center gap-2">
+                        <PerriandIcon name="pin" size={14} color={INK['40']} />
+                        <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['60'], letterSpacing: '0.03em' }}>
                           {placedCount} {placedCount === 1 ? 'place' : 'places'}
                         </span>
                       </div>
                       {trip.startDate && (
-                        <div className="flex items-center gap-1.5">
-                          <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'] }}>
+                        <div className="flex items-center gap-2">
+                          <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['50'] }}>
                             {trip.startDate}
                           </span>
                         </div>
@@ -167,7 +171,7 @@ export default function TripsPage() {
               );
             })}
 
-            {/* Create CTA */}
+            {/* Create CTA - Bold geometric */}
             <SafeFadeIn
               direction="up"
               distance={20}
@@ -176,22 +180,23 @@ export default function TripsPage() {
             >
               <button
                 onClick={() => router.push('/trips/new')}
-                className="flex flex-col items-center justify-center gap-3 rounded-2xl border-none cursor-pointer transition-all hover:scale-[1.01] w-full"
+                className="flex flex-col items-center justify-center gap-4 border-none cursor-pointer transition-all hover:scale-[1.01] w-full"
                 style={{
-                  minHeight: 180,
-                  background: INK['02'],
-                  border: '1.5px dashed var(--t-travertine)',
-                  color: INK['90'],
+                  minHeight: 200,
+                  background: COLORS.peach,
+                  border: `2px dashed ${COLORS.coral}`,
+                  borderRadius: 0,
+                  color: COLORS.navy,
                 }}
               >
               <div
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ background: INK['06'] }}
+                className="w-14 h-14 flex items-center justify-center"
+                style={{ background: COLORS.coral, borderRadius: 0 }}
               >
-                <span style={{ fontSize: 24, color: INK['40'] }}>+</span>
+                <span style={{ fontSize: 28, color: 'white' }}>+</span>
               </div>
-              <span className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>Start a New Trip</span>
-              <span className="text-[11px]" style={{ color: INK['70'] }}>
+              <span style={{ fontFamily: FONT.display, fontSize: 18, color: COLORS.navy, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Start a New Trip</span>
+              <span className="text-[12px]" style={{ color: INK['70'], fontFamily: FONT.sans }}>
                 Tell us where and when — we'll find your perfect places
               </span>
               </button>
@@ -202,68 +207,67 @@ export default function TripsPage() {
     );
   }
 
-  /* ─── Mobile layout ─── */
+  /* ─── Mobile layout - Kinetic Dreamer ─── */
   return (
     <div
       className="min-h-screen pb-16"
       style={{ background: 'var(--t-cream)', maxWidth: 480, margin: '0 auto' }}
     >
       <div className="px-4 pt-6">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-2">
           <h1
-            className="text-2xl"
-            style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.display, fontSize: 28, color: COLORS.navy, letterSpacing: '0.02em', textTransform: 'uppercase' }}
           >
             Your Trips
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => router.push('/trips/new')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-none cursor-pointer text-[12px] font-medium transition-all hover:opacity-80"
-              style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
+              className="flex items-center gap-1.5 px-4 py-2 border-none cursor-pointer text-[11px] font-medium transition-all hover:opacity-80"
+              style={{ background: COLORS.coral, color: 'white', fontFamily: FONT.display, letterSpacing: '0.08em', textTransform: 'uppercase', borderRadius: 0 }}
             >
-              <span className="text-sm">+</span> New Trip
+              <span className="text-sm">+</span> New
             </button>
             <ProfileAvatar />
           </div>
         </div>
-        <p className="text-xs mb-6" style={{ color: INK['95'] }}>
-          Plan and curate your bespoke travel itinerary
+        <p className="text-xs mb-6" style={{ color: INK['70'], fontFamily: FONT.mono, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+          Plan and curate your bespoke itinerary
         </p>
 
         <div
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-4"
         >
           {trips.map(trip => (
             <button
               key={trip.id}
               onClick={() => router.push(`/trips/${trip.id}`)}
-              className="flex items-center gap-3 p-4 rounded-xl border-none cursor-pointer text-left transition-all hover:scale-[1.01]"
-              style={{ background: 'white', border: '1.5px solid var(--t-linen)' }}
+              className="flex items-center gap-4 p-4 border-none cursor-pointer text-left transition-all hover:scale-[1.01]"
+              style={{ background: 'white', border: `2px solid ${COLORS.navy}`, borderRadius: 0 }}
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-lg"
-                style={{ background: 'rgba(200,146,58,0.1)' }}
+                className="w-12 h-12 flex items-center justify-center text-lg"
+                style={{ background: COLORS.peach, borderRadius: 0 }}
               >
-                <PerriandIcon name="plan" size={20} color="var(--t-honey)" />
+                <PerriandIcon name="plan" size={20} color={COLORS.coral} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-dm-serif-display), serif", color: 'var(--t-ink)' }}>
+                  <span className="truncate" style={{ fontFamily: FONT.display, fontSize: 16, color: COLORS.navy, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                     {trip.name}
                   </span>
                   {trip.status && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1" style={{ background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.08)', color: trip.status === 'planning' ? 'var(--t-verde)' : '#8a6a2a', fontFamily: FONT.mono }}>
-                      <PerriandIcon name={trip.status === 'planning' ? 'pin' : 'star'} size={10} color={trip.status === 'planning' ? 'var(--t-verde)' : 'var(--t-honey)'} />
+                    <span className="text-[9px] px-2 py-1 flex-shrink-0 whitespace-nowrap flex items-center gap-1" style={{ background: trip.status === 'planning' ? COLORS.mint : COLORS.ochre, color: COLORS.navy, fontFamily: FONT.mono, borderRadius: 0 }}>
+                      <PerriandIcon name={trip.status === 'planning' ? 'pin' : 'star'} size={10} color={COLORS.navy} />
                       {trip.status === 'planning' ? 'Planning' : 'Dreaming'}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px]" style={{ color: INK['95'] }}>
+                <div className="text-[11px] mt-1" style={{ color: INK['70'], fontFamily: FONT.sans }}>
                   {trip.location} · {trip.days.length} days
                 </div>
               </div>
-              <span style={{ color: INK['95'] }}>→</span>
+              <span style={{ color: COLORS.coral, fontSize: 18 }}>→</span>
             </button>
           ))}
 

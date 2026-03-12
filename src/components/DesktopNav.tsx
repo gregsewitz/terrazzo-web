@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLORS } from '@/constants/theme';
 import { useAddBarStore } from '@/stores/addBarStore';
 
 interface DesktopNavProps {
@@ -22,27 +22,28 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
 
   return (
     <nav
-      className="flex items-center justify-between px-6"
+      className="flex items-center justify-between px-8"
       style={{
-        height: 56,
+        height: 64,
         background: 'var(--t-cream)',
-        boxShadow: '0 1px 0 var(--t-linen)',
+        borderBottom: `2px solid ${COLORS.navy}`,
       }}
     >
-      {/* Left: Terrazzo wordmark + icon */}
+      {/* Left: Terrazzo wordmark - Kinetic Dreamer bold condensed */}
       <button
         onClick={() => router.push('/trips')}
-        className="flex items-center gap-2 bg-transparent border-none cursor-pointer"
+        className="flex items-center gap-3 bg-transparent border-none cursor-pointer"
         style={{ padding: 0 }}
       >
-        <PerriandIcon name="terrazzo" size={24} color="var(--t-ink)" accent="var(--t-signal-red)" />
+        <PerriandIcon name="terrazzo" size={28} color={COLORS.navy} accent={COLORS.coral} />
         <span
           style={{
-            fontFamily: "'Instrument Serif', 'DM Serif Display', serif",
-            fontSize: 20,
+            fontFamily: FONT.display,
+            fontSize: 26,
             fontWeight: 400,
-            color: 'var(--t-ink)',
-            letterSpacing: -0.5,
+            color: COLORS.navy,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
           }}
         >
           Terrazzo
@@ -67,34 +68,37 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
           onClick={() => openAddBar()}
           onMouseEnter={() => setHoveredNav('add')}
           onMouseLeave={() => setHoveredNav(null)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full"
+          className="flex items-center gap-2 px-5 py-2.5"
           style={{
-            background: hoveredNav === 'add' ? INK['04'] : 'transparent',
+            background: hoveredNav === 'add' ? COLORS.coral : COLORS.peach,
             border: 'none',
             cursor: 'pointer',
-            transition: 'background 150ms ease',
+            transition: 'all 200ms ease',
+            borderRadius: 0,
           }}
           aria-label="Add a place"
         >
           <div
-            className="flex items-center justify-center rounded-full"
+            className="flex items-center justify-center"
             style={{
-              width: 22,
-              height: 22,
-              background: 'var(--t-ink)',
+              width: 20,
+              height: 20,
+              background: hoveredNav === 'add' ? 'white' : COLORS.coral,
               flexShrink: 0,
+              borderRadius: 0,
+              transition: 'all 200ms ease',
             }}
           >
-            <PerriandIcon name="add" size={12} color="var(--t-cream)" />
+            <PerriandIcon name="add" size={12} color={hoveredNav === 'add' ? COLORS.coral : 'white'} />
           </div>
           <span
             style={{
-              fontFamily: FONT.sans,
+              fontFamily: FONT.display,
               fontSize: 14,
-              fontWeight: 400,
-              color: hoveredNav === 'add' ? INK['85'] : INK['60'],
-              letterSpacing: 0.2,
-              transition: 'color 150ms ease',
+              color: hoveredNav === 'add' ? 'white' : COLORS.navy,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              transition: 'color 200ms ease',
             }}
           >
             Place
@@ -115,20 +119,20 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
 
       {/* Right: user avatar → profile */}
       <div
-        className="flex items-center justify-center rounded-full cursor-pointer"
+        className="flex items-center justify-center cursor-pointer"
         onMouseEnter={() => setAvatarHovered(true)}
         onMouseLeave={() => setAvatarHovered(false)}
         style={{
-          width: 32,
-          height: 32,
-          background: 'var(--t-ink)',
-          color: 'var(--t-cream)',
-          fontFamily: FONT.mono,
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: 1,
-          transition: 'box-shadow 150ms ease',
-          boxShadow: avatarHovered ? '0 0 0 2px var(--t-honey)' : '0 0 0 0px transparent',
+          width: 36,
+          height: 36,
+          background: COLORS.navy,
+          color: 'white',
+          fontFamily: FONT.display,
+          fontSize: 14,
+          letterSpacing: '0.05em',
+          transition: 'all 200ms ease',
+          borderRadius: 0,
+          border: avatarHovered ? `2px solid ${COLORS.coral}` : `2px solid ${COLORS.navy}`,
         }}
         onClick={() => router.push('/profile')}
       >
@@ -154,28 +158,29 @@ function NavLink({
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="flex items-center gap-1.5 px-4 py-2 rounded-full"
+      className="flex items-center gap-2 px-5 py-2.5"
       style={{
-        background: isActive ? INK['06'] : isHovered ? INK['04'] : 'transparent',
+        background: isActive ? COLORS.mint : isHovered ? INK['06'] : 'transparent',
         border: 'none',
         cursor: 'pointer',
-        transition: 'background 150ms ease, color 150ms ease',
+        transition: 'all 200ms ease',
+        borderRadius: 0,
       }}
     >
       <PerriandIcon
         name={icon}
-        size={16}
-        color={isActive ? 'var(--t-signal-red)' : 'var(--t-ink)'}
-        opacity={isActive ? 1 : isHovered ? 0.7 : 0.5}
+        size={18}
+        color={isActive ? COLORS.navy : COLORS.navy}
+        opacity={isActive ? 1 : isHovered ? 0.8 : 0.6}
       />
       <span
         style={{
-          fontFamily: FONT.sans,
+          fontFamily: FONT.display,
           fontSize: 14,
-          fontWeight: isActive ? 600 : 400,
-          color: isActive ? 'var(--t-ink)' : isHovered ? INK['85'] : INK['60'],
-          letterSpacing: 0.2,
-          transition: 'color 150ms ease',
+          color: isActive ? COLORS.navy : isHovered ? COLORS.navy : INK['60'],
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          transition: 'color 200ms ease',
         }}
       >
         {label}
