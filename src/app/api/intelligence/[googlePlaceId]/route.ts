@@ -80,6 +80,31 @@ export async function GET(
       googleData: intel.googleData ?? null,
       formalityLevel: intel.formalityLevel ?? null,
       cuisineStyle: intel.cuisineStyle ?? null,
+      // Heritage — extracted from facts for dedicated rendering
+      heritage: (() => {
+        if (!intel.facts || typeof intel.facts !== 'object') return null;
+        const f = intel.facts as Record<string, any>;
+        const h: Record<string, any> = {};
+        if (f.architect) h.architect = f.architect;
+        if (f.yearEstablished || f.year_established) h.yearEstablished = String(f.yearEstablished || f.year_established);
+        if (f.yearRenovated || f.year_renovated) h.yearRenovated = String(f.yearRenovated || f.year_renovated);
+        if (f.previousUses && Array.isArray(f.previousUses)) h.previousUses = f.previousUses;
+        if (f.significance) h.significance = f.significance;
+        if (f.restorationPhilosophy || f.restoration_philosophy) h.restorationPhilosophy = f.restorationPhilosophy || f.restoration_philosophy;
+        return Object.keys(h).length > 0 ? h : null;
+      })(),
+      // Seasonality — extracted from facts for dedicated rendering
+      seasonality: (() => {
+        if (!intel.facts || typeof intel.facts !== 'object') return null;
+        const f = intel.facts as Record<string, any>;
+        const s: Record<string, any> = {};
+        if (f.bestMonths && Array.isArray(f.bestMonths)) s.bestMonths = f.bestMonths;
+        if (f.peakMonths && Array.isArray(f.peakMonths)) s.peakMonths = f.peakMonths;
+        if (f.seasonalNote) s.seasonalNote = f.seasonalNote;
+        if (f.crowdPatterns) s.crowdPatterns = f.crowdPatterns;
+        if (f.seasonalClosures && Array.isArray(f.seasonalClosures)) s.seasonalClosures = f.seasonalClosures;
+        return Object.keys(s).length > 0 ? s : null;
+      })(),
       latestRun: latestRun
         ? {
             status: latestRun.status,

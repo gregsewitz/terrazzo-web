@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
           sustainabilityScore: true,
           signalCount: true,
           antiSignalCount: true,
+          facts: true,
         },
       });
 
@@ -98,6 +99,30 @@ export async function POST(req: NextRequest) {
         }
         if (intelForPromotion.alsoKnownAs) {
           promotionData.alsoKnownAs = intelForPromotion.alsoKnownAs;
+        }
+
+        // Heritage fields — extract from facts Json and promote to dedicated columns
+        if (intelForPromotion.facts && typeof intelForPromotion.facts === 'object') {
+          const facts = intelForPromotion.facts as Record<string, any>;
+          const yearEstablished = facts.yearEstablished || facts.year_established;
+          const architect = facts.architect;
+
+          if (yearEstablished) {
+            promotionData.yearEstablished = String(yearEstablished);
+          }
+
+          // Build heritage highlight: "Est. 1924 · Marcel Breuer"
+          const highlightParts: string[] = [];
+          if (yearEstablished) {
+            const yr = String(yearEstablished);
+            highlightParts.push(yr.length === 4 ? `Est. ${yr}` : yr);
+          }
+          if (architect) {
+            highlightParts.push(String(architect));
+          }
+          if (highlightParts.length > 0) {
+            promotionData.heritageHighlight = highlightParts.join(' · ');
+          }
         }
 
         if (Object.keys(promotionData).length > 0) {

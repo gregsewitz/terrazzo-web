@@ -29,6 +29,8 @@ RULES:
 - If TRAVEL PARTY is provided, factor it in: family trips should favor kid-friendly spots; solo trips can lean into intimate bars or long museum visits; partner trips can skew romantic or adventurous; friend groups might want lively, shareable experiences.
 - If WEATHER is provided, factor it in: rainy or cold days should favor indoor venues (museums, restaurants, cafes); hot sunny days are great for outdoor neighborhoods, markets, or rooftop bars. Mention weather naturally in rationale when relevant — e.g. "Perfect rainy-morning museum visit" or "The terrace really shines on a day like this."
 - Reference the user's taste profile axes in your rationale — e.g. "Your Design eye will love..." or "This stretches your Wellness side, but the garden alone is worth the walk."
+- If a candidate has bestMonths or seasonalNote data, factor it in. Prefer places that are in-season. Mention seasonal relevance naturally — e.g. "March is peak season here" or "The terrace garden is at its best right now."
+- If a candidate has a rhythm (e.g. "slow morning", "vibrant evening"), match it to the appropriate time slot.
 - Only suggest from the provided candidates. Never invent places.
 - Each rationale should be 1-2 sentences max. Warm, specific, personal.
 - Confidence should reflect how well the place fits the slot + user: 0.9+ = perfect fit, 0.7-0.9 = good fit, 0.5-0.7 = decent stretch.
@@ -110,9 +112,16 @@ function formatAdjacency(ctx: DaySuggestionContext): string {
 function formatCandidates(ctx: DaySuggestionContext): string {
   if (ctx.candidates.length === 0) return 'CANDIDATES: None available.';
 
-  const lines = ctx.candidates.map(c =>
-    `  { id: "${c.id}", name: "${c.name}", type: "${c.type}", location: "${c.location}", matchScore: ${c.matchScore}, topAxes: [${c.topAxes.map(a => `"${a}"`).join(', ')}]${c.tasteNote ? `, tasteNote: "${c.tasteNote}"` : ''} }`
-  );
+  const lines = ctx.candidates.map(c => {
+    const extras: string[] = [];
+    if (c.tasteNote) extras.push(`tasteNote: "${c.tasteNote}"`);
+    // Include seasonality data when available for richer suggestions
+    if ((c as any).bestMonths?.length) extras.push(`bestMonths: [${(c as any).bestMonths.map((m: string) => `"${m}"`).join(', ')}]`);
+    if ((c as any).rhythmTempo) extras.push(`rhythm: "${(c as any).rhythmTempo}"`);
+    if ((c as any).seasonalNote) extras.push(`seasonalNote: "${(c as any).seasonalNote}"`);
+    const extrasStr = extras.length > 0 ? `, ${extras.join(', ')}` : '';
+    return `  { id: "${c.id}", name: "${c.name}", type: "${c.type}", location: "${c.location}", matchScore: ${c.matchScore}, topAxes: [${c.topAxes.map(a => `"${a}"`).join(', ')}]${extrasStr} }`;
+  });
   return `CANDIDATES (${ctx.candidates.length} places from user's library, filtered to ${ctx.destination}):\n${lines.join('\n')}`;
 }
 
@@ -144,9 +153,12 @@ export function buildSuggestionPrompt(ctx: DaySuggestionContext): string {
   const emptyCount = ctx.slots.filter(s => s.confirmedPlaces.length === 0).length;
   const filledCount = ctx.slots.length - emptyCount;
 
+  const currentMonth = ['January','February','March','April','May','June','July','August','September','October','November','December'][new Date().getMonth()];
+
   const sections = [
     `DESTINATION: ${ctx.destination}`,
     `DAY: ${dayLabel} (Day ${ctx.dayNumber})`,
+    `CURRENT MONTH: ${currentMonth}`,
     `STATUS: ${filledCount} slot${filledCount !== 1 ? 's' : ''} filled, ${emptyCount} empty`,
     formatTravelParty(ctx),
     formatWeather(ctx),

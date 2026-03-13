@@ -242,6 +242,10 @@ model SavedPlace {
   signalCount         Int?
   antiSignalCount     Int?
 
+  // Promoted heritage fields (from PlaceIntelligence.facts)
+  heritageHighlight   String?   // e.g. "Est. 1924 · Marcel Breuer"
+  yearEstablished     String?   // e.g. "1924"
+
   // Link to global intelligence
   placeIntelligenceId String?
   intelligence        PlaceIntelligence? @relation("SavedPlaceIntelligence", fields: [placeIntelligenceId], references: [id])

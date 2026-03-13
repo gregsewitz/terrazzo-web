@@ -28,6 +28,10 @@ import {
 } from '@/types';
 import { FONT, INK } from '@/constants/theme';
 import { ClusterInsightCard } from '@/components/ClusterInsightCard';
+import { HeritageCard } from '@/components/intelligence/HeritageCard';
+import { SeasonalityBadge } from '@/components/intelligence/SeasonalityBadge';
+import { ValueBadge } from '@/components/intelligence/ValueBadge';
+import type { HeritageData, SeasonalityData } from '@/types';
 
 interface BriefingViewProps {
   googlePlaceId: string;
@@ -583,6 +587,25 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   </div>
                 </SafeFadeIn>
 
+                {/* Value badge — price-match framing */}
+                {(() => {
+                  const googleData = data.googleData as any;
+                  const priceLevel = googleData?.priceLevel ?? googleData?.price_level;
+                  if (priceLevel == null) return null;
+                  return (
+                    <SafeFadeIn direction="up" distance={10} duration={0.4} delay={0.05}>
+                      <div className="mb-4">
+                        <ValueBadge
+                          matchScore={matchScore}
+                          priceLevel={priceLevel}
+                          variant="full"
+                          layout="desktop"
+                        />
+                      </div>
+                    </SafeFadeIn>
+                  );
+                })()}
+
                 {/* Source provenance strip */}
                 {data.signals && Array.isArray(data.signals) && data.signals.length > 0 && (
                   <SafeFadeIn direction="up" distance={10} duration={0.4} delay={0.05}>
@@ -720,6 +743,34 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                     </FadeInSection>
                   );
                 })()}
+
+                {/* Heritage — dedicated card for architectural/historical significance */}
+                {data.heritage && (
+                  <FadeInSection delay={0.1} direction="up" distance={16}>
+                    <div className="mb-6">
+                      <HeritageCard
+                        heritage={data.heritage as HeritageData}
+                        variant="full"
+                        layout="desktop"
+                      />
+                    </div>
+                  </FadeInSection>
+                )}
+
+                {/* Seasonality — when to visit, crowd patterns, rhythm */}
+                {data.seasonality && (
+                  <FadeInSection delay={0.1} direction="up" distance={16}>
+                    <div className="mb-6">
+                      <SeasonalityBadge
+                        seasonality={data.seasonality as SeasonalityData}
+                        rhythmTempo={undefined /* TODO: pass from SavedPlace when available */}
+                        seasonalNote={typeof data.facts === 'object' && data.facts ? (data.facts as any).seasonalNote : undefined}
+                        variant="full"
+                        layout="desktop"
+                      />
+                    </div>
+                  </FadeInSection>
+                )}
 
                 {/* Facts — structured detail grid */}
                 {data.facts && Object.keys(data.facts).length > 0 && (

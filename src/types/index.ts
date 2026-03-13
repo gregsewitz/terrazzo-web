@@ -650,6 +650,17 @@ export interface BriefingData {
   reliabilityScore: number | null;
   lastEnrichedAt: string | null;
   pipelineVersion: string;
+  // Synthesis fields
+  description?: string | null;
+  whatToOrder?: unknown[] | null;
+  tips?: unknown[] | null;
+  alsoKnownAs?: string | null;
+  googleData?: Record<string, unknown> | null;
+  formalityLevel?: string | null;
+  cuisineStyle?: string | null;
+  // Structured sub-objects extracted from facts
+  heritage?: HeritageData | null;
+  seasonality?: SeasonalityData | null;
   latestRun: {
     status: string;
     currentStage: string | null;

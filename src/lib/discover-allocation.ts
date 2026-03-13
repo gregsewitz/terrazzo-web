@@ -226,13 +226,41 @@ export function allocateSlots(
   }
 
   // ── 8. Context Recs: 3-4 based on life context ──
-  const contextRecs: AllocatedContextRec[] = takeN(scored, 4).map((c) => ({ candidate: c }));
+  // Prefer places whose bestMonths include the current month
+  const currentMonthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][new Date().getMonth()];
+  const currentMonthShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][new Date().getMonth()];
 
-  // ── Context label ──
+  // Sort remaining candidates: bestMonths-matching first, then by score
+  const contextCandidates = scored
+    .filter((c) => !used.has(c.googlePlaceId))
+    .map((c) => {
+      const bestMonths = (c as any).bestMonths as string[] | undefined;
+      const isSeasonalMatch = bestMonths?.some(
+        (m: string) => m.toLowerCase() === currentMonthName.toLowerCase() || m.toLowerCase() === currentMonthShort.toLowerCase()
+      ) ?? false;
+      return { ...c, isSeasonalMatch };
+    })
+    .sort((a, b) => {
+      if (a.isSeasonalMatch && !b.isSeasonalMatch) return -1;
+      if (!a.isSeasonalMatch && b.isSeasonalMatch) return 1;
+      return b.overallScore - a.overallScore;
+    });
+
+  const contextRecs: AllocatedContextRec[] = contextCandidates.slice(0, 4).map((c) => ({ candidate: c }));
+
+  // ── Context label — richer than binary Summer/Winter ──
   const companion = lifeContext?.primaryCompanions?.[0] || 'solo';
-  const month = new Date().getMonth();
-  const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
-  const contextLabel = companion !== 'solo' ? `With ${companion}` : season;
+  const hasSeasonalMatches = contextCandidates.slice(0, 4).some((c) => c.isSeasonalMatch);
+  let contextLabel: string;
+  if (companion !== 'solo') {
+    contextLabel = `With ${companion}`;
+  } else if (hasSeasonalMatches) {
+    contextLabel = `Perfect for ${currentMonthName}`;
+  } else {
+    const month = new Date().getMonth();
+    const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
+    contextLabel = season;
+  }
 
   return {
     deepMatch,
