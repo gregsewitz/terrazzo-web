@@ -250,6 +250,7 @@ function SavedPageContent() {
                   compact
                 />
               </div>
+              {/* Cap at ~2 rows (10 items) when not expanded */}
               <motion.div
                 initial="hidden"
                 animate="visible"
@@ -257,7 +258,7 @@ function SavedPageContent() {
                 className="grid gap-3"
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
               >
-                {sortedCollections.map(sl => (
+                {(collectionsExpanded ? sortedCollections : sortedCollections.slice(0, 10)).map(sl => (
                   <motion.div key={sl.id} variants={cardVariants}>
                     <CollectionCard
                       collection={sl}
@@ -267,6 +268,27 @@ function SavedPageContent() {
                   </motion.div>
                 ))}
               </motion.div>
+              {sortedCollections.length > 10 && (
+                <motion.button
+                  onClick={() => setCollectionsExpanded(!collectionsExpanded)}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="flex items-center justify-center gap-1.5 mt-4 px-5 py-2 rounded-lg cursor-pointer mx-auto"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid var(--t-linen)',
+                    fontFamily: FONT.sans,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: INK['70'],
+                  }}
+                >
+                  {collectionsExpanded
+                    ? <>Show less <span style={{ fontSize: 10 }}>▲</span></>
+                    : <>Show all {sortedCollections.length} collections <span style={{ fontSize: 10 }}>▼</span></>
+                  }
+                </motion.button>
+              )}
             </div>
           )}
 
