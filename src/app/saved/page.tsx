@@ -65,6 +65,7 @@ function SavedPageContent() {
   const trips = useTripStore(s => s.trips);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
+  const [collectionsExpanded, setCollectionsExpanded] = useState(false);
 
   // ─── Collection count per place ───
   const collectionCountMap = useMemo(() => {
@@ -486,13 +487,80 @@ function SavedPageContent() {
                 <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>+</span> New
               </button>
             </div>
-            <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-              {sortedCollections.map(sl => (
-                <div key={sl.id}>
-                  <CollectionCard collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
+
+            {/* ≤6 collections: always show grid (no carousel needed) */}
+            {/* >6 collections: carousel by default, expandable to grid */}
+            {sortedCollections.length <= 6 || collectionsExpanded ? (
+              /* ── Full 2-column grid ── */
+              <>
+                <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                  {sortedCollections.map(sl => (
+                    <div key={sl.id}>
+                      <CollectionCard collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                {sortedCollections.length > 6 && (
+                  <button
+                    onClick={() => setCollectionsExpanded(false)}
+                    className="w-full flex items-center justify-center gap-1 mt-3 py-2 rounded-lg cursor-pointer"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--t-linen)',
+                      fontFamily: FONT.sans,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: INK['70'],
+                    }}
+                  >
+                    Show less
+                    <span style={{ fontSize: 10, marginTop: -1 }}>▲</span>
+                  </button>
+                )}
+              </>
+            ) : (
+              /* ── Collapsed: horizontal scroll carousel ── */
+              <div
+                className="collections-carousel flex gap-2.5 overflow-x-auto"
+                style={{
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch',
+                  paddingBottom: 2,
+                  /* hide scrollbar */
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+              >
+                <style>{`.collections-carousel::-webkit-scrollbar { display: none; }`}</style>
+                {sortedCollections.map(sl => (
+                  <div
+                    key={sl.id}
+                    className="flex-shrink-0"
+                    style={{ width: 160, scrollSnapAlign: 'start' }}
+                  >
+                    <CollectionCard collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
+                  </div>
+                ))}
+                {/* See All pill at end of carousel */}
+                <button
+                  onClick={() => setCollectionsExpanded(true)}
+                  className="flex-shrink-0 flex items-center justify-center rounded-xl cursor-pointer"
+                  style={{
+                    width: 80,
+                    background: 'white',
+                    border: '1px solid var(--t-linen)',
+                    fontFamily: FONT.sans,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: INK['70'],
+                    padding: '10px 12px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  See all
+                </button>
+              </div>
+            )}
           </div>
         )}
 
