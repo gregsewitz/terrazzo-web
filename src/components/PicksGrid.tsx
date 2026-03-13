@@ -10,6 +10,9 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
 import { TYPE_CHIPS } from '@/constants/picksFilters';
+import { SignalResonanceStrip } from '@/components/intelligence';
+import type { ResonanceCluster } from '@/components/intelligence';
+import type { TasteDomain } from '@/types';
 
 interface PicksGridProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -221,6 +224,29 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
                       {srcStyle.label}
                     </span>
                   </div>
+
+                  {/* Intelligence narrative — progressive enhancement */}
+                  {place.matchExplanation?.topClusters && place.matchExplanation.topClusters.length > 0 && (
+                    <div className="mt-2">
+                      <SignalResonanceStrip
+                        clusters={place.matchExplanation.topClusters.map(c => ({
+                          label: c.label,
+                          domain: c.domain as TasteDomain,
+                          score: c.score,
+                          signals: c.signals,
+                        }))}
+                        variant="compact"
+                      />
+                      {place.matchExplanation.narrative && (
+                        <p
+                          className="text-[9px] leading-snug mt-1.5 line-clamp-2"
+                          style={{ color: INK['70'], fontFamily: FONT.sans }}
+                        >
+                          {place.matchExplanation.narrative}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

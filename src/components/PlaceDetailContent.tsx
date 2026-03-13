@@ -15,6 +15,9 @@ import PlacePhoto from '@/components/PlacePhoto';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar, AnimatedNumber, AnimatedScoreArc } from '@/components/animations/AnimatedElements';
+import { SignalResonanceStrip, OverlapMosaic, DeepMatchBreakdown } from '@/components/intelligence';
+import type { ResonanceCluster, DeepMatch, DeepMatchSignal } from '@/components/intelligence';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 
 export interface PlaceDetailContentProps {
   item: ImportedPlace;
@@ -50,6 +53,20 @@ function PlaceDetailContent({
   const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
   const addPlace = useSavedStore(s => s.addPlace);
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const generatedProfile = useOnboardingStore(s => s.generatedProfile);
+
+  // Derive user's numeric taste profile for overlap mosaic
+  const userTasteProfile = React.useMemo(() => {
+    const radarData = (generatedProfile as { radarData?: { axis: string; value: number }[] } | null)?.radarData;
+    if (!radarData) return null;
+    const result: ImportedPlace['matchBreakdown'] = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
+    for (const r of radarData) {
+      if (r.axis in result) {
+        result[r.axis as keyof typeof result] = Math.max(result[r.axis as keyof typeof result], r.value);
+      }
+    }
+    return result;
+  }, [generatedProfile]);
   const collections = useSavedStore(s => s.collections);
   const [saved, setSaved] = useState(myPlaces.some(p => p.name === item.name));
   const memberCollections = collections.filter(sl => sl.placeIds.includes(item.id));
@@ -518,8 +535,21 @@ function PlaceDetailContent({
               <AnimatedScoreArc score={hydratedMatchScore} size={56} color="#8a6a2a" />
               <div className="flex-1 min-w-0">
                 <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Taste match</div>
-                {/* Top domain highlights — at-a-glance breakdown */}
-                {hydratedBreakdown && (() => {
+                {/* Signal resonance clusters — replaces basic domain chips */}
+                {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 ? (
+                  <div className="mt-1.5">
+                    <SignalResonanceStrip
+                      clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
+                        label: c.label,
+                        domain: c.domain as TasteDomain,
+                        score: c.score,
+                        signals: c.signals,
+                      }))}
+                      variant="compact"
+                      layout={isDesktop ? 'desktop' : 'mobile'}
+                    />
+                  </div>
+                ) : hydratedBreakdown ? (() => {
                   const topDomains = TASTE_DOMAINS
                     .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
                     .filter(d => d.score > 0.15)
@@ -539,7 +569,7 @@ function PlaceDetailContent({
                       ))}
                     </div>
                   ) : null;
-                })()}
+                })() : null}
                 {isEnriching && (
                   intelData?.latestRun
                     ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
@@ -574,15 +604,72 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Taste Mosaic — only show for enrichable places */}
+        {/* Taste Mosaic — overlap mosaic when user profile available, otherwise standard */}
         {!isPrivateListing && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Taste Mosaic</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
-                <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
-              </div>
+              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>
+                {userTasteProfile ? 'Taste Overlap' : 'Taste Mosaic'}
+              </h3>
+              {userTasteProfile ? (
+                <OverlapMosaic
+                  userProfile={userTasteProfile}
+                  placeProfile={hydratedBreakdown}
+                  matchScore={hydratedMatchScore}
+                  size="md"
+                  userLabel="Your taste"
+                  placeLabel={item.name.length > 16 ? item.name.slice(0, 14) + '...' : item.name}
+                />
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
+                  <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+                </div>
+              )}
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Full signal resonance — expanded cluster view with signals */}
+        {!isPrivateListing && resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 && (
+          <FadeInSection delay={0.12} direction="up" distance={16}>
+            <div className="mb-5">
+              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Signal Resonance</h3>
+              <SignalResonanceStrip
+                clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
+                  label: c.label,
+                  domain: c.domain as TasteDomain,
+                  score: c.score,
+                  signals: c.signals,
+                }))}
+                narrative={resolvedItem.matchExplanation.narrative}
+                variant="full"
+                layout={isDesktop ? 'desktop' : 'mobile'}
+              />
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Deep match breakdown — for 93%+ matches with signal data */}
+        {!isPrivateListing && hydratedMatchScore >= 93 && resolvedItem.matchExplanation?.topClusters && (
+          <FadeInSection delay={0.14} direction="up" distance={18}>
+            <div className="mb-5">
+              <DeepMatchBreakdown
+                match={{
+                  name: item.name,
+                  location: hydratedLocation || '',
+                  score: hydratedMatchScore,
+                  headline: resolvedItem.matchExplanation.narrative || '',
+                  signalBreakdown: resolvedItem.matchExplanation.topClusters.slice(0, 4).map(c => ({
+                    signal: c.label,
+                    domain: c.domain as TasteDomain,
+                    strength: c.score,
+                    note: c.signals.join(', '),
+                  })),
+                  googlePlaceId: effectiveGooglePlaceId,
+                }}
+                variant={isDesktop ? 'desktop' : 'mobile'}
+              />
             </div>
           </FadeInSection>
         )}

@@ -17,6 +17,9 @@ import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContex
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
+import { SignalResonanceStrip } from '@/components/intelligence';
+import type { ResonanceCluster } from '@/components/intelligence';
+import type { TasteDomain } from '@/types';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -733,7 +736,31 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
           </span>
         </div>
 
-        {truncSub && (
+        {/* Intelligence narrative — progressive enhancement */}
+        {place.matchExplanation?.topClusters && place.matchExplanation.topClusters.length > 0 && (
+          <div className="mt-1.5 mb-1">
+            <SignalResonanceStrip
+              clusters={place.matchExplanation.topClusters.map(c => ({
+                label: c.label,
+                domain: c.domain as TasteDomain,
+                score: c.score,
+                signals: c.signals,
+              }))}
+              variant="compact"
+            />
+            {place.matchExplanation.narrative && (
+              <p
+                className="text-[10px] leading-snug mt-1.5 line-clamp-2"
+                style={{ color: INK['70'], fontFamily: FONT.sans }}
+              >
+                {place.matchExplanation.narrative}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Fallback subtitle when no intelligence available */}
+        {!(place.matchExplanation?.topClusters && place.matchExplanation.topClusters.length > 0) && truncSub && (
           <div style={{
             fontFamily: FONT.sans,
             fontSize: 11,

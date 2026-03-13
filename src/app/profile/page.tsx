@@ -42,6 +42,9 @@ import {
 } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { FONT, INK } from '@/constants/theme';
+import { TasteTensionCard, DeepMatchBreakdown, StretchPickAxis } from '@/components/intelligence';
+import type { TasteTension as IntelTasteTension, DeepMatch as IntelDeepMatch, StretchPick as IntelStretchPick } from '@/components/intelligence';
+import type { TasteDomain } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
 import PlaceLink from '@/components/PlaceLink';
@@ -1441,66 +1444,22 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
 // ── TASTE TENSION — Editorial exploration of a contradiction ──
 function TasteTensionSection({ tension }: { tension?: TasteTension }) {
   const t = tension || TASTE_TENSION;
+  // Map discover feed TasteTension → intelligence component TasteTension
+  const intelTension: IntelTasteTension = {
+    title: t.title,
+    stated: t.stated,
+    revealed: t.revealed,
+    editorial: t.editorial,
+    resolvedBy: t.resolvedBy,
+  };
   return (
-    <SafeMotionDiv
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true, margin: '-100px' }}
-    >
-      <SectionLabel color="var(--t-panton-violet)">Taste tension</SectionLabel>
-      <SafeMotionDiv
-        className="mt-3 rounded-2xl overflow-hidden"
-        style={{ background: '#2a2535' }}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.1 }}
-        viewport={{ once: true, margin: '-100px' }}
-      >
-        <div className="p-5">
-          <h3 className="text-[18px] leading-snug mb-4" style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}>
-            {t.title}
-          </h3>
-          <div className="flex gap-3 mb-4">
-            <SafeMotionDiv
-              className="flex-1 p-3 rounded-xl"
-              style={{ background: 'rgba(245,245,240,0.06)' }}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true, margin: '-100px' }}
-            >
-              <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You think</div>
-              <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.stated}&rdquo;</p>
-            </SafeMotionDiv>
-            <SafeMotionDiv
-              className="flex-1 p-3 rounded-xl"
-              style={{ background: 'rgba(245,245,240,0.06)' }}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              viewport={{ once: true, margin: '-100px' }}
-            >
-              <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,245,240,0.4)', fontFamily: FONT.mono }}>You do</div>
-              <p className="text-[12px] italic leading-snug" style={{ color: 'rgba(245,245,240,0.85)' }}>&ldquo;{t.revealed}&rdquo;</p>
-            </SafeMotionDiv>
-          </div>
-          <p className="text-[12px] leading-relaxed mb-4" style={{ color: 'rgba(245,245,240,0.8)', fontFamily: FONT.sans }}>
-            {t.editorial}
-          </p>
-        </div>
-        <PlaceLink name={t.resolvedBy.name} location={t.resolvedBy.location} googlePlaceId={t.resolvedBy.googlePlaceId}>
-          <div className="px-5 py-4" style={{ background: 'rgba(245,245,240,0.05)', borderTop: '1px solid rgba(245,245,240,0.08)' }}>
-            <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'rgba(104,68,160,0.7)', fontFamily: FONT.mono }}>Resolved by</div>
-            <div className="text-[13px] font-semibold mb-1" style={{ color: '#f5f5f0' }}>
-              {t.resolvedBy.name} <span className="font-normal text-[11px]" style={{ color: 'rgba(245,245,240,0.5)' }}>{t.resolvedBy.location}</span>
-            </div>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{t.resolvedBy.how}</p>
-          </div>
-        </PlaceLink>
-      </SafeMotionDiv>
-    </SafeMotionDiv>
+    <div className="px-5 mb-7">
+      <TasteTensionCard
+        tension={intelTension}
+        onPlaceTap={undefined}
+        variant="mobile"
+      />
+    </div>
   );
 }
 
@@ -1630,114 +1589,57 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
 // ── DEEP MATCH — Signal-by-signal breakdown ──
 function DeepMatchSection({ match }: { match?: DeepMatch }) {
   const m = match || DEEP_MATCH;
+  // Map discover feed DeepMatch → intelligence component DeepMatch
+  const intelMatch: IntelDeepMatch = {
+    name: m.name,
+    location: m.location,
+    score: m.score,
+    headline: m.headline,
+    signalBreakdown: m.signalBreakdown.map(s => ({
+      signal: s.signal,
+      domain: s.domain as TasteDomain,
+      strength: s.strength,
+      note: s.note,
+    })),
+    tensionResolved: m.tensionResolved,
+    googlePlaceId: m.googlePlaceId,
+  };
   return (
-    <SafeMotionDiv
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true, margin: '-100px' }}
-    >
-      <SectionLabel color="var(--t-verde)">Your deepest match</SectionLabel>
-      <PlaceLink name={m.name} location={m.location} googlePlaceId={m.googlePlaceId}>
-        <SafeMotionDiv
-          className="mt-3 rounded-2xl overflow-hidden"
-          style={{ background: '#1e2e24' }}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          viewport={{ once: true, margin: '-100px' }}
-        >
-          <div className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <ScoreArc score={m.score} size={48} color="#7aba6e" />
-              <div>
-                <div className="text-[16px] font-semibold" style={{ color: '#f5f5f0' }}>{m.name}</div>
-                <div className="text-[11px]" style={{ color: 'rgba(245,245,240,0.55)' }}>{m.location}</div>
-              </div>
-            </div>
-          <p className="text-[13px] italic leading-relaxed mb-5" style={{ fontFamily: FONT.serif, color: 'rgba(245,245,240,0.8)' }}>{m.headline}</p>
-          {/* Signal breakdown bars */}
-          <div className="flex flex-col gap-3">
-            {m.signalBreakdown.map((s, idx) => {
-              const domainColor = DIMENSION_COLORS[s.domain] || '#8b6b4a';
-              return (
-                <div key={s.signal}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-semibold" style={{ color: 'rgba(245,245,240,0.7)' }}>{s.signal}</span>
-                    <span className="text-[10px] font-bold" style={{ color: domainColor, fontFamily: FONT.mono }}>{s.strength}%</span>
-                  </div>
-                  <div className="h-1 rounded-full mb-1.5" style={{ background: 'rgba(245,245,240,0.08)' }}>
-                    <SafeMotionDiv
-                      className="h-1 rounded-full"
-                      style={{ background: domainColor, opacity: 0.7 }}
-                      whileInView={{ width: `${s.strength}%` }}
-                      transition={{ duration: 1, delay: 0.2 + idx * 0.1 }}
-                      viewport={{ once: true, margin: '-100px' }}
-                    />
-                  </div>
-                  <p className="text-[10px] leading-snug" style={{ color: 'rgba(245,245,240,0.65)' }}>{s.note}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="px-5 py-4" style={{ background: 'rgba(245,245,240,0.04)', borderTop: '1px solid rgba(245,245,240,0.06)' }}>
-          <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(42,122,86,0.6)', fontFamily: FONT.mono }}>Tension resolved</div>
-          <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.75)' }}>{m.tensionResolved}</p>
-        </div>
-        </SafeMotionDiv>
-      </PlaceLink>
-    </SafeMotionDiv>
+    <div className="px-5 mb-7">
+      <DeepMatchBreakdown
+        match={intelMatch}
+        onPlaceTap={undefined}
+        variant="mobile"
+      />
+    </div>
   );
 }
 
 // ── STRETCH PICK ──
 function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
   const s = stretch || STRETCH_PICK;
+  // Map discover feed stretch pick → intelligence component StretchPick
+  const intelStretch: IntelStretchPick = {
+    name: s.name,
+    location: s.location,
+    score: s.score,
+    type: s.type,
+    strongAxis: s.strongAxis as TasteDomain,
+    strongScore: s.strongScore,
+    weakAxis: s.weakAxis as TasteDomain,
+    weakScore: s.weakScore,
+    why: s.why,
+    tension: s.tension,
+    googlePlaceId: s.googlePlaceId,
+  };
   return (
-    <SafeMotionDiv
-      className="px-5 mb-7"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true, margin: '-100px' }}
-    >
-      <SectionLabel color="var(--t-panton-orange)">Stretch pick</SectionLabel>
-      <PlaceLink name={s.name} location={s.location} googlePlaceId={(s as Record<string, unknown>).googlePlaceId as string | undefined}>
-        <SafeMotionDiv
-          className="p-4 rounded-xl mt-3"
-          style={{ background: 'white', border: '2px dashed var(--t-panton-orange)' }}
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.1, type: 'spring', stiffness: 200 }}
-          viewport={{ once: true, margin: '-100px' }}
-        >
-          <div className="flex items-center gap-1.5 mb-3">
-            <PerriandIcon name="discover" size={10} color="var(--t-panton-orange)" />
-            <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#c45020', fontFamily: FONT.mono }}>
-              This isn&apos;t your usual pick
-            </span>
-          </div>
-          <div className="flex items-start gap-3 mb-3">
-            <ScoreArc score={s.score} size={44} color="var(--t-panton-orange)" />
-            <div>
-              <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>{s.name}</div>
-              <div className="text-[11px]" style={{ color: INK['60'] }}>{s.location}</div>
-            <div className="flex gap-2 mt-1.5">
-              <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,107,139,0.1)', color: '#4a6b8b', fontFamily: FONT.mono }}>{s.strongAxis} {s.strongScore}%</span>
-              <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(107,107,74,0.1)', color: '#6b6b4a', fontFamily: FONT.mono }}>{s.weakAxis} {s.weakScore}%</span>
-            </div>
-          </div>
-        </div>
-        <div className="p-3 rounded-lg" style={{ background: 'rgba(232,104,48,0.04)' }}>
-          <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: '#c45020', fontFamily: FONT.mono }}>Why we&apos;re suggesting it</div>
-          <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{s.why}</p>
-        </div>
-        <p className="text-[10px] italic leading-relaxed mt-2.5" style={{ color: INK['70'] }}>{s.tension}</p>
-        </SafeMotionDiv>
-      </PlaceLink>
-    </SafeMotionDiv>
+    <div className="px-5 mb-7">
+      <StretchPickAxis
+        pick={intelStretch}
+        onPlaceTap={undefined}
+        variant="mobile"
+      />
+    </div>
   );
 }
 
