@@ -1,7 +1,7 @@
 'use client';
 
 import { DOMAIN_COLORS, type TasteDomain } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, TEXT, INK } from '@/constants/theme';
 
 interface ClusterInsightCardProps {
   label: string;
@@ -48,7 +48,7 @@ export function ClusterInsightCard({ label, domain, score, signals, index }: Clu
             <span
               key={i}
               className="text-[9px] px-1.5 py-0.5 rounded-md"
-              style={{ background: INK['05'], color: INK['70'], fontFamily: FONT.mono }}
+              style={{ background: INK['05'], color: TEXT.primary, fontFamily: FONT.mono }}
             >
               {signal}
             </span>

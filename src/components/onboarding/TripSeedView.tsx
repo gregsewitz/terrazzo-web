@@ -79,7 +79,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
         <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--t-ink)] mb-2">
           {isPlanning ? 'Trip you\'re planning' : 'Dream trip'}
         </p>
-        <h2 className="font-serif text-[26px] text-[var(--t-ink)] leading-tight">
+        <h2 className="font-display text-[26px] text-[var(--t-ink)] leading-tight">
           {isPlanning
             ? 'Do you have a trip coming up?'
             : 'What about a trip you\'ve always dreamed of?'

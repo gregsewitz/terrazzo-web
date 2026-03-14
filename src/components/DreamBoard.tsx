@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useCallback, memo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { DreamBoardEntry, DreamBoardEntryType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Entry type config ───
 const ENTRY_TYPES: { type: DreamBoardEntryType; label: string; icon: PerriandIconName; placeholder: string }[] = [
@@ -17,7 +17,7 @@ const ENTRY_TYPES: { type: DreamBoardEntryType; label: string; icon: PerriandIco
 
 // ─── Vibe accent colors ───
 const VIBE_COLORS = [
-  { value: 'honey', label: 'Warm', bg: 'rgba(200,146,58,0.10)', border: 'rgba(200,146,58,0.25)' },
+  { value: 'honey', label: 'Warm', bg: 'rgba(232,111,90,0.10)', border: 'rgba(232,111,90,0.25)' },
   { value: 'verde', label: 'Fresh', bg: 'rgba(42,122,86,0.08)', border: 'rgba(42,122,86,0.20)' },
   { value: 'blue', label: 'Cool', bg: 'rgba(58,140,180,0.08)', border: 'rgba(58,140,180,0.20)' },
   { value: 'rose', label: 'Rosy', bg: 'rgba(180,80,80,0.08)', border: 'rgba(180,80,80,0.20)' },
@@ -35,7 +35,7 @@ function getVibeBorder(color?: string): string {
 const ACCENT_COLORS = [
   { value: undefined, bg: INK['06'] },
   { value: 'verde', bg: 'rgba(42,122,86,0.12)' },
-  { value: 'honey', bg: 'rgba(200,146,58,0.12)' },
+  { value: 'honey', bg: 'rgba(232,111,90,0.12)' },
   { value: 'blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', bg: 'rgba(180,80,80,0.12)' },
 ];
@@ -147,7 +147,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
           Dream Board
         </h2>
         {!compact && (
-          <p className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans, margin: 0, marginTop: 2 }}>
+          <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans, margin: 0, marginTop: 2 }}>
             Notes, questions, vibes, links — the messy thinking that becomes a great trip.
           </p>
         )}
@@ -175,12 +175,12 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full border cursor-pointer transition-all flex-shrink-0"
                 style={{
                   background: isActive ? 'var(--t-ink)' : 'transparent',
-                  color: isActive ? 'white' : INK['50'],
+                  color: isActive ? 'white' : TEXT.secondary,
                   borderColor: isActive ? 'var(--t-ink)' : 'var(--t-linen)',
                   fontFamily: FONT.sans, fontSize: 11, fontWeight: 500,
                 }}
               >
-                <PerriandIcon name={t.icon} size={11} color={isActive ? 'white' : INK['40']} />
+                <PerriandIcon name={t.icon} size={11} color={isActive ? 'white' : TEXT.secondary} />
                 {t.label}
               </button>
             );
@@ -190,7 +190,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
         {/* Type-specific hint */}
         <p
           className="text-[10px] mb-1.5"
-          style={{ color: INK['35'], fontFamily: FONT.sans, margin: 0, marginBottom: 6 }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans, margin: 0, marginBottom: 6 }}
         >
           {inputType === 'note' && 'Freeform — jot anything down.'}
           {inputType === 'link' && 'Paste a URL to save for later.'}
@@ -205,7 +205,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
           {inputType === 'question' && (
             <span
               className="flex-shrink-0 text-[16px] font-semibold"
-              style={{ color: 'rgba(58,140,180,0.5)', fontFamily: FONT.serif }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.serif }}
             >?</span>
           )}
 
@@ -246,7 +246,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
             {checklistItems.map((item, i) => (
               <div key={i} className="flex items-center gap-2 mb-1">
                 <span className="text-[11px]" style={{ color: INK['20'] }}>☐</span>
-                <span className="text-[11px] flex-1" style={{ color: INK['60'], fontFamily: FONT.sans }}>{item}</span>
+                <span className="text-[11px] flex-1" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{item}</span>
                 <button
                   onClick={() => setChecklistItems(prev => prev.filter((_, j) => j !== i))}
                   className="w-4 h-4 flex items-center justify-center border-none cursor-pointer"
@@ -271,7 +271,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
                 }}
                 placeholder="Add an item and press Enter..."
                 className="flex-1 text-[11px] bg-transparent border-none outline-none"
-                style={{ fontFamily: FONT.sans, color: INK['50'] }}
+                style={{ fontFamily: FONT.sans, color: TEXT.secondary }}
               />
             </div>
           </div>
@@ -280,7 +280,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
         {/* Vibe color picker — only visible when vibe type selected */}
         {inputType === 'vibe' && (
           <div className="flex items-center gap-1.5 mt-2">
-            <span className="text-[10px]" style={{ color: INK['40'], fontFamily: FONT.mono }}>Tone:</span>
+            <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Tone:</span>
             {VIBE_COLORS.map(c => (
               <button
                 key={c.value}
@@ -306,7 +306,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
         {sortedEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10">
             <PerriandIcon name="discover" size={28} color={INK['15']} />
-            <p className="text-[12px] mt-3 text-center leading-relaxed" style={{ color: INK['35'], fontFamily: FONT.sans }}>
+            <p className="text-[12px] mt-3 text-center leading-relaxed" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
               Drop links, jot down questions,<br />
               set the vibe — this is your<br />
               messy thinking space.
@@ -337,7 +337,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
             borderTop: '1px solid var(--t-linen)',
           }}
         >
-          <span className="text-[10px]" style={{ color: INK['35'], fontFamily: FONT.mono }}>
+          <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {entries.length} item{entries.length !== 1 ? 's' : ''}
             {entries.filter(e => e.pinned).length > 0 &&
               ` · ${entries.filter(e => e.pinned).length} pinned`
@@ -413,7 +413,7 @@ function DreamBoardCard({
   const cardBg = isVibe
     ? getVibeBg(entry.color)
     : entry.pinned
-      ? 'rgba(200,146,58,0.04)'
+      ? 'rgba(232,111,90,0.04)'
       : isQuestion
         ? (isResolved ? INK['04'] : 'rgba(58,140,180,0.04)')
         : getAccentBg(entry.color);
@@ -421,7 +421,7 @@ function DreamBoardCard({
   const cardBorder = isVibe
     ? getVibeBorder(entry.color)
     : entry.pinned
-      ? 'rgba(200,146,58,0.2)'
+      ? 'rgba(232,111,90,0.2)'
       : isQuestion && !isResolved
         ? 'rgba(58,140,180,0.2)'
         : 'var(--t-linen)';
@@ -437,9 +437,9 @@ function DreamBoardCard({
       <div className="flex items-center justify-between px-2.5 pt-2 pb-0.5">
         <div className="flex items-center gap-1.5">
           {entry.pinned && (
-            <PerriandIcon name="pin" size={10} color="var(--t-honey, #c8923a)" />
+            <PerriandIcon name="pin" size={10} color="var(--t-honey, #E86F5A)" />
           )}
-          <span className="text-[9px]" style={{ color: INK['35'], fontFamily: FONT.mono }}>
+          <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {TYPE_EMOJI[entry.type] || '✎'} {timeAgo}
           </span>
         </div>
@@ -455,7 +455,7 @@ function DreamBoardCard({
             style={{ background: 'transparent' }}
             title={entry.pinned ? 'Unpin' : 'Pin to top'}
           >
-            <PerriandIcon name="pin" size={10} color={entry.pinned ? 'var(--t-honey, #c8923a)' : INK['30']} />
+            <PerriandIcon name="pin" size={10} color={entry.pinned ? 'var(--t-honey, #E86F5A)' : INK['30']} />
           </button>
           {isQuestion && (
             <button
@@ -518,7 +518,7 @@ function DreamBoardCard({
                 style={{ background: getVibeBg(entry.color) }}
               >
                 <PerriandIcon name="sparkle" size={9} color={INK['35']} />
-                <span className="text-[9px]" style={{ color: INK['40'], fontFamily: FONT.sans }}>
+                <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                   Influences AI recommendations for this trip
                 </span>
               </div>
@@ -535,12 +535,12 @@ function DreamBoardCard({
               <div className="flex items-start gap-2">
                 <span
                   className="flex-shrink-0 text-[15px] font-semibold mt-[-1px]"
-                  style={{ color: isResolved ? INK['20'] : 'rgba(58,140,180,0.6)', fontFamily: FONT.serif }}
+                  style={{ color: isResolved ? TEXT.secondary : TEXT.secondary, fontFamily: FONT.serif }}
                 >?</span>
                 <p
                   className="text-[12px] leading-relaxed whitespace-pre-wrap flex-1"
                   style={{
-                    color: isResolved ? INK['40'] : 'var(--t-ink)',
+                    color: isResolved ? TEXT.secondary : TEXT.primary,
                     fontFamily: FONT.sans,
                     margin: 0,
                     textDecoration: isResolved ? 'line-through' : 'none',
@@ -555,7 +555,7 @@ function DreamBoardCard({
                   style={{ background: 'rgba(58,140,180,0.06)' }}
                 >
                   <PerriandIcon name="discover" size={9} color="rgba(58,140,180,0.5)" />
-                  <span className="text-[9px]" style={{ color: 'rgba(58,140,180,0.6)', fontFamily: FONT.sans }}>
+                  <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                     AI will help research this during planning
                   </span>
                 </div>
@@ -571,7 +571,7 @@ function DreamBoardCard({
           ) : (
             <p
               className="text-[12px] leading-relaxed whitespace-pre-wrap"
-              style={{ color: 'var(--t-ink)', fontFamily: FONT.sans, margin: 0 }}
+              style={{ color: TEXT.primary, fontFamily: FONT.sans, margin: 0 }}
             >
               {entry.content}
             </p>
@@ -595,13 +595,13 @@ function DreamBoardCard({
             <div className="min-w-0 flex-1">
               <span
                 className="text-[12px] font-medium block truncate group-hover/link:underline"
-                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                style={{ color: TEXT.primary, fontFamily: FONT.sans }}
               >
                 {entry.title || extractDomain(entry.content)}
               </span>
               <span
                 className="text-[10px] block truncate"
-                style={{ color: INK['40'], fontFamily: FONT.mono }}
+                style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
               >
                 {extractDomain(entry.content)}
               </span>
@@ -615,7 +615,7 @@ function DreamBoardCard({
             {entry.title && (
               <span
                 className="text-[12px] font-medium block mb-1.5"
-                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                style={{ color: TEXT.primary, fontFamily: FONT.sans }}
               >
                 {entry.title}
               </span>
@@ -662,7 +662,7 @@ function EditableTextarea({ value, onChange, onSave, onCancel }: {
         onChange={e => onChange(e.target.value)}
         className="w-full text-[12px] rounded-md p-2 resize-none border outline-none"
         style={{
-          fontFamily: FONT.sans, color: 'var(--t-ink)',
+          fontFamily: FONT.sans, color: TEXT.primary,
           borderColor: 'var(--t-linen)', background: 'white',
           minHeight: 60, lineHeight: 1.6,
         }}
@@ -676,7 +676,7 @@ function EditableTextarea({ value, onChange, onSave, onCancel }: {
         <button
           onClick={onCancel}
           className="text-[10px] px-2 py-1 rounded border-none cursor-pointer"
-          style={{ background: INK['06'], color: INK['50'], fontFamily: FONT.sans }}
+          style={{ background: INK['06'], color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           Cancel
         </button>
@@ -711,7 +711,7 @@ function ChecklistAdder({ onAdd }: { onAdd: (text: string) => void }) {
         }}
         placeholder="Add item..."
         className="flex-1 text-[11px] bg-transparent border-none outline-none"
-        style={{ fontFamily: FONT.sans, color: INK['50'] }}
+        style={{ fontFamily: FONT.sans, color: TEXT.secondary }}
       />
     </div>
   );

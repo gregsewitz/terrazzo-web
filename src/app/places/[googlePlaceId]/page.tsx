@@ -9,7 +9,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { ImportedPlace, PlaceType, GooglePlaceData } from '@/types';
 import { trackPropertyVisit, startDwellTracker, stopDwellTracker } from '@/lib/interaction-tracker';
 
@@ -107,7 +107,7 @@ function PlaceSkeleton({ name, location }: { name: string; location?: string }) 
             {name}
           </h1>
           {location && (
-            <p className="mt-1 text-sm" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+            <p className="mt-1 text-sm" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
               {location}
             </p>
           )}
@@ -301,7 +301,7 @@ export default function PlaceDetailPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4 px-6 text-center">
             <PerriandIcon name="location" size={32} color={INK['30']} />
-            <p className="text-base" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+            <p className="text-base" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
               {error || "Couldn't find this place"}
             </p>
             <button

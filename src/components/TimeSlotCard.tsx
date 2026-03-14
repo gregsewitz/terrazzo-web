@@ -10,7 +10,7 @@ import CollaboratorGhostCard from './CollaboratorGhostCard';
 import ReactionPills from './ReactionPills';
 import QuickEntryCard from './QuickEntryCard';
 import QuickEntryInput from './QuickEntryInput';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { hasGhostItems } from '@/utils/ghostFiltering';
 import PlaceTimeEditor from './PlaceTimeEditor';
 import type { Suggestion, Reaction } from '@/stores/collaborationStore';
@@ -230,7 +230,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         onClick={(e) => { e.stopPropagation(); setShowQuickInput(true); }}
         className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
         style={{
-          color: INK['80'],
+          color: TEXT.primary,
           fontFamily: FONT.sans,
           fontWeight: 500,
           background: INK['04'],
@@ -382,7 +382,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     <div className="flex items-center gap-1.5">
                       <span
                         className="text-[12px] font-medium truncate"
-                        style={{ color: 'var(--t-ink)' }}
+                        style={{ color: TEXT.primary }}
                       >
                         {p.name}
                       </span>
@@ -395,7 +395,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                       {p.addedByName && (
                         <span
                           className="text-[8px] font-medium px-1.5 py-px rounded flex-shrink-0"
-                          style={{ background: INK['04'], color: INK['50'] }}
+                          style={{ background: INK['04'], color: TEXT.secondary }}
                         >
                           Added by {p.addedByName}
                         </span>
@@ -405,7 +405,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                       <div
                         className="text-[10px] truncate mt-px"
                         style={{
-                          color: INK['85'],
+                          color: TEXT.primary,
                           fontStyle: 'italic',
                           fontFamily: FONT.sans,
                         }}

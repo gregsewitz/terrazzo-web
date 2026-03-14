@@ -12,7 +12,7 @@ import {
   CONTEXT_TAGS,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface RatingSheetProps {
   item: ImportedPlace;
@@ -94,11 +94,11 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
             <div className="flex-1 min-w-0">
               <h2
                 className="text-lg truncate"
-                style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.serif, color: TEXT.primary }}
               >
                 {item.name}
               </h2>
-              <p className="text-[11px]" style={{ color: INK['95'] }}>
+              <p className="text-[11px]" style={{ color: TEXT.primary }}>
                 {item.location}
               </p>
             </div>
@@ -124,7 +124,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
             <div className="flex flex-col items-center gap-6">
               <h3
                 className="text-sm font-medium"
-                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                style={{ color: TEXT.primary, fontFamily: FONT.sans }}
               >
                 How did it feel?
               </h3>
@@ -303,7 +303,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
                   style={{
                     background: 'white',
                     borderColor: 'var(--t-linen)',
-                    color: INK['90'],
+                    color: TEXT.primary,
                     fontFamily: FONT.sans,
                   }}
                 >
@@ -333,7 +333,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
               >
                 Personal note
               </h3>
-              <p className="text-[11px] -mt-2" style={{ color: INK['95'] }}>
+              <p className="text-[11px] -mt-2" style={{ color: TEXT.primary }}>
                 What would you tell a friend about this place?
               </p>
               <textarea
@@ -344,7 +344,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
                 style={{
                   background: 'white',
                   borderColor: 'var(--t-linen)',
-                  color: 'var(--t-ink)',
+                  color: TEXT.primary,
                   fontFamily: FONT.sans,
                   minHeight: 120,
                   outline: 'none',
@@ -359,7 +359,7 @@ export default function RatingSheet({ item, onClose, onSave, initialStep }: Rati
                   style={{
                     background: 'white',
                     borderColor: 'var(--t-linen)',
-                    color: INK['90'],
+                    color: TEXT.primary,
                     fontFamily: FONT.sans,
                   }}
                 >

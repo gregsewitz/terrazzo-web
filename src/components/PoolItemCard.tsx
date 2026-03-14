@@ -3,7 +3,7 @@
 import React from 'react';
 import { ImportedPlace, T, DOMAIN_COLORS } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
 
@@ -39,7 +39,7 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
       <div
         className="absolute top-2 right-2 text-[10px] font-bold rounded-full px-1.5 py-0.5"
         style={{
-          background: `rgba(200,146,58,0.15)`,
+          background: `rgba(232,111,90,0.15)`,
           color: 'var(--t-amber)',
           fontFamily: FONT.mono,
         }}
@@ -55,7 +55,7 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
         <div className="min-w-0">
           <div
             className="text-[11px] font-semibold leading-tight truncate"
-            style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+            style={{ color: TEXT.primary, fontFamily: FONT.sans }}
           >
             {item.name}
           </div>
@@ -72,7 +72,7 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
       {!compact && item.tasteNote && (
         <div
           className="text-[10px] mt-1.5 leading-snug line-clamp-2"
-          style={{ color: INK['90'], fontStyle: 'italic' }}
+          style={{ color: TEXT.secondary, fontStyle: 'italic' }}
         >
           "{item.tasteNote}"
         </div>
@@ -82,11 +82,11 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
       {item.google?.rating && (
         <div className="flex items-center gap-1 mt-1.5">
           <PerriandIcon name="star" size={10} color="var(--t-chrome-yellow)" />
-          <span className="text-[10px] font-medium" style={{ color: 'var(--t-ink)' }}>
+          <span className="text-[10px] font-medium" style={{ color: TEXT.primary }}>
             {item.google.rating}
           </span>
           {item.google.reviewCount && (
-            <span className="text-[9px]" style={{ color: INK['90'] }}>
+            <span className="text-[9px]" style={{ color: TEXT.secondary }}>
               ({item.google.reviewCount.toLocaleString()})
             </span>
           )}
@@ -100,7 +100,7 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
           className="text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1"
           style={{
             background: INK['06'],
-            color: INK['95'],
+            color: TEXT.secondary,
             fontFamily: FONT.mono,
           }}
         >

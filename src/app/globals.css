@@ -1,59 +1,100 @@
 @import "tailwindcss";
 
 :root {
-  /* Forme Libere Design System */
-  --t-ink: #1c1a17;
-  --t-honey: #c8923a;
-  --t-honey-text: #8a6a2a;    /* WCAG AA accessible honey for text on cream */
-  --t-amber: #a06c28;
-  --t-verde: #2a7a56;
-  --t-panton-violet: #6844a0;
-  --t-panton-orange: #e86830;
-  --t-royere-pink: #e87080;
-  --t-warm-white: #f5f0e6;
-  --t-travertine: #e8dcc8;
-  --t-cream: #fdfaf3;
+  /* ─── Terrazzo Brand Palette ─── */
+  /* Primary */
+  --t-coral: #E86F5A;
+  --t-navy: #1A2D4A;
+  /* Secondary */
+  --t-teal: #5EC4B2;
+  --t-ochre: #E8B84B;
+  --t-olive: #6B7C4E;
+  /* Supporting */
+  --t-peach: #F4BFA0;
+  --t-cream: #FBF5EC;
+  --t-charcoal: #2D2D2D;
+  --t-warm-gray: #A89888;
+  /* System */
   --t-signal-red: #d63020;
-  --t-chrome-yellow: #eeb420;
-  --t-linen: #ede6d8;
 
-  /* Domain Colors */
-  --domain-design: #d63020;
-  --domain-character: #6844a0;
-  --domain-service: #a06c28;
-  --domain-food: #e87080;
-  --domain-location: #2a7a56;
-  --domain-wellness: #eeb420;
+  /* ─── Legacy aliases (for gradual migration) ─── */
+  --t-ink: var(--t-navy);
+  --t-honey: var(--t-coral);
+  --t-honey-text: #C45A47;    /* Accessible coral for text on cream */
+  --t-amber: var(--t-ochre);
+  --t-verde: var(--t-teal);
+  --t-panton-violet: var(--t-olive);
+  --t-panton-orange: var(--t-coral);
+  --t-royere-pink: var(--t-peach);
+  --t-warm-white: var(--t-cream);
+  --t-travertine: var(--t-peach);
+  --t-chrome-yellow: var(--t-ochre);
+  --t-linen: var(--t-cream);
+
+  /* ─── Domain Colors ─── */
+  --domain-design: #E86F5A;     /* Coral */
+  --domain-character: #6B7C4E;  /* Olive */
+  --domain-service: #E8B84B;    /* Ochre */
+  --domain-food: #F4BFA0;       /* Peach */
+  --domain-location: #5EC4B2;   /* Teal */
+  --domain-wellness: #1A2D4A;   /* Navy */
+
+  /* ─── Semantic Text Colors ─── */
+  /* Change these 5 values to restyle ALL text across the app */
+  --text-primary: var(--t-navy);       /* Headings, body text */
+  --text-secondary: var(--t-warm-gray); /* Labels, metadata, captions */
+  --text-tertiary: var(--t-olive);      /* Domain badges, category labels */
+  --text-accent: var(--t-coral);        /* Links, CTAs, interactive highlights */
+  --text-inverse: var(--t-cream);       /* Text on dark surfaces */
 
   --background: var(--t-cream);
-  --foreground: var(--t-ink);
+  --foreground: var(--t-navy);
 }
 
 @theme inline {
+  /* Surfaces */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-ink: var(--t-ink);
-  --color-honey: var(--t-honey);
-  --color-amber: var(--t-amber);
-  --color-verde: var(--t-verde);
-  --color-panton-violet: var(--t-panton-violet);
-  --color-panton-orange: var(--t-panton-orange);
-  --color-royere-pink: var(--t-royere-pink);
-  --color-warm-white: var(--t-warm-white);
-  --color-travertine: var(--t-travertine);
+  /* Brand colors (new) */
+  --color-coral: var(--t-coral);
+  --color-navy: var(--t-navy);
+  --color-teal: var(--t-teal);
+  --color-ochre: var(--t-ochre);
+  --color-olive: var(--t-olive);
+  --color-peach: var(--t-peach);
   --color-cream: var(--t-cream);
+  --color-charcoal: var(--t-charcoal);
+  --color-warm-gray: var(--t-warm-gray);
   --color-signal-red: var(--t-signal-red);
-  --color-chrome-yellow: var(--t-chrome-yellow);
-  --color-linen: var(--t-linen);
-  --font-sans: 'DM Sans', sans-serif;
-  --font-serif: 'DM Serif Display', serif;
+  /* Legacy aliases — point to new tokens so old classes still work */
+  --color-ink: var(--t-navy);
+  --color-honey: var(--t-coral);
+  --color-amber: var(--t-ochre);
+  --color-verde: var(--t-teal);
+  --color-panton-violet: var(--t-olive);
+  --color-panton-orange: var(--t-coral);
+  --color-royere-pink: var(--t-peach);
+  --color-warm-white: var(--t-cream);
+  --color-travertine: var(--t-peach);
+  --color-chrome-yellow: var(--t-ochre);
+  --color-linen: var(--t-cream);
+  /* Semantic text colors → use as text-t-primary, text-t-secondary, etc. */
+  --color-t-primary: var(--text-primary);
+  --color-t-secondary: var(--text-secondary);
+  --color-t-tertiary: var(--text-tertiary);
+  --color-t-accent: var(--text-accent);
+  --color-t-inverse: var(--text-inverse);
+  /* Fonts */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Fraunces', serif;
+  --font-display: 'Space Grotesk', sans-serif;
   --font-mono: 'Space Mono', monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* ─── iOS zoom prevention ───
@@ -74,7 +115,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--t-travertine);
+  background: var(--t-warm-gray);
   border-radius: 2px;
 }
 
@@ -175,7 +216,7 @@ body {
 /* ─── Desktop-native hover states ─── */
 @media (hover: hover) {
   .picks-rail-handle:hover .picks-rail-grip {
-    background: var(--t-verde) !important;
+    background: var(--t-teal) !important;
     width: 3px !important;
   }
 
@@ -183,9 +224,9 @@ body {
     transition: box-shadow 150ms ease, transform 150ms ease, border-color 150ms ease;
   }
   .card-hover:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 16px rgba(26,45,74,0.08);
     transform: translateY(-1px);
-    border-color: rgba(200,146,58,0.3) !important;
+    border-color: var(--t-coral) !important;
   }
   .btn-hover {
     transition: background 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
@@ -197,13 +238,13 @@ body {
     transition: background 150ms ease, color 150ms ease;
   }
   .nav-hover:hover {
-    background: rgba(28,26,23,0.04);
+    background: rgba(26,45,74,0.04);
   }
   .link-hover {
     transition: color 150ms ease;
   }
   .link-hover:hover {
-    color: var(--t-honey) !important;
+    color: var(--t-coral) !important;
   }
 }
 
@@ -231,7 +272,7 @@ body {
 /* ─── Desktop focus rings ─── */
 @media (hover: hover) {
   .focus-ring:focus-visible {
-    outline: 2px solid var(--t-honey);
+    outline: 2px solid var(--t-coral);
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -251,8 +292,8 @@ body {
 
 /* Breathing glow for interactive elements */
 @keyframes breathe {
-  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  50% { box-shadow: 0 4px 20px rgba(200,146,58,0.12); }
+  0%, 100% { box-shadow: 0 2px 8px rgba(26,45,74,0.05); }
+  50% { box-shadow: 0 4px 20px rgba(232,111,90,0.15); }
 }
 
 .breathe-glow {
@@ -273,9 +314,9 @@ body {
 
 /* Pulse ring for notification-style elements */
 @keyframes pulseRing {
-  0% { box-shadow: 0 0 0 0 rgba(200,146,58,0.3); }
-  70% { box-shadow: 0 0 0 8px rgba(200,146,58,0); }
-  100% { box-shadow: 0 0 0 0 rgba(200,146,58,0); }
+  0% { box-shadow: 0 0 0 0 rgba(232,111,90,0.3); }
+  70% { box-shadow: 0 0 0 8px rgba(232,111,90,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,111,90,0); }
 }
 
 .pulse-ring {
@@ -318,7 +359,7 @@ body {
 .cursor-blink::after {
   content: '|';
   animation: cursorBlink 1s step-end infinite;
-  color: var(--t-honey);
+  color: var(--t-coral);
   margin-left: 2px;
 }
 
@@ -337,7 +378,7 @@ input[type="range"].terrazzo-slider {
   appearance: none;
   width: 100%;
   height: 3px;
-  background: var(--t-travertine);
+  background: var(--t-warm-gray);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
@@ -349,15 +390,15 @@ input[type="range"].terrazzo-slider::-webkit-slider-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--t-honey);
+  background: var(--t-coral);
   border: 3px solid var(--t-cream);
-  box-shadow: 0 1px 6px rgba(28,26,23,0.15);
+  box-shadow: 0 1px 6px rgba(26,45,74,0.15);
   cursor: grab;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 input[type="range"].terrazzo-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 2px 10px rgba(200,146,58,0.3);
+  box-shadow: 0 2px 10px rgba(232,111,90,0.3);
 }
 input[type="range"].terrazzo-slider::-webkit-slider-thumb:active {
   cursor: grabbing;
@@ -367,14 +408,14 @@ input[type="range"].terrazzo-slider::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--t-honey);
+  background: var(--t-coral);
   border: 3px solid var(--t-cream);
-  box-shadow: 0 1px 6px rgba(28,26,23,0.15);
+  box-shadow: 0 1px 6px rgba(26,45,74,0.15);
   cursor: grab;
 }
 input[type="range"].terrazzo-slider::-moz-range-track {
   height: 3px;
-  background: var(--t-travertine);
+  background: var(--t-warm-gray);
   border-radius: 2px;
 }
 input[type="range"].terrazzo-slider:disabled {
@@ -403,9 +444,9 @@ input[type="range"].terrazzo-slider:disabled::-webkit-slider-thumb {
 
 /* Swipe card choice flash */
 @keyframes choiceFlash {
-  0% { box-shadow: 0 0 0 0 rgba(200,146,58,0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(200,146,58,0.15); }
-  100% { box-shadow: 0 0 0 0 rgba(200,146,58,0); }
+  0% { box-shadow: 0 0 0 0 rgba(232,111,90,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(232,111,90,0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(232,111,90,0); }
 }
 .choice-flash {
   animation: choiceFlash 0.4s ease-out;

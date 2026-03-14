@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import SortPills from '@/components/ui/SortPills';
 import type { Collection } from '@/types';
 
@@ -103,18 +103,18 @@ export default function CollectionPickerList({
               {/* Icon */}
               <span style={{ fontSize: isIcon ? 14 : 16, width: 20, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {isIcon ? (
-                  <PerriandIcon name={sl.emoji as any} size={14} color={active ? 'var(--t-verde)' : INK['50']} />
+                  <PerriandIcon name={sl.emoji as any} size={14} color={active ? 'var(--t-verde)' : TEXT.secondary} />
                 ) : (
-                  <PerriandIcon name="pin" size={14} color={active ? 'var(--t-verde)' : INK['50']} />
+                  <PerriandIcon name="pin" size={14} color={active ? 'var(--t-verde)' : TEXT.secondary} />
                 )}
               </span>
 
               {/* Name + count */}
               <div className="flex-1 text-left">
-                <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.primary }}>
                   {sl.name}
                 </span>
-                <span className="ml-2" style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'] }}>
+                <span className="ml-2" style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
                   {sl.placeIds.length}
                 </span>
               </div>
@@ -159,8 +159,8 @@ export default function CollectionPickerList({
               disabled={!newName.trim()}
               className="px-3 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer"
               style={{
-                background: newName.trim() ? 'var(--t-ink)' : INK['10'],
-                color: newName.trim() ? 'white' : INK['30'],
+                background: newName.trim() ? TEXT.primary : INK['10'],
+                color: newName.trim() ? 'white' : TEXT.secondary,
                 border: 'none',
                 fontFamily: FONT.sans,
               }}
@@ -175,12 +175,12 @@ export default function CollectionPickerList({
             style={{
               background: 'none',
               border: `1.5px dashed ${INK['12']}`,
-              color: INK['70'],
+              color: TEXT.secondary,
               fontFamily: FONT.sans,
               fontSize: 12,
             }}
           >
-            <PerriandIcon name="add" size={12} color={INK['40']} />
+            <PerriandIcon name="add" size={12} color={TEXT.secondary} />
             New Collection
           </button>
         )}

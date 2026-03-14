@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -198,8 +198,8 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
             key={i}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
             style={{
-              background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(200,146,58,0.1)',
-              color: dest.lat ? 'var(--t-verde)' : '#8a6a2a',
+              background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(232,111,90,0.1)',
+              color: dest.lat ? 'var(--t-verde)' : TEXT.accent,
               fontFamily: FONT.sans,
               fontWeight: 500,
             }}
@@ -230,13 +230,13 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
           className="flex-1 min-w-[160px] text-[14px] bg-transparent border-none outline-none py-1"
           style={{
             fontFamily: FONT.sans,
-            color: 'var(--t-ink)',
+            color: TEXT.primary,
           }}
         />
       </div>
 
       {/* Helper text */}
-      <div className="mt-1.5 text-[10px]" style={{ color: INK['90'] }}>
+      <div className="mt-1.5 text-[10px]" style={{ color: TEXT.secondary }}>
         {isDreaming
           ? 'Type anything — a city, a vibe, a region. Press Enter to add.'
           : destinations.length === 0
@@ -263,20 +263,20 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               onClick={() => handleSelect(prediction)}
               className="w-full flex items-start gap-2.5 px-3.5 py-2.5 border-none cursor-pointer text-left transition-colors"
               style={{
-                background: i === activeIndex ? 'rgba(200,146,58,0.06)' : 'transparent',
+                background: i === activeIndex ? 'rgba(232,111,90,0.06)' : 'transparent',
                 fontFamily: FONT.sans,
                 borderBottom: i < predictions.length - 1 ? '1px solid rgba(237,230,216,0.5)' : 'none',
               }}
               onMouseEnter={() => setActiveIndex(i)}
             >
-              <div style={{ color: INK['95'] }}>
+              <div style={{ color: TEXT.secondary }}>
                 <PerriandIcon name="location" size={13} />
               </div>
               <div>
-                <div className="text-[13px] font-medium" style={{ color: 'var(--t-ink)' }}>
+                <div className="text-[13px] font-medium" style={{ color: TEXT.primary }}>
                   {prediction.structured_formatting.main_text}
                 </div>
-                <div className="text-[11px]" style={{ color: INK['90'] }}>
+                <div className="text-[11px]" style={{ color: TEXT.secondary }}>
                   {prediction.structured_formatting.secondary_text}
                 </div>
               </div>
@@ -289,17 +289,17 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               onClick={() => addDestination({ name: inputValue.trim() })}
               className="w-full flex items-center gap-2.5 px-3.5 py-2.5 border-none cursor-pointer text-left"
               style={{
-                background: activeIndex === predictions.length ? 'rgba(200,146,58,0.06)' : 'rgba(248,243,234,0.5)',
+                background: activeIndex === predictions.length ? 'rgba(232,111,90,0.06)' : 'rgba(248,243,234,0.5)',
                 fontFamily: FONT.sans,
                 borderTop: '1px solid var(--t-linen)',
               }}
             >
-              <div style={{ color: INK['95'] }}>
+              <div style={{ color: TEXT.secondary }}>
                 <PerriandIcon name="profile" size={13} />
               </div>
               <div>
-                <div className="text-[12px]" style={{ color: INK['95'] }}>
-                  Just add "<span style={{ color: 'var(--t-ink)', fontWeight: 500 }}>{inputValue.trim()}</span>" as-is
+                <div className="text-[12px]" style={{ color: TEXT.secondary }}>
+                  Just add "<span style={{ color: TEXT.primary, fontWeight: 500 }}>{inputValue.trim()}</span>" as-is
                 </div>
               </div>
             </button>
@@ -345,7 +345,7 @@ function DestinationInputFallback({ destinations, onChange, isDreaming }: Destin
           <span
             key={i}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
-            style={{ background: 'rgba(200,146,58,0.1)', color: '#8a6a2a' }}
+            style={{ background: 'rgba(232,111,90,0.1)', color: TEXT.accent }}
           >
             {dest.name}
             <button
@@ -364,7 +364,7 @@ function DestinationInputFallback({ destinations, onChange, isDreaming }: Destin
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addDestination(); } }}
           placeholder={destinations.length === 0 ? 'Type a destination and press Enter...' : '+ Add another'}
           className="flex-1 min-w-[160px] text-[14px] bg-transparent border-none outline-none py-1"
-          style={{ fontFamily: FONT.sans, color: 'var(--t-ink)' }}
+          style={{ fontFamily: FONT.sans, color: TEXT.primary }}
         />
       </div>
     </div>

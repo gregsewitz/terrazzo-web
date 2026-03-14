@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 
 interface ImportSuccessStepProps {
@@ -40,7 +40,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
           <div className="text-[13px] font-semibold" style={{ color: 'var(--t-verde)' }}>
             {savedPlaces.length} places saved
           </div>
-          <div className="text-[10px]" style={{ color: INK['95'] }}>
+          <div className="text-[10px]" style={{ color: TEXT.secondary }}>
             {sourceName ? `From "${sourceName}"` : 'From pasted content'}
             {detectedDestination ? ` · ${detectedDestination}` : ''}
           </div>
@@ -57,7 +57,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
           <div className="mb-0.5">
             <PerriandIcon name="trips" size={18} color="var(--t-ink)" />
           </div>
-          <div className="text-[10px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+          <div className="text-[10px] font-semibold" style={{ color: TEXT.primary }}>
             View collection
           </div>
         </button>
@@ -69,7 +69,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
           <div className="mb-0.5">
             <PerriandIcon name="discover" size={18} color="var(--t-ink)" />
           </div>
-          <div className="text-[10px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+          <div className="text-[10px] font-semibold" style={{ color: TEXT.primary }}>
             Start a trip
           </div>
         </button>
@@ -79,9 +79,9 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
           style={{ background: 'var(--t-linen)' }}
         >
           <div className="mb-0.5">
-            <PerriandIcon name="pin" size={18} color="var(--t-ink)" />
+            <PerriandIcon name="pin" size={18} color={TEXT.primary} />
           </div>
-          <div className="text-[10px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+          <div className="text-[10px] font-semibold" style={{ color: TEXT.primary }}>
             View on map
           </div>
         </button>
@@ -107,10 +107,10 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
         <div className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+              <div className="text-[13px] font-semibold" style={{ color: TEXT.primary }}>
                 {createdCollectionName}
               </div>
-              <div className="text-[10px]" style={{ color: INK['95'] }}>
+              <div className="text-[10px]" style={{ color: TEXT.secondary }}>
                 {savedPlaces.length} places · auto-created collection
               </div>
             </div>
@@ -126,7 +126,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
         <>
           <div
             className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1"
-            style={{ color: '#8a6a2a', fontFamily: FONT.mono, letterSpacing: '1px' }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono, letterSpacing: '1px' }}
           >
             <PerriandIcon name="terrazzo" size={12} color="var(--t-honey)" />
             Top matches for you
@@ -143,22 +143,22 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                   style={{
-                    background: `linear-gradient(135deg, ${sourceStyle?.color || '#c8923a'}30, ${sourceStyle?.color || '#c8923a'}15)`,
-                    color: sourceStyle?.color || '#8a6a2a',
+                    background: `linear-gradient(135deg, ${sourceStyle?.color || TEXT.accent}30, ${sourceStyle?.color || TEXT.accent}15)`,
+                    color: sourceStyle?.color || TEXT.secondary,
                     fontFamily: FONT.mono,
                   }}
                 >
                   {place.matchScore}%
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                  <div className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>
                     {place.name}
                   </div>
-                  <div className="text-[10px]" style={{ color: INK['95'] }}>
+                  <div className="text-[10px]" style={{ color: TEXT.secondary }}>
                     {place.type.charAt(0).toUpperCase() + place.type.slice(1)} · {place.location}
                   </div>
                   {place.tasteNote && (
-                    <div className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--t-ghost)', fontStyle: 'italic' }}>
+                    <div className="text-[10px] mt-0.5 truncate" style={{ color: TEXT.secondary, fontStyle: 'italic' }}>
                       &ldquo;{place.tasteNote}&rdquo;
                     </div>
                   )}
@@ -173,7 +173,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
       <button
         onClick={onClose}
         className="w-full mt-4 py-3 rounded-2xl border-none cursor-pointer text-[13px] font-semibold"
-        style={{ background: 'var(--t-ink)', color: 'white' }}
+        style={{ background: TEXT.primary, color: 'white' }}
       >
         Done
       </button>
@@ -181,7 +181,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
       <button
         onClick={onImportMore}
         className="w-full mt-2 py-2 bg-transparent border-none cursor-pointer text-[11px]"
-        style={{ color: INK['95'] }}
+        style={{ color: TEXT.secondary }}
       >
         Import more places
       </button>

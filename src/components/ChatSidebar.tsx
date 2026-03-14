@@ -6,7 +6,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useTripStore } from '@/stores/tripStore';
 import { apiFetch } from '@/lib/api-client';
 import { TASTE_PROFILE } from '@/constants/profile';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface Message {
   id: string;
@@ -48,9 +48,9 @@ function renderMessageContent(content: string) {
 
     // Add the bold place name with honey color
     parts.push(
-      <span key={`bold-${match.index}`} style={{ color: '#8a6a2a', fontWeight: 600 }}>
+      <span key={`bold-${match.index}`} style={{ color: TEXT.accent, fontWeight: 600 }}>
         {match[1]}
-        <span className="text-[9px] ml-1" style={{ color: INK['90'] }}>
+        <span className="text-[9px] ml-1" style={{ color: TEXT.primary }}>
           →
         </span>
       </span>
@@ -201,11 +201,11 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
           <div>
             <h3
               className="text-sm font-semibold"
-              style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+              style={{ fontFamily: FONT.serif, color: TEXT.primary }}
             >
               Terrazzo Assistant
             </h3>
-            <p className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--t-amber)', fontFamily: FONT.mono }}>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
               Your taste-aware trip companion
             </p>
           </div>
@@ -214,7 +214,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
             className="w-7 h-7 flex items-center justify-center rounded-full border-none cursor-pointer"
             style={{ background: INK['06'] }}
           >
-            <PerriandIcon name="close" size={16} color="var(--t-ink)" />
+            <PerriandIcon name="close" size={16} color={TEXT.primary} />
           </button>
         </div>
 
@@ -227,8 +227,8 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
                 msg.role === 'user' ? 'self-end' : 'self-start'
               }`}
               style={{
-                background: msg.role === 'user' ? 'var(--t-ink)' : INK['04'],
-                color: msg.role === 'user' ? 'var(--t-cream)' : 'var(--t-ink)',
+                background: msg.role === 'user' ? TEXT.primary : INK['04'],
+                color: msg.role === 'user' ? TEXT.inverse : TEXT.primary,
               }}
             >
               {msg.role === 'assistant' && idx === 0 && (
@@ -238,7 +238,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
             </div>
           ))}
           {isLoading && (
-            <div className="self-start p-3 rounded-xl text-[12px]" style={{ background: INK['04'] }}>
+            <div className="self-start p-3 rounded-xl text-[12px]" style={{ background: INK['04'], color: TEXT.primary }}>
               <span className="inline-block">
                 <span className="animate-bounce" style={{ animationDelay: '0ms' }}>•</span>
                 <span className="animate-bounce ml-1" style={{ animationDelay: '150ms' }}>•</span>
@@ -258,7 +258,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
                 className="px-3 py-1.5 rounded-full text-[11px] font-medium border-none cursor-pointer transition-all hover:scale-105"
                 style={{
                   background: 'white',
-                  color: 'var(--t-ink)',
+                  color: TEXT.primary,
                   border: '1px solid var(--t-linen)',
                   fontFamily: FONT.sans,
                 }}
@@ -281,7 +281,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
               style={{
                 background: 'var(--t-cream)',
                 borderColor: 'var(--t-linen)',
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
               }}
             />
             <button

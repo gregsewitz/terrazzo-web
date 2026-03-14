@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { ReservationRow } from './ReservationRow';
 import type { TripGroupData } from '@/lib/email-reservations-helpers';
 import type { TripOption } from '@/hooks/useEmailReservations';
@@ -159,16 +159,16 @@ export const TripGroup = React.memo(function TripGroup({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
+          <div className="text-[13px] font-semibold" style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
             {group.tripName}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             {group.dateRange && (
-              <span className="text-[9px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+              <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                 {group.dateRange}
               </span>
             )}
-            <span className="text-[9px]" style={{ color: INK['40'] }}>
+            <span className="text-[9px]" style={{ color: TEXT.secondary }}>
               {placeCount} place{placeCount !== 1 ? 's' : ''}
             </span>
           </div>
@@ -208,7 +208,7 @@ export const TripGroup = React.memo(function TripGroup({
           <span
             className="text-[10px]"
             style={{
-              color: isLinked ? INK['70'] : INK['40'],
+              color: isLinked ? TEXT.primary : TEXT.secondary,
               textDecoration: isLinked ? 'none' : 'line-through',
             }}
           >
@@ -225,16 +225,16 @@ export const TripGroup = React.memo(function TripGroup({
       {!isMatched && mode === 'idle' && (
         <div
           className="flex items-center gap-2 px-3 py-2.5"
-          style={{ background: 'rgba(200,146,58,0.04)', borderBottom: '1px solid var(--t-linen)' }}
+          style={{ background: 'rgba(232,111,90,0.04)', borderBottom: '1px solid var(--t-linen)' }}
         >
           <PerriandIcon name="trips" size={12} color="var(--t-honey)" />
-          <span className="text-[10px]" style={{ color: INK['50'] }}>Add to a trip?</span>
+          <span className="text-[10px]" style={{ color: TEXT.secondary }}>Add to a trip?</span>
           <div className="flex-1" />
           {availableTrips.length > 0 && (
             <button
               onClick={() => setMode('pick')}
               className="text-[10px] font-semibold px-2.5 py-1 rounded-md border-none cursor-pointer transition-all"
-              style={{ background: INK['06'], color: INK['70'] }}
+              style={{ background: INK['06'], color: TEXT.primary }}
             >
               Existing trip
             </button>
@@ -251,15 +251,15 @@ export const TripGroup = React.memo(function TripGroup({
 
       {/* ── Pick an existing trip ── */}
       {!isMatched && mode === 'pick' && (
-        <div style={{ background: 'rgba(200,146,58,0.04)', borderBottom: '1px solid var(--t-linen)' }}>
+        <div style={{ background: 'rgba(232,111,90,0.04)', borderBottom: '1px solid var(--t-linen)' }}>
           <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
-            <span className="text-[10px] font-medium" style={{ color: INK['60'] }}>
+            <span className="text-[10px] font-medium" style={{ color: TEXT.secondary }}>
               Choose a trip
             </span>
             <button
               onClick={() => setMode('idle')}
               className="text-[10px] bg-transparent border-none cursor-pointer"
-              style={{ color: INK['40'] }}
+              style={{ color: TEXT.secondary }}
             >
               Cancel
             </button>
@@ -285,7 +285,7 @@ export const TripGroup = React.memo(function TripGroup({
                     <PerriandIcon name="trips" size={12} color={isRecommended ? 'var(--t-verde)' : INK['40']} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-medium truncate" style={{ color: 'var(--t-ink)' }}>
+                        <span className="text-[11px] font-medium truncate" style={{ color: TEXT.primary }}>
                           {trip.name}
                         </span>
                         {isRecommended && (
@@ -303,7 +303,7 @@ export const TripGroup = React.memo(function TripGroup({
                         )}
                       </div>
                       {trip.location && (
-                        <div className="text-[9px] truncate" style={{ color: isRecommended ? 'var(--t-verde)' : INK['40'], opacity: isRecommended ? 0.7 : 1 }}>
+                        <div className="text-[9px] truncate" style={{ color: isRecommended ? 'var(--t-verde)' : TEXT.secondary, opacity: isRecommended ? 0.7 : 1 }}>
                           {trip.location}
                         </div>
                       )}
@@ -320,7 +320,7 @@ export const TripGroup = React.memo(function TripGroup({
       {!isMatched && mode === 'create' && (
         <div
           className="flex items-center gap-2 px-3 py-2"
-          style={{ background: 'rgba(200,146,58,0.04)', borderBottom: '1px solid var(--t-linen)' }}
+          style={{ background: 'rgba(232,111,90,0.04)', borderBottom: '1px solid var(--t-linen)' }}
         >
           <PerriandIcon name="trips" size={12} color="var(--t-honey)" />
           <input
@@ -334,7 +334,7 @@ export const TripGroup = React.memo(function TripGroup({
             }}
             placeholder={suggestedName ? `e.g. ${suggestedName}` : 'Trip name'}
             className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-[#b8a070]"
-            style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+            style={{ color: TEXT.primary, fontFamily: FONT.sans }}
             disabled={isCreatingTrip}
           />
           <button
@@ -352,7 +352,7 @@ export const TripGroup = React.memo(function TripGroup({
           <button
             onClick={() => { setMode('idle'); setTripName(''); }}
             className="text-[10px] px-1.5 py-1 rounded bg-transparent border-none cursor-pointer transition-all"
-            style={{ color: INK['40'] }}
+            style={{ color: TEXT.secondary }}
             disabled={isCreatingTrip}
           >
             ✕

@@ -114,7 +114,7 @@ export default function GapFillPage() {
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
               Gap fill &middot; {currentDomainIndex + 1} of {totalDomains}
             </p>
-            <h1 className="font-serif text-[22px] text-[var(--t-ink)] leading-tight">
+            <h1 className="font-display text-[22px] text-[var(--t-ink)] leading-tight">
               {DOMAIN_DISPLAY[currentDomain.domain] || currentDomain.domain}
             </h1>
           </div>

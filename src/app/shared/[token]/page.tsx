@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
 import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { trackInteraction } from '@/lib/interaction-tracker';
 
@@ -188,7 +188,7 @@ export default function SharedViewPage() {
       <div className="min-h-screen flex items-center justify-center px-8" style={{ background: 'var(--t-cream)' }}>
         <div className="text-center">
           <PerriandIcon name="close" size={32} color={INK['20']} />
-          <p className="text-[14px] mt-3" style={{ color: INK['70'], fontFamily: FONT.serif, fontStyle: 'italic' }}>
+          <p className="text-[14px] mt-3" style={{ color: TEXT.primary, fontFamily: FONT.serif, fontStyle: 'italic' }}>
             {error}
           </p>
           <button
@@ -236,11 +236,11 @@ export default function SharedViewPage() {
             >
               {collection.name}
             </h1>
-            <p className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+            <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
               Shared by {data.ownerName} · {places.length} place{places.length !== 1 ? 's' : ''}
             </p>
             {collection.description && (
-              <p className="text-[12px] mt-2 mx-4" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+              <p className="text-[12px] mt-2 mx-4" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                 {collection.description}
               </p>
             )}
@@ -295,7 +295,7 @@ export default function SharedViewPage() {
 
           {places.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-[12px]" style={{ color: INK['50'] }}>This collection is empty</p>
+              <p className="text-[12px]" style={{ color: TEXT.secondary }}>This collection is empty</p>
             </div>
           )}
         </div>
@@ -336,11 +336,11 @@ export default function SharedViewPage() {
             >
               {trip.name}
             </h1>
-            <p className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+            <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
               Shared by {data.ownerName} · {trip.location}
             </p>
             {trip.startDate && (
-              <p className="text-[10px] mt-1" style={{ color: INK['40'], fontFamily: FONT.mono }}>
+              <p className="text-[10px] mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                 {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 {trip.endDate && ` – ${new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
               </p>
@@ -353,12 +353,12 @@ export default function SharedViewPage() {
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className="text-[10px] font-bold uppercase tracking-wider"
-                  style={{ color: INK['40'], fontFamily: FONT.mono }}
+                  style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                 >
                   Day {day.dayNumber}
                 </span>
                 {day.destination && (
-                  <span className="text-[10px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                  <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                     {day.destination}
                   </span>
                 )}
@@ -375,7 +375,7 @@ export default function SharedViewPage() {
                   >
                     <div
                       className="text-[9px] font-medium uppercase tracking-wider w-16 flex-shrink-0"
-                      style={{ color: INK['40'], fontFamily: FONT.mono }}
+                      style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                     >
                       {slot.label}
                     </div>
@@ -400,7 +400,7 @@ export default function SharedViewPage() {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-[11px]" style={{ color: INK['20'], fontFamily: FONT.sans }}>
+                      <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                         Open
                       </span>
                     )}
@@ -412,7 +412,7 @@ export default function SharedViewPage() {
 
           {days.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-[12px]" style={{ color: INK['50'] }}>No itinerary yet</p>
+              <p className="text-[12px]" style={{ color: TEXT.secondary }}>No itinerary yet</p>
             </div>
           )}
         </div>
@@ -484,7 +484,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
               className="text-[9px] px-2 py-1 rounded-full cursor-pointer flex items-center gap-1 flex-shrink-0 transition-all"
               style={{
                 background: isSaved ? 'rgba(42,122,86,0.08)' : INK['04'],
-                color: isSaved ? 'var(--t-verde)' : INK['60'],
+                color: isSaved ? 'var(--t-verde)' : TEXT.secondary,
                 border: isSaved ? '1px solid rgba(42,122,86,0.2)' : '1px solid transparent',
                 fontFamily: FONT.mono,
                 fontWeight: 600,
@@ -503,12 +503,12 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
       <div className="px-3 pt-2 pb-3">
         <div className="flex items-center gap-1.5 flex-wrap mb-1">
           {google?.rating && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <PerriandIcon name="star" size={10} color={INK['50']} /> {google.rating}
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <PerriandIcon name="star" size={10} color={TEXT.secondary} /> {google.rating}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
               {priceStr}
             </span>
           )}
@@ -523,7 +523,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
           <div style={{
             fontFamily: FONT.sans,
             fontSize: 11,
-            color: INK['60'],
+            color: TEXT.secondary,
             fontStyle: 'italic',
             lineHeight: 1.4,
           }}>

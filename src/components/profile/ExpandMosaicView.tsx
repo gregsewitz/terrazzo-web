@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { MOSAIC_QUESTIONS, MOSAIC_SECTIONS, type MosaicQuestion } from '@/constants/mosaic-questions';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
 // ─── Selection Engine ───
@@ -178,14 +178,14 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
           onClick={onClose}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: FONT.sans, fontSize: 13, color: INK['60'],
+            fontFamily: FONT.sans, fontSize: 13, color: TEXT.secondary,
             padding: '4px 0',
           }}
         >
           ← Done
         </button>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['50'], textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+          <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
             Expand Your Mosaic
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
           style={{
             background: showProgress ? INK['10'] : 'none',
             border: 'none', cursor: 'pointer', borderRadius: 8, padding: '4px 10px',
-            fontFamily: FONT.mono, fontSize: 11, color: INK['60'],
+            fontFamily: FONT.mono, fontSize: 11, color: TEXT.secondary,
           }}
         >
           {completionPct}%
@@ -210,17 +210,17 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
             background: 'white',
           }}
         >
-          <div style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12 }}>
+          <div style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12 }}>
             Domain coverage
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {domainProgress.map(d => (
               <div key={d.domain} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 80, fontFamily: FONT.sans, fontSize: 11, color: INK['70'] }}>{d.label}</div>
+                <div style={{ width: 80, fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{d.label}</div>
                 <div style={{ flex: 1, height: 4, borderRadius: 2, background: INK['06'] }}>
-                  <div style={{ width: `${d.pct}%`, height: '100%', borderRadius: 2, background: d.pct > 50 ? '#2a7a56' : d.pct > 20 ? '#c8923a' : INK['20'], transition: 'width 0.4s ease' }} />
+                  <div style={{ width: `${d.pct}%`, height: '100%', borderRadius: 2, background: d.pct > 50 ? '#2a7a56' : d.pct > 20 ? '#E86F5A' : INK['20'], transition: 'width 0.4s ease' }} />
                 </div>
-                <div style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['45'], width: 36, textAlign: 'right' }}>{d.answered}/{d.total}</div>
+                <div style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, width: 36, textAlign: 'right' }}>{d.answered}/{d.total}</div>
               </div>
             ))}
           </div>
@@ -267,7 +267,7 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
 
       {/* ─── Bottom: Skip + Signal flash + count ─── */}
       <div style={{ padding: '12px 20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['35'] }}>
+        <div style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
           {answered.size} of {totalQuestions} answered
         </div>
         {phase === 'transition' && lastSignals.length > 0 ? (
@@ -289,12 +289,12 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
             onClick={handleSkip}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: FONT.mono, fontSize: 11, color: INK['35'],
+              fontFamily: FONT.mono, fontSize: 11, color: TEXT.secondary,
               padding: '4px 0',
               transition: 'color 0.2s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.color = INK['60'])}
-            onMouseLeave={e => (e.currentTarget.style.color = INK['35'])}
+            onMouseEnter={e => (e.currentTarget.style.color = TEXT.secondary)}
+            onMouseLeave={e => (e.currentTarget.style.color = TEXT.secondary)}
           >
             Skip →
           </button>
@@ -333,7 +333,7 @@ function ABQuestion({ question, onAnswer }: { question: MosaicQuestion; onAnswer
       {/* Prompt */}
       <h2 style={{
         fontFamily: FONT.serif, fontSize: isScene ? 20 : 26, lineHeight: 1.25,
-        color: 'var(--t-ink)', textAlign: 'center', marginBottom: isScene ? 24 : 32,
+        color: TEXT.primary, textAlign: 'center', marginBottom: isScene ? 24 : 32,
         fontWeight: 400,
       }}>
         {question.prompt}
@@ -364,7 +364,7 @@ function ABQuestion({ question, onAnswer }: { question: MosaicQuestion; onAnswer
             >
               <div style={{
                 fontFamily: FONT.sans, fontSize: isScene ? 14 : 16,
-                color: 'var(--t-ink)', fontWeight: 500, lineHeight: 1.4,
+                color: TEXT.primary, fontWeight: 500, lineHeight: 1.4,
               }}>
                 {opt.label}
               </div>
@@ -401,7 +401,7 @@ function SliderQuestion({ question, onAnswer }: { question: MosaicQuestion; onAn
 
   return (
     <div style={{ maxWidth: 400, margin: '0 auto', width: '100%', textAlign: 'center' }}>
-      <h2 style={{ fontFamily: FONT.serif, fontSize: 24, color: 'var(--t-ink)', marginBottom: 40, fontWeight: 400 }}>
+      <h2 style={{ fontFamily: FONT.serif, fontSize: 24, color: TEXT.primary, marginBottom: 40, fontWeight: 400 }}>
         {question.prompt}
       </h2>
 
@@ -421,15 +421,15 @@ function SliderQuestion({ question, onAnswer }: { question: MosaicQuestion; onAn
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
-        <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'] }}>{question.leftLabel}</span>
-        <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'] }}>{question.rightLabel}</span>
+        <span style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary }}>{question.leftLabel}</span>
+        <span style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary }}>{question.rightLabel}</span>
       </div>
 
       <button
         onClick={handleCommit}
         style={{
           fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-          color: 'white', background: 'var(--t-ink)',
+          color: TEXT.inverse, background: TEXT.primary,
           border: 'none', borderRadius: 12, padding: '12px 32px',
           cursor: 'pointer', opacity: committed ? 0.5 : 1,
           transition: 'opacity 0.2s',
@@ -480,7 +480,7 @@ function RankQuestion({ question, onAnswer }: { question: MosaicQuestion; onAnsw
 
   return (
     <div style={{ maxWidth: 400, margin: '0 auto', width: '100%' }}>
-      <h2 style={{ fontFamily: FONT.serif, fontSize: 22, color: 'var(--t-ink)', textAlign: 'center', marginBottom: 28, fontWeight: 400 }}>
+      <h2 style={{ fontFamily: FONT.serif, fontSize: 22, color: TEXT.primary, textAlign: 'center', marginBottom: 28, fontWeight: 400 }}>
         {question.rankPrompt}
       </h2>
 
@@ -494,10 +494,10 @@ function RankQuestion({ question, onAnswer }: { question: MosaicQuestion; onAnsw
               background: 'white', border: `1px solid ${INK['10']}`,
             }}
           >
-            <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['35'], width: 20, textAlign: 'center' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 12, color: TEXT.secondary, width: 20, textAlign: 'center' }}>
               {idx + 1}
             </span>
-            <span style={{ flex: 1, fontFamily: FONT.sans, fontSize: 14, color: 'var(--t-ink)' }}>
+            <span style={{ flex: 1, fontFamily: FONT.sans, fontSize: 14, color: TEXT.primary }}>
               {item}
             </span>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -513,7 +513,7 @@ function RankQuestion({ question, onAnswer }: { question: MosaicQuestion; onAnsw
           onClick={handleCommit}
           style={{
             fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-            color: 'white', background: 'var(--t-ink)',
+            color: TEXT.inverse, background: TEXT.primary,
             border: 'none', borderRadius: 12, padding: '12px 32px',
             cursor: 'pointer', opacity: committed ? 0.5 : 1,
           }}
@@ -553,7 +553,7 @@ function MicroQuestion({ question, onAnswer }: { question: MosaicQuestion; onAns
 
   return (
     <div style={{ maxWidth: 400, margin: '0 auto', width: '100%', textAlign: 'center' }}>
-      <h2 style={{ fontFamily: FONT.serif, fontSize: 22, color: 'var(--t-ink)', marginBottom: 36, fontWeight: 400, lineHeight: 1.35 }}>
+      <h2 style={{ fontFamily: FONT.serif, fontSize: 22, color: TEXT.primary, marginBottom: 36, fontWeight: 400, lineHeight: 1.35 }}>
         {question.microPrompt}
       </h2>
 
@@ -566,7 +566,7 @@ function MicroQuestion({ question, onAnswer }: { question: MosaicQuestion; onAns
         placeholder="Type here..."
         style={{
           width: '100%', maxWidth: 320,
-          fontFamily: FONT.serif, fontSize: 18, color: 'var(--t-ink)',
+          fontFamily: FONT.serif, fontSize: 18, color: TEXT.primary,
           background: 'none', border: 'none', borderBottom: `2px solid ${INK['15']}`,
           padding: '12px 0', textAlign: 'center', outline: 'none',
         }}
@@ -578,8 +578,8 @@ function MicroQuestion({ question, onAnswer }: { question: MosaicQuestion; onAns
           disabled={!text.trim()}
           style={{
             fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-            color: text.trim() ? 'white' : INK['30'],
-            background: text.trim() ? 'var(--t-ink)' : INK['06'],
+            color: text.trim() ? TEXT.inverse : TEXT.secondary,
+            background: text.trim() ? TEXT.primary : INK['06'],
             border: 'none', borderRadius: 12, padding: '12px 32px',
             cursor: text.trim() ? 'pointer' : 'default',
             transition: 'all 0.2s',
@@ -600,17 +600,17 @@ function CompletionState({ onClose, answered, total }: { onClose: () => void; an
   return (
     <div style={{ textAlign: 'center', padding: '0 24px' }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>◈</div>
-      <h2 style={{ fontFamily: FONT.serif, fontSize: 26, color: 'var(--t-ink)', marginBottom: 8, fontWeight: 400 }}>
+      <h2 style={{ fontFamily: FONT.serif, fontSize: 26, color: TEXT.primary, marginBottom: 8, fontWeight: 400 }}>
         Mosaic complete
       </h2>
-      <p style={{ fontFamily: FONT.sans, fontSize: 14, color: INK['60'], marginBottom: 32, lineHeight: 1.5 }}>
+      <p style={{ fontFamily: FONT.sans, fontSize: 14, color: TEXT.secondary, marginBottom: 32, lineHeight: 1.5 }}>
         You've answered all {total} questions. Your taste profile is sharper than ever — matching across hotels, restaurants, bars, and activities is fully calibrated.
       </p>
       <button
         onClick={onClose}
         style={{
           fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-          color: 'white', background: 'var(--t-ink)',
+          color: TEXT.inverse, background: TEXT.primary,
           border: 'none', borderRadius: 14, padding: '14px 36px',
           cursor: 'pointer',
         }}

@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, SustainabilitySignal } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Spectrum Definitions ───
 
@@ -192,9 +192,9 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                 flexDirection: 'column',
                 gap: 10,
                 padding: '20px 24px',
-                background: 'rgba(28,26,23,0.02)',
+                background: 'rgba(26,45,74,0.02)',
                 borderRadius: 14,
-                border: '1px solid rgba(28,26,23,0.05)',
+                border: '1px solid rgba(26,45,74,0.05)',
                 animation: `fadeInUp 0.4s ease ${i * 0.08}s both`,
               }}
             >
@@ -219,7 +219,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                 <span style={{
                   fontSize: 12,
                   fontWeight: leftActive ? 600 : 400,
-                  color: leftActive ? T.ink : INK['35'],
+                  color: leftActive ? T.ink : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   flex: '0 1 auto',
@@ -230,7 +230,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                 <span style={{
                   fontSize: 12,
                   fontWeight: rightActive ? 600 : 400,
-                  color: rightActive ? T.ink : INK['35'],
+                  color: rightActive ? T.ink : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   textAlign: 'right',
@@ -289,7 +289,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
             marginTop: 20,
             padding: '15px 40px',
             background: submitted ? T.travertine : T.ink,
-            color: submitted ? INK['50'] : T.cream,
+            color: submitted ? TEXT.secondary : T.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

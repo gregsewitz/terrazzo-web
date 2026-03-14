@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface InviteInfo {
   tripId: string;
@@ -105,7 +105,7 @@ function JoinTripInner() {
           </div>
           <p
             className="text-[13px] mb-6"
-            style={{ color: INK['60'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
           >
             {error || 'This invite may have expired or already been used.'}
           </p>
@@ -159,7 +159,7 @@ function JoinTripInner() {
 
           <div
             className="text-[13px] mb-4"
-            style={{ color: INK['60'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
           >
             {invite.tripLocation}
             {invite.tripDestinations && invite.tripDestinations.length > 1 && (
@@ -169,7 +169,7 @@ function JoinTripInner() {
 
           <div
             className="text-[12px] leading-relaxed"
-            style={{ color: INK['70'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.primary, fontFamily: FONT.sans }}
           >
             <strong style={{ color: 'var(--t-ink)' }}>{invite.invitedBy}</strong> invited you
             as a <strong style={{ color: 'var(--t-ink)' }}>{invite.role}</strong>.
@@ -203,7 +203,7 @@ function JoinTripInner() {
             className="w-full py-3 rounded-xl text-[13px] font-medium"
             style={{
               background: 'transparent',
-              color: INK['50'],
+              color: TEXT.secondary,
               border: 'none',
               cursor: 'pointer',
               fontFamily: FONT.sans,

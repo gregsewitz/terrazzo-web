@@ -153,12 +153,12 @@ export default function SustainabilityScaleView({ onComplete }: SustainabilitySc
                 alignItems: 'flex-start',
                 padding: '18px 22px',
                 background: isSelected
-                  ? 'rgba(28,26,23,0.05)'
-                  : 'rgba(28,26,23,0.015)',
+                  ? 'rgba(26,45,74,0.05)'
+                  : 'rgba(26,45,74,0.015)',
                 borderRadius: 14,
                 border: isSelected
                   ? `1.5px solid ${T.ink}`
-                  : '1px solid rgba(28,26,23,0.06)',
+                  : '1px solid rgba(26,45,74,0.06)',
                 cursor: submitted ? 'default' : 'pointer',
                 transition: 'all 0.3s ease',
                 opacity: isOther ? 0.35 : 1,

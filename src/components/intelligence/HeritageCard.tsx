@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { T } from '@/types';
 import type { HeritageData } from '@/types';
 
@@ -110,7 +110,7 @@ export function HeritageCard({
         {headline && (
           <p
             className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold leading-snug`}
-            style={{ color: INK['95'], fontFamily: FONT.serif }}
+            style={{ color: TEXT.primary, fontFamily: FONT.serif }}
           >
             {headline}
           </p>
@@ -120,7 +120,7 @@ export function HeritageCard({
         {renovationLine && (
           <p
             className="text-[11px] mt-0.5"
-            style={{ color: INK['60'], fontFamily: FONT.mono }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             {renovationLine}
           </p>
@@ -135,7 +135,7 @@ export function HeritageCard({
                 className="text-[10px] px-2 py-0.5 rounded-md"
                 style={{
                   background: `${HERITAGE_COLOR}08`,
-                  color: INK['75'],
+                  color: TEXT.secondary,
                   fontFamily: FONT.mono,
                 }}
               >
@@ -149,7 +149,7 @@ export function HeritageCard({
         {heritage.significance && variant === 'full' && (
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed mt-2`}
-            style={{ color: INK['80'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
           >
             {heritage.significance}
           </p>
@@ -163,7 +163,7 @@ export function HeritageCard({
           >
             <p
               className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} leading-relaxed italic`}
-              style={{ color: INK['70'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               {heritage.restorationPhilosophy}
             </p>

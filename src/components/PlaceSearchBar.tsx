@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface PlaceSearchBarProps {
   /** Placeholder text override */
@@ -20,7 +20,7 @@ export default function PlaceSearchBar({ placeholder }: PlaceSearchBarProps = {}
       <PerriandIcon
         name="discover"
         size={14}
-        color={INK['35']}
+        color={TEXT.secondary}
         style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
       />
       <input
@@ -42,7 +42,7 @@ export default function PlaceSearchBar({ placeholder }: PlaceSearchBarProps = {}
           fontSize: 16,
           background: 'white',
           border: '1px solid var(--t-linen)',
-          color: 'var(--t-ink)',
+          color: TEXT.primary,
           fontFamily: FONT.sans,
           outline: 'none',
           boxSizing: 'border-box',
@@ -61,7 +61,7 @@ export default function PlaceSearchBar({ placeholder }: PlaceSearchBarProps = {}
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          <PerriandIcon name="close" size={8} color={INK['50']} />
+          <PerriandIcon name="close" size={8} color={TEXT.secondary} />
         </button>
       )}
     </div>

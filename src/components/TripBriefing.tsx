@@ -7,7 +7,7 @@ import {
   GhostSourceType, DEST_COLORS, T,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTripWeather, weatherEmoji, type DestinationWeather } from '@/hooks/useTripWeather';
 
 // ─── Props ───
@@ -165,7 +165,7 @@ function SectionHeader({ kicker, title }: { kicker: string; title?: string }) {
     <div style={{ marginBottom: 20 }}>
       <div style={{
         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-        textTransform: 'uppercase', color: INK['70'],
+        textTransform: 'uppercase', color: TEXT.secondary,
         marginBottom: title ? 6 : 0,
       }}>
         {kicker}
@@ -173,7 +173,7 @@ function SectionHeader({ kicker, title }: { kicker: string; title?: string }) {
       {title && (
         <div style={{
           fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          color: 'var(--t-ink)', lineHeight: 1.25,
+          color: TEXT.primary, lineHeight: 1.25,
         }}>
           {title}
         </div>
@@ -219,7 +219,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
             textTransform: 'uppercase',
             padding: '4px 10px', borderRadius: 20,
             background: 'rgba(255,255,255,0.9)',
-            color: INK['80'],
+            color: TEXT.primary,
             backdropFilter: 'blur(8px)',
           }}>
             {typeLabel}
@@ -244,13 +244,13 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
       <div style={{ padding: '18px 20px 20px' }}>
         <div style={{
           fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
-          color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.25,
+          color: TEXT.primary, marginBottom: 4, lineHeight: 1.25,
         }}>
           {place.name}
         </div>
         <div style={{
           fontFamily: FONT.sans, fontSize: 12,
-          color: INK['75'], marginBottom: 12,
+          color: TEXT.secondary, marginBottom: 12,
         }}>
           {place.location}
         </div>
@@ -259,7 +259,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
         {place.terrazzoInsight?.why && (
           <div style={{
             fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-            color: INK['85'], marginBottom: 12,
+            color: TEXT.primary, marginBottom: 12,
           }}>
             {place.terrazzoInsight.why}
           </div>
@@ -270,7 +270,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
           <div style={{ marginBottom: 10 }}>
             <div style={{
               fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: INK['70'],
+              textTransform: 'uppercase', color: TEXT.secondary,
               marginBottom: 6,
             }}>
               What to order
@@ -279,7 +279,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
               {place.whatToOrder.map((item, i) => (
                 <span key={i} style={{
                   fontFamily: FONT.sans, fontSize: 12,
-                  color: INK['80'],
+                  color: TEXT.primary,
                   padding: '4px 10px', borderRadius: 8,
                   background: 'var(--t-cream)',
                 }}>
@@ -295,7 +295,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
           <div>
             <div style={{
               fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: INK['70'],
+              textTransform: 'uppercase', color: TEXT.secondary,
               marginBottom: 6,
             }}>
               Tips
@@ -303,7 +303,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
             {place.tips.map((tip, i) => (
               <div key={i} style={{
                 fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.5,
-                color: INK['85'], marginBottom: 2,
+                color: TEXT.primary, marginBottom: 2,
               }}>
                 {tip}
               </div>
@@ -330,14 +330,14 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
             <div>
               <span style={{
                 fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-                color: INK['80'],
+                color: TEXT.primary,
               }}>
                 {place.friendAttribution.name}
               </span>
               {place.friendAttribution.note && (
                 <div style={{
                   fontFamily: FONT.sans, fontSize: 12, fontStyle: 'italic',
-                  color: INK['75'], marginTop: 2, lineHeight: 1.5,
+                  color: TEXT.secondary, marginTop: 2, lineHeight: 1.5,
                 }}>
                   &ldquo;{place.friendAttribution.note}&rdquo;
                 </div>
@@ -351,7 +351,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
           <div style={{
             marginTop: 12, padding: '10px 12px',
             borderRadius: 10,
-            background: 'rgba(200,146,58,0.06)',
+            background: 'rgba(232,111,90,0.06)',
             fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.5,
             color: T.amber,
           }}>
@@ -377,7 +377,7 @@ function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: () => v
       {/* Time */}
       {time && (
         <span style={{
-          fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: INK['75'],
+          fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: TEXT.primary,
           width: 56, flexShrink: 0,
         }}>
           {time}
@@ -387,12 +387,12 @@ function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: () => v
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{
           fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
-          color: 'var(--t-ink)',
+          color: TEXT.primary,
         }}>
           {place.name}
         </span>
         <span style={{
-          fontFamily: FONT.sans, fontSize: 11, color: INK['75'],
+          fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary,
           marginLeft: 8,
         }}>
           {place.location}
@@ -401,7 +401,7 @@ function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: () => v
       {/* Source indicator */}
       {place.ghostSource && place.ghostSource !== 'manual' && (
         <span style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: INK['70'],
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: TEXT.secondary,
           textTransform: 'uppercase', letterSpacing: '0.04em',
         }}>
           {SOURCE_STYLES[place.ghostSource]?.label}
@@ -435,14 +435,14 @@ function DayCard({
       >
         <span style={{
           fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
-          color: INK['45'], lineHeight: 1,
+          color: TEXT.secondary, lineHeight: 1,
         }}>
           {day.dayNumber}
         </span>
         <div>
           <div style={{
             fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-            color: 'var(--t-ink)',
+            color: TEXT.primary,
           }}>
             {trip.flexibleDates
               ? `Day ${day.dayNumber}`
@@ -460,10 +460,10 @@ function DayCard({
             )}
             {(day.hotelInfo?.name || day.hotel) && (
               <span style={{
-                fontFamily: FONT.sans, fontSize: 10, color: INK['70'],
+                fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary,
                 display: 'flex', alignItems: 'center', gap: 3,
               }}>
-                <PerriandIcon name="hotel" size={10} color={INK['60']} />
+                <PerriandIcon name="hotel" size={10} color={TEXT.secondary} />
                 {day.hotelInfo?.name || day.hotel}
               </span>
             )}
@@ -487,7 +487,7 @@ function DayCard({
         <div style={{
           paddingLeft: 44,
           fontFamily: FONT.sans, fontSize: 12,
-          color: INK['55'], fontStyle: 'italic',
+          color: TEXT.secondary, fontStyle: 'italic',
         }}>
           Open day — still dreaming
         </div>
@@ -503,13 +503,13 @@ function Stat({ value, label }: { value: string | number; label: string }) {
     <div style={{ textAlign: 'center', flex: '1 1 0', minWidth: 0 }}>
       <div style={{
         fontFamily: FONT.serif, fontSize: 36, fontStyle: 'italic',
-        color: 'var(--t-ink)', lineHeight: 1, marginBottom: 4,
+        color: TEXT.primary, lineHeight: 1, marginBottom: 4,
       }}>
         {value}
       </div>
       <div style={{
         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: INK['75'],
+        textTransform: 'uppercase', color: TEXT.secondary,
       }}>
         {label}
       </div>
@@ -543,7 +543,7 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
       {isHistorical && (
         <div style={{
           fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.6,
-          color: INK['70'], marginBottom: 20, marginTop: -10,
+          color: TEXT.secondary, marginBottom: 20, marginTop: -10,
         }}>
           Based on last year&apos;s weather for the same dates — expect similar conditions.
         </div>
@@ -562,7 +562,7 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                 <div style={{
                   fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
                   letterSpacing: '0.06em', textTransform: 'uppercase',
-                  color: INK['70'], marginBottom: 12,
+                  color: TEXT.secondary, marginBottom: 12,
                 }}>
                   {dest.destination}
                 </div>
@@ -575,19 +575,19 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
               }}>
                 <div style={{
                   fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
-                  color: 'var(--t-ink)', lineHeight: 1,
+                  color: TEXT.primary, lineHeight: 1,
                 }}>
                   {dest.avgLowC}–{dest.avgHighC}°C
                 </div>
                 <div style={{
                   fontFamily: FONT.sans, fontSize: 12,
-                  color: INK['75'],
+                  color: TEXT.secondary,
                 }}>
                   ({tempF(dest.avgLowC)}–{tempF(dest.avgHighC)}°F)
                 </div>
                 <div style={{
                   fontFamily: FONT.sans, fontSize: 12, fontWeight: 500,
-                  color: INK['80'],
+                  color: TEXT.primary,
                   padding: '4px 10px', borderRadius: 8,
                   background: 'var(--t-cream)',
                 }}>
@@ -621,13 +621,13 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                     >
                       <span style={{
                         fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-                        color: INK['70'], textTransform: 'uppercase',
+                        color: TEXT.secondary, textTransform: 'uppercase',
                       }}>
                         {dayLabel}
                       </span>
                       <span style={{
                         fontFamily: FONT.sans, fontSize: 9,
-                        color: INK['55'],
+                        color: TEXT.secondary,
                       }}>
                         {dateLabel}
                       </span>
@@ -636,13 +636,13 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                       </span>
                       <span style={{
                         fontFamily: FONT.sans, fontSize: 11, fontWeight: 500,
-                        color: 'var(--t-ink)',
+                        color: TEXT.primary,
                       }}>
                         {day.tempHighC}°
                       </span>
                       <span style={{
                         fontFamily: FONT.sans, fontSize: 10,
-                        color: INK['60'],
+                        color: TEXT.secondary,
                       }}>
                         {day.tempLowC}°
                       </span>
@@ -740,7 +740,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
         {/* Terrazzo kicker */}
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.16em',
-          textTransform: 'uppercase', color: INK['70'],
+          textTransform: 'uppercase', color: TEXT.secondary,
           marginBottom: 28,
         }}>
           Terrazzo · Trip Briefing
@@ -749,7 +749,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
         {/* Trip name */}
         <h1 style={{
           fontFamily: FONT.serif, fontSize: 42, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--t-ink)',
+          fontWeight: 400, color: TEXT.primary,
           margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
           maxWidth: 560,
         }}>
@@ -763,7 +763,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
         }}>
           <span style={{
             fontFamily: FONT.sans, fontSize: 13,
-            color: INK['80'],
+            color: TEXT.primary,
           }}>
             {trip.flexibleDates
               ? `${trip.days.length} days · dates flexible`
@@ -778,7 +778,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
         {/* Brief editorial summary */}
         <div style={{
           fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65,
-          color: INK['85'],
+          color: TEXT.primary,
           marginTop: 24, maxWidth: 520,
         }}>
           {data.totalDays} days across {data.destinations.length === 1
@@ -930,7 +930,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
                   </div>
                   <div style={{
                     fontFamily: FONT.sans, fontSize: 12,
-                    color: INK['75'], marginBottom: f.note ? 8 : 0,
+                    color: TEXT.primary, marginBottom: f.note ? 8 : 0,
                   }}>
                     Recommended {f.places.slice(0, 3).join(', ')}
                     {f.places.length > 3 ? ` and ${f.places.length - 3} more` : ''}
@@ -938,7 +938,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
                   {f.note && (
                     <div style={{
                       fontFamily: FONT.sans, fontSize: 13, fontStyle: 'italic',
-                      color: INK['80'], lineHeight: 1.55,
+                      color: TEXT.primary, lineHeight: 1.55,
                       paddingTop: 8,
                       borderTop: '1px solid var(--t-linen)',
                     }}>
@@ -975,7 +975,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
                     <PerriandIcon name={style.icon} size={13} color={style.color} />
                     <span style={{
                       fontFamily: FONT.sans, fontSize: 12, fontWeight: 500,
-                      color: INK['80'],
+                      color: TEXT.primary,
                     }}>
                       {count} from {style.label}
                     </span>
@@ -1000,14 +1000,14 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
         }} />
         <div style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.16em',
-          textTransform: 'uppercase', color: INK['55'],
+          textTransform: 'uppercase', color: TEXT.secondary,
           marginBottom: 6,
         }}>
           Terrazzo
         </div>
         <div style={{
           fontFamily: FONT.sans, fontSize: 11,
-          color: INK['60'],
+          color: TEXT.secondary,
         }}>
           Travel that matches your taste
         </div>

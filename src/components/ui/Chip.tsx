@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { INK, FONT } from '@/constants/theme';
+import { INK, FONT, TEXT } from '@/constants/theme';
 
 interface ChipProps {
   label: string;
@@ -42,19 +42,19 @@ export default function Chip({
   switch (variant) {
     case 'filter':
       if (isActive) {
-        bg = 'var(--t-ink)';
+        bg = TEXT.primary;
         fg = 'white';
-        border = '1px solid var(--t-ink)';
+        border = `1px solid ${TEXT.primary}`;
       } else {
         bg = 'white';
-        fg = INK['90'];
+        fg = TEXT.secondary;
         border = '1px solid var(--t-linen)';
       }
       break;
 
     case 'tinted':
       bg = color ? `${color}15` : INK['06'];
-      fg = color || 'var(--t-ink)';
+      fg = color || TEXT.primary;
       border = color ? `1.5px solid ${color}25` : undefined;
       break;
 
@@ -65,12 +65,12 @@ export default function Chip({
 
     case 'tag':
       bg = 'var(--t-linen)';
-      fg = 'var(--t-ink)';
+      fg = TEXT.primary;
       break;
 
     default:
       bg = INK['06'];
-      fg = 'var(--t-ink)';
+      fg = TEXT.primary;
   }
 
   return (

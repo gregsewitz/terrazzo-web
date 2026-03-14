@@ -4,7 +4,7 @@ import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
@@ -179,7 +179,7 @@ function PicksStrip({
         className="px-4 pt-2 pb-3"
         style={{ background: 'white', borderTop: '1px solid var(--t-linen)' }}
       >
-        <span className="text-[11px]" style={{ color: INK['85'], fontFamily: FONT.sans }}>
+        <span className="text-[11px]" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
           No picks for this destination yet
         </span>
       </div>
@@ -307,7 +307,7 @@ function PicksStrip({
       <div className="px-3 pb-1">
         <div className="relative">
           <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
-            <PerriandIcon name="discover" size={12} color={INK['40']} />
+            <PerriandIcon name="discover" size={12} color={TEXT.secondary} />
           </span>
           <input
             type="text"
@@ -318,7 +318,7 @@ function PicksStrip({
               width: '100%',
               fontFamily: FONT.sans,
               fontSize: 10,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               background: INK['04'],
               border: '1px solid var(--t-linen)',
               borderRadius: 6,
@@ -331,7 +331,7 @@ function PicksStrip({
               onClick={() => setSearchQuery('')}
               style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
-              <PerriandIcon name="close" size={10} color={INK['50']} />
+              <PerriandIcon name="close" size={10} color={TEXT.secondary} />
             </button>
           )}
         </div>
@@ -342,7 +342,7 @@ function PicksStrip({
         <span style={{
           fontFamily: FONT.mono,
           fontSize: 8,
-          color: isDropTarget ? 'var(--t-verde)' : INK['70'],
+          color: isDropTarget ? 'var(--t-verde)' : TEXT.secondary,
           letterSpacing: '0.3px',
           fontWeight: isDropTarget ? 700 : undefined,
           transition: 'color 0.2s',
@@ -429,7 +429,7 @@ function PicksStrip({
                   <span
                     className="text-[10px] font-medium text-center leading-tight mt-1.5"
                     style={{
-                      color: 'var(--t-ink)',
+                      color: TEXT.primary,
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
@@ -446,7 +446,7 @@ function PicksStrip({
                   <span
                     className="text-[8px] text-center mt-0.5"
                     style={{
-                      color: INK['50'],
+                      color: TEXT.secondary,
                       fontFamily: FONT.mono,
                       display: '-webkit-box',
                       WebkitLineClamp: 1,
@@ -465,7 +465,7 @@ function PicksStrip({
 
           {stripPlaces.length === 0 && (
             <div className="flex items-center justify-center w-full py-6">
-              <span className="text-[10px]" style={{ color: INK['80'] }}>
+              <span className="text-[10px]" style={{ color: TEXT.primary }}>
                 No picks match this filter
               </span>
             </div>
@@ -484,7 +484,7 @@ function PicksStrip({
         >
           {stripPlaces.length === 0 ? (
             <div className="flex items-center justify-center w-full py-1">
-              <span className="text-[10px]" style={{ color: INK['80'] }}>
+              <span className="text-[10px]" style={{ color: TEXT.primary }}>
                 No picks match this filter
               </span>
             </div>
@@ -560,7 +560,7 @@ function PicksStrip({
                     <span
                       className="text-[9px] font-medium text-center leading-tight mt-1"
                       style={{
-                        color: 'var(--t-ink)',
+                        color: TEXT.primary,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',

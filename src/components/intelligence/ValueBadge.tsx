@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { T } from '@/types';
 import { computeValueAssessment, getPriceLabel } from '@/lib/price-value';
 import type { ValueAssessment } from '@/lib/price-value';
@@ -46,7 +46,7 @@ export function ValueBadge({
     return (
       <span
         className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-semibold ${className || ''}`}
-        style={{ color: INK['55'], fontFamily: FONT.mono }}
+        style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
       >
         {priceLabel}
       </span>
@@ -104,14 +104,14 @@ export function ValueBadge({
           </span>
           <span
             className="text-[10px] font-bold"
-            style={{ color: INK['50'], fontFamily: FONT.mono }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             {priceLabel}
           </span>
         </div>
         <p
           className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} mt-0.5`}
-          style={{ color: INK['60'], fontFamily: FONT.sans }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           {assessment.explanation}
         </p>

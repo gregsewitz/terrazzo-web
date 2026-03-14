@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection } from '@/components/animations/AnimatedElements';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ export function StretchPickAxis({
             </span>
             <span
               className="text-[11px] font-bold ml-auto"
-              style={{ color: INK['70'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               {pick.score}% match
             </span>
@@ -176,13 +176,13 @@ export function StretchPickAxis({
           >
             <h3
               className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} italic leading-snug m-0`}
-              style={{ fontFamily: FONT.serif, color: INK['95'] }}
+              style={{ fontFamily: FONT.serif, color: TEXT.primary }}
             >
               {pick.name}
             </h3>
             <span
               className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} mt-0.5 block`}
-              style={{ color: INK['70'] }}
+              style={{ color: TEXT.secondary }}
             >
               {pick.location} · {pick.type}
             </span>
@@ -214,15 +214,15 @@ export function StretchPickAxis({
         >
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed m-0 mb-2`}
-            style={{ color: INK['80'] }}
+            style={{ color: TEXT.secondary }}
           >
             {pick.why}
           </p>
           <div className="flex items-center gap-1.5">
-            <PerriandIcon name="sparkle" size={10} color={INK['70']} />
+            <PerriandIcon name="sparkle" size={10} color={TEXT.secondary} />
             <span
               className={`${isDesktop ? 'text-[10px]' : 'text-[9px]'} italic`}
-              style={{ color: INK['70'] }}
+              style={{ color: TEXT.secondary }}
             >
               Breaks your pattern: {pick.tension}
             </span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { SectionHeader, PlaceRow, searchLibraryByDestination, getRecentSaves } from './AddBarShared';
 import type { ImportedPlace, Collection } from '@/types';
@@ -118,7 +118,7 @@ export default function AddBarSearch({
               }}
             >
               <PerriandIcon name="add" size={14} color="var(--t-verde)" />
-              <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)' }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.primary }}>
                 Search Google for &ldquo;{query}&rdquo;
               </span>
             </button>
@@ -155,7 +155,7 @@ export default function AddBarSearch({
                             : sl.emoji}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
+                          <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, margin: 0 }}>
                             {sl.name}
                           </p>
                           <p style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-verde)', margin: '1px 0 0' }}>
@@ -185,7 +185,7 @@ export default function AddBarSearch({
                     />
                   ))}
                   {destinationMatches.length > 6 && (
-                    <p style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['40'], textAlign: 'center', margin: '8px 0 0' }}>
+                    <p style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, textAlign: 'center', margin: '8px 0 0' }}>
                       + {destinationMatches.length - 6} more — type to search
                     </p>
                   )}
@@ -196,11 +196,11 @@ export default function AddBarSearch({
               <div
                 className="mt-4 p-4 rounded-xl"
                 style={{
-                  background: 'rgba(200,146,58,0.05)',
-                  border: '1px solid rgba(200,146,58,0.12)',
+                  background: 'rgba(232,111,90,0.05)',
+                  border: '1px solid rgba(232,111,90,0.12)',
                 }}
               >
-                <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', margin: '0 0 8px' }}>
+                <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, margin: '0 0 8px' }}>
                   Don&apos;t have what you need?
                 </p>
                 <button
@@ -216,7 +216,7 @@ export default function AddBarSearch({
                   }}
                 >
                   <PerriandIcon name="discover" size={15} color={INK['50']} />
-                  <span style={{ fontFamily: FONT.sans, fontSize: 13, color: 'var(--t-ink)' }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.primary }}>
                     Search Google for {tripContext.destination || ''} places
                   </span>
                 </button>
@@ -241,7 +241,7 @@ export default function AddBarSearch({
                 </>
               ) : (
                 <div className="pt-6 pb-2 text-center">
-                  <p style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['40'], margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.secondary, margin: 0, lineHeight: 1.5 }}>
                     Search for a place, paste a link,<br />or drop in a list from a friend
                   </p>
                 </div>

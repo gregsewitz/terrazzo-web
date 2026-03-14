@@ -5,7 +5,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS as CANONICAL_TYPE_ICONS } from '@/constants/placeTypes';
 
 // Extend canonical TYPE_ICONS with dreaming-specific subtypes
@@ -112,11 +112,11 @@ export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoard
           <div>
             <h2
               className="text-lg mb-0.5"
-              style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)', margin: 0 }}
+              style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
             >
               Dream Board
             </h2>
-            <p className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+            <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
               Collect places, build your inspiration. Set dates when you're ready to plan.
             </p>
           </div>
@@ -175,13 +175,13 @@ export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoard
             <PerriandIcon name="star" size={40} color={INK['20']} />
             <p
               className="text-[14px] mt-4 mb-2 font-medium"
-              style={{ color: INK['50'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               Your dream board is empty
             </p>
             <p
               className="text-[12px] text-center max-w-xs"
-              style={{ color: INK['40'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               Save places from My Places or ask Terrazzo for recommendations to start building your inspiration.
             </p>
@@ -192,7 +192,7 @@ export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoard
             <div key={dest} className="mb-6">
               <h3
                 className="text-[11px] font-bold uppercase tracking-[2px] mb-2 px-1"
-                style={{ fontFamily: FONT.mono, color: INK['50'] }}
+                style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
               >
                 {dest} · {items.length}
               </h3>
@@ -218,14 +218,14 @@ export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoard
         className="flex items-center justify-between px-5 py-2.5 flex-shrink-0"
         style={{ borderTop: '1px solid var(--t-linen)', background: 'white' }}
       >
-        <span className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+        <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
           {filteredItems.length} place{filteredItems.length !== 1 ? 's' : ''} saved
         </span>
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as 'added' | 'type' | 'match')}
           className="text-[11px] bg-transparent border-none outline-none cursor-pointer"
-          style={{ color: INK['50'], fontFamily: FONT.sans }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           <option value="added">Recently added</option>
           <option value="type">By type</option>
@@ -264,7 +264,7 @@ function DreamCard({ item, onTap }: { item: ImportedPlace; onTap: (item: Importe
               background: item.matchScore >= 85
                 ? 'rgba(42,122,86,0.1)'
                 : item.matchScore >= 70
-                  ? 'rgba(200,146,58,0.1)'
+                  ? 'rgba(232,111,90,0.1)'
                   : INK['06'],
               color: item.matchScore >= 85
                 ? 'var(--t-verde)'
@@ -282,7 +282,7 @@ function DreamCard({ item, onTap }: { item: ImportedPlace; onTap: (item: Importe
       {/* Name */}
       <span
         className="text-[13px] font-medium leading-snug mb-0.5 line-clamp-2"
-        style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+        style={{ color: TEXT.primary, fontFamily: FONT.sans }}
       >
         {item.name}
       </span>
@@ -290,7 +290,7 @@ function DreamCard({ item, onTap }: { item: ImportedPlace; onTap: (item: Importe
       {/* Type + location */}
       <span
         className="text-[10px] truncate w-full"
-        style={{ color: INK['50'], fontFamily: FONT.sans }}
+        style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
       >
         {item.type && <span className="capitalize">{item.type}</span>}
         {item.type && item.location && ' · '}
@@ -301,7 +301,7 @@ function DreamCard({ item, onTap }: { item: ImportedPlace; onTap: (item: Importe
       {item.tasteNote && (
         <span
           className="text-[10px] mt-1.5 line-clamp-2 leading-relaxed italic"
-          style={{ color: INK['40'], fontFamily: FONT.sans }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           "{item.tasteNote}"
         </span>

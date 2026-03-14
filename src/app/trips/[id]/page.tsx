@@ -22,7 +22,7 @@ import ExportToMaps from '@/components/ExportToMaps';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useCollaborationStore } from '@/stores/collaborationStore';
 import { useCollaborationSync } from '@/hooks/useCollaborationSync';
-import { INK, FONT } from '@/constants/theme';
+import { INK, FONT, TEXT } from '@/constants/theme';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import DesktopNav from '@/components/DesktopNav';
 import DayBoardView from '@/components/DayBoardView';
@@ -331,7 +331,7 @@ function TripDetailContent() {
   if (!trip) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
-        <p style={{ color: INK['90'] }}>Trip not found</p>
+        <p style={{ color: TEXT.primary }}>Trip not found</p>
       </div>
     );
   }
@@ -355,26 +355,26 @@ function TripDetailContent() {
             <button
               onClick={() => router.push('/trips')}
               className="bg-transparent border-none cursor-pointer link-hover"
-              style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'], padding: 0 }}
+              style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, padding: 0 }}
             >
               Trips
             </button>
-            <span style={{ color: INK['20'], fontSize: 12 }}>→</span>
+            <span style={{ color: TEXT.secondary, fontSize: 12 }}>→</span>
             <EditableTripName
               name={trip.name}
               onRename={(newName) => renameTrip(trip.id, newName)}
-              style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}
+              style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, fontWeight: 600, color: TEXT.primary, margin: 0 }}
             />
             {trip.status === 'dreaming' && (
               <span
                 className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[1px]"
-                style={{ background: 'rgba(200,146,58,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
+                style={{ background: 'rgba(232,111,90,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
               >
                 Dreaming
               </span>
             )}
             {(trip.flexibleDates || (trip.startDate && trip.endDate)) && (
-              <span style={{ fontFamily: FONT.mono, fontSize: 11, color: INK['50'] }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 11, color: TEXT.secondary }}>
                 {trip.flexibleDates
                   ? `${trip.days.length} days · flexible`
                   : formatDateRange(trip.startDate!, trip.endDate!)
@@ -392,7 +392,7 @@ function TripDetailContent() {
                       fontSize: 10,
                       fontWeight: 500,
                       background: INK['04'],
-                      color: INK['70'],
+                      color: TEXT.secondary,
                     }}
                   >
                     {d}
@@ -426,12 +426,12 @@ function TripDetailContent() {
                         fontSize: 11,
                         fontWeight: isActive ? 600 : 400,
                         background: isActive ? 'white' : 'transparent',
-                        color: isActive ? 'var(--t-ink)' : INK['50'],
+                        color: isActive ? TEXT.primary : TEXT.secondary,
                         boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
                         borderRadius: isActive ? 20 : 0,
                       }}
                     >
-                      <PerriandIcon name={tab.icon} size={13} color={isActive ? 'var(--t-ink)' : INK['40']} />
+                      <PerriandIcon name={tab.icon} size={13} color={isActive ? TEXT.primary : TEXT.secondary} />
                       {tab.label}
                     </button>
                   );
@@ -447,7 +447,7 @@ function TripDetailContent() {
                     className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm"
                     style={{
                       background: 'var(--t-linen)',
-                      color: 'var(--t-ink)',
+                      color: TEXT.primary,
                       border: '2px solid white',
                       fontFamily: FONT.sans,
                     }}
@@ -467,10 +467,10 @@ function TripDetailContent() {
                 fontFamily: FONT.sans,
                 fontSize: 12,
                 fontWeight: 500,
-                color: INK['70'],
+                color: TEXT.secondary,
               }}
             >
-              <PerriandIcon name="invite" size={14} color={INK['50']} />
+              <PerriandIcon name="invite" size={14} color={TEXT.secondary} />
               Share
             </button>
             <button
@@ -515,7 +515,7 @@ function TripDetailContent() {
             <div className="flex-1 flex flex-col min-h-0">
               {/* Graduation banner */}
               <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
-                <span className="text-[12px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                <span className="text-[12px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                   Ready to set dates and build an itinerary?
                 </span>
                 <button
@@ -628,7 +628,7 @@ function TripDetailContent() {
                 fontFamily: FONT.serif,
                 fontStyle: 'italic',
                 fontSize: 18,
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 margin: '0 0 8px',
               }}>
                 Delete trip?
@@ -636,7 +636,7 @@ function TripDetailContent() {
               <p style={{
                 fontFamily: FONT.sans,
                 fontSize: 13,
-                color: INK['70'],
+                color: TEXT.secondary,
                 lineHeight: 1.5,
                 margin: '0 0 20px',
               }}>
@@ -652,7 +652,7 @@ function TripDetailContent() {
                     fontWeight: 600,
                     background: INK['04'],
                     border: '1px solid var(--t-linen)',
-                    color: 'var(--t-ink)',
+                    color: TEXT.primary,
                   }}
                 >
                   Cancel
@@ -748,11 +748,11 @@ function TripDetailContent() {
                   name={trip.name}
                   onRename={(newName) => renameTrip(trip.id, newName)}
                   className="text-[16px] truncate"
-                  style={{ fontFamily: FONT.serif, fontWeight: 600, color: 'var(--t-ink)', margin: 0, display: 'block' }}
+                  style={{ fontFamily: FONT.serif, fontWeight: 600, color: TEXT.primary, margin: 0, display: 'block' }}
                 />
                 <span
                   className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-[0.5px] flex-shrink-0"
-                  style={{ background: 'rgba(200,146,58,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
+                  style={{ background: 'rgba(232,111,90,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
                 >
                   Dreaming
                 </span>
@@ -951,7 +951,7 @@ function TripDetailContent() {
               fontFamily: FONT.serif,
               fontStyle: 'italic',
               fontSize: 18,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               margin: '0 0 8px',
             }}>
               Delete trip?
@@ -959,7 +959,7 @@ function TripDetailContent() {
             <p style={{
               fontFamily: FONT.sans,
               fontSize: 13,
-              color: INK['70'],
+              color: TEXT.secondary,
               lineHeight: 1.5,
               margin: '0 0 20px',
             }}>
@@ -975,7 +975,7 @@ function TripDetailContent() {
                   fontWeight: 600,
                   background: INK['04'],
                   border: '1px solid var(--t-linen)',
-                  color: 'var(--t-ink)',
+                  color: TEXT.primary,
                 }}
               >
                 Cancel

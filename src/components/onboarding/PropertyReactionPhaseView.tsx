@@ -330,7 +330,7 @@ export default function PropertyReactionPhaseView({
                 padding: '10px 24px',
                 background: 'transparent',
                 color: T.ink,
-                border: `1px solid rgba(28,26,23,0.1)`,
+                border: `1px solid rgba(26,45,74,0.1)`,
                 borderRadius: 100,
                 fontSize: 13,
                 fontWeight: 500,

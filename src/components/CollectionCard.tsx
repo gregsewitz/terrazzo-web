@@ -3,7 +3,7 @@
 import React from 'react';
 import { Collection, ImportedPlace } from '@/types';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface CollectionCardProps {
   collection: Collection;
@@ -45,7 +45,7 @@ function CollectionCardInner({
           {collection.emoji && (
             <span style={{ fontSize: isPerriandIcon ? 13 : 15 }}>
               {isPerriandIcon ? (
-                <PerriandIcon name={collection.emoji as any} size={13} color={INK['70']} />
+                <PerriandIcon name={collection.emoji as any} size={13} color={TEXT.secondary} />
               ) : (
                 collection.emoji
               )}
@@ -55,12 +55,12 @@ function CollectionCardInner({
         <div className="flex-1 min-w-0">
           <div
             className="text-[12px] font-semibold truncate"
-            style={{ fontFamily: FONT.sans, color: 'var(--t-ink)', lineHeight: 1.3 }}
+            style={{ fontFamily: FONT.sans, color: TEXT.primary, lineHeight: 1.3 }}
           >
             {collection.name}
           </div>
           <div className="flex items-center gap-1.5" style={{ marginTop: 2 }}>
-            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, whiteSpace: 'nowrap' }}>
               {placeCount} {placeCount === 1 ? 'place' : 'places'}
             </span>
             {collection.isSmartCollection && (

@@ -164,7 +164,7 @@ export default function PhasePage() {
                 </svg>
               </button>
             )}
-            <h1 className="font-serif text-[20px] text-[var(--t-ink)] leading-tight">
+            <h1 className="font-display text-[20px] text-[var(--t-ink)] leading-tight">
               {phase.title}
             </h1>
           </div>

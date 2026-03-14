@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { TransportEvent, TransportMode, TRANSPORT_ICONS } from '@/types';
 
 // ─── Mode config ───
@@ -129,7 +129,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
               fontFamily: FONT.sans,
               fontSize: compact ? 10 : 11,
               fontWeight: 600,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
             }}
           >
             {config.label} {transport.from} → {transport.to}
@@ -139,7 +139,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
           <span style={{
             fontFamily: FONT.mono,
             fontSize: compact ? 9 : 10,
-            color: INK['55'],
+            color: TEXT.secondary,
           }}>
             {transport.details}
             {transport.details && transport.arrivalTime ? ' · ' : ''}
@@ -173,7 +173,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
                 background: INK['06'], border: 'none', cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="edit" size={10} color={INK['50']} />
+              <PerriandIcon name="edit" size={10} color={TEXT.secondary} />
             </button>
           )}
           {onRemove && (
@@ -185,7 +185,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
                 background: INK['06'], border: 'none', cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="close" size={10} color={INK['50']} />
+              <PerriandIcon name="close" size={10} color={TEXT.secondary} />
             </button>
           )}
         </div>
@@ -235,7 +235,7 @@ export function TransportInput({ initial, onSave, onCancel, fromDefault, compact
     fontFamily: FONT.sans,
     fontSize,
     fontWeight: 500,
-    color: 'var(--t-ink)',
+    color: TEXT.primary,
     background: 'transparent',
     border: 'none',
     borderBottom: `1px solid ${INK['20']}`,
@@ -290,7 +290,7 @@ export function TransportInput({ initial, onSave, onCancel, fromDefault, compact
           onKeyDown={e => { if (e.key === 'Escape') onCancel(); }}
           autoFocus
         />
-        <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['55'] }}>→</span>
+        <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>→</span>
         <input
           type="text"
           value={to}
@@ -342,7 +342,7 @@ export function TransportInput({ initial, onSave, onCancel, fromDefault, compact
           className="px-3 py-1 rounded-full cursor-pointer"
           style={{
             fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-            color: INK['50'], background: INK['06'], border: 'none',
+            color: TEXT.secondary, background: INK['06'], border: 'none',
           }}
         >
           Cancel

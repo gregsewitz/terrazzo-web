@@ -142,7 +142,7 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
               {dimensionLabel}
             </span>
           )}
-          <h2 className="font-serif text-[18px] text-[var(--t-ink)] leading-tight">
+          <h2 className="font-display text-[18px] text-[var(--t-ink)] leading-tight">
             {promptText}
           </h2>
         </div>
@@ -269,7 +269,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
 
         {/* Experience label — large editorial */}
         <h3
-          className="font-serif leading-tight mb-3"
+          className="font-serif italic leading-tight mb-3"
           style={{
             fontSize: 'clamp(20px, 3.5vw, 26px)',
             color: 'var(--t-ink)',
@@ -305,7 +305,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
       <div
         className="absolute top-3 right-3 px-3 py-1.5 rounded-full pointer-events-none"
         style={{
-          background: isSelected ? 'var(--t-honey)' : 'rgba(28,26,23,0.06)',
+          background: isSelected ? 'var(--t-honey)' : 'rgba(26,45,74,0.06)',
           transition: 'background 300ms ease, transform 300ms ease',
           transform: isSelected ? 'scale(1.05)' : 'scale(1)',
         }}

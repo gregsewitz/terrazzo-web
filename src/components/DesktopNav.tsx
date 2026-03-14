@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { Logo } from '@/components/brand';
+import { FONT, TEXT, INK } from '@/constants/theme';
 import { useAddBarStore } from '@/stores/addBarStore';
 
 interface DesktopNavProps {
@@ -29,24 +30,13 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
         boxShadow: '0 1px 0 var(--t-linen)',
       }}
     >
-      {/* Left: Terrazzo wordmark + icon */}
+      {/* Left: Terrazzo wordmark */}
       <button
         onClick={() => router.push('/trips')}
-        className="flex items-center gap-2 bg-transparent border-none cursor-pointer"
+        className="flex items-center bg-transparent border-none cursor-pointer"
         style={{ padding: 0 }}
       >
-        <PerriandIcon name="terrazzo" size={24} color="var(--t-ink)" accent="var(--t-signal-red)" />
-        <span
-          style={{
-            fontFamily: "'Instrument Serif', 'DM Serif Display', serif",
-            fontSize: 20,
-            fontWeight: 400,
-            color: 'var(--t-ink)',
-            letterSpacing: -0.5,
-          }}
-        >
-          Terrazzo
-        </span>
+        <Logo variant="wordmark" font="pixellance" theme="dark" style={{ height: 22, width: 'auto' }} />
       </button>
 
       {/* Center: Collect · + Place · Plan */}
@@ -92,7 +82,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
               fontFamily: FONT.sans,
               fontSize: 14,
               fontWeight: 400,
-              color: hoveredNav === 'add' ? INK['85'] : INK['60'],
+              color: hoveredNav === 'add' ? TEXT.primary : TEXT.secondary,
               letterSpacing: 0.2,
               transition: 'color 150ms ease',
             }}
@@ -128,7 +118,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
           fontWeight: 700,
           letterSpacing: 1,
           transition: 'box-shadow 150ms ease',
-          boxShadow: avatarHovered ? '0 0 0 2px var(--t-honey)' : '0 0 0 0px transparent',
+          boxShadow: avatarHovered ? '0 0 0 2px var(--t-coral)' : '0 0 0 0px transparent',
         }}
         onClick={() => router.push('/profile')}
       >
@@ -165,7 +155,7 @@ function NavLink({
       <PerriandIcon
         name={icon}
         size={16}
-        color={isActive ? 'var(--t-signal-red)' : 'var(--t-ink)'}
+        color={isActive ? 'var(--t-coral)' : 'var(--t-navy)'}
         opacity={isActive ? 1 : isHovered ? 0.7 : 0.5}
       />
       <span
@@ -173,7 +163,7 @@ function NavLink({
           fontFamily: FONT.sans,
           fontSize: 14,
           fontWeight: isActive ? 600 : 400,
-          color: isActive ? 'var(--t-ink)' : isHovered ? INK['85'] : INK['60'],
+          color: isActive ? TEXT.primary : isHovered ? TEXT.primary : TEXT.secondary,
           letterSpacing: 0.2,
           transition: 'color 150ms ease',
         }}

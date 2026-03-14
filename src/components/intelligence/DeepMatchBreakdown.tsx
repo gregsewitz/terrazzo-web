@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar } from '@/components/animations/AnimatedElements';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ export function DeepMatchBreakdown({
       <div
         className={`rounded-2xl overflow-hidden ${className || ''}`}
         style={{
-          background: 'linear-gradient(160deg, rgba(200,146,58,0.08) 0%, rgba(200,146,58,0.02) 100%)',
+          background: 'linear-gradient(160deg, rgba(232,111,90,0.08) 0%, rgba(232,111,90,0.02) 100%)',
           border: `1px solid ${T.honey}20`,
         }}
       >
@@ -114,13 +114,13 @@ export function DeepMatchBreakdown({
           >
             <h3
               className={`${isDesktop ? 'text-[20px]' : 'text-[18px]'} italic leading-snug m-0`}
-              style={{ fontFamily: FONT.serif, color: INK['95'] }}
+              style={{ fontFamily: FONT.serif, color: TEXT.primary }}
             >
               {match.name}
             </h3>
             <span
               className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} mt-0.5 block`}
-              style={{ color: INK['70'] }}
+              style={{ color: TEXT.secondary }}
             >
               {match.location}
             </span>
@@ -129,7 +129,7 @@ export function DeepMatchBreakdown({
           {/* Editorial headline */}
           <p
             className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed mt-2.5 mb-0 italic`}
-            style={{ color: INK['70'] }}
+            style={{ color: TEXT.secondary }}
           >
             {match.headline}
           </p>
@@ -164,13 +164,13 @@ export function DeepMatchBreakdown({
                           />
                           <span
                             className="text-[11px] font-semibold"
-                            style={{ color: INK['90'], fontFamily: FONT.sans }}
+                            style={{ color: TEXT.primary, fontFamily: FONT.sans }}
                           >
                             {humanizeSignal(signal.signal)}
                           </span>
                           <span
                             className="text-[9px] font-bold ml-auto"
-                            style={{ color: `${color}a0`, fontFamily: FONT.mono }}
+                            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                           >
                             {signal.strength}
                           </span>
@@ -178,7 +178,7 @@ export function DeepMatchBreakdown({
                         {/* Explanation note */}
                         <p
                           className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} leading-relaxed m-0`}
-                          style={{ color: INK['70'] }}
+                          style={{ color: TEXT.secondary }}
                         >
                           {signal.note}
                         </p>
@@ -204,7 +204,7 @@ export function DeepMatchBreakdown({
               <PerriandIcon name="sparkle" size={11} color={T.pantonViolet} />
               <p
                 className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} m-0`}
-                style={{ color: INK['70'], fontFamily: FONT.sans }}
+                style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
               >
                 <span className="font-semibold" style={{ color: `${T.pantonViolet}b0` }}>
                   Resolves your tension:

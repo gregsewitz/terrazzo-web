@@ -10,7 +10,7 @@ import { PHOTO_GRADIENTS } from '@/constants/placeTypes';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import PipelineProgress from '@/components/PipelineProgress';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import PlacePhoto from '@/components/PlacePhoto';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
@@ -216,7 +216,7 @@ function PlaceDetailContent({
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(to top, rgba(28,26,23,0.55) 0%, rgba(28,26,23,0.15) 40%, transparent 70%)',
+            background: 'linear-gradient(to top, rgba(26,45,74,0.55) 0%, rgba(26,45,74,0.15) 40%, transparent 70%)',
             pointerEvents: 'none',
           }}
         />
@@ -229,15 +229,15 @@ function PlaceDetailContent({
             width: isDesktop ? 36 : 32,
             height: isDesktop ? 36 : 32,
             borderRadius: '50%',
-            background: 'rgba(28,26,23,0.45)',
+            background: 'rgba(26,45,74,0.45)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             color: 'white',
             fontSize: isDesktop ? 16 : 14,
             transition: 'background 150ms ease',
           }}
-          onMouseEnter={e => isDesktop && (e.currentTarget.style.background = 'rgba(28,26,23,0.6)')}
-          onMouseLeave={e => isDesktop && (e.currentTarget.style.background = 'rgba(28,26,23,0.45)')}
+          onMouseEnter={e => isDesktop && (e.currentTarget.style.background = 'rgba(26,45,74,0.6)')}
+          onMouseLeave={e => isDesktop && (e.currentTarget.style.background = 'rgba(26,45,74,0.45)')}
           aria-label="Close"
         >
           {isDesktop ? 'x' : '<'}
@@ -263,11 +263,11 @@ function PlaceDetailContent({
               className={`w-full mb-3 py-3 rounded-xl border-none cursor-pointer ${saveButtonFontSize} font-semibold ${saveButtonHoverClass} flex items-center justify-center gap-2 ${containerMarginTop}`}
               style={{
                 background: saved ? INK['06'] : 'var(--t-ink)',
-                color: saved ? 'var(--t-ink)' : 'var(--t-cream)',
+                color: saved ? TEXT.primary : TEXT.inverse,
                 fontFamily: FONT.sans,
               }}
             >
-              <PerriandIcon name={saved ? 'check' : 'add'} size={14} color={saved ? 'var(--t-ink)' : 'var(--t-cream)'} />
+              <PerriandIcon name={saved ? 'check' : 'add'} size={14} color={saved ? TEXT.primary : TEXT.inverse} />
               {saved ? 'Saved to library' : 'Save to library'}
             </button>
           </SafeFadeIn>
@@ -299,8 +299,8 @@ function PlaceDetailContent({
                   border: `1.5px solid ${INK['08']}`,
                 }}
               >
-                <PerriandIcon name="star" size={isDesktop ? 13 : 12} color={INK['80']} />
-                <span className={`${ratingBadgeFontSize} font-medium`} style={{ color: INK['80'], fontFamily: FONT.mono }}>
+                <PerriandIcon name="star" size={isDesktop ? 13 : 12} color={TEXT.primary} />
+                <span className={`${ratingBadgeFontSize} font-medium`} style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
                   Rate
                 </span>
               </button>
@@ -314,9 +314,9 @@ function PlaceDetailContent({
                   border: isInCollections ? '1.5px solid rgba(42,122,86,0.2)' : `1.5px solid ${INK['08']}`,
                 }}
               >
-                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isInCollections ? 'var(--t-verde)' : INK['70']} />
+                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isInCollections ? 'var(--t-verde)' : TEXT.secondary} />
                 <span className={`${collectionBadgeFontSize} font-semibold`} style={{
-                  color: isInCollections ? 'var(--t-verde)' : INK['70'],
+                  color: isInCollections ? 'var(--t-verde)' : TEXT.secondary,
                   fontFamily: FONT.mono,
                 }}>
                   {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
@@ -329,11 +329,11 @@ function PlaceDetailContent({
         {/* Location + metadata chips */}
         <SafeFadeIn direction="up" distance={10} duration={0.5} delay={0.1}>
           <div className="flex items-center gap-1.5 mt-2.5 mb-4 flex-wrap">
-            <span className={`${locationFontSize}`} style={{ color: INK['70'] }}>
+            <span className={`${locationFontSize}`} style={{ color: TEXT.secondary }}>
               {hydratedLocation} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
             </span>
             {item.alsoKnownAs && (
-              <span className={`${akaFontSize}`} style={{ color: INK['70'] }}>
+              <span className={`${akaFontSize}`} style={{ color: TEXT.secondary }}>
                 aka &ldquo;{item.alsoKnownAs}&rdquo;
               </span>
             )}
@@ -349,22 +349,22 @@ function PlaceDetailContent({
             {hydratedGoogle?.category && (
               <span
                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                style={{ background: 'rgba(200,146,58,0.15)', color: '#7a5e24' }}
+                style={{ background: 'rgba(232,111,90,0.15)', color: '#7a5e24' }}
               >
                 {hydratedGoogle.category}
               </span>
             )}
             {hydratedGoogle?.rating && (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: 'var(--t-ink)' }}>
+              <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: TEXT.primary }}>
                 <PerriandIcon name="star" size={11} color="var(--t-chrome-yellow)" />
                 {hydratedGoogle.rating}
                 {hydratedGoogle.reviewCount && (
-                  <span style={{ color: INK['70'] }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
+                  <span style={{ color: TEXT.secondary }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
                 )}
               </span>
             )}
             {hydratedGoogle?.priceLevel && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: 'var(--t-ink)' }}>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: TEXT.primary }}>
                 {'$'.repeat(hydratedGoogle.priceLevel)}
               </span>
             )}
@@ -374,7 +374,7 @@ function PlaceDetailContent({
         {/* Description */}
         {item.enrichment?.description && (
           <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.15}>
-            <p className={`${descriptionFontSize} leading-relaxed mb-5`} style={{ color: INK['85'] }}>
+            <p className={`${descriptionFontSize} leading-relaxed mb-5`} style={{ color: TEXT.primary }}>
               {item.enrichment.description}
             </p>
           </SafeFadeIn>
@@ -389,10 +389,10 @@ function PlaceDetailContent({
               ? `https://www.google.com/maps/search/?api=1&query=${g.lat},${g.lng}`
               : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.name} ${item.location}`)}`;
           const tiles: React.ReactNode[] = [];
-          if (g.address) tiles.push(<div key="addr" className="flex items-start gap-2.5 p-3.5 min-w-0"><PerriandIcon name="pin" size={13} color={INK['50']} /><span className="text-[11px] leading-snug" style={{ color: INK['75'] }}>{g.address}</span></div>);
-          if (g.website) tiles.push(<div key="web" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="discover" size={13} color={INK['50']} /><a href={g.website} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline truncate" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>{g.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></div>);
-          if (g.phone) tiles.push(<div key="phone" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="sparkle" size={13} color={INK['50']} /><a href={`tel:${g.phone}`} className="text-[11px] no-underline" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>{g.phone}</a></div>);
-          tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={INK['50']} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline" style={{ color: '#8a6a2a' }} onClick={(e) => e.stopPropagation()}>Google Maps</a></div>);
+          if (g.address) tiles.push(<div key="addr" className="flex items-start gap-2.5 p-3.5 min-w-0"><PerriandIcon name="pin" size={13} color={TEXT.secondary} /><span className="text-[11px] leading-snug" style={{ color: TEXT.primary }}>{g.address}</span></div>);
+          if (g.website) tiles.push(<div key="web" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="discover" size={13} color={TEXT.secondary} /><a href={g.website} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline truncate" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>{g.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></div>);
+          if (g.phone) tiles.push(<div key="phone" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="sparkle" size={13} color={TEXT.secondary} /><a href={`tel:${g.phone}`} className="text-[11px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>{g.phone}</a></div>);
+          tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={TEXT.secondary} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>Google Maps</a></div>);
           return (
             <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.2}>
               <div className="mb-5 rounded-2xl overflow-hidden" style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length >= 2 ? 2 : 1}, 1fr)`, gap: 1, background: INK['06'], border: `1px solid ${INK['04']}` }}>
@@ -416,11 +416,11 @@ function PlaceDetailContent({
         {item.whatToOrder && item.whatToOrder.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}>What to order</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.primary, fontFamily: FONT.mono, letterSpacing: '1px' }}>What to order</div>
               <StaggerContainer className="flex flex-wrap gap-1.5" staggerDelay={0.06}>
                 {item.whatToOrder.map((tag, i) => (
                   <StaggerItem key={i}>
-                    <div className={`px-2.5 py-1 rounded-lg ${whatToOrderTagFontSize}`} style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}>{tag}</div>
+                    <div className={`px-2.5 py-1 rounded-lg ${whatToOrderTagFontSize}`} style={{ background: 'var(--t-linen)', color: TEXT.primary }}>{tag}</div>
                   </StaggerItem>
                 ))}
               </StaggerContainer>
@@ -432,9 +432,9 @@ function PlaceDetailContent({
         {item.tips && item.tips.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}>Tips</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.primary, fontFamily: FONT.mono, letterSpacing: '1px' }}>Tips</div>
               <div className="rounded-2xl px-4 py-3" style={{ background: 'var(--t-linen)' }}>
-                {item.tips.map((tip, i) => (<div key={i} className={`${tipsFontSize} leading-relaxed`} style={{ color: 'var(--t-ink)' }}>{tip}</div>))}
+                {item.tips.map((tip, i) => (<div key={i} className={`${tipsFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{tip}</div>))}
               </div>
             </div>
           </FadeInSection>
@@ -444,12 +444,12 @@ function PlaceDetailContent({
         {siblingPlaces && siblingPlaces.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['95'], fontFamily: FONT.mono, letterSpacing: '1px' }}>Also from this guide</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.primary, fontFamily: FONT.mono, letterSpacing: '1px' }}>Also from this guide</div>
               <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {siblingPlaces.slice(0, 5).map(sibling => (
                   <div key={sibling.id} className={`${siblingCardWidth} rounded-2xl p-3 flex-shrink-0 card-hover`} style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <div className={`${siblingNameFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>{sibling.name}</div>
-                    <div className={`${siblingTypeFontSize} mt-0.5`} style={{ color: INK['70'] }}>{sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)} · {sibling.location.split(',')[0]}</div>
+                    <div className={`${siblingNameFontSize} font-semibold`} style={{ color: TEXT.primary }}>{sibling.name}</div>
+                    <div className={`${siblingTypeFontSize} mt-0.5`} style={{ color: TEXT.secondary }}>{sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)} · {sibling.location.split(',')[0]}</div>
                   </div>
                 ))}
               </div>
@@ -462,7 +462,7 @@ function PlaceDetailContent({
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="mb-5" style={{ background: sourceStyle ? `${sourceStyle.color}14` : 'rgba(199,82,51,0.08)', borderLeft: `3px solid ${sourceStyle?.color || '#c75233'}`, padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
               <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>{item.source?.name ? `From ${item.source.name}` : 'Source note'}</div>
-              <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: 'var(--t-ink)' }}>{hydratedTasteNote}</p>
+              <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{hydratedTasteNote}</p>
             </div>
           </FadeInSection>
         )}
@@ -474,7 +474,7 @@ function PlaceDetailContent({
               <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}>
                 <PerriandIcon name="friend" size={12} color="var(--t-verde)" />{item.friendAttribution.name}
               </div>
-              {item.friendAttribution.note && <p className={`${friendAttributionFontSize} italic leading-relaxed`} style={{ color: 'var(--t-ink)' }}>&ldquo;{item.friendAttribution.note}&rdquo;</p>}
+              {item.friendAttribution.note && <p className={`${friendAttributionFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>&ldquo;{item.friendAttribution.note}&rdquo;</p>}
             </div>
           </FadeInSection>
         )}
@@ -489,10 +489,10 @@ function PlaceDetailContent({
               {existingRating.tags && existingRating.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {existingRating.tags.map(tag => (<span key={tag} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${ratingReaction.color}12`, color: ratingReaction.color }}>{tag}</span>))}
-                  {existingRating.returnIntent === 'absolutely' && <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: INK['90'] }}>Would return <PerriandIcon name="check" size={11} color={INK['90']} /></span>}
+                  {existingRating.returnIntent === 'absolutely' && <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: TEXT.primary }}>Would return <PerriandIcon name="check" size={11} color={TEXT.primary} /></span>}
                 </div>
               )}
-              {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: INK['90'] }}>&ldquo;{existingRating.personalNote}&rdquo;</p>}
+              {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: TEXT.primary }}>&ldquo;{existingRating.personalNote}&rdquo;</p>}
             </div>
           </FadeInSection>
         )}
@@ -505,12 +505,12 @@ function PlaceDetailContent({
                 <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5" style={{ color: '#226848', fontFamily: FONT.mono }}>
                   <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You&apos;ll Love It
                 </h4>
-                <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: 'var(--t-ink)' }}>{item.terrazzoInsight.why}</p>
+                <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
               </div>
               {item.terrazzoInsight.caveat && (
                 <div className="p-4 rounded-2xl" style={{ background: 'rgba(160,108,40,0.08)', border: '1px solid rgba(160,108,40,0.16)' }}>
                   <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: '#7a5518', fontFamily: FONT.mono }}>Heads Up</h4>
-                  <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: 'var(--t-ink)' }}>{item.terrazzoInsight.caveat}</p>
+                  <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.caveat}</p>
                 </div>
               )}
             </div>
@@ -523,8 +523,8 @@ function PlaceDetailContent({
             <div
               className="flex items-center gap-4 p-4 rounded-2xl mb-5"
               style={{
-                background: 'linear-gradient(135deg, rgba(200,146,58,0.10), rgba(200,146,58,0.04))',
-                border: '1px solid rgba(200,146,58,0.18)',
+                background: 'linear-gradient(135deg, rgba(232,111,90,0.10), rgba(232,111,90,0.04))',
+                border: '1px solid rgba(232,111,90,0.18)',
                 cursor: onViewBriefing ? 'pointer' : 'default',
               }}
               onClick={onViewBriefing}
@@ -534,7 +534,7 @@ function PlaceDetailContent({
             >
               <AnimatedScoreArc score={hydratedMatchScore} size={56} color="#8a6a2a" />
               <div className="flex-1 min-w-0">
-                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Taste match</div>
+                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: TEXT.primary }}>Taste match</div>
                 {/* Signal resonance clusters — replaces basic domain chips */}
                 {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 ? (
                   <div className="mt-1.5">
@@ -573,7 +573,7 @@ function PlaceDetailContent({
                 {isEnriching && (
                   intelData?.latestRun
                     ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
-                    : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: INK['40'], fontFamily: FONT.mono }}>Researching this place…</span></div>
+                    : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Researching this place…</span></div>
                 )}
                 {onViewBriefing && googlePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing</button>)}
               </div>
@@ -592,11 +592,11 @@ function PlaceDetailContent({
                 className="flex items-center justify-center flex-shrink-0"
                 style={{ width: 44, height: 44, borderRadius: 12, background: INK['06'] }}
               >
-                <PerriandIcon name="pin" size={20} color={INK['40']} />
+                <PerriandIcon name="pin" size={20} color={TEXT.secondary} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: 'var(--t-ink)' }}>Private listing</div>
-                <div className={`${matchScoreSubFontSize} mt-0.5`} style={{ color: INK['50'], fontFamily: FONT.mono }}>
+                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: TEXT.primary }}>Private listing</div>
+                <div className={`${matchScoreSubFontSize} mt-0.5`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                   Taste matching isn&apos;t available for private rentals and listings
                 </div>
               </div>
@@ -608,7 +608,7 @@ function PlaceDetailContent({
         {!isPrivateListing && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>
+              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
                 {userTasteProfile ? 'Taste Overlap' : 'Taste Mosaic'}
               </h3>
               {userTasteProfile ? (
@@ -634,7 +634,7 @@ function PlaceDetailContent({
         {!isPrivateListing && resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 && (
           <FadeInSection delay={0.12} direction="up" distance={16}>
             <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Signal Resonance</h3>
+              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>Signal Resonance</h3>
               <SignalResonanceStrip
                 clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
                   label: c.label,
@@ -678,7 +678,7 @@ function PlaceDetailContent({
         {item.sustainabilityScore !== undefined && item.sustainabilityScore > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: INK['95'], fontFamily: FONT.mono }}>Sustainability</h3>
+              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>Sustainability</h3>
               <SustainabilityBadge
                 sensitivity={
                   item.sustainabilityScore >= 0.75 ? 'LEADING'
@@ -700,7 +700,7 @@ function PlaceDetailContent({
               className={`w-full mt-6 py-3.5 rounded-xl border-none cursor-pointer ${rateButtonFontSize} font-semibold ${rateButtonHoverClass}`}
               style={{
                 background: existingRating ? INK['06'] : 'var(--t-ink)',
-                color: existingRating ? 'var(--t-ink)' : 'var(--t-cream)',
+                color: existingRating ? TEXT.primary : TEXT.inverse,
                 fontFamily: FONT.sans,
               }}
             >
@@ -717,7 +717,7 @@ function PlaceDetailContent({
             style={{
               background: 'none',
               border: 'none',
-              color: INK['40'],
+              color: TEXT.secondary,
               fontFamily: FONT.sans,
               fontWeight: 500,
             }}

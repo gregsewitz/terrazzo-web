@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 
 interface DragOverlayProps {
@@ -81,9 +81,9 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           </div>
           <div
             className="text-[10px] truncate flex items-center gap-1"
-            style={{ color: INK['70'] }}
+            style={{ color: TEXT.secondary }}
           >
-            <PerriandIcon name={sourceStyle.icon} size={10} color={INK['40']} />
+            <PerriandIcon name={sourceStyle.icon} size={10} color={TEXT.secondary} />
             {item.location}
           </div>
         </div>

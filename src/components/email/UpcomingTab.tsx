@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { INK } from '@/constants/theme';
+import { INK, TEXT } from '@/constants/theme';
 import { TripGroup } from './TripGroup';
 import type { TripGroupData } from '@/lib/email-reservations-helpers';
 import type { TripOption } from '@/hooks/useEmailReservations';
@@ -42,10 +42,10 @@ export const UpcomingTab = React.memo(function UpcomingTab({
   if (totalCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-[13px]" style={{ color: INK['50'] }}>
+        <p className="text-[13px]" style={{ color: TEXT.secondary }}>
           No upcoming reservations found
         </p>
-        <p className="text-[11px] mt-1" style={{ color: INK['30'] }}>
+        <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>
           Future bookings from your email will appear here
         </p>
       </div>
@@ -56,7 +56,7 @@ export const UpcomingTab = React.memo(function UpcomingTab({
     <div>
       {/* Bulk controls */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px]" style={{ color: INK['50'] }}>
+        <span className="text-[10px]" style={{ color: TEXT.secondary }}>
           {selectedCount} of {totalCount} selected
         </span>
         <div className="flex gap-2">
@@ -70,7 +70,7 @@ export const UpcomingTab = React.memo(function UpcomingTab({
           <button
             onClick={onDeselectAll}
             className="text-[10px] font-semibold bg-transparent border-none cursor-pointer"
-            style={{ color: INK['50'] }}
+            style={{ color: TEXT.secondary }}
           >
             Clear
           </button>

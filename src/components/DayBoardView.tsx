@@ -10,7 +10,7 @@ import HotelInput from './HotelInput';
 import DayContextMenu from './DayContextMenu';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import { useDragGesture } from '@/hooks/useDragGesture';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import PlaceTimeEditor from './PlaceTimeEditor';
 import QuickEntryCard from './QuickEntryCard';
@@ -105,10 +105,10 @@ function PlacedCard({
     >
       {/* Row 1: name + type + match% */}
       <div className="flex items-center gap-1.5 min-w-0">
-        <span className="font-semibold truncate flex-1" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans, fontSize: isDesktop ? 12 : 11, lineHeight: 1.2 }}>
+        <span className="font-semibold truncate flex-1" style={{ color: TEXT.primary, fontFamily: FONT.sans, fontSize: isDesktop ? 12 : 11, lineHeight: 1.2 }}>
           {place.name}
         </span>
-        <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['60'], textTransform: 'uppercase' }}>
+        <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: TEXT.secondary, textTransform: 'uppercase' }}>
           {place.type}
         </span>
         {place.matchScore >= 70 && (
@@ -150,7 +150,7 @@ function PlacedCard({
       {(context || loves > 0 || nopes > 0) && (
         <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 1 }}>
           {context && (
-            <span className="truncate flex-1" style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: INK['60'], fontStyle: 'italic' }}>
+            <span className="truncate flex-1" style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9, color: TEXT.secondary, fontStyle: 'italic' }}>
               {context}
             </span>
           )}
@@ -160,7 +160,7 @@ function PlacedCard({
             </span>
           )}
           {nopes > 0 && (
-            <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['55'] }}>
+            <span className="flex-shrink-0 flex items-center gap-0.5" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: TEXT.secondary }}>
               ✗ {nopes}
             </span>
           )}
@@ -386,7 +386,7 @@ function DayBoardView({
                   fontFamily: FONT.sans,
                   fontSize: 14,
                   fontWeight: 700,
-                  color: INK['70'],
+                  color: TEXT.primary,
                   lineHeight: 1,
                   padding: 0,
                   letterSpacing: 1,
@@ -662,7 +662,7 @@ function DayBoardView({
                       <span style={{
                         fontFamily: FONT.mono,
                         fontSize: SLOT_LABEL_SIZE,
-                        color: INK['50'],
+                        color: TEXT.secondary,
                         textTransform: 'uppercase',
                         letterSpacing: 0.8,
                         fontWeight: isDesktop ? 600 : 400,
@@ -714,10 +714,10 @@ function DayBoardView({
                         >
                           {/* Row 1: name + type + Add / × */}
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="font-semibold truncate flex-1" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans, fontSize: isDesktop ? 12 : 11, lineHeight: 1.2 }}>
+                            <span className="font-semibold truncate flex-1" style={{ color: TEXT.primary, fontFamily: FONT.sans, fontSize: isDesktop ? 12 : 11, lineHeight: 1.2 }}>
                               {ghost.name}
                             </span>
-                            <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: INK['60'], textTransform: 'uppercase' }}>
+                            <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: TEXT.secondary, textTransform: 'uppercase' }}>
                               {ghost.type}
                             </span>
                             <button
@@ -742,7 +742,7 @@ function DayBoardView({
                               {gSrc.label}
                             </span>
                             {gNote && (
-                              <span className="truncate italic" style={{ color: INK['60'], fontSize: isDesktop ? 10 : 9 }}>
+                              <span className="truncate italic" style={{ color: TEXT.secondary, fontSize: isDesktop ? 10 : 9 }}>
                                 {gNote}
                               </span>
                             )}
@@ -811,7 +811,7 @@ function DayBoardView({
                           transition: 'all 150ms ease',
                         }}
                       >
-                        <span style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 11 : 10, color: INK['70'] }}>
+                        <span style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 11 : 10, color: TEXT.primary }}>
                           + add entry
                         </span>
                       </div>
@@ -838,7 +838,7 @@ function DayBoardView({
                           onClick={() => setActiveQuickInput(`${day.dayNumber}-${slot.id}`)}
                           className="text-[9px] cursor-pointer rounded flex items-center gap-0.5"
                           style={{
-                            color: INK['80'],
+                            color: TEXT.primary,
                             fontFamily: FONT.sans,
                             fontWeight: 500,
                             background: INK['04'],
@@ -911,10 +911,10 @@ function DayBoardView({
               style={{ background: 'white', maxWidth: 340, width: '100%' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 style={{ fontFamily: FONT.serif, fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: 'var(--t-ink)' }}>
+              <h3 style={{ fontFamily: FONT.serif, fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: TEXT.primary }}>
                 Remove {dayToRemove.dayOfWeek ? `${dayToRemove.dayOfWeek}` : `Day ${deleteDayConfirm}`}?
               </h3>
-              <p style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['70'], margin: '0 0 20px', lineHeight: 1.5 }}>
+              <p style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.primary, margin: '0 0 20px', lineHeight: 1.5 }}>
                 {dayToRemove.destination && <>{dayToRemove.destination} · </>}
                 {placedCount > 0
                   ? 'Placed items will return to your unsorted pool.'
@@ -926,7 +926,7 @@ function DayBoardView({
                   className="flex-1 py-2.5 rounded-lg cursor-pointer"
                   style={{
                     fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
-                    background: INK['04'], color: 'var(--t-ink)',
+                    background: INK['04'], color: TEXT.primary,
                     border: 'none',
                   }}
                 >

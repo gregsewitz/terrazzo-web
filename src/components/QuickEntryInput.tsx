@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { parseQuickEntry } from '@/lib/parseQuickEntry';
 import type { QuickEntry } from '@/types';
 
@@ -87,7 +87,7 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
           style={{
             fontFamily: FONT.sans,
             fontSize: 16, // ≥16px prevents iOS Safari auto-zoom on focus
-            color: 'var(--t-ink)',
+            color: TEXT.primary,
             border: 'none',
             padding: '4px 0',
             lineHeight: 1.4,
@@ -130,7 +130,7 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
             className="text-[9px] font-medium px-1.5 py-px rounded"
             style={{
               background: INK['06'],
-              color: INK['80'],
+              color: TEXT.primary,
               fontFamily: FONT.mono,
               textTransform: 'uppercase',
               letterSpacing: 0.5,
@@ -141,7 +141,7 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
           {preview.specificTime && (
             <span
               className="text-[9px]"
-              style={{ color: INK['70'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               {preview.specificTimeLabel ? `${preview.specificTimeLabel} ` : ''}{preview.specificTime}
             </span>
@@ -149,7 +149,7 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
           {isTentative && (
             <span
               className="text-[9px] italic"
-              style={{ color: INK['70'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               tentative
             </span>

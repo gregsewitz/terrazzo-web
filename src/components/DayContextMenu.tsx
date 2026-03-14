@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import AddDestinationSearch from './AddDestinationSearch';
 
 export interface DayContextMenuProps {
@@ -126,7 +126,7 @@ export default function DayContextMenu({
                 background: isCurrent ? destC.bg : 'transparent',
                 fontFamily: FONT.sans,
                 fontSize: 15,
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 cursor: isCurrent ? 'default' : 'pointer',
                 fontWeight: isCurrent ? 600 : 400,
                 opacity: isCurrent ? 0.5 : 1,
@@ -138,7 +138,7 @@ export default function DayContextMenu({
               }} />
               {dest}
               {isCurrent && (
-                <span style={{ marginLeft: 'auto', fontSize: 12, color: INK['40'] }}>current</span>
+                <span style={{ marginLeft: 'auto', fontSize: 12, color: TEXT.secondary }}>current</span>
               )}
             </button>
           );
@@ -159,7 +159,7 @@ export default function DayContextMenu({
             background: 'transparent',
             fontFamily: FONT.sans,
             fontSize: 14,
-            color: INK['50'],
+            color: TEXT.secondary,
             cursor: 'pointer',
           }}
         >
@@ -206,7 +206,7 @@ export default function DayContextMenu({
             fontFamily: FONT.sans,
             fontSize: 13,
             fontWeight: 600,
-            color: INK['70'],
+            color: TEXT.secondary,
             textAlign: 'center',
             padding: '4px 0 8px',
           }}>
@@ -228,7 +228,7 @@ export default function DayContextMenu({
                   fontFamily: FONT.sans,
                   fontSize: 13,
                   fontWeight: 500,
-                  color: INK['50'],
+                  color: TEXT.secondary,
                   cursor: 'pointer',
                 }}
               >
@@ -255,7 +255,7 @@ export default function DayContextMenu({
                       fontFamily: FONT.sans,
                       fontSize: 15,
                       fontWeight: 500,
-                      color: INK['85'],
+                      color: TEXT.primary,
                       cursor: 'pointer',
                     }}
                   >
@@ -276,7 +276,7 @@ export default function DayContextMenu({
                     <span style={{ flex: 1, color: currentDestination ? INK['85'] : INK['50'] }}>
                       {currentDestination || 'No location set'}
                     </span>
-                    <span style={{ fontSize: 12, color: INK['40'] }}>{currentDestination ? 'Change ›' : 'Set ›'}</span>
+                    <span style={{ fontSize: 12, color: TEXT.secondary }}>{currentDestination ? 'Change ›' : 'Set ›'}</span>
                   </button>
                   <div style={{ height: 1, background: 'var(--t-linen)', margin: '4px 16px' }} />
                 </>
@@ -340,7 +340,7 @@ export default function DayContextMenu({
                 fontFamily: FONT.sans,
                 fontSize: 15,
                 fontWeight: 600,
-                color: INK['70'],
+                color: TEXT.secondary,
                 cursor: 'pointer',
               }}
             >
@@ -370,7 +370,7 @@ export default function DayContextMenu({
       {onChangeDestination && getDestColor && (
         <div style={{ padding: '8px 6px 6px' }}>
           <div style={{ padding: '2px 8px 6px' }}>
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>
               Location
             </span>
           </div>
@@ -414,7 +414,7 @@ export default function DayContextMenu({
                       background: isCurrent ? destC.bg : 'transparent',
                       fontFamily: FONT.sans,
                       fontSize: 12,
-                      color: INK['85'],
+                      color: TEXT.primary,
                       cursor: isCurrent ? 'default' : 'pointer',
                       fontWeight: isCurrent ? 600 : 400,
                       transition: 'background 100ms',
@@ -423,7 +423,7 @@ export default function DayContextMenu({
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: destC.accent, flexShrink: 0 }} />
                     {dest}
                     {isCurrent && (
-                      <span style={{ marginLeft: 'auto', fontSize: 10, color: INK['70'], fontWeight: 400 }}>✓</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 10, color: TEXT.secondary, fontWeight: 400 }}>✓</span>
                     )}
                   </button>
                 );
@@ -449,7 +449,7 @@ export default function DayContextMenu({
                   background: 'transparent',
                   fontFamily: FONT.sans,
                   fontSize: 12,
-                  color: INK['70'],
+                  color: TEXT.secondary,
                   cursor: 'pointer',
                   transition: 'background 100ms',
                 }}
@@ -468,7 +468,7 @@ export default function DayContextMenu({
         borderTop: onChangeDestination && currentDestination ? '1px solid var(--t-linen)' : 'none',
       }}>
         <div style={{ padding: '2px 8px 6px' }}>
-          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase' as const, letterSpacing: 0.8, fontWeight: 600 }}>
             Day
           </span>
         </div>

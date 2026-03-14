@@ -3,7 +3,7 @@
 import React from 'react';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 interface GhostCardProps {
@@ -85,13 +85,13 @@ function GhostCardInner({
           <div className="flex-1 min-w-0">
             <span
               className="font-medium block truncate"
-              style={{ color: 'var(--t-ink)', fontSize: isDesktop ? 12 : 11 }}
+              style={{ color: TEXT.primary, fontSize: isDesktop ? 12 : 11 }}
             >
               {item.name}
             </span>
             <span
               className="block truncate"
-              style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], marginTop: 1 }}
+              style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, marginTop: 1 }}
             >
               {item.type}{item.location ? ` · ${item.location.split(',')[0]}` : ''}
             </span>
@@ -121,7 +121,7 @@ function GhostCardInner({
                 cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="close" size={10} color={INK['85']} />
+              <PerriandIcon name="close" size={10} color={TEXT.primary} />
             </button>
           </div>
         </div>
@@ -138,7 +138,7 @@ function GhostCardInner({
           {note && (
             <span
               className="italic truncate"
-              style={{ color: INK['60'], fontSize: 10 }}
+              style={{ color: TEXT.secondary, fontSize: 10 }}
             >
               {sourceType === 'friend' ? `"${note}"` : note}
             </span>
@@ -180,7 +180,7 @@ function GhostCardInner({
       <div
         className="font-semibold text-sm leading-tight pr-8 mb-0.5"
         style={{
-          color: 'var(--t-ink)',
+          color: TEXT.primary,
           fontFamily: FONT.serif,
         }}
       >
@@ -203,7 +203,7 @@ function GhostCardInner({
         {note && (
           <div
             className="text-[10px] ml-0.5 italic mt-1"
-            style={{ color: INK['90'] }}
+            style={{ color: TEXT.primary }}
           >
             {sourceType === 'friend' ? `"${note}"` : note}
           </div>
@@ -230,13 +230,13 @@ function GhostCardInner({
           className="flex-1 px-2 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1 transition-all hover:scale-105"
           style={{
             background: 'var(--t-travertine)',
-            color: 'var(--t-ink)',
+            color: TEXT.primary,
             border: 'none',
             cursor: 'pointer',
             fontFamily: FONT.sans,
           }}
         >
-          <PerriandIcon name="close" size={12} color="var(--t-ink)" />
+          <PerriandIcon name="close" size={12} color={TEXT.primary} />
         </button>
       </div>
     </div>

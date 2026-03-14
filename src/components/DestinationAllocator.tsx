@@ -2,12 +2,12 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Color palette for destination blocks ───
 const DEST_COLORS = [
   { bg: 'rgba(42,122,86,0.12)', border: 'rgba(42,122,86,0.4)', text: 'var(--t-verde)' },
-  { bg: 'rgba(200,146,58,0.12)', border: 'rgba(200,146,58,0.4)', text: '#8a6a2a' },
+  { bg: 'rgba(232,111,90,0.12)', border: 'rgba(232,111,90,0.4)', text: '#8a6a2a' },
   { bg: 'rgba(120,90,160,0.12)', border: 'rgba(120,90,160,0.4)', text: '#6b4f8a' },
   { bg: 'rgba(58,140,180,0.12)', border: 'rgba(58,140,180,0.4)', text: '#2a6a8a' },
   { bg: 'rgba(180,80,80,0.12)', border: 'rgba(180,80,80,0.4)', text: '#8a3a3a' },
@@ -107,12 +107,12 @@ function DestinationAllocator({
     <div className="mb-8">
       <label
         className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-3"
-        style={{ fontFamily: FONT.mono, color: INK['90'] }}
+        style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
       >
         NIGHTS PER DESTINATION
       </label>
 
-      <p className="text-[12px] mb-4 leading-relaxed" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+      <p className="text-[12px] mb-4 leading-relaxed" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
         Drag the dividers or use ± to adjust how many nights you spend in each place.
       </p>
 
@@ -139,7 +139,7 @@ function DestinationAllocator({
             >
               <span
                 className="text-[11px] font-semibold truncate px-2"
-                style={{ color: color.text, fontFamily: FONT.sans }}
+                style={{ color: TEXT.primary, fontFamily: FONT.sans }}
               >
                 {dest}
               </span>
@@ -190,17 +190,17 @@ function DestinationAllocator({
               <div className="flex-1 min-w-0">
                 <span
                   className="text-[13px] font-medium truncate block"
-                  style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                  style={{ color: TEXT.primary, fontFamily: FONT.sans }}
                 >
                   {dest}
                 </span>
                 {isFirst && (
-                  <span className="text-[10px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+                  <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                     Arrival
                   </span>
                 )}
                 {isLast && destinations.length > 1 && (
-                  <span className="text-[10px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+                  <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                     Departure
                   </span>
                 )}
@@ -212,7 +212,7 @@ function DestinationAllocator({
                   onClick={() => adjustDays(dest, -1)}
                   disabled={days <= 1}
                   className="w-6 h-6 rounded-full flex items-center justify-center border-none cursor-pointer disabled:opacity-20"
-                  style={{ background: 'white', color: 'var(--t-ink)' }}
+                  style={{ background: 'white', color: TEXT.primary }}
                 >
                   <span className="text-[13px] font-bold leading-none">−</span>
                 </button>
@@ -225,11 +225,11 @@ function DestinationAllocator({
                 <button
                   onClick={() => adjustDays(dest, 1)}
                   className="w-6 h-6 rounded-full flex items-center justify-center border-none cursor-pointer disabled:opacity-20"
-                  style={{ background: 'white', color: 'var(--t-ink)' }}
+                  style={{ background: 'white', color: TEXT.primary }}
                 >
                   <span className="text-[13px] font-bold leading-none">+</span>
                 </button>
-                <span className="text-[10px] ml-0.5" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                <span className="text-[10px] ml-0.5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                   {days === 1 ? 'night' : 'nights'}
                 </span>
               </div>
@@ -242,10 +242,10 @@ function DestinationAllocator({
       <div
         className="flex items-center justify-between mt-3 px-1"
       >
-        <span className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+        <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
           Total
         </span>
-        <span className="text-[12px] font-bold" style={{ color: isBalanced ? 'var(--t-ink)' : '#c04040', fontFamily: FONT.mono }}>
+        <span className="text-[12px] font-bold" style={{ color: isBalanced ? TEXT.primary : '#c04040', fontFamily: FONT.mono }}>
           {currentTotal} / {totalNights} nights
         </span>
       </div>

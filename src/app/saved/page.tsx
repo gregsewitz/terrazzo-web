@@ -198,7 +198,7 @@ function SavedPageContent() {
                     fontFamily: FONT.serif,
                     fontStyle: 'italic',
                     fontSize: 32,
-                    color: 'var(--t-ink)',
+                    color: TEXT.primary,
                     margin: 0,
                     lineHeight: 1.2,
                   }}
@@ -206,7 +206,7 @@ function SavedPageContent() {
                   Collect
                 </h1>
               </motion.div>
-              <p style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['60'], margin: '6px 0 0' }}>
+              <p style={{ fontFamily: FONT.mono, fontSize: 12, color: TEXT.secondary, margin: '6px 0 0' }}>
                 {myPlaces.length} places across {allCities.length} {allCities.length === 1 ? 'city' : 'cities'}
               </p>
             </div>
@@ -235,7 +235,7 @@ function SavedPageContent() {
           {sortedCollections.length > 0 && (
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
+                <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: TEXT.primary, margin: 0 }}>
                   Collections
                 </h2>
                 <FilterSortBar
@@ -280,7 +280,7 @@ function SavedPageContent() {
                     fontFamily: FONT.sans,
                     fontSize: 12,
                     fontWeight: 500,
-                    color: INK['70'],
+                    color: TEXT.secondary,
                   }}
                 >
                   {collectionsExpanded
@@ -295,9 +295,9 @@ function SavedPageContent() {
           {/* ═══ All Places grid ═══ */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
+              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: TEXT.primary, margin: 0 }}>
                 {typeFilter !== 'all' ? `${TYPE_CHIPS_WITH_ALL.find(c => c.value === typeFilter)?.label || 'Filtered'} places` : 'All places'}
-                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['50'], fontStyle: 'normal', marginLeft: 8 }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: TEXT.secondary, fontStyle: 'normal', marginLeft: 8 }}>
                   {filteredPlaces.length}
                 </span>
               </h2>
@@ -381,8 +381,8 @@ function SavedPageContent() {
               </motion.div>
             ) : (
               <div className="text-center py-16">
-                <PerriandIcon name="discover" size={36} color={INK['15']} />
-                <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>
+                <PerriandIcon name="discover" size={36} color={TEXT.secondary} />
+                <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>
                   {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
                     ? 'No places match your filters'
                     : 'No saved places yet'}
@@ -394,13 +394,13 @@ function SavedPageContent() {
           {/* ═══ Uncollected section ═══ */}
           {uncollectedPlaces.length > 0 && uncollectedPlaces.length < filteredPlaces.length && typeFilter === 'all' && (
             <div className="mt-10 pt-8" style={{ borderTop: '1px solid var(--t-linen)' }}>
-              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 18, color: INK['70'], margin: '0 0 12px' }}>
+              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 18, color: TEXT.secondary, margin: '0 0 12px' }}>
                 Uncollected
-                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: INK['40'], fontStyle: 'normal', marginLeft: 8 }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: TEXT.secondary, fontStyle: 'normal', marginLeft: 8 }}>
                   {uncollectedPlaces.length}
                 </span>
               </h2>
-              <p style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'], margin: '0 0 16px' }}>
+              <p style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, margin: '0 0 16px' }}>
                 These places aren&apos;t in any collection yet
               </p>
               <motion.div
@@ -467,14 +467,14 @@ function SavedPageContent() {
                 fontFamily: FONT.serif,
                 fontStyle: 'italic',
                 fontSize: 22,
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 margin: 0,
                 lineHeight: 1.2,
               }}
             >
               Collect
             </h1>
-            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
               {myPlaces.length} places
             </span>
           </div>
@@ -488,9 +488,9 @@ function SavedPageContent() {
         {sortedCollections.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: 'var(--t-ink)', margin: 0 }}>
+              <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: TEXT.primary, margin: 0 }}>
                 Collections
-                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontStyle: 'normal', marginLeft: 6 }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, fontStyle: 'normal', marginLeft: 6 }}>
                   {sortedCollections.length}
                 </span>
               </h2>
@@ -532,7 +532,7 @@ function SavedPageContent() {
                       fontFamily: FONT.sans,
                       fontSize: 12,
                       fontWeight: 500,
-                      color: INK['70'],
+                      color: TEXT.secondary,
                     }}
                   >
                     Show less
@@ -574,7 +574,7 @@ function SavedPageContent() {
                     fontFamily: FONT.sans,
                     fontSize: 11,
                     fontWeight: 600,
-                    color: INK['70'],
+                    color: TEXT.secondary,
                     padding: '10px 12px',
                     whiteSpace: 'nowrap',
                   }}
@@ -589,9 +589,9 @@ function SavedPageContent() {
         {/* ═══ All Places ═══ */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: 'var(--t-ink)', margin: 0 }}>
+            <h2 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 16, color: TEXT.primary, margin: 0 }}>
               {typeFilter !== 'all' ? `${TYPE_CHIPS_WITH_ALL.find(c => c.value === typeFilter)?.label || 'Filtered'}` : 'All places'}
-              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], fontStyle: 'normal', marginLeft: 6 }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, fontStyle: 'normal', marginLeft: 6 }}>
                 {filteredPlaces.length}
               </span>
             </h2>
@@ -665,9 +665,9 @@ function SavedPageContent() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <PerriandIcon name="discover" size={36} color={INK['15']} />
-              <p className="text-[13px] mt-3" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
-              <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
+              <PerriandIcon name="discover" size={36} color={TEXT.secondary} />
+              <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
+              <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
             </div>
           )}
         </div>
@@ -750,20 +750,20 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
             background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
           }}
         >
-          <PerriandIcon name={typeIcon as any} size={20} color={INK['70']} />
+          <PerriandIcon name={typeIcon as any} size={20} color={TEXT.secondary} />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+              <div className="text-[13px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
                 {place.name}
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                   {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                 </span>
-                <span style={{ fontSize: 10, color: INK['70'] }}>· {place.location.split(',')[0]}</span>
+                <span style={{ fontSize: 10, color: TEXT.secondary }}>· {place.location.split(',')[0]}</span>
               </div>
             </div>
 
@@ -812,12 +812,12 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'], display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <PerriandIcon name="star" size={10} color={INK['50']} /> {google.rating}
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <PerriandIcon name="star" size={10} color={TEXT.secondary} /> {google.rating}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
               {priceStr}
             </span>
           )}
@@ -841,7 +841,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
             {place.matchExplanation.narrative && (
               <p
                 className="text-[10px] leading-snug mt-1.5 line-clamp-2"
-                style={{ color: INK['70'], fontFamily: FONT.sans }}
+                style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
               >
                 {place.matchExplanation.narrative}
               </p>
@@ -854,7 +854,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
           <div style={{
             fontFamily: FONT.sans,
             fontSize: 11,
-            color: INK['70'],
+            color: TEXT.secondary,
             fontStyle: 'italic',
             lineHeight: 1.4,
           }}>
@@ -1082,7 +1082,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
           }}
         >
           <span
-            style={{ fontFamily: FONT.serif, fontSize: isDesktop ? 19 : 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.serif, fontSize: isDesktop ? 19 : 17, fontStyle: 'italic', color: TEXT.primary }}
           >
             New Collection
           </span>
@@ -1091,7 +1091,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             className="w-8 h-8 rounded-full flex items-center justify-center nav-hover"
             style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
           >
-            <PerriandIcon name="close" size={12} color={INK['50']} />
+            <PerriandIcon name="close" size={12} color={TEXT.secondary} />
           </button>
         </div>
 
@@ -1109,26 +1109,26 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             onClick={() => { setIsSmartMode(false); resetSmart(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
             style={{
-              background: !isSmartMode ? 'var(--t-ink)' : 'white',
-              color: !isSmartMode ? 'white' : INK['60'],
-              border: !isSmartMode ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+              background: !isSmartMode ? TEXT.primary : 'white',
+              color: !isSmartMode ? 'white' : TEXT.secondary,
+              border: !isSmartMode ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
               fontFamily: FONT.mono,
             }}
           >
-            <PerriandIcon name="edit" size={10} color={!isSmartMode ? 'white' : INK['50']} />
+            <PerriandIcon name="edit" size={10} color={!isSmartMode ? 'white' : TEXT.secondary} />
             Manual
           </button>
           <button
             onClick={() => setIsSmartMode(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-pointer transition-all"
             style={{
-              background: isSmartMode ? 'var(--t-ink)' : 'white',
-              color: isSmartMode ? 'white' : INK['60'],
-              border: isSmartMode ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+              background: isSmartMode ? TEXT.primary : 'white',
+              color: isSmartMode ? 'white' : TEXT.secondary,
+              border: isSmartMode ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
               fontFamily: FONT.mono,
             }}
           >
-            <PerriandIcon name="sparkle" size={10} color={isSmartMode ? 'white' : INK['50']} />
+            <PerriandIcon name="sparkle" size={10} color={isSmartMode ? 'white' : TEXT.secondary} />
             Terrazzo curate
           </button>
         </div>
@@ -1151,7 +1151,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                   <PerriandIcon
                     name={icon.name}
                     size={14}
-                    color={selectedEmoji === icon.name ? 'white' : INK['50']}
+                    color={selectedEmoji === icon.name ? 'white' : TEXT.secondary}
                   />
                 </button>
               ))}
@@ -1169,7 +1169,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                 fontSize: 16,
                 background: isDesktop ? 'var(--t-cream)' : 'white',
                 border: '1px solid var(--t-linen)',
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 fontFamily: FONT.sans,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -1210,7 +1210,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                 fontSize: 16,
                 background: 'white',
                 border: '1px solid var(--t-linen)',
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 fontFamily: FONT.sans,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -1227,7 +1227,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                   style={{
                     background: 'white',
                     border: '1px solid var(--t-linen)',
-                    color: INK['70'],
+                    color: TEXT.secondary,
                     fontFamily: FONT.sans,
                   }}
                 >
@@ -1278,7 +1278,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             </div>
             <p
               className="text-center text-[10px] mt-2"
-              style={{ color: INK['70'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               Terrazzo is curating...
             </p>
@@ -1292,7 +1292,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             {smartResult.reasoning && (
               <div
                 className="text-[10px] leading-relaxed px-3 py-2 rounded-lg flex gap-2 items-start mb-3"
-                style={{ color: INK['80'], background: 'rgba(200,146,58,0.06)' }}
+                style={{ color: TEXT.primary, background: 'rgba(232,111,90,0.06)' }}
               >
                 <PerriandIcon name="sparkle" size={10} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span style={{ fontFamily: FONT.sans }}>{smartResult.reasoning}</span>
@@ -1303,7 +1303,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             {smartError && (
               <div
                 className="text-[9px] px-2.5 py-1.5 rounded-lg mb-2"
-                style={{ color: INK['70'], background: 'rgba(107,139,154,0.06)', fontFamily: FONT.mono }}
+                style={{ color: TEXT.secondary, background: 'rgba(107,139,154,0.06)', fontFamily: FONT.mono }}
               >
                 Offline mode — {smartError}
               </div>
@@ -1315,7 +1315,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                 <PerriandIcon name={smartResult.emoji} size={16} />
                 <span
                   className="text-[14px] font-semibold"
-                  style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
+                  style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary }}
                 >
                   {smartResult.name}
                 </span>
@@ -1355,7 +1355,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                 style={{
                   background: 'transparent',
                   border: '1px solid var(--t-linen)',
-                  color: 'var(--t-ink)',
+                  color: TEXT.primary,
                   fontFamily: FONT.sans,
                 }}
               >
@@ -1398,7 +1398,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
 // ═══════════════════════════════════════════
 
 import type { Trip } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 function AddToTripSheet({ place, trips, onClose, onAdd }: {
   place: ImportedPlace;
@@ -1425,19 +1425,19 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
+            <div className="text-[14px] font-semibold" style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
               Add to trip
             </div>
-            <div className="text-[11px]" style={{ color: INK['70'] }}>
+            <div className="text-[11px]" style={{ color: TEXT.secondary }}>
               {place.name}
             </div>
           </div>
           <button
             onClick={onClose}
             className="flex items-center justify-center"
-            style={{ color: INK['70'], background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
+            style={{ color: TEXT.secondary, background: 'none', border: 'none', cursor: 'pointer', width: 24, height: 24 }}
           >
-            <PerriandIcon name="close" size={16} color={INK['50']} />
+            <PerriandIcon name="close" size={16} color={TEXT.secondary} />
           </button>
         </div>
 
@@ -1450,10 +1450,10 @@ function AddToTripSheet({ place, trips, onClose, onAdd }: {
               style={{ background: 'white', border: '1px solid var(--t-linen)' }}
             >
               <div>
-                <div className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                <div className="text-[13px] font-semibold" style={{ color: TEXT.primary }}>
                   {trip.name}
                 </div>
-                <div className="text-[10px]" style={{ color: INK['70'] }}>
+                <div className="text-[10px]" style={{ color: TEXT.secondary }}>
                   {trip.location} {trip.startDate && `· ${trip.startDate}`}
                 </div>
               </div>

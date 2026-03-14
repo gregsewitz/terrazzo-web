@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Types ───
 
@@ -102,16 +102,16 @@ export default function FilterSortBar({
             onClick={() => setOpenPanel(openPanel === 'filter' ? null : 'filter')}
             className={`flex items-center gap-1.5 rounded-full font-medium cursor-pointer transition-all ${compact ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'}`}
             style={{
-              background: isFilterActive || openPanel === 'filter' ? 'var(--t-ink)' : 'white',
-              color: isFilterActive || openPanel === 'filter' ? 'white' : INK['70'],
-              border: isFilterActive || openPanel === 'filter' ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+              background: isFilterActive || openPanel === 'filter' ? TEXT.primary : 'white',
+              color: isFilterActive || openPanel === 'filter' ? 'white' : TEXT.secondary,
+              border: isFilterActive || openPanel === 'filter' ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
               fontFamily: FONT.sans,
             }}
           >
             <PerriandIcon
               name={activeFilterIcon || 'discover'}
               size={12}
-              color={isFilterActive || openPanel === 'filter' ? 'white' : INK['50']}
+              color={isFilterActive || openPanel === 'filter' ? 'white' : TEXT.secondary}
             />
             {activeFilterLabel || 'Filter'}
             <Chevron open={openPanel === 'filter'} />
@@ -123,13 +123,13 @@ export default function FilterSortBar({
             onClick={() => setOpenPanel(openPanel === 'sort' ? null : 'sort')}
             className={`flex items-center gap-1.5 rounded-full font-medium cursor-pointer transition-all ${compact ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'}`}
             style={{
-              background: isSortActive || openPanel === 'sort' ? 'var(--t-ink)' : 'white',
-              color: isSortActive || openPanel === 'sort' ? 'white' : INK['70'],
-              border: isSortActive || openPanel === 'sort' ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+              background: isSortActive || openPanel === 'sort' ? TEXT.primary : 'white',
+              color: isSortActive || openPanel === 'sort' ? 'white' : TEXT.secondary,
+              border: isSortActive || openPanel === 'sort' ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
               fontFamily: FONT.sans,
             }}
           >
-            <SortIcon color={isSortActive || openPanel === 'sort' ? 'white' : INK['50']} />
+            <SortIcon color={isSortActive || openPanel === 'sort' ? 'white' : TEXT.secondary} />
             {isSortActive ? activeSortLabel : 'Sort'}
             <Chevron open={openPanel === 'sort'} />
           </button>
@@ -158,7 +158,7 @@ export default function FilterSortBar({
               {filterGroups!.length > 1 && (
                 <span
                   className="text-[9px] font-semibold uppercase tracking-wider block mb-1"
-                  style={{ color: INK['40'], fontFamily: FONT.mono }}
+                  style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                 >
                   {group.label}
                 </span>
@@ -176,14 +176,14 @@ export default function FilterSortBar({
                       }}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap cursor-pointer transition-all"
                       style={{
-                        background: isActive ? 'var(--t-ink)' : 'white',
-                        color: isActive ? 'white' : INK['70'],
-                        border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+                        background: isActive ? TEXT.primary : 'white',
+                        color: isActive ? 'white' : TEXT.secondary,
+                        border: isActive ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
                         fontFamily: FONT.sans,
                       }}
                     >
                       {opt.icon && (
-                        <PerriandIcon name={opt.icon} size={12} color={isActive ? 'white' : INK['50']} />
+                        <PerriandIcon name={opt.icon} size={12} color={isActive ? 'white' : TEXT.secondary} />
                       )}
                       {opt.label}
                       {opt.count !== undefined && (
@@ -225,9 +225,9 @@ export default function FilterSortBar({
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-all"
                 style={{
-                  background: isActive ? 'var(--t-ink)' : 'white',
-                  color: isActive ? 'white' : INK['70'],
-                  border: isActive ? '1px solid var(--t-ink)' : '1px solid var(--t-linen)',
+                  background: isActive ? TEXT.primary : 'white',
+                  color: isActive ? 'white' : TEXT.secondary,
+                  border: isActive ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
                   fontFamily: FONT.sans,
                 }}
               >

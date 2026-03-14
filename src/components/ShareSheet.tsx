@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { apiFetch } from '@/lib/api-client';
 
 interface ShareSheetProps {
@@ -156,11 +156,11 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
           <div className="flex items-center justify-between mb-4">
             <div>
               <div
-                style={{ fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic', color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic', color: TEXT.primary }}
               >
                 Share {resourceType === 'collection' ? 'collection' : 'trip'}
               </div>
-              <div className="text-[11px] mt-0.5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+              <div className="text-[11px] mt-0.5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                 {resourceName}
               </div>
             </div>
@@ -169,14 +169,14 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
               className="w-8 h-8 rounded-full flex items-center justify-center"
               style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
             >
-              <PerriandIcon name="close" size={12} color={INK['50']} />
+              <PerriandIcon name="close" size={12} color={TEXT.secondary} />
             </button>
           </div>
 
           {/* ─── Share Link Section ─── */}
           <div
             className="text-[10px] font-semibold mb-2"
-            style={{ color: INK['50'], fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: '0.5px' }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: '0.5px' }}
           >
             Public share link
           </div>
@@ -196,7 +196,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
             <div>
               <div
                 className="text-[12px] leading-relaxed mb-4"
-                style={{ color: INK['60'], fontFamily: FONT.sans }}
+                style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
               >
                 Create a link that anyone can use to view this {resourceType === 'collection' ? 'collection and its places' : 'trip itinerary'}.
                 They can save places to their own library if they have an account.
@@ -205,8 +205,8 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
                 onClick={generateLink}
                 className="w-full py-3 rounded-xl text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2"
                 style={{
-                  background: 'var(--t-ink)',
-                  color: 'white',
+                  background: TEXT.primary,
+                  color: TEXT.inverse,
                   border: 'none',
                   fontFamily: FONT.sans,
                 }}
@@ -232,13 +232,13 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
                 className="flex items-center gap-2 p-3 rounded-xl mb-3"
                 style={{ background: 'white', border: '1px solid var(--t-linen)' }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={INK['50']} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT.secondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
                 <div
                   className="flex-1 text-[11px] truncate"
-                  style={{ color: INK['70'], fontFamily: FONT.mono }}
+                  style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                 >
                   {window.location.origin}{state.url}
                 </div>
@@ -249,8 +249,8 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
                   onClick={copyLink}
                   className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all"
                   style={{
-                    background: copied ? 'var(--t-verde)' : 'var(--t-ink)',
-                    color: 'white',
+                    background: copied ? 'var(--t-verde)' : TEXT.primary,
+                    color: TEXT.inverse,
                     border: 'none',
                     fontFamily: FONT.sans,
                   }}
@@ -276,7 +276,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
                     className="py-2.5 px-4 rounded-xl text-[12px] font-medium cursor-pointer flex items-center justify-center gap-1.5"
                     style={{
                       background: 'white',
-                      color: 'var(--t-ink)',
+                      color: TEXT.primary,
                       border: '1px solid var(--t-linen)',
                       fontFamily: FONT.sans,
                     }}
@@ -292,7 +292,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[10px]" style={{ color: INK['40'], fontFamily: FONT.mono }}>
+                <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                   {state.viewCount} view{state.viewCount !== 1 ? 's' : ''}
                 </span>
                 <button

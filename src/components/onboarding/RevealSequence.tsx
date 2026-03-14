@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GeneratedTasteProfile, GoBackPlace, SeedTripInput } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { T } from '@/types';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -54,7 +54,7 @@ const BRAND = {
   verde: '#2a7a56',
   pantonViolet: '#6844a0',
   royerePink: '#e87080',
-  ink: '#1c1a17',
+  ink: '#1A2D4A',
   warmWhite: '#f5f0e6',
   travertine: '#e8dcc8',
   cream: '#f8f3ea',
@@ -143,7 +143,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       borderRadius: 24, overflow: 'hidden',
-      boxShadow: '0 4px 32px rgba(28,26,23,0.08), 0 1px 4px rgba(28,26,23,0.04)',
+      boxShadow: '0 4px 32px rgba(26,45,74,0.08), 0 1px 4px rgba(26,45,74,0.04)',
       background: BRAND.cream,
     }}>
       {children}
@@ -276,7 +276,7 @@ const RevealSequence = memo(function RevealSequence({
             onClick={goBackStep}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: FONT.sans, fontSize: 13, color: INK['55'], padding: 0,
+              fontFamily: FONT.sans, fontSize: 13, color: TEXT.secondary, padding: 0,
             }}
             whileHover={{ opacity: 0.7 }}
             whileTap={{ scale: 0.95 }}
@@ -372,7 +372,7 @@ const RevealSequence = memo(function RevealSequence({
                 style={{
                   fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
                   letterSpacing: '0.12em', textTransform: 'uppercase',
-                  color: INK['30'], display: 'inline-block',
+                  color: TEXT.secondary, display: 'inline-block',
                 }}
                 animate={{ opacity: [1, 0.5, 1], y: [0, 2, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -555,7 +555,7 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
         <SafeFadeIn delay={0.65} direction="up" distance={16} duration={0.6}>
           <p style={{
             fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.75,
-            color: INK['80'], margin: 0, maxWidth: 380,
+            color: TEXT.primary, margin: 0, maxWidth: 380,
           }}>
             {profile.archetypeDescription}
           </p>
@@ -597,7 +597,7 @@ function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
         <SafeFadeIn delay={0.6} direction="up" distance={12} duration={0.5}>
           <p style={{
             fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.75,
-            color: INK['75'], margin: 0,
+            color: TEXT.secondary, margin: 0,
           }}>
             {profile.bestQuote.insight}
           </p>
@@ -674,14 +674,14 @@ function DesignLanguageReveal({
                 <span style={{
                   fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
                   textTransform: 'uppercase', letterSpacing: '0.08em',
-                  color: INK['55'],
+                  color: TEXT.secondary,
                 }}>
                   {spec.labels[0]}
                 </span>
                 <span style={{
                   fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
                   textTransform: 'uppercase', letterSpacing: '0.08em',
-                  color: INK['55'],
+                  color: TEXT.secondary,
                 }}>
                   {spec.labels[1]}
                 </span>
@@ -719,7 +719,7 @@ function DesignLanguageReveal({
               {spec.note && (
                 <p style={{
                   fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.55,
-                  color: INK['60'], marginTop: 6, marginBottom: 0,
+                  color: TEXT.secondary, marginTop: 6, marginBottom: 0,
                   fontStyle: 'italic',
                 }}>
                   {spec.note}
@@ -826,7 +826,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
         <SafeFadeIn delay={0.8} direction="up" distance={10} duration={0.5}>
           <p style={{
             fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-            color: INK['75'], textAlign: 'center', margin: '12px 0 0',
+            color: TEXT.secondary, textAlign: 'center', margin: '12px 0 0',
           }}>
             <span style={{ fontWeight: 700, color: BRAND.pantonOrange }}>{top2[0]}</span>
             {' and '}
@@ -871,7 +871,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
             <div style={{
               flex: 1,
               fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
-              color: 'var(--t-ink)', textAlign: 'center',
+              color: TEXT.primary, textAlign: 'center',
               padding: '18px 16px', borderRadius: 16,
               background: `linear-gradient(135deg, ${BRAND.pantonOrange}08, white)`,
               border: `1px solid ${BRAND.pantonOrange}20`,
@@ -895,7 +895,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
             <div style={{
               flex: 1,
               fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
-              color: 'var(--t-ink)', textAlign: 'center',
+              color: TEXT.primary, textAlign: 'center',
               padding: '18px 16px', borderRadius: 16,
               background: `linear-gradient(135deg, ${BRAND.pantonViolet}06, white)`,
               border: `1px solid ${BRAND.pantonViolet}15`,
@@ -910,12 +910,12 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
           <div style={{
             padding: '22px 24px', borderRadius: 16,
             background: 'white',
-            boxShadow: `0 2px 16px rgba(28,26,23,0.04)`,
+            boxShadow: `0 2px 16px rgba(26,45,74,0.04)`,
             border: `1px solid ${INK['05']}`,
           }}>
             <p style={{
               fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-              color: INK['80'], margin: 0,
+              color: TEXT.primary, margin: 0,
             }}>
               {c.resolution}
             </p>
@@ -982,7 +982,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 padding: '18px 20px', borderRadius: 16,
                 background: 'white',
                 border: `1px solid ${INK['05']}`,
-                boxShadow: '0 1px 8px rgba(28,26,23,0.03)',
+                boxShadow: '0 1px 8px rgba(26,45,74,0.03)',
                 position: 'relative',
               }}>
                 {/* Time dot */}
@@ -1003,7 +1003,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
                   </div>
                   <p style={{
                     fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-                    color: INK['80'], margin: 0,
+                    color: TEXT.primary, margin: 0,
                   }}>
                     {seg.text}
                   </p>
@@ -1049,7 +1049,7 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 <div style={{
                   padding: '20px 22px', borderRadius: 16,
                   background: 'white',
-                  boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
+                  boxShadow: '0 2px 12px rgba(26,45,74,0.04)',
                   border: `1px solid ${INK['05']}`,
                   position: 'relative', overflow: 'hidden',
                 }}>
@@ -1068,7 +1068,7 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
                     </div>
                     <p style={{
                       fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
-                      color: INK['75'], margin: 0,
+                      color: TEXT.secondary, margin: 0,
                     }}>
                       {shift.insight}
                     </p>
@@ -1115,7 +1115,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
             <SafeFadeIn key={name} delay={0.35 + idx * 0.1} scale={0.8} direction="none" duration={0.5}>
               <span style={{
                 fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
-                color: 'var(--t-ink)', padding: '10px 22px', borderRadius: 100,
+                color: TEXT.primary, padding: '10px 22px', borderRadius: 100,
                 background: 'white',
                 border: `1px solid ${BRAND.royerePink}25`,
                 boxShadow: `0 2px 12px ${BRAND.royerePink}10`,
@@ -1131,7 +1131,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         <SafeFadeIn delay={0.55} direction="up" distance={12} duration={0.5}>
           <p style={{
             fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-            color: INK['80'], margin: '0 0 20px', textAlign: 'center',
+            color: TEXT.primary, margin: '0 0 20px', textAlign: 'center',
           }}>
             {distinction}
           </p>
@@ -1146,7 +1146,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
           }}>
             <p style={{
               fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-              color: INK['70'], margin: 0, fontStyle: 'italic', textAlign: 'center',
+              color: TEXT.secondary, margin: 0, fontStyle: 'italic', textAlign: 'center',
             }}>
               {rarityStat}
             </p>
@@ -1185,10 +1185,10 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
             <SafeFadeIn key={dest} delay={0.35 + idx * 0.12} direction="up" distance={10} duration={0.5}>
               <div style={{
                 fontFamily: FONT.serif, fontSize: 17, fontStyle: 'italic',
-                color: 'var(--t-ink)', padding: '14px 20px', borderRadius: 14,
+                color: TEXT.primary, padding: '14px 20px', borderRadius: 14,
                 background: 'white',
                 border: `1px solid ${INK['06']}`,
-                boxShadow: '0 2px 10px rgba(28,26,23,0.03)',
+                boxShadow: '0 2px 10px rgba(26,45,74,0.03)',
                 display: 'flex', alignItems: 'center', gap: 12,
               }}>
                 <div style={{
@@ -1226,13 +1226,13 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
               </div>
               <div style={{
                 fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
-                color: 'var(--t-ink)', marginBottom: 8,
+                color: TEXT.primary, marginBottom: 8,
               }}>
                 {surprise.name}
               </div>
               <p style={{
                 fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
-                color: INK['70'], margin: 0,
+                color: TEXT.secondary, margin: 0,
               }}>
                 {surprise.reason}
               </p>
@@ -1278,7 +1278,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
               <div style={{
                 padding: '20px 22px', borderRadius: 16,
                 background: 'white',
-                boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
+                boxShadow: '0 2px 12px rgba(26,45,74,0.04)',
                 border: `1px solid ${INK['06']}`,
                 position: 'relative', overflow: 'hidden',
               }}>
@@ -1293,12 +1293,12 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                   <div>
                     <div style={{
                       fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
-                      color: 'var(--t-ink)',
+                      color: TEXT.primary,
                     }}>
                       {trip.destination}
                     </div>
                     {trip.dates && (
-                      <div style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['60'], marginTop: 3 }}>
+                      <div style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, marginTop: 3 }}>
                         {trip.dates}
                       </div>
                     )}
@@ -1313,11 +1313,11 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                   </span>
                 </div>
                 <div style={{
-                  fontFamily: FONT.sans, fontSize: 12, color: INK['55'],
+                  fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary,
                   display: 'flex', alignItems: 'center', gap: 6,
                 }}>
                   <span>{trip.travelContext}</span>
-                  <span style={{ color: INK['30'] }}>·</span>
+                  <span style={{ color: TEXT.secondary }}>·</span>
                   <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
                 </div>
               </div>
@@ -1394,11 +1394,11 @@ function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 padding: '20px 22px', borderRadius: 16,
                 background: 'white',
                 border: `1px solid ${INK['05']}`,
-                boxShadow: '0 2px 12px rgba(28,26,23,0.03)',
+                boxShadow: '0 2px 12px rgba(26,45,74,0.03)',
               }}>
                 <p style={{
                   fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
-                  color: INK['85'], margin: 0,
+                  color: TEXT.primary, margin: 0,
                 }}>
                   {obs}
                 </p>
@@ -1440,7 +1440,7 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 padding: '22px 22px', borderRadius: 16,
                 background: 'white',
                 border: `1px solid ${INK['05']}`,
-                boxShadow: '0 2px 12px rgba(28,26,23,0.04)',
+                boxShadow: '0 2px 12px rgba(26,45,74,0.04)',
                 position: 'relative', overflow: 'hidden',
               }}>
                 {/* Bold accent stripe */}
@@ -1451,19 +1451,19 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
                 <div style={{
                   fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
-                  color: 'var(--t-ink)', marginBottom: 4, lineHeight: 1.2, marginTop: 4,
+                  color: TEXT.primary, marginBottom: 4, lineHeight: 1.2, marginTop: 4,
                 }}>
                   {m.name}
                 </div>
 
                 <div style={{
-                  fontFamily: FONT.sans, fontSize: 12, color: INK['55'], marginBottom: 12,
+                  fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, marginBottom: 12,
                 }}>
                   {m.location}
                 </div>
 
                 <div style={{
-                  fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6, color: INK['75'],
+                  fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6, color: TEXT.secondary,
                 }}>
                   {m.matchReasons.slice(0, 2).join(' · ')}
                 </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ALL_PHASE_IDS } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -71,7 +71,7 @@ export default function OnboardingIntro() {
       >
         {/* Logo / brand mark */}
         <div className="mb-10">
-          <h1 className="font-serif text-[42px] text-[var(--t-ink)] leading-none">
+          <h1 className="font-display text-[42px] text-[var(--t-ink)] leading-none">
             Terrazzo
           </h1>
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--t-ink)]/40 mt-1">
@@ -119,7 +119,7 @@ export default function OnboardingIntro() {
               onClick={handleStart}
               className="w-full py-3 rounded-xl text-[14px] font-medium transition-all
                 hover:opacity-70 active:scale-[0.98]"
-              style={{ color: 'var(--t-ink)', opacity: 0.5 }}
+              style={{ color: TEXT.primary, opacity: 0.5 }}
             >
               Start over
             </button>
@@ -145,7 +145,7 @@ export default function OnboardingIntro() {
           onClick={handleDevSkip}
           className="mt-6 text-[12px] font-medium transition-colors hover:opacity-70"
           style={{
-            color: INK['70'],
+            color: TEXT.secondary,
             background: 'none',
             border: 'none',
             cursor: 'pointer',

@@ -5,7 +5,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import PlaceSearchInput, { type PlaceSearchResult } from './PlaceSearchInput';
 
 interface AddPlaceInlineProps {
@@ -89,12 +89,12 @@ function AddPlaceInline({ destination, variant }: AddPlaceInlineProps) {
             transition: 'border-color 0.15s, background 0.15s',
           }}
         >
-          <PerriandIcon name="add" size={18} color={INK['35']} />
+          <PerriandIcon name="add" size={18} color={TEXT.secondary} />
         </div>
         <span
           className="text-[9px] font-medium text-center leading-tight mt-1"
           style={{
-            color: INK['35'],
+            color: TEXT.secondary,
             fontFamily: FONT.sans,
             maxWidth: '100%',
             lineHeight: '1.15',
@@ -142,7 +142,7 @@ function AddPlaceInline({ destination, variant }: AddPlaceInlineProps) {
       >
         <PerriandIcon name="add" size={14} color="var(--t-verde)" />
       </div>
-      <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: INK['40'] }}>
+      <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: TEXT.secondary }}>
         Add a place
       </span>
     </button>

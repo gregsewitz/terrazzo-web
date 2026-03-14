@@ -12,7 +12,7 @@ import ShareSheet from '@/components/ShareSheet';
 import DesktopNav from '@/components/DesktopNav';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet';
 
@@ -136,7 +136,7 @@ function CollectionDetailContent() {
       <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: isDesktop ? undefined : 480, margin: '0 auto', overflowX: 'hidden' }}>
         {isDesktop && <DesktopNav />}
         <div className="px-4 pt-5 text-center">
-          <p style={{ color: INK['70'] }}>Collection not found</p>
+          <p style={{ color: TEXT.secondary }}>Collection not found</p>
           <button
             onClick={() => router.back()}
             className="mt-4 text-[12px] cursor-pointer"
@@ -194,13 +194,13 @@ function CollectionDetailContent() {
               onClick={() => setMapOpen(true)}
               className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
               style={{
-                background: 'rgba(200,146,58,0.08)',
+                background: 'rgba(232,111,90,0.08)',
                 color: '#8a6a2a',
                 border: 'none',
                 fontFamily: FONT.mono,
               }}
             >
-              <PerriandIcon name="pin" size={10} color="var(--t-honey)" />
+              <PerriandIcon name="pin" size={10} color={TEXT.accent} />
               Map
             </button>
           )}
@@ -226,7 +226,7 @@ function CollectionDetailContent() {
         className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer"
         style={{
           background: INK['04'],
-          color: INK['70'],
+          color: TEXT.secondary,
           border: 'none',
           fontFamily: FONT.mono,
         }}
@@ -254,7 +254,7 @@ function CollectionDetailContent() {
       <div className="flex items-start gap-3">
         <span style={{ fontSize: isPerriandIcon ? 28 : 36 }}>
           {isPerriandIcon ? (
-            <PerriandIcon name={collection.emoji as any} size={28} color="var(--t-ink)" />
+            <PerriandIcon name={collection.emoji as any} size={28} color={TEXT.primary} />
           ) : (
             collection.emoji
           )}
@@ -271,7 +271,7 @@ function CollectionDetailContent() {
                 style={{
                   fontFamily: FONT.serif,
                   fontStyle: 'italic',
-                  color: 'var(--t-ink)',
+                  color: TEXT.primary,
                   background: 'white',
                   border: '1px solid var(--t-linen)',
                   outline: 'none',
@@ -286,7 +286,7 @@ function CollectionDetailContent() {
                 className="w-full text-[11px] rounded-lg px-2 py-1"
                 style={{
                   fontFamily: FONT.sans,
-                  color: INK['70'],
+                  color: TEXT.secondary,
                   background: 'white',
                   border: '1px solid var(--t-linen)',
                   outline: 'none',
@@ -304,7 +304,7 @@ function CollectionDetailContent() {
                 <button
                   onClick={() => setIsEditing(false)}
                   className="text-[10px] px-3 py-1.5 rounded-full cursor-pointer"
-                  style={{ background: INK['06'], color: INK['70'], border: 'none', fontFamily: FONT.mono }}
+                  style={{ background: INK['06'], color: TEXT.secondary, border: 'none', fontFamily: FONT.mono }}
                 >
                   Cancel
                 </button>
@@ -314,12 +314,12 @@ function CollectionDetailContent() {
             <>
               <h1
                 className="text-[22px] mb-1"
-                style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary }}
               >
                 {collection.name}
               </h1>
               {collection.description && (
-                <p className="text-[11px] mb-2" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+                <p className="text-[11px] mb-2" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                   {collection.description}
                 </p>
               )}
@@ -327,13 +327,13 @@ function CollectionDetailContent() {
           )}
 
           <div className="flex items-center gap-2 mt-1">
-            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['70'] }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
               {placesInCollection.length} {placesInCollection.length === 1 ? 'place' : 'places'}
             </span>
             {collection.cities.length > 0 && (
               <>
                 <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                   {collection.cities.slice(0, 3).join(', ')}
                 </span>
               </>
@@ -356,7 +356,7 @@ function CollectionDetailContent() {
             Auto-updating · Curated Collection
           </span>
           {collection.query && (
-            <p className="text-[10px] mt-2" style={{ color: INK['70'], fontFamily: FONT.mono }}>
+            <p className="text-[10px] mt-2" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
               Query: &ldquo;{collection.query}&rdquo;
             </p>
           )}
@@ -392,7 +392,7 @@ function CollectionDetailContent() {
         <PerriandIcon
           name="discover"
           size={13}
-          color={INK['40']}
+          color={TEXT.secondary}
           style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
         />
         <input
@@ -405,7 +405,7 @@ function CollectionDetailContent() {
             paddingLeft: 30,
             background: 'white',
             border: '1px solid var(--t-linen)',
-            color: 'var(--t-ink)',
+            color: TEXT.primary,
             fontFamily: FONT.sans,
             outline: 'none',
             boxSizing: 'border-box',
@@ -417,7 +417,7 @@ function CollectionDetailContent() {
             className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center"
             style={{ background: INK['06'], border: 'none', cursor: 'pointer' }}
           >
-            <PerriandIcon name="close" size={8} color={INK['40']} />
+            <PerriandIcon name="close" size={8} color={TEXT.secondary} />
           </button>
         )}
       </div>
@@ -494,15 +494,15 @@ function CollectionDetailContent() {
     <div
       className="mt-6 p-4 rounded-xl flex items-center justify-between"
       style={{
-        background: 'rgba(200,146,58,0.06)',
-        border: '1px solid rgba(200,146,58,0.12)',
+        background: 'rgba(232,111,90,0.06)',
+        border: '1px solid rgba(232,111,90,0.12)',
       }}
     >
       <div>
-        <div className="text-[13px] font-semibold" style={{ fontFamily: FONT.sans, color: 'var(--t-ink)' }}>
+        <div className="text-[13px] font-semibold" style={{ fontFamily: FONT.sans, color: TEXT.primary }}>
           Plan a trip with these places
         </div>
-        <div className="text-[11px] mt-0.5" style={{ fontFamily: FONT.sans, color: INK['60'] }}>
+        <div className="text-[11px] mt-0.5" style={{ fontFamily: FONT.sans, color: TEXT.secondary }}>
           {cityOptions.length === 1
             ? `${allPlacesInCollection.length} places in ${cityOptions[0].city}`
             : `${allPlacesInCollection.length} places across ${cityOptions.length} cities`}
@@ -548,13 +548,13 @@ function CollectionDetailContent() {
         </div>
       ) : (
         <div className="flex flex-col items-center py-12">
-          <PerriandIcon name="discover" size={32} color={INK['15']} />
-          <p className="text-[12px] mt-3" style={{ color: INK['70'] }}>
+          <PerriandIcon name="discover" size={32} color={TEXT.secondary} />
+          <p className="text-[12px] mt-3" style={{ color: TEXT.secondary }}>
             {collectionSearch || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all'
               ? 'No places match your filters'
               : 'No places in this collection yet'}
           </p>
-          <p className="text-[11px] mt-1" style={{ color: INK['70'] }}>
+          <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>
             {collectionSearch || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all'
               ? 'Try adjusting your search or filters'
               : 'Tap "Add Places" above to add from your library'}
@@ -642,10 +642,10 @@ function CollectionDetailContent() {
               className="relative rounded-2xl px-6 py-5 mx-5"
               style={{ maxWidth: 320, background: 'var(--t-cream)' }}
             >
-              <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
+              <p className="text-[14px] font-semibold mb-2" style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
                 Delete &ldquo;{collection.name}&rdquo;?
               </p>
-              <p className="text-[11px] mb-5" style={{ color: INK['70'] }}>
+              <p className="text-[11px] mb-5" style={{ color: TEXT.secondary }}>
                 This won&apos;t remove the places from your library.
               </p>
               <div className="flex gap-2">
@@ -662,7 +662,7 @@ function CollectionDetailContent() {
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="flex-1 py-2.5 rounded-xl text-[12px] cursor-pointer"
-                  style={{ background: INK['06'], color: INK['70'], border: 'none' }}
+                  style={{ background: INK['06'], color: TEXT.secondary, border: 'none' }}
                 >
                   Cancel
                 </button>
@@ -725,10 +725,10 @@ function CollectionDetailContent() {
             className="relative rounded-2xl px-6 py-5 mx-5"
             style={{ maxWidth: 320, background: 'var(--t-cream)' }}
           >
-            <p className="text-[14px] font-semibold mb-2" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
+            <p className="text-[14px] font-semibold mb-2" style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
               Delete "{collection.name}"?
             </p>
-            <p className="text-[11px] mb-5" style={{ color: INK['70'] }}>
+            <p className="text-[11px] mb-5" style={{ color: TEXT.secondary }}>
               This won't remove the places from your library.
             </p>
             <div className="flex gap-2">
@@ -745,7 +745,7 @@ function CollectionDetailContent() {
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl text-[12px] cursor-pointer"
-                style={{ background: INK['06'], color: INK['70'], border: 'none' }}
+                style={{ background: INK['06'], color: TEXT.secondary, border: 'none' }}
               >
                 Cancel
               </button>
@@ -785,10 +785,10 @@ function CollectionDetailContent() {
               </svg>
             </button>
             <div className="flex-1 min-w-0">
-              <div className="text-[14px] font-semibold truncate" style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}>
+              <div className="text-[14px] font-semibold truncate" style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary }}>
                 {collection.name}
               </div>
-              <div className="text-[10px]" style={{ fontFamily: FONT.mono, color: INK['70'] }}>
+              <div className="text-[10px]" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
                 {placesInCollection.length} {placesInCollection.length === 1 ? 'place' : 'places'}
                 {collection.cities.length > 0 && ` · ${collection.cities.slice(0, 3).join(', ')}`}
               </div>
@@ -833,7 +833,7 @@ function CollectionDetailContent() {
                   return Array.from(types).slice(0, 4).map(type => (
                     <div key={type} className="flex items-center gap-1">
                       <PerriandIcon name={type as any} size={11} color={TYPE_COLORS_VIBRANT[type as PlaceType] || INK['60']} />
-                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
+                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
                         {placesInCollection.filter(p => p.type === type).length}
                       </span>
                     </div>
@@ -900,13 +900,13 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
           className="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center"
           style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
         >
-          <PerriandIcon name={typeIcon as any} size={18} color={INK['60']} />
+          <PerriandIcon name={typeIcon as any} size={18} color={TEXT.secondary} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
-            <h3 className="text-[13px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+            <h3 className="text-[13px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
               {place.name}
             </h3>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -919,24 +919,24 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
                   className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer"
                   style={{ background: INK['04'], border: 'none' }}
                 >
-                  <PerriandIcon name="close" size={8} color={INK['30']} />
+                  <PerriandIcon name="close" size={8} color={TEXT.secondary} />
                 </button>
               )}
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
               {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
             </span>
-            <span style={{ fontSize: 10, color: INK['70'] }}>· {place.location.split(',')[0]}</span>
+            <span style={{ fontSize: 10, color: TEXT.secondary }}>· {place.location.split(',')[0]}</span>
             {place.google?.rating && (
-              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['70'] }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
                 ★ {place.google.rating}
               </span>
             )}
           </div>
           {place.tasteNote && (
-            <p className="text-[10px] mt-1" style={{ color: INK['70'], fontStyle: 'italic', lineHeight: 1.3 }}>
+            <p className="text-[10px] mt-1" style={{ color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.3 }}>
               {place.tasteNote.length > 80 ? place.tasteNote.slice(0, 77) + '…' : place.tasteNote}
             </p>
           )}

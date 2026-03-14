@@ -95,7 +95,7 @@ export default function AnchorVerificationCard({
             onKeyDown={handleClarifyKeyDown}
             placeholder="Type the name..."
             className="flex-1 text-[14px] bg-transparent outline-none text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/30"
-            style={{ fontFamily: 'var(--font-serif, Georgia, serif)' }}
+            style={{ fontFamily: 'var(--font-sans)' }}
           />
           <button
             onClick={handleClarifySubmit}
@@ -130,7 +130,7 @@ export default function AnchorVerificationCard({
       <div className="flex-1 min-w-0">
         <p
           className="text-[14px] leading-tight truncate"
-          style={{ fontFamily: 'var(--font-serif, Georgia, serif)', color: 'var(--t-ink)' }}
+          style={{ fontFamily: 'var(--font-display)', color: 'var(--t-ink)' }}
         >
           {anchor.propertyName}
         </p>

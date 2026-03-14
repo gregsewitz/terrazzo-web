@@ -129,31 +129,29 @@ export const WRAPPED = {
   rarestPercent: 4,
 };
 
-// Domain colors for profile deep-dive sections (muted earth-tone variants)
-// NOTE: These are intentionally different from DOMAIN_COLORS in types/index.ts —
-// those map the TasteDomain keys to vibrant brand colors for UI accents.
-// These map to muted earth-tones for profile section backgrounds.
+// Domain colors — mapped to new brand palette
 export const DIMENSION_COLORS: Record<string, string> = {
-  "Design": "#8b6b4a",
-  "Atmosphere": "#a06830",
-  "Character": "#4a6741",
-  "Service": "#6b8b4a",
-  "FoodDrink": "#8b4a4a",
-  "Setting": "#4a6b8b",
-  "Wellness": "#6b6b4a",
-  "Sustainability": "#4a7a8b",
-  "Rejection": "#8b4a4a",
+  "Design": "#E86F5A",       // Coral
+  "Atmosphere": "#E8B84B",    // Ochre
+  "Character": "#6B7C4E",     // Olive
+  "Service": "#E8B84B",       // Ochre
+  "FoodDrink": "#1A2D4A",     // Navy
+  "Setting": "#5EC4B2",       // Teal
+  "Wellness": "#E86F5A",      // Coral
+  "Sustainability": "#5EC4B2", // Teal
+  "Rejection": "#A89888",     // Warm Gray
 };
 
+// Taste radar axis colors — each domain gets a distinct brand color
 export const AXIS_COLORS: Record<string, string> = {
-  Design: T.honey,
-  Atmosphere: T.pantonOrange,
-  Character: T.signalRed,
-  Service: T.chromeYellow,
-  FoodDrink: T.pantonViolet,
-  Setting: T.verde,
-  Wellness: T.pantonOrange,
-  Sustainability: T.ghost,
+  Design: "#E86F5A",         // Coral
+  Atmosphere: "#E8B84B",      // Ochre
+  Character: "#6B7C4E",       // Olive
+  Service: "#E8B84B",         // Ochre
+  FoodDrink: "#1A2D4A",       // Navy
+  Setting: "#5EC4B2",          // Teal
+  Wellness: "#F4BFA0",         // Peach
+  Sustainability: "#5EC4B2",    // Teal
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
@@ -165,4 +163,5 @@ export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
   "Summer": "summer",
 };
 
-export const CONTEXT_COLORS = ["#8b6b4a", "#4a6741", "#4a6b8b", "#6b6b4a", "#6b8b4a", "#8b4a4a"];
+// Context shift card colors — brand palette rotation
+export const CONTEXT_COLORS = ["#1A2D4A", "#5EC4B2", "#E86F5A", "#6B7C4E", "#E8B84B", "#F4BFA0"];

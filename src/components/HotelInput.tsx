@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { HotelInfo } from '@/types';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -25,7 +25,7 @@ function HotelInputInner({
   onSave,
   onCancel,
   accentColor = 'var(--t-verde)',
-  textColor = 'var(--t-ink)',
+  textColor = TEXT.primary,
   destination,
 }: HotelInputProps) {
   const places = useMapsLibrary('places');
@@ -287,7 +287,7 @@ function HotelInputInner({
           style={{
             ...inputStyle,
             fontSize: 12,
-            color: INK['60'],
+            color: TEXT.secondary,
             padding: '6px 12px',
           }}
         />
@@ -395,7 +395,7 @@ function HotelInputInner({
               }}
             >
               <span
-                style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: TEXT.primary }}
               >
                 {p.structured_formatting?.main_text || p.description}
               </span>
@@ -404,7 +404,7 @@ function HotelInputInner({
                   style={{
                     fontFamily: FONT.sans,
                     fontSize: 11,
-                    color: INK['50'],
+                    color: TEXT.secondary,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -436,8 +436,8 @@ function HotelInputInner({
               borderTop: `1px solid var(--t-linen)`,
             }}
           >
-            <PerriandIcon name="add" size={12} color={INK['40']} />
-            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'] }}>
+            <PerriandIcon name="add" size={12} color={TEXT.secondary} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary }}>
               Airbnb / Villa / Other
             </span>
           </button>
@@ -451,7 +451,7 @@ function HotelInputInner({
           style={{
             fontFamily: FONT.sans,
             fontSize: 11,
-            color: INK['40'],
+            color: TEXT.secondary,
             background: 'none',
             border: 'none',
             padding: '6px 0 0',

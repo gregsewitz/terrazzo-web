@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { PlaceType } from '@/types';
 
 /** Tiny inline clock icon (no dependency on icon set) */
@@ -139,16 +139,16 @@ export default function PlaceTimeEditor({
           style={{
             fontSize: compact ? 9 : 10,
             fontFamily: FONT.sans,
-            color: INK['70'],
+            color: TEXT.secondary,
             fontStyle: 'italic',
           }}
         >
-          <ClockIcon size={compact ? 8 : 9} color={INK['50']} />
+          <ClockIcon size={compact ? 8 : 9} color={TEXT.secondary} />
           {buildTimeDisplay(specificTime, placeType, specificTimeLabel)}
           <span
             className="opacity-0 group-hover/time:opacity-60 transition-opacity"
             onClick={handleClear}
-            style={{ fontSize: 8, color: INK['40'], marginLeft: 2 }}
+            style={{ fontSize: 8, color: TEXT.secondary, marginLeft: 2 }}
           >
             ×
           </span>
@@ -165,7 +165,7 @@ export default function PlaceTimeEditor({
         style={{
           fontSize: compact ? 8 : 9,
           fontFamily: FONT.sans,
-          color: INK['55'],
+          color: TEXT.secondary,
         }}
       >
         <ClockIcon size={compact ? 7 : 8} color={INK['50']} />
@@ -187,7 +187,7 @@ export default function PlaceTimeEditor({
         style={{
           background: 'var(--t-cream, #faf8f4)',
           border: '1px solid var(--t-verde-muted, rgba(42,122,86,0.25))',
-          boxShadow: '0 1px 3px rgba(28,26,23,0.06)',
+          boxShadow: '0 1px 3px rgba(26,45,74,0.06)',
           padding: '2px 6px',
         }}
       >
@@ -222,7 +222,7 @@ export default function PlaceTimeEditor({
           style={{
             fontFamily: FONT.mono,
             fontSize: compact ? 10 : 11,
-            color: INK['85'],
+            color: TEXT.primary,
             background: 'transparent',
             border: 'none',
             outline: 'none',

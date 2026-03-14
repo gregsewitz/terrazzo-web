@@ -121,7 +121,7 @@ export default function ImagePairView({ onComplete, questions }: ImagePairViewPr
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: i < currentIdx ? T.honey : i === currentIdx ? T.ink : 'rgba(28,26,23,0.15)',
+              background: i < currentIdx ? T.honey : i === currentIdx ? T.ink : 'rgba(26,45,74,0.15)',
               transition: 'background 0.3s',
             }}
           />

@@ -125,7 +125,7 @@ export default function Act1CompletePage() {
         </p>
 
         <h1 className={`
-          font-serif text-[28px] text-[var(--t-ink)] leading-tight text-center mb-6
+          font-display text-[28px] text-[var(--t-ink)] leading-tight text-center mb-6
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
@@ -148,7 +148,7 @@ export default function Act1CompletePage() {
               className="flex-1 text-center py-3 rounded-xl"
               style={{ backgroundColor: 'var(--t-warm-white)' }}
             >
-              <p className="font-serif text-[22px] text-[var(--t-ink)] leading-none mb-1">
+              <p className="font-display text-[22px] text-[var(--t-ink)] leading-none mb-1">
                 {stat.value}
               </p>
               <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--t-ink)]/40 leading-tight px-1">

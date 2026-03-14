@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface SmartCollectionSheetProps {
   isOpen: boolean;
@@ -189,7 +189,7 @@ function SmartCollectionSheet({
           {/* Title */}
           <h2
             className="text-lg italic mb-6"
-            style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.serif, color: TEXT.primary }}
           >
             New Curated Collection
           </h2>
@@ -206,7 +206,7 @@ function SmartCollectionSheet({
                   className="w-full px-4 py-3 rounded-lg border text-[14px]"
                   style={{
                     backgroundColor: 'white', borderColor: 'var(--t-linen)',
-                    color: 'var(--t-ink)', fontFamily: FONT.sans,
+                    color: TEXT.primary, fontFamily: FONT.sans,
                   }}
                   autoFocus
                 />
@@ -228,7 +228,7 @@ function SmartCollectionSheet({
                       className="px-3 py-1.5 rounded-full border text-[11px] cursor-pointer transition-colors"
                       style={{
                         backgroundColor: 'white', borderColor: 'var(--t-linen)',
-                        color: 'var(--t-ink)', fontFamily: FONT.sans,
+                        color: TEXT.primary, fontFamily: FONT.sans,
                       }}
                     >
                       {prompt}
@@ -241,7 +241,7 @@ function SmartCollectionSheet({
                 onClick={handleSubmit}
                 disabled={!input.trim()}
                 className="w-full py-3 rounded-xl text-[14px] font-medium cursor-pointer transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)', fontFamily: FONT.sans }}
+                style={{ backgroundColor: 'var(--t-ink)', color: TEXT.inverse, fontFamily: FONT.sans }}
               >
                 Create Collection <PerriandIcon name="star" size={12} color="var(--t-cream)" />
               </button>
@@ -285,7 +285,7 @@ function SmartCollectionSheet({
                   </div>
                 </div>
               </div>
-              <p className="text-center text-[11px]" style={{ color: INK['95'] }}>
+              <p className="text-center text-[11px]" style={{ color: TEXT.primary }}>
                 Terrazzo is thinking...
               </p>
             </div>
@@ -297,7 +297,7 @@ function SmartCollectionSheet({
               {parsed.reasoning && (
                 <div
                   className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px] flex gap-2 items-start"
-                  style={{ color: INK['95'], background: 'rgba(200,146,58,0.06)' }}
+                  style={{ color: TEXT.primary, background: 'rgba(232,111,90,0.06)' }}
                 >
                   <div style={{ flexShrink: 0 }}>
                     <PerriandIcon name="sparkle" size={11} />
@@ -324,14 +324,14 @@ function SmartCollectionSheet({
                   </div>
                   <h3
                     className="text-[15px] italic"
-                    style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+                    style={{ fontFamily: FONT.serif, color: TEXT.primary }}
                   >
                     {parsed.name}
                   </h3>
                 </div>
                 <p
                   className="text-[12px] mb-4"
-                  style={{ fontFamily: FONT.mono, color: INK['90'] }}
+                  style={{ fontFamily: FONT.mono, color: TEXT.primary }}
                 >
                   {parsed.matchCount ?? 0} places found
                 </p>
@@ -361,7 +361,7 @@ function SmartCollectionSheet({
                   className="flex-1 py-3 rounded-xl text-[14px] font-medium cursor-pointer border"
                   style={{
                     backgroundColor: 'transparent', borderColor: 'var(--t-linen)',
-                    color: 'var(--t-ink)', fontFamily: FONT.sans,
+                    color: TEXT.primary, fontFamily: FONT.sans,
                   }}
                 >
                   Back
@@ -370,7 +370,7 @@ function SmartCollectionSheet({
                   onClick={handleCreate}
                   className="flex-1 py-3 rounded-xl text-[14px] font-medium cursor-pointer"
                   style={{
-                    backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)',
+                    backgroundColor: 'var(--t-ink)', color: TEXT.inverse,
                     fontFamily: FONT.sans,
                   }}
                 >

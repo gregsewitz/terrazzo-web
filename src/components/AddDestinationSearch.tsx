@@ -7,7 +7,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { extractDestinationFromGooglePlace, isGeographicPlace } from '@/lib/destination-helpers';
 import type { ImportedPlace } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface AddDestinationSearchProps {
   onAdded?: (destination: string) => void;
@@ -63,7 +63,7 @@ export default function AddDestinationSearch({ onAdded, onCancel }: AddDestinati
         fontFamily: FONT.sans,
         fontSize: 12,
         fontWeight: 600,
-        color: INK['70'],
+        color: TEXT.secondary,
         padding: '4px 12px 2px',
         letterSpacing: 0.2,
       }}>

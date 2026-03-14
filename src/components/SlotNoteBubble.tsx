@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SlotNoteItem } from '@/stores/collaborationStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface SlotNoteBubbleProps {
   notes: SlotNoteItem[];
@@ -30,15 +30,15 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
         onClick={() => setExpanded(true)}
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full transition-all"
         style={{
-          background: notes.length > 0 ? 'rgba(200,146,58,0.08)' : INK['05'],
+          background: notes.length > 0 ? 'rgba(232,111,90,0.08)' : INK['05'],
           border: 'none',
           cursor: 'pointer',
           fontFamily: FONT.mono,
           fontSize: 9,
-          color: notes.length > 0 ? '#8a6a2a' : INK['60'],
+          color: notes.length > 0 ? 'TEXT.accent' : INK['60'],
         }}
       >
-        <PerriandIcon name="chatBubble" size={11} color={notes.length > 0 ? '#8a6a2a' : INK['60']} accent={notes.length > 0 ? '#c8923a' : INK['60']} />
+        <PerriandIcon name="chatBubble" size={11} color={notes.length > 0 ? 'TEXT.accent' : INK['60']} accent={notes.length > 0 ? '#E86F5A' : INK['60']} />
         {notes.length > 0 ? `${notes.length} note${notes.length > 1 ? 's' : ''}` : 'Add note'}
       </button>
     );
@@ -58,12 +58,12 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
         className="flex items-center justify-between px-2.5 py-1.5"
         style={{ borderBottom: notes.length > 0 ? '1px solid var(--t-linen)' : 'none' }}
       >
-        <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           Notes
         </span>
         <button
           onClick={() => setExpanded(false)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: INK['50'] }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: TEXT.secondary }}
         >
           &times;
         </button>
@@ -81,20 +81,20 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
           >
             <div
               className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold mt-0.5"
-              style={{ background: INK['08'], color: INK['60'] }}
+              style={{ background: INK['08'], color: TEXT.secondary }}
             >
               {name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-1.5">
-                <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'var(--t-ink)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: TEXT.primary }}>
                   {name}
                 </span>
-                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'] }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
                   {timeAgo}
                 </span>
               </div>
-              <div style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['80'], marginTop: 1, lineHeight: 1.4 }}>
+              <div style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.primary, marginTop: 1, lineHeight: 1.4 }}>
                 {note.content}
               </div>
             </div>
@@ -116,7 +116,7 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
               border: '1px solid var(--t-linen)',
               outline: 'none',
               fontFamily: FONT.sans,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
             }}
           />
           <button

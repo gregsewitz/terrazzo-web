@@ -55,7 +55,7 @@ export type PerriandIconName =
 interface PerriandIconProps {
   name: PerriandIconName;
   size?: number;
-  /** Stroke color — defaults to Ink (#1c1a17) */
+  /** Stroke color — defaults to Ink (#1A2D4A) */
   color?: string;
   /** Accent dot color — overrides the default per-icon accent */
   accent?: string;
@@ -71,18 +71,18 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   // Place types
   restaurant: '#e87080', // Royère Pink
   bar:        '#6844a0', // Panton Violet
-  hotel:      '#c8923a', // Honey
+  hotel:      '#E86F5A', // Honey
   cafe:       '#eeb420', // Chrome Yellow
   museum:     '#2a7a56', // Verde
   activity:   '#e86830', // Panton Orange
   neighborhood: '#6b8b9a', // Ghost
   shop:       '#a06c28', // Amber
   // Time slots
-  breakfast:  '#c8923a',
+  breakfast:  '#E86F5A',
   morning:    '#eeb420',
   lunch:      '#e87080',
   afternoon:  '#e86830',
-  dinner:     '#1c1a17',
+  dinner:     '#1A2D4A',
   evening:    '#6844a0',
   // Taste domains
   design:     '#d63020',
@@ -93,7 +93,7 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   wellness:   '#eeb420',
   // Reactions (use reaction color as accent)
   myPlace:    '#2a7a56',
-  enjoyed:    '#c8923a',
+  enjoyed:    '#E86F5A',
   mixed:      '#eeb420',
   notMe:      '#d63020',
   // Sources
@@ -115,7 +115,7 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   lightbulb:    '#eeb420',
   acceptCircle: '#2a7a56',
   rejectCircle: '#d63020',
-  chatBubble:   '#c8923a',
+  chatBubble:   '#E86F5A',
   loveReaction: '#e87080',
   unsure:       '#6b8b9a',
   swap:         '#6366f1',
@@ -123,7 +123,7 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   currency:     '#a06c28',
   calendar:     '#6b8b9a',
   person:       '#6844a0',
-  quote:        '#c8923a',
+  quote:        '#E86F5A',
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────
@@ -377,7 +377,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
       <line x1="11" y1="11" x2="21" y2="11" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
       <line x1="11" y1="15" x2="21" y2="15" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
       <line x1="11" y1="19" x2="17" y2="19" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
-      <circle cx="20" cy="8" r="1" fill={a || '#c8923a'} />
+      <circle cx="20" cy="8" r="1" fill={a || '#E86F5A'} />
     </>
   ),
 
@@ -385,7 +385,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M20,7 L25,12 L13,24 L8,24 L8,19 Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <line x1="17" y1="10" x2="22" y2="15" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".4" />
-      <circle cx="10" cy="22" r="1" fill={a || '#1c1a17'} />
+      <circle cx="10" cy="22" r="1" fill={a || '#1A2D4A'} />
     </>
   ),
 
@@ -402,7 +402,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <rect x="6" y="8" width="20" height="16" rx="2" stroke={s} strokeWidth="1.5" fill="none" />
       <line x1="6" y1="14" x2="26" y2="14" stroke={s} strokeWidth="1.5" />
-      <circle cx="12" cy="20" r="1" fill={a || '#1c1a17'} />
+      <circle cx="12" cy="20" r="1" fill={a || '#1A2D4A'} />
     </>
   ),
 
@@ -437,7 +437,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
   edit: (s, a) => (
     <>
       <path d="M20,7 L25,12 L13,24 L8,24 L8,19 Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <circle cx="10" cy="22" r="1" fill={a || '#1c1a17'} />
+      <circle cx="10" cy="22" r="1" fill={a || '#1A2D4A'} />
     </>
   ),
 
@@ -675,7 +675,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
 export function PerriandIcon({
   name,
   size = 20,
-  color = '#1c1a17',
+  color = '#1A2D4A',
   accent,
   opacity = 1,
   className,

@@ -12,7 +12,7 @@ import TripBriefing from './TripBriefing';
 import DaySelector from './DaySelector';
 import DayContextBar from './DayContextBar';
 import { TransportBanner, TransportInput, getTransportsAfterSlot } from './TransportBanner';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import EditableTripName from './EditableTripName';
 import DayContextMenu from './DayContextMenu';
@@ -209,7 +209,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 style={{ width: 28, height: 28, padding: 0, marginLeft: -6 }}
                 title="Back to trips"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={INK['50']} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT.secondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
@@ -221,7 +221,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               style={{
                 fontFamily: FONT.serif,
                 fontWeight: 600,
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 margin: 0,
                 display: 'block',
               }}
@@ -230,7 +230,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <span
               className="text-[10px]"
-              style={{ color: INK['90'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               {trip.flexibleDates
                 ? `${trip.days.length} days · dates flexible`
@@ -270,7 +270,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   style={{ background: INK['04'] }}
                   title="More options"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill={INK['50']}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={TEXT.secondary}>
                     <circle cx="12" cy="5" r="2" />
                     <circle cx="12" cy="12" r="2" />
                     <circle cx="12" cy="19" r="2" />
@@ -487,10 +487,10 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
             style={{ background: 'white', maxWidth: 340, width: '100%' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontFamily: FONT.serif, fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: 'var(--t-ink)' }}>
+            <h3 style={{ fontFamily: FONT.serif, fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: TEXT.primary }}>
               Remove {day.dayOfWeek ? `${day.dayOfWeek}` : `Day ${currentDay}`}?
             </h3>
-            <p style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['70'], margin: '0 0 20px', lineHeight: 1.5 }}>
+            <p style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.primary, margin: '0 0 20px', lineHeight: 1.5 }}>
               {day.destination && <>{day.destination} · </>}
               {day.slots.flatMap(s => s.places).length > 0
                 ? 'Placed items will return to your unsorted pool.'
@@ -502,7 +502,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 className="flex-1 py-2.5 rounded-lg cursor-pointer"
                 style={{
                   fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
-                  background: INK['04'], color: 'var(--t-ink)',
+                  background: INK['04'], color: TEXT.primary,
                   border: 'none',
                 }}
               >

@@ -1,6 +1,6 @@
 'use client';
 
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PlacePhoto from '@/components/PlacePhoto';
 import type { ImportedPlace } from '@/types';
@@ -60,7 +60,7 @@ export function SectionHeader({ label }: { label: string }) {
         fontWeight: 700,
         textTransform: 'uppercase',
         letterSpacing: '0.08em',
-        color: INK['40'],
+        color: TEXT.secondary,
         margin: 0,
       }}
     >
@@ -111,7 +111,7 @@ export function PlaceRow({
           fontFamily: FONT.sans,
           fontSize: compact ? 12 : 13,
           fontWeight: 600,
-          color: 'var(--t-ink)',
+          color: TEXT.primary,
           margin: 0,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -123,7 +123,7 @@ export function PlaceRow({
         <p style={{
           fontFamily: FONT.mono,
           fontSize: 9,
-          color: INK['50'],
+          color: TEXT.secondary,
           margin: '1px 0 0',
           textTransform: 'uppercase',
           letterSpacing: '0.04em',
@@ -139,7 +139,7 @@ export function PlaceRow({
           <p style={{
             fontFamily: FONT.sans,
             fontSize: 10,
-            color: INK['40'],
+            color: TEXT.secondary,
             margin: '2px 0 0',
             overflow: 'hidden',
             textOverflow: 'ellipsis',

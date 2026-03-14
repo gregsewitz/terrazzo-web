@@ -2,7 +2,7 @@
 
 import { Reaction } from '@/stores/collaborationStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface ReactionPillsProps {
   reactions: Reaction[];
@@ -41,12 +41,12 @@ export default function ReactionPills({ reactions, compact = false }: ReactionPi
           className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px]"
           style={{
             background: INK['05'],
-            color: INK['60'],
+            color: TEXT.secondary,
             fontFamily: FONT.mono,
           }}
           title={notForMe.map(r => r.user.name || r.user.email.split('@')[0]).join(', ')}
         >
-          <PerriandIcon name="unsure" size={12} color={INK['60']} accent={INK['60']} />
+          <PerriandIcon name="unsure" size={12} color={TEXT.secondary} accent={INK['60']} />
           {compact ? (
             <span>{notForMe.length}</span>
           ) : (

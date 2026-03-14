@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 export default function LoginPage() {
   const { signIn, isAuthenticated } = useAuth();
@@ -64,7 +64,7 @@ export default function LoginPage() {
         </h1>
         <p
           className="text-[13px] mb-8 text-center"
-          style={{ color: INK['50'], fontFamily: FONT.sans }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           Your bespoke travel concierge
         </p>
@@ -81,7 +81,7 @@ export default function LoginPage() {
             </h2>
             <p
               className="text-[13px] mb-6"
-              style={{ color: INK['60'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               We sent a magic link to <strong>{email}</strong>. Click the link to sign in.
             </p>
@@ -120,7 +120,7 @@ export default function LoginPage() {
             />
 
             {status === 'error' && (
-              <p className="text-[11px] mb-2" style={{ color: '#c44', fontFamily: FONT.sans }}>
+              <p className="text-[11px] mb-2" style={{ color: TEXT.accent, fontFamily: FONT.sans }}>
                 {errorMsg || 'Something went wrong. Please try again.'}
               </p>
             )}
@@ -131,7 +131,7 @@ export default function LoginPage() {
               className="w-full py-3 rounded-xl text-[14px] font-semibold cursor-pointer btn-hover"
               style={{
                 background: email.trim() ? 'var(--t-ink)' : INK['10'],
-                color: email.trim() ? 'white' : INK['30'],
+                color: email.trim() ? 'white' : TEXT.secondary,
                 border: 'none',
                 fontFamily: FONT.sans,
                 opacity: status === 'sending' ? 0.6 : 1,
@@ -143,7 +143,7 @@ export default function LoginPage() {
 
             <p
               className="text-[10px] text-center mt-4"
-              style={{ color: INK['40'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               No password needed. We&apos;ll email you a sign-in link.
             </p>

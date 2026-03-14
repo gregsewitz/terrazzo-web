@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PlacePhoto from '@/components/PlacePhoto';
 import { SectionHeader } from './AddBarShared';
@@ -49,10 +49,10 @@ export default function AddBarCollections({
           </div>
         )}
         <div className="px-4 py-3">
-          <p style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
+          <p style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: TEXT.primary, margin: 0 }}>
             {previewPlace.name}
           </p>
-          <p style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'], margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <p style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {previewPlace.type}{previewPlace.location ? ` \u00B7 ${previewPlace.location}` : ''}
           </p>
           {previewPlace.matchScore ? (
@@ -65,7 +65,7 @@ export default function AddBarCollections({
               fontFamily: FONT.sans,
               fontSize: 12,
               fontStyle: 'italic',
-              color: INK['60'],
+              color: TEXT.secondary,
               margin: '6px 0 0',
               lineHeight: 1.4,
             }}>
@@ -106,7 +106,7 @@ export function AddBarCollectionsCTA({
         disabled={saving}
         className="w-full py-3.5 rounded-xl cursor-pointer transition-all"
         style={{
-          background: saving ? 'var(--t-verde)' : 'var(--t-ink)',
+          background: saving ? 'var(--t-verde)' : TEXT.primary,
           color: 'white',
           border: 'none',
           fontFamily: FONT.sans,
@@ -125,7 +125,7 @@ export function AddBarCollectionsCTA({
       <p style={{
         fontFamily: FONT.sans,
         fontSize: 11,
-        color: INK['40'],
+        color: TEXT.secondary,
         textAlign: 'center',
         marginTop: 6,
         marginBottom: 0,

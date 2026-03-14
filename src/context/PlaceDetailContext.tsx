@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { ImportedPlace, PlaceRating } from '@/types';
 import { useSavedStore } from '@/stores/savedStore';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
 import BriefingView from '@/components/BriefingView';
@@ -287,7 +287,7 @@ export function PlaceDetailProvider({ config, children }: PlaceDetailProviderPro
             <p style={{
               fontFamily: FONT.sans,
               fontSize: 13,
-              color: INK['70'],
+              color: TEXT.secondary,
               lineHeight: 1.5,
               margin: '0 0 20px',
             }}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface ScoreArcProps {
   score: number; // 0–100

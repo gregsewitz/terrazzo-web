@@ -5,7 +5,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
@@ -78,7 +78,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
               fontFamily: FONT.mono,
               fontSize: 10,
               fontWeight: 700,
-              color: INK['50'],
+              color: TEXT.secondary,
               textTransform: 'uppercase',
               letterSpacing: 1.5,
             }}
@@ -116,7 +116,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
               outline: 'none',
               fontFamily: FONT.sans,
               fontSize: 11,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               width: '100%',
             }}
           />
@@ -151,7 +151,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
       >
         {filteredPicks.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['40'] }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary }}>
               {allPicks.length === 0 ? 'No unplaced picks' : 'No picks match this filter'}
             </span>
           </div>
@@ -191,13 +191,13 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
                     <div className="flex-1 min-w-0">
                       <div
                         className="text-[12px] font-semibold truncate"
-                        style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                        style={{ color: TEXT.primary, fontFamily: FONT.sans }}
                       >
                         {place.name}
                       </div>
                       <div
                         className="text-[10px] truncate"
-                        style={{ color: INK['50'], fontFamily: FONT.sans }}
+                        style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
                       >
                         {place.location}
                       </div>
@@ -240,7 +240,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
                       {place.matchExplanation.narrative && (
                         <p
                           className="text-[9px] leading-snug mt-1.5 line-clamp-2"
-                          style={{ color: INK['70'], fontFamily: FONT.sans }}
+                          style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
                         >
                           {place.matchExplanation.narrative}
                         </p>

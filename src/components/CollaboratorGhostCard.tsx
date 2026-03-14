@@ -2,7 +2,7 @@
 
 import { Suggestion } from '@/stores/collaborationStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 
 // Stable color palette for collaborator accents
@@ -72,14 +72,14 @@ export default function CollaboratorGhostCard({
         <div className="flex-1 min-w-0">
           <span
             className="font-medium block truncate"
-            style={{ color: 'var(--t-ink)', fontSize: isDesktop ? 12 : 11 }}
+            style={{ color: TEXT.primary, fontSize: isDesktop ? 12 : 11 }}
           >
             {suggestion.placeName}
           </span>
           {suggestion.placeType && (
             <span
               className="block truncate"
-              style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['50'], marginTop: 1 }}
+              style={{ fontFamily: FONT.mono, fontSize: 8, color: TEXT.secondary, marginTop: 1 }}
             >
               {suggestion.placeType}
             </span>
@@ -111,7 +111,7 @@ export default function CollaboratorGhostCard({
                 cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="close" size={10} color={INK['85']} />
+              <PerriandIcon name="close" size={10} color={TEXT.primary} />
             </button>
           </div>
         ) : suggestion.status !== 'pending' ? (
@@ -119,7 +119,7 @@ export default function CollaboratorGhostCard({
             className="font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
             style={{
               background: suggestion.status === 'accepted' ? 'rgba(42,122,86,0.08)' : 'rgba(200,50,50,0.06)',
-              color: suggestion.status === 'accepted' ? 'var(--t-verde)' : INK['60'],
+              color: suggestion.status === 'accepted' ? 'var(--t-verde)' : TEXT.secondary,
               fontFamily: FONT.mono,
               fontSize: 8,
             }}
@@ -140,7 +140,7 @@ export default function CollaboratorGhostCard({
         {suggestion.reason && (
           <span
             className="italic truncate"
-            style={{ color: INK['50'], fontSize: 9 }}
+            style={{ color: TEXT.secondary, fontSize: 9 }}
           >
             &ldquo;{suggestion.reason}&rdquo;
           </span>

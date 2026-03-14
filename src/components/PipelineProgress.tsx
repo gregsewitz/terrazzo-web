@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PIPELINE_STAGES } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface PipelineProgressProps {
   currentStage: string | null;
@@ -50,7 +50,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
             />
           ))}
         </div>
-        <span className="text-[9px]" style={{ color: INK['95'], fontFamily: FONT.mono }}>
+        <span className="text-[9px]" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
           {completedCount}/{total}{currentLabel ? ` · ${currentLabel}` : ''}
           {elapsed > 0 ? ` · ${elapsed}s` : ''}
         </span>
@@ -68,7 +68,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
           Researching this place
         </div>
         {elapsed > 0 && (
-          <span className="text-[9px]" style={{ color: INK['90'], fontFamily: FONT.mono }}>
+          <span className="text-[9px]" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
             {elapsed}s
           </span>
         )}
@@ -85,13 +85,13 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
                 background: isCompleted
                   ? 'rgba(42,122,86,0.08)'
                   : isCurrent
-                    ? 'rgba(200,146,58,0.1)'
+                    ? 'rgba(232,111,90,0.1)'
                     : INK['04'],
               }}
             >
               <div
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? '#8a6a2a' : INK['90'],
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? TEXT.accent : TEXT.primary,
                   ...(isCurrent ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
                 }}
               >
@@ -103,7 +103,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               <span
                 className="text-[9px] font-medium"
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? '#8a6a2a' : INK['90'],
+                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? TEXT.accent : TEXT.primary,
                   fontFamily: FONT.mono,
                 }}
               >

@@ -4,13 +4,13 @@ import { useState } from 'react';
 import type { Activity } from '@/stores/collaborationStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import type { PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Activity type → PerriandIcon + color mapping ───
 const ACTIVITY_CONFIG: Record<string, { icon: PerriandIconName; color: string; accent: string; bg: string }> = {
   collaborator_invited: { icon: 'invite',        color: '#6366f1', accent: '#6366f1', bg: 'rgba(99,102,241,0.06)' },
   collaborator_joined:  { icon: 'wave',          color: '#2a7a56', accent: '#2a7a56', bg: 'rgba(42,122,86,0.06)' },
-  suggestion_added:     { icon: 'lightbulb',     color: '#c8923a', accent: '#eeb420', bg: 'rgba(200,146,58,0.06)' },
+  suggestion_added:     { icon: 'lightbulb',     color: '#E86F5A', accent: '#eeb420', bg: 'rgba(232,111,90,0.06)' },
   suggestion_accepted:  { icon: 'acceptCircle',  color: '#2a7a56', accent: '#2a7a56', bg: 'rgba(42,122,86,0.06)' },
   suggestion_rejected:  { icon: 'rejectCircle',  color: '#d63020', accent: '#d63020', bg: 'rgba(214,48,32,0.06)' },
   reaction_added:       { icon: 'loveReaction',  color: '#e87080', accent: '#e87080', bg: 'rgba(232,112,128,0.06)' },
@@ -18,7 +18,7 @@ const ACTIVITY_CONFIG: Record<string, { icon: PerriandIconName; color: string; a
   place_moved:          { icon: 'swap',          color: '#6366f1', accent: '#6366f1', bg: 'rgba(99,102,241,0.06)' },
 };
 
-const FALLBACK_CONFIG = { icon: 'sparkle' as PerriandIconName, color: INK['60'], accent: INK['60'], bg: INK['05'] };
+const FALLBACK_CONFIG = { icon: 'sparkle' as PerriandIconName, color: TEXT.secondary, accent: TEXT.secondary, bg: INK['05'] };
 
 type FilterType = 'all' | 'suggestions' | 'reactions' | 'notes';
 
@@ -69,7 +69,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
             className="px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all"
             style={{
               background: filter === f.key ? 'var(--t-ink)' : 'white',
-              color: filter === f.key ? 'white' : INK['70'],
+              color: filter === f.key ? 'white' : TEXT.secondary,
               border: filter === f.key ? 'none' : `1px solid ${INK['15']}`,
               cursor: 'pointer',
               fontFamily: FONT.sans,
@@ -84,7 +84,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
       {filtered.length === 0 ? (
         <div
           className="text-center py-12"
-          style={{ color: INK['50'], fontFamily: FONT.sans, fontSize: 13 }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 13 }}
         >
           {filter === 'all'
             ? 'No activity yet. Invite collaborators to get started!'
@@ -124,7 +124,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                       fontFamily: FONT.mono,
                       fontSize: 10,
                       fontWeight: 600,
-                      color: INK['50'],
+                      color: TEXT.secondary,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}
@@ -160,7 +160,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                     <div
                       className="text-[12px] leading-relaxed"
                       style={{
-                        color: INK['80'],
+                        color: TEXT.primary,
                         fontFamily: FONT.sans,
                       }}
                     >
@@ -169,7 +169,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                     <div
                       className="text-[10px] mt-0.5"
                       style={{
-                        color: INK['40'],
+                        color: TEXT.secondary,
                         fontFamily: FONT.mono,
                       }}
                     >

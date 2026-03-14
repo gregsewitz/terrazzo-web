@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { T } from '@/types';
 import type { SeasonalityData } from '@/types';
 
@@ -147,7 +147,7 @@ export function SeasonalityBadge({
             className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} px-2 py-0.5 rounded-md`}
             style={{
               background: `${INK['95']}06`,
-              color: INK['60'],
+              color: TEXT.secondary,
               fontFamily: FONT.mono,
             }}
           >
@@ -199,7 +199,7 @@ export function SeasonalityBadge({
         {timingLabel && (
           <p
             className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold`}
-            style={{ color: INK['95'], fontFamily: FONT.serif }}
+            style={{ color: TEXT.primary, fontFamily: FONT.serif }}
           >
             {timingLabel}
           </p>
@@ -216,7 +216,7 @@ export function SeasonalityBadge({
                   className="text-[10px] px-2 py-0.5 rounded-md font-medium"
                   style={{
                     background: isCurrent ? `${TIMING_COLOR_GOOD}15` : `${INK['95']}06`,
-                    color: isCurrent ? TIMING_COLOR_GOOD : INK['60'],
+                    color: isCurrent ? TIMING_COLOR_GOOD : TEXT.secondary,
                     fontFamily: FONT.mono,
                     border: isCurrent ? `1px solid ${TIMING_COLOR_GOOD}25` : 'none',
                   }}
@@ -231,10 +231,10 @@ export function SeasonalityBadge({
         {/* Rhythm tempo */}
         {rhythmTempo && (
           <div className="flex items-center gap-1.5 mt-2">
-            <PerriandIcon name="discover" size={10} color={INK['50']} />
+            <PerriandIcon name="discover" size={10} color={TEXT.secondary} />
             <span
               className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'}`}
-              style={{ color: INK['60'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               {rhythmTempo}
             </span>
@@ -245,7 +245,7 @@ export function SeasonalityBadge({
         {crowdContext && (
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed mt-2`}
-            style={{ color: INK['75'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
           >
             {crowdContext}
           </p>
@@ -255,7 +255,7 @@ export function SeasonalityBadge({
         {seasonalNote && (
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed mt-2`}
-            style={{ color: INK['80'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
           >
             {seasonalNote}
           </p>
@@ -270,7 +270,7 @@ export function SeasonalityBadge({
             <PerriandIcon name="sparkle" size={10} color={T.signalRed} className="mt-0.5" />
             <span
               className="text-[10px]"
-              style={{ color: INK['75'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               Closures: {seasonality.seasonalClosures.join(', ')}
             </span>

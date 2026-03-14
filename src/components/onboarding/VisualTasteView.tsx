@@ -159,7 +159,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
     <div className="flex flex-col h-full">
       {/* Compact header — prompt + progress inline */}
       <div className="flex-shrink-0 px-4 pt-1 pb-2 flex items-center gap-4">
-        <h2 className="font-serif text-[18px] text-[var(--t-ink)] leading-tight whitespace-nowrap">
+        <h2 className="font-display text-[18px] text-[var(--t-ink)] leading-tight whitespace-nowrap">
           {promptText}
         </h2>
         {/* Thin progress bar — fills remaining space */}
@@ -403,7 +403,7 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
 
         {/* Hotel name — large editorial serif */}
         <h3
-          className="font-serif leading-tight mb-1"
+          className="font-serif italic leading-tight mb-1"
           style={{
             fontSize: 22,
             color: '#fff',

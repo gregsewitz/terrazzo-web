@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // Hero images — one chosen at random per visit
 const HERO_IMAGES = [
@@ -108,7 +108,7 @@ export default function Home() {
               fontSize: 11,
               fontWeight: 400,
               letterSpacing: '0.25em',
-              color: INK['40'],
+              color: TEXT.secondary,
               margin: '0 0 32px',
               textTransform: 'uppercase',
             }}
@@ -136,7 +136,7 @@ export default function Home() {
             style={{
               fontFamily: FONT.sans,
               fontSize: 16,
-              color: INK['55'],
+              color: TEXT.secondary,
               lineHeight: 1.6,
               margin: '0 0 40px',
               maxWidth: 400,
@@ -169,7 +169,7 @@ export default function Home() {
                   <p style={{
                     fontFamily: FONT.sans,
                     fontSize: 12,
-                    color: INK['50'],
+                    color: TEXT.secondary,
                     margin: '2px 0 0',
                   }}>
                     We&apos;ll be in touch when it&apos;s your turn.
@@ -205,7 +205,7 @@ export default function Home() {
                   padding: '14px 28px',
                   borderRadius: 100,
                   background: email.trim() ? 'var(--t-ink)' : INK['10'],
-                  color: email.trim() ? 'white' : INK['30'],
+                  color: email.trim() ? 'white' : TEXT.secondary,
                   border: 'none',
                   fontFamily: FONT.mono,
                   fontSize: 11,
@@ -228,7 +228,7 @@ export default function Home() {
             <p style={{
               fontFamily: FONT.sans,
               fontSize: 12,
-              color: 'var(--t-signal-red)',
+              color: TEXT.accent,
               margin: '10px 0 0',
             }}>
               {errorMsg}
@@ -242,7 +242,7 @@ export default function Home() {
               style={{
                 fontFamily: FONT.sans,
                 fontSize: 12,
-                color: INK['40'],
+                color: TEXT.secondary,
                 textDecoration: 'none',
               }}
             >
@@ -255,7 +255,7 @@ export default function Home() {
             style={{
               fontFamily: FONT.mono,
               fontSize: 10,
-              color: INK['30'],
+              color: TEXT.secondary,
               letterSpacing: '0.05em',
             }}
           >

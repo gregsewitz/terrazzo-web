@@ -1,6 +1,6 @@
 'use client';
 
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface SortPillsProps<T extends string> {
   options: { id: T; label: string }[];
@@ -22,7 +22,7 @@ export default function SortPills<T extends string>({
 
   return (
     <div className="flex items-center gap-1.5 mb-3 pb-3" style={{ borderBottom: '1px solid var(--t-linen)' }}>
-      <span style={{ fontFamily: FONT.mono, fontSize: 8, letterSpacing: 1.5, color: INK['40'], textTransform: 'uppercase', marginRight: 4 }}>
+      <span style={{ fontFamily: FONT.mono, fontSize: 8, letterSpacing: 1.5, color: TEXT.secondary, textTransform: 'uppercase', marginRight: 4 }}>
         Sort
       </span>
       {options.map(opt => (
@@ -31,9 +31,9 @@ export default function SortPills<T extends string>({
           onClick={() => onChange(opt.id)}
           className="px-2.5 py-1 rounded-full text-[10px] cursor-pointer transition-all"
           style={{
-            background: value === opt.id ? 'var(--t-ink)' : 'transparent',
-            color: value === opt.id ? 'white' : INK['70'],
-            border: value === opt.id ? '1px solid var(--t-ink)' : `1px solid ${INK['12']}`,
+            background: value === opt.id ? TEXT.primary : 'transparent',
+            color: value === opt.id ? 'white' : TEXT.secondary,
+            border: value === opt.id ? `1px solid ${TEXT.primary}` : `1px solid ${INK['12']}`,
             fontFamily: FONT.sans,
             fontWeight: value === opt.id ? 600 : 400,
           }}

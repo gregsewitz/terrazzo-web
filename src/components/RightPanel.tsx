@@ -7,7 +7,7 @@ import type { MapMarker } from '@/components/GoogleMapView';
 import ActivityFeed from '@/components/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import DreamBoard from '@/components/DreamBoard';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { DEST_COLORS } from '@/types';
 import type { Activity } from '@/stores/collaborationStore';
 
@@ -72,7 +72,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
             flexShrink: 0,
             background: 'white',
             borderLeft: '1px solid var(--t-linen)',
-            boxShadow: '-2px 0 8px rgba(28,26,23,0.04)',
+            boxShadow: '-2px 0 8px rgba(26,45,74,0.04)',
             transition: 'width 200ms ease, box-shadow 200ms ease',
           }}
           onClick={() => setCollapsed(false)}
@@ -82,7 +82,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
             className="flex items-center justify-center mt-3 mb-3"
             style={{ width: 30, height: 30, borderRadius: '50%', background: INK['06'] }}
           >
-            <span style={{ fontSize: 13, color: INK['60'], fontWeight: 500 }}>‹</span>
+            <span style={{ fontSize: 13, color: TEXT.secondary, fontWeight: 500 }}>‹</span>
           </div>
           {/* Rotated label */}
           <div
@@ -92,7 +92,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
               fontFamily: FONT.sans,
               fontSize: 10,
               fontWeight: 600,
-              color: INK['60'],
+              color: TEXT.secondary,
               letterSpacing: 1.2,
               textTransform: 'uppercase',
             }}
@@ -142,7 +142,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
             fontFamily: FONT.mono,
             fontSize: 9,
             fontWeight: 700,
-            color: INK['40'],
+            color: TEXT.secondary,
             textTransform: 'uppercase',
             letterSpacing: 1.5,
           }}
@@ -160,7 +160,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
             border: 'none',
           }}
         >
-          <span style={{ fontSize: 11, color: INK['50'] }}>›</span>
+          <span style={{ fontSize: 11, color: TEXT.secondary }}>›</span>
         </button>
       </div>
 
@@ -175,11 +175,11 @@ export default function RightPanel({ activities }: RightPanelProps) {
         {markers.length > 0 && (
           <div
             className="flex items-center gap-3 px-3 py-1.5"
-            style={{ background: INK['02'] }}
+            style={{ background: 'var(--t-linen)' }}
           >
             <div className="flex items-center gap-1">
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--t-verde)' }} />
-              <span style={{ fontFamily: FONT.mono, fontSize: 8, color: INK['60'] }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 8, color: TEXT.secondary }}>
                 {markers.length} place{markers.length !== 1 ? 's' : ''} planned
               </span>
             </div>
@@ -248,16 +248,16 @@ export default function RightPanel({ activities }: RightPanelProps) {
                     <div className="px-3 py-2" style={{ background: 'white' }}>
                       {day.slots.filter(s => s.places.length > 0).map(slot => (
                         <div key={slot.id} className="flex items-center gap-2 py-1">
-                          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'], width: 50 }}>
+                          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, width: 50 }}>
                             {slot.time || slot.label}
                           </span>
-                          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: 'var(--t-ink)' }}>
+                          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.primary }}>
                             {slot.places[0]?.name}
                           </span>
                         </div>
                       ))}
                       {day.slots.filter(s => s.places.length > 0).length === 0 && (
-                        <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['30'] }}>
+                        <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                           No reservations yet
                         </span>
                       )}

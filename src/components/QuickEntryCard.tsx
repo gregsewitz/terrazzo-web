@@ -2,7 +2,7 @@
 
 import { memo, useState, useCallback } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { QuickEntry, QUICK_ENTRY_CATEGORY_ICONS } from '@/types';
 import { QUICK_ENTRY_CATEGORY_ICONS as CATEGORY_ICONS } from '@/types';
 import { formatTime12h } from './PlaceTimeEditor';
@@ -24,7 +24,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
   const categoryColors: Record<string, string> = {
     activity: '#2a7a56',    // verde
     transport: '#5a7a9a',   // steel blue
-    dining: '#c8923a',      // honey
+    dining: '#E86F5A',      // honey
     logistics: '#6b8b9a',   // ghost
     other: '#6b8b9a',
   };
@@ -39,7 +39,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
       style={{
         background: isTentative ? 'var(--t-cream)' : 'white',
         border: isTentative
-          ? '1.5px dashed rgba(28,26,23,0.18)'
+          ? '1.5px dashed rgba(26,45,74,0.18)'
           : `1px solid ${accentColor}22`,
         opacity: isTentative ? 0.85 : 1,
         cursor: 'pointer',
@@ -76,7 +76,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
             <span
               className="text-[12px] font-medium truncate"
               style={{
-                color: isTentative ? INK['80'] : 'var(--t-ink)',
+                color: isTentative ? TEXT.secondary : TEXT.primary,
                 fontFamily: FONT.sans,
                 fontStyle: isTentative ? 'italic' : 'normal',
               }}
@@ -88,7 +88,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
                 className="text-[8px] font-semibold px-1 py-px rounded flex-shrink-0"
                 style={{
                   background: INK['08'],
-                  color: INK['70'],
+                  color: TEXT.secondary,
                   letterSpacing: 0.3,
                 }}
               >
@@ -104,7 +104,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
               style={{
                 fontSize: 10,
                 fontFamily: FONT.sans,
-                color: INK['70'],
+                color: TEXT.secondary,
                 fontStyle: 'italic',
               }}
             >
@@ -149,7 +149,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
             }}
             aria-label="Remove entry"
           >
-            <PerriandIcon name="close" size={8} color={INK['70']} />
+            <PerriandIcon name="close" size={8} color={TEXT.secondary} />
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { ReservationRow } from './ReservationRow';
 import type { YearGroupData } from '@/lib/email-reservations-helpers';
 import type { ReactionId } from '@/types';
@@ -29,10 +29,10 @@ export const YearGroup = React.memo(function YearGroup({
     <div>
       {/* Year header */}
       <div className="flex items-center gap-2 mb-2 mt-1">
-        <span className="text-[18px]" style={{ color: 'var(--t-ink)', fontFamily: FONT.serif }}>
+        <span className="text-[18px]" style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
           {group.year}
         </span>
-        <span className="text-[10px]" style={{ color: INK['40'] }}>
+        <span className="text-[10px]" style={{ color: TEXT.secondary }}>
           {placeCount} place{placeCount !== 1 ? 's' : ''}
         </span>
       </div>

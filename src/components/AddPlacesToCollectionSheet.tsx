@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, Collection, REACTIONS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { THUMB_GRADIENTS } from '@/constants/placeTypes';
 import BaseSheet from '@/components/ui/BaseSheet';
 import SortPills from '@/components/ui/SortPills';
@@ -80,7 +80,7 @@ export default function AddPlacesToCollectionSheet({
           <PerriandIcon
             name="discover"
             size={13}
-            color={INK['40']}
+            color={TEXT.secondary}
             style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
           />
           <input
@@ -94,7 +94,7 @@ export default function AddPlacesToCollectionSheet({
               paddingLeft: 30,
               background: 'white',
               border: '1px solid var(--t-linen)',
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               fontFamily: FONT.sans,
               outline: 'none',
               boxSizing: 'border-box',
@@ -106,12 +106,12 @@ export default function AddPlacesToCollectionSheet({
               className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center"
               style={{ background: INK['06'], border: 'none', cursor: 'pointer' }}
             >
-              <PerriandIcon name="close" size={8} color={INK['40']} />
+              <PerriandIcon name="close" size={8} color={TEXT.secondary} />
             </button>
           )}
         </div>
         {/* Count summary */}
-        <div className="mt-2 text-[10px]" style={{ fontFamily: FONT.mono, color: INK['70'] }}>
+        <div className="mt-2 text-[10px]" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
           {availablePlaces.length} available · {alreadyInCount} already in collection
         </div>
 
@@ -131,7 +131,7 @@ export default function AddPlacesToCollectionSheet({
         {availablePlaces.length === 0 ? (
           <div className="text-center py-10">
             <PerriandIcon name="discover" size={28} color={INK['15']} />
-            <p className="text-[12px] mt-3" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+            <p className="text-[12px] mt-3" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
               {searchQuery
                 ? 'No matching places found'
                 : 'All your library places are already in this collection'}
@@ -160,14 +160,14 @@ export default function AddPlacesToCollectionSheet({
 
                   {/* Info */}
                   <div className="flex-1 min-w-0 cursor-default">
-                    <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                    <div className="text-[12px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
                       {place.name}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
+                      <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                         {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                       </span>
-                      <span style={{ fontSize: 10, color: INK['70'] }}>
+                      <span style={{ fontSize: 10, color: TEXT.secondary }}>
                         · {place.location.split(',')[0]}
                       </span>
                       {reaction && (

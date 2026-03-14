@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS, TYPE_COLORS_VIBRANT } from '@/constants/placeTypes';
 import type { PlaceType } from '@/types';
 
@@ -171,7 +171,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
             {isDashed && (
               <div style={{
                 fontSize: 8, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.5px',
-                color: INK['70'], fontFamily: FONT.mono,
+                color: TEXT.secondary, fontFamily: FONT.mono,
                 marginBottom: 4,
               }}>Suggestion</div>
             )}
@@ -190,27 +190,27 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontSize: 12, fontWeight: 600, color: isDashed ? INK['85'] : '#1c1a17',
+                  fontSize: 12, fontWeight: 600, color: isDashed ? TEXT.secondary : TEXT.primary,
                   fontFamily: FONT.sans,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>{marker.name}</div>
-                <div style={{ fontSize: 9, color: INK['70'], fontFamily: FONT.sans }}>
+                <div style={{ fontSize: 9, color: TEXT.secondary, fontFamily: FONT.sans }}>
                   {marker.type ? marker.type.charAt(0).toUpperCase() + marker.type.slice(1) : ''}
                   {marker.location ? ` · ${marker.location.split(',')[0]}` : ''}
                 </div>
               </div>
               {marker.matchScore && (
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: '#c8923a',
+                  fontSize: 9, fontWeight: 700, color: '#E86F5A',
                   fontFamily: FONT.mono,
-                  background: 'rgba(200,146,58,0.1)',
+                  background: 'rgba(232,111,90,0.1)',
                   padding: '2px 5px', borderRadius: 4,
                 }}>{marker.matchScore}%</span>
               )}
             </div>
             {marker.tasteNote && (
               <div style={{
-                fontSize: 10, color: INK['70'], fontStyle: 'italic',
+                fontSize: 10, color: TEXT.primary, fontStyle: 'italic',
                 fontFamily: FONT.sans, lineHeight: 1.4,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>{marker.tasteNote}</div>
@@ -234,7 +234,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
             }}>{marker.count}</div>
             <div style={{
               fontFamily: FONT.sans, fontSize: glowing ? 10 : 9, fontWeight: 600,
-              color: '#1c1a17', background: 'white',
+              color: TEXT.primary, background: 'white',
               borderRadius: 6, padding: glowing ? '2px 8px' : '1px 6px', marginTop: 2,
               boxShadow: glowing
                 ? `0 2px 12px ${INK['18']}`
@@ -297,7 +297,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
             </div>
             <span style={{
               fontSize: glowing ? 11 : 10, fontWeight: 600,
-              color: isDashed ? INK['80'] : isVibrant ? 'white' : '#1c1a17',
+              color: isDashed ? TEXT.secondary : isVibrant ? 'white' : TEXT.primary,
               fontFamily: FONT.sans,
               maxWidth: glowing ? 130 : 100, overflow: 'hidden', textOverflow: 'ellipsis',
               textShadow: isVibrant ? '0 1px 2px rgba(0,0,0,0.15)' : 'none',
@@ -494,8 +494,8 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
       <div
         className={`${isFullScreen ? '' : 'rounded-xl'} overflow-hidden flex items-center justify-center`}
         style={isFullScreen
-          ? { position: 'absolute' as const, inset: 0, background: 'var(--t-cream)', color: INK['90'] }
-          : { height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: INK['90'] }
+          ? { position: 'absolute' as const, inset: 0, background: 'var(--t-cream)', color: TEXT.secondary }
+          : { height, border: '1px solid var(--t-linen)', background: 'var(--t-cream)', color: TEXT.secondary }
         }
       >
         <div className="text-center text-xs" style={{ fontFamily: FONT.sans }}>

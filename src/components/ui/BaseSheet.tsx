@@ -1,7 +1,7 @@
 'use client';
 
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface BaseSheetProps {
   title: string;
@@ -43,12 +43,12 @@ export default function BaseSheet({
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <div>
             <span
-              style={{ fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic', color: 'var(--t-ink)' }}
+              style={{ fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic', color: TEXT.primary }}
             >
               {title}
             </span>
             {subtitle && (
-              <div className="text-[11px] mt-0.5" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+              <div className="text-[11px] mt-0.5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                 {subtitle}
               </div>
             )}
@@ -56,9 +56,9 @@ export default function BaseSheet({
           <button
             onClick={onClose}
             className="cursor-pointer"
-            style={{ color: INK['70'], background: 'none', border: 'none' }}
+            style={{ color: TEXT.secondary, background: 'none', border: 'none' }}
           >
-            <PerriandIcon name="close" size={16} color={INK['50']} />
+            <PerriandIcon name="close" size={16} color={TEXT.secondary} />
           </button>
         </div>
 

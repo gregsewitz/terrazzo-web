@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 function AuthCallbackInner() {
   const router = useRouter();
@@ -85,7 +85,7 @@ function AuthCallbackInner() {
       >
         Terrazzo
       </h1>
-      <p className="text-[13px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+      <p className="text-[13px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
         Signing you in...
       </p>
     </div>
@@ -106,7 +106,7 @@ export default function AuthCallbackPage() {
           >
             Terrazzo
           </h1>
-          <p className="text-[13px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+          <p className="text-[13px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
             Signing you in...
           </p>
         </div>

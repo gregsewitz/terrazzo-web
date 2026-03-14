@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ScratchpadEntry, ScratchpadEntryType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Entry type config ───
 const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIconName; placeholder: string }[] = [
@@ -17,7 +17,7 @@ const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIco
 const ACCENT_COLORS = [
   { value: undefined, label: 'None', bg: INK['06'] },
   { value: 'verde', label: 'Green', bg: 'rgba(42,122,86,0.12)' },
-  { value: 'honey', label: 'Gold', bg: 'rgba(200,146,58,0.12)' },
+  { value: 'honey', label: 'Gold', bg: 'rgba(232,111,90,0.12)' },
   { value: 'blue', label: 'Blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', label: 'Rose', bg: 'rgba(180,80,80,0.12)' },
 ];
@@ -112,11 +112,11 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
         >
           <h2
             className="text-base mb-0.5"
-            style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)', margin: 0 }}
+            style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
           >
             Scratchpad
           </h2>
-          <p className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+          <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
             Notes, links, ideas — anything you want to come back to.
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
             <PerriandIcon
               name={ENTRY_TYPES.find(t => t.type === inputType)?.icon || 'edit'}
               size={14}
-              color={INK['50']}
+              color={TEXT.secondary}
             />
           </button>
 
@@ -160,7 +160,7 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
             onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
             placeholder={ENTRY_TYPES.find(t => t.type === inputType)?.placeholder || 'Add something...'}
             className="flex-1 text-[13px] bg-transparent border-none outline-none"
-            style={{ fontFamily: FONT.sans, color: 'var(--t-ink)' }}
+            style={{ fontFamily: FONT.sans, color: TEXT.primary }}
           />
 
           {/* Add button */}
@@ -190,15 +190,15 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
                 onClick={() => { setInputType(t.type); setShowTypePicker(false); }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full border cursor-pointer transition-all"
                 style={{
-                  background: inputType === t.type ? 'var(--t-ink)' : 'white',
-                  color: inputType === t.type ? 'white' : INK['70'],
-                  borderColor: inputType === t.type ? 'var(--t-ink)' : 'var(--t-linen)',
+                  background: inputType === t.type ? TEXT.primary : 'white',
+                  color: inputType === t.type ? TEXT.inverse : TEXT.secondary,
+                  borderColor: inputType === t.type ? TEXT.primary : 'var(--t-linen)',
                   fontFamily: FONT.sans,
                   fontSize: 11,
                   fontWeight: 500,
                 }}
               >
-                <PerriandIcon name={t.icon} size={11} color={inputType === t.type ? 'white' : INK['50']} />
+                <PerriandIcon name={t.icon} size={11} color={inputType === t.type ? TEXT.inverse : TEXT.secondary} />
                 {t.label}
               </button>
             ))}
@@ -214,7 +214,7 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
         {sortedEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10">
             <PerriandIcon name="edit" size={28} color={INK['15']} />
-            <p className="text-[12px] mt-3 text-center" style={{ color: INK['35'], fontFamily: FONT.sans }}>
+            <p className="text-[12px] mt-3 text-center" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
               Drop links, jot down ideas,<br />make checklists — all in one place.
             </p>
           </div>
@@ -243,7 +243,7 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
             borderTop: '1px solid var(--t-linen)',
           }}
         >
-          <span className="text-[10px]" style={{ color: INK['35'], fontFamily: FONT.mono }}>
+          <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {entries.length} item{entries.length !== 1 ? 's' : ''}
             {entries.filter(e => e.pinned).length > 0 &&
               ` · ${entries.filter(e => e.pinned).length} pinned`
@@ -311,8 +311,8 @@ function ScratchpadCard({
     <div
       className="group/sp rounded-lg border overflow-hidden transition-all"
       style={{
-        background: entry.pinned ? 'rgba(200,146,58,0.04)' : bg,
-        borderColor: entry.pinned ? 'rgba(200,146,58,0.2)' : 'var(--t-linen)',
+        background: entry.pinned ? 'rgba(232,111,90,0.04)' : bg,
+        borderColor: entry.pinned ? 'rgba(232,111,90,0.2)' : 'var(--t-linen)',
       }}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -321,9 +321,9 @@ function ScratchpadCard({
       <div className="flex items-center justify-between px-2.5 pt-2 pb-0.5">
         <div className="flex items-center gap-1.5">
           {entry.pinned && (
-            <PerriandIcon name="pin" size={10} color="var(--t-honey, #c8923a)" />
+            <PerriandIcon name="pin" size={10} color="var(--t-honey, #E86F5A)" />
           )}
-          <span className="text-[9px]" style={{ color: INK['35'], fontFamily: FONT.mono }}>
+          <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {entry.type === 'link' ? '🔗' : entry.type === 'checklist' ? '☑' : '✎'} {timeAgo}
           </span>
         </div>
@@ -339,7 +339,7 @@ function ScratchpadCard({
             style={{ background: 'transparent' }}
             title={entry.pinned ? 'Unpin' : 'Pin to top'}
           >
-            <PerriandIcon name="pin" size={10} color={entry.pinned ? 'var(--t-honey, #c8923a)' : INK['30']} />
+            <PerriandIcon name="pin" size={10} color={entry.pinned ? TEXT.accent : INK['30']} />
           </button>
           {entry.type === 'note' && (
             <button
@@ -348,7 +348,7 @@ function ScratchpadCard({
               style={{ background: 'transparent' }}
               title="Edit"
             >
-              <PerriandIcon name="edit" size={10} color={INK['30']} />
+              <PerriandIcon name="edit" size={10} color={TEXT.secondary} />
             </button>
           )}
           <button
@@ -357,7 +357,7 @@ function ScratchpadCard({
             style={{ background: 'transparent' }}
             title="Delete"
           >
-            <PerriandIcon name="close" size={10} color={INK['30']} />
+            <PerriandIcon name="close" size={10} color={TEXT.secondary} />
           </button>
         </div>
       </div>
@@ -373,7 +373,7 @@ function ScratchpadCard({
                 className="w-full text-[12px] rounded-md p-2 resize-none border outline-none"
                 style={{
                   fontFamily: FONT.sans,
-                  color: 'var(--t-ink)',
+                  color: TEXT.primary,
                   borderColor: 'var(--t-linen)',
                   background: 'white',
                   minHeight: 60,
@@ -389,14 +389,14 @@ function ScratchpadCard({
                 <button
                   onClick={() => setEditing(false)}
                   className="text-[10px] px-2 py-1 rounded border-none cursor-pointer"
-                  style={{ background: INK['06'], color: INK['50'], fontFamily: FONT.sans }}
+                  style={{ background: INK['06'], color: TEXT.secondary, fontFamily: FONT.sans }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveEdit}
                   className="text-[10px] px-2 py-1 rounded border-none cursor-pointer"
-                  style={{ background: 'var(--t-ink)', color: 'white', fontFamily: FONT.sans }}
+                  style={{ background: TEXT.primary, color: TEXT.inverse, fontFamily: FONT.sans }}
                 >
                   Save
                 </button>
@@ -405,7 +405,7 @@ function ScratchpadCard({
           ) : (
             <p
               className="text-[12px] leading-relaxed whitespace-pre-wrap"
-              style={{ color: 'var(--t-ink)', fontFamily: FONT.sans, margin: 0 }}
+              style={{ color: TEXT.primary, fontFamily: FONT.sans, margin: 0 }}
             >
               {entry.content}
             </p>
@@ -428,13 +428,13 @@ function ScratchpadCard({
             <div className="min-w-0 flex-1">
               <span
                 className="text-[12px] font-medium block truncate group-hover/link:underline"
-                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                style={{ color: TEXT.primary, fontFamily: FONT.sans }}
               >
                 {entry.title || extractDomain(entry.content)}
               </span>
               <span
                 className="text-[10px] block truncate"
-                style={{ color: INK['40'], fontFamily: FONT.mono }}
+                style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
               >
                 {extractDomain(entry.content)}
               </span>
@@ -447,7 +447,7 @@ function ScratchpadCard({
             {entry.title && (
               <span
                 className="text-[12px] font-medium block mb-1.5"
-                style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                style={{ color: TEXT.primary, fontFamily: FONT.sans }}
               >
                 {entry.title}
               </span>
@@ -468,7 +468,7 @@ function ScratchpadCard({
                   <span
                     className="text-[12px] leading-relaxed"
                     style={{
-                      color: item.done ? INK['35'] : 'var(--t-ink)',
+                      color: item.done ? TEXT.secondary : TEXT.primary,
                       fontFamily: FONT.sans,
                       textDecoration: item.done ? 'line-through' : 'none',
                     }}
@@ -493,7 +493,7 @@ function ChecklistAdder({ onAdd }: { onAdd: (text: string) => void }) {
 
   return (
     <div className="flex items-center gap-1.5 mt-1.5">
-      <span className="text-[11px]" style={{ color: INK['20'] }}>+</span>
+      <span className="text-[11px]" style={{ color: TEXT.secondary }}>+</span>
       <input
         type="text"
         value={value}
@@ -506,7 +506,7 @@ function ChecklistAdder({ onAdd }: { onAdd: (text: string) => void }) {
         }}
         placeholder="Add item..."
         className="flex-1 text-[11px] bg-transparent border-none outline-none"
-        style={{ fontFamily: FONT.sans, color: INK['50'] }}
+        style={{ fontFamily: FONT.sans, color: TEXT.secondary }}
       />
     </div>
   );

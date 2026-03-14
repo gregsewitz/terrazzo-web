@@ -5,7 +5,7 @@ import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TravelContext } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Companion chip options ───
 
@@ -222,7 +222,7 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
                 top: '100%',
                 marginTop: 4,
                 background: 'white',
-                border: '1px solid rgba(28,26,23,0.08)',
+                border: '1px solid rgba(26,45,74,0.08)',
                 borderRadius: 12,
                 overflow: 'hidden',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
@@ -247,7 +247,7 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
                     padding: '10px 16px',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    background: i === activeCityIndex ? 'rgba(28,26,23,0.03)' : 'transparent',
+                    background: i === activeCityIndex ? 'rgba(26,45,74,0.03)' : 'transparent',
                     border: 'none',
                     transition: 'background 0.1s ease',
                   }}
@@ -281,7 +281,7 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
                   style={{
                     padding: '10px 18px',
                     borderRadius: 100,
-                    border: `1.5px solid ${active ? T.ink : 'rgba(28,26,23,0.1)'}`,
+                    border: `1.5px solid ${active ? T.ink : 'rgba(26,45,74,0.1)'}`,
                     background: active ? T.ink : 'transparent',
                     color: active ? T.cream : T.ink,
                     fontSize: 14,
@@ -323,8 +323,8 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
           style={{
             marginTop: 8,
             padding: '15px 40px',
-            background: submitted ? T.travertine : isValid ? T.ink : 'rgba(28,26,23,0.15)',
-            color: submitted ? INK['50'] : isValid ? T.cream : INK['40'],
+            background: submitted ? T.travertine : isValid ? T.ink : 'rgba(26,45,74,0.15)',
+            color: submitted ? TEXT.secondary : isValid ? T.cream : TEXT.secondary,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,
@@ -364,8 +364,8 @@ const inputStyle = (disabled: boolean): React.CSSProperties => ({
   fontSize: 16,
   fontFamily: FONT.sans,
   color: T.ink,
-  background: 'rgba(28,26,23,0.02)',
-  border: '1px solid rgba(28,26,23,0.08)',
+  background: 'rgba(26,45,74,0.02)',
+  border: '1px solid rgba(26,45,74,0.08)',
   borderRadius: 12,
   outline: 'none',
   transition: 'border-color 0.2s ease',

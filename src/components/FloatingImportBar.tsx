@@ -1,7 +1,7 @@
 'use client';
 
 import { useImportStore } from '@/stores/importStore';
-import { INK } from '@/constants/theme';
+import { INK, TEXT } from '@/constants/theme';
 
 /**
  * FloatingImportBar — small pill above TabBar showing background import progress.
@@ -110,14 +110,14 @@ export default function FloatingImportBar() {
           {/* Text content */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
-              fontSize: 13, fontWeight: 600, color: 'var(--t-ink)',
+              fontSize: 13, fontWeight: 600, color: TEXT.primary,
               margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               fontFamily: 'var(--font-sans)',
             }}>
               {isError ? 'Import failed' : isComplete ? 'Import ready' : progressLabel || 'Importing…'}
             </p>
             <p style={{
-              fontSize: 11, color: INK['70'], margin: '2px 0 0',
+              fontSize: 11, color: TEXT.secondary, margin: '2px 0 0',
               fontFamily: 'var(--font-sans)',
             }}>
               {isError

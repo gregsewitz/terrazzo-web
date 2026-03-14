@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ export function SignalResonanceStrip({
                 {variant === 'full' && cluster.score >= 80 && (
                   <span
                     className="text-[9px] font-bold ml-0.5"
-                    style={{ color: `${color}90`, fontFamily: FONT.mono }}
+                    style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                   >
                     {cluster.score}
                   </span>
@@ -140,7 +140,7 @@ export function SignalResonanceStrip({
                             className="text-[10px] px-2 py-0.5 rounded-md"
                             style={{
                               background: `${color}08`,
-                              color: INK['85'],
+                              color: TEXT.primary,
                               fontFamily: FONT.mono,
                             }}
                           >
@@ -164,7 +164,7 @@ export function SignalResonanceStrip({
                         </div>
                         <span
                           className="text-[10px] font-bold"
-                          style={{ color, fontFamily: FONT.mono }}
+                          style={{ color: color, fontFamily: FONT.mono }}
                         >
                           {cluster.score}
                         </span>
@@ -182,7 +182,7 @@ export function SignalResonanceStrip({
       {variant === 'full' && narrative && (
         <p
           className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed mt-2.5`}
-          style={{ color: INK['80'], fontFamily: FONT.sans }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           {narrative}
         </p>

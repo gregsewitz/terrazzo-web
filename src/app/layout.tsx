@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk, Space_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import GlobalImportUI from "@/components/GlobalImportUI";
 import UniversalAddBar from "@/components/UniversalAddBar";
@@ -9,17 +9,25 @@ import SaveIndicator from "@/components/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
 import MapsProvider from "@/components/MapsProvider";
 
-const dmSans = DM_Sans({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
-const dmSerif = DM_Serif_Display({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-dm-serif",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["700"],
+  style: ["italic"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
@@ -37,6 +45,24 @@ export const metadata: Metadata = {
     width: 'device-width',
     initialScale: 1,
   },
+  icons: {
+    icon: [
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
+      },
+      {
+        url: '/favicon.png',
+        type: 'image/png',
+        sizes: '32x32',
+      },
+    ],
+    apple: {
+      url: '/apple-touch-icon.png',
+      sizes: '180x180',
+      type: 'image/png',
+    },
+  },
 };
 
 export default function RootLayout({
@@ -45,7 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceMono.variable}`}>
+    <html lang="en" className={`${plusJakarta.variable} ${spaceGrotesk.variable} ${fraunces.variable} ${spaceMono.variable}`}>
       <body className="antialiased">
         <AuthProvider>
           <MapsProvider>

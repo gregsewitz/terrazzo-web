@@ -7,7 +7,7 @@ import type { MapMarker } from '@/components/GoogleMapView';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import HotelInput from './HotelInput';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { filterGhostsByDestination } from '@/utils/ghostFiltering';
 
 export interface DayContextBarProps {
@@ -133,7 +133,7 @@ const DayContextBar = memo(({
                 <span style={{
                   fontFamily: FONT.sans,
                   fontSize: 9,
-                  color: INK['55'],
+                  color: TEXT.secondary,
                   marginLeft: 16,
                   whiteSpace: 'nowrap',
                   maxWidth: 180,
@@ -168,7 +168,7 @@ const DayContextBar = memo(({
 
           {/* Separator */}
           {(day.hotel || day.hotelInfo) && !editingHotel && (
-            <span style={{ color: INK['15'], fontSize: 10 }}>·</span>
+            <span style={{ color: TEXT.secondary, fontSize: 10 }}>·</span>
           )}
 
           {/* + Transport button */}
@@ -271,11 +271,11 @@ const DayContextBar = memo(({
             fallbackCoords={geo?.lat != null && geo?.lng != null ? { lat: geo.lat, lng: geo.lng } : undefined}
           />
           {/* Map legend */}
-          <div className="flex items-center gap-3 px-3.5 py-1.5" style={{ background: INK['02'] }}>
+          <div className="flex items-center gap-3 px-3.5 py-1.5" style={{ background: 'var(--t-linen)' }}>
             {placedItems.length > 0 && (
               <div className="flex items-center gap-1">
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.manual.color }} />
-                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['85'] }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.primary }}>
                   {placedItems.length} planned
                 </span>
               </div>
@@ -283,7 +283,7 @@ const DayContextBar = memo(({
             {ghostItems.length > 0 && (
               <div className="flex items-center gap-1">
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: SOURCE_STYLES.terrazzo.color, opacity: 0.5 }} />
-                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'] }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.primary }}>
                   {ghostItems.length} suggested
                 </span>
               </div>

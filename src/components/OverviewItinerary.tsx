@@ -3,7 +3,7 @@
 import React from 'react';
 import { Trip, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface OverviewItineraryProps {
   trip: Trip;
@@ -19,10 +19,10 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
     <div className="px-3 py-3 pb-48" style={{ background: 'var(--t-cream)' }}>
       {/* Summary */}
       <div className="flex items-baseline justify-between mb-2.5 px-1">
-        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['85'] }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.primary }}>
           {totalPlaces} place{totalPlaces !== 1 ? 's' : ''} planned
         </span>
-        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['75'] }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
           {totalSlots - totalPlaces} slot{(totalSlots - totalPlaces) !== 1 ? 's' : ''} open
         </span>
       </div>
@@ -70,7 +70,7 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
                     style={{ background: 'white' }}
                     onClick={() => onTapDay(d.dayNumber)}
                   >
-                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['80'] }}>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.primary }}>
                       No places yet — tap to plan
                     </span>
                   </div>
@@ -92,7 +92,7 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <PerriandIcon name={SLOT_ICONS[slot.id] as any || 'pin'} size={12} color="var(--t-ink)" />
-                            <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                            <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
                             </span>
                             <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}>
@@ -101,11 +101,11 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['80'], whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.primary, whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {slot.time}
                             </span>
                             {truncSub && (
-                              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontStyle: 'italic', color: INK['85'], overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontStyle: 'italic', color: TEXT.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {truncSub}
                               </span>
                             )}

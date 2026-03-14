@@ -4,8 +4,8 @@ export type { PerriandIconName };
 
 // Forme Libere Design Tokens
 export const T = {
-  ink: '#1c1a17',
-  honey: '#c8923a',
+  ink: '#1A2D4A',
+  honey: '#E86F5A',
   amber: '#a06c28',
   verde: '#2a7a56',
   pantonViolet: '#6844a0',
@@ -85,7 +85,7 @@ export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string;
   friend: { color: T.verde, bg: 'rgba(42,122,86,0.12)', icon: 'friend', label: 'Friend' },
   terrazzo: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'terrazzo', label: 'Terrazzo pick' },
   maps: { color: '#a84018', bg: 'rgba(232,104,48,0.10)', icon: 'maps', label: 'Google Maps' },
-  article: { color: '#7a5a20', bg: 'rgba(200,146,58,0.12)', icon: 'article', label: 'Article' },
+  article: { color: '#7a5a20', bg: 'rgba(232,111,90,0.12)', icon: 'article', label: 'Article' },
   manual: { color: T.ink, bg: INK['06'], icon: 'manual', label: 'Added' },
 };
 

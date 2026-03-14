@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useEmailReservations, type ActiveTab } from '@/hooks/useEmailReservations';
 import { UpcomingTab } from '@/components/email/UpcomingTab';
 import { HistoryTab } from '@/components/email/HistoryTab';
@@ -90,7 +90,7 @@ export default function EmailReservationsPage() {
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-semibold border-none cursor-pointer transition-all"
                 style={{
                   background: isActive ? 'var(--t-ink)' : INK['06'],
-                  color: isActive ? 'white' : INK['60'],
+                  color: isActive ? 'white' : TEXT.secondary,
                 }}
               >
                 {label}
@@ -99,7 +99,7 @@ export default function EmailReservationsPage() {
                     className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
                     style={{
                       background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)',
-                      color: isActive ? 'white' : INK['40'],
+                      color: isActive ? 'white' : TEXT.secondary,
                     }}
                   >
                     {count}
@@ -122,7 +122,7 @@ export default function EmailReservationsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <span className="text-[12px]" style={{ color: INK['40'] }}>Loading…</span>
+            <span className="text-[12px]" style={{ color: TEXT.secondary }}>Loading…</span>
           </div>
         ) : (
           <>

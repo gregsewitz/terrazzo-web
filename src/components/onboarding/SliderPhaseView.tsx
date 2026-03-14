@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Slider Definitions ───
 
@@ -116,9 +116,9 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
                 flexDirection: 'column',
                 gap: 8,
                 padding: '20px 24px',
-                background: 'rgba(28,26,23,0.02)',
+                background: 'rgba(26,45,74,0.02)',
                 borderRadius: 14,
-                border: '1px solid rgba(28,26,23,0.05)',
+                border: '1px solid rgba(26,45,74,0.05)',
                 animation: `fadeInUp 0.4s ease ${i * 0.08}s both`,
               }}
             >
@@ -131,7 +131,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
                 <span style={{
                   fontSize: 13,
                   fontWeight: leftActive ? 600 : 400,
-                  color: leftActive ? T.ink : INK['40'],
+                  color: leftActive ? T.ink : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   flex: '0 1 auto',
@@ -142,7 +142,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
                 <span style={{
                   fontSize: 13,
                   fontWeight: rightActive ? 600 : 400,
-                  color: rightActive ? T.ink : INK['40'],
+                  color: rightActive ? T.ink : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   textAlign: 'right',
@@ -175,7 +175,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
             marginTop: 24,
             padding: '15px 40px',
             background: submitted ? T.travertine : T.ink,
-            color: submitted ? INK['50'] : T.cream,
+            color: submitted ? TEXT.secondary : T.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

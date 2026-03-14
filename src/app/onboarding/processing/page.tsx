@@ -94,7 +94,7 @@ export default function ProcessingPage() {
         {/* Animated brand mark */}
         <div className="text-center mb-10">
           <motion.h1
-            className="font-serif text-[32px] text-[var(--t-ink)]"
+            className="font-display text-[32px] text-[var(--t-ink)]"
             initial={{ opacity: 0, y: -10 }}
             animate={hasError ? { opacity: 1, y: 0, x: [0, -4, 4, -4, 0] } : { opacity: 1, y: 0 }}
             transition={hasError ? { duration: 0.6, x: { duration: 0.5, delay: 0.1 } } : { duration: 0.6 }}
@@ -103,10 +103,11 @@ export default function ProcessingPage() {
           </motion.h1>
           {!hasError && (
             <motion.p
-              className="text-[14px] text-[var(--t-ink)]/45 mt-2 font-serif italic"
+              className="text-[14px] text-[var(--t-ink)]/45 mt-2 italic"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
+              style={{ fontFamily: 'var(--font-serif)' }}
             >
               This may take a minute or two — please don&apos;t close this screen.
             </motion.p>

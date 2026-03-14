@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface ImportProcessingStepProps {
   progressPercent: number;
@@ -24,7 +24,7 @@ export const ImportProcessingStep = React.memo(function ImportProcessingStep({
       <div className="mb-4 ghost-shimmer flex justify-center">
         <PerriandIcon name="terrazzo" size={48} color="var(--t-honey)" />
       </div>
-      <h3 className="text-xl italic mb-2" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
+      <h3 className="text-xl italic mb-2" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
         {progressPercent < 35 ? 'Reading your paste…' : progressPercent < 75 ? 'Looking up places…' : 'Almost there…'}
       </h3>
 
@@ -41,10 +41,10 @@ export const ImportProcessingStep = React.memo(function ImportProcessingStep({
           />
         </div>
         <div className="flex items-center justify-between mt-2">
-          <span className="text-[11px]" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+          <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
             {progressLabel}
           </span>
-          <span className="text-[10px] font-semibold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
+          <span className="text-[10px] font-semibold" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {progressPercent}%
           </span>
         </div>
@@ -61,7 +61,7 @@ export const ImportProcessingStep = React.memo(function ImportProcessingStep({
           </div>
           <div className="flex flex-wrap gap-1.5">
             {discoveredNames.map((name, i) => (
-              <span key={i} className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}>
+              <span key={i} className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: 'var(--t-linen)', color: TEXT.primary }}>
                 {name}
               </span>
             ))}
@@ -73,7 +73,7 @@ export const ImportProcessingStep = React.memo(function ImportProcessingStep({
       <button
         onClick={onMinimize}
         className="mt-6 px-4 py-2 rounded-xl border-none cursor-pointer text-[11px] font-semibold"
-        style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}
+        style={{ background: 'var(--t-linen)', color: TEXT.primary }}
       >
         Continue in background
       </button>

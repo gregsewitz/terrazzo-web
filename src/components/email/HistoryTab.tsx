@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { INK } from '@/constants/theme';
+import { INK, TEXT } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { YearGroup } from './YearGroup';
 import { TYPE_FILTER_OPTIONS } from '@/lib/email-reservations-helpers';
@@ -46,10 +46,10 @@ export const HistoryTab = React.memo(function HistoryTab({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <PerriandIcon name="discover" size={32} color={INK['20']} />
-        <p className="text-[13px] mt-3" style={{ color: INK['50'] }}>
+        <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>
           No past reservations found
         </p>
-        <p className="text-[11px] mt-1" style={{ color: INK['30'] }}>
+        <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>
           Historical bookings from your email will appear here
         </p>
       </div>
@@ -68,8 +68,8 @@ export const HistoryTab = React.memo(function HistoryTab({
               onClick={() => onTypeFilterChange(value)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-medium border-none cursor-pointer transition-all whitespace-nowrap"
               style={{
-                background: isActive ? 'var(--t-ink)' : INK['06'],
-                color: isActive ? 'white' : INK['60'],
+                background: isActive ? TEXT.primary : 'rgba(0,0,0,0.06)',
+                color: isActive ? 'white' : TEXT.secondary,
               }}
             >
               {label}
@@ -81,7 +81,7 @@ export const HistoryTab = React.memo(function HistoryTab({
       {/* Filter yielded no results */}
       {totalCount === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-[12px]" style={{ color: INK['40'] }}>
+          <p className="text-[12px]" style={{ color: TEXT.secondary }}>
             No {TYPE_FILTER_OPTIONS.find(o => o.value === typeFilter)?.label?.toLowerCase() || 'results'} found
           </p>
           <button
@@ -96,7 +96,7 @@ export const HistoryTab = React.memo(function HistoryTab({
         <>
           {/* Bulk controls */}
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px]" style={{ color: INK['50'] }}>
+            <span className="text-[10px]" style={{ color: TEXT.secondary }}>
               {selectedCount} of {totalCount} selected
             </span>
             <div className="flex gap-2">
@@ -110,7 +110,7 @@ export const HistoryTab = React.memo(function HistoryTab({
               <button
                 onClick={onDeselectAll}
                 className="text-[10px] font-semibold bg-transparent border-none cursor-pointer"
-                style={{ color: INK['50'] }}
+                style={{ color: TEXT.secondary }}
               >
                 Clear
               </button>

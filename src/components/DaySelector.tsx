@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { Trip } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 export interface DaySelectorProps {
   trip: Trip;
@@ -107,7 +107,7 @@ const DaySelector = memo(({
               fontFamily: FONT.serif,
               fontSize: 16,
               fontWeight: 400,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               letterSpacing: -0.2,
               flexShrink: 0,
             }}
@@ -118,7 +118,7 @@ const DaySelector = memo(({
             style={{
               fontFamily: FONT.mono,
               fontSize: 11,
-              color: INK['50'],
+              color: TEXT.secondary,
               flexShrink: 0,
             }}
           >
@@ -143,7 +143,7 @@ const DaySelector = memo(({
             height="12"
             viewBox="0 0 24 24"
             fill="none"
-            stroke={INK['40']}
+            stroke={TEXT.secondary}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -173,7 +173,7 @@ const DaySelector = memo(({
             }}
             aria-label="Day options"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill={INK['50']}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={TEXT.secondary}>
               <circle cx="5" cy="12" r="2" />
               <circle cx="12" cy="12" r="2" />
               <circle cx="19" cy="12" r="2" />

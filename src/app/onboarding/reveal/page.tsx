@@ -50,7 +50,7 @@ export default function RevealPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
         <div className="max-w-lg w-full text-center">
-          <h2 className="font-serif text-[28px] text-[var(--t-ink)] mb-3">
+          <h2 className="font-display text-[28px] text-[var(--t-ink)] mb-3">
             You&apos;re all set
           </h2>
           <p className="text-[15px] text-[var(--t-ink)]/60 mb-6">

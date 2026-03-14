@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface ExportToMapsProps {
   places: ImportedPlace[];
@@ -86,11 +86,11 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
             <h2 style={{ fontFamily: FONT.serif, fontSize: 20, color: 'var(--t-ink)', margin: 0 }}>
               Export to Google Maps
             </h2>
-            <button onClick={onClose} className="bg-transparent border-none cursor-pointer" style={{ color: INK['90'] }} aria-label="Close">
+            <button onClick={onClose} className="bg-transparent border-none cursor-pointer" style={{ color: TEXT.primary }} aria-label="Close">
               <PerriandIcon name="close" size={16} />
             </button>
           </div>
-          <p className="text-[12px]" style={{ color: INK['95'] }}>
+          <p className="text-[12px]" style={{ color: TEXT.primary }}>
             Download as KML to import into Google Maps, or open places individually.
           </p>
         </div>
@@ -144,14 +144,14 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
               </>
             )}
           </button>
-          <p className="text-[10px] text-center mt-2" style={{ color: INK['90'] }}>
+          <p className="text-[10px] text-center mt-2" style={{ color: TEXT.secondary }}>
             Open Google Maps → Your places → Maps → Import → select the .kml file
           </p>
         </div>
 
         {/* Individual place links */}
         <div className="px-5 pb-6 overflow-y-auto" style={{ maxHeight: '35dvh' }}>
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: INK['90'], fontFamily: FONT.mono }}>
+          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             Or open individually
           </p>
           <div className="flex flex-col gap-1.5">
@@ -168,7 +168,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
                   <div className="text-[12px] font-medium" style={{ color: 'var(--t-ink)' }}>
                     {place.name}
                   </div>
-                  <div className="text-[10px]" style={{ color: INK['95'] }}>
+                  <div className="text-[10px]" style={{ color: TEXT.primary }}>
                     {place.location} · {place.type}
                   </div>
                 </div>

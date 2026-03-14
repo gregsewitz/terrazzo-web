@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { formatCompactDetails, type StagedReservation } from '@/lib/email-reservations-helpers';
 import type { PerriandIconName, ReactionId } from '@/types';
 
@@ -19,7 +19,7 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
 
 const REACTIONS: { id: ReactionId; icon: PerriandIconName; label: string; color: string }[] = [
   { id: 'myPlace', icon: 'myPlace', label: 'Obsessed', color: '#2a7a56' },
-  { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: '#c8923a' },
+  { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: '#E86F5A' },
   { id: 'mixed', icon: 'mixed', label: 'Mixed', color: '#eeb420' },
   { id: 'notMe', icon: 'notMe', label: 'Not me', color: '#d63020' },
 ];
@@ -84,11 +84,11 @@ export const ReservationRow = React.memo(function ReservationRow({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+          <div className="text-[12px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
             {r.placeName}
           </div>
           {(r.location || details) && (
-            <div className="text-[10px] truncate mt-0.5" style={{ color: INK['50'] }}>
+            <div className="text-[10px] truncate mt-0.5" style={{ color: TEXT.secondary }}>
               {r.location}{r.location && details ? ' · ' : ''}{details}
             </div>
           )}
@@ -100,7 +100,7 @@ export const ReservationRow = React.memo(function ReservationRow({
             className="text-[10px] px-2 py-1 rounded-md flex-shrink-0"
             style={{
               background: 'var(--t-linen)',
-              color: INK['60'],
+              color: TEXT.secondary,
               fontFamily: FONT.mono,
               letterSpacing: '0.02em',
             }}
@@ -132,7 +132,7 @@ export const ReservationRow = React.memo(function ReservationRow({
                 <PerriandIcon name={reactionIcon} size={12} color={isActive ? color : INK['30']} />
                 <span
                   className="text-[9px] font-medium"
-                  style={{ color: isActive ? color : INK['30'] }}
+                  style={{ color: isActive ? color : TEXT.secondary }}
                 >
                   {label}
                 </span>

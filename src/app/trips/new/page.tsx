@@ -11,7 +11,7 @@ import { PerriandIcon, type PerriandIconName } from '@/components/icons/Perriand
 import DesktopNav from '@/components/DesktopNav';
 import DestinationAllocator from '@/components/DestinationAllocator';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 
@@ -128,7 +128,7 @@ function TripSeedForm({ onStart, initialSeed }: {
           <SafeFadeIn delay={0.22} direction="up" distance={12}>
             <p
               className="text-sm leading-relaxed max-w-xs mx-auto"
-              style={{ color: INK['95'] }}
+              style={{ color: TEXT.secondary }}
             >
               Give us the basics, then we'll have a quick conversation to understand what you're really looking for.
             </p>
@@ -139,7 +139,7 @@ function TripSeedForm({ onStart, initialSeed }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: FONT.mono, color: INK['90'] }}
+            style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
           >
             TRIP NAME (optional)
           </label>
@@ -161,7 +161,7 @@ function TripSeedForm({ onStart, initialSeed }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: FONT.mono, color: INK['90'] }}
+            style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
           >
             WHERE
           </label>
@@ -176,7 +176,7 @@ function TripSeedForm({ onStart, initialSeed }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: FONT.mono, color: INK['90'] }}
+            style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
           >
             WHEN
           </label>
@@ -221,7 +221,7 @@ function TripSeedForm({ onStart, initialSeed }: {
                   borderColor: 'var(--t-linen)',
                 }}
               />
-              <span className="text-[12px]" style={{ color: INK['90'], fontFamily: FONT.sans }}>
+              <span className="text-[12px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                 nights
               </span>
             </div>
@@ -245,13 +245,13 @@ function TripSeedForm({ onStart, initialSeed }: {
                   className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                   style={{
                     fontFamily: FONT.sans,
-                    color: startDate ? 'var(--t-ink)' : INK['90'],
+                    color: startDate ? 'var(--t-ink)' : TEXT.secondary,
                     borderColor: 'var(--t-linen)',
                   }}
                 />
-                <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
+                <span className="text-[9px] mt-1 block" style={{ color: TEXT.secondary }}>Start</span>
               </div>
-              <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
+              <div className="flex items-center text-xs" style={{ color: TEXT.secondary }}>→</div>
               <div className="flex-1">
                 <input
                   type="date"
@@ -261,11 +261,11 @@ function TripSeedForm({ onStart, initialSeed }: {
                   className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                   style={{
                     fontFamily: FONT.sans,
-                    color: endDate ? 'var(--t-ink)' : INK['90'],
+                    color: endDate ? 'var(--t-ink)' : TEXT.secondary,
                     borderColor: 'var(--t-linen)',
                   }}
                 />
-                <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
+                <span className="text-[9px] mt-1 block" style={{ color: TEXT.secondary }}>End</span>
               </div>
             </div>
           )}
@@ -275,7 +275,7 @@ function TripSeedForm({ onStart, initialSeed }: {
         <div className="mb-6">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: FONT.mono, color: INK['90'] }}
+            style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
           >
             WHO'S COMING
           </label>
@@ -323,7 +323,7 @@ function TripSeedForm({ onStart, initialSeed }: {
         <div className="mb-8">
           <label
             className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-            style={{ fontFamily: FONT.mono, color: INK['90'] }}
+            style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
           >
             TRIP STATUS
           </label>
@@ -354,7 +354,7 @@ function TripSeedForm({ onStart, initialSeed }: {
                     {opt.label}
                   </span>
                 </div>
-                <span className="text-[10px]" style={{ color: INK['90'] }}>
+                <span className="text-[10px]" style={{ color: TEXT.secondary }}>
                   {opt.desc}
                 </span>
               </button>
@@ -393,7 +393,7 @@ function TripSeedForm({ onStart, initialSeed }: {
           Start Conversation
         </motion.button>
 
-        <p className="text-center text-[11px] mt-4" style={{ color: INK['95'] }}>
+        <p className="text-center text-[11px] mt-4" style={{ color: TEXT.secondary }}>
           ~3 minutes · text or voice · we'll use your taste profile
         </p>
       </div>
@@ -451,7 +451,7 @@ function DestinationAllocationStep({
           >
             How many nights in each place?
           </h1>
-          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: INK['60'] }}>
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: TEXT.secondary }}>
             You have {totalNights} night{totalNights !== 1 ? 's' : ''} across {seed.destinations.length} destinations.
             Your last destination includes your departure day.
           </p>
@@ -669,7 +669,7 @@ function TripConversation({
                 />
               ))}
             </div>
-            <span className="text-[12px] italic" style={{ color: INK['90'] }}>Thinking...</span>
+            <span className="text-[12px] italic" style={{ color: TEXT.secondary }}>Thinking...</span>
           </div>
         )}
 
@@ -682,7 +682,7 @@ function TripConversation({
             >
               <div
                 className="text-[8px] font-bold uppercase tracking-[1.5px] mb-2"
-                style={{ fontFamily: FONT.mono, color: INK['90'] }}
+                style={{ fontFamily: FONT.mono, color: TEXT.secondary }}
               >
                 {signals.length} trip signal{signals.length !== 1 ? 's' : ''}
               </div>
@@ -749,7 +749,7 @@ function TripConversation({
             <button
               onClick={handleSkip}
               className="text-[12px] bg-transparent border-none cursor-pointer self-center py-1"
-              style={{ color: INK['90'] }}
+              style={{ color: TEXT.secondary }}
             >
               Skip to trip →
             </button>
@@ -804,7 +804,7 @@ function TripComplete({ seed, onDone }: {
         distance={10}
         duration={0.4}
         className="text-sm text-center leading-relaxed mb-8 max-w-xs"
-        style={{ color: INK['95'] }}
+        style={{ color: TEXT.secondary }}
       >
         We've layered your trip context onto your base taste profile. Your {seed.destinations[0]} recommendations will
         reflect the specific energy, companions, and priorities for this journey.
@@ -834,7 +834,7 @@ function TripComplete({ seed, onDone }: {
               distance={8}
               duration={0.4}
               className="text-[12px] leading-relaxed"
-              style={{ color: INK['95'] }}
+              style={{ color: TEXT.secondary }}
             >
               • {item}
             </SafeFadeIn>
@@ -925,7 +925,7 @@ export default function NewTripPage() {
               <button
                 onClick={() => router.push('/trips')}
                 className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer link-hover"
-                style={{ color: 'var(--t-verde)', fontFamily: FONT.sans, fontSize: 13, padding: 0 }}
+                style={{ color: TEXT.accent, fontFamily: FONT.sans, fontSize: 13, padding: 0 }}
               >
                 ← Back to Trips
               </button>
@@ -977,7 +977,7 @@ export default function NewTripPage() {
             <button
               onClick={() => router.push('/trips')}
               className="flex items-center gap-1 bg-transparent border-none cursor-pointer"
-              style={{ color: INK['60'], fontFamily: FONT.sans, fontSize: 13, padding: 0 }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 13, padding: 0 }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 3L5 8L10 13" />

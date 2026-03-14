@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TasteDomain, DOMAIN_COLORS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export function TasteTensionCard({
           </div>
           <h3
             className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} leading-snug italic`}
-            style={{ fontFamily: FONT.serif, color: INK['95'], margin: 0 }}
+            style={{ fontFamily: FONT.serif, color: TEXT.primary, margin: 0 }}
           >
             {tension.title}
           </h3>
@@ -111,9 +111,9 @@ export function TasteTensionCard({
             </div>
             <p
               className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
-              style={{ color: INK['80'] }}
+              style={{ color: TEXT.secondary }}
             >
-              <span className="font-semibold" style={{ color: INK['90'] }}>You say: </span>
+              <span className="font-semibold" style={{ color: TEXT.primary }}>You say: </span>
               {tension.stated}
             </p>
           </div>
@@ -143,9 +143,9 @@ export function TasteTensionCard({
             </div>
             <p
               className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
-              style={{ color: INK['80'] }}
+              style={{ color: TEXT.secondary }}
             >
-              <span className="font-semibold" style={{ color: INK['90'] }}>But you keep saving: </span>
+              <span className="font-semibold" style={{ color: TEXT.primary }}>But you keep saving: </span>
               {tension.revealed}
             </p>
           </div>
@@ -153,7 +153,7 @@ export function TasteTensionCard({
           {/* Editorial explanation */}
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed italic`}
-            style={{ color: INK['70'], margin: 0 }}
+            style={{ color: TEXT.secondary, margin: 0 }}
           >
             {tension.editorial}
           </p>
@@ -185,15 +185,15 @@ export function TasteTensionCard({
                 Bridges this tension
               </span>
             </div>
-            <p className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold m-0 mb-1`} style={{ color: INK['95'] }}>
+            <p className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold m-0 mb-1`} style={{ color: TEXT.primary }}>
               {tension.resolvedBy.name}
-              <span className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-normal ml-1.5`} style={{ color: INK['70'] }}>
+              <span className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-normal ml-1.5`} style={{ color: TEXT.secondary }}>
                 {tension.resolvedBy.location}
               </span>
             </p>
             <p
               className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed m-0`}
-              style={{ color: INK['70'] }}
+              style={{ color: TEXT.secondary }}
             >
               {tension.resolvedBy.how}
             </p>

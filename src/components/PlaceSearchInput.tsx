@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { ImportedPlace, PlaceType } from '@/types';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -252,7 +252,7 @@ function PlaceSearchInputInner({
             alignItems: 'center',
             pointerEvents: 'none',
           }}>
-            <PerriandIcon name="add" size={compact ? 13 : 15} color={accentColor} />
+            <PerriandIcon name="add" size={compact ? 13 : 15} color={TEXT.primary} />
           </div>
           <input
             ref={inputRef}
@@ -295,8 +295,8 @@ function PlaceSearchInputInner({
                 fontFamily: FONT.mono,
                 fontSize: 10,
                 fontWeight: customType === opt.value ? 700 : 500,
-                color: customType === opt.value ? 'white' : INK['50'],
-                background: customType === opt.value ? accentColor : INK['06'],
+                color: customType === opt.value ? 'white' : TEXT.secondary,
+                background: customType === opt.value ? TEXT.primary : INK['06'],
                 border: 'none',
                 borderRadius: 12,
                 padding: '4px 10px',
@@ -341,7 +341,7 @@ function PlaceSearchInputInner({
           alignItems: 'center',
           pointerEvents: 'none',
         }}>
-          <PerriandIcon name="add" size={compact ? 13 : 15} color={accentColor} />
+          <PerriandIcon name="add" size={compact ? 13 : 15} color={TEXT.primary} />
         </div>
         <input
           ref={inputRef}
@@ -409,7 +409,7 @@ function PlaceSearchInputInner({
               }}
             >
               <span
-                style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: 'var(--t-ink)' }}
+                style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: TEXT.primary }}
               >
                 {p.structured_formatting?.main_text || p.description}
               </span>
@@ -418,7 +418,7 @@ function PlaceSearchInputInner({
                   style={{
                     fontFamily: FONT.sans,
                     fontSize: 11,
-                    color: INK['50'],
+                    color: TEXT.secondary,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -450,8 +450,8 @@ function PlaceSearchInputInner({
               borderTop: `1px solid var(--t-linen)`,
             }}
           >
-            <PerriandIcon name="edit" size={12} color={INK['40']} />
-            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['50'] }}>
+            <PerriandIcon name="edit" size={12} color={TEXT.secondary} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary }}>
               Add custom place
             </span>
           </button>
@@ -465,7 +465,7 @@ function PlaceSearchInputInner({
           style={{
             fontFamily: FONT.sans,
             fontSize: 11,
-            color: INK['40'],
+            color: TEXT.secondary,
             background: 'none',
             border: 'none',
             padding: '6px 0 0',

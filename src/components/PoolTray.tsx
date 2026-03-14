@@ -6,7 +6,7 @@ import { usePoolStore, FilterType, SLOT_TYPE_AFFINITY } from '@/stores/poolStore
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import FilterSortBar from './ui/FilterSortBar';
 
 interface PoolTrayProps {
@@ -169,7 +169,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 fontFamily: FONT.serif,
                 fontSize: '14px',
                 fontWeight: 600,
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
               }}
             >
               Everywhere you want to go
@@ -177,23 +177,23 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
             <span
               className="inline-flex items-center justify-center rounded-full text-[10px] font-bold"
               style={{
-                background: 'rgba(200,146,58,0.12)',
-                color: '#8a6a2a',
+                background: 'rgba(232,111,90,0.12)',
+                color: TEXT.accent,
                 padding: '2px 8px',
                 fontFamily: FONT.mono,
               }}
             >
               {starredPlaces.length}
             </span>
-            <span style={{ fontSize: '10px', color: INK['90'] }}>▲</span>
+            <span style={{ fontSize: '10px', color: TEXT.secondary }}>▲</span>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onCurateMore(); }}
             className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
             style={{
               background: 'transparent',
-              color: '#c45020',
-              borderColor: 'var(--t-panton-orange)',
+              color: TEXT.accent,
+              borderColor: TEXT.accent,
               fontFamily: FONT.mono,
             }}
           >
@@ -240,11 +240,11 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               fontFamily: FONT.serif,
               fontSize: '18px',
               fontWeight: 600,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
             }}
           >
             Everywhere you want to go
-            <span style={{ fontSize: '10px', color: INK['90'] }}>▼</span>
+            <span style={{ fontSize: '10px', color: TEXT.secondary }}>▼</span>
           </button>
           <div className="flex items-center gap-2">
             {onOpenExport && starredPlaces.length > 0 && (
@@ -253,12 +253,12 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80 flex items-center gap-1"
                 style={{
                   background: 'transparent',
-                  color: '#8a6a2a',
-                  borderColor: 'var(--t-honey)',
+                  color: TEXT.accent,
+                  borderColor: TEXT.accent,
                   fontFamily: FONT.mono,
                 }}
               >
-                <PerriandIcon name="pin" size={12} color="var(--t-honey)" />
+                <PerriandIcon name="pin" size={12} color={TEXT.accent} />
                 Export
               </button>
             )}
@@ -267,8 +267,8 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-2 cursor-pointer transition-colors hover:opacity-80"
               style={{
                 background: 'transparent',
-                color: '#c45020',
-                borderColor: 'var(--t-panton-orange)',
+                color: TEXT.accent,
+                borderColor: TEXT.accent,
                 fontFamily: FONT.mono,
               }}
             >
@@ -296,13 +296,13 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               <button
                 onClick={() => usePoolStore.getState().setSlotContext(null)}
                 className="text-[10px] px-2 py-0.5 rounded-full border-none cursor-pointer"
-                style={{ background: INK['06'], color: INK['95'] }}
+                style={{ background: INK['06'], color: TEXT.secondary }}
               >
                 Clear
               </button>
             </div>
             {(slotContext.adjacentPlaces.before || slotContext.adjacentPlaces.after) && (
-              <div className="text-[11px]" style={{ color: INK['95'] }}>
+              <div className="text-[11px]" style={{ color: TEXT.secondary }}>
                 {slotContext.adjacentPlaces.before && (
                   <span>After {slotContext.adjacentPlaces.before.name}</span>
                 )}
@@ -340,7 +340,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
         )}
 
         {/* Subtitle */}
-        <div className="px-4 pb-2 text-xs" style={{ color: INK['95'] }}>
+        <div className="px-4 pb-2 text-xs" style={{ color: TEXT.secondary }}>
           {sortedItems.length} place{sortedItems.length !== 1 ? 's' : ''}
           {filterType !== 'all' && ` · ${filterType}`}
           {sourceFilter !== 'all' && ` · ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label}`}
@@ -409,7 +409,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 <div
                   className="flex flex-col items-center justify-center px-1.5 self-stretch"
                   style={{
-                    color: INK['20'],
+                    color: TEXT.secondary,
                     fontSize: '10px',
                     letterSpacing: '2px',
                     touchAction: 'none',
@@ -421,7 +421,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
 
                 <div className="flex-1 min-w-0 py-3 pr-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <div className="text-[13px] font-medium truncate" style={{ color: 'var(--t-ink)' }}>
+                    <div className="text-[13px] font-medium truncate" style={{ color: TEXT.primary }}>
                       {item.name}
                     </div>
                     {typeChip && (
@@ -439,15 +439,15 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: INK['95'] }}>
-                    <PerriandIcon name={sourceStyle.icon} size={12} color={INK['95']} />
+                  <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: TEXT.secondary }}>
+                    <PerriandIcon name={sourceStyle.icon} size={12} color={TEXT.secondary} />
                     {item.ghostSource === 'friend'
                       ? item.friendAttribution?.name
                       : item.ghostSource === 'maps' ? 'Google Maps'
                       : item.source?.name || sourceStyle.label}
                   </div>
                   {note && (
-                    <div className="text-[11px] italic" style={{ color: INK['95'] }}>
+                    <div className="text-[11px] italic" style={{ color: TEXT.secondary }}>
                       {item.ghostSource === 'friend' ? `"${note}"` : note}
                     </div>
                   )}
@@ -471,18 +471,18 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
           })}
 
           {sortedItems.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: INK['95'] }}>
+            <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: TEXT.secondary }}>
               <div className="text-2xl mb-3 flex justify-center">
-                <PerriandIcon name="star" size={28} color={INK['95']} />
+                <PerriandIcon name="star" size={28} color={TEXT.secondary} />
               </div>
-              <p className="text-[12px] mb-1" style={{ fontFamily: FONT.sans }}>
+              <p className="text-[12px] mb-1" style={{ fontFamily: FONT.sans, color: TEXT.primary }}>
                 {filterType !== 'all'
                   ? `No ${filterType} places starred`
                   : sourceFilter !== 'all'
                     ? 'No starred places from this source'
                     : 'No starred places yet'}
               </p>
-              <p className="text-[11px]" style={{ color: INK['90'] }}>
+              <p className="text-[11px]" style={{ color: TEXT.secondary }}>
                 {filterType !== 'all'
                   ? <button onClick={() => setFilterType('all')} className="underline cursor-pointer bg-transparent border-none" style={{ color: 'var(--t-verde)', fontSize: '11px' }}>Show all types</button>
                   : 'Star places in My Places or Collect to add them here'}

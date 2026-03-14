@@ -4,7 +4,7 @@ import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import { useTripStore } from '@/stores/tripStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
@@ -147,7 +147,7 @@ function PicksRailInner({
                 fontFamily: FONT.mono,
                 fontSize: 10,
                 fontWeight: 700,
-                color: INK['50'],
+                color: TEXT.secondary,
                 textTransform: 'uppercase',
                 letterSpacing: 1.5,
               }}
@@ -175,7 +175,7 @@ function PicksRailInner({
             fontFamily: FONT.sans,
             fontSize: 10,
             fontWeight: 500,
-            color: INK['50'],
+            color: TEXT.secondary,
           }}>
             Day {selectedDay} · {activeDestination}
           </span>
@@ -214,7 +214,7 @@ function PicksRailInner({
       <div className="px-3 py-1.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
         <div className="relative">
           <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
-            <PerriandIcon name="discover" size={12} color={INK['40']} />
+            <PerriandIcon name="discover" size={12} color={TEXT.secondary} />
           </span>
           <input
             type="text"
@@ -225,7 +225,7 @@ function PicksRailInner({
               width: '100%',
               fontFamily: FONT.sans,
               fontSize: 11,
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               background: INK['04'],
               border: `1px solid var(--t-linen)`,
               borderRadius: 8,
@@ -238,7 +238,7 @@ function PicksRailInner({
               onClick={() => setSearchQuery('')}
               style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
-              <PerriandIcon name="close" size={10} color={INK['50']} />
+              <PerriandIcon name="close" size={10} color={TEXT.secondary} />
             </button>
           )}
         </div>
@@ -325,7 +325,7 @@ function PicksRailInner({
                     fontFamily: FONT.sans,
                     fontSize: 11,
                     fontWeight: 600,
-                    color: 'var(--t-ink)',
+                    color: TEXT.primary,
                     lineHeight: 1.25,
                     display: '-webkit-box',
                     WebkitLineClamp: 1,
@@ -340,7 +340,7 @@ function PicksRailInner({
                   style={{
                     fontFamily: FONT.mono,
                     fontSize: 9,
-                    color: INK['55'],
+                    color: TEXT.secondary,
                     lineHeight: 1.3,
                     display: '-webkit-box',
                     WebkitLineClamp: 1,
@@ -357,7 +357,7 @@ function PicksRailInner({
                       fontFamily: FONT.serif,
                       fontStyle: 'italic',
                       fontSize: 9,
-                      color: INK['55'],
+                      color: TEXT.secondary,
                       lineHeight: 1.3,
                       marginTop: 1,
                       display: '-webkit-box',
@@ -376,10 +376,10 @@ function PicksRailInner({
 
         {sortedPicks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 px-3">
-            <PerriandIcon name="discover" size={20} color={INK['20']} />
+            <PerriandIcon name="discover" size={20} color={TEXT.secondary} />
             <span
               className="text-center mt-2"
-              style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['35'], lineHeight: 1.4 }}
+              style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary, lineHeight: 1.4 }}
             >
               {allUnplacedPicks.length === 0 ? 'No unplaced picks' : 'No picks match this filter'}
             </span>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import type { TasteDomain } from '@/types';
 
@@ -110,21 +110,21 @@ export function ComparativeCard({
         {/* Place names header */}
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <p className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold truncate`} style={{ color: INK['95'], fontFamily: FONT.serif }}>
+            <p className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold truncate`} style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
               {placeAName}
             </p>
             {comparison.userFit.placeA != null && (
-              <span className="text-[10px]" style={{ color: INK['55'], fontFamily: FONT.mono }}>
+              <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                 {comparison.userFit.placeA}% match
               </span>
             )}
           </div>
           <div className="text-right">
-            <p className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold truncate`} style={{ color: INK['95'], fontFamily: FONT.serif }}>
+            <p className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold truncate`} style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
               {placeBName}
             </p>
             {comparison.userFit.placeB != null && (
-              <span className="text-[10px]" style={{ color: INK['55'], fontFamily: FONT.mono }}>
+              <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                 {comparison.userFit.placeB}% match
               </span>
             )}
@@ -145,7 +145,7 @@ export function ComparativeCard({
                       {domain}
                     </span>
                   </div>
-                  <span className="text-[9px]" style={{ color: INK['45'], fontFamily: FONT.mono }}>
+                  <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                     {values.placeA} vs {values.placeB}
                   </span>
                 </div>
@@ -173,7 +173,7 @@ export function ComparativeCard({
         {/* Key differentiators */}
         {(comparison.differentiators.placeAStronger.length > 0 || comparison.differentiators.placeBStronger.length > 0) && (
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${INK['95']}06` }}>
-            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: INK['50'], fontFamily: FONT.mono }}>
+            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
               Key Differences
             </span>
             <div className="grid grid-cols-2 gap-2 mt-1.5">

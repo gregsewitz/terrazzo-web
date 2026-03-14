@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import DestinationAllocator from '@/components/DestinationAllocator';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface GraduateModalProps {
   onClose: () => void;
@@ -71,7 +71,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(28,26,23,0.5)' }}
+      style={{ background: 'rgba(26,45,74,0.5)' }}
       onClick={onClose}
     >
       <div
@@ -88,7 +88,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
             <PerriandIcon name="pin" size={18} color="var(--t-verde)" />
             <h2
               className="text-lg"
-              style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)', margin: 0 }}
+              style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
             >
               {step === 'dates' ? 'Set Your Dates' : 'Allocate Nights'}
             </h2>
@@ -96,9 +96,9 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center border-none cursor-pointer nav-hover"
-            style={{ background: INK['06'], color: INK['50'] }}
+            style={{ background: INK['06'], color: TEXT.secondary }}
           >
-            <PerriandIcon name="close" size={14} color={INK['50']} />
+            <PerriandIcon name="close" size={14} color={TEXT.secondary} />
           </button>
         </div>
 
@@ -106,7 +106,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
         <div className="px-5 py-5 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 130px)' }}>
           {step === 'dates' ? (
             <>
-              <p className="text-[13px] leading-relaxed mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+              <p className="text-[13px] leading-relaxed mb-5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                 Your dreaming trip is ready to become real.
                 Pick your travel dates and we'll build your itinerary.
               </p>
@@ -115,7 +115,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
               <div className="mb-6">
                 <label
                   className="block text-[9px] font-bold uppercase tracking-[2.5px] mb-2"
-                  style={{ fontFamily: FONT.mono, color: INK['90'] }}
+                  style={{ fontFamily: FONT.mono, color: TEXT.primary }}
                 >
                   WHEN ARE YOU GOING?
                 </label>
@@ -131,9 +131,9 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                       onClick={() => setFlexibleDates(opt.key)}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-full border cursor-pointer transition-all text-[11px]"
                       style={{
-                        background: flexibleDates === opt.key ? 'var(--t-ink)' : 'white',
-                        color: flexibleDates === opt.key ? 'white' : 'var(--t-ink)',
-                        borderColor: flexibleDates === opt.key ? 'var(--t-ink)' : 'var(--t-linen)',
+                        background: flexibleDates === opt.key ? TEXT.primary : 'white',
+                        color: flexibleDates === opt.key ? TEXT.inverse : TEXT.primary,
+                        borderColor: flexibleDates === opt.key ? TEXT.primary : 'var(--t-linen)',
                         fontFamily: FONT.sans,
                         fontWeight: 500,
                       }}
@@ -154,11 +154,11 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                       className="w-20 text-center text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                       style={{
                         fontFamily: FONT.sans,
-                        color: 'var(--t-ink)',
+                        color: TEXT.primary,
                         borderColor: 'var(--t-linen)',
                       }}
                     />
-                    <span className="text-[12px]" style={{ color: INK['90'], fontFamily: FONT.sans }}>
+                    <span className="text-[12px]" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
                       nights
                     </span>
                   </div>
@@ -180,13 +180,13 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                         className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                         style={{
                           fontFamily: FONT.sans,
-                          color: startDate ? 'var(--t-ink)' : INK['90'],
+                          color: startDate ? TEXT.primary : TEXT.primary,
                           borderColor: 'var(--t-linen)',
                         }}
                       />
-                      <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>Start</span>
+                      <span className="text-[9px] mt-1 block" style={{ color: TEXT.primary }}>Start</span>
                     </div>
-                    <div className="flex items-center text-xs" style={{ color: INK['95'] }}>→</div>
+                    <div className="flex items-center text-xs" style={{ color: TEXT.primary }}>→</div>
                     <div className="flex-1">
                       <input
                         type="date"
@@ -196,11 +196,11 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                         className="w-full text-sm pb-2.5 bg-transparent border-0 border-b outline-none"
                         style={{
                           fontFamily: FONT.sans,
-                          color: endDate ? 'var(--t-ink)' : INK['90'],
+                          color: endDate ? TEXT.primary : TEXT.primary,
                           borderColor: 'var(--t-linen)',
                         }}
                       />
-                      <span className="text-[9px] mt-1 block" style={{ color: INK['95'] }}>End</span>
+                      <span className="text-[9px] mt-1 block" style={{ color: TEXT.secondary }}>End</span>
                     </div>
                   </div>
                 )}
@@ -218,7 +218,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
             </>
           ) : (
             <>
-              <p className="text-[13px] leading-relaxed mb-4" style={{ color: INK['60'], fontFamily: FONT.sans }}>
+              <p className="text-[13px] leading-relaxed mb-4" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                 Distribute your {totalNights} nights across destinations. You can always adjust later.
               </p>
 
@@ -244,7 +244,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
               style={{
                 background: 'transparent',
                 borderColor: 'var(--t-linen)',
-                color: INK['60'],
+                color: TEXT.secondary,
                 fontFamily: FONT.sans,
               }}
             >
@@ -256,8 +256,8 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
             disabled={!canProceed}
             className="flex-1 py-3 rounded-full border-none cursor-pointer text-[14px] font-semibold disabled:opacity-30 transition-all"
             style={{
-              background: 'var(--t-ink)',
-              color: 'white',
+              background: TEXT.primary,
+              color: TEXT.inverse,
               fontFamily: FONT.sans,
             }}
           >

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import type { TasteDomain } from '@/types';
 
@@ -81,7 +81,7 @@ export function TastePatternCard({
         </div>
         <span
           className="text-[9px]"
-          style={{ color: INK['50'], fontFamily: FONT.mono }}
+          style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
         >
           {analyzedPlaces} of {totalPlaces} places analyzed
         </span>
@@ -115,7 +115,7 @@ export function TastePatternCard({
             </div>
             <p
               className="text-[11px] mb-2"
-              style={{ color: INK['60'], fontFamily: FONT.sans }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
             >
               Patterns in your saves that go beyond your stated profile:
             </p>
@@ -174,7 +174,7 @@ function PatternRow({
         <div className="flex-1 text-left min-w-0">
           <span
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-semibold`}
-            style={{ color: INK['90'], fontFamily: FONT.sans }}
+            style={{ color: TEXT.primary, fontFamily: FONT.sans }}
           >
             {pattern.label}
           </span>
@@ -227,7 +227,7 @@ function PatternRow({
                     className="text-[10px] px-2 py-0.5 rounded-md"
                     style={{
                       background: `${color}08`,
-                      color: INK['70'],
+                      color: TEXT.secondary,
                       fontFamily: FONT.mono,
                     }}
                   >
@@ -238,7 +238,7 @@ function PatternRow({
               {/* Example places */}
               <p
                 className="text-[10px]"
-                style={{ color: INK['55'], fontFamily: FONT.sans }}
+                style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
               >
                 Seen in: {pattern.examplePlaces.join(', ')}
                 {pattern.placeCount > pattern.examplePlaces.length && (

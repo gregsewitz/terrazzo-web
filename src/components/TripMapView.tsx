@@ -6,7 +6,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, TEXT, INK } from '@/constants/theme';
 import { DEST_COLORS, SOURCE_STYLES, GhostSourceType, SLOT_ICONS, ImportedPlace, SuggestionItem } from '@/types';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
@@ -462,7 +462,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
               style={{
                 bottom: hasActive ? -60 : 16,
                 transform: 'translateX(-50%)',
-                background: 'rgba(28,26,23,0.85)',
+                background: 'rgba(26,45,74,0.85)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
                 color: 'var(--t-cream)',
@@ -692,7 +692,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
           {filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <PerriandIcon name="pin" size={32} color={INK['20']} />
-              <span style={{ fontFamily: FONT.sans, fontSize: 13, color: INK['40'], marginTop: 12 }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.secondary, marginTop: 12 }}>
                 No places{selectedDay !== null ? ` on Day ${selectedDay}` : ''} yet
               </span>
             </div>
@@ -844,13 +844,13 @@ function MobileDetailCard({
               {place.name}
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['50'] }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
               {place.location && (
                 <>
                   <span style={{ color: INK['20'] }}>·</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['50'] }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
                     {place.location.split(',')[0]}
                   </span>
                 </>
@@ -862,7 +862,7 @@ function MobileDetailCard({
               className="flex items-center justify-center rounded-lg flex-shrink-0"
               style={{
                 fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: '#c8923a', background: 'rgba(200,146,58,0.08)',
+                color: '#E86F5A', background: 'rgba(232,111,90,0.08)',
                 padding: '4px 8px',
               }}
             >
@@ -880,7 +880,7 @@ function MobileDetailCard({
         {/* Taste note */}
         {(place.terrazzoInsight?.why || place.tasteNote) && (
           <p style={{
-            fontFamily: FONT.sans, fontSize: 12, color: INK['60'],
+            fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary,
             fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any,
             overflow: 'hidden',
@@ -899,7 +899,7 @@ function MobileDetailCard({
               Day {item.dayNumber} · {item.slotTime}
             </span>
             {place.google?.rating && (
-              <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md" style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'], background: INK['04'] }}>
+              <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md" style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, background: INK['04'] }}>
                 ★ {place.google.rating}
               </span>
             )}
@@ -908,7 +908,7 @@ function MobileDetailCard({
             onClick={(e) => { e.stopPropagation(); onDirections(); }}
             className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg"
             style={{
-              background: INK['04'], border: `1px solid ${INK['08']}`, color: INK['60'],
+              background: INK['04'], border: `1px solid ${INK['08']}`, color: TEXT.secondary,
               fontFamily: FONT.sans, fontSize: 10, fontWeight: 500, cursor: 'pointer',
             }}
           >
@@ -986,13 +986,13 @@ function MobileGhostCard({
                 <PerriandIcon name={srcStyle.icon} size={9} color={srcStyle.color} />
                 {srcStyle.label}
               </span>
-              <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['50'] }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
               {place.location && (
                 <>
                   <span style={{ color: INK['20'] }}>·</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['50'] }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
                     {place.location.split(',')[0]}
                   </span>
                 </>
@@ -1004,7 +1004,7 @@ function MobileGhostCard({
               className="flex items-center justify-center rounded-lg flex-shrink-0"
               style={{
                 fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: '#c8923a', background: 'rgba(200,146,58,0.08)',
+                color: '#E86F5A', background: 'rgba(232,111,90,0.08)',
                 padding: '4px 8px',
               }}
             >
@@ -1016,7 +1016,7 @@ function MobileGhostCard({
         {/* Taste note */}
         {(place.terrazzoInsight?.why || place.tasteNote) && (
           <p style={{
-            fontFamily: FONT.sans, fontSize: 12, color: INK['60'],
+            fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary,
             fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any,
             overflow: 'hidden',
@@ -1049,7 +1049,7 @@ function MobileGhostCard({
             className="flex items-center justify-center px-4 py-2.5 rounded-xl cursor-pointer"
             style={{
               background: INK['04'], border: `1px solid ${INK['08']}`,
-              color: INK['50'], fontFamily: FONT.sans, fontSize: 12, fontWeight: 500,
+              color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 12, fontWeight: 500,
             }}
           >
             Dismiss
@@ -1119,7 +1119,7 @@ function SidebarPlaceCard({
           {place.name}
         </span>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
             {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
           </span>
           {showDay && (
@@ -1130,14 +1130,14 @@ function SidebarPlaceCard({
               D{item.dayNumber}
             </span>
           )}
-          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['30'] }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
             {item.slotTime}
           </span>
         </div>
       </div>
       {place.matchScore && (
         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0" style={{
-          fontFamily: FONT.mono, color: '#c8923a', background: 'rgba(200,146,58,0.08)',
+          fontFamily: FONT.mono, color: '#E86F5A', background: 'rgba(232,111,90,0.08)',
         }}>
           {place.matchScore}%
         </span>
@@ -1190,18 +1190,18 @@ function DesktopDetailCard({
           <div className="flex-1 min-w-0">
             <div style={{ fontFamily: FONT.serif, fontSize: 16, fontWeight: 600, color: 'var(--t-ink)' }}>{place.name}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              {place.location && <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>{place.location.split(',')[0]}</span>}
+              {place.location && <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{place.location.split(',')[0]}</span>}
             </div>
           </div>
           {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#c8923a', background: 'rgba(200,146,58,0.08)' }}>
+            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#E86F5A', background: 'rgba(232,111,90,0.08)' }}>
               {place.matchScore}%
             </span>
           )}
         </div>
 
         {(place.terrazzoInsight?.why || place.tasteNote) && (
-          <p style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['60'], fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0' }}>
+          <p style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0' }}>
             {place.terrazzoInsight?.why || place.tasteNote}
           </p>
         )}
@@ -1215,7 +1215,7 @@ function DesktopDetailCard({
             Day {item.dayNumber} · {item.slotTime}
           </span>
           {place.google?.rating && (
-            <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md" style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], background: INK['04'] }}>
+            <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md" style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, background: INK['04'] }}>
               ★ {place.google.rating}
             </span>
           )}
@@ -1236,7 +1236,7 @@ function DesktopDetailCard({
               window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
             }}
             className="flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl cursor-pointer"
-            style={{ background: INK['04'], border: `1px solid ${INK['08']}`, color: INK['60'], fontFamily: FONT.sans, fontSize: 12, fontWeight: 500 }}
+            style={{ background: INK['04'], border: `1px solid ${INK['08']}`, color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 12, fontWeight: 500 }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 11l18-5-5 18-4-8-9-5z" />
@@ -1288,7 +1288,7 @@ function DesktopGhostCard({
             <PerriandIcon name={srcStyle.icon} size={9} color={srcStyle.color} />
             {srcStyle.label}
           </span>
-          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['40'], textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
             Suggestion
           </span>
         </div>
@@ -1309,19 +1309,19 @@ function DesktopGhostCard({
           <div className="flex-1 min-w-0">
             <div style={{ fontFamily: FONT.serif, fontSize: 16, fontWeight: 600, color: 'var(--t-ink)' }}>{place.name}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
               {place.location && (
                 <>
                   <span style={{ color: INK['20'] }}>·</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>{place.location.split(',')[0]}</span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{place.location.split(',')[0]}</span>
                 </>
               )}
             </div>
           </div>
           {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#c8923a', background: 'rgba(200,146,58,0.08)' }}>
+            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#E86F5A', background: 'rgba(232,111,90,0.08)' }}>
               {place.matchScore}%
             </span>
           )}
@@ -1329,7 +1329,7 @@ function DesktopGhostCard({
 
         {/* Taste note */}
         {(place.terrazzoInsight?.why || place.tasteNote) && (
-          <p style={{ fontFamily: FONT.sans, fontSize: 12, color: INK['60'], fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0' }}>
+          <p style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0' }}>
             {place.terrazzoInsight?.why || place.tasteNote}
           </p>
         )}
@@ -1337,7 +1337,7 @@ function DesktopGhostCard({
         {/* Info chips */}
         <div className="flex items-center gap-1.5 flex-wrap mb-3">
           {place.google?.rating && (
-            <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md" style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], background: INK['04'] }}>
+            <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md" style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, background: INK['04'] }}>
               ★ {place.google.rating}
             </span>
           )}
@@ -1361,7 +1361,7 @@ function DesktopGhostCard({
           <button
             onClick={(e) => { e.stopPropagation(); onViewDetail(); }}
             className="flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl cursor-pointer"
-            style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${INK['08']}`, color: INK['60'], fontFamily: FONT.sans, fontSize: 12, fontWeight: 500 }}
+            style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${INK['08']}`, color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 12, fontWeight: 500 }}
           >
             Details
           </button>
@@ -1372,7 +1372,7 @@ function DesktopGhostCard({
               onClose();
             }}
             className="flex items-center justify-center px-3 py-2.5 rounded-xl cursor-pointer"
-            style={{ background: 'transparent', border: `1px solid ${INK['08']}`, color: INK['40'], fontFamily: FONT.sans, fontSize: 11, fontWeight: 500 }}
+            style={{ background: 'transparent', border: `1px solid ${INK['08']}`, color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 11, fontWeight: 500 }}
           >
             Dismiss
           </button>

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { TasteDomain, TasteProfile, DOMAIN_COLORS, CORE_TASTE_DOMAINS } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -237,7 +237,7 @@ export function OverlapMosaic({
           />
           <span
             className="text-[9px] font-semibold uppercase tracking-wider"
-            style={{ color: INK['70'], fontFamily: FONT.mono }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             {userLabel}
           </span>
@@ -263,7 +263,7 @@ export function OverlapMosaic({
           {matchScore !== undefined && (
             <span
               className="text-[10px] font-bold mt-0.5"
-              style={{ color: INK['80'], fontFamily: FONT.mono }}
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               {overlapPercent}%
             </span>
@@ -280,7 +280,7 @@ export function OverlapMosaic({
           />
           <span
             className="text-[9px] font-semibold uppercase tracking-wider"
-            style={{ color: INK['70'], fontFamily: FONT.mono }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             {placeLabel}
           </span>
@@ -292,7 +292,7 @@ export function OverlapMosaic({
         <div className="flex items-center gap-1.5 mt-3 justify-center">
           <span
             className="text-[9px] uppercase tracking-wider"
-            style={{ color: INK['70'], fontFamily: FONT.mono }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             Strongest overlap:
           </span>
