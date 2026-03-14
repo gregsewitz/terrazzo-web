@@ -69,6 +69,32 @@ export async function extractFromGoogleMaps(url: string): Promise<Array<{ name: 
   }
 }
 
+// ─── HTML stripping utility ──────────────────────────────────────────────────────
+
+/**
+ * Strip HTML tags, scripts, styles, nav/footer chrome, and decode common entities.
+ * Used for both the raw-fetch fallback and file-upload HTML handling.
+ */
+export function stripHtml(html: string, maxLength = 30000): string {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, ' ')
+    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, ' ')
+    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#8211;/g, '–')
+    .replace(/&#8217;/g, "'")
+    .replace(/&#8220;/g, '"')
+    .replace(/&#8221;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
 // ─── URL fetching via Firecrawl (with raw fallback) ─────────────────────────────
 
 /**
@@ -130,14 +156,7 @@ export async function fetchAndClean(url: string): Promise<string | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    const text = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 25000);
-    return text;
+    return stripHtml(html, 25000);
   } catch {
     return null;
   }
@@ -156,8 +175,8 @@ export async function enrichWithGooglePlaces(
   onProgress?: EnrichmentProgress,
 ): Promise<ImportedPlace[]> {
   const batchId = `import-${Date.now()}`;
-  const sourceType = inputType === 'google-maps' ? 'google-maps' : inputType === 'url' ? 'url' : 'text';
-  const sourceName = inputType === 'google-maps' ? 'Google Maps' : inputType === 'url' ? 'Article' : 'Pasted List';
+  const sourceType = (inputType === 'google-maps-list' || inputType === 'google-maps-place' || inputType === 'google-maps') ? 'google-maps' : inputType === 'url' ? 'url' : inputType === 'file' ? 'url' : 'text';
+  const sourceName = (inputType === 'google-maps-list' || inputType === 'google-maps-place' || inputType === 'google-maps') ? 'Google Maps' : inputType === 'url' ? 'Article' : inputType === 'file' ? 'File Upload' : 'Pasted List';
 
   let done = 0;
   const total = extracted.length;
@@ -201,39 +220,56 @@ export async function enrichWithGooglePlaces(
 
         let googleResult = await cachedSearchPlace(query, locationBias, place.name);
 
-        // ── Geographic fencing (soft) ─────────────────────────────────────
-        // If the article has a regional context (e.g., "Europe") and Google
-        // resolved to a completely different region, the match is likely wrong.
-        // Try once more with a tighter query. If that also misses, KEEP the
-        // original result but flag it as low-confidence so the user can still
-        // see it in the curation UI and decide for themselves.
+        // ── Geographic fencing with deep-resolve cascade ────────────────
+        // If the article has a regional context and Google resolved to a
+        // different region, try progressively more specific queries to find
+        // the right place. No user-visible badge — we resolve it silently.
         let geoConfidence: 'high' | 'low' = 'high';
         if (googleResult && inferredRegion && place.city) {
-          const address = (googleResult.formattedAddress || '').toLowerCase();
           const cityLower = place.city.toLowerCase();
           const regionLower = inferredRegion.toLowerCase();
-          // Split compound cities like "Brockenhurst, Hampshire" and check each part
           const cityParts = cityLower.split(/[,/]/).map(s => s.trim()).filter(Boolean);
-          const addressMatchesContext =
-            cityParts.some(part => address.includes(part)) ||
-            address.includes(regionLower) ||
-            // Also check country-level: if region is "Europe" check common European country names
-            (regionLower === 'europe' && /\b(france|italy|spain|germany|uk|united kingdom|portugal|greece|austria|switzerland|netherlands|belgium|sweden|norway|denmark|croatia|ireland|czech|poland|hungary|romania|turkey)\b/.test(address)) ||
-            (regionLower === 'asia' && /\b(japan|china|thailand|vietnam|indonesia|india|malaysia|singapore|south korea|taiwan|philippines|cambodia|sri lanka|nepal)\b/.test(address));
-          if (!addressMatchesContext) {
-            // Retry with a more specific query: "Name, City, Region"
-            const tighterQuery = `${place.name}, ${place.city}, ${inferredRegion}`;
-            const retry = await cachedSearchPlace(tighterQuery, locationBias, place.name);
-            if (retry) {
-              const retryAddress = (retry.formattedAddress || '').toLowerCase();
-              if (cityParts.some(part => retryAddress.includes(part)) || retryAddress.includes(regionLower)) {
+          const cityPrefixes = cityParts.filter(p => p.length >= 5).map(p => p.slice(0, 5));
+
+          // Check if an address matches the expected geographic context
+          const addressMatchesGeo = (addr: string) => {
+            const a = addr.toLowerCase();
+            return (
+              cityParts.some(part => a.includes(part)) ||
+              cityPrefixes.some(prefix => a.includes(prefix)) ||
+              a.includes(regionLower) ||
+              (regionLower.length >= 5 && a.includes(regionLower.slice(0, 5))) ||
+              (regionLower === 'europe' && /\b(france|italy|spain|germany|uk|united kingdom|portugal|greece|austria|switzerland|netherlands|belgium|sweden|norway|denmark|croatia|ireland|czech|poland|hungary|romania|turkey)\b/.test(a)) ||
+              (regionLower === 'asia' && /\b(japan|china|thailand|vietnam|indonesia|india|malaysia|singapore|south korea|taiwan|philippines|cambodia|sri lanka|nepal)\b/.test(a)) ||
+              (/\b(africa|morocco|maroc|egypt|kenya|south africa|tanzania|tunisia|algeria|senegal|ghana|nigeria|ethiopia)\b/.test(regionLower) && /\b(morocco|maroc|egypt|kenya|south africa|tanzania|tunisia|algeria|senegal|ghana|nigeria|ethiopia)\b/.test(a))
+            );
+          };
+
+          if (!addressMatchesGeo(googleResult.formattedAddress || '')) {
+            // ── Deep-resolve cascade: try progressively more specific queries ──
+            const typeHint = place.type || 'place';
+            const deepQueries = [
+              `${place.name}, ${place.city}, ${inferredRegion}`,                // "Izza, Marrakech, Morocco"
+              `${place.name} ${typeHint} ${place.city}`,                        // "Izza hotel Marrakech"
+              `"${place.name}" ${place.city} ${inferredRegion}`,                // exact name + full context
+            ];
+
+            let resolved = false;
+            for (const dq of deepQueries) {
+              const retry = await cachedSearchPlace(dq, locationBias, place.name);
+              if (retry && addressMatchesGeo(retry.formattedAddress || '')) {
                 googleResult = retry;
-              } else {
-                // Both attempts missed — keep original but flag as low-confidence
-                // so the curation UI can surface this to the user
-                geoConfidence = 'low';
-                console.warn(`[geo-fence] "${place.name}" in "${place.city}" — Google resolved to "${googleResult.formattedAddress}". Keeping with low confidence.`);
+                resolved = true;
+                break;
               }
+            }
+
+            if (!resolved) {
+              // All retries missed — flag internally but don't surface to user.
+              // Keep the best result we have; it may still be correct (just an
+              // address format that doesn't match our geo-fence heuristic).
+              geoConfidence = 'low';
+              console.warn(`[geo-fence] "${place.name}" in "${place.city}" — resolved to "${googleResult.formattedAddress}" after ${deepQueries.length} retries. Accepting with low internal confidence.`);
             }
           }
         }

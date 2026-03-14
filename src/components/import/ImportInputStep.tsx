@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { detectInputType } from '@/lib/import-helpers';
 import type { ImportMode } from '@/stores/importStore';
 
@@ -47,7 +47,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
         <h2
           style={{
             fontFamily: FONT.serif,
-            color: 'var(--t-ink)',
+            color: TEXT.primary,
             fontSize: isDesktop ? 22 : 20,
             fontStyle: 'italic',
           }}
@@ -57,12 +57,12 @@ export const ImportInputStep = React.memo(function ImportInputStep({
         <button
           onClick={onClose}
           className="bg-transparent border-none cursor-pointer flex items-center justify-center w-8 h-8 rounded-full nav-hover"
-          style={{ color: INK['80'] }}
+          style={{ color: TEXT.secondary }}
         >
-          <PerriandIcon name="close" size={16} color={INK['80']} />
+          <PerriandIcon name="close" size={16} color={TEXT.secondary} />
         </button>
       </div>
-      <p style={{ color: INK['85'], lineHeight: 1.5, fontSize: isDesktop ? 13 : 11, marginBottom: 16 }}>
+      <p style={{ color: TEXT.secondary, lineHeight: 1.5, fontSize: isDesktop ? 13 : 11, marginBottom: 16 }}>
         Paste anything — an article, a Google Maps list, a Substack, a text from a friend. We&apos;ll figure out the rest.
       </p>
 
@@ -82,7 +82,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
           }}
           placeholder={`Paste a link, a message, or a list of places…\n\ne.g. a Condé Nast article, a Google Maps list,\na Substack post, or a text from a friend`}
           className="w-full p-4 text-[12px] resize-none border-none outline-none leading-relaxed"
-          style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: FONT.sans, minHeight: 200 }}
+          style={{ background: 'transparent', color: TEXT.primary, fontFamily: FONT.sans, minHeight: 200 }}
         />
         {inputValue.length > 300 && (
           <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none" style={{ background: 'linear-gradient(transparent, white)' }} />
@@ -92,7 +92,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
       {/* Detected type indicator */}
       {inputValue.trim() && (
         <div className="flex items-center gap-2 mb-3 px-1">
-          <span className="text-[10px]" style={{ color: INK['80'], fontFamily: FONT.mono }}>
+          <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {mode === 'url' ? '🔗 Link detected' : mode === 'google-maps' ? '📍 Google Maps link detected' : '📋 Text'}
           </span>
           <span style={{ color: INK['15'] }}>·</span>
@@ -102,7 +102,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
             onChange={e => onSourceNameChange(e.target.value)}
             placeholder="Source name (optional)"
             className="text-[10px] bg-transparent border-none outline-none flex-1"
-            style={{ color: '#8a6a2a', fontFamily: FONT.mono }}
+            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             onClick={e => e.stopPropagation()}
           />
         </div>
@@ -112,7 +112,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
         onClick={onImport}
         disabled={isProcessing || !inputValue.trim()}
         className="w-full py-3.5 rounded-2xl border-none cursor-pointer text-[14px] font-semibold transition-all flex items-center justify-center gap-2"
-        style={{ background: 'var(--t-ink)', color: 'white', opacity: isProcessing || !inputValue.trim() ? 0.35 : 1 }}
+        style={{ background: TEXT.primary, color: 'white', opacity: isProcessing || !inputValue.trim() ? 0.35 : 1 }}
       >
         Find places
         <PerriandIcon name="terrazzo" size={16} color="white" />
@@ -121,7 +121,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
       {/* Divider */}
       <div className="flex items-center gap-3 my-4">
         <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
-        <span className="text-[10px]" style={{ color: INK['70'], fontFamily: FONT.mono }}>
+        <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
           or
         </span>
         <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
@@ -151,7 +151,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
             onChange={e => setMapsUrl(e.target.value)}
             placeholder="Paste your maps.app.goo.gl link…"
             className="w-full px-3 py-2 text-[12px] border-none outline-none"
-            style={{ background: 'transparent', color: 'var(--t-ink)', fontFamily: FONT.sans }}
+            style={{ background: 'transparent', color: TEXT.primary, fontFamily: FONT.sans }}
             autoFocus
           />
           <div className="flex gap-2 px-3 pb-3">
@@ -161,7 +161,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
                 setMapsUrl('');
               }}
               className="flex-1 py-2 rounded-xl border-none cursor-pointer text-[11px]"
-              style={{ background: 'var(--t-linen)', color: 'var(--t-ink)' }}
+              style={{ background: 'var(--t-linen)', color: TEXT.primary }}
             >
               Cancel
             </button>
@@ -169,7 +169,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
               onClick={onMapsImport}
               disabled={isProcessing || !mapsUrl.trim()}
               className="flex-1 py-2 rounded-xl border-none cursor-pointer text-[11px] font-semibold"
-              style={{ background: 'var(--t-ink)', color: 'white', opacity: isProcessing || !mapsUrl.trim() ? 0.35 : 1 }}
+              style={{ background: TEXT.primary, color: 'white', opacity: isProcessing || !mapsUrl.trim() ? 0.35 : 1 }}
             >
               Import list
             </button>

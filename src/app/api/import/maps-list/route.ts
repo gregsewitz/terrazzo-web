@@ -42,6 +42,9 @@ async function parallelMap<T, R>(
   return results;
 }
 
+// Allow up to 120s — Google Maps list fetch + enrichment for many places
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers);
   const rl = rateLimit(ip + ':ai', { maxRequests: 10, windowMs: 60000 });

@@ -9,10 +9,17 @@ import {
 // ─── detectInputType ────────────────────────────────────────────────────────
 
 describe('detectInputType', () => {
-  it('detects Google Maps URLs', () => {
-    expect(detectInputType('https://www.google.com/maps/place/Tokyo')).toBe('google-maps');
-    expect(detectInputType('https://maps.app.goo.gl/abc123')).toBe('google-maps');
-    expect(detectInputType('http://google.com/maps/@35.6,139.7')).toBe('google-maps');
+  it('detects Google Maps place URLs', () => {
+    expect(detectInputType('https://www.google.com/maps/place/Tokyo')).toBe('google-maps-place');
+  });
+
+  it('detects Google Maps short URLs as list (ambiguous default)', () => {
+    expect(detectInputType('https://maps.app.goo.gl/abc123')).toBe('google-maps-list');
+  });
+
+  it('detects Google Maps coordinate URLs as place', () => {
+    // Plain coordinate view without list data params
+    expect(detectInputType('http://google.com/maps/@35.6,139.7,15z')).toBe('google-maps-place');
   });
 
   it('detects regular URLs', () => {
@@ -28,7 +35,7 @@ describe('detectInputType', () => {
   });
 
   it('is case insensitive for URLs', () => {
-    expect(detectInputType('HTTPS://WWW.GOOGLE.COM/MAPS/PLACE/Test')).toBe('google-maps');
+    expect(detectInputType('HTTPS://WWW.GOOGLE.COM/MAPS/PLACE/Test')).toBe('google-maps-place');
     expect(detectInputType('HTTP://EXAMPLE.COM')).toBe('url');
   });
 });

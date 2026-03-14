@@ -1,5 +1,18 @@
 'use client';
 
+/**
+ * @deprecated — Use UniversalAddBar instead.
+ *
+ * This component is being phased out in favor of the UniversalAddBar,
+ * which now supports all import flows (links, text, file uploads, Google Maps lists).
+ *
+ * Remaining references:
+ * - src/app/trips/[id]/page.tsx (trip planner import)
+ * - src/components/FloatingImportBar.tsx (background processing indicator)
+ *
+ * TODO: Migrate trip planner import to use UAB with tripContext, then remove this file.
+ */
+
 import { useState, useMemo, useEffect } from 'react';
 import { useImportStore } from '@/stores/importStore';
 import { useSavedStore } from '@/stores/savedStore';
@@ -87,7 +100,9 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
   async function handleImport() {
     if (!inputValue.trim()) return;
     const detectedMode = detectInputType(inputValue);
-    patch({ mode: detectedMode, error: null, backgroundError: null, isProcessing: true, discoveredNames: [], importResults: [] });
+    // Normalize: map new granular types to the mode values the drawer expects
+    const drawerMode = detectedMode === 'google-maps-list' ? 'google-maps' : detectedMode === 'google-maps-place' ? 'url' : detectedMode;
+    patch({ mode: drawerMode as 'text' | 'url' | 'google-maps', error: null, backgroundError: null, isProcessing: true, discoveredNames: [], importResults: [] });
     setProgress(0, 'Starting…');
 
     // Minimize and close drawer — import runs in background
@@ -96,7 +111,7 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
 
     try {
       // Route to the correct endpoint based on input type
-      if (detectedMode === 'google-maps') {
+      if (detectedMode === 'google-maps-list') {
         await streamMapsImport(inputValue, {
           onProgress: (percent, label, placeNames) => {
             setProgress(percent, label);
@@ -234,7 +249,14 @@ export default function ImportDrawer({ onClose }: ImportDrawerProps) {
               onImport={handleImport}
               onMapsImport={handleMapsImport}
               inputValue={inputValue}
-              onInputChange={value => patch({ inputValue: value, mode: detectInputType(value) })}
+              onInputChange={value => {
+                const detected = detectInputType(value);
+                // Map new granular types back to ImportMode for the legacy store
+                const mode = detected === 'google-maps-list' ? 'google-maps'
+                  : detected === 'google-maps-place' ? 'url'
+                  : detected as 'text' | 'url' | 'google-maps' | 'email';
+                patch({ inputValue: value, mode });
+              }}
               mode={mode}
               sourceName={sourceName}
               onSourceNameChange={name => patch({ sourceName: name })}

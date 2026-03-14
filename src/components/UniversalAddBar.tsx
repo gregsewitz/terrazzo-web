@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useAddBarStore } from '@/stores/addBarStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { streamImport, streamMapsImport } from '@/lib/importService';
-import { detectInputType } from '@/lib/import-helpers';
+import { streamImport, streamMapsImport, streamFileImport } from '@/lib/importService';
+import { detectInput, extractPlaceIdFromMapsUrl, getPlatformLabel } from '@/lib/import-helpers';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useTripStore } from '@/stores/tripStore';
 import type { ImportedPlace } from '@/types';
@@ -51,6 +51,10 @@ const UniversalAddBar = memo(function UniversalAddBar() {
 
   // Local UI state
   const [saving, setSaving] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // File upload ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track client IDs saved during enrichment so onResult can back-fill
   const savedDuringEnrichRef = useRef<Map<string, string>>(new Map()); // clientId → name
@@ -106,35 +110,93 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     return () => clearTimeout(timer);
   }, [query, mode, setGoogleResults]);
 
+  // ─── File upload handler ──────────────────────────────────────────────
+  const handleFileUpload = useCallback(async (file: File) => {
+    const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'application/pdf', 'text/csv', 'text/plain', 'text/html'];
+    if (!allowed.some(t => file.type.startsWith(t.split('/')[0]) || file.type === t) && !file.name.match(/\.(png|jpe?g|webp|heic|pdf|csv|txt|html?)$/i)) {
+      setImportError('Unsupported file type. Try an image, PDF, CSV, or text file.');
+      setMode('error');
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      setImportError('File is too large (max 20 MB).');
+      setMode('error');
+      return;
+    }
+
+    setMode('importing');
+    const isImage = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|heic)$/i);
+    const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+    setImportProgress(0,
+      isImage ? 'Reading screenshot…'
+        : isPdf ? 'Extracting text from PDF…'
+        : 'Reading file…'
+    );
+
+    try {
+      await streamFileImport(file, {
+        onProgress: (percent: number, label: string) => setImportProgress(percent, label),
+        onResult: (places: ImportedPlace[]) => { setImportResults(places); setMode('preview'); },
+        onError: (err: string) => {
+          setImportError(err || 'Could not extract places from this file');
+          setMode('error');
+        },
+      });
+    } catch {
+      setImportError('Something went wrong — please try again');
+      setMode('error');
+    }
+  }, [setMode, setImportProgress, setImportResults, setImportError]);
+
   // ─── Input detection + smart routing ───────────────────────────────────
   //
   // The UAB is the single entry point for all import types.
-  // detectInputType() classifies the input, then we route to the
-  // correct streaming endpoint:
+  // detectInput() classifies the input with rich metadata, then we route
+  // to the correct streaming endpoint:
   //
-  //   'google-maps'  → streamMapsImport()  → /api/import/maps-list
-  //   'url'          → streamImport()      → /api/import
-  //   'text' (multi) → streamImport()      → /api/import
+  //   'google-maps-list'  → streamMapsImport()  → /api/import/maps-list
+  //   'google-maps-place' → streamImport()       → /api/import/place (direct resolve)
+  //   'url'               → streamImport()       → /api/import
+  //   'text' (multi)      → streamImport()       → /api/import
   //
   const handleInputSubmit = useCallback(async (overrideText?: string) => {
     const trimmed = (overrideText ?? query).trim();
     if (!trimmed) return;
 
-    const inputType = detectInputType(trimmed);
+    const detected = detectInput(trimmed);
+    const { type: inputType, platform } = detected;
     const isMultiLine = inputType === 'text' && trimmed.split('\n').filter(l => l.trim()).length >= 2;
 
     // Only proceed for importable input (URLs, maps links, multi-line lists)
-    if (inputType !== 'url' && inputType !== 'google-maps' && !isMultiLine) return;
+    if (inputType !== 'url' && inputType !== 'google-maps-list' && inputType !== 'google-maps-place' && !isMultiLine) return;
 
     setMode('importing');
+    const platformLabel = getPlatformLabel(platform);
     setImportProgress(0,
-      inputType === 'google-maps' ? 'Loading saved places...'
+      inputType === 'google-maps-list' ? 'Loading saved places...'
+        : inputType === 'google-maps-place' ? 'Resolving place from Google Maps…'
         : isMultiLine ? 'Parsing list...'
+        : platform && platform !== 'generic' ? `Importing from ${platformLabel}…`
         : 'Starting...'
     );
 
     try {
-      if (inputType === 'google-maps') {
+      if (inputType === 'google-maps-place') {
+        // Single Google Maps place → extract name/coords and resolve via standard import
+        const placeInfo = extractPlaceIdFromMapsUrl(detected.cleanedInput);
+        // If we can extract the place name, send it as a text query to the import endpoint
+        // which will use Claude to parse + Google Places to resolve
+        const importContent = placeInfo?.placeName || detected.cleanedInput;
+        await streamImport(importContent, {
+          onProgress: (percent: number, label: string) => setImportProgress(percent, label),
+          onResult: (places: ImportedPlace[]) => { setImportResults(places); setMode('preview'); },
+          onError: (err: string) => {
+            setImportError(err || 'Could not resolve this Google Maps place');
+            setMode('error');
+          },
+        });
+      } else if (inputType === 'google-maps-list') {
         // Google Maps saved lists → dedicated fast endpoint with lazy enrichment
         setIsEnriching(true);
         savedDuringEnrichRef.current = new Map();
@@ -313,7 +375,15 @@ const UniversalAddBar = memo(function UniversalAddBar() {
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="rounded-2xl overflow-hidden flex flex-col"
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            const file = e.dataTransfer?.files?.[0];
+            if (file) handleFileUpload(file);
+          }}
+          className="rounded-2xl overflow-hidden flex flex-col relative"
           style={{
             pointerEvents: 'auto',
             width: '94vw',
@@ -324,8 +394,34 @@ const UniversalAddBar = memo(function UniversalAddBar() {
             boxShadow: '0 24px 64px rgba(0,0,0,0.16)',
             opacity: 0,
             animation: 'fadeInUp 200ms ease both',
+            ...(isDragging ? { outline: '2px dashed var(--t-sage)', outlineOffset: -2 } : {}),
           }}
         >
+          {/* ── DROP ZONE OVERLAY ── */}
+          {isDragging && (
+            <div
+              className="absolute inset-0 flex items-center justify-center rounded-2xl"
+              style={{
+                zIndex: 100,
+                background: 'rgba(255,255,255,0.92)',
+                pointerEvents: 'none',
+              }}
+            >
+              <div className="text-center">
+                <svg width="32" height="32" viewBox="0 0 16 16" fill="none" style={{ margin: '0 auto 8px' }}>
+                  <path d="M8 2v8M4 6l4-4 4 4" stroke="var(--t-sage)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="var(--t-sage)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: TEXT.primary, margin: 0 }}>
+                  Drop to import
+                </p>
+                <p style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, margin: '4px 0 0' }}>
+                  Screenshots, PDFs, or text files
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* ── HEADER ── */}
           <div
             className="flex items-center gap-3 px-5 flex-shrink-0"
@@ -340,7 +436,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                   if (mode === 'collections') setMode('preview');
                   else { setImportResults([]); setMode('search'); }
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t-ink)', padding: 0 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT.primary, padding: 0 }}
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M11 4L6 9L11 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -352,7 +448,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
               fontFamily: FONT.serif,
               fontSize: 17,
               fontStyle: 'italic',
-              color: 'var(--t-ink)',
+              color: TEXT.primary,
               flex: 1,
             }}>
               {mode === 'collections'
@@ -372,7 +468,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 background: INK['04'],
                 border: 'none',
                 cursor: 'pointer',
-                color: 'var(--t-ink)',
+                color: TEXT.primary,
                 transition: 'background 150ms ease',
               }}
             >
@@ -402,7 +498,21 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     if (e.key === 'Enter') handleInputSubmit();
                     if (e.key === 'Escape') close();
                   }}
-                  placeholder={tripContext ? `Search library or Google...` : 'Search or paste a link...'}
+                  onPaste={(e) => {
+                    // Handle pasted files (e.g. screenshots from clipboard)
+                    const items = e.clipboardData?.items;
+                    if (items) {
+                      for (const item of Array.from(items)) {
+                        if (item.kind === 'file') {
+                          e.preventDefault();
+                          const file = item.getAsFile();
+                          if (file) handleFileUpload(file);
+                          return;
+                        }
+                      }
+                    }
+                  }}
+                  placeholder={tripContext ? `Search library or Google...` : 'Search, paste a link, or drop a file...'}
                   style={{
                     flex: 1,
                     border: 'none',
@@ -410,13 +520,47 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     background: 'transparent',
                     fontFamily: FONT.sans,
                     fontSize: 14,
-                    color: 'var(--t-ink)',
+                    color: TEXT.primary,
                   }}
                 />
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf,.csv,.txt,.html"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                    e.target.value = ''; // reset so same file can be re-selected
+                  }}
+                />
+                {/* Upload button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Upload a screenshot, PDF, or file"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '2px',
+                    color: TEXT.secondary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'color 150ms ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = TEXT.primary)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = INK['30'])}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2v8M4 6l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
                 {query && (
                   <button
                     onClick={() => setQuery('')}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: INK['30'] }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: TEXT.secondary }}
                   >
                     <PerriandIcon name="close" size={12} color={INK['30']} />
                   </button>
@@ -462,13 +606,13 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 </div>
                 <p style={{
                   fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-                  color: 'var(--t-ink)', margin: '0 0 4px',
+                  color: TEXT.primary, margin: '0 0 4px',
                 }}>
                   Import failed
                 </p>
                 <p style={{
                   fontFamily: FONT.sans, fontSize: 13,
-                  color: INK['60'], margin: '0 0 16px',
+                  color: TEXT.secondary, margin: '0 0 16px',
                   lineHeight: 1.4, maxWidth: 320, marginInline: 'auto',
                 }}>
                   {importError || 'Something went wrong'}
@@ -478,7 +622,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                   className="rounded-lg px-4 py-2"
                   style={{
                     fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-                    background: 'var(--t-ink)', color: 'white',
+                    background: TEXT.primary, color: 'white',
                     border: 'none', cursor: 'pointer',
                   }}
                 >

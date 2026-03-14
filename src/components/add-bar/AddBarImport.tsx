@@ -1,6 +1,6 @@
 'use client';
 
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { SectionHeader } from './AddBarShared';
 
 interface AddBarImportProps {
@@ -31,16 +31,13 @@ export default function AddBarImport({ importProgress, importLabel }: AddBarImpo
               style={{ transition: 'stroke-dasharray 0.3s ease' }}
             />
           </svg>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-ink)', position: 'relative', zIndex: 1 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: TEXT.primary, position: 'relative', zIndex: 1 }}>
             {Math.round(importProgress)}%
           </span>
         </div>
         <div>
-          <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)', margin: 0 }}>
-            Extracting places from link...
-          </p>
-          <p style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['60'], margin: '2px 0 0' }}>
-            {importLabel || 'Working...'}
+          <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, margin: 0 }}>
+            {importLabel || 'Importing places…'}
           </p>
         </div>
       </div>

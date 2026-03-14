@@ -11,6 +11,9 @@ import {
   deduplicatePlaces,
 } from '@/lib/import-pipeline';
 
+// Allow up to 120s — Claude extraction + Google Places enrichment for 30+ places
+export const maxDuration = 120;
+
 /**
  * Unified smart import endpoint — streams progress via SSE.
  * Each event is JSON: { type: 'progress' | 'result' | 'error', ... }
@@ -46,15 +49,18 @@ export async function POST(request: NextRequest) {
         // ── 1. Detect input type ────────────────────────────────────────────
         const detectedType = detectInputType(trimmed);
 
-        // Google Maps links should be routed to /api/import/maps-list by the client.
+        // Google Maps saved-list links should be routed to /api/import/maps-list by the client.
         // If one arrives here, reject it rather than silently failing.
-        if (detectedType === 'google-maps') {
-          send({ type: 'error', error: 'Google Maps links should use the maps-list endpoint' });
+        if (detectedType === 'google-maps-list') {
+          send({ type: 'error', error: 'Google Maps list links should use the maps-list endpoint' });
           controller.close();
           return;
         }
 
-        const isUrl = detectedType === 'url';
+        // Single Google Maps place links are fine here — they'll be fetched and parsed normally.
+        // The client may also pre-extract the place name and send that as text instead.
+
+        const isUrl = detectedType === 'url' || detectedType === 'google-maps-place';
         send({
           type: 'progress',
           stage: 'detecting',

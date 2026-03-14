@@ -72,6 +72,42 @@ export function streamMapsImport(mapsUrl: string, callbacks: ImportCallbacks): P
   return streamFromEndpoint('/api/import/maps-list', { url: mapsUrl }, callbacks, 'Maps import failed');
 }
 
+/**
+ * Stream import from /api/import/file (file uploads — screenshots, PDFs, CSVs, etc.).
+ * Uses FormData instead of JSON since we're uploading a binary file.
+ */
+export async function streamFileImport(file: File, callbacks: ImportCallbacks): Promise<void> {
+  cancelActiveImport();
+  const controller = new AbortController();
+  activeController = controller;
+  const timeout = setTimeout(() => controller.abort(), 180000); // 3 min for large files
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch('/api/import/file', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+    if (!res.ok || !res.body) throw new Error('File import failed');
+
+    await parseSSEStream(res.body, callbacks);
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') {
+      callbacks.onError('Import timed out');
+    } else {
+      callbacks.onError((err as Error).message || 'File import failed');
+    }
+  } finally {
+    clearTimeout(timeout);
+    activeController = null;
+  }
+}
+
 // ─── SSE stream parser ─────────────────────────────────────────────────────
 
 async function parseSSEStream(

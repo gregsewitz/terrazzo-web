@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
 import { TYPE_COLORS } from './AddBarShared';
 import SortPills from '@/components/ui/SortPills';
@@ -111,18 +111,18 @@ export default function AddBarPreview({
       <div className="mt-1 mb-1">
         <h2
           className="text-xl"
-          style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)', margin: 0 }}
+          style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
         >
           Found {importResults.length} place{importResults.length === 1 ? '' : 's'}
         </h2>
-        <p className="mt-0.5" style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['50'], margin: '2px 0 0' }}>
+        <p className="mt-0.5" style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary, margin: '2px 0 0' }}>
           Tap to deselect any you don&rsquo;t want
         </p>
       </div>
 
       {/* ── Bulk select controls ── */}
       <div className="flex items-center justify-between mt-3 mb-3">
-        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'] }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
           {selectedCount} of {importResults.length} selected
         </span>
         <div className="flex gap-2">
@@ -161,11 +161,11 @@ export default function AddBarPreview({
               {!isAllGroup && (
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
-                  <PerriandIcon name={config.icon} size={16} color="var(--t-ink)" />
-                  <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: 'var(--t-ink)' }}>
+                  <PerriandIcon name={config.icon} size={16} color={TEXT.primary} />
+                  <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary }}>
                     {config.label}
                   </span>
-                  <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['50'] }}>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary }}>
                     {items.length}
                   </span>
                 </div>
@@ -217,7 +217,7 @@ export default function AddBarPreview({
                             fontFamily: FONT.sans,
                             fontSize: 13,
                             fontWeight: 600,
-                            color: 'var(--t-ink)',
+                            color: TEXT.primary,
                             margin: 0,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -234,20 +234,12 @@ export default function AddBarPreview({
                               IN LIBRARY
                             </span>
                           )}
-                          {isLowConfidence && !isAlreadyInLibrary && (
-                            <span style={{
-                              fontFamily: FONT.mono, fontSize: 8, fontWeight: 700,
-                              color: '#B8860B', background: 'rgba(184,134,11,0.08)',
-                              padding: '1px 5px', borderRadius: 4, flexShrink: 0,
-                            }}>
-                              CHECK LOCATION
-                            </span>
-                          )}
+                          {/* Low-confidence places are silently re-resolved on save — no badge shown */}
                         </div>
                         <p style={{
                           fontFamily: FONT.mono,
                           fontSize: 9,
-                          color: INK['50'],
+                          color: TEXT.secondary,
                           margin: '1px 0 0',
                           textTransform: 'uppercase',
                           letterSpacing: '0.04em',
@@ -263,7 +255,7 @@ export default function AddBarPreview({
                             fontFamily: FONT.sans,
                             fontSize: 11,
                             fontStyle: 'italic',
-                            color: INK['40'],
+                            color: TEXT.secondary,
                             margin: '2px 0 0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -301,15 +293,15 @@ export default function AddBarPreview({
             className="flex items-center gap-2 bg-transparent border-none cursor-pointer w-full text-left"
             style={{ padding: 0 }}
           >
-            <PerriandIcon name="bookmark" size={14} color={INK['40']} />
+            <PerriandIcon name="bookmark" size={14} color={TEXT.secondary} />
             <span style={{
               fontFamily: FONT.mono, fontSize: 10, fontWeight: 700,
-              textTransform: 'uppercase', letterSpacing: '0.08em', color: INK['40'],
+              textTransform: 'uppercase', letterSpacing: '0.08em', color: TEXT.secondary,
             }}>
               Add to collections
             </span>
             <span style={{
-              fontFamily: FONT.sans, fontSize: 10, color: INK['40'],
+              fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary,
               marginLeft: 'auto',
             }}>
               {collectionIds.length > 0 ? `${collectionIds.length} selected` : 'Optional'}
@@ -318,12 +310,12 @@ export default function AddBarPreview({
               width="10" height="10" viewBox="0 0 10 10" fill="none"
               style={{ transform: showCollections ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease' }}
             >
-              <path d="M2 4L5 7L8 4" stroke={INK['40']} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 4L5 7L8 4" stroke={TEXT.secondary} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
 
           {showCollections && (
-            <div className="mt-2 p-3 rounded-xl" style={{ background: INK['02'] }}>
+            <div className="mt-2 p-3 rounded-xl" style={{ background: 'rgba(0,0,0,0.02)' }}>
               <div className="flex flex-wrap gap-1.5">
                 {collections.map(sl => {
                   const isSelected = collectionIds.includes(sl.id);
@@ -339,7 +331,7 @@ export default function AddBarPreview({
                         border: isSelected ? '1px solid var(--t-verde)' : '1px solid var(--t-linen)',
                         fontSize: 12,
                         fontFamily: FONT.sans,
-                        color: isSelected ? 'var(--t-verde)' : 'var(--t-ink)',
+                        color: isSelected ? 'var(--t-verde)' : TEXT.primary,
                       }}
                     >
                       <span style={{ fontSize: 13, display: 'inline-flex', alignItems: 'center' }}>
@@ -358,13 +350,13 @@ export default function AddBarPreview({
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all"
                     style={{
                       background: 'transparent',
-                      border: `1.5px dashed ${INK['12']}`,
+                      border: '1.5px dashed rgba(0,0,0,0.12)',
                       fontSize: 12,
                       fontFamily: FONT.sans,
-                      color: INK['70'],
+                      color: TEXT.secondary,
                     }}
                   >
-                    <PerriandIcon name="add" size={10} color={INK['40']} />
+                    <PerriandIcon name="add" size={10} color={TEXT.secondary} />
                     New
                   </button>
                 )}
@@ -394,8 +386,8 @@ export default function AddBarPreview({
                     disabled={!newCollectionName.trim()}
                     className="px-2.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer"
                     style={{
-                      background: newCollectionName.trim() ? 'var(--t-ink)' : INK['10'],
-                      color: newCollectionName.trim() ? 'white' : INK['30'],
+                      background: newCollectionName.trim() ? TEXT.primary : 'rgba(0,0,0,0.10)',
+                      color: newCollectionName.trim() ? 'white' : 'rgba(0,0,0,0.30)',
                       border: 'none',
                       fontFamily: FONT.sans,
                     }}
@@ -404,7 +396,7 @@ export default function AddBarPreview({
                   </button>
                 </div>
               )}
-              <p style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['40'], margin: '6px 0 0' }}>
+              <p style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary, margin: '6px 0 0' }}>
                 Applies to all selected places
               </p>
             </div>
@@ -416,7 +408,7 @@ export default function AddBarPreview({
       {isEnriching && (
         <div
           className="flex items-center justify-center gap-2 mt-4 mb-1"
-          style={{ fontFamily: FONT.sans, fontSize: 11, color: INK['40'] }}
+          style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}
         >
           <span
             className="inline-block w-3 h-3 rounded-full border-2"
@@ -436,8 +428,8 @@ export default function AddBarPreview({
         disabled={selectedCount === 0}
         className="w-full mt-3 py-3.5 rounded-2xl border-none cursor-pointer transition-all flex items-center justify-center gap-2"
         style={{
-          background: selectedCount > 0 ? 'var(--t-ink)' : INK['10'],
-          color: selectedCount > 0 ? 'white' : INK['50'],
+          background: selectedCount > 0 ? TEXT.primary : 'rgba(0,0,0,0.10)',
+          color: selectedCount > 0 ? 'white' : TEXT.secondary,
           fontFamily: FONT.sans,
           fontSize: 14,
           fontWeight: 600,
@@ -446,7 +438,7 @@ export default function AddBarPreview({
         Save {selectedCount} place{selectedCount === 1 ? '' : 's'}
         {tripContext && ' to Trip'}
         {collectionIds.length > 0 && ` + ${collectionIds.length} collection${collectionIds.length > 1 ? 's' : ''}`}
-        <PerriandIcon name="terrazzo" size={16} color={selectedCount > 0 ? 'white' : INK['50']} />
+        <PerriandIcon name="terrazzo" size={16} color={selectedCount > 0 ? 'white' : TEXT.secondary} />
       </button>
     </>
   );
