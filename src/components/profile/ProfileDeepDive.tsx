@@ -8,9 +8,10 @@ import { TASTE_PROFILE, WRAPPED, DIMENSION_COLORS, AXIS_COLORS, CONTEXT_ICONS, C
 import type { TasteProfile as ProfileShape } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
+import { BrandGraphicTransition } from '@/components/brand';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import PlaceLink from '@/components/PlaceLink';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import type { TasteProfile as NumericProfile, GeneratedTasteProfile } from '@/types';
 import {
   FadeInSection,
@@ -44,16 +45,20 @@ export default function ProfileDeepDive() {
     <div>
       <IdentitySection profile={profile} signalCount={signalCount} numericProfile={numericProfile} />
       <TasteDNASection profile={profile} mosaicAxes={mosaicAxes} />
+      <BrandGraphicTransition variant="palette" height={100} opacity={0.85} objectPosition="center 60%" />
       <DesignLanguageSection profile={profile} gp={gp} mosaicAxes={mosaicAxes} />
       <ContradictionsSection profile={profile} />
+      <BrandGraphicTransition variant="fields" height={80} opacity={0.85} objectPosition="center 45%" mirror />
       <PerfectDaySection gp={gp} />
       <ContextShiftsSection profile={profile} gp={gp} />
       <TasteNeighborsSection gp={gp} />
+      <BrandGraphicTransition variant="geometric" height={90} opacity={0.8} objectPosition="left center" />
       <DimensionsSection profile={profile} />
       <VocabularySection profile={profile} />
       <MatchesSection profile={profile} />
       <TasteRadarSection profile={profile} />
       <TravelStatsSection />
+      <BrandGraphicTransition variant="palette" height={80} opacity={0.85} objectPosition="right 30%" mirror />
       <TravelTimelineSection />
       <TasteEvolutionSection profile={profile} />
       <BucketListSection />
@@ -66,43 +71,44 @@ export default function ProfileDeepDive() {
 // ═══════════════════════════════════════════
 function IdentitySection({ profile, signalCount, numericProfile }: { profile: ProfileShape; signalCount: number; numericProfile: NumericProfile }) {
   return (
-    <div style={{ background: '#2d3a2d' }}>
-      <div className="px-5 pt-8 pb-3">
+    <div style={{ background: 'var(--t-navy)' }}>
+      {/* Hero content */}
+      <div className="px-5 pt-8 pb-6">
         <FadeInSection delay={0.1}>
-          <div className="text-[9px] uppercase tracking-[0.25em] mb-3" style={{ color: 'rgba(245,245,240,0.5)', fontFamily: FONT.mono }}>
+          <div className="text-[9px] uppercase tracking-[0.25em] mb-3" style={{ color: 'var(--t-peach)', fontFamily: FONT.mono, opacity: 0.7 }}>
             Your Taste Identity
           </div>
         </FadeInSection>
 
         <FadeInSection delay={0.2}>
-          <h2 className="text-[28px] mb-3 leading-tight" style={{ fontFamily: FONT.serif, color: '#f5f5f0' }}>
+          <h2 className="text-[32px] mb-3 leading-tight" style={{ fontFamily: FONT.serif, color: 'var(--t-cream)', fontStyle: 'italic' }}>
             {profile.overallArchetype}
           </h2>
         </FadeInSection>
 
         <FadeInSection delay={0.35}>
-          <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'rgba(245,245,240,0.78)', fontFamily: FONT.sans }}>
+          <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
             {profile.archetypeDescription}
           </p>
         </FadeInSection>
 
         {/* Emotional drivers */}
         <FadeInSection delay={0.45} direction="left">
-          <div className="flex gap-2 mb-5">
-            <div className="px-3 py-2 rounded-xl" style={{ background: 'rgba(245,245,240,0.08)' }}>
-              <div className="text-[8px] uppercase tracking-wider mb-1" style={{ color: 'rgba(200,146,58,0.7)', fontFamily: FONT.mono }}>Primary driver</div>
-              <div className="text-[12px] font-semibold" style={{ color: 'rgba(245,245,240,0.9)' }}>{profile.emotionalDriver.primary}</div>
+          <div className="flex gap-2 mb-6">
+            <div className="px-4 py-2" style={{ background: 'var(--t-coral)', borderRadius: '1rem' }}>
+              <div className="text-[8px] uppercase tracking-wider mb-1" style={{ color: 'white', fontFamily: FONT.mono, opacity: 0.8 }}>Primary driver</div>
+              <div className="text-[12px] font-semibold" style={{ color: 'white', fontFamily: FONT.sans }}>{profile.emotionalDriver.primary}</div>
             </div>
-            <div className="px-3 py-2 rounded-xl" style={{ background: 'rgba(245,245,240,0.06)' }}>
-              <div className="text-[8px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,245,240,0.45)', fontFamily: FONT.mono }}>Secondary</div>
-              <div className="text-[12px]" style={{ color: 'rgba(245,245,240,0.75)' }}>{profile.emotionalDriver.secondary}</div>
+            <div className="px-4 py-2" style={{ background: 'var(--t-teal)', borderRadius: '1rem' }}>
+              <div className="text-[8px] uppercase tracking-wider mb-1" style={{ color: 'white', fontFamily: FONT.mono, opacity: 0.8 }}>Secondary</div>
+              <div className="text-[12px]" style={{ color: 'white', fontFamily: FONT.sans }}>{profile.emotionalDriver.secondary}</div>
             </div>
           </div>
         </FadeInSection>
 
         {/* Stats row — animated counters */}
         <FadeInSection delay={0.5}>
-          <div className="flex gap-4 mb-2">
+          <div className="flex gap-4">
             {[
               { n: signalCount, label: 'Signals collected' },
               { n: profile.contradictions?.length || 3, label: 'Tensions found' },
@@ -112,9 +118,9 @@ function IdentitySection({ profile, signalCount, numericProfile }: { profile: Pr
               <div key={label} className="flex-1 text-center">
                 <AnimatedNumber
                   value={n}
-                  style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: '#f5f5f0' }}
+                  style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: 'var(--t-coral)' }}
                 />
-                <div style={{ fontFamily: FONT.mono, fontSize: 8, color: 'rgba(245,245,240,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
+                <div style={{ fontFamily: FONT.mono, fontSize: 8, color: 'var(--t-peach)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
               </div>
             ))}
           </div>
@@ -124,7 +130,7 @@ function IdentitySection({ profile, signalCount, numericProfile }: { profile: Pr
       {/* Mosaic — scale in */}
       <FadeInSection delay={0.6} direction="none">
         <div className="flex flex-col items-center px-5 pt-4 pb-8 gap-4">
-          <div style={{ fontFamily: FONT.mono, fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'rgba(245,240,230,0.55)' }}>
+          <div style={{ fontFamily: FONT.mono, fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'var(--t-peach)', opacity: 0.7 }}>
             Your Terrazzo Mosaic
           </div>
           {isMobileSafari() ? (
@@ -156,30 +162,41 @@ function IdentitySection({ profile, signalCount, numericProfile }: { profile: Pr
 function TasteDNASection({ profile, mosaicAxes }: { profile: ProfileShape; mosaicAxes: Record<string, number> }) {
   const axes = profile.radarData || [];
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="py-8" style={{ background: 'var(--t-cream)' }}>
+      <div className="px-5">
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-coral)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste DNA
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          Six dimensions that define how you experience places.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Your Sensibility Profile
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+          Six dimensions that define how you experience places and spaces.
         </p>
       </FadeInSection>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {axes.map(({ axis, value }, i) => {
-          const color = AXIS_COLORS[axis] || '#8b6b4a';
+          const color = AXIS_COLORS[axis] || 'var(--t-coral)';
           const pct = Math.round(value * 100);
           return (
             <FadeInSection key={axis} delay={i * 0.1} direction="left" distance={16}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{axis}</span>
-                <AnimatedNumber value={pct} suffix="%" style={{ color, fontFamily: FONT.mono, fontSize: 11, fontWeight: 700 }} />
+              <div className="px-4 py-3 rounded-2xl" style={{ background: 'white', boxShadow: '0 1px 3px rgba(26,45,74,0.08)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-[13px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display, textTransform: 'uppercase' }}>{axis}</span>
+                  </div>
+                  <div style={{ background: color, color: 'white', padding: '2px 10px', borderRadius: '999px', fontSize: '11px', fontFamily: FONT.mono, fontWeight: 700 }}>
+                    <AnimatedNumber value={pct} suffix="%" style={{ color: 'white', fontFamily: FONT.mono, fontSize: 11 }} />
+                  </div>
+                </div>
+                <AnimatedBar percentage={pct} color={color} delay={i * 0.1} />
               </div>
-              <AnimatedBar percentage={pct} color={color} delay={i * 0.1} />
             </FadeInSection>
           );
         })}
+      </div>
       </div>
     </div>
   );
@@ -201,18 +218,22 @@ function DesignLanguageSection({ profile, gp, mosaicAxes }: { profile: ProfileSh
   const annotations = insight?.annotations || AXES_FALLBACK;
 
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="py-8" style={{ background: 'var(--t-charcoal)' }}>
+      <div className="px-5">
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8b6b4a', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Your Design Eye
         </div>
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          How You See Spaces
+        </h3>
         {insight?.headline && (
-          <h3 className="text-[16px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
-            {insight.headline}
-          </h3>
+          <p className="text-[14px] mb-2 italic leading-snug" style={{ fontFamily: FONT.serif, color: 'var(--t-peach)' }}>
+            "{insight.headline}"
+          </p>
         )}
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          How your eye works — mapped across six design spectrums.
+        <p className="text-[12px] mb-6" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
+          Mapped across six design spectrums that reveal your aesthetic pattern.
         </p>
       </FadeInSection>
 
@@ -222,57 +243,65 @@ function DesignLanguageSection({ profile, gp, mosaicAxes }: { profile: ProfileSh
           const pct = Math.round(eloValue * 100);
           return (
             <FadeInSection key={a.axis} delay={i * 0.1}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px]" style={{ color: INK['60'], fontFamily: FONT.mono }}>{a.label[0]}</span>
-                <span className="text-[10px]" style={{ color: INK['60'], fontFamily: FONT.mono }}>{a.label[1]}</span>
+              <div className="px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] uppercase" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.mono, opacity: 0.6 }}>{a.label[0]}</span>
+                  <span className="text-[10px] uppercase" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.mono, opacity: 0.6 }}>{a.label[1]}</span>
+                </div>
+                <AnimatedSpectrum percentage={pct} delay={i * 0.12} />
+                <p className="text-[11px] mt-2.5 leading-relaxed" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.sans }}>
+                  {a.note}
+                </p>
               </div>
-              <AnimatedSpectrum percentage={pct} delay={i * 0.12} />
-              <p className="text-[10px] mt-1.5 leading-relaxed" style={{ color: INK['70'], fontFamily: FONT.sans }}>
-                {a.note}
-              </p>
             </FadeInSection>
           );
         })}
+      </div>
       </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════
-// CONTRADICTIONS — Deep dive with editorial
+// CONTRADICTIONS — Deep dive with editorial split layout
 // ═══════════════════════════════════════════
 function ContradictionsSection({ profile }: { profile: ProfileShape }) {
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="relative overflow-hidden px-5 py-8" style={{ background: 'var(--t-coral)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-panton-violet)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1 relative z-10" style={{ color: 'var(--t-cream)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Your Contradictions
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          The tensions that make your taste interesting — and matchable.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          The Tensions That Define You
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(251,245,236,0.8)', fontFamily: FONT.sans }}>
+          Where you say one thing, but your behavior reveals something deeper — and that's exactly what makes you fascinating.
         </p>
       </FadeInSection>
 
       <StaggerContainer className="flex flex-col gap-4" staggerDelay={0.12}>
         {profile.contradictions.map((c, i) => (
           <StaggerItem key={i}>
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
-              <div className="p-4">
-                <div className="flex gap-3 mb-3">
-                  <div className="flex-1">
-                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: INK['50'], fontFamily: FONT.mono }}>You said</div>
-                    <p className="text-[12px] italic leading-snug" style={{ color: 'var(--t-ink)' }}>&ldquo;{c.stated}&rdquo;</p>
-                  </div>
-                  <div className="flex items-center" style={{ color: INK['30'], fontFamily: FONT.serif, fontSize: 14 }}>×</div>
-                  <div className="flex-1">
-                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: INK['50'], fontFamily: FONT.mono }}>Behavior shows</div>
-                    <p className="text-[12px] italic leading-snug" style={{ color: 'var(--t-ink)' }}>&ldquo;{c.revealed}&rdquo;</p>
-                  </div>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'white', boxShadow: '0 2px 8px rgba(26,45,74,0.08)' }}>
+              <div className="flex">
+                {/* You Said column */}
+                <div className="flex-1 p-4">
+                  <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 600 }}>You said</div>
+                  <p className="text-[13px] italic leading-snug" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>"{c.stated}"</p>
+                </div>
+                {/* Coral divider */}
+                <div style={{ width: '3px', background: 'var(--t-coral)', margin: '0' }} />
+                {/* Behavior column */}
+                <div className="flex-1 p-4" style={{ background: 'rgba(232,111,90,0.02)' }}>
+                  <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 600 }}>Behavior shows</div>
+                  <p className="text-[13px] italic leading-snug" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>"{c.revealed}"</p>
                 </div>
               </div>
-              <div className="px-4 py-3" style={{ background: 'rgba(42,122,86,0.03)', borderTop: '1px solid var(--t-linen)' }}>
-                <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}>What this means for matching</div>
-                <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{c.resolution}</p>
+              {/* Navy footer */}
+              <div className="px-4 py-3" style={{ background: 'var(--t-navy)' }}>
+                <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 600 }}>What this means for matching</div>
+                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>{c.resolution}</p>
               </div>
             </div>
           </StaggerItem>
@@ -290,51 +319,54 @@ function PerfectDaySection({ gp }: { gp: GeneratedTasteProfile | null }) {
   if (!day) return null;
 
   const segments = [
-    { time: 'Morning', icon: 'morning' as const, text: day.morning, color: '#c8923a' },
-    { time: 'Afternoon', icon: 'afternoon' as const, text: day.afternoon, color: '#e86830' },
-    { time: 'Evening', icon: 'evening' as const, text: day.evening, color: '#6844a0' },
+    { time: 'Morning', icon: 'morning' as const, text: day.morning, color: 'var(--t-coral)' },
+    { time: 'Afternoon', icon: 'afternoon' as const, text: day.afternoon, color: 'var(--t-ochre)' },
+    { time: 'Evening', icon: 'evening' as const, text: day.evening, color: 'var(--t-teal)' },
   ];
 
   return (
-    <div className="px-5 py-6" style={{ background: '#f5f0e6' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-peach)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Your Perfect Day
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          We synthesized your ideal travel day from everything you told us.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Your Ideal Travel Day
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+          Synthesized from every signal you've given us — morning through evening.
         </p>
       </FadeInSection>
 
       <div className="flex flex-col gap-0">
         {segments.map((seg, i) => (
           <FadeInSection key={seg.time} delay={i * 0.2} direction="left" distance={20}>
-            <div className="flex gap-3">
-              <div className="flex flex-col items-center" style={{ width: 24 }}>
+            <div className="flex gap-4 pb-6">
+              <div className="flex flex-col items-center" style={{ width: 28 }}>
                 {isMobileSafari() ? (
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${seg.color}15` }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: seg.color, boxShadow: `0 2px 8px ${seg.color}40` }}
                   >
-                    <PerriandIcon name={seg.icon} size={12} color={seg.color} />
+                    <PerriandIcon name={seg.icon} size={13} color="white" />
                   </div>
                 ) : (
                   <motion.div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${seg.color}15` }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: seg.color, boxShadow: `0 2px 8px ${seg.color}40` }}
                     initial={{ scale: 0 }}
                     whileInView={{ scale: 1 }}
                     transition={{ duration: 0.4, delay: i * 0.2, type: 'spring', stiffness: 300 }}
                     viewport={{ once: true }}
                   >
-                    <PerriandIcon name={seg.icon} size={12} color={seg.color} />
+                    <PerriandIcon name={seg.icon} size={13} color="white" />
                   </motion.div>
                 )}
-                {i < segments.length - 1 && <div className="w-[1px] flex-1 my-1" style={{ background: INK['10'] }} />}
+                {i < segments.length - 1 && <div className="w-[2px] flex-1 my-1" style={{ background: seg.color, opacity: 0.3 }} />}
               </div>
-              <div className="flex-1 pb-5">
-                <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: seg.color, fontFamily: FONT.mono }}>{seg.time}</div>
-                <p className="text-[12px] leading-relaxed" style={{ color: INK['80'], fontFamily: FONT.sans }}>{seg.text}</p>
+              <div className="flex-1">
+                <div className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: seg.color, fontFamily: FONT.display }}>{seg.time}</div>
+                <p className="text-[13px] leading-relaxed" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{seg.text}</p>
               </div>
             </div>
           </FadeInSection>
@@ -350,23 +382,26 @@ function PerfectDaySection({ gp }: { gp: GeneratedTasteProfile | null }) {
 function ContextShiftsSection({ profile, gp }: { profile: ProfileShape; gp: GeneratedTasteProfile | null }) {
   const shifts = gp?.howYouShift;
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-olive)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#4a6b8b', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 700 }}>
           How Your Taste Shifts
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          You&apos;re not one traveler — you&apos;re several. Here&apos;s how context changes everything.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          Multiple Travelers in One
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
+          You&apos;re not the same traveler with friends as you are alone, or in summer versus winter.
         </p>
       </FadeInSection>
 
       {shifts && shifts.length > 0 && (
-        <StaggerContainer className="flex flex-col gap-3 mb-5" staggerDelay={0.1}>
+        <StaggerContainer className="flex flex-col gap-3 mb-6" staggerDelay={0.1}>
           {shifts.map((s, i) => (
             <StaggerItem key={i}>
-              <div className="p-4 rounded-xl" style={{ background: 'white', borderLeft: '3px solid #4a6b8b' }}>
-                <div className="text-[11px] font-semibold mb-1" style={{ color: 'var(--t-ink)' }}>{s.context}</div>
-                <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{s.insight}</p>
+              <div className="p-4 rounded-2xl" style={{ background: 'var(--t-cream)', borderLeft: '3px solid var(--t-teal)' }}>
+                <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--t-teal)', fontFamily: FONT.display, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.context}</div>
+                <p className="text-[12px] leading-relaxed" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>{s.insight}</p>
               </div>
             </StaggerItem>
           ))}
@@ -379,12 +414,12 @@ function ContextShiftsSection({ profile, gp }: { profile: ProfileShape; gp: Gene
           const icon = CONTEXT_ICONS[mod.context] || 'discover';
           return (
             <StaggerItem key={mod.context}>
-              <div className="p-3 rounded-xl" style={{ background: 'white', borderTop: `2px solid ${color}` }}>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <PerriandIcon name={icon} size={14} color={color} />
-                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-ink)' }}>{mod.context}</span>
+              <div className="p-4 rounded-2xl" style={{ background: 'var(--t-cream)', borderLeft: `3px solid ${color}` }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <PerriandIcon name={icon} size={15} color={color} />
+                  <span className="text-[11px] font-bold" style={{ color: color, fontFamily: FONT.display }}>{mod.context}</span>
                 </div>
-                <p className="text-[10px] leading-relaxed" style={{ color: INK['70'] }}>{mod.shifts}</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>{mod.shifts}</p>
               </div>
             </StaggerItem>
           );
@@ -402,20 +437,23 @@ function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null }) {
   if (!neighbors) return null;
 
   return (
-    <div className="px-5 py-6" style={{ background: '#f5f0e6' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-ochre)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-panton-orange)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste Neighbors
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          Archetypes that overlap with yours — and what sets you apart.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Archetypes Like You
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(26,45,74,0.7)', fontFamily: FONT.sans }}>
+          You share DNA with these taste profiles — but something makes you distinctly yourself.
         </p>
       </FadeInSection>
 
-      <StaggerContainer className="flex flex-wrap gap-2 mb-4" staggerDelay={0.06}>
+      <StaggerContainer className="flex flex-wrap gap-2 mb-6" staggerDelay={0.06}>
         {neighbors.nearbyArchetypes.map((a) => (
           <StaggerItem key={a}>
-            <span className="text-[11px] px-3 py-1.5 rounded-full inline-block" style={{ background: 'rgba(232,104,48,0.08)', color: '#c45020', fontFamily: FONT.sans }}>
+            <span className="text-[11px] px-4 py-2 rounded-full inline-block font-medium" style={{ background: 'var(--t-navy)', color: 'white', fontFamily: FONT.sans }}>
               {a}
             </span>
           </StaggerItem>
@@ -423,16 +461,16 @@ function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null }) {
       </StaggerContainer>
 
       <FadeInSection delay={0.3}>
-        <div className="p-4 rounded-xl mb-3" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
-          <div className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: INK['50'], fontFamily: FONT.mono }}>What makes you different</div>
-          <p className="text-[12px] leading-relaxed" style={{ color: INK['70'] }}>{neighbors.distinction}</p>
+        <div className="p-4 rounded-2xl mb-3" style={{ background: 'white', boxShadow: '0 2px 8px rgba(26,45,74,0.08)', borderLeft: '3px solid var(--t-coral)' }}>
+          <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'var(--t-coral)', fontFamily: FONT.mono, fontWeight: 600 }}>What makes you different</div>
+          <p className="text-[12px] leading-relaxed" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>{neighbors.distinction}</p>
         </div>
       </FadeInSection>
 
       <FadeInSection delay={0.4}>
-        <div className="p-3 rounded-lg flex items-center gap-2" style={{ background: 'rgba(232,104,48,0.05)' }}>
-          <PerriandIcon name="sparkle" size={12} color="#c45020" />
-          <p className="text-[11px] italic" style={{ color: '#c45020' }}>{neighbors.rarityStat}</p>
+        <div className="p-4 rounded-2xl flex items-start gap-3" style={{ background: 'var(--t-coral)', color: 'white' }}>
+          <PerriandIcon name="sparkle" size={13} color="white" />
+          <p className="text-[11px] leading-relaxed" style={{ color: 'white', fontFamily: FONT.sans }}>{neighbors.rarityStat}</p>
         </div>
       </FadeInSection>
     </div>
@@ -475,29 +513,34 @@ function DimensionsSection({ profile }: { profile: ProfileShape }) {
   const domains = Object.keys(profile.microTasteSignals).filter(k => k !== 'Rejection');
   const totalSignals = Object.values(profile.microTasteSignals).flat().length;
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-warm-gray)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste Dimensions
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          How confidently we can match you across {domains.length} domains, based on {totalSignals} signals.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Confidence by Domain
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(26,45,74,0.75)', fontFamily: FONT.sans }}>
+          How deeply we understand your taste across {domains.length} dimensions, powered by {totalSignals} signals.
         </p>
       </FadeInSection>
 
-      <StaggerContainer className="flex flex-col gap-2" staggerDelay={0.08}>
+      <StaggerContainer className="flex flex-col gap-3" staggerDelay={0.08}>
         {domains.map(domain => {
-          const color = DIMENSION_COLORS[domain] || '#8b6b4a';
+          const color = DIMENSION_COLORS[domain] || 'var(--t-coral)';
           const certainty = DIMENSION_CERTAINTIES[domain] || 80;
           const signalCount = (profile.microTasteSignals[domain] || []).length;
           return (
             <StaggerItem key={domain}>
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'white' }}>
-                <div className="flex-shrink-0 w-2 h-2 rounded-full" style={{ background: color }} />
-                <span className="text-[12px] font-semibold flex-1" style={{ color: 'var(--t-ink)' }}>{domain}</span>
-                <span className="text-[9px]" style={{ color: INK['55'], fontFamily: FONT.mono }}>{signalCount} signals</span>
+              <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: 'white', boxShadow: '0 1px 3px rgba(26,45,74,0.08)' }}>
+                <div className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: color }} />
+                <span className="text-[13px] font-bold flex-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{domain}</span>
+                <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{signalCount} signals</span>
                 <DimensionBar certainty={certainty} color={color} />
-                <AnimatedNumber value={certainty} suffix="%" style={{ color, fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, width: 32, textAlign: 'right' as const }} />
+                <div style={{ width: 36, textAlign: 'right' }}>
+                  <AnimatedNumber value={certainty} suffix="%" style={{ color, fontFamily: FONT.display, fontSize: 11, fontWeight: 700 }} />
+                </div>
               </div>
             </StaggerItem>
           );
@@ -518,27 +561,30 @@ function VocabularySection({ profile }: { profile: ProfileShape }) {
     if (category === 'Rejection') {
       rejectionTerms.push(...terms);
     } else {
-      const color = DIMENSION_COLORS[category] || '#8b6b4a';
+      const color = DIMENSION_COLORS[category] || 'var(--t-coral)';
       terms.forEach(term => positiveTerms.push({ term, color }));
     }
   }
 
   return (
-    <div className="px-5 py-6" style={{ background: '#f5f0e6' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-olive)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-ochre)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste Vocabulary
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          {positiveTerms.length + rejectionTerms.length} words that define what you love — and what you don&apos;t.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          The Words That Define You
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(251,245,236,0.75)', fontFamily: FONT.sans }}>
+          {positiveTerms.length + rejectionTerms.length} words that capture what you love — and what you actively avoid.
         </p>
       </FadeInSection>
 
       {/* Positive signals — animated word cloud */}
-      <StaggerContainer className="flex flex-wrap gap-1.5 mb-4" staggerDelay={0.03}>
+      <StaggerContainer className="flex flex-wrap gap-2 mb-6" staggerDelay={0.03}>
         {positiveTerms.map(({ term, color }) => (
           <StaggerItem key={term}>
-            <span className="text-[10px] px-2.5 py-1 rounded-full inline-block" style={{ background: `${color}10`, color, fontFamily: FONT.sans }}>
+            <span className="text-[11px] px-3 py-1.5 rounded-full inline-block font-medium" style={{ background: color, color: 'white', fontFamily: FONT.sans }}>
               {term}
             </span>
           </StaggerItem>
@@ -548,14 +594,14 @@ function VocabularySection({ profile }: { profile: ProfileShape }) {
       {/* Rejections */}
       {rejectionTerms.length > 0 && (
         <FadeInSection delay={0.4}>
-          <div className="p-3 rounded-xl" style={{ background: 'rgba(139,74,74,0.04)', border: '1px dashed rgba(139,74,74,0.15)' }}>
-            <div className="text-[9px] uppercase tracking-wider mb-2" style={{ color: '#8b4a4a', fontFamily: FONT.mono }}>
+          <div className="p-4 rounded-2xl" style={{ background: 'var(--t-cream)', border: '1px solid rgba(251,245,236,0.3)' }}>
+            <div className="text-[9px] uppercase tracking-wider mb-3 px-4 pt-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 600 }}>
               What you reject
             </div>
-            <StaggerContainer className="flex flex-wrap gap-1.5" staggerDelay={0.04}>
+            <StaggerContainer className="flex flex-wrap gap-2 px-4 pb-4" staggerDelay={0.04}>
               {rejectionTerms.map(term => (
                 <StaggerItem key={term}>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full inline-block" style={{ background: 'rgba(139,74,74,0.08)', color: '#8b4a4a', fontFamily: FONT.sans }}>
+                  <span className="text-[10px] px-3 py-1.5 rounded-full inline-block" style={{ background: 'var(--t-warm-gray)', color: 'var(--t-navy)', fontFamily: FONT.sans }}>
                     {term}
                   </span>
                 </StaggerItem>
@@ -573,60 +619,63 @@ function VocabularySection({ profile }: { profile: ProfileShape }) {
 // ═══════════════════════════════════════════
 function MatchesSection({ profile }: { profile: ProfileShape }) {
   return (
-    <div className="px-5 py-6 pb-8" style={{ background: 'var(--t-cream)' }}>
+    <div className="px-5 py-8 pb-10" style={{ background: 'var(--t-cream)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Top Matches
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          Properties scored against your full taste profile.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Places Made for You
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+          Properties scored against your complete taste profile, ranked by compatibility.
         </p>
       </FadeInSection>
 
-      <StaggerContainer className="flex flex-col gap-3" staggerDelay={0.15}>
+      <StaggerContainer className="flex flex-col gap-4" staggerDelay={0.15}>
         {profile.matchedProperties.map((prop, i) => (
           <StaggerItem key={prop.name}>
             <PlaceLink name={prop.name} location={prop.location} googlePlaceId={(prop as Record<string, unknown>).googlePlaceId as string | undefined}>
-            <div className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <AnimatedScoreArc score={prop.score} color="#4a6741" size={48} delay={i * 0.15} />
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'white', boxShadow: '0 4px 12px rgba(26,45,74,0.12)' }}>
+              <div className="p-4 border-b" style={{ borderColor: 'rgba(26,45,74,0.06)' }}>
+                <div className="flex items-start gap-4">
+                  <AnimatedScoreArc score={prop.score} color="var(--t-teal)" size={52} delay={i * 0.15} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>{prop.name}</span>
+                    <div className="flex items-baseline gap-2 mb-0.5">
+                      <span className="text-[15px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{prop.name}</span>
                       {i === 0 && (
                         isMobileSafari() ? (
                           <span
-                            className="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                            style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+                            className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold"
+                            style={{ background: 'var(--t-coral)', color: 'white', fontFamily: FONT.mono }}
                           >
-                            Best match
+                            Best Match
                           </span>
                         ) : (
                           <motion.span
-                            className="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                            style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+                            className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold"
+                            style={{ background: 'var(--t-coral)', color: 'white', fontFamily: FONT.mono }}
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ delay: 0.5, type: 'spring', stiffness: 400 }}
                             viewport={{ once: true }}
                           >
-                            Best match
+                            Best Match
                           </motion.span>
                         )
                       )}
                     </div>
-                    <div className="text-[11px] mb-2" style={{ color: INK['60'] }}>{prop.location}</div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="text-[12px] mb-3 font-medium" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{prop.location}</div>
+                    <div className="flex flex-wrap gap-1.5">
                       {prop.matchReasons.map(reason => (
-                        <span key={reason} className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,103,65,0.08)', color: '#4a6741' }}>{reason}</span>
+                        <span key={reason} className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'var(--t-teal)', color: 'white', fontFamily: FONT.sans }}>{reason}</span>
                       ))}
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="px-4 py-3" style={{ background: 'rgba(42,122,86,0.02)', borderTop: '1px solid var(--t-linen)' }}>
-                <p className="text-[10px] italic leading-snug" style={{ color: INK['70'] }}>{prop.tensionResolved}</p>
+              <div className="px-4 py-3" style={{ background: 'rgba(94,196,178,0.05)' }}>
+                <p className="text-[11px] italic leading-snug" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{prop.tensionResolved}</p>
               </div>
             </div>
             </PlaceLink>
@@ -665,13 +714,16 @@ function TasteRadarSection({ profile }: { profile: ProfileShape }) {
   const zeroPolygon = axes.map((_, i) => getPoint(i, 0)).map(p => `${p.x},${p.y}`).join(' ');
 
   return (
-    <div className="px-5 py-6" style={{ background: '#2d3a2d' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-navy)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'rgba(200,146,58,0.7)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-coral)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste Profile
         </div>
-        <p className="text-[11px] mb-2" style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}>
-          Your six sensibility axes — the shape of how you experience places.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          Your Sensibility Map
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
+          The shape of how you experience places — six axes that define your sensibility.
         </p>
       </FadeInSection>
 
@@ -679,32 +731,32 @@ function TasteRadarSection({ profile }: { profile: ProfileShape }) {
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <defs>
             <radialGradient id="radarAnimFill" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="var(--t-honey)" stopOpacity={0.2} />
-              <stop offset="100%" stopColor="var(--t-honey)" stopOpacity={0.05} />
+              <stop offset="0%" stopColor="var(--t-coral)" stopOpacity={0.15} />
+              <stop offset="100%" stopColor="var(--t-coral)" stopOpacity={0.04} />
             </radialGradient>
           </defs>
 
           {/* Grid polygons */}
           {gridPolygons.map((points, i) => (
-            <polygon key={`g-${i}`} points={points} fill="none" stroke="rgba(245,245,240,0.08)" strokeWidth={0.5} />
+            <polygon key={`g-${i}`} points={points} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={0.5} />
           ))}
 
           {/* Axis lines */}
           {axes.map((d, i) => {
             const outer = getPoint(i, maxRadius);
-            const color = AXIS_COLORS[d.axis] || '#8b6b4a';
-            return <line key={`a-${i}`} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke={color} strokeOpacity={0.35} strokeWidth={0.8} />;
+            const color = AXIS_COLORS[d.axis] || 'var(--t-coral)';
+            return <line key={`a-${i}`} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke={color} strokeOpacity={0.3} strokeWidth={0.8} />;
           })}
 
           {/* Animated data polygon */}
           {isMobileSafari() ? (
-            <polygon points={dataPolygon} fill="url(#radarAnimFill)" stroke="var(--t-honey)" strokeWidth={1.5} strokeOpacity={0.7} />
+            <polygon points={dataPolygon} fill="url(#radarAnimFill)" stroke="var(--t-coral)" strokeWidth={2} strokeOpacity={0.8} />
           ) : (
             <motion.polygon
               fill="url(#radarAnimFill)"
-              stroke="var(--t-honey)"
-              strokeWidth={1.5}
-              strokeOpacity={0.7}
+              stroke="var(--t-coral)"
+              strokeWidth={2}
+              strokeOpacity={0.8}
               initial={{ points: zeroPolygon, opacity: 0 }}
               animate={isInView ? { points: dataPolygon, opacity: 1 } : { points: zeroPolygon, opacity: 0 }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
@@ -713,16 +765,16 @@ function TasteRadarSection({ profile }: { profile: ProfileShape }) {
 
           {/* Data point dots */}
           {dataPoints.map((p, i) => {
-            const color = AXIS_COLORS[axes[i].axis] || '#8b6b4a';
+            const color = AXIS_COLORS[axes[i].axis] || 'var(--t-coral)';
             return isMobileSafari() ? (
               <g key={`d-${i}`}>
-                <circle cx={p.x} cy={p.y} r={3.5} fill={color} />
-                <circle cx={p.x} cy={p.y} r={1.5} fill="white" />
+                <circle cx={p.x} cy={p.y} r={4} fill={color} />
+                <circle cx={p.x} cy={p.y} r={1.5} fill="var(--t-navy)" />
               </g>
             ) : (
               <motion.g key={`d-${i}`} initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : { opacity: 0 }} transition={{ duration: 0.4, delay: 0.8 + i * 0.08 }}>
-                <circle cx={p.x} cy={p.y} r={3.5} fill={color} />
-                <circle cx={p.x} cy={p.y} r={1.5} fill="white" />
+                <circle cx={p.x} cy={p.y} r={4} fill={color} />
+                <circle cx={p.x} cy={p.y} r={1.5} fill="var(--t-navy)" />
               </motion.g>
             );
           })}
@@ -731,7 +783,7 @@ function TasteRadarSection({ profile }: { profile: ProfileShape }) {
           {axes.map((d, i) => {
             const lp = getPoint(i, maxRadius * 1.25);
             return (
-              <text key={`l-${i}`} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle" fill="#f5f5f0" fontSize={10} fontFamily={FONT.mono} opacity={0.7}>
+              <text key={`l-${i}`} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle" fill="var(--t-peach)" fontSize={11} fontFamily={FONT.mono} opacity={0.8} fontWeight={600}>
                 {d.axis}
               </text>
             );
@@ -740,9 +792,9 @@ function TasteRadarSection({ profile }: { profile: ProfileShape }) {
           {/* Numeric values */}
           {axes.map((d, i) => {
             const vp = getPoint(i, maxRadius * 1.42);
-            const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+            const color = AXIS_COLORS[d.axis] || 'var(--t-coral)';
             return (
-              <text key={`v-${i}`} x={vp.x} y={vp.y} textAnchor="middle" dominantBaseline="middle" fill={color} fontSize={9} fontFamily={FONT.mono} fontWeight={700} opacity={0.9}>
+              <text key={`v-${i}`} x={vp.x} y={vp.y} textAnchor="middle" dominantBaseline="middle" fill={color} fontSize={10} fontFamily={FONT.display} fontWeight={700} opacity={0.95}>
                 {Math.round(d.value * 100)}
               </text>
             );
@@ -751,13 +803,13 @@ function TasteRadarSection({ profile }: { profile: ProfileShape }) {
 
         {/* Legend row */}
         <FadeInSection delay={0.6}>
-          <div className="flex flex-wrap justify-center gap-3 mt-2">
+          <div className="flex flex-wrap justify-center gap-3 mt-6">
             {axes.map(d => {
-              const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+              const color = AXIS_COLORS[d.axis] || 'var(--t-coral)';
               return (
-                <div key={d.axis} className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                  <span className="text-[9px]" style={{ color: 'rgba(245,245,240,0.55)', fontFamily: FONT.mono }}>{d.axis} {Math.round(d.value * 100)}</span>
+                <div key={d.axis} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                  <span className="text-[10px]" style={{ color: 'var(--t-peach)', fontFamily: FONT.mono, opacity: 0.8 }}>{d.axis} {Math.round(d.value * 100)}</span>
                 </div>
               );
             })}
@@ -783,7 +835,7 @@ const TRAVEL_STATS = {
 };
 
 const CONTINENTS = [
-  { name: 'Europe', visits: 22, pct: 58, color: '#c8923a' },
+  { name: 'Europe', visits: 22, pct: 58, color: '#E86F5A' },
   { name: 'Asia', visits: 9, pct: 24, color: '#e86830' },
   { name: 'North America', visits: 5, pct: 13, color: '#4a6741' },
   { name: 'Africa', visits: 2, pct: 5, color: '#6844a0' },
@@ -800,12 +852,12 @@ function AnimatedStatCard({ value, label, suffix, delay }: { value: number; labe
   const iconName = STAT_ICONS[label] || 'discover';
   return (
     <FadeInSection delay={delay} direction="up" distance={20}>
-      <div className="text-center p-4 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+      <div className="text-center p-4 rounded-2xl" style={{ background: 'white', boxShadow: '0 2px 8px rgba(26,45,74,0.1)' }}>
         <div className="flex justify-center mb-2">
-          <PerriandIcon name={iconName} size={18} color="var(--t-honey)" />
+          <PerriandIcon name={iconName} size={18} color="var(--t-coral)" />
         </div>
-        <AnimatedNumber value={value} suffix={suffix} style={{ fontFamily: FONT.mono, fontSize: 26, fontWeight: 700, color: 'var(--t-honey)' }} />
-        <div className="text-[9px] uppercase tracking-wider mt-1" style={{ color: INK['50'], fontFamily: FONT.mono }}>{label}</div>
+        <AnimatedNumber value={value} suffix={suffix} style={{ fontFamily: FONT.display, fontSize: 28, fontWeight: 700, color: 'var(--t-navy)' }} />
+        <div className="text-[9px] uppercase tracking-wider mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{label}</div>
       </div>
     </FadeInSection>
   );
@@ -816,27 +868,27 @@ function ContinentBar({ name, visits, pct, color, delay }: { name: string; visit
 
   return (
     <FadeInSection delay={delay} direction="left" distance={24}>
-      <div ref={ref} className="flex items-center gap-3 mb-3">
-        <span className="text-[11px] font-semibold w-28 shrink-0" style={{ color: 'rgba(245,245,240,0.8)' }}>{name}</span>
-        <div className="flex-1 h-5 rounded-full overflow-hidden relative" style={{ background: 'rgba(245,245,240,0.06)' }}>
+      <div ref={ref} className="flex items-center gap-3 mb-4">
+        <span className="text-[12px] font-bold w-32 shrink-0" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>{name}</span>
+        <div className="flex-1 h-6 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.08)' }}>
           {isMobileSafari() ? (
             <div
-              className="h-full rounded-full flex items-center justify-end pr-2"
+              className="h-full rounded-full flex items-center justify-end pr-3"
               style={{ background: color, width: `${pct}%` }}
             >
-              <span className="text-[9px] font-bold" style={{ color: 'rgba(255,255,255,0.9)', fontFamily: FONT.mono }}>{visits}</span>
+              <span className="text-[10px] font-bold" style={{ color: 'white', fontFamily: FONT.display }}>{visits}</span>
             </div>
           ) : (
             <motion.div
-              className="h-full rounded-full flex items-center justify-end pr-2"
+              className="h-full rounded-full flex items-center justify-end pr-3"
               style={{ background: color }}
               initial={{ width: 0 }}
               animate={isInView ? { width: `${pct}%` } : { width: 0 }}
               transition={{ duration: 1, delay: delay + 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <motion.span
-                className="text-[9px] font-bold"
-                style={{ color: 'rgba(255,255,255,0.9)', fontFamily: FONT.mono }}
+                className="text-[10px] font-bold"
+                style={{ color: 'white', fontFamily: FONT.display }}
                 initial={{ opacity: 0 }}
                 animate={isInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.3, delay: delay + 0.8 }}
@@ -846,7 +898,7 @@ function ContinentBar({ name, visits, pct, color, delay }: { name: string; visit
             </motion.div>
           )}
         </div>
-        <span className="text-[10px] w-8 text-right" style={{ color: 'rgba(245,245,240,0.45)', fontFamily: FONT.mono }}>{pct}%</span>
+        <span className="text-[11px] w-8 text-right font-bold" style={{ color: 'var(--t-peach)', fontFamily: FONT.mono }}>{pct}%</span>
       </div>
     </FadeInSection>
   );
@@ -854,13 +906,16 @@ function ContinentBar({ name, visits, pct, color, delay }: { name: string; visit
 
 function TravelStatsSection() {
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-ochre)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-honey)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Your Travel Stats
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          The numbers behind your journeys — and they&apos;re still growing.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Journey by the Numbers
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(26,45,74,0.7)', fontFamily: FONT.sans }}>
+          The scale and scope of your explorations — still growing with every trip.
         </p>
       </FadeInSection>
 
@@ -873,18 +928,18 @@ function TravelStatsSection() {
 
       {/* Highlight strip */}
       <FadeInSection delay={0.3}>
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-3 mb-6">
           {[
             { v: TRAVEL_STATS.longestTrip, l: 'Longest trip', s: ' days', icon: 'trips' as const },
             { v: TRAVEL_STATS.continents, l: 'Continents', s: '', icon: 'discover' as const },
             { v: Math.round(TRAVEL_STATS.kmTraveled / 1000), l: 'Distance', s: 'k km', icon: 'transport' as const },
           ].map(({ v, l, s, icon }) => (
-            <div key={l} className="flex-1 text-center p-3 rounded-xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
-              <div className="flex justify-center mb-1">
-                <PerriandIcon name={icon} size={12} color={INK['40']} />
+            <div key={l} className="flex-1 text-center p-3 rounded-2xl" style={{ background: 'rgba(251,245,236,0.9)', boxShadow: '0 1px 3px rgba(26,45,74,0.08)' }}>
+              <div className="flex justify-center mb-2">
+                <PerriandIcon name={icon} size={13} color="var(--t-coral)" />
               </div>
-              <AnimatedNumber value={v} suffix={s} style={{ fontFamily: FONT.mono, fontSize: 16, fontWeight: 700, color: 'var(--t-ink)' }} />
-              <div className="text-[8px] uppercase tracking-wider mt-0.5" style={{ color: INK['45'], fontFamily: FONT.mono }}>{l}</div>
+              <AnimatedNumber value={v} suffix={s} style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: 'var(--t-navy)' }} />
+              <div className="text-[8px] uppercase tracking-wider mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{l}</div>
             </div>
           ))}
         </div>
@@ -892,11 +947,11 @@ function TravelStatsSection() {
 
       {/* Continent breakdown */}
       <FadeInSection delay={0.35}>
-        <div className="text-[9px] uppercase tracking-[0.2em] mb-3" style={{ color: INK['45'], fontFamily: FONT.mono }}>
-          Where you go most
+        <div className="text-[9px] uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 600 }}>
+          Geographic Distribution
         </div>
       </FadeInSection>
-      <div className="p-4 rounded-2xl" style={{ background: '#2d3a2d' }}>
+      <div className="p-5 rounded-2xl" style={{ background: 'var(--t-navy)' }}>
         {CONTINENTS.map((c, i) => (
           <ContinentBar key={c.name} {...c} delay={0.4 + i * 0.1} />
         ))}
@@ -910,7 +965,7 @@ function TravelStatsSection() {
 // ═══════════════════════════════════════════
 
 const TRIPS: Array<{ title: string; dates: string; places: number; upcoming: boolean; color: string; icon: import('@/types').PerriandIconName }> = [
-  { title: 'Paris in Spring', dates: 'Apr 12\u201316, 2026', places: 7, upcoming: true, color: '#c8923a', icon: 'hotel' },
+  { title: 'Paris in Spring', dates: 'Apr 12\u201316, 2026', places: 7, upcoming: true, color: '#E86F5A', icon: 'hotel' },
   { title: 'Kyoto Autumn', dates: 'Nov 3\u201310, 2025', places: 12, upcoming: false, color: '#e86830', icon: 'morning' },
   { title: 'Amalfi Coast', dates: 'Jun 18\u201325, 2025', places: 9, upcoming: false, color: '#4a6741', icon: 'summer' },
   { title: 'Marrakech Weekend', dates: 'Mar 7\u20139, 2025', places: 5, upcoming: false, color: '#6844a0', icon: 'activity' },
@@ -920,13 +975,16 @@ const TRIPS: Array<{ title: string; dates: string; places: number; upcoming: boo
 
 function TravelTimelineSection() {
   return (
-    <div className="px-5 py-6" style={{ background: '#f5f0e6' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-peach)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Travel Timeline
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          Your journeys, past and future — each one shaping your taste.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+          Your Journey So Far
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+          Past trips that shaped you, and future adventures already in motion.
         </p>
       </FadeInSection>
 
@@ -934,8 +992,8 @@ function TravelTimelineSection() {
         {/* Animated timeline spine */}
         {!isMobileSafari() ? (
           <motion.div
-            className="absolute left-[15px] top-0 w-[1.5px]"
-            style={{ background: `linear-gradient(to bottom, var(--t-honey), ${INK['10']})` }}
+            className="absolute left-[15px] top-0 w-[2px]"
+            style={{ background: 'var(--t-navy)' }}
             initial={{ height: 0 }}
             whileInView={{ height: '100%' }}
             transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
@@ -943,15 +1001,15 @@ function TravelTimelineSection() {
           />
         ) : (
           <div
-            className="absolute left-[15px] top-0 w-[1.5px] h-full"
-            style={{ background: `linear-gradient(to bottom, var(--t-honey), ${INK['10']})` }}
+            className="absolute left-[15px] top-0 w-[2px] h-full"
+            style={{ background: 'var(--t-navy)' }}
           />
         )}
 
         <div className="flex flex-col gap-0">
           {TRIPS.map((trip, i) => (
             <FadeInSection key={trip.title} delay={i * 0.12} direction="left" distance={30}>
-              <div className="flex gap-4 pb-5">
+              <div className="flex gap-4 pb-6">
                 {/* Timeline dot with icon */}
                 <div className="flex flex-col items-center shrink-0" style={{ width: 32 }}>
                   {isMobileSafari() ? (
@@ -959,44 +1017,44 @@ function TravelTimelineSection() {
                       className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
                       style={{
                         background: trip.upcoming ? trip.color : 'white',
-                        border: trip.upcoming ? 'none' : `2px solid ${trip.color}`,
-                        boxShadow: trip.upcoming ? `0 2px 8px ${trip.color}30` : 'none',
+                        border: trip.upcoming ? 'none' : `2.5px solid ${trip.color}`,
+                        boxShadow: trip.upcoming ? `0 4px 12px ${trip.color}40` : 'none',
                       }}
                     >
-                      <PerriandIcon name={trip.icon} size={14} color={trip.upcoming ? 'white' : trip.color} />
+                      <PerriandIcon name={trip.icon} size={15} color={trip.upcoming ? 'white' : trip.color} />
                     </div>
                   ) : (
                     <motion.div
                       className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
                       style={{
                         background: trip.upcoming ? trip.color : 'white',
-                        border: trip.upcoming ? 'none' : `2px solid ${trip.color}`,
-                        boxShadow: trip.upcoming ? `0 2px 8px ${trip.color}30` : 'none',
+                        border: trip.upcoming ? 'none' : `2.5px solid ${trip.color}`,
+                        boxShadow: trip.upcoming ? `0 4px 12px ${trip.color}40` : 'none',
                       }}
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
                       transition={{ duration: 0.4, delay: i * 0.12, type: 'spring', stiffness: 300, damping: 20 }}
                       viewport={{ once: true }}
                     >
-                      <PerriandIcon name={trip.icon} size={14} color={trip.upcoming ? 'white' : trip.color} />
+                      <PerriandIcon name={trip.icon} size={15} color={trip.upcoming ? 'white' : trip.color} />
                     </motion.div>
                   )}
                 </div>
 
                 {/* Trip card */}
-                <div className="flex-1 p-4 rounded-xl" style={{ background: 'white', border: `1px solid ${trip.upcoming ? trip.color + '30' : 'var(--t-linen)'}` }}>
+                <div className="flex-1 p-4 rounded-2xl" style={{ background: 'white', boxShadow: '0 2px 8px rgba(26,45,74,0.08)', borderLeft: `3px solid ${trip.color}` }}>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>{trip.title}</span>
+                    <span className="text-[14px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{trip.title}</span>
                     {trip.upcoming && (
-                      <span className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold" style={{ background: `${trip.color}12`, color: trip.color, fontFamily: FONT.mono }}>
+                      <span className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold" style={{ background: `${trip.color}15`, color: trip.color, fontFamily: FONT.mono }}>
                         Upcoming
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] mb-1.5" style={{ color: INK['55'], fontFamily: FONT.mono }}>{trip.dates}</div>
+                  <div className="text-[11px] mb-1.5 font-medium" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{trip.dates}</div>
                   <div className="flex items-center gap-1.5">
-                    <PerriandIcon name="location" size={10} color={trip.color} />
-                    <span className="text-[10px]" style={{ color: trip.color, fontFamily: FONT.mono }}>{trip.places} places</span>
+                    <PerriandIcon name="location" size={11} color={trip.color} />
+                    <span className="text-[11px] font-medium" style={{ color: trip.color, fontFamily: FONT.mono }}>{trip.places} places</span>
                   </div>
                 </div>
               </div>
@@ -1039,7 +1097,7 @@ const EVOLUTION_PHASES = [
     label: 'The Aesthetic Pilgrim',
     description: 'Now you travel to expand your sense of what\u2019s possible. Design, food, culture \u2014 everything is taste.',
     shifts: { design: 92, character: 88, food: 90, service: 85 },
-    color: '#c8923a',
+    color: '#E86F5A',
   },
 ];
 
@@ -1075,13 +1133,16 @@ function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
   );
 
   return (
-    <div className="px-5 py-6" style={{ background: 'var(--t-cream)' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-coral)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-cream)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste Evolution
         </div>
-        <p className="text-[11px] mb-5" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          How your palate has matured — from comfort zones to curious pilgrim.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          How You&apos;ve Grown
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(251,245,236,0.8)', fontFamily: FONT.sans }}>
+          Your taste journey from comfort zones to intentional exploration — each phase marking a shift.
         </p>
       </FadeInSection>
 
@@ -1089,15 +1150,15 @@ function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
         {/* Animated connecting line */}
         {!isMobileSafari() ? (
           <motion.div
-            className="absolute left-[7px] top-2 w-[1.5px]"
-            style={{ background: 'linear-gradient(to bottom, #8b6b4a, #c8923a)' }}
+            className="absolute left-[7px] top-2 w-[2px]"
+            style={{ background: 'linear-gradient(to bottom, var(--t-cream), var(--t-peach))' }}
             initial={{ height: 0 }}
             whileInView={{ height: 'calc(100% - 16px)' }}
             transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
             viewport={{ once: true }}
           />
         ) : (
-          <div className="absolute left-[7px] top-2 w-[1.5px]" style={{ height: 'calc(100% - 16px)', background: 'linear-gradient(to bottom, #8b6b4a, #c8923a)' }} />
+          <div className="absolute left-[7px] top-2 w-[2px]" style={{ height: 'calc(100% - 16px)', background: 'linear-gradient(to bottom, var(--t-cream), var(--t-peach))' }} />
         )}
 
         <div className="flex flex-col gap-5">
@@ -1109,11 +1170,11 @@ function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
                   {/* Dot */}
                   <div className="shrink-0 mt-1">
                     {isMobileSafari() ? (
-                      <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: phase.color, background: isCurrent ? phase.color : 'white' }} />
+                      <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: isCurrent ? 'var(--t-cream)' : phase.color, background: isCurrent ? 'var(--t-cream)' : 'white' }} />
                     ) : (
                       <motion.div
                         className="w-4 h-4 rounded-full border-2"
-                        style={{ borderColor: phase.color, background: isCurrent ? phase.color : 'white' }}
+                        style={{ borderColor: isCurrent ? 'var(--t-cream)' : phase.color, background: isCurrent ? 'var(--t-cream)' : 'white' }}
                         initial={{ scale: 0 }}
                         whileInView={{ scale: 1 }}
                         transition={{ duration: 0.4, delay: i * 0.15, type: 'spring', stiffness: 300 }}
@@ -1123,21 +1184,21 @@ function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
                   </div>
 
                   {/* Card */}
-                  <div className="flex-1 p-4 rounded-xl" style={{ background: 'white', border: `1px solid ${isCurrent ? phase.color + '30' : 'var(--t-linen)'}` }}>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${phase.color}12`, color: phase.color, fontFamily: FONT.mono }}>{phase.period}</span>
-                      <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{phase.label}</span>
-                      {isCurrent && <PerriandIcon name="sparkle" size={10} color={phase.color} />}
+                  <div className="flex-1 p-4 rounded-2xl" style={{ background: 'white', boxShadow: '0 2px 8px rgba(26,45,74,0.08)', borderLeft: `3px solid ${phase.color}` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: `${phase.color}15`, color: phase.color, fontFamily: FONT.mono }}>{phase.period}</span>
+                      <span className="text-[14px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{phase.label}</span>
+                      {isCurrent && <PerriandIcon name="sparkle" size={11} color={phase.color} />}
                     </div>
-                    <p className="text-[11px] leading-relaxed mb-3" style={{ color: INK['70'], fontFamily: FONT.sans }}>{phase.description}</p>
+                    <p className="text-[12px] leading-relaxed mb-3" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{phase.description}</p>
 
                     {/* Mini dimension bars */}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                       {Object.entries(phase.shifts).map(([key, val], j) => (
                         <div key={key}>
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[9px] capitalize" style={{ color: INK['50'], fontFamily: FONT.mono }}>{key}</span>
-                            <AnimatedNumber value={val} suffix="%" style={{ color: phase.color, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700 }} />
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] capitalize font-medium" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono }}>{key}</span>
+                            <AnimatedNumber value={val} suffix="%" style={{ color: phase.color, fontFamily: FONT.display, fontSize: 10, fontWeight: 700 }} />
                           </div>
                           <EvolutionBar value={val} color={phase.color} delay={i * 0.15 + j * 0.05} />
                         </div>
@@ -1166,7 +1227,7 @@ const BUCKET_LIST: Array<{
   { destination: 'Fogo Island, Canada', reason: 'Architecture at the edge of the world', progress: 40, color: '#4a6b8b', icon: 'design', status: 'Dreaming' },
   { destination: 'Naoshima, Japan', reason: 'Art islands that blur gallery and landscape', progress: 65, color: '#6844a0', icon: 'museum', status: 'Researching' },
   { destination: 'Pantelleria, Italy', reason: 'Volcanic gardens and dammusi architecture', progress: 30, color: '#4a6741', icon: 'activity', status: 'Dreaming' },
-  { destination: 'Bhutan', reason: 'Gross National Happiness — a country built on intention', progress: 20, color: '#c8923a', icon: 'wellness', status: 'Someday' },
+  { destination: 'Bhutan', reason: 'Gross National Happiness — a country built on intention', progress: 20, color: '#E86F5A', icon: 'wellness', status: 'Someday' },
   { destination: 'Cape Town, South Africa', reason: 'Where wine, design, and landscape collide', progress: 55, color: '#8b4a4a', icon: 'bar', status: 'Researching' },
 ];
 
@@ -1209,25 +1270,28 @@ function BucketListSection() {
   const totalProgress = Math.round(BUCKET_LIST.reduce((acc, b) => acc + b.progress, 0) / BUCKET_LIST.length);
 
   return (
-    <div className="px-5 py-6 pb-8" style={{ background: '#f5f0e6' }}>
+    <div className="px-5 py-8 pb-10" style={{ background: 'var(--t-charcoal)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-panton-orange)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-coral)', fontFamily: FONT.mono, fontWeight: 700 }}>
           The Bucket List
         </div>
-        <p className="text-[11px] mb-2" style={{ color: INK['60'], fontFamily: FONT.sans }}>
-          Dream destinations matched to your taste DNA — with readiness scores.
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+          Dream Destinations
+        </h3>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(251,245,236,0.7)', fontFamily: FONT.sans }}>
+          Places matched to your taste DNA, ranked by your readiness to visit.
         </p>
       </FadeInSection>
 
       {/* Overall progress header */}
       <FadeInSection delay={0.15}>
-        <div className="flex items-center gap-4 p-4 rounded-2xl mb-5" style={{ background: '#2d3a2d' }}>
-          <ProgressRing progress={totalProgress} color="#c8923a" size={56} delay={0.2} />
+        <div className="flex items-center gap-4 p-5 rounded-2xl mb-6" style={{ background: 'var(--t-navy)' }}>
+          <ProgressRing progress={totalProgress} color="var(--t-coral)" size={56} delay={0.2} />
           <div className="flex-1">
-            <div className="text-[14px] font-semibold mb-0.5" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
+            <div className="text-[15px] font-bold mb-0.5" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
               {completedCount > 0 ? `${completedCount} nearly ready` : 'Building your list'}
             </div>
-            <div className="text-[11px]" style={{ color: 'rgba(245,245,240,0.6)', fontFamily: FONT.sans }}>
+            <div className="text-[11px] font-medium" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
               {BUCKET_LIST.length} destinations · {totalProgress}% average readiness
             </div>
           </div>
@@ -1235,18 +1299,18 @@ function BucketListSection() {
       </FadeInSection>
 
       {/* Destination cards */}
-      <StaggerContainer className="flex flex-col gap-3" staggerDelay={0.1}>
+      <StaggerContainer className="flex flex-col gap-4" staggerDelay={0.1}>
         {BUCKET_LIST.map((item, i) => (
           <StaggerItem key={item.destination}>
-            <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
+            <div className="flex items-center gap-4 p-4 rounded-2xl" style={{ background: 'var(--t-cream)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', borderLeft: `3px solid ${item.color}` }}>
               <ProgressRing progress={item.progress} color={item.color} size={48} delay={i * 0.1} />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex items-center gap-2 mb-1">
                   <PerriandIcon name={item.icon} size={14} color={item.color} />
-                  <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{item.destination}</span>
+                  <span className="text-[14px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{item.destination}</span>
                 </div>
-                <p className="text-[10px] leading-relaxed mb-1.5" style={{ color: INK['60'], fontFamily: FONT.sans }}>{item.reason}</p>
-                <span className="text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold" style={{ background: `${item.color}10`, color: item.color, fontFamily: FONT.mono }}>
+                <p className="text-[11px] leading-relaxed mb-2" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.sans }}>{item.reason}</p>
+                <span className="text-[8px] uppercase tracking-wider px-2.5 py-0.5 rounded-full font-bold" style={{ background: item.color, color: 'white', fontFamily: FONT.mono }}>
                   {item.status}
                 </span>
               </div>
@@ -1257,11 +1321,11 @@ function BucketListSection() {
 
       {/* Recommendation footer */}
       <FadeInSection delay={0.6}>
-        <div className="mt-5 p-4 rounded-xl flex items-start gap-3" style={{ background: 'rgba(200,146,58,0.05)', border: '1px solid rgba(200,146,58,0.12)' }}>
-          <PerriandIcon name="sparkle" size={14} color="var(--t-honey)" />
+        <div className="mt-6 p-5 rounded-2xl flex items-start gap-3" style={{ background: 'var(--t-coral)', color: 'white' }}>
+          <PerriandIcon name="sparkle" size={15} color="white" />
           <div>
-            <p className="text-[11px] leading-relaxed" style={{ color: INK['70'], fontFamily: FONT.sans }}>
-              Your taste profile suggests <strong style={{ color: 'var(--t-ink)' }}>Oaxaca</strong> as your highest-readiness match —
+            <p className="text-[12px] leading-relaxed font-medium" style={{ color: 'white', fontFamily: FONT.sans }}>
+              Your taste profile suggests <strong style={{ fontFamily: FONT.display }}>Oaxaca</strong> as your highest-readiness match —
               93% alignment with your food and character signals.
             </p>
           </div>

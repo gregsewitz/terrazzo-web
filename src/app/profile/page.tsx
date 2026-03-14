@@ -41,7 +41,7 @@ import {
   type DeepMatch,
 } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, TEXT } from '@/constants/theme';
 import { TasteTensionCard, DeepMatchBreakdown, StretchPickAxis } from '@/components/intelligence';
 import type { TasteTension as IntelTasteTension, DeepMatch as IntelDeepMatch, StretchPick as IntelStretchPick } from '@/components/intelligence';
 import type { TasteDomain } from '@/types';
@@ -51,6 +51,7 @@ import PlaceLink from '@/components/PlaceLink';
 import { PlaceDetailProvider } from '@/context/PlaceDetailContext';
 import { useSavedStore } from '@/stores/savedStore';
 import { useEmailScanStore } from '@/stores/emailScanStore';
+import { BrandGraphicTransition } from '@/components/brand';
 
 // ─── Discover cache TTL (2 hours) ─────────────────────────────────────────────
 const DISCOVER_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
@@ -507,7 +508,7 @@ function ProfilePageContent() {
   if (!dbHydrated) {
     return (
       <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
-        <div className="animate-pulse text-[13px]" style={{ color: INK['85'] }}>Loading your profile…</div>
+        <div className="animate-pulse text-[13px]" style={{ color: TEXT.primary }}>Loading your profile…</div>
       </div>
     );
   }
@@ -527,13 +528,13 @@ function ProfilePageContent() {
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(200,146,58,0.1)' }}
+            style={{ background: 'rgba(232,111,90,0.1)' }}
           >
             <PerriandIcon name="profile" size={24} color="var(--t-honey)" />
           </div>
           <div>
-            <div className="text-[15px] font-semibold" style={{ color: 'var(--t-ink)' }}>{userName}</div>
-            <div className="text-[11px]" style={{ color: INK['90'] }}>{profile.overallArchetype}</div>
+            <div className="text-[15px] font-semibold" style={{ color: TEXT.primary }}>{userName}</div>
+            <div className="text-[11px]" style={{ color: TEXT.secondary }}>{profile.overallArchetype}</div>
           </div>
         </div>
         <TerrazzoMosaic profile={numericProfile} size="xs" />
@@ -585,7 +586,7 @@ function ProfilePageContent() {
           {/* Subtle divider between pages */}
           <div className="flex items-center gap-4 my-10 px-4">
             <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
               More for you
             </span>
             <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
@@ -614,14 +615,14 @@ function ProfilePageContent() {
           {isLoadingMore ? (
             <>
               <div className="animate-spin w-5 h-5 rounded-full border-2" style={{ borderColor: 'var(--t-linen)', borderTopColor: 'var(--t-honey)' }} />
-              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'], letterSpacing: '0.05em' }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, letterSpacing: '0.05em' }}>
                 Curating more…
               </span>
             </>
           ) : (
             <span
               className="animate-pulse"
-              style={{ fontFamily: FONT.mono, fontSize: 10, color: INK['60'], letterSpacing: '0.05em' }}
+              style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, letterSpacing: '0.05em' }}
             >
               Scroll for more
             </span>
@@ -636,219 +637,267 @@ function ProfilePageContent() {
     return (
       <PageTransition className="min-h-screen" style={{ background: 'var(--t-cream)' }}>
         <DesktopNav />
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 48px 48px' }}>
-          <div className="flex gap-10">
-            {/* Left: profile card (sticky) */}
-            <div className="flex-shrink-0" style={{ width: 300 }}>
-              <div
-                className="rounded-2xl p-6 sticky"
-                style={{
-                  top: 88, /* 56 nav + 32 padding */
-                  background: 'white',
-                  border: '1px solid var(--t-linen)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                }}
-              >
-                {headerBlock}
-
-                {/* Quick stats — 3-col grid */}
-                <div
-                  className="grid grid-cols-3 gap-3 mt-5 pt-5"
-                  style={{ borderTop: '1px solid var(--t-linen)' }}
-                >
-                  <div className="text-center">
-                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{signalCount}</div>
-                    <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '36px 48px 48px' }}>
+          {/* Profile header card — full width, scrolls with page */}
+          <div
+            className="rounded-2xl overflow-hidden mb-8"
+            style={{
+              background: 'var(--t-cream)',
+              border: '1px solid var(--t-linen)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+            }}
+          >
+            {/* Navy header section */}
+            <div style={{ background: 'var(--t-navy)', padding: '24px 32px 20px' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(232,111,90,0.15)' }}
+                  >
+                    <PerriandIcon name="profile" size={28} color="var(--t-coral)" />
                   </div>
-                  <div className="text-center">
-                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{profile.contradictions?.length || 0}</div>
-                    <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
-                  </div>
-                  <div className="text-center">
-                    <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: 'var(--t-ink)' }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
-                    <div style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['60'], textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-semibold" style={{ color: 'var(--t-cream)', fontFamily: FONT.sans }}>{userName}</div>
+                    <div className="text-[11px]" style={{ color: 'rgba(251,245,236,0.72)', fontFamily: FONT.mono }}>{profile.overallArchetype}</div>
                   </div>
                 </div>
-
-                {/* Wrapped CTA */}
-                <SafeMotionButton
-                  onClick={() => setShowWrapped(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl mt-4 cursor-pointer border-none transition-all hover:opacity-90"
-                  style={{ background: '#2d3a2d' }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <span className="text-[11px] font-semibold" style={{ color: '#f5f5f0', fontFamily: FONT.sans }}>
-                    Your Taste Dossier
-                  </span>
-                  <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(245,245,240,0.12)', color: '#f5f5f0', fontFamily: FONT.mono }}>
-                    Replay →
-                  </span>
-                </SafeMotionButton>
-
-                {/* Expand Your Mosaic CTA */}
-                <SafeMotionButton
-                  onClick={() => setShowMosaic(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl mt-3 cursor-pointer border-none transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)', border: '1px solid rgba(200,146,58,0.12)' }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div>
-                    <span className="text-[11px] font-semibold block" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
-                      Expand Your Mosaic
-                    </span>
-                    <span className="text-[9px]" style={{ color: INK['50'], fontFamily: FONT.mono }}>
-                      Sharpen your matches
-                    </span>
-                  </div>
-                  <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(28,26,23,0.06)', color: 'var(--t-ink)', fontFamily: FONT.mono }}>
-                    Play →
-                  </span>
-                </SafeMotionButton>
-
-                {/* Settings links */}
-                <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--t-linen)' }}>
-                  {SETTINGS_LINKS.map(({ label, action }) => (
-                    <div key={action}>
-                      <div
-                        onClick={() => handleSettingTap(action)}
-                        className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg cursor-pointer nav-hover"
-                        style={{ fontSize: 12, color: expandedSection === action ? 'var(--t-ink)' : INK['60'], fontFamily: FONT.sans }}
+                <div className="flex items-center gap-5">
+                  <TerrazzoMosaic profile={numericProfile} size="xs" />
+                  {/* Tabs */}
+                  <div
+                    className="flex gap-1 p-0.5 rounded-lg"
+                    style={{ background: 'rgba(255,255,255,0.08)' }}
+                  >
+                    {(['discover', 'profile'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className="py-1.5 px-4 rounded-md text-[11px] font-medium transition-all"
+                        style={{
+                          background: activeTab === tab ? 'var(--t-coral)' : 'transparent',
+                          color: activeTab === tab ? 'white' : 'rgba(251,245,236,0.8)',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontFamily: FONT.sans,
+                          boxShadow: activeTab === tab ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+                        }}
                       >
-                        <span>{label}</span>
-                        <span style={{ color: INK['30'], transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', display: 'inline-block' }}>→</span>
-                      </div>
-                      {expandedSection === 'accounts' && action === 'accounts' && (
-                        <div className="px-2 py-2.5 mt-1 rounded-lg" style={{ background: 'rgba(107,139,154,0.05)', fontSize: 11 }}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <PerriandIcon name="email" size={11} color="var(--t-ink)" />
-                              <span style={{ color: 'var(--t-ink)' }}>Gmail</span>
-                            </div>
-                            {emailLoading ? (
-                              <span className="text-[10px]" style={{ color: INK['40'] }}>Checking…</span>
-                            ) : emailStatus?.connected ? (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>Connected</span>
-                            ) : (
-                              <a href="/api/auth/nylas/connect" className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--t-verde)', color: 'white', textDecoration: 'none' }}>Connect</a>
-                            )}
-                          </div>
-                          {emailStatus?.connected && (
-                            <div className="ml-5 mb-2">
-                              <span className="text-[10px] block mb-2" style={{ color: INK['50'] }}>{emailStatus.email}</span>
-                              <div className="flex items-center gap-2 flex-wrap mb-2">
-                                <button onClick={handleScanNow} disabled={scanState === 'scanning' || scanState === 'parsing'} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: '#2a7a56', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}>
-                                  {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${scanResult?.emailsParsed ? ` ${scanResult.emailsParsed}/${scanResult.emailsFound}` : '…'}` : scanState === 'done' ? '✓ Done' : scanState === 'failed' ? 'Retry Scan' : 'Scan Inbox'}
-                                </button>
-                                <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: INK['60'] }}>
-                                  Debug
-                                </button>
-                                {scanState === 'parsing' && scanResult && (scanResult.reservationsFound ?? 0) > 0 && (
-                                  <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>
-                                    Review {scanResult.reservationsFound} so far →
-                                  </button>
-                                )}
-                                {scanState === 'done' && scanResult && (scanResult.reservationsFound ?? 0) > 0 && (
-                                  <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-honey)', color: 'white' }}>
-                                    Review {scanResult.reservationsFound} reservations →
-                                  </button>
-                                )}
-                                {scanState === 'done' && scanResult && (scanResult.reservationsFound ?? 0) === 0 && (
-                                  <span className="text-[10px]" style={{ color: INK['40'] }}>
-                                    {scanResult.emailsFound} emails scanned · no reservations found
-                                  </span>
-                                )}
-                              </div>
-                              <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(196,80,32,0.08)', color: '#c45020' }}>Disconnect</button>
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <PerriandIcon name="pin" size={11} color="var(--t-ink)" />
-                              <span style={{ color: 'var(--t-ink)' }}>Google Maps</span>
-                            </div>
-                            {hasGoogleMapsImport ? (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>Imported</span>
-                            ) : (
-                              <Link href="/onboarding" className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--t-linen)', color: INK['60'], textDecoration: 'none' }}>Import</Link>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {expandedSection === 'history' && action === 'history' && (
-                        <div className="px-2 py-2.5 mt-1 rounded-lg" style={{ background: 'rgba(107,139,154,0.05)', fontSize: 11 }}>
-                          {historyLoading ? (
-                            <span className="text-[10px]" style={{ color: INK['40'] }}>Loading history…</span>
-                          ) : importHistory.length === 0 ? (
-                            <span className="text-[10px]" style={{ color: INK['40'] }}>No import history yet. Connect Gmail or import from a URL to get started.</span>
-                          ) : (
-                            <div className="flex flex-col gap-1.5">
-                              {importHistory.slice(0, 10).map((item) => (
-                                <div key={item.id} className="flex items-center justify-between py-1 cursor-pointer" onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <PerriandIcon name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'} size={9} color={INK['50']} />
-                                    <span className="text-[10px] truncate" style={{ color: 'var(--t-ink)' }}>{item.title}</span>
-                                  </div>
-                                  <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: INK['30'] }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                </div>
-                              ))}
-                              <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left" style={{ color: 'var(--t-honey)' }}>View email reservations →</button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {expandedSection === 'notifications' && action === 'notifications' && (
-                        <div className="px-2 py-2.5 mt-1 rounded-lg text-[10px]" style={{ background: 'rgba(107,139,154,0.05)', color: INK['50'] }}>Notification preferences coming soon.</div>
-                      )}
-                      {expandedSection === 'about' && action === 'about' && (
-                        <div className="px-2 py-2.5 mt-1 rounded-lg text-[10px]" style={{ background: 'rgba(107,139,154,0.05)', color: INK['50'] }}>Terrazzo v0.1 — Your taste-driven travel companion.</div>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    onClick={handleRedoOnboarding}
-                    className="flex items-center gap-1.5 mt-2 py-2 bg-transparent border-none cursor-pointer"
-                    style={{ fontSize: 11, color: '#c45020', fontFamily: FONT.sans }}
-                  >
-                    <PerriandIcon name="discover" size={10} color="#c45020" />
-                    Redo Onboarding
-                  </button>
-                  <button
-                    onClick={handleResynthesis}
-                    disabled={isResynthesizing}
-                    className="flex items-center gap-1.5 mt-1 py-2 bg-transparent border-none cursor-pointer"
-                    style={{ fontSize: 11, color: isResynthesizing ? INK['30'] : 'var(--t-verde)', fontFamily: FONT.sans, opacity: isResynthesizing ? 0.6 : 1 }}
-                  >
-                    <PerriandIcon name="sparkle" size={10} color={isResynthesizing ? INK['30'] : 'var(--t-verde)'} />
-                    {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
-                    {resynthesisResult === 'success' && <span style={{ color: 'var(--t-verde)', marginLeft: 4 }}>✓</span>}
-                    {resynthesisResult === 'error' && <span style={{ color: '#c44', marginLeft: 4 }}>Failed</span>}
-                  </button>
-                </div>
-
-                {/* Auth */}
-                <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
-                  {isAuthenticated ? (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: INK['50'] }}>{user?.email}</span>
-                      <button onClick={signOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(214,48,32,0.08)', color: '#c44', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
-                    </div>
-                  ) : (
-                    <Link href="/login" className="text-[11px] font-semibold" style={{ color: 'var(--t-verde)', textDecoration: 'none' }}>Sign in →</Link>
-                  )}
+                        {tab === 'discover' ? 'Discover' : 'My Profile'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: content feed */}
-            <div className="flex-1 min-w-0">
-              {activeTab === 'discover' ? discoverFeed : (
-                <>
-                  <ProfileDeepDive />
-                </>
-              )}
+            {/* Bottom bar: stats + CTAs in a horizontal row */}
+            <div className="flex items-center gap-6 px-8 py-4">
+              {/* Quick stats */}
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: TEXT.primary }}>{signalCount}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
+                </div>
+                <div className="text-center">
+                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: TEXT.primary }}>{profile.contradictions?.length || 0}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
+                </div>
+                <div className="text-center">
+                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: TEXT.primary }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
+                </div>
+              </div>
+
+              <div className="h-8 w-px" style={{ background: 'var(--t-linen)' }} />
+
+              {/* CTAs */}
+              <div className="flex items-center gap-3 flex-1">
+                <SafeMotionButton
+                  onClick={() => setShowWrapped(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+                  style={{ background: 'var(--t-navy)' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-cream)', fontFamily: FONT.sans }}>
+                    Taste Dossier
+                  </span>
+                  <span className="text-[10px]" style={{ color: 'rgba(251,245,236,0.6)', fontFamily: FONT.mono }}>→</span>
+                </SafeMotionButton>
+
+                <SafeMotionButton
+                  onClick={() => setShowMosaic(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, var(--t-peach) 0%, var(--t-cream) 100%)', border: '1px solid rgba(230,111,90,0.15)' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>
+                    Expand Mosaic
+                  </span>
+                  <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>→</span>
+                </SafeMotionButton>
+              </div>
+
+              {/* Settings gear */}
+              <div className="flex items-center gap-3">
+                {SETTINGS_LINKS.map(({ label, action }) => (
+                  <div key={action} className="relative">
+                    <button
+                      onClick={() => handleSettingTap(action)}
+                      className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all"
+                      style={{
+                        fontSize: 11,
+                        color: expandedSection === action ? 'var(--t-ink)' : INK['50'],
+                        fontFamily: FONT.sans,
+                        background: expandedSection === action ? 'rgba(232,111,90,0.06)' : 'transparent',
+                        border: 'none',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* Settings expanded panels — shown below header when active */}
+          {expandedSection && (
+            <div className="mb-6 rounded-2xl px-6 py-4" style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              {expandedSection === 'accounts' && (
+                <div style={{ fontSize: 12 }}>
+                  <h4 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>Connected Accounts</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <PerriandIcon name="email" size={12} color="var(--t-ink)" />
+                      <span style={{ color: TEXT.primary }}>Gmail</span>
+                    </div>
+                    {emailLoading ? (
+                      <span className="text-[10px]" style={{ color: TEXT.secondary }}>Checking…</span>
+                    ) : emailStatus?.connected ? (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(94,196,178,0.08)', color: 'var(--t-teal)' }}>Connected</span>
+                    ) : (
+                      <a href="/api/auth/nylas/connect" className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--t-teal)', color: 'white', textDecoration: 'none' }}>Connect</a>
+                    )}
+                  </div>
+                  {emailStatus?.connected && (
+                    <div className="ml-5 mb-3">
+                      <span className="text-[10px] block mb-2" style={{ color: TEXT.secondary }}>{emailStatus.email}</span>
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <button onClick={handleScanNow} disabled={scanState === 'scanning' || scanState === 'parsing'} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-teal)', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}>
+                          {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${scanResult?.emailsParsed ? ` ${scanResult.emailsParsed}/${scanResult.emailsFound}` : '…'}` : scanState === 'done' ? '✓ Done' : scanState === 'failed' ? 'Retry Scan' : 'Scan Inbox'}
+                        </button>
+                        <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: TEXT.secondary }}>
+                          Debug
+                        </button>
+                        {scanState === 'parsing' && scanResult && (scanResult.reservationsFound ?? 0) > 0 && (
+                          <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-coral)', color: 'white' }}>
+                            Review {scanResult.reservationsFound} so far →
+                          </button>
+                        )}
+                        {scanState === 'done' && scanResult && (scanResult.reservationsFound ?? 0) > 0 && (
+                          <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style={{ background: 'var(--t-coral)', color: 'white' }}>
+                            Review {scanResult.reservationsFound} reservations →
+                          </button>
+                        )}
+                        {scanState === 'done' && scanResult && (scanResult.reservationsFound ?? 0) === 0 && (
+                          <span className="text-[10px]" style={{ color: TEXT.secondary }}>
+                            {scanResult.emailsFound} emails scanned · no reservations found
+                          </span>
+                        )}
+                      </div>
+                      <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(232,111,90,0.08)', color: 'var(--t-coral)' }}>Disconnect</button>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <PerriandIcon name="pin" size={12} color="var(--t-ink)" />
+                      <span style={{ color: TEXT.primary }}>Google Maps</span>
+                    </div>
+                    {hasGoogleMapsImport ? (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(94,196,178,0.08)', color: 'var(--t-teal)' }}>Imported</span>
+                    ) : (
+                      <Link href="/onboarding" className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--t-peach)', color: 'var(--t-navy)', textDecoration: 'none' }}>Import</Link>
+                    )}
+                  </div>
+                </div>
+              )}
+              {expandedSection === 'history' && (
+                <div style={{ fontSize: 12 }}>
+                  <h4 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>Import History</h4>
+                  {historyLoading ? (
+                    <span className="text-[10px]" style={{ color: TEXT.secondary }}>Loading history…</span>
+                  ) : importHistory.length === 0 ? (
+                    <span className="text-[10px]" style={{ color: TEXT.secondary }}>No import history yet. Connect Gmail or import from a URL to get started.</span>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {importHistory.slice(0, 10).map((item) => (
+                        <div key={item.id} className="flex items-center justify-between py-1 cursor-pointer" onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <PerriandIcon name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'} size={10} color={INK['50']} />
+                            <span className="text-[11px] truncate" style={{ color: TEXT.primary }}>{item.title}</span>
+                          </div>
+                          <span className="text-[10px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      ))}
+                      <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left" style={{ color: TEXT.accent }}>View email reservations →</button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {expandedSection === 'notifications' && (
+                <div>
+                  <h4 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>Notifications</h4>
+                  <span className="text-[11px]" style={{ color: TEXT.secondary }}>Notification preferences coming soon.</span>
+                </div>
+              )}
+              {expandedSection === 'about' && (
+                <div>
+                  <h4 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>About</h4>
+                  <span className="text-[11px]" style={{ color: TEXT.secondary }}>Terrazzo v0.1 — Your taste-driven travel companion.</span>
+                </div>
+              )}
+              <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                <button
+                  onClick={handleRedoOnboarding}
+                  className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
+                  style={{ fontSize: 11, color: 'var(--t-coral)', fontFamily: FONT.sans }}
+                >
+                  <PerriandIcon name="discover" size={10} color="var(--t-coral)" />
+                  Redo Onboarding
+                </button>
+                <button
+                  onClick={handleResynthesis}
+                  disabled={isResynthesizing}
+                  className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
+                  style={{ fontSize: 11, color: isResynthesizing ? INK['30'] : 'var(--t-teal)', fontFamily: FONT.sans, opacity: isResynthesizing ? 0.6 : 1 }}
+                >
+                  <PerriandIcon name="sparkle" size={10} color={isResynthesizing ? INK['30'] : 'var(--t-teal)'} />
+                  {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
+                  {resynthesisResult === 'success' && <span style={{ color: 'var(--t-teal)', marginLeft: 4 }}>✓</span>}
+                  {resynthesisResult === 'error' && <span style={{ color: '#c44', marginLeft: 4 }}>Failed</span>}
+                </button>
+                {isAuthenticated ? (
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-[10px]" style={{ color: TEXT.secondary }}>{user?.email}</span>
+                    <button onClick={signOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(232,111,90,0.08)', color: 'var(--t-coral)', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
+                  </div>
+                ) : (
+                  <Link href="/login" className="ml-auto text-[11px] font-semibold" style={{ color: 'var(--t-teal)', textDecoration: 'none' }}>Sign in →</Link>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Content feed — full width */}
+          <div>
+            {activeTab === 'discover' ? discoverFeed : (
+              <>
+                <ProfileDeepDive />
+              </>
+            )}
           </div>
         </div>
       </PageTransition>
@@ -872,20 +921,20 @@ function ProfilePageContent() {
             <SafeMotionButton
               onClick={() => setShowWrapped(true)}
               className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
-              style={{ background: '#2d3a2d' }}
+              style={{ background: 'var(--t-navy)' }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-start gap-0.5">
                 <span
                   className="text-[12px] font-semibold"
-                  style={{ color: '#f5f5f0', fontFamily: FONT.sans }}
+                  style={{ color: 'var(--t-cream)', fontFamily: FONT.sans }}
                 >
                   Your Taste Dossier
                 </span>
                 <span
                   className="text-[9px]"
-                  style={{ color: 'rgba(245,245,240,0.45)', fontFamily: FONT.mono }}
+                  style={{ color: 'rgba(251,245,236,0.45)', fontFamily: FONT.mono }}
                 >
                   {signalCount > 0 ? `${signalCount} signals` : 'Your signals'} · {profile.contradictions?.length || 0} tensions
                 </span>
@@ -893,8 +942,8 @@ function ProfilePageContent() {
               <span
                 className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
                 style={{
-                  background: 'rgba(245,245,240,0.12)',
-                  color: '#f5f5f0',
+                  background: 'rgba(251,245,236,0.15)',
+                  color: 'var(--t-cream)',
                   fontFamily: FONT.mono,
                 }}
               >
@@ -907,7 +956,7 @@ function ProfilePageContent() {
               className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
-                border: '1px solid rgba(200,146,58,0.12)',
+                border: '1px solid rgba(232,111,90,0.12)',
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -915,13 +964,13 @@ function ProfilePageContent() {
               <div className="flex flex-col items-start gap-0.5">
                 <span
                   className="text-[12px] font-semibold"
-                  style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}
+                  style={{ color: TEXT.primary, fontFamily: FONT.sans }}
                 >
                   Expand Your Mosaic
                 </span>
                 <span
                   className="text-[9px]"
-                  style={{ color: INK['50'], fontFamily: FONT.mono }}
+                  style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                 >
                   Quick questions that sharpen your matches
                 </span>
@@ -929,8 +978,8 @@ function ProfilePageContent() {
               <span
                 className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
                 style={{
-                  background: 'rgba(28,26,23,0.06)',
-                  color: 'var(--t-ink)',
+                  background: 'rgba(26,45,74,0.06)',
+                  color: TEXT.primary,
                   fontFamily: FONT.mono,
                 }}
               >
@@ -943,7 +992,7 @@ function ProfilePageContent() {
           <ProfileDeepDive />
 
           {/* Settings */}
-          <div className="px-4 py-6">
+          <div className="px-4 py-6 mx-4 mt-2 rounded-2xl" style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <h3
               className="text-[10px] uppercase tracking-[0.2em] mb-4"
               style={{ color: '#8a6a2a', fontFamily: FONT.mono, fontWeight: 700 }}
@@ -956,10 +1005,10 @@ function ProfilePageContent() {
                   <div
                     onClick={() => handleSettingTap(action)}
                     className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all"
-                    style={{ background: expandedSection === action ? 'rgba(200,146,58,0.06)' : INK['03'] }}
+                    style={{ background: expandedSection === action ? 'rgba(232,111,90,0.06)' : INK['03'] }}
                   >
-                    <span className="text-[12px]" style={{ color: 'var(--t-ink)' }}>{label}</span>
-                    <span style={{ color: INK['95'], transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
+                    <span className="text-[12px]" style={{ color: TEXT.primary }}>{label}</span>
+                    <span style={{ color: TEXT.secondary, transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
                   </div>
                   {expandedSection === 'accounts' && action === 'accounts' && (
                     <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
@@ -967,10 +1016,10 @@ function ProfilePageContent() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <PerriandIcon name="email" size={12} color="var(--t-ink)" />
-                          <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>Gmail</span>
+                          <span className="text-[11px]" style={{ color: TEXT.primary }}>Gmail</span>
                         </div>
                         {emailLoading ? (
-                          <span className="text-[10px]" style={{ color: INK['40'] }}>Checking…</span>
+                          <span className="text-[10px]" style={{ color: TEXT.secondary }}>Checking…</span>
                         ) : emailStatus?.connected ? (
                           <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
                             Connected
@@ -988,7 +1037,7 @@ function ProfilePageContent() {
                       {/* Connected: show email, scan, disconnect */}
                       {emailStatus?.connected && (
                         <div className="ml-5 mb-3">
-                          <span className="text-[10px] block mb-2" style={{ color: INK['50'] }}>
+                          <span className="text-[10px] block mb-2" style={{ color: TEXT.secondary }}>
                             {emailStatus.email}
                           </span>
                           <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -1000,7 +1049,7 @@ function ProfilePageContent() {
                             >
                               {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${scanResult?.emailsParsed ? ` ${scanResult.emailsParsed}/${scanResult.emailsFound}` : '…'}` : scanState === 'done' ? '✓ Done' : scanState === 'failed' ? 'Retry Scan' : 'Scan Inbox'}
                             </button>
-                            <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: INK['60'] }}>
+                            <button onClick={handleDebugEmail} className="text-[10px] px-2 py-1 rounded-full border-none cursor-pointer" style={{ background: 'rgba(0,0,0,0.06)', color: TEXT.secondary }}>
                               Debug
                             </button>
                             {scanState === 'parsing' && scanResult && (scanResult.reservationsFound ?? 0) > 0 && (
@@ -1022,7 +1071,7 @@ function ProfilePageContent() {
                               </button>
                             )}
                             {scanState === 'done' && scanResult && (scanResult.reservationsFound ?? 0) === 0 && (
-                              <span className="text-[10px]" style={{ color: INK['40'] }}>
+                              <span className="text-[10px]" style={{ color: TEXT.secondary }}>
                                 {scanResult.emailsFound} emails scanned · no reservations found
                               </span>
                             )}
@@ -1040,7 +1089,7 @@ function ProfilePageContent() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <PerriandIcon name="pin" size={12} color="var(--t-ink)" />
-                          <span className="text-[11px]" style={{ color: 'var(--t-ink)' }}>Google Maps</span>
+                          <span className="text-[11px]" style={{ color: TEXT.primary }}>Google Maps</span>
                         </div>
                         <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
                           Via import
@@ -1052,9 +1101,9 @@ function ProfilePageContent() {
                   {expandedSection === 'history' && action === 'history' && (
                     <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
                       {historyLoading ? (
-                        <span className="text-[10px]" style={{ color: INK['40'] }}>Loading history…</span>
+                        <span className="text-[10px]" style={{ color: TEXT.secondary }}>Loading history…</span>
                       ) : importHistory.length === 0 ? (
-                        <span className="text-[10px]" style={{ color: INK['40'] }}>
+                        <span className="text-[10px]" style={{ color: TEXT.secondary }}>
                           No import history yet. Connect Gmail or import from a URL to get started.
                         </span>
                       ) : (
@@ -1072,15 +1121,15 @@ function ProfilePageContent() {
                                   color={INK['50']}
                                 />
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-medium block truncate" style={{ color: 'var(--t-ink)' }}>
+                                  <span className="text-[10px] font-medium block truncate" style={{ color: TEXT.primary }}>
                                     {item.title}
                                   </span>
-                                  <span className="text-[9px] block" style={{ color: INK['40'] }}>
+                                  <span className="text-[9px] block" style={{ color: TEXT.secondary }}>
                                     {item.subtitle}
                                   </span>
                                 </div>
                               </div>
-                              <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: INK['30'] }}>
+                              <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>
                                 {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                               </span>
                             </div>
@@ -1089,7 +1138,7 @@ function ProfilePageContent() {
                           <button
                             onClick={() => router.push('/email/inbox')}
                             className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left"
-                            style={{ color: 'var(--t-honey)' }}
+                            style={{ color: TEXT.accent }}
                           >
                             View email reservations →
                           </button>
@@ -1098,12 +1147,12 @@ function ProfilePageContent() {
                     </div>
                   )}
                   {expandedSection === 'notifications' && action === 'notifications' && (
-                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: INK['95'] }}>
+                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: TEXT.secondary }}>
                       Notification preferences will be available in a future update.
                     </div>
                   )}
                   {expandedSection === 'about' && action === 'about' && (
-                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: INK['95'] }}>
+                    <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: TEXT.secondary }}>
                       Terrazzo v0.1 — Your taste-driven travel companion. Built with Forme Libere design principles.
                     </div>
                   )}
@@ -1121,8 +1170,8 @@ function ProfilePageContent() {
               }}
             >
               <div className="flex items-center gap-2">
-                <PerriandIcon name="discover" size={12} color="var(--t-panton-orange)" />
-                <span className="text-[12px] font-medium" style={{ color: '#c45020' }}>
+                <PerriandIcon name="discover" size={12} color="var(--t-coral)" />
+                <span className="text-[12px] font-medium" style={{ color: 'var(--t-coral)' }}>
                   Redo Onboarding
                 </span>
               </div>
@@ -1141,11 +1190,11 @@ function ProfilePageContent() {
               }}
             >
               <div className="flex items-center gap-2">
-                <PerriandIcon name="sparkle" size={12} color="var(--t-verde)" />
-                <span className="text-[12px] font-medium" style={{ color: 'var(--t-verde)' }}>
+                <PerriandIcon name="sparkle" size={12} color="var(--t-teal)" />
+                <span className="text-[12px] font-medium" style={{ color: 'var(--t-teal)' }}>
                   {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
                 </span>
-                {resynthesisResult === 'success' && <span style={{ color: 'var(--t-verde)', fontSize: 12 }}>✓ Updated</span>}
+                {resynthesisResult === 'success' && <span style={{ color: 'var(--t-teal)', fontSize: 12 }}>✓ Updated</span>}
                 {resynthesisResult === 'error' && <span style={{ color: '#c44', fontSize: 12 }}>Failed</span>}
               </div>
               {!isResynthesizing && !resynthesisResult && (
@@ -1158,10 +1207,10 @@ function ProfilePageContent() {
               {isAuthenticated ? (
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                    <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                       Signed in as
                     </span>
-                    <span className="text-[12px] ml-1 font-medium" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
+                    <span className="text-[12px] ml-1 font-medium" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
                       {user?.email}
                     </span>
                   </div>
@@ -1169,8 +1218,8 @@ function ProfilePageContent() {
                     onClick={signOut}
                     className="text-[11px] font-medium px-3 py-1.5 rounded-full cursor-pointer"
                     style={{
-                      background: 'rgba(214,48,32,0.08)',
-                      color: '#c44',
+                      background: 'rgba(232,111,90,0.08)',
+                      color: 'var(--t-coral)',
                       border: 'none',
                       fontFamily: FONT.sans,
                     }}
@@ -1180,14 +1229,14 @@ function ProfilePageContent() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px]" style={{ color: INK['50'], fontFamily: FONT.sans }}>
+                  <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
                     Sign in to save your places and trips
                   </span>
                   <Link
                     href="/login"
                     className="text-[11px] font-semibold px-3 py-1.5 rounded-full"
                     style={{
-                      background: 'var(--t-verde)',
+                      background: 'var(--t-teal)',
                       color: 'white',
                       textDecoration: 'none',
                       fontFamily: FONT.sans,
@@ -1212,7 +1261,7 @@ function ProfilePageContent() {
 // DISCOVER FEED SECTIONS — Editorial Intelligence
 // ═══════════════════════════════════════════
 
-function SectionLabel({ children, color = 'var(--t-honey)' }: { children: React.ReactNode; color?: string }) {
+function SectionLabel({ children, color = 'var(--t-coral)' }: { children: React.ReactNode; color?: string }) {
   return (
     <div
       className="text-[10px] uppercase tracking-[0.2em] font-bold"
@@ -1228,8 +1277,9 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const l = letter || EDITORIAL_LETTER;
   return (
     <SafeMotionDiv
-      
-      className="px-5 pt-5 pb-6"
+
+      className="px-5 pt-5 pb-6 rounded-2xl"
+      style={{ background: 'var(--t-navy)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -1239,7 +1289,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         <div className="flex items-center gap-2 mb-4">
           <SafeMotionDiv
             className="w-5 h-[1px]"
-            style={{ background: 'var(--t-honey)' }}
+            style={{ background: 'var(--t-coral)' }}
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             transition={{ duration: 0.8, delay: 0.1 }}
@@ -1247,7 +1297,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
           />
           <SafeMotionSpan
             className="text-[9px] uppercase tracking-[0.25em]"
-            style={{ color: 'var(--t-honey)', fontFamily: FONT.mono }}
+            style={{ color: 'var(--t-coral)', fontFamily: FONT.mono }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -1258,7 +1308,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         </div>
         <SafeMotionH2
           className="text-[20px] leading-snug mb-4"
-          style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}
+          style={{ fontFamily: FONT.serif, color: 'var(--t-cream)' }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
@@ -1268,7 +1318,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         </SafeMotionH2>
         <SafeMotionP
           className="text-[13px] leading-relaxed"
-          style={{ color: INK['70'], fontFamily: FONT.sans }}
+          style={{ color: 'rgba(251,245,236,0.8)', fontFamily: FONT.sans }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
@@ -1284,10 +1334,13 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         transition={{ duration: 0.5, delay: 0.5 }}
         viewport={{ once: true, margin: '-100px' }}
       >
-        <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(200,146,58,0.08)', color: 'var(--t-honey)', fontFamily: FONT.mono }}>
+        <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(232,111,90,0.08)', color: 'var(--t-coral)', fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
       </SafeMotionDiv>
+      <div className="mt-8 -mx-5">
+        <BrandGraphicTransition variant="fields" height={80} opacity={0.85} objectPosition="center 40%" />
+      </div>
     </SafeMotionDiv>
   );
 }
@@ -1317,7 +1370,7 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
             <PlaceLink key={card.place} name={card.place} location={card.location} googlePlaceId={card.googlePlaceId}>
               <SafeMotionDiv
                 className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
-                style={{ background: card.bg, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
+                style={{ background: 'var(--t-navy)', width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
                 initial={{ opacity: 0, x: -20, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
@@ -1330,27 +1383,30 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                       {card.signalDomain}
                     </span>
                   </div>
-                  <p className="text-[12px] leading-relaxed mb-1" style={{ color: 'rgba(245,245,240,0.72)', fontFamily: FONT.sans }}>
+                  <p className="text-[12px] leading-relaxed mb-1" style={{ color: 'rgba(251,245,236,0.72)', fontFamily: FONT.sans }}>
                     Because you love
                   </p>
-                  <p className="text-[16px] font-semibold mb-4 italic" style={{ color: '#f5f5f0', fontFamily: FONT.serif }}>
+                  <p className="text-[16px] font-semibold mb-4 italic" style={{ color: 'var(--t-cream)', fontFamily: FONT.serif }}>
                     &ldquo;{card.signal}&rdquo;
                   </p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5 mb-2">
-                    <ScoreArc score={card.score} size={34} color="#f5f5f0" />
+                    <ScoreArc score={card.score} size={34} color="var(--t-cream)" />
                     <div>
-                      <div className="text-[14px] font-semibold" style={{ color: '#f5f5f0' }}>{card.place}</div>
-                      <div className="text-[11px]" style={{ color: 'rgba(245,245,240,0.6)' }}>{card.location}</div>
+                      <div className="text-[14px] font-semibold" style={{ color: 'var(--t-cream)' }}>{card.place}</div>
+                      <div className="text-[11px]" style={{ color: 'rgba(251,245,236,0.6)' }}>{card.location}</div>
                     </div>
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(245,245,240,0.7)' }}>{card.why}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(251,245,236,0.7)' }}>{card.why}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>
           );
         })}
+      </div>
+      <div className="mt-8 -mx-5">
+        <BrandGraphicTransition variant="palette" height={80} opacity={0.85} objectPosition="center 55%" mirror />
       </div>
     </SafeMotionDiv>
   );
@@ -1364,16 +1420,17 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
 
   return (
     <SafeMotionDiv
-      className="px-5 mb-7"
+      className="px-5 py-6 mb-7 rounded-2xl"
+      style={{ background: 'var(--t-olive)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel>The thread</SectionLabel>
+      <SectionLabel color="var(--t-peach)">The thread</SectionLabel>
       <SafeMotionDiv
         className="mt-3 p-5 rounded-2xl"
-        style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        style={{ background: 'var(--t-cream)', border: 'none' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -1384,7 +1441,7 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
             {t.signal}
           </span>
         </div>
-        <p className="text-[13px] leading-relaxed mb-5" style={{ color: INK['70'], fontFamily: FONT.sans }}>
+        <p className="text-[13px] leading-relaxed mb-5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
           {t.thread}
         </p>
         {/* Vertical thread line connecting places */}
@@ -1423,14 +1480,14 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 <div className="flex-1 pb-4">
                   <div className="flex items-center gap-1.5 mb-1">
                     <PerriandIcon name={(TYPE_ICONS[place.type] || 'discover') as import('@/types').PerriandIconName} size={12} color={INK['55']} />
-                    <span className="text-[9px] uppercase tracking-wider" style={{ color: INK['55'], fontFamily: FONT.mono }}>{place.type}</span>
+                    <span className="text-[9px] uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{place.type}</span>
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</span>
-                    <span className="text-[10px]" style={{ color: INK['50'] }}>{place.location}</span>
+                    <span className="text-[13px] font-semibold" style={{ color: TEXT.primary }}>{place.name}</span>
+                    <span className="text-[10px]" style={{ color: TEXT.secondary }}>{place.location}</span>
                     <span className="text-[10px] font-bold ml-auto" style={{ color: domainColor, fontFamily: FONT.mono }}>{place.score <= 1 ? Math.round(place.score * 100) : place.score}</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.connection}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: TEXT.secondary }}>{place.connection}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>
@@ -1476,8 +1533,8 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
     >
       <div className="mb-1"><SectionLabel>This week&apos;s edit</SectionLabel></div>
       <div className="mb-3">
-        <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>{collection.title}</h3>
-        <p className="text-[11px]" style={{ color: INK['60'], fontFamily: FONT.mono }}>{collection.subtitle}</p>
+        <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>{collection.title}</h3>
+        <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{collection.subtitle}</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
         {collection.places.map((place, idx) => {
@@ -1501,22 +1558,25 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
                 <div className="p-4 flex flex-col">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <div className="text-[14px] font-semibold" style={{ color: 'var(--t-ink)' }}>{place.name}</div>
-                      <div className="text-[11px]" style={{ color: INK['60'] }}>{place.location}</div>
+                      <div className="text-[14px] font-semibold" style={{ color: TEXT.primary }}>{place.name}</div>
+                      <div className="text-[11px]" style={{ color: TEXT.secondary }}>{place.location}</div>
                     </div>
-                    <ScoreArc score={place.score} size={38} color="#4a6741" />
+                    <ScoreArc score={place.score} size={38} color="var(--t-teal)" />
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2.5">
                     {(Array.isArray(place.signals) ? place.signals : []).map(s => (
                       <span key={s} className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.sans }}>{s}</span>
                     ))}
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: INK['75'] }}>{place.note}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: TEXT.secondary }}>{place.note}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>
           );
         })}
+      </div>
+      <div className="mt-8 -mx-5">
+        <BrandGraphicTransition variant="geometric" height={80} opacity={0.8} objectPosition="center center" />
       </div>
     </SafeMotionDiv>
   );
@@ -1527,13 +1587,14 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
   const displayBoards = boards || MOOD_BOARDS;
   return (
     <SafeMotionDiv
-      className="px-5 mb-7"
+      className="px-5 py-6 mb-7 rounded-2xl"
+      style={{ background: 'var(--t-ochre)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel>Travel moods</SectionLabel>
+      <SectionLabel color="var(--t-navy)">Travel moods</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {displayBoards.map((board, idx) => (
           <SafeMotionDiv
@@ -1545,8 +1606,8 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
             transition={{ duration: 0.5, delay: idx * 0.1 }}
             viewport={{ once: true, margin: '-100px' }}
           >
-            <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>{board.mood}</h4>
-            <p className="text-[11px] mb-4" style={{ color: INK['70'], fontFamily: FONT.sans }}>{board.description}</p>
+            <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>{board.mood}</h4>
+            <p className="text-[11px] mb-4" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{board.description}</p>
             <div className="flex flex-col gap-2">
               {board.places.map((p, pIdx) => {
                 const imageUrl = getPlaceImage(p.name);
@@ -1568,10 +1629,10 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{p.name}</span>
-                          <span className="text-[10px]" style={{ color: INK['60'] }}>{p.location}</span>
+                          <span className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>{p.name}</span>
+                          <span className="text-[10px]" style={{ color: TEXT.secondary }}>{p.location}</span>
                         </div>
-                        <p className="text-[10px] italic" style={{ color: INK['70'] }}>{p.vibe}</p>
+                        <p className="text-[10px] italic" style={{ color: TEXT.secondary }}>{p.vibe}</p>
                       </div>
                       <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
                     </SafeMotionDiv>
@@ -1649,16 +1710,17 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
   const label = contextLabel || 'Summer';
   return (
     <SafeMotionDiv
-      className="px-5 mb-7"
+      className="px-5 py-6 mb-7 rounded-2xl"
+      style={{ background: 'var(--t-charcoal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel>Context mode</SectionLabel>
+      <SectionLabel color="var(--t-peach)">Context mode</SectionLabel>
       <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
-        style={{ background: 'white', border: '1px solid var(--t-linen)', borderTop: '3px solid #6b8b4a' }}
+        style={{ background: 'var(--t-cream)', border: 'none', borderTop: '3px solid var(--t-teal)' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -1666,11 +1728,11 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
       >
         <div className="flex items-center gap-2 mb-1">
           <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
-          <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: 'var(--t-ink)' }}>
+          <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
             If you&apos;re traveling this {label.toLowerCase()}...
           </span>
         </div>
-        <p className="text-[11px] mb-4" style={{ color: INK['60'], fontFamily: FONT.mono }}>
+        <p className="text-[11px] mb-4" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
           {displayRecs.length > 0
             ? displayRecs.slice(0, 3).map(r => r.name).join(' · ')
             : 'Curated for your moment'}
@@ -1692,14 +1754,14 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
                       <PlacePhoto src={imageUrl} alt={rec.name} fill sizes="36px" />
                     </div>
                   ) : (
-                    <ScoreArc score={rec.score} size={36} color="#6b8b4a" />
+                    <ScoreArc score={rec.score} size={36} color="var(--t-teal)" />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-[12px] font-semibold" style={{ color: 'var(--t-ink)' }}>{rec.name}</span>
-                      <span className="text-[10px]" style={{ color: INK['60'] }}>{rec.location}</span>
+                      <span className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>{rec.name}</span>
+                      <span className="text-[10px]" style={{ color: TEXT.secondary }}>{rec.location}</span>
                     </div>
-                    <p className="text-[10px] leading-snug" style={{ color: INK['70'] }}>{rec.whyFits}</p>
+                    <p className="text-[10px] leading-snug" style={{ color: TEXT.secondary }}>{rec.whyFits}</p>
                   </div>
                 </SafeMotionDiv>
               </PlaceLink>
@@ -1721,16 +1783,17 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
 
   return (
     <SafeMotionDiv
-      className="px-5 mb-7"
+      className="px-5 py-6 mb-7 rounded-2xl"
+      style={{ background: 'var(--t-teal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel>Your taste vocabulary</SectionLabel>
+      <SectionLabel color="var(--t-cream)">Your taste vocabulary</SectionLabel>
       <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
-        style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        style={{ background: 'rgba(255,255,255,0.85)', border: 'none' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -1745,7 +1808,7 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
               <SafeMotionSpan
                 key={term}
                 className="text-[10px] px-2.5 py-1 rounded-full"
-                style={{ background: isRejection ? 'rgba(139,74,74,0.08)' : `${color}12`, color: isRejection ? '#8b4a4a' : color, fontFamily: FONT.sans }}
+                style={{ background: isRejection ? 'rgba(200,100,100,0.08)' : `${color}12`, color: isRejection ? 'rgba(200,100,100,0.8)' : color, fontFamily: FONT.sans }}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: randomDelay }}
@@ -1757,7 +1820,7 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
           })}
           <SafeMotionSpan
             className="text-[10px] px-2.5 py-1 rounded-full"
-            style={{ background: INK['04'], color: INK['50'] }}
+            style={{ background: INK['04'], color: TEXT.secondary }}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
