@@ -557,6 +557,36 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
+                {/* Submit arrow — shows when input looks importable (URL or multi-line) */}
+                {query && (() => {
+                  const d = detectInput(query.trim());
+                  const isImportable = d.type === 'url' || d.type === 'google-maps-list' || d.type === 'google-maps-place'
+                    || (d.type === 'text' && query.trim().split('\n').filter((l: string) => l.trim()).length >= 2);
+                  return isImportable ? (
+                    <button
+                      onClick={() => handleInputSubmit()}
+                      title="Import places from this link"
+                      style={{
+                        background: TEXT.primary,
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        width: 26,
+                        height: 26,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        transition: 'opacity 150ms ease',
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M2.5 7h9M8 3.5L11.5 7 8 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  ) : null;
+                })()}
                 {query && (
                   <button
                     onClick={() => setQuery('')}

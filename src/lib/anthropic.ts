@@ -202,7 +202,7 @@ Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
     model: MODEL,
     max_tokens: scaledTokens,
     system: [{ type: 'text', text: extractSystemPrompt, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: content.slice(0, 30000) }],
+    messages: [{ role: 'user', content: content.slice(0, 60000) }],
   });
 
   try {

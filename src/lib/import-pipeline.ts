@@ -75,7 +75,7 @@ export async function extractFromGoogleMaps(url: string): Promise<Array<{ name: 
  * Strip HTML tags, scripts, styles, nav/footer chrome, and decode common entities.
  * Used for both the raw-fetch fallback and file-upload HTML handling.
  */
-export function stripHtml(html: string, maxLength = 30000): string {
+export function stripHtml(html: string, maxLength = 60000): string {
   return html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
@@ -130,8 +130,9 @@ export async function fetchAndClean(url: string): Promise<string | null> {
           const data = await res.json();
           const markdown = data?.data?.markdown;
           if (markdown && markdown.length > 500) {
-            // Firecrawl returns clean markdown — pass up to 30k chars to Claude
-            return markdown.slice(0, 30000);
+            // Firecrawl returns clean markdown — pass up to 60k chars to Claude
+            // (gallery-style articles like CN Traveler have 20+ hotels × 300 words each)
+            return markdown.slice(0, 60000);
           }
         }
         // If first attempt returned too little content, try again with longer wait
@@ -156,7 +157,7 @@ export async function fetchAndClean(url: string): Promise<string | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    return stripHtml(html, 25000);
+    return stripHtml(html, 50000);
   } catch {
     return null;
   }

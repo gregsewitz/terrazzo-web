@@ -203,7 +203,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
               label: 'Cleaning HTML content…',
               percent: 10,
             });
-            textContent = stripHtml(textContent, 30000);
+            textContent = stripHtml(textContent, 60000);
           } else if (isCsv) {
             // For CSV files, clean up and format for better extraction
             send({
