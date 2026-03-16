@@ -375,7 +375,7 @@ function SavedPageContent() {
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
               >
                 {filteredPlaces.map(place => (
-                  <motion.div key={place.id} variants={cardVariants}>
+                  <motion.div key={place.id} variants={cardVariants} className="h-full">
                     <PlaceCard
                       place={place}
                       onTap={() => openDetail(place)}
@@ -418,7 +418,7 @@ function SavedPageContent() {
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
               >
                 {uncollectedPlaces.map(place => (
-                  <motion.div key={place.id} variants={cardVariants}>
+                  <motion.div key={place.id} variants={cardVariants} className="h-full">
                     <PlaceCard
                       place={place}
                       onTap={() => openDetail(place)}
@@ -747,8 +747,8 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
-      className="rounded-xl cursor-pointer transition-all overflow-hidden card-hover"
-      style={{ background: 'white', border: `1px solid ${INK['10']}` }}
+      className="rounded-xl cursor-pointer transition-all overflow-hidden card-hover flex flex-col"
+      style={{ background: 'white', border: `1px solid ${INK['10']}`, height: '100%' }}
     >
       {/* ── Primary tier: icon + name + score ── */}
       <div
@@ -793,7 +793,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
       </div>
 
       {/* ── Secondary tier: narrative + metadata ── */}
-      <div className="px-3 pt-2 pb-2.5">
+      <div className="px-3 pt-2 pb-2.5 flex flex-col flex-1">
         {/* Narrative — smart-truncated at sentence boundaries */}
         {smartNarrative && (
           <p
@@ -811,7 +811,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
         )}
 
         {/* Pills: reaction, friend, Google rating, price, bookmark */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap mt-auto">
           {ratingReaction && (() => {
             // Use coral for 'myPlace' so it's visually distinct from the teal bookmark
             const rxColor = place.rating?.reaction === 'myPlace' ? '#ee716d' : ratingReaction.color;
@@ -837,7 +837,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
               className="px-1.5 py-0.5 rounded flex items-center gap-1"
               style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, background: INK['04'] }}
             >
-              <PerriandIcon name="star" size={10} color={TEXT.secondary} /> {google.rating}
+              <PerriandIcon name="star" size={10} color={TEXT.secondary} /> {google.rating} Google Rating
             </span>
           )}
           {priceStr && (
