@@ -4,6 +4,9 @@ import { apiFetch } from '@/lib/api-client';
 import { dbWrite } from './savedHelpers';
 import type { SavedState } from './savedTypes';
 import { trackInteraction } from '@/lib/interaction-tracker';
+import { DEMO_PLACES } from '@/constants/demoData';
+
+const ENABLE_DEMO = process.env.NEXT_PUBLIC_DEMO_DATA !== 'false';
 
 // ═══════════════════════════════════════════
 // Pending place ID tracking
@@ -46,7 +49,7 @@ export interface SavedPlacesState {
 // ═══════════════════════════════════════════
 
 export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesState> = (set, get) => ({
-  myPlaces: [],
+  myPlaces: ENABLE_DEMO ? DEMO_PLACES : [],
   viewMode: 'myPlaces',
   typeFilter: 'all',
   searchQuery: '',

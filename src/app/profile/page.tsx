@@ -21,6 +21,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import PlacePhoto from '@/components/PlacePhoto';
+import BrandLoader from '@/components/BrandLoader';
 import {
   BECAUSE_YOU_CARDS,
   WEEKLY_COLLECTION,
@@ -505,11 +506,7 @@ function ProfilePageContent() {
 
   // Wait for DB hydration before rendering profile data
   if (!dbHydrated) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
-        <div className="animate-pulse text-[13px]" style={{ color: TEXT.primary }}>Loading your profile…</div>
-      </div>
-    );
+    return <BrandLoader message="Loading your profile…" />;
   }
 
   // Full-screen overlays

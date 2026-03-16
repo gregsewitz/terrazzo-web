@@ -5,6 +5,9 @@ import { dbWrite, deriveCities } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
 import type { SavedState } from './savedTypes';
 import { trackInteraction } from '@/lib/interaction-tracker';
+import { DEMO_COLLECTIONS } from '@/constants/demoData';
+
+const ENABLE_DEMO = process.env.NEXT_PUBLIC_DEMO_DATA !== 'false';
 
 /** Sanitize emoji to a valid Perriand icon name, defaulting to 'pin' */
 function safeEmoji(raw?: string): string {
@@ -63,7 +66,7 @@ export interface SavedCollectionState {
 // ═══════════════════════════════════════════
 
 export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollectionState> = (set, get) => ({
-  collections: [],
+  collections: ENABLE_DEMO ? DEMO_COLLECTIONS : [],
   activeView: 'collections',
 
   setActiveView: (view) => set({ activeView: view }),

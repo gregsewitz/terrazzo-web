@@ -3,6 +3,9 @@ import { StateCreator } from 'zustand';
 import { apiFetch } from '@/lib/api-client';
 import { dbWrite, _pendingTripIds, debouncedTripSave, cancelTripSave } from './tripHelpers';
 import type { TripState } from './types';
+import { DEMO_TRIP } from '@/constants/demoData';
+
+const ENABLE_DEMO = process.env.NEXT_PUBLIC_DEMO_DATA !== 'false';
 
 // ═══════════════════════════════════════════
 // DB types (shapes returned by API routes)
@@ -58,8 +61,8 @@ export interface TripCoreState {
 // ═══════════════════════════════════════════
 
 export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (set, get) => ({
-  trips: [],
-  currentTripId: null,
+  trips: ENABLE_DEMO ? [DEMO_TRIP] : [],
+  currentTripId: ENABLE_DEMO ? DEMO_TRIP.id : null,
   currentDay: 1,
 
   currentTrip: () => {

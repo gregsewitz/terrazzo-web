@@ -25,6 +25,8 @@ import { useCollaborationSync } from '@/hooks/useCollaborationSync';
 import { INK, FONT, TEXT } from '@/constants/theme';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import DesktopNav from '@/components/DesktopNav';
+import BrandLoader from '@/components/BrandLoader';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 import DayBoardView from '@/components/DayBoardView';
 import PicksGrid from '@/components/PicksGrid';
 import PicksRail from '@/components/PicksRail';
@@ -58,6 +60,7 @@ function TripDetailContent() {
   const router = useRouter();
   const breakpoint = useBreakpoint();
   const isDesktop = breakpoint === 'desktop';
+  const dbHydrated = useOnboardingStore(s => s.dbHydrated);
   const { openDetail } = usePlaceDetail();
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const placeFromSaved = useTripStore(s => s.placeFromSaved);
@@ -327,6 +330,10 @@ function TripDetailContent() {
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
   }, [boardHeight]);
+
+  if (!dbHydrated) {
+    return <BrandLoader message="Loading your trip…" />;
+  }
 
   if (!trip) {
     return (

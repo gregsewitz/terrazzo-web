@@ -15,6 +15,8 @@ import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet';
+import BrandLoader from '@/components/BrandLoader';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 
 export default function CollectionDetailPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
@@ -31,6 +33,7 @@ export default function CollectionDetailPage() {
 function CollectionDetailContent() {
   const params = useParams();
   const router = useRouter();
+  const dbHydrated = useOnboardingStore(s => s.dbHydrated);
   const { openDetail } = usePlaceDetail();
   const collectionId = params.id as string;
   const isDesktop = useIsDesktop();
@@ -130,6 +133,10 @@ function CollectionDetailContent() {
     }
     return items;
   }, [allPlacesInCollection, typeFilter, sourceFilter, cityFilter, collectionSearch, detailSortBy]);
+
+  if (!dbHydrated) {
+    return <BrandLoader message="Loading collection…" />;
+  }
 
   if (!collection) {
     return (

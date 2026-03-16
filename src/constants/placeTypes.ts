@@ -1,5 +1,6 @@
-import { T, type PlaceType } from '@/types';
+import { type PlaceType } from '@/types';
 import type { PerriandIconName } from '@/components/icons/PerriandIcons';
+import { COLOR } from '@/constants/theme';
 
 // ─── Icon mapping (unified: neighborhood → 'location') ───
 
@@ -15,60 +16,84 @@ export const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
   shop: 'shop',
 };
 
+// ─── Brand color per place type ───
+// Each type gets a unique brand color for icon tints, badges, and gradients.
+
+export const TYPE_BRAND_COLORS: Record<PlaceType, string> = {
+  restaurant: COLOR.coral,       // #ee716d
+  hotel:      COLOR.navy,        // #002a55
+  rental:     COLOR.navy,        // #002a55
+  bar:        COLOR.darkTeal,    // #3a8088
+  cafe:       COLOR.ochre,       // #e0a501
+  museum:     COLOR.periwinkle,  // #3869a4
+  activity:   COLOR.olive,       // #6B7C4E
+  neighborhood: COLOR.teal,      // #92ced6
+  shop:       COLOR.peach,       // #e7a8a1
+};
+
 // ─── Thumbnail gradients (2-stop, for cards) ───
+// Light brand-tinted gradients used as photo placeholders.
+
+function thumbGrad(hex: string): string {
+  return `linear-gradient(135deg, ${hex}18, ${hex}28)`;
+}
 
 export const THUMB_GRADIENTS: Record<PlaceType, string> = {
-  restaurant: 'linear-gradient(135deg, #d8c8ae, #c0ab8e)',
-  hotel: 'linear-gradient(135deg, #d0c8d8, #b8b0c0)',
-  rental: 'linear-gradient(135deg, #d0d0c8, #b8b8b0)',
-  bar: 'linear-gradient(135deg, #c0d0c8, #a8c0b0)',
-  cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0)',
-  museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8)',
-  activity: 'linear-gradient(135deg, #c0d0c8, #a8b8a8)',
-  neighborhood: 'linear-gradient(135deg, #d0d8c8, #b8c0a8)',
-  shop: 'linear-gradient(135deg, #d8c8b8, #c0b0a0)',
+  restaurant: thumbGrad(COLOR.coral),
+  hotel:      thumbGrad(COLOR.navy),
+  rental:     thumbGrad(COLOR.navy),
+  bar:        thumbGrad(COLOR.darkTeal),
+  cafe:       thumbGrad(COLOR.ochre),
+  museum:     thumbGrad(COLOR.periwinkle),
+  activity:   thumbGrad(COLOR.olive),
+  neighborhood: thumbGrad(COLOR.teal),
+  shop:       thumbGrad(COLOR.peach),
 };
 
 // ─── Hero photo gradients (3-stop, richer for detail view) ───
 
+function heroGrad(hex: string): string {
+  return `linear-gradient(135deg, ${hex}20, ${hex}30, ${hex}40)`;
+}
+
 export const PHOTO_GRADIENTS: Record<PlaceType, string> = {
-  restaurant: 'linear-gradient(135deg, #d8c0a0, #c0a880, #b89870)',
-  hotel: 'linear-gradient(135deg, #c8c0d0, #b0a8b8, #a098a8)',
-  rental: 'linear-gradient(135deg, #c8c8c0, #b0b0a8, #a0a098)',
-  bar: 'linear-gradient(135deg, #d0c0a0, #b8a888, #a89878)',
-  cafe: 'linear-gradient(135deg, #d8d0c0, #c8c0b0, #b8b0a0)',
-  museum: 'linear-gradient(135deg, #c0c8d0, #a8b0b8, #98a0a8)',
-  activity: 'linear-gradient(135deg, #c0d0c8, #a8b8a8, #98a898)',
-  neighborhood: 'linear-gradient(135deg, #d0d8c8, #b8c0a8, #a8b098)',
-  shop: 'linear-gradient(135deg, #d8c8b8, #c0b0a0, #b0a090)',
+  restaurant: heroGrad(COLOR.coral),
+  hotel:      heroGrad(COLOR.navy),
+  rental:     heroGrad(COLOR.navy),
+  bar:        heroGrad(COLOR.darkTeal),
+  cafe:       heroGrad(COLOR.ochre),
+  museum:     heroGrad(COLOR.periwinkle),
+  activity:   heroGrad(COLOR.olive),
+  neighborhood: heroGrad(COLOR.teal),
+  shop:       heroGrad(COLOR.peach),
 };
 
 // ─── Type colors: muted (for subtle backgrounds) ───
 
 export const TYPE_COLORS_MUTED: Record<PlaceType, string> = {
-  restaurant: '#c0ab8e',
-  hotel: '#b8b0c0',
-  rental: '#b0b0a8',
-  bar: '#a8c0b0',
-  cafe: '#c8c0b0',
-  museum: '#a8b0b8',
-  activity: '#a8b8a8',
-  neighborhood: '#b8c0a8',
-  shop: '#c0b0a0',
+  restaurant: `${COLOR.coral}30`,
+  hotel:      `${COLOR.navy}30`,
+  rental:     `${COLOR.navy}30`,
+  bar:        `${COLOR.darkTeal}30`,
+  cafe:       `${COLOR.ochre}30`,
+  museum:     `${COLOR.periwinkle}30`,
+  activity:   `${COLOR.olive}30`,
+  neighborhood: `${COLOR.teal}30`,
+  shop:       `${COLOR.peach}30`,
 };
 
 // ─── Type colors: vibrant (for strong indicators) ───
 
 export const TYPE_COLORS_VIBRANT: Record<PlaceType, string> = {
-  restaurant: T.royerePink,
-  hotel: T.honey,
-  rental: T.honey,
-  bar: T.pantonViolet,
-  museum: T.verde,
-  cafe: T.chromeYellow,
-  activity: T.pantonOrange,
-  neighborhood: T.ghost,
-  shop: T.amber,
+  restaurant: COLOR.coral,
+  hotel:      COLOR.navy,
+  rental:     COLOR.navy,
+  bar:        COLOR.darkTeal,
+  cafe:       COLOR.ochre,
+  museum:     COLOR.periwinkle,
+  activity:   COLOR.olive,
+  neighborhood: COLOR.teal,
+  shop:       COLOR.peach,
 };
 
 // ─── Filter chip arrays ───

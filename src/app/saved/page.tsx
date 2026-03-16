@@ -20,6 +20,8 @@ import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/pl
 import { SignalResonanceStrip } from '@/components/intelligence';
 import type { ResonanceCluster } from '@/components/intelligence';
 import type { TasteDomain } from '@/types';
+import BrandLoader from '@/components/BrandLoader';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -52,6 +54,7 @@ const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 
 function SavedPageContent() {
   const router = useRouter();
   const isDesktop = useIsDesktop();
+  const dbHydrated = useOnboardingStore(s => s.dbHydrated);
   const { openDetail, openCollectionPicker } = usePlaceDetail();
   const myPlaces = useSavedStore(s => s.myPlaces);
   const collections = useSavedStore(s => s.collections);
@@ -182,6 +185,11 @@ function SavedPageContent() {
     const collectedIds = new Set(collections.flatMap(sl => sl.placeIds));
     return filteredPlaces.filter(p => !collectedIds.has(p.id));
   }, [filteredPlaces, collections]);
+
+  // Wait for DB hydration before rendering
+  if (!dbHydrated) {
+    return <BrandLoader message="Loading your library…" />;
+  }
 
   /* ─── Desktop Library layout (unified) ─── */
   if (isDesktop) {
