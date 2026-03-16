@@ -87,7 +87,7 @@ These are the primary matching dimensions. Each has a rich space of possible pos
 
 **Opposite profiles test**: A natural-wine-and-foraging devotee vs. someone who wants classic French fine dining with a grand cru list — clearly opposite.
 
-### 6. Setting
+### 6. Geography
 **What it encodes**: Location, geography, neighborhood, and physical context.
 
 - Urban texture (cobblestone old town, glass-tower downtown, industrial district, residential quiet)
@@ -97,7 +97,7 @@ These are the primary matching dimensions. Each has a rich space of possible pos
 - Views and orientation (panoramic skyline, courtyard-facing, garden view)
 - Surroundings (cultural institutions nearby, nightlife, markets, nature trails)
 
-**Pipeline dimension mapping**: `Location & Context`, `Location & Setting`
+**Pipeline dimension mapping**: `Location & Context`, `Location & Geography`
 
 **Opposite profiles test**: A remote cliff-edge retreat accessible only by boat vs. a Times Square hotel steps from the subway — clearly opposite.
 
@@ -168,8 +168,8 @@ Structured data that informs filtering and logistics but doesn't participate in 
 | Service Style | Service | Direct map |
 | Food & Drink Identity | Food & Drink | Direct map |
 | Menu Personality | Food & Drink | Direct map |
-| Location & Context | Setting | Renamed |
-| Location & Setting | Setting | Direct map |
+| Location & Context | Geography | Renamed |
+| Location & Geography | Geography | Direct map |
 | Sustainability | Sustainability (pref dim) | Moves to preference dimension |
 
 ### User TasteNode Redistribution
@@ -178,18 +178,18 @@ The current user profile has 239 TasteNodes across 6 domains, with **Character h
 
 | Current Domain | Node Count | v2 Redistribution |
 |---|---|---|
-| Character | 130 | Split across Character, Atmosphere, Service, Setting |
+| Character | 130 | Split across Character, Atmosphere, Service, Geography |
 | Design | 44 | Mostly stays in Design; some material/sensory → Atmosphere |
 | Wellness | 20 | Stays in Wellness (preference dimension) |
 | Service | 17 | Stays in Service |
 | Food | 14 | Stays in Food & Drink |
-| Location | 14 | Stays in Setting |
+| Location | 14 | Stays in Geography |
 
 Key redistribution from Character's 130 nodes:
 - Social dynamics, community signals → Character (place identity/belonging)
 - Energy, tempo, pace signals → Atmosphere
 - Cultural programming, heritage → Character
-- Travel-style, logistics → Operational metadata or Setting
+- Travel-style, logistics → Operational metadata or Geography
 - Sensory preferences mixed in → Atmosphere
 
 ### Vector Layout Change
@@ -199,7 +199,7 @@ Key redistribution from Character's 130 nodes:
 - [8-33]: 26 semantic hash buckets
 
 **Proposed v2 (32-dim)**:
-- [0-5]: 6 taste domains (Design, Atmosphere, Character, Service, Food & Drink, Setting)
+- [0-5]: 6 taste domains (Design, Atmosphere, Character, Service, Food & Drink, Geography)
 - [6-7]: 2 preference dimensions (Wellness, Sustainability) — lower weight in similarity
 - [8-31]: 24 semantic hash buckets
 
@@ -212,7 +212,7 @@ Key redistribution from Character's 130 nodes:
 | Material | 0.98 | Design |
 | Sensory | 0.95 | Atmosphere |
 | Cultural | 0.88 | Character |
-| Spatial | 0.92 | Setting |
+| Spatial | 0.92 | Geography |
 | Authenticity | 0.82 | Character (secondary) |
 | Social | 0.65 | Service |
 | *(missing)* | — | Food & Drink (needs onboarding) |

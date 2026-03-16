@@ -163,36 +163,36 @@ export const MOSAIC_QUESTIONS: MosaicQuestion[] = [
   // LOCATION & CONTEXT
   // ═══════════════════════════════════════
 
-  { id: 33, type: 'ab', section: 'Setting', domain: 'hotel',
+  { id: 33, type: 'ab', section: 'Geography', domain: 'hotel',
     prompt: 'On a cobblestone alley in the old town — or on the cliff above it all?',
     optionA: { label: 'Cobblestone alley', axes: { culture: 0.1, volume: 0.05 }, signals: ['Embedded-in-fabric'] },
     optionB: { label: 'Cliff above it all', axes: { culture: -0.05, volume: -0.1 }, signals: ['Removed-with-views'] } },
 
-  { id: 34, type: 'ab', section: 'Setting', domain: 'hotel',
+  { id: 34, type: 'ab', section: 'Geography', domain: 'hotel',
     prompt: 'You can hear the city — or you can hear nothing?',
     optionA: { label: 'Hear the city', axes: { volume: 0.15 }, signals: ['Urban-energy'] },
     optionB: { label: 'Hear nothing', axes: { volume: -0.15 }, signals: ['Total-silence'] } },
 
-  { id: 36, type: 'ab', section: 'Setting', domain: 'hotel',
+  { id: 36, type: 'ab', section: 'Geography', domain: 'hotel',
     prompt: 'Beach or mountain?',
     optionA: { label: 'Beach', axes: { mood: 0.1, temperature: 0.08 }, signals: ['Coastal-drawn'] },
     optionB: { label: 'Mountain', axes: { mood: -0.05, temperature: -0.1 }, signals: ['Alpine-drawn'] } },
 
-  { id: 37, type: 'ab', section: 'Setting', domain: 'hotel',
+  { id: 37, type: 'ab', section: 'Geography', domain: 'hotel',
     prompt: 'Island you need a boat to reach — or city hotel you can walk everywhere from?',
     optionA: { label: 'Island by boat', axes: { culture: 0.1, formality: -0.05 }, signals: ['Remote-island'] },
     optionB: { label: 'Walk everywhere', axes: { culture: -0.05, volume: 0.1 }, signals: ['Urban-walkable'] } },
 
-  { id: 38, type: 'slider', section: 'Setting', domain: 'hotel',
+  { id: 38, type: 'slider', section: 'Geography', domain: 'hotel',
     prompt: 'How much does the destination matter vs. the property?',
     leftLabel: 'All destination', rightLabel: 'All property', sliderAxis: 'culture' },
 
-  { id: 39, type: 'ab', section: 'Setting', domain: 'hotel',
+  { id: 39, type: 'ab', section: 'Geography', domain: 'hotel',
     prompt: 'A hotel in a converted palazzo — or one built by a starchitect?',
     optionA: { label: 'Converted palazzo', axes: { time: -0.15, culture: 0.1 }, signals: ['Adaptive-reuse'] },
     optionB: { label: 'Starchitect build', axes: { time: 0.15, culture: -0.05 }, signals: ['Contemporary-vision'] } },
 
-  { id: 40, type: 'ab', section: 'Setting', domain: 'hotel',
+  { id: 40, type: 'ab', section: 'Geography', domain: 'hotel',
     prompt: 'Tropical or alpine?',
     optionA: { label: 'Tropical', axes: { temperature: 0.12, mood: 0.08 }, signals: ['Tropical-warmth'] },
     optionB: { label: 'Alpine', axes: { temperature: -0.1, mood: -0.08 }, signals: ['Alpine-drama'] } },
@@ -572,7 +572,7 @@ export const MOSAIC_QUESTIONS: MosaicQuestion[] = [
 export const MOSAIC_SECTIONS: Record<string, { label: string; emoji: string; color: string }> = {
   Design:       { label: 'Design & Space',      emoji: '◼', color: '#d63020' },
   Service:      { label: 'Service & Ritual',     emoji: '◻', color: '#a06c28' },
-  Setting:      { label: 'Location & Setting',    emoji: '◆', color: '#2a7a56' },
+  Geography:    { label: 'Location & Geography',    emoji: '◆', color: '#2a7a56' },
   Character:    { label: 'Character',            emoji: '◇', color: '#6844a0' },
   Mood:         { label: 'Mood & Energy',        emoji: '●', color: '#eeb420' },
   Scenario:     { label: 'Scenarios',            emoji: '○', color: '#4a6e7a' },

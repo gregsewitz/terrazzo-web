@@ -243,7 +243,7 @@ export const WEEKLY_COLLECTION = {
       location: "Mallorca, Spain",
       score: 87,
       signals: ["Natural pool", "Courtyard-centered", "Village-scale"],
-      signalDomain: "Setting",
+      signalDomain: "Geography",
       note: "A 17th-century estate woven into Santanyí village — the natural pool is carved from the original cistern",
       // googlePlaceId omitted — auto-resolved via ensure-places endpoint on first use
     },

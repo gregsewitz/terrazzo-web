@@ -34,7 +34,7 @@ export interface PlaceDetailContentProps {
   variant: 'desktop' | 'mobile';
 }
 
-const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting', 'Wellness', 'Sustainability'];
+const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography', 'Wellness', 'Sustainability'];
 
 function PlaceDetailContent({
   item,
@@ -60,7 +60,7 @@ function PlaceDetailContent({
   const userTasteProfile = React.useMemo(() => {
     const radarData = (generatedProfile as { radarData?: { axis: string; value: number }[] } | null)?.radarData;
     if (!radarData) return null;
-    const result: ImportedPlace['matchBreakdown'] = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
+    const result: ImportedPlace['matchBreakdown'] = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Geography: 0.5, Wellness: 0.5, Sustainability: 0.5 };
     for (const r of radarData) {
       if (r.axis in result) {
         result[r.axis as keyof typeof result] = Math.max(result[r.axis as keyof typeof result], r.value);

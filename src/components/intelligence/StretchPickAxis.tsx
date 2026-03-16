@@ -139,7 +139,7 @@ export function StretchPickAxis({
         className={`rounded-2xl overflow-hidden ${className || ''}`}
         style={{
           background: 'linear-gradient(155deg, rgba(238,113,109,0.06), rgba(238,113,109,0.12))',
-          border: `1px solid ${INK['06']}`,
+          border: '1px solid var(--t-coral)',
         }}
       >
         {/* Header */}

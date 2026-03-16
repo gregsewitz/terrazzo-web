@@ -346,7 +346,7 @@
   },
   {
     "s": "destination-dining-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 24
   },
   {
@@ -586,7 +586,7 @@
   },
   {
     "s": "car-dependent-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 18
   },
   {
@@ -661,7 +661,7 @@
   },
   {
     "s": "outdoor-terrace-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 16
   },
   {
@@ -686,7 +686,7 @@
   },
   {
     "s": "intentionally-remote-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 16
   },
   {
@@ -746,7 +746,7 @@
   },
   {
     "s": "remote-wilderness-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 15
   },
   {
@@ -756,12 +756,12 @@
   },
   {
     "s": "remote-wilderness-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 15
   },
   {
     "s": "private-beach-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 15
   },
   {
@@ -791,7 +791,7 @@
   },
   {
     "s": "high-density-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 15
   },
   {
@@ -811,7 +811,7 @@
   },
   {
     "s": "car-dependent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 14
   },
   {
@@ -826,7 +826,7 @@
   },
   {
     "s": "bar-seating-available",
-    "d": "Setting",
+    "d": "Geography",
     "df": 14
   },
   {
@@ -851,7 +851,7 @@
   },
   {
     "s": "outdoor-seating-available",
-    "d": "Setting",
+    "d": "Geography",
     "df": 14
   },
   {
@@ -861,7 +861,7 @@
   },
   {
     "s": "sunset-viewing-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 14
   },
   {
@@ -886,7 +886,7 @@
   },
   {
     "s": "intentionally-remote",
-    "d": "Setting",
+    "d": "Geography",
     "df": 14
   },
   {
@@ -1256,7 +1256,7 @@
   },
   {
     "s": "self-contained-estate-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 11
   },
   {
@@ -1471,12 +1471,12 @@
   },
   {
     "s": "tight-table-spacing",
-    "d": "Setting",
+    "d": "Geography",
     "df": 10
   },
   {
     "s": "wildlife-corridor-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 10
   },
   {
@@ -1571,7 +1571,7 @@
   },
   {
     "s": "forest-immersion-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 10
   },
   {
@@ -1621,7 +1621,7 @@
   },
   {
     "s": "compact-urban-footprint",
-    "d": "Setting",
+    "d": "Geography",
     "df": 10
   },
   {
@@ -1716,7 +1716,7 @@
   },
   {
     "s": "multi-building-campus-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 9
   },
   {
@@ -1786,7 +1786,7 @@
   },
   {
     "s": "remote-desert-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 9
   },
   {
@@ -1806,7 +1806,7 @@
   },
   {
     "s": "private-island-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 9
   },
   {
@@ -1821,7 +1821,7 @@
   },
   {
     "s": "residential-neighborhood-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 9
   },
   {
@@ -1906,7 +1906,7 @@
   },
   {
     "s": "journey-as-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 9
   },
   {
@@ -2176,7 +2176,7 @@
   },
   {
     "s": "urban-oasis-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 8
   },
   {
@@ -2186,7 +2186,7 @@
   },
   {
     "s": "wildlife-integrated-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 8
   },
   {
@@ -2326,7 +2326,7 @@
   },
   {
     "s": "nature-immersion-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 8
   },
   {
@@ -2356,7 +2356,7 @@
   },
   {
     "s": "ski-in-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 8
   },
   {
@@ -2366,7 +2366,7 @@
   },
   {
     "s": "residential-neighborhood-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 8
   },
   {
@@ -2476,7 +2476,7 @@
   },
   {
     "s": "communal-table-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 8
   },
   {
@@ -2551,7 +2551,7 @@
   },
   {
     "s": "challenging-access-road",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -2621,7 +2621,7 @@
   },
   {
     "s": "compact-intimate-space",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -2806,7 +2806,7 @@
   },
   {
     "s": "pedestrian-only-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -2816,7 +2816,7 @@
   },
   {
     "s": "extreme-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -2846,7 +2846,7 @@
   },
   {
     "s": "courtyard-facing-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -2896,7 +2896,7 @@
   },
   {
     "s": "street-level-visibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -2921,7 +2921,7 @@
   },
   {
     "s": "street-terrace-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -3081,7 +3081,7 @@
   },
   {
     "s": "ski-in-ski-out-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -3091,7 +3091,7 @@
   },
   {
     "s": "self-contained-destination-resort",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -3106,7 +3106,7 @@
   },
   {
     "s": "remote-countryside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -3171,7 +3171,7 @@
   },
   {
     "s": "remote-rural-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -3216,7 +3216,7 @@
   },
   {
     "s": "zero-urban-infrastructure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 7
   },
   {
@@ -3241,7 +3241,7 @@
   },
   {
     "s": "working-agricultural-landscape",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3271,7 +3271,7 @@
   },
   {
     "s": "direct-beach-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3426,7 +3426,7 @@
   },
   {
     "s": "complete-urban-disconnection",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3441,7 +3441,7 @@
   },
   {
     "s": "agricultural-landscape-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3566,7 +3566,7 @@
   },
   {
     "s": "metro-accessible-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3616,7 +3616,7 @@
   },
   {
     "s": "no-walkable-neighborhood-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3631,7 +3631,7 @@
   },
   {
     "s": "micro-capacity-intimate",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3706,12 +3706,12 @@
   },
   {
     "s": "multi-stage-arrival-journey",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "mountain-view-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3736,7 +3736,7 @@
   },
   {
     "s": "no-neighboring-development",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3776,7 +3776,7 @@
   },
   {
     "s": "private-island-exclusivity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3816,17 +3816,17 @@
   },
   {
     "s": "self-contained-resort-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "remote-mountain-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "self-contained-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3841,12 +3841,12 @@
   },
   {
     "s": "remote-rural-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "rooftop-terrace-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3861,7 +3861,7 @@
   },
   {
     "s": "queue-visible-from-street",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3876,7 +3876,7 @@
   },
   {
     "s": "self-contained-resort-ecosystem",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3951,7 +3951,7 @@
   },
   {
     "s": "waterfront-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -3986,12 +3986,12 @@
   },
   {
     "s": "unpaved-access-road",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "street-level-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -4101,12 +4101,12 @@
   },
   {
     "s": "intimate-scale",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "historic-building-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -4176,12 +4176,12 @@
   },
   {
     "s": "limited-seating-capacity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
     "s": "isolated-from-urban-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -4246,7 +4246,7 @@
   },
   {
     "s": "hidden-entrance-discovery",
-    "d": "Setting",
+    "d": "Geography",
     "df": 6
   },
   {
@@ -4421,17 +4421,17 @@
   },
   {
     "s": "hidden-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
     "s": "international-visitor-draw",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
     "s": "international-visitor-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4461,7 +4461,7 @@
   },
   {
     "s": "jungle-immersive-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4471,7 +4471,7 @@
   },
   {
     "s": "jungle-immersion-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4586,7 +4586,7 @@
   },
   {
     "s": "limited-parking",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4616,7 +4616,7 @@
   },
   {
     "s": "chef-counter-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4646,7 +4646,7 @@
   },
   {
     "s": "central-business-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4716,17 +4716,17 @@
   },
   {
     "s": "basement-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
     "s": "clifftop-dramatic-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
     "s": "4x4-access-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4821,7 +4821,7 @@
   },
   {
     "s": "working-farm-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4856,7 +4856,7 @@
   },
   {
     "s": "discovery-required-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4896,7 +4896,7 @@
   },
   {
     "s": "courtyard-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4906,7 +4906,7 @@
   },
   {
     "s": "discreet-street-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -4941,7 +4941,7 @@
   },
   {
     "s": "Cotswolds-village-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5116,7 +5116,7 @@
   },
   {
     "s": "urban-density-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5446,7 +5446,7 @@
   },
   {
     "s": "no-walkable-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5536,7 +5536,7 @@
   },
   {
     "s": "mountain-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5571,7 +5571,7 @@
   },
   {
     "s": "outdoor-seating-option",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5596,7 +5596,7 @@
   },
   {
     "s": "off-beaten-path-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5656,7 +5656,7 @@
   },
   {
     "s": "olive-grove-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5731,7 +5731,7 @@
   },
   {
     "s": "self-contained-destination-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5741,7 +5741,7 @@
   },
   {
     "s": "residential-neighborhood-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5761,12 +5761,12 @@
   },
   {
     "s": "secluded-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
     "s": "remote-coastal-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5776,7 +5776,7 @@
   },
   {
     "s": "pine-forest-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5841,7 +5841,7 @@
   },
   {
     "s": "private-airstrip-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5856,7 +5856,7 @@
   },
   {
     "s": "soho-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5876,7 +5876,7 @@
   },
   {
     "s": "rural-countryside-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5921,7 +5921,7 @@
   },
   {
     "s": "riverfront-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -5986,7 +5986,7 @@
   },
   {
     "s": "seasonal-landscape-transformation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -6006,7 +6006,7 @@
   },
   {
     "s": "remote-wilderness-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 5
   },
   {
@@ -6021,7 +6021,7 @@
   },
   {
     "s": "shoreditch-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6046,7 +6046,7 @@
   },
   {
     "s": "Shoreditch-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6056,7 +6056,7 @@
   },
   {
     "s": "residential-neighborhood-character",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6196,7 +6196,7 @@
   },
   {
     "s": "residential-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6216,7 +6216,7 @@
   },
   {
     "s": "remote-countryside-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6231,12 +6231,12 @@
   },
   {
     "s": "self-contained-resort-necessity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "seaplane-only-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6256,7 +6256,7 @@
   },
   {
     "s": "removed-from-city-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6321,12 +6321,12 @@
   },
   {
     "s": "ski-in-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "rural-isolation-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6391,12 +6391,12 @@
   },
   {
     "s": "quiet-side-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "rural-mountain-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6416,12 +6416,12 @@
   },
   {
     "s": "self-contained-island-ecosystem",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "remote-wilderness-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6436,7 +6436,7 @@
   },
   {
     "s": "roma-norte-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6446,17 +6446,17 @@
   },
   {
     "s": "quiet-despite-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "remote-desert-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "self-contained-estate-model",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6496,7 +6496,7 @@
   },
   {
     "s": "Soho-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6551,7 +6551,7 @@
   },
   {
     "s": "remote-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6576,7 +6576,7 @@
   },
   {
     "s": "small-intimate-space",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6646,7 +6646,7 @@
   },
   {
     "s": "working-farm-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6686,7 +6686,7 @@
   },
   {
     "s": "isolation-as-feature",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6731,12 +6731,12 @@
   },
   {
     "s": "hidden-entrance-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "intentional-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6801,7 +6801,7 @@
   },
   {
     "s": "harbor-edge-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6831,7 +6831,7 @@
   },
   {
     "s": "intimate-scale-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6891,7 +6891,7 @@
   },
   {
     "s": "house-reef-snorkeling",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -6906,7 +6906,7 @@
   },
   {
     "s": "limited-mobile-signal",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7071,7 +7071,7 @@
   },
   {
     "s": "industrial-zone-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7106,7 +7106,7 @@
   },
   {
     "s": "hidden-gem-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7121,7 +7121,7 @@
   },
   {
     "s": "indoor-outdoor-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7141,7 +7141,7 @@
   },
   {
     "s": "isolated-from-urban-infrastructure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7181,7 +7181,7 @@
   },
   {
     "s": "isolated-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7231,7 +7231,7 @@
   },
   {
     "s": "hillside-terraced-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7311,7 +7311,7 @@
   },
   {
     "s": "boat-only-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7336,7 +7336,7 @@
   },
   {
     "s": "alpine-resort-village-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7356,7 +7356,7 @@
   },
   {
     "s": "bar-seating-priority",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7366,7 +7366,7 @@
   },
   {
     "s": "agricultural-working-landscape",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7381,7 +7381,7 @@
   },
   {
     "s": "central-barcelona-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7516,7 +7516,7 @@
   },
   {
     "s": "central-london-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7576,7 +7576,7 @@
   },
   {
     "s": "central-soho-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7616,7 +7616,7 @@
   },
   {
     "s": "away-from-tourist-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7676,7 +7676,7 @@
   },
   {
     "s": "canal-side-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7796,7 +7796,7 @@
   },
   {
     "s": "outdoor-street-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7836,12 +7836,12 @@
   },
   {
     "s": "no-neighboring-properties",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "narrow-access-road",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7901,7 +7901,7 @@
   },
   {
     "s": "mountain-backdrop-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -7986,7 +7986,7 @@
   },
   {
     "s": "mountain-view-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8026,7 +8026,7 @@
   },
   {
     "s": "open-kitchen-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8056,12 +8056,12 @@
   },
   {
     "s": "multi-level-vertical-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "neighborhood-dining-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8136,7 +8136,7 @@
   },
   {
     "s": "outdoor-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8361,7 +8361,7 @@
   },
   {
     "s": "forest-immersed-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8376,7 +8376,7 @@
   },
   {
     "s": "everything-walkable-radius",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8411,7 +8411,7 @@
   },
   {
     "s": "discovery-destination-not-passing-trade",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8481,7 +8481,7 @@
   },
   {
     "s": "difficult-to-find-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8586,7 +8586,7 @@
   },
   {
     "s": "garden-buffer-from-street",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8606,7 +8606,7 @@
   },
   {
     "s": "garden-courtyard-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8636,7 +8636,7 @@
   },
   {
     "s": "destination-worthy-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8701,12 +8701,12 @@
   },
   {
     "s": "courtyard-garden-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "destination-dining-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8761,7 +8761,7 @@
   },
   {
     "s": "valley-floor-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8801,7 +8801,7 @@
   },
   {
     "s": "walkable-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8861,7 +8861,7 @@
   },
   {
     "s": "turquoise-water-clarity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8966,7 +8966,7 @@
   },
   {
     "s": "walk-in-accessible-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -8986,7 +8986,7 @@
   },
   {
     "s": "street-level-queue-visibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9001,7 +9001,7 @@
   },
   {
     "s": "winding-mountain-road-approach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9021,7 +9021,7 @@
   },
   {
     "s": "walkable-urban-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9061,7 +9061,7 @@
   },
   {
     "s": "wilderness-immersion-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9076,7 +9076,7 @@
   },
   {
     "s": "terrace-dining-option",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9171,12 +9171,12 @@
   },
   {
     "s": "unmarked-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
     "s": "steep-hillside-topography",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9196,7 +9196,7 @@
   },
   {
     "s": "urban-density-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9236,7 +9236,7 @@
   },
   {
     "s": "standing-room-bar-culture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9256,7 +9256,7 @@
   },
   {
     "s": "vineyard-view-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 4
   },
   {
@@ -9371,7 +9371,7 @@
   },
   {
     "s": "trailhead-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9416,7 +9416,7 @@
   },
   {
     "s": "valet-arrival-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9436,7 +9436,7 @@
   },
   {
     "s": "walled-garden-sanctuary",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9616,7 +9616,7 @@
   },
   {
     "s": "village-center-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9696,7 +9696,7 @@
   },
   {
     "s": "vineyard-immersed-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9726,7 +9726,7 @@
   },
   {
     "s": "vineyard-immersion-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9736,7 +9736,7 @@
   },
   {
     "s": "valley-view-terrace",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9746,37 +9746,37 @@
   },
   {
     "s": "wildlife-on-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "vineyard-immersive-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "vineyard-integrated",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "sunset-facing-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "waterfront-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "whale-watching-from-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "valley-view-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9786,7 +9786,7 @@
   },
   {
     "s": "street-level-direct-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9821,12 +9821,12 @@
   },
   {
     "s": "theatre-district-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "West-Village-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9886,7 +9886,7 @@
   },
   {
     "s": "street-level-transparency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9906,7 +9906,7 @@
   },
   {
     "s": "waterfront-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -9956,12 +9956,12 @@
   },
   {
     "s": "vineyard-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "upstairs-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10016,12 +10016,12 @@
   },
   {
     "s": "wildlife-immersive-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "tourist-local-crossover-zone",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10051,7 +10051,7 @@
   },
   {
     "s": "weather-dependent-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10066,7 +10066,7 @@
   },
   {
     "s": "tropical-garden-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10086,7 +10086,7 @@
   },
   {
     "s": "unfenced-wildlife-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10161,7 +10161,7 @@
   },
   {
     "s": "train-station-adjacent",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10201,7 +10201,7 @@
   },
   {
     "s": "volcano-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10211,7 +10211,7 @@
   },
   {
     "s": "terrace-dining-available",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10221,12 +10221,12 @@
   },
   {
     "s": "threshold-transformation-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "village-integrated-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10256,7 +10256,7 @@
   },
   {
     "s": "urban-oasis-contrast",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10296,7 +10296,7 @@
   },
   {
     "s": "visible-street-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10316,7 +10316,7 @@
   },
   {
     "s": "two-floor-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10346,7 +10346,7 @@
   },
   {
     "s": "terraced-garden-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10376,7 +10376,7 @@
   },
   {
     "s": "walkable-island-scale",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10386,7 +10386,7 @@
   },
   {
     "s": "wildlife-encounter-frequency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10431,7 +10431,7 @@
   },
   {
     "s": "hilltop-panoramic-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10451,7 +10451,7 @@
   },
   {
     "s": "intentionally-isolated",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10521,7 +10521,7 @@
   },
   {
     "s": "intimate-scale-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10596,7 +10596,7 @@
   },
   {
     "s": "intentionally-remote-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10691,12 +10691,12 @@
   },
   {
     "s": "intimate-small-capacity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "limited-beach-swimming-conditions",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10721,7 +10721,7 @@
   },
   {
     "s": "kitchen-table-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10731,7 +10731,7 @@
   },
   {
     "s": "hotel-basement-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10771,12 +10771,12 @@
   },
   {
     "s": "hotel-embedded-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "limited-cell-service",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -10846,7 +10846,7 @@
   },
   {
     "s": "high-altitude-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11131,7 +11131,7 @@
   },
   {
     "s": "limited-outdoor-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11151,7 +11151,7 @@
   },
   {
     "s": "limited-parking-capacity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11166,7 +11166,7 @@
   },
   {
     "s": "limited-parking-infrastructure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11326,7 +11326,7 @@
   },
   {
     "s": "historic-center-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11341,7 +11341,7 @@
   },
   {
     "s": "jungle-immersed-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11361,7 +11361,7 @@
   },
   {
     "s": "jungle-immersive",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11371,7 +11371,7 @@
   },
   {
     "s": "jungle-integrated-architecture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11406,12 +11406,12 @@
   },
   {
     "s": "isolated-hilltop-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "hidden-discovery-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11421,7 +11421,7 @@
   },
   {
     "s": "hidden-discovery-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11436,7 +11436,7 @@
   },
   {
     "s": "isolation-as-intentional-feature",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11566,12 +11566,12 @@
   },
   {
     "s": "leopard-sighting-frequency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "high-density-urban-core",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11631,7 +11631,7 @@
   },
   {
     "s": "high-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11681,7 +11681,7 @@
   },
   {
     "s": "hillside-terraced-architecture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11716,7 +11716,7 @@
   },
   {
     "s": "geographically-isolated",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11821,7 +11821,7 @@
   },
   {
     "s": "hilltop-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11871,7 +11871,7 @@
   },
   {
     "s": "remote-alpine-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11911,7 +11911,7 @@
   },
   {
     "s": "rooftop-pool-with-city-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -11926,7 +11926,7 @@
   },
   {
     "s": "riverfront-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12026,12 +12026,12 @@
   },
   {
     "s": "rooftop-bar-with-skyline-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "right-bank-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12101,7 +12101,7 @@
   },
   {
     "s": "riverside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12166,7 +12166,7 @@
   },
   {
     "s": "remote-mountain-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12191,12 +12191,12 @@
   },
   {
     "s": "remote-mountain-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "rooftop-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12206,7 +12206,7 @@
   },
   {
     "s": "rooftop-cathedral-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12226,7 +12226,7 @@
   },
   {
     "s": "shared-table-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12246,7 +12246,7 @@
   },
   {
     "s": "remote-coastal-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12361,12 +12361,12 @@
   },
   {
     "s": "private-concession-exclusivity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "rural-countryside-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12471,7 +12471,7 @@
   },
   {
     "s": "rainforest-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12536,12 +12536,12 @@
   },
   {
     "s": "remote-wilderness-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "seasonal-accessibility-variation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12551,7 +12551,7 @@
   },
   {
     "s": "remote-wilderness-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12576,7 +12576,7 @@
   },
   {
     "s": "side-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12636,7 +12636,7 @@
   },
   {
     "s": "self-contained-resort-campus",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12656,7 +12656,7 @@
   },
   {
     "s": "self-contained-resort-enclave",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12696,7 +12696,7 @@
   },
   {
     "s": "sidewalk-terrace-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12706,7 +12706,7 @@
   },
   {
     "s": "self-contained-resort-model",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12741,7 +12741,7 @@
   },
   {
     "s": "rough-access-road",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12786,7 +12786,7 @@
   },
   {
     "s": "remote-forest-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12816,7 +12816,7 @@
   },
   {
     "s": "remote-from-city-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12826,7 +12826,7 @@
   },
   {
     "s": "requires-intentional-journey",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12836,7 +12836,7 @@
   },
   {
     "s": "sightseeing-hub-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12936,7 +12936,7 @@
   },
   {
     "s": "rocky-beach-entry",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12971,7 +12971,7 @@
   },
   {
     "s": "pre-theater-dining-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -12996,7 +12996,7 @@
   },
   {
     "s": "soho-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13036,7 +13036,7 @@
   },
   {
     "s": "railway-arch-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13056,7 +13056,7 @@
   },
   {
     "s": "small-village-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13106,7 +13106,7 @@
   },
   {
     "s": "residential-street-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13156,7 +13156,7 @@
   },
   {
     "s": "restaurant-dense-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13166,7 +13166,7 @@
   },
   {
     "s": "remote-isolation-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13206,7 +13206,7 @@
   },
   {
     "s": "working-landscape-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13281,12 +13281,12 @@
   },
   {
     "s": "working-farm-adjacency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "zero-urban-infrastructure-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13316,7 +13316,7 @@
   },
   {
     "s": "zero-walkable-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13341,7 +13341,7 @@
   },
   {
     "s": "working-village-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13416,7 +13416,7 @@
   },
   {
     "s": "cuauhtemoc-borough-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13436,7 +13436,7 @@
   },
   {
     "s": "destination-not-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13451,7 +13451,7 @@
   },
   {
     "s": "easy-parking-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13541,7 +13541,7 @@
   },
   {
     "s": "discovery-arrival-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13561,17 +13561,17 @@
   },
   {
     "s": "discovery-as-arrival-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "easy-to-miss-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "embassy-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13596,7 +13596,7 @@
   },
   {
     "s": "discovery-as-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13641,7 +13641,7 @@
   },
   {
     "s": "edge-of-town-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13656,7 +13656,7 @@
   },
   {
     "s": "courtyard-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13691,7 +13691,7 @@
   },
   {
     "s": "destination-property-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13731,7 +13731,7 @@
   },
   {
     "s": "covered-outdoor-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13791,7 +13791,7 @@
   },
   {
     "s": "end-of-road-terminus",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13821,7 +13821,7 @@
   },
   {
     "s": "counter-seating-intimacy",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13831,7 +13831,7 @@
   },
   {
     "s": "financial-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13906,7 +13906,7 @@
   },
   {
     "s": "garden-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -13976,7 +13976,7 @@
   },
   {
     "s": "destination-shopping-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14001,7 +14001,7 @@
   },
   {
     "s": "countryside-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14081,7 +14081,7 @@
   },
   {
     "s": "flatiron-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14111,7 +14111,7 @@
   },
   {
     "s": "direct-beach-access-villas",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14176,7 +14176,7 @@
   },
   {
     "s": "destination-not-passthrough",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14251,12 +14251,12 @@
   },
   {
     "s": "extreme-rural-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "difficult-to-find-by-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14281,7 +14281,7 @@
   },
   {
     "s": "cotswolds-countryside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14291,7 +14291,7 @@
   },
   {
     "s": "destination-resort-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14311,7 +14311,7 @@
   },
   {
     "s": "difficult-to-locate-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14366,7 +14366,7 @@
   },
   {
     "s": "gated-entrance-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14516,7 +14516,7 @@
   },
   {
     "s": "counter-seating-available",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14621,7 +14621,7 @@
   },
   {
     "s": "architectural-pilgrimage-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14641,7 +14641,7 @@
   },
   {
     "s": "car-essential-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14756,7 +14756,7 @@
   },
   {
     "s": "central-london-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14786,7 +14786,7 @@
   },
   {
     "s": "compact-intimate-scale",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14826,7 +14826,7 @@
   },
   {
     "s": "airport-proximity-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14881,7 +14881,7 @@
   },
   {
     "s": "central-urban-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14901,7 +14901,7 @@
   },
   {
     "s": "central-village-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14931,7 +14931,7 @@
   },
   {
     "s": "bar-counter-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14946,7 +14946,7 @@
   },
   {
     "s": "active-construction-zone-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -14981,7 +14981,7 @@
   },
   {
     "s": "central-station-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15031,7 +15031,7 @@
   },
   {
     "s": "bar-seating-culture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15201,7 +15201,7 @@
   },
   {
     "s": "complete-wilderness-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15221,7 +15221,7 @@
   },
   {
     "s": "bar-seating-preferred",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15261,7 +15261,7 @@
   },
   {
     "s": "bar-seating-program",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15296,12 +15296,12 @@
   },
   {
     "s": "close-table-spacing",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "basement-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15336,7 +15336,7 @@
   },
   {
     "s": "boat-access-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15376,7 +15376,7 @@
   },
   {
     "s": "canal-adjacent",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15416,7 +15416,7 @@
   },
   {
     "s": "archaeological-site-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15446,7 +15446,7 @@
   },
   {
     "s": "captive-dining-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15491,7 +15491,7 @@
   },
   {
     "s": "boat-accessible",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15511,7 +15511,7 @@
   },
   {
     "s": "buggy-dependent-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15526,7 +15526,7 @@
   },
   {
     "s": "central-pedestrian-zone-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15541,7 +15541,7 @@
   },
   {
     "s": "christmas-market-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15726,7 +15726,7 @@
   },
   {
     "s": "mountain-backdrop-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15736,12 +15736,12 @@
   },
   {
     "s": "mountain-backdrop-visibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "ocean-view-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15786,7 +15786,7 @@
   },
   {
     "s": "nature-immersed",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15801,7 +15801,7 @@
   },
   {
     "s": "nature-immersed-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -15831,7 +15831,7 @@
   },
   {
     "s": "off-center-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16006,7 +16006,7 @@
   },
   {
     "s": "meticulously-maintained-gardens",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16016,7 +16016,7 @@
   },
   {
     "s": "no-need-to-leave-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16051,7 +16051,7 @@
   },
   {
     "s": "off-tourist-path-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16301,7 +16301,7 @@
   },
   {
     "s": "northern-lights-viewing-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16336,12 +16336,12 @@
   },
   {
     "s": "outdoor-garden-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "old-town-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16381,7 +16381,7 @@
   },
   {
     "s": "outdoor-heated-terrace",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16411,7 +16411,7 @@
   },
   {
     "s": "marais-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16431,7 +16431,7 @@
   },
   {
     "s": "natural-soundscape-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16471,7 +16471,7 @@
   },
   {
     "s": "pedestrian-discovery-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16541,17 +16541,17 @@
   },
   {
     "s": "micro-capacity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "pedestrian-square-frontage",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
     "s": "pedestrian-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16581,7 +16581,7 @@
   },
   {
     "s": "outdoor-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16631,7 +16631,7 @@
   },
   {
     "s": "people-watching-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16671,7 +16671,7 @@
   },
   {
     "s": "marais-neighborhood-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16761,7 +16761,7 @@
   },
   {
     "s": "panoramic-valley-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16816,7 +16816,7 @@
   },
   {
     "s": "pilgrimage-destination-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 3
   },
   {
@@ -16886,7 +16886,7 @@
   },
   {
     "s": "minimal-village-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -16896,7 +16896,7 @@
   },
   {
     "s": "narrow-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17026,7 +17026,7 @@
   },
   {
     "s": "no-casual-visitor-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17086,7 +17086,7 @@
   },
   {
     "s": "mayfair-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17096,7 +17096,7 @@
   },
   {
     "s": "no-medical-facilities-on-island",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17186,7 +17186,7 @@
   },
   {
     "s": "nightclub-proximity-issue",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17231,7 +17231,7 @@
   },
   {
     "s": "mayfair-dover-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17251,7 +17251,7 @@
   },
   {
     "s": "national-park-boundary-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17311,7 +17311,7 @@
   },
   {
     "s": "nightlife-adjacent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17361,7 +17361,7 @@
   },
   {
     "s": "metro-adjacent",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17376,7 +17376,7 @@
   },
   {
     "s": "non-pedestrian-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17391,7 +17391,7 @@
   },
   {
     "s": "mayfair-luxury-district-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17406,7 +17406,7 @@
   },
   {
     "s": "multi-building-compound",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17421,7 +17421,7 @@
   },
   {
     "s": "multi-location-chain-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17496,7 +17496,7 @@
   },
   {
     "s": "north-male-atoll-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17531,12 +17531,12 @@
   },
   {
     "s": "oxford-street-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "oxford-street-proximity-contrast",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17576,7 +17576,7 @@
   },
   {
     "s": "off-main-tourist-circuit",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17606,7 +17606,7 @@
   },
   {
     "s": "off-main-thoroughfare-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17686,7 +17686,7 @@
   },
   {
     "s": "minimal-external-dining-options",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17701,7 +17701,7 @@
   },
   {
     "s": "mozambique-border-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17796,7 +17796,7 @@
   },
   {
     "s": "northern-lights-viewing-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17811,7 +17811,7 @@
   },
   {
     "s": "panoramic-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -17891,7 +17891,7 @@
   },
   {
     "s": "mountain-valley-panorama",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18081,7 +18081,7 @@
   },
   {
     "s": "nature-immersion-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18101,12 +18101,12 @@
   },
   {
     "s": "mountain-view-backdrop",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "old-town-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18171,7 +18171,7 @@
   },
   {
     "s": "outdoor-waiting-area",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18206,7 +18206,7 @@
   },
   {
     "s": "old-town-pedestrian-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18286,7 +18286,7 @@
   },
   {
     "s": "minimal-street-signage",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18321,7 +18321,7 @@
   },
   {
     "s": "on-site-working-farm",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18351,7 +18351,7 @@
   },
   {
     "s": "peacock-inhabited-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18381,7 +18381,7 @@
   },
   {
     "s": "multi-restaurant-dining-district",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18396,7 +18396,7 @@
   },
   {
     "s": "off-beaten-track-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18526,17 +18526,17 @@
   },
   {
     "s": "parking-scarcity-challenge",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "open-kitchen-counter-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "no-sunset-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18556,7 +18556,7 @@
   },
   {
     "s": "photo-opportunity-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18571,7 +18571,7 @@
   },
   {
     "s": "natural-soundscape-dominance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18676,7 +18676,7 @@
   },
   {
     "s": "new-forest-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18716,7 +18716,7 @@
   },
   {
     "s": "multi-level-vertical-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18826,7 +18826,7 @@
   },
   {
     "s": "mixed-use-development-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18846,7 +18846,7 @@
   },
   {
     "s": "pedestrian-discovery-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18941,7 +18941,7 @@
   },
   {
     "s": "peripheral-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -18976,7 +18976,7 @@
   },
   {
     "s": "no-external-neighborhood-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19001,7 +19001,7 @@
   },
   {
     "s": "outdoor-pavement-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19021,12 +19021,12 @@
   },
   {
     "s": "micro-cafe-format",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "multi-level-terrain-navigation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19036,7 +19036,7 @@
   },
   {
     "s": "open-kitchen-visible",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19081,7 +19081,7 @@
   },
   {
     "s": "notting-hill-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19196,12 +19196,12 @@
   },
   {
     "s": "pedestrian-street-character",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "natural-swimming-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19211,7 +19211,7 @@
   },
   {
     "s": "no-urban-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19236,12 +19236,12 @@
   },
   {
     "s": "multi-hour-drive-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "multi-level-terrain",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19326,7 +19326,7 @@
   },
   {
     "s": "pedestrian-zone-edge-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19336,12 +19336,12 @@
   },
   {
     "s": "pedestrian-zone-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "mosquito-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19416,12 +19416,12 @@
   },
   {
     "s": "no-walkable-external-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "no-walkable-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19516,7 +19516,7 @@
   },
   {
     "s": "no-dramatic-arrival-sequence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19536,7 +19536,7 @@
   },
   {
     "s": "mountain-village-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19561,12 +19561,12 @@
   },
   {
     "s": "mosquito-prevalence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "neighborhood-regular-clientele",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19601,7 +19601,7 @@
   },
   {
     "s": "peninsula-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19661,7 +19661,7 @@
   },
   {
     "s": "millennium-bridge-pedestrian-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19686,12 +19686,12 @@
   },
   {
     "s": "park-adjacent-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "park-adjacent-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19716,7 +19716,7 @@
   },
   {
     "s": "physically-demanding-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19726,7 +19726,7 @@
   },
   {
     "s": "manta-ray-seasonal-encounters",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19746,7 +19746,7 @@
   },
   {
     "s": "multi-room-progression",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19801,12 +19801,12 @@
   },
   {
     "s": "no-air-conditioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "neighborhood-stroll-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19861,7 +19861,7 @@
   },
   {
     "s": "pilgrimage-destination-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19876,12 +19876,12 @@
   },
   {
     "s": "ocean-surrounded-geography",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "micro-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19901,7 +19901,7 @@
   },
   {
     "s": "nyhavn-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -19971,7 +19971,7 @@
   },
   {
     "s": "manicured-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20021,7 +20021,7 @@
   },
   {
     "s": "multiple-beach-access-points",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20096,7 +20096,7 @@
   },
   {
     "s": "piazza-terrace-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20141,12 +20141,12 @@
   },
   {
     "s": "Piccadilly-Circus-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "natural-wildlife-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20171,7 +20171,7 @@
   },
   {
     "s": "manhattan-skyline-view-focus",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20221,7 +20221,7 @@
   },
   {
     "s": "opera-house-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20251,7 +20251,7 @@
   },
   {
     "s": "on-property-trail-network",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20331,7 +20331,7 @@
   },
   {
     "s": "mid-park-discovery-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20356,7 +20356,7 @@
   },
   {
     "s": "narrow-alley-approach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20381,7 +20381,7 @@
   },
   {
     "s": "no-nearby-dining-alternatives",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20411,12 +20411,12 @@
   },
   {
     "s": "non-tourist-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "minimal-nearby-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20461,7 +20461,7 @@
   },
   {
     "s": "multi-stage-arrival-sequence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20471,7 +20471,7 @@
   },
   {
     "s": "medina-adjacent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20501,7 +20501,7 @@
   },
   {
     "s": "no-nearby-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20566,7 +20566,7 @@
   },
   {
     "s": "middle-of-nowhere-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20596,7 +20596,7 @@
   },
   {
     "s": "nature-surrounded-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20636,7 +20636,7 @@
   },
   {
     "s": "middle-of-nowhere-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20661,7 +20661,7 @@
   },
   {
     "s": "multi-stage-access-journey",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20681,7 +20681,7 @@
   },
   {
     "s": "middle-of-nowhere-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20711,7 +20711,7 @@
   },
   {
     "s": "manicured-garden-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20726,7 +20726,7 @@
   },
   {
     "s": "multi-venue-campus-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20741,7 +20741,7 @@
   },
   {
     "s": "off-the-beaten-path-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20781,7 +20781,7 @@
   },
   {
     "s": "narrow-lane-rural-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20811,7 +20811,7 @@
   },
   {
     "s": "off-tourist-path-local-area",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20831,7 +20831,7 @@
   },
   {
     "s": "narrow-medieval-street-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -20986,7 +20986,7 @@
   },
   {
     "s": "panoramic-mountain-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21206,7 +21206,7 @@
   },
   {
     "s": "panoramic-overlook-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21296,7 +21296,7 @@
   },
   {
     "s": "residential-avenue-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21311,7 +21311,7 @@
   },
   {
     "s": "roadside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21321,7 +21321,7 @@
   },
   {
     "s": "shuttle-dependent-beach-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21351,17 +21351,17 @@
   },
   {
     "s": "rooftop-terrace-with-panoramic-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "sister-property-beach-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "residential-building-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21376,12 +21376,12 @@
   },
   {
     "s": "private-concession-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "shuttle-dependent-town-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21401,12 +21401,12 @@
   },
   {
     "s": "shuttle-dependent-village-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "residential-commercial-blend",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21486,12 +21486,12 @@
   },
   {
     "s": "residential-corner-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "rural-estate-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21526,7 +21526,7 @@
   },
   {
     "s": "rural-hiking-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21551,7 +21551,7 @@
   },
   {
     "s": "rural-hilltop-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21571,7 +21571,7 @@
   },
   {
     "s": "remote-rural-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21581,7 +21581,7 @@
   },
   {
     "s": "remote-rural-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21591,7 +21591,7 @@
   },
   {
     "s": "rural-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21621,7 +21621,7 @@
   },
   {
     "s": "remote-sanctuary-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21641,12 +21641,12 @@
   },
   {
     "s": "remote-self-contained-resort",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "private-room-available",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21656,7 +21656,7 @@
   },
   {
     "s": "private-room-option",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21681,12 +21681,12 @@
   },
   {
     "s": "remote-valley-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "rainforest-immersed",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21701,7 +21701,7 @@
   },
   {
     "s": "rainforest-immersion-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21711,7 +21711,7 @@
   },
   {
     "s": "rainforest-immersion-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21756,12 +21756,12 @@
   },
   {
     "s": "remote-wellness-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "rural-village-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21771,7 +21771,7 @@
   },
   {
     "s": "residential-local-neighborhood-character",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21871,7 +21871,7 @@
   },
   {
     "s": "residential-neighborhood-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21886,7 +21886,7 @@
   },
   {
     "s": "private-sandbank-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21896,7 +21896,7 @@
   },
   {
     "s": "ski-in-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21916,7 +21916,7 @@
   },
   {
     "s": "ski-in-ski-out-defining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21931,7 +21931,7 @@
   },
   {
     "s": "ski-in-ski-out-integrated",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21941,7 +21941,7 @@
   },
   {
     "s": "ski-in-ski-out-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21971,12 +21971,12 @@
   },
   {
     "s": "private-island-seclusion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "quiet-neighborhood-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -21986,7 +21986,7 @@
   },
   {
     "s": "private-cove-beach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22056,7 +22056,7 @@
   },
   {
     "s": "removed-from-town-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22186,7 +22186,7 @@
   },
   {
     "s": "private-airstrip-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22306,7 +22306,7 @@
   },
   {
     "s": "residential-side-street-character",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22331,12 +22331,12 @@
   },
   {
     "s": "residential-side-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "residential-side-street-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22351,7 +22351,7 @@
   },
   {
     "s": "quiet-residential-buffer",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22376,7 +22376,7 @@
   },
   {
     "s": "residential-soi-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22416,7 +22416,7 @@
   },
   {
     "s": "pine-forest-backed",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22496,7 +22496,7 @@
   },
   {
     "s": "seasonal-garden-variation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22506,7 +22506,7 @@
   },
   {
     "s": "plaza-facing-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22521,7 +22521,7 @@
   },
   {
     "s": "pre-dawn-departure-culture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22551,12 +22551,12 @@
   },
   {
     "s": "soho-carnaby-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "Soho-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22626,7 +22626,7 @@
   },
   {
     "s": "Roma-Norte-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22636,7 +22636,7 @@
   },
   {
     "s": "roma-norte-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22716,7 +22716,7 @@
   },
   {
     "s": "private-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22726,7 +22726,7 @@
   },
   {
     "s": "repeat-visit-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22736,7 +22736,7 @@
   },
   {
     "s": "resort-enclave-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22746,7 +22746,7 @@
   },
   {
     "s": "soho-side-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22766,7 +22766,7 @@
   },
   {
     "s": "soho-theater-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22816,7 +22816,7 @@
   },
   {
     "s": "rice-field-adjacency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -22951,7 +22951,7 @@
   },
   {
     "s": "rice-paddy-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23011,7 +23011,7 @@
   },
   {
     "s": "quiet-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23081,7 +23081,7 @@
   },
   {
     "s": "seasonal-outdoor-dining-emphasis",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23091,7 +23091,7 @@
   },
   {
     "s": "scattered-pavilion-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23126,7 +23126,7 @@
   },
   {
     "s": "seasonal-outdoor-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23171,7 +23171,7 @@
   },
   {
     "s": "scattered-villa-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23201,7 +23201,7 @@
   },
   {
     "s": "queue-as-street-theater",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23236,7 +23236,7 @@
   },
   {
     "s": "private-beach-club-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23266,7 +23266,7 @@
   },
   {
     "s": "queue-based-entry-system",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23441,7 +23441,7 @@
   },
   {
     "s": "shaded-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23561,7 +23561,7 @@
   },
   {
     "s": "private-estate-enclosure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23616,7 +23616,7 @@
   },
   {
     "s": "private-beach-exclusivity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23681,7 +23681,7 @@
   },
   {
     "s": "shallow-water-beach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23861,12 +23861,12 @@
   },
   {
     "s": "protected-courtyard-microclimate",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "rooftop-bar",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23896,7 +23896,7 @@
   },
   {
     "s": "remote-access-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23911,12 +23911,12 @@
   },
   {
     "s": "private-boat-dock",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "restaurant-dense-surroundings",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -23991,12 +23991,12 @@
   },
   {
     "s": "rooftop-bar-with-360-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "rooftop-bar-with-city-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24021,12 +24021,12 @@
   },
   {
     "s": "silom-business-district-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "seasonal-wind-exposure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24041,7 +24041,7 @@
   },
   {
     "s": "remote-atoll-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24081,7 +24081,7 @@
   },
   {
     "s": "rooftop-bar-with-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24131,7 +24131,7 @@
   },
   {
     "s": "remote-beach-access-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24171,7 +24171,7 @@
   },
   {
     "s": "small-intimate-capacity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24181,7 +24181,7 @@
   },
   {
     "s": "small-intimate-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24216,7 +24216,7 @@
   },
   {
     "s": "small-intimate-scale",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24251,7 +24251,7 @@
   },
   {
     "s": "protected-wilderness-buffer",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24276,7 +24276,7 @@
   },
   {
     "s": "remote-coastal-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24301,7 +24301,7 @@
   },
   {
     "s": "small-plane-access-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24356,7 +24356,7 @@
   },
   {
     "s": "remote-coastal-wilderness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24476,7 +24476,7 @@
   },
   {
     "s": "queue-visible-street-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24521,7 +24521,7 @@
   },
   {
     "s": "secluded-by-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24546,12 +24546,12 @@
   },
   {
     "s": "remote-destination-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "remote-difficult-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24571,7 +24571,7 @@
   },
   {
     "s": "secluded-from-main-road",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24596,7 +24596,7 @@
   },
   {
     "s": "remote-end-of-valley-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24686,12 +24686,12 @@
   },
   {
     "s": "remote-forest-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "remote-forest-seclusion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24706,12 +24706,12 @@
   },
   {
     "s": "river-overlook-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "sculpture-garden-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24721,7 +24721,7 @@
   },
   {
     "s": "sculpture-garden-integrated",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24756,12 +24756,12 @@
   },
   {
     "s": "remote-from-urban-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "remote-from-urban-centers",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24781,7 +24781,7 @@
   },
   {
     "s": "south-tyrol-alpine-village-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24801,12 +24801,12 @@
   },
   {
     "s": "remote-hillside-arrival-sequence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "remote-hillside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24836,7 +24836,7 @@
   },
   {
     "s": "place-des-vosges-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24861,22 +24861,22 @@
   },
   {
     "s": "small-village-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "river-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "river-view-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "river-view-room-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24891,7 +24891,7 @@
   },
   {
     "s": "shopping-district-adjacency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24906,7 +24906,7 @@
   },
   {
     "s": "shopping-district-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24916,7 +24916,7 @@
   },
   {
     "s": "remote-isolated-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24941,7 +24941,7 @@
   },
   {
     "s": "remote-jungle-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -24991,7 +24991,7 @@
   },
   {
     "s": "secret-garden-courtyard",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25006,7 +25006,7 @@
   },
   {
     "s": "post-industrial-conversion-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25041,7 +25041,7 @@
   },
   {
     "s": "shoreditch-high-street-frontage",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25051,7 +25051,7 @@
   },
   {
     "s": "sea-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25071,7 +25071,7 @@
   },
   {
     "s": "single-resort-island-monopoly",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25096,7 +25096,7 @@
   },
   {
     "s": "riverfront-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25161,7 +25161,7 @@
   },
   {
     "s": "single-restroom-facility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25176,7 +25176,7 @@
   },
   {
     "s": "riverfront-wilderness-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25266,12 +25266,12 @@
   },
   {
     "s": "private-hiking-trail-network",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "security-checkpoint-entry",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25356,7 +25356,7 @@
   },
   {
     "s": "riverside-setting-defining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25366,7 +25366,7 @@
   },
   {
     "s": "quiet-despite-central",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25416,7 +25416,7 @@
   },
   {
     "s": "remote-mountain-access-point",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25456,7 +25456,7 @@
   },
   {
     "s": "rooftop-terrace-culture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25506,12 +25506,12 @@
   },
   {
     "s": "wildlife-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "wildlife-immersion-by-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25541,7 +25541,7 @@
   },
   {
     "s": "vertical-arrival-sequence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25606,7 +25606,7 @@
   },
   {
     "s": "wildlife-integrated-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25626,7 +25626,7 @@
   },
   {
     "s": "wildlife-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25646,7 +25646,7 @@
   },
   {
     "s": "valley-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25681,7 +25681,7 @@
   },
   {
     "s": "street-level-entry",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25706,7 +25706,7 @@
   },
   {
     "s": "street-level-frontage",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25716,22 +25716,22 @@
   },
   {
     "s": "unpaved-road-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "wildlife-proximity-encounters",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "unpaved-road-approach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "walkable-city-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25741,7 +25741,7 @@
   },
   {
     "s": "street-level-gallery-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25761,7 +25761,7 @@
   },
   {
     "s": "vertical-descent-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25841,12 +25841,12 @@
   },
   {
     "s": "trailhead-access-from-hotel",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "trailhead-access-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25861,17 +25861,17 @@
   },
   {
     "s": "wildlife-viewable-from-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "trailhead-at-doorstep",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "walkable-from-transit",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25906,7 +25906,7 @@
   },
   {
     "s": "wildlife-viewing-from-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25931,7 +25931,7 @@
   },
   {
     "s": "wildlife-viewing-opportunities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25951,7 +25951,7 @@
   },
   {
     "s": "stargazing-optimized-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25966,12 +25966,12 @@
   },
   {
     "s": "walkable-neighborhood-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "trailhead-proximity-hiking-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -25986,12 +25986,12 @@
   },
   {
     "s": "wildlife-visible-from-lodge",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "vertical-separation-from-street",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26021,7 +26021,7 @@
   },
   {
     "s": "walkable-neighborhood-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26071,17 +26071,17 @@
   },
   {
     "s": "walkable-restaurant-cluster",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "walkable-restaurant-density",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "walkable-restaurant-district",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26231,7 +26231,7 @@
   },
   {
     "s": "walkable-to-major-sights",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26251,7 +26251,7 @@
   },
   {
     "s": "vertical-tower-format",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26271,7 +26271,7 @@
   },
   {
     "s": "walkable-to-town",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26281,7 +26281,7 @@
   },
   {
     "s": "walkable-to-town-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26296,12 +26296,12 @@
   },
   {
     "s": "street-level-residential-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "walkable-to-village",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26311,7 +26311,7 @@
   },
   {
     "s": "walkable-town-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26321,7 +26321,7 @@
   },
   {
     "s": "walkable-town-center-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26371,7 +26371,7 @@
   },
   {
     "s": "walkable-village-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26436,7 +26436,7 @@
   },
   {
     "s": "street-level-sidewalk-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26456,7 +26456,7 @@
   },
   {
     "s": "street-level-sidewalk-interface",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26486,7 +26486,7 @@
   },
   {
     "s": "window-seat-hierarchy",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26501,7 +26501,7 @@
   },
   {
     "s": "street-level-storefront",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26521,7 +26521,7 @@
   },
   {
     "s": "West-End-central-London-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26551,12 +26551,12 @@
   },
   {
     "s": "west-end-entertainment-district",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "tightly-packed-tables",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26576,7 +26576,7 @@
   },
   {
     "s": "window-table-hierarchy",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26591,12 +26591,12 @@
   },
   {
     "s": "west-end-theater-district-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "window-table-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26626,12 +26626,12 @@
   },
   {
     "s": "walking-distance-local-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "west-facing-sunset-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26656,7 +26656,7 @@
   },
   {
     "s": "street-level-terrace-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26671,7 +26671,7 @@
   },
   {
     "s": "street-level-terrace-interaction",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26716,7 +26716,7 @@
   },
   {
     "s": "walking-distance-shopping-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26756,7 +26756,7 @@
   },
   {
     "s": "speakeasy-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26796,7 +26796,7 @@
   },
   {
     "s": "victoria-harbour-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26826,7 +26826,7 @@
   },
   {
     "s": "tropical-garden-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26856,7 +26856,7 @@
   },
   {
     "s": "vast-property-footprint",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26886,12 +26886,12 @@
   },
   {
     "s": "special-occasion-destination-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "walking-grounds-as-primary-activity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26911,7 +26911,7 @@
   },
   {
     "s": "street-level-walk-in-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26976,7 +26976,7 @@
   },
   {
     "s": "standing-room-bar-area",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -26996,7 +26996,7 @@
   },
   {
     "s": "visible-queue-street-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27026,7 +27026,7 @@
   },
   {
     "s": "thames-panoramic-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27101,7 +27101,7 @@
   },
   {
     "s": "walking-trails-on-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27226,7 +27226,7 @@
   },
   {
     "s": "street-noise-exposure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27251,7 +27251,7 @@
   },
   {
     "s": "walled-garden-enclosure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27301,7 +27301,7 @@
   },
   {
     "s": "walled-garden-separation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27311,7 +27311,7 @@
   },
   {
     "s": "walled-garden-street-contrast",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27346,12 +27346,12 @@
   },
   {
     "s": "street-noise-intrusion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "steep-terrain-navigation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27411,7 +27411,7 @@
   },
   {
     "s": "street-noise-penetration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27456,7 +27456,7 @@
   },
   {
     "s": "waterfront-harbor-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27481,7 +27481,7 @@
   },
   {
     "s": "waterfront-industrial-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27526,12 +27526,12 @@
   },
   {
     "s": "uchisar-castle-adjacency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "tour-bus-pickup-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27551,12 +27551,12 @@
   },
   {
     "s": "waterfront-positioned",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "terrace-dining-focused",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27596,7 +27596,7 @@
   },
   {
     "s": "waterfront-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27681,7 +27681,7 @@
   },
   {
     "s": "street-facing-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27691,7 +27691,7 @@
   },
   {
     "s": "street-parking-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27706,7 +27706,7 @@
   },
   {
     "s": "speakeasy-hidden-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27821,7 +27821,7 @@
   },
   {
     "s": "tucked-away-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27846,7 +27846,7 @@
   },
   {
     "s": "urban-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27856,7 +27856,7 @@
   },
   {
     "s": "tourist-attraction-status",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27941,7 +27941,7 @@
   },
   {
     "s": "tourist-circuit-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27966,7 +27966,7 @@
   },
   {
     "s": "transit-accessible-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -27991,12 +27991,12 @@
   },
   {
     "s": "transit-hub-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "tourist-corridor-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28006,17 +28006,17 @@
   },
   {
     "s": "weather-dependent-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "weather-dependent-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "transit-oriented-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28041,7 +28041,7 @@
   },
   {
     "s": "volcanic-landscape-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28071,7 +28071,7 @@
   },
   {
     "s": "white-sand-beach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28081,7 +28081,7 @@
   },
   {
     "s": "weather-exposed-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28101,7 +28101,7 @@
   },
   {
     "s": "weather-refuge-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28116,12 +28116,12 @@
   },
   {
     "s": "tourist-destination-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "tourist-destination-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28146,7 +28146,7 @@
   },
   {
     "s": "tourist-destination-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28176,7 +28176,7 @@
   },
   {
     "s": "terrace-seating-available",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28186,17 +28186,17 @@
   },
   {
     "s": "tourist-destination-status",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "volcano-view-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "ultra-remote-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28211,12 +28211,12 @@
   },
   {
     "s": "terrace-seating-option",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "tourist-destination-village",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28251,7 +28251,7 @@
   },
   {
     "s": "subway-adjacent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28336,7 +28336,7 @@
   },
   {
     "s": "tourist-epicenter-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28516,7 +28516,7 @@
   },
   {
     "s": "street-to-courtyard-transition",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28556,7 +28556,7 @@
   },
   {
     "s": "tourist-infrastructure-saturation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28571,7 +28571,7 @@
   },
   {
     "s": "tourist-infrastructure-zone",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28701,7 +28701,7 @@
   },
   {
     "s": "third-arrondissement-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28746,7 +28746,7 @@
   },
   {
     "s": "street-to-underground-transition",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28766,7 +28766,7 @@
   },
   {
     "s": "unassuming-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28816,7 +28816,7 @@
   },
   {
     "s": "unassuming-street-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28826,7 +28826,7 @@
   },
   {
     "s": "village-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -28891,7 +28891,7 @@
   },
   {
     "s": "village-walk-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29056,7 +29056,7 @@
   },
   {
     "s": "threshold-transformation-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29091,7 +29091,7 @@
   },
   {
     "s": "tourist-route-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29111,7 +29111,7 @@
   },
   {
     "s": "taxi-dependent-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29121,7 +29121,7 @@
   },
   {
     "s": "taxi-dependent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29156,7 +29156,7 @@
   },
   {
     "s": "wilderness-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29166,7 +29166,7 @@
   },
   {
     "s": "tuscan-countryside-panoramic-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29196,7 +29196,7 @@
   },
   {
     "s": "valet-arrival-protocol",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29221,7 +29221,7 @@
   },
   {
     "s": "wilderness-isolation-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29256,7 +29256,7 @@
   },
   {
     "s": "wilderness-mountain-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29321,7 +29321,7 @@
   },
   {
     "s": "sunset-viewing-geography",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29331,7 +29331,7 @@
   },
   {
     "s": "valet-parking-arrival-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29381,7 +29381,7 @@
   },
   {
     "s": "vineyard-mountain-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29511,7 +29511,7 @@
   },
   {
     "s": "vineyard-view-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29536,7 +29536,7 @@
   },
   {
     "s": "wildlife-encounter-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29546,7 +29546,7 @@
   },
   {
     "s": "wildlife-encounters",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29576,12 +29576,12 @@
   },
   {
     "s": "wildlife-encounters-on-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "unobstructed-horizon-views",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29591,7 +29591,7 @@
   },
   {
     "s": "street-level-direct-entry",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29646,7 +29646,7 @@
   },
   {
     "s": "high-footfall-tourist-area",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29691,7 +29691,7 @@
   },
   {
     "s": "intimate-tight-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29786,7 +29786,7 @@
   },
   {
     "s": "limited-mobile-phone-signal",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29826,7 +29826,7 @@
   },
   {
     "s": "industrial-estate-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29851,7 +29851,7 @@
   },
   {
     "s": "intimate-table-spacing",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29926,12 +29926,12 @@
   },
   {
     "s": "intentionally-isolated-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "limited-nearby-dining-options",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29951,7 +29951,7 @@
   },
   {
     "s": "limited-cell-reception",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -29961,7 +29961,7 @@
   },
   {
     "s": "house-reef-snorkeling-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30086,7 +30086,7 @@
   },
   {
     "s": "limited-parking-availability",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30191,7 +30191,7 @@
   },
   {
     "s": "historic-building-conversion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30246,7 +30246,7 @@
   },
   {
     "s": "grindavik-town-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30261,12 +30261,12 @@
   },
   {
     "s": "international-destination-bar-status",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "journey-as-commitment",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30291,7 +30291,7 @@
   },
   {
     "s": "in-village-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30311,12 +30311,12 @@
   },
   {
     "s": "historic-building-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "grand-canal-frontage",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30376,7 +30376,7 @@
   },
   {
     "s": "infinity-pool-panoramic",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30396,7 +30396,7 @@
   },
   {
     "s": "journey-as-part-of-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30416,7 +30416,7 @@
   },
   {
     "s": "helicopter-access-only",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30426,12 +30426,12 @@
   },
   {
     "s": "lower-east-side-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "Lower-East-Side-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30446,7 +30446,7 @@
   },
   {
     "s": "greenhouse-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30561,7 +30561,7 @@
   },
   {
     "s": "intimate-small-scale",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30646,7 +30646,7 @@
   },
   {
     "s": "limited-seating-intimate-scale",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30666,7 +30666,7 @@
   },
   {
     "s": "grand-canal-direct-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30681,7 +30681,7 @@
   },
   {
     "s": "intimate-small-format",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30696,7 +30696,7 @@
   },
   {
     "s": "limited-beach-space",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30721,7 +30721,7 @@
   },
   {
     "s": "limited-seating-scarcity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30826,7 +30826,7 @@
   },
   {
     "s": "golf-cart-dominant-circulation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -30836,7 +30836,7 @@
   },
   {
     "s": "Hackney-neighborhood-identity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31041,7 +31041,7 @@
   },
   {
     "s": "island-surrounded-by-reef",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31051,7 +31051,7 @@
   },
   {
     "s": "lunar-landscape-aesthetic",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31081,7 +31081,7 @@
   },
   {
     "s": "jungle-canopy-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31181,7 +31181,7 @@
   },
   {
     "s": "historic-center-pedestrian-zone",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31231,12 +31231,12 @@
   },
   {
     "s": "isolated-countryside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "integrated-retail-complex",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31271,7 +31271,7 @@
   },
   {
     "s": "intentionally-secluded-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31311,7 +31311,7 @@
   },
   {
     "s": "isolated-destination-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31341,7 +31341,7 @@
   },
   {
     "s": "kitchen-garden-visible",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31396,7 +31396,7 @@
   },
   {
     "s": "limited-village-amenities",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31476,7 +31476,7 @@
   },
   {
     "s": "local-neighborhood-anchor",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31501,12 +31501,12 @@
   },
   {
     "s": "hidden-courtyard-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "hidden-courtyard-oasis",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31526,7 +31526,7 @@
   },
   {
     "s": "intentionally-compact",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31541,7 +31541,7 @@
   },
   {
     "s": "local-neighborhood-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31596,7 +31596,7 @@
   },
   {
     "s": "isolated-from-town-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31656,7 +31656,7 @@
   },
   {
     "s": "ground-floor-street-level-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31681,12 +31681,12 @@
   },
   {
     "s": "isolated-from-urban-services",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "lush-garden-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31781,7 +31781,7 @@
   },
   {
     "s": "kitchen-extraction-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31796,7 +31796,7 @@
   },
   {
     "s": "insider-knowledge-required",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31821,7 +31821,7 @@
   },
   {
     "s": "insider-knowledge-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -31901,7 +31901,7 @@
   },
   {
     "s": "isolated-rural-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32031,7 +32031,7 @@
   },
   {
     "s": "hidden-entrance-aesthetic",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32061,7 +32061,7 @@
   },
   {
     "s": "hidden-entrance-by-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32156,7 +32156,7 @@
   },
   {
     "s": "long-drive-required-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32211,7 +32211,7 @@
   },
   {
     "s": "historic-district-character",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32226,7 +32226,7 @@
   },
   {
     "s": "hidden-entrance-discovery-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32276,7 +32276,7 @@
   },
   {
     "s": "infrastructure-vulnerability-remote-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32321,7 +32321,7 @@
   },
   {
     "s": "historic-district-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32346,7 +32346,7 @@
   },
   {
     "s": "hidden-entrance-speakeasy",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32441,7 +32441,7 @@
   },
   {
     "s": "lake-view-defining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32481,7 +32481,7 @@
   },
   {
     "s": "lake-view-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32506,7 +32506,7 @@
   },
   {
     "s": "lake-view-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32631,7 +32631,7 @@
   },
   {
     "s": "luxury-retail-district-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32641,7 +32641,7 @@
   },
   {
     "s": "lakefront-direct-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32681,7 +32681,7 @@
   },
   {
     "s": "lakefront-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32761,7 +32761,7 @@
   },
   {
     "s": "hot-air-balloon-launch-site",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32861,12 +32861,12 @@
   },
   {
     "s": "hidden-garden-oasis",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "golf-adjacent",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32901,7 +32901,7 @@
   },
   {
     "s": "high-density-urban-center",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -32981,12 +32981,12 @@
   },
   {
     "s": "hidden-gem-discovery",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "lakeside-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33001,7 +33001,7 @@
   },
   {
     "s": "harbour-view-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33041,7 +33041,7 @@
   },
   {
     "s": "hidden-gem-discovery-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33226,7 +33226,7 @@
   },
   {
     "s": "inconspicuous-exterior-presentation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33361,7 +33361,7 @@
   },
   {
     "s": "limited-dining-alternatives-nearby",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33431,7 +33431,7 @@
   },
   {
     "s": "high-altitude-mountain-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33501,12 +33501,12 @@
   },
   {
     "s": "greenhouse-dining-space",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "gothic-quarter-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33601,7 +33601,7 @@
   },
   {
     "s": "grounds-as-primary-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33621,7 +33621,7 @@
   },
   {
     "s": "jardins-prime-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33686,7 +33686,7 @@
   },
   {
     "s": "high-street-central-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33756,7 +33756,7 @@
   },
   {
     "s": "grand-canal-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33791,7 +33791,7 @@
   },
   {
     "s": "hilltop-commanding-position",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33816,7 +33816,7 @@
   },
   {
     "s": "grand-canal-theater-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -33961,7 +33961,7 @@
   },
   {
     "s": "industrial-waterfront-district",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34146,7 +34146,7 @@
   },
   {
     "s": "heated-outdoor-terrace",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34276,7 +34276,7 @@
   },
   {
     "s": "central-london-dense-urban",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34321,7 +34321,7 @@
   },
   {
     "s": "central-london-fine-dining-corridor",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34341,7 +34341,7 @@
   },
   {
     "s": "central-London-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34431,7 +34431,7 @@
   },
   {
     "s": "bahnhofstrasse-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34441,7 +34441,7 @@
   },
   {
     "s": "central-marrakech-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34476,7 +34476,7 @@
   },
   {
     "s": "central-old-town-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34531,7 +34531,7 @@
   },
   {
     "s": "central-paris-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34546,7 +34546,7 @@
   },
   {
     "s": "4x4-access-requirement",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34561,12 +34561,12 @@
   },
   {
     "s": "cliff-edge-architecture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "cliff-edge-dramatic-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34616,7 +34616,7 @@
   },
   {
     "s": "central-piazza-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34691,7 +34691,7 @@
   },
   {
     "s": "central-singapore-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34761,12 +34761,12 @@
   },
   {
     "s": "bay-enclosed-geography",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "bar-seating-alternative",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34806,7 +34806,7 @@
   },
   {
     "s": "bay-mountain-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34856,17 +34856,17 @@
   },
   {
     "s": "bicycle-primary-transport",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "alpine-mountain-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "bay-view-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34896,7 +34896,7 @@
   },
   {
     "s": "central-yet-quiet-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -34911,7 +34911,7 @@
   },
   {
     "s": "bay-view-orientation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35026,7 +35026,7 @@
   },
   {
     "s": "centro-historico-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35201,7 +35201,7 @@
   },
   {
     "s": "agricultural-landscape-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35216,7 +35216,7 @@
   },
   {
     "s": "basement-dining-area",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35346,7 +35346,7 @@
   },
   {
     "s": "alpine-resort-town-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35396,7 +35396,7 @@
   },
   {
     "s": "cloud-forest-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35601,7 +35601,7 @@
   },
   {
     "s": "buffer-zone-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35646,7 +35646,7 @@
   },
   {
     "s": "car-free-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35686,7 +35686,7 @@
   },
   {
     "s": "airport-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35746,12 +35746,12 @@
   },
   {
     "s": "airport-proximity-convenience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "airport-proximity-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35766,12 +35766,12 @@
   },
   {
     "s": "cave-dining-spectacle",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "agricultural-working-landscape-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35781,7 +35781,7 @@
   },
   {
     "s": "car-rental-necessity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35816,7 +35816,7 @@
   },
   {
     "s": "airport-proximity-tradeoff",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35836,7 +35836,7 @@
   },
   {
     "s": "communal-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -35991,7 +35991,7 @@
   },
   {
     "s": "challenging-mountain-road-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36021,7 +36021,7 @@
   },
   {
     "s": "challenging-parking-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36041,7 +36041,7 @@
   },
   {
     "s": "communal-table-seating-option",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36151,7 +36151,7 @@
   },
   {
     "s": "cobblestone-street-approach",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36216,7 +36216,7 @@
   },
   {
     "s": "art-deco-architecture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36251,7 +36251,7 @@
   },
   {
     "s": "18th-floor-elevated-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36371,7 +36371,7 @@
   },
   {
     "s": "Bermondsey-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36471,7 +36471,7 @@
   },
   {
     "s": "carnaby-soho-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36506,7 +36506,7 @@
   },
   {
     "s": "away-from-crowds-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36566,7 +36566,7 @@
   },
   {
     "s": "boat-accessible-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36586,7 +36586,7 @@
   },
   {
     "s": "away-from-tourist-crowds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36596,7 +36596,7 @@
   },
   {
     "s": "ancient-olive-trees",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36796,12 +36796,12 @@
   },
   {
     "s": "boat-dependent-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "bridge-connected-island-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36816,22 +36816,22 @@
   },
   {
     "s": "compact-footprint",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "airport-transfer-dependency",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "beachfront-positioned",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "beachfront-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36856,7 +36856,7 @@
   },
   {
     "s": "airport-transfer-distance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36961,7 +36961,7 @@
   },
   {
     "s": "boat-transfer-arrival-ritual",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -36971,7 +36971,7 @@
   },
   {
     "s": "boat-transfer-required",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37001,7 +37001,7 @@
   },
   {
     "s": "bus-accessible-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37016,7 +37016,7 @@
   },
   {
     "s": "airport-transfer-required-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37036,7 +37036,7 @@
   },
   {
     "s": "compact-market-footprint",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37076,7 +37076,7 @@
   },
   {
     "s": "City-of-London-financial-district",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37321,7 +37321,7 @@
   },
   {
     "s": "architectural-landmark-building",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37331,7 +37331,7 @@
   },
   {
     "s": "canal-adjacent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37476,7 +37476,7 @@
   },
   {
     "s": "casino-adjacent-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37511,7 +37511,7 @@
   },
   {
     "s": "canal-side-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37606,7 +37606,7 @@
   },
   {
     "s": "business-district-evening-transformation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37651,7 +37651,7 @@
   },
   {
     "s": "competitive-dining-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37736,7 +37736,7 @@
   },
   {
     "s": "charming-neighborhood-character",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37846,7 +37846,7 @@
   },
   {
     "s": "complete-destination-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37861,7 +37861,7 @@
   },
   {
     "s": "complete-digital-disconnection-zone",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37886,7 +37886,7 @@
   },
   {
     "s": "complete-geographic-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37906,7 +37906,7 @@
   },
   {
     "s": "complete-island-self-containment",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37926,7 +37926,7 @@
   },
   {
     "s": "complete-isolation-from-urban-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -37976,7 +37976,7 @@
   },
   {
     "s": "central-business-district-proximity",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38021,7 +38021,7 @@
   },
   {
     "s": "16th-arrondissement-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38051,7 +38051,7 @@
   },
   {
     "s": "central-copenhagen-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38071,7 +38071,7 @@
   },
   {
     "s": "complete-visual-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38151,7 +38151,7 @@
   },
   {
     "s": "Broadway-Market-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38196,7 +38196,7 @@
   },
   {
     "s": "central-historic-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38221,12 +38221,12 @@
   },
   {
     "s": "alpine-isolation-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "casual-drop-in-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38321,12 +38321,12 @@
   },
   {
     "s": "working-ranch-integration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "working-farm-estate-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38341,7 +38341,7 @@
   },
   {
     "s": "zero-commercial-infrastructure",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38366,7 +38366,7 @@
   },
   {
     "s": "working-farm-integrated",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38381,7 +38381,7 @@
   },
   {
     "s": "zoo-view-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38406,7 +38406,7 @@
   },
   {
     "s": "working-farm-on-property",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38416,7 +38416,7 @@
   },
   {
     "s": "working-neighborhood-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38461,7 +38461,7 @@
   },
   {
     "s": "working-farm-with-animals",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38491,7 +38491,7 @@
   },
   {
     "s": "zero-light-pollution-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38526,7 +38526,7 @@
   },
   {
     "s": "wythe-avenue-corridor-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38536,7 +38536,7 @@
   },
   {
     "s": "winter-wonderland-seasonal-transformation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38621,12 +38621,12 @@
   },
   {
     "s": "working-class-neighborhood-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "working-class-neighborhood-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38676,7 +38676,7 @@
   },
   {
     "s": "working-vineyard-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38696,12 +38696,12 @@
   },
   {
     "s": "working-vineyard-estate-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "working-vineyard-immersion",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38716,7 +38716,7 @@
   },
   {
     "s": "wine-country-touring-base",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38741,7 +38741,7 @@
   },
   {
     "s": "winter-access-challenges",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38761,7 +38761,7 @@
   },
   {
     "s": "worth-the-detour-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38771,12 +38771,12 @@
   },
   {
     "s": "worth-the-journey-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "worth-the-journey-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38891,7 +38891,7 @@
   },
   {
     "s": "cramped-intimate-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -38966,7 +38966,7 @@
   },
   {
     "s": "cotswolds-village-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39096,12 +39096,12 @@
   },
   {
     "s": "cramped-seating-layout",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "dolomites-mountain-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39126,7 +39126,7 @@
   },
   {
     "s": "escape-from-coastal-crowds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39136,7 +39136,7 @@
   },
   {
     "s": "disconnect-enabling-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39256,7 +39256,7 @@
   },
   {
     "s": "ganton-street-side-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39331,7 +39331,7 @@
   },
   {
     "s": "courtyard-dining-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39491,7 +39491,7 @@
   },
   {
     "s": "discovery-as-arrival-ritual",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39506,12 +39506,12 @@
   },
   {
     "s": "garden-courtyard-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "courtyard-entry-sequence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39606,7 +39606,7 @@
   },
   {
     "s": "extensive-estate-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39651,7 +39651,7 @@
   },
   {
     "s": "extensive-garden-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39666,7 +39666,7 @@
   },
   {
     "s": "corso-main-street-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39746,7 +39746,7 @@
   },
   {
     "s": "garden-immersive",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39806,7 +39806,7 @@
   },
   {
     "s": "forest-immersive-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39816,7 +39816,7 @@
   },
   {
     "s": "forest-integrated-architecture",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39876,7 +39876,7 @@
   },
   {
     "s": "countryside-escape-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -39946,7 +39946,7 @@
   },
   {
     "s": "estate-grounds-exploration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40031,7 +40031,7 @@
   },
   {
     "s": "courtyard-garden-centered",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40071,7 +40071,7 @@
   },
   {
     "s": "difficult-access-by-design",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40156,7 +40156,7 @@
   },
   {
     "s": "garden-view-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40171,7 +40171,7 @@
   },
   {
     "s": "courtyard-garden-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40181,7 +40181,7 @@
   },
   {
     "s": "countryside-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40276,7 +40276,7 @@
   },
   {
     "s": "difficult-parking",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40286,7 +40286,7 @@
   },
   {
     "s": "fishing-village-context",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40346,7 +40346,7 @@
   },
   {
     "s": "cycling-route-stopover",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40481,12 +40481,12 @@
   },
   {
     "s": "difficult-to-find-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "countryside-retreat-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40541,7 +40541,7 @@
   },
   {
     "s": "difficult-vehicle-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40611,7 +40611,7 @@
   },
   {
     "s": "destination-dining-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40661,12 +40661,12 @@
   },
   {
     "s": "destination-dining-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "destination-dining-not-neighborhood",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40676,7 +40676,7 @@
   },
   {
     "s": "gated-estate-arrival",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40686,7 +40686,7 @@
   },
   {
     "s": "gated-estate-entrance",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40711,7 +40711,7 @@
   },
   {
     "s": "destination-dining-remote-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40761,17 +40761,17 @@
   },
   {
     "s": "extreme-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "gated-resort-compound",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "extreme-isolation-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40786,7 +40786,7 @@
   },
   {
     "s": "destination-endpoint-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40891,12 +40891,12 @@
   },
   {
     "s": "extreme-remote-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "extreme-remoteness-as-feature",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -40971,7 +40971,7 @@
   },
   {
     "s": "day-trip-destination-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41026,7 +41026,7 @@
   },
   {
     "s": "coral-garden-house-reef",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41066,7 +41066,7 @@
   },
   {
     "s": "destination-not-stopover",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41076,12 +41076,12 @@
   },
   {
     "s": "expansive-estate-grounds",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "destination-not-stopover-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41091,7 +41091,7 @@
   },
   {
     "s": "destination-property-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41156,7 +41156,7 @@
   },
   {
     "s": "downstairs-dining-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41176,7 +41176,7 @@
   },
   {
     "s": "expansive-property-footprint",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41231,7 +41231,7 @@
   },
   {
     "s": "end-of-world-isolation",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41246,7 +41246,7 @@
   },
   {
     "s": "Eiffel-Tower-view-rooms",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41266,7 +41266,7 @@
   },
   {
     "s": "eight-table-intimacy",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41281,7 +41281,7 @@
   },
   {
     "s": "ferry-accessible",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41331,7 +41331,7 @@
   },
   {
     "s": "eixample-grid-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41341,7 +41341,7 @@
   },
   {
     "s": "eixample-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41406,7 +41406,7 @@
   },
   {
     "s": "dispersed-attraction-geography",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41456,7 +41456,7 @@
   },
   {
     "s": "destination-within-destination",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41476,7 +41476,7 @@
   },
   {
     "s": "destination-worth-traveling-to",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41486,7 +41486,7 @@
   },
   {
     "s": "dramatic-arrival-contrast",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41506,7 +41506,7 @@
   },
   {
     "s": "dramatic-arrival-reveal",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41606,7 +41606,7 @@
   },
   {
     "s": "dual-space-concept",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41641,7 +41641,7 @@
   },
   {
     "s": "easy-airport-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41651,7 +41651,7 @@
   },
   {
     "s": "dramatic-entrance-reveal",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41681,7 +41681,7 @@
   },
   {
     "s": "desert-canyon-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41726,7 +41726,7 @@
   },
   {
     "s": "easy-to-miss-street-presence",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41761,7 +41761,7 @@
   },
   {
     "s": "front-terrace-seating",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41861,7 +41861,7 @@
   },
   {
     "s": "desert-immersive-setting",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -41946,7 +41946,7 @@
   },
   {
     "s": "dual-vista-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42031,7 +42031,7 @@
   },
   {
     "s": "contrada-rural-address",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42106,7 +42106,7 @@
   },
   {
     "s": "deliberate-destination-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42151,7 +42151,7 @@
   },
   {
     "s": "dark-sky-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42166,7 +42166,7 @@
   },
   {
     "s": "dark-sky-stargazing-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42296,7 +42296,7 @@
   },
   {
     "s": "duomo-adjacent-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42336,7 +42336,7 @@
   },
   {
     "s": "finding-it-is-part-of-experience",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42361,7 +42361,7 @@
   },
   {
     "s": "direct-beach-access-from-room",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42381,12 +42381,12 @@
   },
   {
     "s": "connected-to-luxury-shopping",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "covered-terrace-dining",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42481,7 +42481,7 @@
   },
   {
     "s": "contrast-between-street-and-interior",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42551,7 +42551,7 @@
   },
   {
     "s": "crystalline-turquoise-water",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42561,7 +42561,7 @@
   },
   {
     "s": "deliberate-remoteness",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42581,7 +42581,7 @@
   },
   {
     "s": "direct-hiking-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42591,7 +42591,7 @@
   },
   {
     "s": "fine-white-sand",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42636,7 +42636,7 @@
   },
   {
     "s": "cotswolds-market-town-location",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42666,7 +42666,7 @@
   },
   {
     "s": "direct-mall-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42736,7 +42736,7 @@
   },
   {
     "s": "elevated-hillside-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42771,7 +42771,7 @@
   },
   {
     "s": "elevated-hilltop-position",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42786,7 +42786,7 @@
   },
   {
     "s": "elevated-hilltop-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42806,12 +42806,12 @@
   },
   {
     "s": "fly-in-only-access",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
     "s": "fly-in-only-accessibility",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -42866,7 +42866,7 @@
   },
   {
     "s": "edge-of-town-positioning",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -43096,7 +43096,7 @@
   },
   {
     "s": "dual-access-configuration",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {
@@ -43151,7 +43151,7 @@
   },
   {
     "s": "dual-access-route-choice",
-    "d": "Setting",
+    "d": "Geography",
     "df": 2
   },
   {

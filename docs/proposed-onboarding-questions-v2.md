@@ -219,7 +219,7 @@
 - "Coffee and warm bread"
 - "Jasmine at night"
 - "Old books and stone"
-**Domain:** Atmosphere + Setting
+**Domain:** Atmosphere + Geography
 **Note:** Playful but reveals climate/setting/atmosphere through sensory memory
 
 ### SP4 — Light Quality
@@ -445,7 +445,7 @@
 - "Thick walls, small windows — the room is a refuge from outside"
 - "A courtyard — the outside is brought inside, contained"
 **Signals:** `Open-air-obsessed`, `View-seeker-protected`, `Cocoon-builder`, `Courtyard-dweller`
-**Domain:** Design + Setting
+**Domain:** Design + Geography
 
 ---
 
@@ -468,7 +468,7 @@
 **Right:** "Barely on the map — figuring it out is half the point"
 **Signals left:** `Infrastructure-valued`, `Reliability-first`
 **Signals right:** `Pioneer-traveler`, `Friction-as-adventure`
-**Domain:** Setting
+**Domain:** Geography
 
 ### CI3 — Cultural Depth
 **Modality:** scene (4 options)
@@ -479,7 +479,7 @@
 - "Book a private tea ceremony or cooking class"
 - "Go where the hotel recommends — they know best"
 **Signals:** `Landmark-visitor`, `Neighborhood-wanderer`, `Cultural-experience-seeker`, `Hotel-guided`
-**Domain:** Character + Setting
+**Domain:** Character + Geography
 
 ### CI4 — Local vs International
 **Modality:** cards (A/B)
@@ -532,7 +532,7 @@
 **B:** "Average location, extraordinary hotel"
 **Signals A:** `Location-over-property`, `Context-first`
 **Signals B:** `Property-over-location`, `Destination-in-itself`
-**Domain:** Setting + Design
+**Domain:** Geography + Design
 
 ---
 

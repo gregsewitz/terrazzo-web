@@ -116,7 +116,7 @@ export const SECTION = {
     /** Card gradient background */
     cardBg: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)',
     /** Card border */
-    cardBorder: `1px solid ${INK['06']}`,
+    cardBorder: `1px solid ${COLOR.coral}`,
     /** SectionLabel color prop */
     label: COLOR.coral,
     /** Uppercase mono labels inside cards (e.g. "TASTE TENSION") */

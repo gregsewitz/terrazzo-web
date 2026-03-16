@@ -282,7 +282,7 @@ function ProfilePageContent() {
 
   // Build numeric profile for mosaic visualization from radar data
   const numericProfile: NumericProfile = useMemo(() => {
-    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
+    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Geography: 0.5, Wellness: 0.5, Sustainability: 0.5 };
     const radarData = (profile as { radarData?: { axis: string; value: number }[] }).radarData;
     if (radarData) {
       for (const r of radarData) {
@@ -639,7 +639,7 @@ function ProfilePageContent() {
             className="rounded-2xl overflow-hidden mb-8"
             style={{
               background: '#ffffff',
-              border: '1px solid var(--t-linen)',
+              border: '1px solid var(--t-coral)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
             }}
           >
@@ -688,7 +688,7 @@ function ProfilePageContent() {
             </div>
 
             {/* Bottom bar: stats + CTAs — plain pattern with coral gradient */}
-            <div className="flex items-center gap-6 px-8 py-4" style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)' }}>
+            <div className="flex items-center gap-6 px-8 py-4" style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', borderTop: '1px solid var(--t-coral)' }}>
               {/* Quick stats */}
               <div className="flex items-center gap-6">
                 <div className="text-center">
@@ -725,7 +725,7 @@ function ProfilePageContent() {
                 <SafeMotionButton
                   onClick={() => setShowMosaic(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.15) 0%, rgba(238,113,109,0.06) 100%)', border: `1px solid ${INK['06']}` }}
+                  style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.15) 0%, rgba(238,113,109,0.06) 100%)', border: '1px solid var(--t-coral)' }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -952,7 +952,7 @@ function ProfilePageContent() {
               className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
-                border: '1px solid rgba(238,113,109,0.12)',
+                border: '1px solid var(--t-coral)',
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -1363,7 +1363,7 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
             <PlaceLink key={card.place} name={card.place} location={card.location} googlePlaceId={card.googlePlaceId}>
               <SafeMotionDiv
                 className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
-                style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: `1px solid ${INK['06']}`, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
+                style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: '1px solid var(--t-coral)', width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
                 initial={{ opacity: 0, x: -20, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
@@ -1371,8 +1371,8 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
               >
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <PerriandIcon name="sparkle" size={12} color={COLOR.coral} />
-                    <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${COLOR.coral}12`, color: COLOR.coral, fontFamily: FONT.mono }}>
+                    <PerriandIcon name="sparkle" size={12} color={domainColor} />
+                    <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${domainColor}18`, color: domainColor, fontFamily: FONT.mono }}>
                       {card.signalDomain}
                     </span>
                   </div>
@@ -1587,7 +1587,7 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
           <SafeMotionDiv
             key={board.mood}
             className="p-4 rounded-2xl"
-            style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: `1px solid ${INK['06']}`, borderLeft: `3px solid ${board.color}` }}
+            style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: '1px solid var(--t-coral)', borderLeft: `3px solid ${board.color}` }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: idx * 0.1 }}

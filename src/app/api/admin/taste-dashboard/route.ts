@@ -34,7 +34,7 @@ export async function GET() {
     // Build TasteProfile from radarData for LLM scoring
     const userTasteProfile: TasteProfile = {
       Design: 0.5, Atmosphere: 0.5, Character: 0.5,
-      Service: 0.5, FoodDrink: 0.5, Setting: 0.5,
+      Service: 0.5, FoodDrink: 0.5, Geography: 0.5,
       Wellness: 0.5, Sustainability: 0.5,
     };
 
@@ -44,7 +44,7 @@ export async function GET() {
       character: 'Character', 'character & identity': 'Character',
       service: 'Service', 'service philosophy': 'Service',
       fooddrink: 'FoodDrink', 'food & drink': 'FoodDrink', 'food & drink identity': 'FoodDrink', food: 'FoodDrink',
-      setting: 'Setting', 'location & context': 'Setting', 'location & setting': 'Setting', location: 'Setting',
+      setting: 'Geography', 'location & context': 'Geography', 'location & setting': 'Geography', location: 'Geography',
       wellness: 'Wellness', 'wellness & body': 'Wellness',
       sustainability: 'Sustainability',
     };
@@ -148,7 +148,7 @@ export async function GET() {
       { domain: 'Design', start: 136, end: 191 },
       { domain: 'FoodDrink', start: 192, end: 263 },
       { domain: 'Service', start: 264, end: 336 },
-      { domain: 'Setting', start: 337, end: 379 },
+      { domain: 'Geography', start: 337, end: 379 },
       { domain: 'Sustainability', start: 380, end: 386 },
       { domain: 'Wellness', start: 387, end: 399 },
     ];

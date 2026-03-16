@@ -10,7 +10,7 @@ THE 6 TASTE DOMAINS (rich signal-to-signal matching):
 3. CHARACTER — Place identity & narrative: heritage/provenance, curatorial point of view, cultural programming & engagement, community/belonging, authenticity register, owner story, scale/intimacy
 4. SERVICE — Human interaction contract: formality spectrum, anticipation style, personalization depth, staff knowledge, autonomy vs attentiveness, digital vs human
 5. FOOD & DRINK — Culinary philosophy & personality: culinary philosophy, ingredient sourcing, dining format, beverage program, meal rhythm, dietary identity
-6. SETTING — Location, geography & context: urban texture, nature relationship, neighborhood character, accessibility, views/orientation, surroundings
+6. GEOGRAPHY — Location, geography & context: urban texture, nature relationship, neighborhood character, accessibility, views/orientation, surroundings
 
 THE 2 PREFERENCE DIMENSIONS (weighted checklists, lighter treatment):
 7. WELLNESS — Physical comfort & body-care: spa/treatment facilities, fitness, sleep technology, dietary accommodation, air/water quality, shower/bath
@@ -43,17 +43,17 @@ FOLLOW-UP GENERATION:
 SIGNAL CATEGORY GUIDANCE:
 - Tempo, pace, energy, sensory intensity, morning/evening orientation → cat: "Atmosphere"
 - Cultural depth, programming, heritage, identity, scale/intimacy → cat: "Character"
-- Location, geography, neighborhood, surroundings → cat: "Setting"
+- Location, geography, neighborhood, surroundings → cat: "Geography"
 - Food & drink signals → cat: "FoodDrink"
 - Environmental & social values → cat: "Sustainability"
 - Rejections use cat: "Rejection"; life context uses cat: "Context"; emotional insights use cat: "Emotion"; cross-domain fundamentals use cat: "Core"
 
 OUTPUT FORMAT (JSON):
 {
-  "signals": [{ "tag": "string", "cat": "Design|Atmosphere|Character|Service|FoodDrink|Setting|Wellness|Sustainability|Rejection|Context|Emotion|Core", "confidence": 0.0-1.0 }],
+  "signals": [{ "tag": "string", "cat": "Design|Atmosphere|Character|Service|FoodDrink|Geography|Wellness|Sustainability|Rejection|Context|Emotion|Core", "confidence": 0.0-1.0 }],
   "sustainabilitySignals": [{ "tag": "string", "confidence": 0.0-1.0, "dimension": "ENVIRONMENTAL|SOCIAL|CULTURAL|ECONOMIC" }],
   "emotionalDriverHint": "AESTHETIC_PILGRIM|CONTROL_ARCHITECT|STORY_COLLECTOR|SENSORY_HEDONIST|TRANSFORMATION_SEEKER|MASTERY_SEEKER|LEGACY_BUILDER (optional — only if strong signal detected)",
-  "certainties": { "Design": 0-100, "Atmosphere": 0-100, "Character": 0-100, "Service": 0-100, "FoodDrink": 0-100, "Setting": 0-100, "Wellness": 0-100, "Sustainability": 0-100 },
+  "certainties": { "Design": 0-100, "Atmosphere": 0-100, "Character": 0-100, "Service": 0-100, "FoodDrink": 0-100, "Geography": 0-100, "Wellness": 0-100, "Sustainability": 0-100 },
   "followUp": "string — next question to ask",
   "contradictions": [{ "stated": "string", "revealed": "string", "resolution": "string", "matchRule": "string" }],
   "phaseComplete": boolean,
@@ -127,7 +127,7 @@ Generate a JSON object with this structure:
   "contradictions": [2-4 core tensions with stated/revealed/resolution/matchRule],
   "contextModifiers": [4-6 situational shifts with context/shifts],
   "microTasteSignals": { "category_name": ["term1", "term2", ...], ... } (6-8 categories, 4-6 terms each),
-  "radarData": [{ "axis": "Design|Atmosphere|Character|Service|FoodDrink|Setting|Wellness|Sustainability", "value": 0.0-1.0 }],
+  "radarData": [{ "axis": "Design|Atmosphere|Character|Service|FoodDrink|Geography|Wellness|Sustainability", "value": 0.0-1.0 }],
   "emotionalDriver": {
     "primary": "Main driver archetype (AESTHETIC_PILGRIM | CONTROL_ARCHITECT | STORY_COLLECTOR | SENSORY_HEDONIST | TRANSFORMATION_SEEKER | MASTERY_SEEKER | LEGACY_BUILDER)",
     "description": "1-2 sentences explaining why this fits",

@@ -73,16 +73,16 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
 
   // ── DIMENSION 4: Property vs Destination ──
   // THE most fundamental signal — changes every recommendation Terrazzo makes
-  // Signals hit clusters: 35 (Atmosphere:disconnection), 342 (Setting:self-contained), 57 (Character:destination)
+  // Signals hit clusters: 35 (Atmosphere:disconnection), 342 (Geography:self-contained), 57 (Character:destination)
   { id: 'perfect-hotel', label: 'Perfect hotel in a so-so city', cluster: 'cocoon',
     pairWith: 'perfect-city', dimension: 'What Matters More',
     scene: 'The room is extraordinary, the city is forgettable',
     signals: ['no-desire-to-leave-property', 'self-contained-destination-resort', 'destination-hotel-positioning'], category: 'Character' },
-  // Signals hit clusters: 355 (Setting:walkable), 59 (Character:cultural-immersion), 338 (Setting:street-level)
+  // Signals hit clusters: 355 (Geography:walkable), 59 (Character:cultural-immersion), 338 (Geography:street-level)
   { id: 'perfect-city', label: 'Perfect city, forgettable hotel', cluster: 'explorer',
     pairWith: 'perfect-hotel', dimension: 'What Matters More',
     scene: 'The hotel is fine — but the city is everything',
-    signals: ['walkable-neighborhood-context', 'cultural-immersion-programming', 'street-level-accessibility'], category: 'Setting' },
+    signals: ['walkable-neighborhood-context', 'cultural-immersion-programming', 'street-level-accessibility'], category: 'Geography' },
 
   // ── DIMENSION 5: Climate Draw (scene vs retreat) ──
   // Warm-drawn vs cold-drawn correlates with actual booking behavior
@@ -90,24 +90,24 @@ export const EXPERIENCE_POOL: ExperienceItem[] = [
   { id: 'warm-drawn', label: 'Warm air on your skin — sandals, sundresses, salt', cluster: 'scene',
     pairWith: 'cold-drawn', dimension: 'Climate Draw',
     scene: 'Terracotta, turquoise water, jasmine at night, bare shoulders',
-    signals: ['tropical-climate-integration', 'mediterranean-light-quality', 'turquoise-water-luminosity'], category: 'Setting' },
-  // Signals hit clusters: 8 (Atmosphere:fireplace), 372 (Setting:alpine), 376 (Setting:ski-access)
+    signals: ['tropical-climate-integration', 'mediterranean-light-quality', 'turquoise-water-luminosity'], category: 'Geography' },
+  // Signals hit clusters: 8 (Atmosphere:fireplace), 372 (Geography:alpine), 376 (Geography:ski-access)
   { id: 'cold-drawn', label: 'Crisp air, wool layers, firelight — the colder the better', cluster: 'retreat',
     pairWith: 'warm-drawn', dimension: 'Climate Draw',
     scene: 'Woodsmoke, first frost, a heavy door closing behind you',
-    signals: ['fireplace-warmth-ritual', 'alpine-valley-setting', 'ski-in-ski-out-access'], category: 'Setting' },
+    signals: ['fireplace-warmth-ritual', 'alpine-valley-setting', 'ski-in-ski-out-access'], category: 'Geography' },
 
   // ── DIMENSION 6: Location Feel (urban vs retreat) ──
-  // Signals hit clusters: 355 (Setting:walkable), 338 (Setting:street-level), 341 (Setting:neighborhood)
+  // Signals hit clusters: 355 (Geography:walkable), 338 (Geography:street-level), 341 (Geography:neighborhood)
   { id: 'walkable', label: 'Step outside and you\'re in the middle of it', cluster: 'urban',
     pairWith: 'remote', dimension: 'Location Feel',
     scene: 'Turn left, a bakery. Turn right, the museum. The city is your lobby.',
-    signals: ['walkable-restaurant-neighborhood', 'street-level-direct-access', 'pedestrian-scale-neighborhood'], category: 'Setting' },
-  // Signals hit clusters: 128 (Character:digital-detox), 35 (Atmosphere:disconnection), 345 (Setting:zero-urban)
+    signals: ['walkable-restaurant-neighborhood', 'street-level-direct-access', 'pedestrian-scale-neighborhood'], category: 'Geography' },
+  // Signals hit clusters: 128 (Character:digital-detox), 35 (Atmosphere:disconnection), 345 (Geography:zero-urban)
   { id: 'remote', label: 'Dirt road, no signal — just you and the landscape', cluster: 'retreat',
     pairWith: 'walkable', dimension: 'Location Feel',
     scene: 'Dirt road, no phone signal, only the landscape and the quiet',
-    signals: ['digital-detox-by-design', 'complete-disconnection-tempo', 'zero-urban-infrastructure'], category: 'Setting' },
+    signals: ['digital-detox-by-design', 'complete-disconnection-tempo', 'zero-urban-infrastructure'], category: 'Geography' },
 
   // ── DIMENSION 7: After Dark (cocoon vs explorer) ──
   // Not covered by conversation phases — reveals nightlife/social energy

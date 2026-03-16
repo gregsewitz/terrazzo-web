@@ -28,7 +28,7 @@ function place(
     matchScore: Math.round(85 + Math.random() * 12),
     matchBreakdown: {
       Design: 0.8, Atmosphere: 0.7, Character: 0.75,
-      Service: 0.6, FoodDrink: 0.85, Setting: 0.7,
+      Service: 0.6, FoodDrink: 0.85, Geography: 0.7,
       Wellness: 0.5, Sustainability: 0.6,
     },
     tasteNote: '',

@@ -147,7 +147,7 @@ export default function CollectionPickerList({
               className="flex-1 min-w-0 rounded-lg py-2.5 px-3 text-[12px]"
               style={{
                 background: 'white',
-                border: '1px solid var(--t-linen)',
+                border: '1px solid var(--t-navy)',
                 color: 'var(--t-ink)',
                 fontFamily: FONT.sans,
                 outline: 'none',

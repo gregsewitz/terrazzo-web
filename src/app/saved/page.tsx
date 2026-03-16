@@ -1119,7 +1119,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             style={{
               background: !isSmartMode ? TEXT.primary : 'white',
               color: !isSmartMode ? 'white' : TEXT.secondary,
-              border: !isSmartMode ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
+              border: !isSmartMode ? `1px solid ${TEXT.primary}` : '1px solid var(--t-navy)',
               fontFamily: FONT.mono,
             }}
           >
@@ -1132,7 +1132,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             style={{
               background: isSmartMode ? TEXT.primary : 'white',
               color: isSmartMode ? 'white' : TEXT.secondary,
-              border: isSmartMode ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
+              border: isSmartMode ? `1px solid ${TEXT.primary}` : '1px solid var(--t-navy)',
               fontFamily: FONT.mono,
             }}
           >

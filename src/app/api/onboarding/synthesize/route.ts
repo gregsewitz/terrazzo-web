@@ -31,7 +31,7 @@ ${JSON.stringify(certainties)}`;
 // ─── Chunk 1: Core Profile ───
 const CORE_SYSTEM = `You are synthesizing the CORE ANALYTICAL section of a Terrazzo taste profile.
 
-THE 6 TASTE DOMAINS: Design, Atmosphere, Character, Service, FoodDrink, Setting
+THE 6 TASTE DOMAINS: Design, Atmosphere, Character, Service, FoodDrink, Geography
 THE 2 PREFERENCE DIMENSIONS: Wellness, Sustainability
 
 EMOTIONAL DRIVER ARCHETYPES — classify the user into ONE primary:
@@ -55,7 +55,7 @@ Generate a JSON object with ONLY these fields:
   "contradictions": [2-4 core tensions with "stated", "revealed", "resolution", "matchRule"],
   "contextModifiers": [4-6 situational shifts with "context" and "shifts"],
   "microTasteSignals": { "category_name": ["term1", "term2", ...] } (6-8 categories, 4-6 terms each),
-  "radarData": [{ "axis": "Design|Atmosphere|Character|Service|FoodDrink|Setting|Wellness|Sustainability", "value": 0.0-1.0 }],
+  "radarData": [{ "axis": "Design|Atmosphere|Character|Service|FoodDrink|Geography|Wellness|Sustainability", "value": 0.0-1.0 }],
   "sustainabilityProfile": {
     "sensitivity": "LEADING | CONSCIOUS | PASSIVE | INDIFFERENT",
     "priorities": ["top sustainability priorities"],

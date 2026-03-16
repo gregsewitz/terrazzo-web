@@ -8,7 +8,7 @@
 
 ## Current State
 
-**Types layer** (`types/index.ts`): Already v2. `TasteDomain` is `'Design' | 'Atmosphere' | 'Character' | 'Service' | 'FoodDrink' | 'Setting' | 'Wellness' | 'Sustainability'`. `CORE_TASTE_DOMAINS`, `PREFERENCE_DIMENSIONS`, `ALL_TASTE_DOMAINS`, `DIMENSION_TO_DOMAIN` all exist and are v2-correct.
+**Types layer** (`types/index.ts`): Already v2. `TasteDomain` is `'Design' | 'Atmosphere' | 'Character' | 'Service' | 'FoodDrink' | 'Geography' | 'Wellness' | 'Sustainability'`. `CORE_TASTE_DOMAINS`, `PREFERENCE_DIMENSIONS`, `ALL_TASTE_DOMAINS`, `DIMENSION_TO_DOMAIN` all exist and are v2-correct.
 
 **Everything else**: Still v1. The onboarding constants, store, API routes, system prompts, and static profile data all reference the old 8 domains (Design, Character, Service, Food, Location, Wellness, Rhythm, CulturalEngagement).
 
@@ -32,7 +32,7 @@ const INITIAL_CERTAINTIES: Record<TasteDomain, number> = {
   Character: 5,
   Service: 5,
   FoodDrink: 5,
-  Setting: 5,
+  Geography: 5,
   // 2 Preference Dimensions — start slightly higher, thinner signal space
   Wellness: 10,
   Sustainability: 10,
@@ -52,10 +52,10 @@ Every phase definition has a `certaintyAfter` object using v1 keys. Remap all of
 | v1 Key | v2 Key(s) | Notes |
 |--------|-----------|-------|
 | `Design` | `Design` | Direct, but some sensory signals now → `Atmosphere` |
-| `Character` | `Character` + `Atmosphere` + `Setting` | Character was the v1 catch-all; redistribute |
+| `Character` | `Character` + `Atmosphere` + `Geography` | Character was the v1 catch-all; redistribute |
 | `Service` | `Service` | Direct |
 | `Food` | `FoodDrink` | Rename |
-| `Location` | `Setting` | Rename |
+| `Location` | `Geography` | Rename |
 | `Wellness` | `Wellness` | Direct (now preference dimension) |
 | `Rhythm` | `Atmosphere` | Tempo/pace/energy → Atmosphere |
 | `CulturalEngagement` | `Character` | Cultural depth folds into Character |
@@ -64,10 +64,10 @@ Rewrite every phase's `certaintyAfter` using v2 keys and realistic post-phase es
 
 ```typescript
 // v1 (current)
-certaintyAfter: { Design: 70, Character: 45, Service: 50, FoodDrink: 35, Setting: 50, Wellness: 10 },
+certaintyAfter: { Design: 70, Character: 45, Service: 50, FoodDrink: 35, Geography: 50, Wellness: 10 },
 
 // v2 (rewritten)
-certaintyAfter: { Design: 55, Atmosphere: 30, Character: 35, Service: 40, FoodDrink: 25, Setting: 35, Wellness: 8, Sustainability: 8 },
+certaintyAfter: { Design: 55, Atmosphere: 30, Character: 35, Service: 40, FoodDrink: 25, Geography: 35, Wellness: 8, Sustainability: 8 },
 ```
 
 Note: Certainty growth will be more distributed across 8 dimensions instead of concentrated in fewer, so individual per-phase jumps should be smaller.
@@ -81,9 +81,9 @@ Note: Certainty growth will be more distributed across 8 dimensions instead of c
 | `'Service'` | `'Service'` | room-service |
 | `'FoodDrink'` | `'FoodDrink'` | local-cafe |
 | `'Wellness'` | `'Wellness'` | infinity-pool, hidden-pool |
-| `'Character'` | Redistribute: `'Atmosphere'` (pace/energy items), `'Character'` (identity items), `'Setting'` (location items) | packed-day → Atmosphere, early-night → Atmosphere, perfect-hotel → Character, intimate-inn → Character |
+| `'Character'` | Redistribute: `'Atmosphere'` (pace/energy items), `'Character'` (identity items), `'Geography'` (location items) | packed-day → Atmosphere, early-night → Atmosphere, perfect-hotel → Character, intimate-inn → Character |
 | `'Design'` | `'Design'` | grand-lobby |
-| `'Setting'` | `'Setting'` | beach, mountain, walkable, remote |
+| `'Geography'` | `'Geography'` | beach, mountain, walkable, remote |
 
 Specific remappings within the pool:
 - `packed-day`, `slow-day` (Day Pace) → `'Atmosphere'` (energy/tempo)
@@ -140,7 +140,7 @@ THE 2 PREFERENCE DIMENSIONS (weighted checklists, lighter treatment):
 ```json
 "certainties": {
   "Design": 0-100, "Atmosphere": 0-100, "Character": 0-100,
-  "Service": 0-100, "FoodDrink": 0-100, "Setting": 0-100,
+  "Service": 0-100, "FoodDrink": 0-100, "Geography": 0-100,
   "Wellness": 0-100, "Sustainability": 0-100
 }
 ```
@@ -148,7 +148,7 @@ THE 2 PREFERENCE DIMENSIONS (weighted checklists, lighter treatment):
 **Update signal category guidance**: Currently signals use `cat` values that map to v1 domains. Guide Claude to use v2 categories:
 - Tempo, pace, energy, sensory signals → `cat: "Atmosphere"` (not "Rhythm" or "Character")
 - Cultural depth, programming, heritage → `cat: "Character"` (not "CulturalEngagement")
-- Location, geography, neighborhood → `cat: "Setting"` (not "Location")
+- Location, geography, neighborhood → `cat: "Geography"` (not "Location")
 - Food signals → `cat: "FoodDrink"` (not "Food")
 
 **Remove the separate sustainability extraction pathway**: Currently the prompt separates sustainability signals with dimension tags (ENVIRONMENTAL, SOCIAL, etc.). In v2, sustainability is a first-class preference dimension. Sustainability signals should use `cat: "Sustainability"` like any other domain, with the sub-dimension (ENVIRONMENTAL, etc.) as an optional metadata field.
@@ -168,13 +168,13 @@ THE 2 PREFERENCE DIMENSIONS (weighted checklists, lighter treatment):
   { "axis": "Character", "value": 0.0-1.0 },
   { "axis": "Service", "value": 0.0-1.0 },
   { "axis": "FoodDrink", "value": 0.0-1.0 },
-  { "axis": "Setting", "value": 0.0-1.0 },
+  { "axis": "Geography", "value": 0.0-1.0 },
   { "axis": "Wellness", "value": 0.0-1.0 },
   { "axis": "Sustainability", "value": 0.0-1.0 }
 ]
 ```
 
-**Update `microTasteSignals` categories**: Replace v1 category names with v2 domain names in the synthesis schema. Categories should be: "Design", "Atmosphere", "Character", "Service", "Food & Drink", "Setting", "Wellness", "Rejection".
+**Update `microTasteSignals` categories**: Replace v1 category names with v2 domain names in the synthesis schema. Categories should be: "Design", "Atmosphere", "Character", "Service", "Food & Drink", "Geography", "Wellness", "Rejection".
 
 **Update `sustainabilityProfile`**: Keep this section but frame it as the Sustainability preference dimension's detail view rather than a "cross-cutting" layer.
 
@@ -226,7 +226,7 @@ FINAL CERTAINTIES (6 taste domains + 2 preference dimensions):
 ${JSON.stringify(certainties)}
 
 IMPORTANT: Generate the profile using the v2 taxonomy:
-6 taste domains (Design, Atmosphere, Character, Service, FoodDrink, Setting) +
+6 taste domains (Design, Atmosphere, Character, Service, FoodDrink, Geography) +
 2 preference dimensions (Wellness, Sustainability).
 Include radarData with 8 axes matching these domains.
 ```
@@ -250,7 +250,7 @@ The static demo `TASTE_PROFILE` needs a full rewrite:
 - "Character & Identity" → "Character"
 - "Service Philosophy" → "Service"
 - "Food & Drink" → "Food & Drink"
-- "Location & Context" → "Setting"
+- "Location & Context" → "Geography"
 - "Wellness & Body" → "Wellness"
 - Add new: "Atmosphere" (with sensory, energy, tempo signals extracted from what was in Design and Character)
 - "Rejection" stays
@@ -263,7 +263,7 @@ radarData: [
   { axis: "Character", value: 0.88 },
   { axis: "Service", value: 0.82 },
   { axis: "FoodDrink", value: 0.78 },
-  { axis: "Setting", value: 0.85 },
+  { axis: "Geography", value: 0.85 },
   { axis: "Wellness", value: 0.65 },
   { axis: "Sustainability", value: 0.60 },
 ],
@@ -278,7 +278,7 @@ radarData: [
 
 // v2:
 "Design", "Atmosphere", "Character", "Service",
-"Food & Drink", "Setting", "Wellness", "Sustainability", "Rejection"
+"Food & Drink", "Geography", "Wellness", "Sustainability", "Rejection"
 ```
 
 **`AXIS_COLORS`**: Replace with v2 domain-keyed colors, aligning with `DOMAIN_COLORS` from `types/index.ts`.
@@ -309,7 +309,7 @@ Already imports `TasteDomain` and `ALL_TASTE_DOMAINS` from v2 types. The `comput
 ```typescript
 const DOMAIN_WEIGHTS: Record<TasteDomain, number> = {
   Design: 1.0, Atmosphere: 1.0, Character: 1.0,
-  Service: 1.0, FoodDrink: 1.0, Setting: 1.0,
+  Service: 1.0, FoodDrink: 1.0, Geography: 1.0,
   Wellness: 0.5,      // preference dimension — lighter weight
   Sustainability: 0.3, // preference dimension — lightest weight
 };
@@ -393,7 +393,7 @@ These files reference certainties or domain names and need spot-fixes:
        Character: Math.max(old.Character ?? 5, old.CulturalEngagement ?? 5),
        Service: old.Service ?? 5,
        FoodDrink: old.Food ?? 5,
-       Setting: old.Location ?? 5,
+       Geography: old.Location ?? 5,
        Wellness: old.Wellness ?? 10,
        Sustainability: 10, // new dimension, start fresh
      };
@@ -404,7 +404,7 @@ These files reference certainties or domain names and need spot-fixes:
    ```typescript
    const CAT_MIGRATION: Record<string, TasteDomain> = {
      'Food': 'FoodDrink',
-     'Location': 'Setting',
+     'Location': 'Geography',
      'Rhythm': 'Atmosphere',
      'CulturalEngagement': 'Character',
      // Design, Character, Service, Wellness stay the same

@@ -40,7 +40,7 @@ User domain preference: radarData values boost signal confidence (not separate v
 
 Domain assignment (contiguous cluster ranges — used for domain-slice queries):
   Atmosphere (0-50), Character (51-135), Design (136-191), FoodDrink (192-263),
-  Service (264-336), Setting (337-379), Sustainability (380-386), Wellness (387-399)
+  Service (264-336), Geography (337-379), Sustainability (380-386), Wellness (387-399)
   (ranges shift whenever K changes — these are the v3.2/v3.3/v3.4 ranges)
 ```
 
@@ -80,7 +80,7 @@ node scripts/extract-signal-corpus.mjs
 
 **Sanity checks:**
 - Total signal count should grow roughly proportional to new properties (was 5,047 at 360 places, 7,628 at 736 places)
-- Domain distribution: Service > FoodDrink > Character > Design > Setting > Atmosphere > Wellness > Sustainability
+- Domain distribution: Service > FoodDrink > Character > Design > Geography > Atmosphere > Wellness > Sustainability
 - Frequency distribution — bulk should be freq 2-5
 
 ### Step 2: Run Clustering
@@ -698,7 +698,7 @@ If you want to tune:
 - **Intra scale (0.30)**: Controls within-domain smoothing. Higher = smoother, lower = sharper.
 - **Cross scale (0.10)**: Controls cross-domain bridging. Keep low to avoid spurious connections.
 - **Cross threshold (0.5)**: Only high-similarity cross-domain pairs qualify. Lower = more bridges, more noise risk.
-- **Audit cross-domain links** after regenerating: check that "Japanese garden" (Setting) doesn't bleed to "Japanese breakfast" (FoodDrink) via surface vocabulary overlap.
+- **Audit cross-domain links** after regenerating: check that "Japanese garden" (Geography) doesn't bleed to "Japanese breakfast" (FoodDrink) via surface vocabulary overlap.
 
 ## DB Tables Reference
 

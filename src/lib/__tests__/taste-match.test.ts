@@ -17,7 +17,7 @@ const userProfile: TasteProfile = {
   Character: 0.8,
   Service: 0.5,
   FoodDrink: 0.7,
-  Setting: 0.6,
+  Geography: 0.6,
   Wellness: 0.3,
   Sustainability: 0.3,
 };
@@ -35,7 +35,7 @@ const placeProfileHigh: TasteProfile = {
   Character: 0.85,
   Service: 0.7,
   FoodDrink: 0.8,
-  Setting: 0.75,
+  Geography: 0.75,
   Wellness: 0.6,
   Sustainability: 0.5,
 };
@@ -46,7 +46,7 @@ const placeProfileLow: TasteProfile = {
   Character: 0.15,
   Service: 0.2,
   FoodDrink: 0.1,
-  Setting: 0.2,
+  Geography: 0.2,
   Wellness: 0.9,
   Sustainability: 0.5,
 };
@@ -138,7 +138,7 @@ describe('computeMatchScore', () => {
 
   it('returns 50 when all weights are zero', () => {
     const zeroProfile: TasteProfile = {
-      Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0,
+      Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0,
     };
     const score = computeMatchScore(zeroProfile, placeProfileHigh);
     expect(score).toBe(50);
@@ -146,7 +146,7 @@ describe('computeMatchScore', () => {
 
   it('returns 100 for a perfect match (all 1.0)', () => {
     const perfect: TasteProfile = {
-      Design: 1, Atmosphere: 1, Character: 1, Service: 1, FoodDrink: 1, Setting: 1, Wellness: 1, Sustainability: 1,
+      Design: 1, Atmosphere: 1, Character: 1, Service: 1, FoodDrink: 1, Geography: 1, Wellness: 1, Sustainability: 1,
     };
     const score = computeMatchScore(perfect, perfect);
     expect(score).toBe(100);
@@ -182,7 +182,7 @@ describe('isStretchPick', () => {
     // User top 2: Design, Character
     // Place top 2: Wellness, Setting → no overlap = stretch
     const wellnessPlace: TasteProfile = {
-      Design: 0.1, Atmosphere: 0.15, Character: 0.1, Service: 0.2, FoodDrink: 0.2, Setting: 0.8, Wellness: 0.95, Sustainability: 0.2,
+      Design: 0.1, Atmosphere: 0.15, Character: 0.1, Service: 0.2, FoodDrink: 0.2, Geography: 0.8, Wellness: 0.95, Sustainability: 0.2,
     };
     expect(isStretchPick(userProfile, wellnessPlace)).toBe(true);
   });

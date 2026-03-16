@@ -414,7 +414,7 @@ function TripDetailContent() {
             {trip.status !== 'dreaming' && (
               <div
                 className="flex rounded-full overflow-hidden"
-                style={{ border: '1px solid var(--t-linen)', background: INK['04'] }}
+                style={{ border: '1px solid var(--t-navy)', background: INK['04'] }}
               >
                 {([
                   { key: 'overview' as const, label: 'Overview', icon: 'discover' as const },

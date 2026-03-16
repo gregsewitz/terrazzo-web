@@ -21,7 +21,7 @@ const DEFAULT_USER_PROFILE: TasteProfile = {
   Character: 0.8,
   Service: 0.6,
   FoodDrink: 0.75,
-  Setting: 0.7,
+  Geography: 0.7,
   Wellness: 0.4,
   Sustainability: 0.3,
 };

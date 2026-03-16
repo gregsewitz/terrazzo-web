@@ -32,7 +32,7 @@ export default function ProfileDeepDive() {
   const signalCount = allSignals?.length || WRAPPED.totalSignals;
 
   const numericProfile: NumericProfile = useMemo(() => {
-    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
+    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Geography: 0.5, Wellness: 0.5, Sustainability: 0.5 };
     for (const r of profile.radarData || []) {
       if (r.axis in result) {
         result[r.axis as keyof NumericProfile] = Math.max(result[r.axis as keyof NumericProfile], r.value);
@@ -478,7 +478,7 @@ function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null }) {
 // ═══════════════════════════════════════════
 const DIMENSION_CERTAINTIES: Record<string, number> = {
   "Design": 92, "Atmosphere": 78, "Character": 85, "Service": 88,
-  "FoodDrink": 90, "Setting": 82, "Wellness": 72, "Sustainability": 65,
+  "FoodDrink": 90, "Geography": 82, "Wellness": 72, "Sustainability": 65,
 };
 
 function DimensionBar({ certainty, color }: { certainty: number; color: string }) {

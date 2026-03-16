@@ -32,7 +32,7 @@ interface DashboardData {
 
 const DOMAIN_COLORS: Record<string, string> = {
   Atmosphere: '#8b5cf6', Character: '#06b6d4', Design: '#ec4899',
-  FoodDrink: '#f59e0b', Service: '#22c55e', Setting: '#3b82f6',
+  FoodDrink: '#f59e0b', Service: '#22c55e', Geography: '#3b82f6',
   Wellness: '#f97316', Sustainability: '#10b981',
 };
 
@@ -42,7 +42,7 @@ const DOMAIN_RANGES = [
   { domain: 'Design', start: 136, end: 191 },
   { domain: 'FoodDrink', start: 192, end: 263 },
   { domain: 'Service', start: 264, end: 336 },
-  { domain: 'Setting', start: 337, end: 379 },
+  { domain: 'Geography', start: 337, end: 379 },
   { domain: 'Sustainability', start: 380, end: 386 },
   { domain: 'Wellness', start: 387, end: 399 },
 ];

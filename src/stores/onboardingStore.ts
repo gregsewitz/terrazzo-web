@@ -25,14 +25,14 @@ import type { ActNumber } from '@/constants/onboarding';
 const V1_TO_V2: Record<string, TasteDomain> = {
   // v2 domain names — identity mappings
   'Design': 'Design', 'Atmosphere': 'Atmosphere', 'Character': 'Character',
-  'Service': 'Service', 'FoodDrink': 'FoodDrink', 'Setting': 'Setting',
+  'Service': 'Service', 'FoodDrink': 'FoodDrink', 'Geography': 'Geography',
   'Wellness': 'Wellness', 'Sustainability': 'Sustainability',
   // Display name variants the LLM may produce
   'Design Language': 'Design', 'Design Sensibility': 'Design',
   'Character & Identity': 'Character',
   'Service Philosophy': 'Service', 'Service Style': 'Service',
   'Food & Drink': 'FoodDrink', 'Culinary': 'FoodDrink', 'F&B': 'FoodDrink',
-  'Location & Context': 'Setting', 'Setting & Place': 'Setting',
+  'Location & Context': 'Geography', 'Setting & Place': 'Geography',
   'Retreat & Wellbeing': 'Wellness',
   'Values & Sustainability': 'Sustainability',
 };
@@ -176,7 +176,7 @@ interface OnboardingState {
 
 const INITIAL_CERTAINTIES: Record<TasteDomain, number> = {
   // 6 Taste Domains — start low, rich signal space to fill
-  Design: 5, Atmosphere: 5, Character: 5, Service: 5, FoodDrink: 5, Setting: 5,
+  Design: 5, Atmosphere: 5, Character: 5, Service: 5, FoodDrink: 5, Geography: 5,
   // 2 Preference Dimensions — start slightly higher, thinner signal space
   Wellness: 10, Sustainability: 10,
 };

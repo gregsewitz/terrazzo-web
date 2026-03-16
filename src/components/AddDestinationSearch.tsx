@@ -36,7 +36,7 @@ export default function AddDestinationSearch({ onAdded, onCancel }: AddDestinati
         location: result.address || destination,
         source: { type: 'google-maps' as const, name: 'Google Places' },
         matchScore: 0,
-        matchBreakdown: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
+        matchBreakdown: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0 },
         tasteNote: '',
         status: 'available' as const,
         google: {

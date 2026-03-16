@@ -41,7 +41,7 @@ export default function PlaceSearchBar({ placeholder }: PlaceSearchBarProps = {}
           padding: '10px 36px 10px 36px',
           fontSize: 16,
           background: 'white',
-          border: '1px solid var(--t-linen)',
+          border: '1px solid var(--t-navy)',
           color: TEXT.primary,
           fontFamily: FONT.sans,
           outline: 'none',

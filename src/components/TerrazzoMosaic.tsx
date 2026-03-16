@@ -46,7 +46,7 @@ function seededRandom(seed: number) {
 
 /** Simple numeric hash from profile values for stable rendering */
 function profileSeed(profile: TasteProfile): number {
-  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
+  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
   let hash = 7;
   DOMAINS.forEach(d => {
     hash = hash * 31 + Math.round((profile[d] ?? 0) * 1000);
@@ -67,7 +67,7 @@ function generateClusteredGrid(
   gridSize: number,
   seed: number,
 ): Tile[] {
-  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
+  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
   const totalCells = gridSize * gridSize;
   const totalScore = DOMAINS.reduce((sum, d) => sum + (profile[d] ?? 0), 0) || 1;
 
@@ -186,7 +186,7 @@ export function TerrazzoMosaic({ profile, size = 'md', className, style }: Terra
 // ─── Legend ─────────────────────────────────────────────────────────────────────
 
 export function MosaicLegend({ profile, className, style, dark = false }: MosaicLegendProps) {
-  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
+  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
 
   const sorted = DOMAINS
     .map(d => ({ domain: d, color: DOMAIN_COLORS[d], score: profile[d] ?? 0 }))

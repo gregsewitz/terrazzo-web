@@ -264,7 +264,7 @@ function generatePatternLabel(domain: TasteDomain, clusterLabels: string[]): str
     Character: 'Character instinct',
     Service: 'Service expectation',
     FoodDrink: 'Culinary thread',
-    Setting: 'Setting preference',
+    Geography: 'Geography preference',
     Wellness: 'Wellness pattern',
     Sustainability: 'Values alignment',
   };

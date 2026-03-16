@@ -214,7 +214,7 @@ export function allocateSlots(
 
   // ── 7. Mood Boards: 2 groups of 3 from different domains ──
   const moodBoards: AllocatedMoodBoard[] = [];
-  const remainingDomains = (['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'] as TasteDomain[])
+  const remainingDomains = (['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'] as TasteDomain[])
     .filter((d) => d !== weeklyDomain);
 
   for (const domain of remainingDomains) {
@@ -485,7 +485,7 @@ export function allocateMoreSlots(
   // Mood Boards
   if (sections.has('moodBoards')) {
     const boards: AllocatedMoodBoard[] = [];
-    const allDomains = (['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'] as TasteDomain[]);
+    const allDomains = (['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'] as TasteDomain[]);
     for (const domain of allDomains) {
       if (boards.length >= 2) break;
       const candidates = takeN(scored, 3, (c) => c.topDimension === domain);

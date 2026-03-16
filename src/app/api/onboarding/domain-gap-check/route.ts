@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     // Early onboarding (Act 0): radarData is empty, not enough signal for gap
     // analysis. Just spread exemplars across all core domains for diverse first
     // impressions. targetDomains from the client can still override.
-    const ALL_CORE_DOMAINS = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
+    const ALL_CORE_DOMAINS = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
     const earlyOnboarding = radarData.length === 0;
 
     let coverage: CoverageAnalysis | null = null;

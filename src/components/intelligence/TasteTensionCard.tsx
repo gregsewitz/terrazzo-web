@@ -52,7 +52,7 @@ export function TasteTensionCard({
         className={`rounded-2xl overflow-hidden ${className || ''}`}
         style={{
           background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)',
-          border: `1px solid ${INK['06']}`,
+          border: '1px solid var(--t-coral)',
         }}
       >
         {/* Header */}

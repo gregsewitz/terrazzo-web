@@ -75,7 +75,7 @@ export const TASTE_PROFILE: TasteProfile = {
     "Character": ["Staff-knows-your-name", "Cultural-immersion-seeker", "Artisan-economy-supporter", "Anti-tourist-version", "Owner-story-matters", "Place-has-a-point-of-view"],
     "Service": ["Staff-as-host", "Initiative without intrusion", "Memory-driven", "Owner-operated", "Anti-butler"],
     "FoodDrink": ["Farm-to-table-driven", "Communal dinner (long table)", "Aperitivo culture", "Natural wine devotee", "Breakfast-sacred"],
-    "Setting": ["Village-scale", "Walkable radius", "Courtyard-centered", "Indoor-outdoor flow", "Hotel-as-destination"],
+    "Geography": ["Village-scale", "Walkable radius", "Courtyard-centered", "Indoor-outdoor flow", "Hotel-as-destination"],
     "Wellness": ["Temperature-precise", "Natural pool preference", "Fresh-air-obsessive", "Sleep-darkness-critical", "Barefoot preference"],
     "Sustainability": ["Artisan-economy-supporter", "Local-supply-chain", "Anti-greenwash", "Seasonal-only-menu", "Adaptive-reuse-architecture"],
     "Rejection": ["Anti-Instagram aesthetic", "Anti-scripted service", "Anti-resort pool", "Anti-QR-code dining", "Anti-marble-lobby"],
@@ -86,7 +86,7 @@ export const TASTE_PROFILE: TasteProfile = {
     { axis: "Character", value: 0.95 },
     { axis: "Service", value: 0.88 },
     { axis: "FoodDrink", value: 0.80 },
-    { axis: "Setting", value: 0.85 },
+    { axis: "Geography", value: 0.85 },
     { axis: "Wellness", value: 0.72 },
     { axis: "Sustainability", value: 0.65 },
   ],
@@ -136,7 +136,7 @@ export const DOMAIN_DISPLAY: Record<string, string> = {
   Character: 'Character',
   Service: 'Service',
   FoodDrink: 'Food & Drink',
-  Setting: 'Setting',
+  Geography: 'Geography',
   Wellness: 'Wellness',
   Sustainability: 'Sustainability',
   Rejection: 'Rejection',
@@ -152,9 +152,9 @@ export const DIMENSION_COLORS: Record<string, string> = {
   "Design": "#ee716d",       // Coral
   "Atmosphere": "#e0a501",    // Ochre
   "Character": "#6B7C4E",     // Olive
-  "Service": "#e7a8a1",       // Peach
+  "Service": "#002a55",       // Navy
   "FoodDrink": "#3a8088",     // Dark Teal
-  "Setting": "#92ced6",       // Teal
+  "Geography": "#92ced6",     // Teal
   "Wellness": "#3869a4",      // Periwinkle
   "Sustainability": "#413800", // Dark Brown
   "Rejection": "#002a55",     // Navy
@@ -165,9 +165,9 @@ export const AXIS_COLORS: Record<string, string> = {
   Design: "#ee716d",         // Coral
   Atmosphere: "#e0a501",      // Ochre
   Character: "#6B7C4E",       // Olive
-  Service: "#e7a8a1",         // Peach
+  Service: "#002a55",          // Navy
   FoodDrink: "#3a8088",       // Dark Teal
-  Setting: "#92ced6",          // Teal
+  Geography: "#92ced6",        // Teal
   Wellness: "#3869a4",         // Periwinkle
   Sustainability: "#413800",    // Dark Brown
 };

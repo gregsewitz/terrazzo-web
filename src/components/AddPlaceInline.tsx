@@ -32,7 +32,7 @@ function AddPlaceInline({ destination, variant }: AddPlaceInlineProps) {
       location: result.address || destination || '',
       source: { type: 'text', name: 'Manual' },
       matchScore: 0,
-      matchBreakdown: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
+      matchBreakdown: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0 },
       tasteNote: '',
       status: 'available',
       ...(result.placeId && {

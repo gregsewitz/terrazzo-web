@@ -57,15 +57,6 @@ const BRAND = {
   navy: '#002a55',
   cream: '#FBF5EC',
   blush: '#f1e7e5',
-  signalRed: '#d63020',
-  // Legacy aliases
-  ink: '#002a55',
-  chromeYellow: '#e0a501',
-  pantonOrange: '#ee716d',
-  verde: '#3a8088',
-  pantonViolet: '#6B7C4E',
-  royerePink: '#e7a8a1',
-  warmWhite: '#FBF5EC',
 };
 
 // ─── Shared decorative elements ───
@@ -259,11 +250,11 @@ const RevealSequence = memo(function RevealSequence({
 
   // Accent colors per stage for replay dots
   const REPLAY_ACCENTS: Record<string, string> = {
-    cover: BRAND.ink, archetype: BRAND.signalRed, quote: BRAND.pantonOrange,
-    design: BRAND.verde, fingerprint: BRAND.ink, contradiction: BRAND.pantonViolet,
-    observations: BRAND.chromeYellow, perfectday: BRAND.pantonOrange, shift: BRAND.verde,
-    neighbors: BRAND.royerePink, destinations: BRAND.signalRed, matches: BRAND.verde,
-    trips: BRAND.chromeYellow, share: BRAND.ink,
+    cover: BRAND.navy, archetype: BRAND.coral, quote: BRAND.coral,
+    design: BRAND.darkTeal, fingerprint: BRAND.navy, contradiction: BRAND.olive,
+    observations: BRAND.ochre, perfectday: BRAND.coral, shift: BRAND.darkTeal,
+    neighbors: BRAND.peach, destinations: BRAND.coral, matches: BRAND.darkTeal,
+    trips: BRAND.ochre, share: BRAND.navy,
   };
 
   return (
@@ -300,7 +291,7 @@ const RevealSequence = memo(function RevealSequence({
                 style={{
                   height: 5, borderRadius: 3,
                   background: i === stageIndex
-                    ? (REPLAY_ACCENTS[s] || BRAND.ink)
+                    ? (REPLAY_ACCENTS[s] || BRAND.navy)
                     : i < stageIndex ? INK['30'] : INK['12'],
                 }}
                 animate={{ width: i === stageIndex ? 20 : 5 }}
@@ -427,7 +418,7 @@ const RevealSequence = memo(function RevealSequence({
                 style={{
                   height: 5,
                   borderRadius: 3,
-                  background: i === stageIndex ? (REPLAY_ACCENTS[s] || BRAND.ink) : i < stageIndex ? INK['30'] : INK['12'],
+                  background: i === stageIndex ? (REPLAY_ACCENTS[s] || BRAND.navy) : i < stageIndex ? INK['30'] : INK['12'],
                 }}
                 animate={{ width: i === stageIndex ? 20 : 5 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -458,13 +449,13 @@ function CoverReveal({ firstName }: { firstName?: string }) {
     <CardShell>
       <div style={{
         position: 'relative', overflow: 'hidden',
-        padding: '72px 28px 56px', background: BRAND.ink,
+        padding: '72px 28px 56px', background: BRAND.navy,
         textAlign: 'center', minHeight: 360,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
         <OrgBlob color="rgba(255,255,255,0.03)" size={260} style={{ top: -80, right: -60 }} />
-        <OrgBlob color={`${BRAND.signalRed}10`} size={180} style={{ bottom: -40, left: -40 }} />
-        <OrgBlob color={`${BRAND.chromeYellow}06`} size={120} style={{ top: 20, left: -30 }} />
+        <OrgBlob color={`${BRAND.coral}10`} size={180} style={{ bottom: -40, left: -40 }} />
+        <OrgBlob color={`${BRAND.ochre}06`} size={120} style={{ top: 20, left: -30 }} />
 
         <div style={{ position: 'relative', zIndex: 2 }}>
           <SafeFadeIn delay={0.1} direction="up" distance={10}>
@@ -521,7 +512,7 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.signalRed} label="Your taste archetype" minHeight={240}>
+      <HeroSection bg={BRAND.coral} label="Your taste archetype" minHeight={240}>
         <SafeFadeIn delay={0.25} direction="up" distance={24} duration={0.7}>
           <h1 style={{
             fontFamily: FONT.serif, fontSize: 38, fontStyle: 'italic',
@@ -557,7 +548,7 @@ function ArchetypeReveal({ profile, firstName }: { profile: GeneratedTasteProfil
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.signalRed} />
+      <WaveDivider from={BRAND.coral} />
 
       <ContentSection>
         <SafeFadeIn delay={0.65} direction="up" distance={16} duration={0.6}>
@@ -581,7 +572,7 @@ function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.pantonOrange} label="The moment that told us the most" minHeight={200}>
+      <HeroSection bg={BRAND.coral} label="The moment that told us the most" minHeight={200}>
         <SafeFadeIn delay={0.2} direction="up" distance={20} duration={0.7}>
           <div style={{
             fontFamily: FONT.serif, fontSize: 14, color: 'rgba(255,255,255,0.5)',
@@ -599,7 +590,7 @@ function QuoteReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.pantonOrange} />
+      <WaveDivider from={BRAND.coral} />
 
       <ContentSection>
         <SafeFadeIn delay={0.6} direction="up" distance={12} duration={0.5}>
@@ -650,7 +641,7 @@ function DesignLanguageReveal({
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.verde} label="Your design language" minHeight={140}>
+      <HeroSection bg={BRAND.darkTeal} label="Your design language" minHeight={140}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -662,7 +653,7 @@ function DesignLanguageReveal({
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.verde} />
+      <WaveDivider from={BRAND.darkTeal} />
 
       <ContentSection padding="20px 24px 24px">
         <motion.div
@@ -703,7 +694,7 @@ function DesignLanguageReveal({
                   style={{
                     position: 'absolute', top: 0, left: 0,
                     height: '100%', borderRadius: 3,
-                    background: `linear-gradient(90deg, ${BRAND.verde}70, ${BRAND.verde})`,
+                    background: `linear-gradient(90deg, ${BRAND.darkTeal}70, ${BRAND.darkTeal})`,
                   }}
                   initial={{ width: '0%' }}
                   animate={{ width: `${Math.round(spec.value * 100)}%` }}
@@ -714,8 +705,8 @@ function DesignLanguageReveal({
                     position: 'absolute', top: '50%',
                     width: 14, height: 14, borderRadius: '50%',
                     background: 'white',
-                    border: `2.5px solid ${BRAND.verde}`,
-                    boxShadow: `0 1px 6px ${BRAND.verde}30`,
+                    border: `2.5px solid ${BRAND.darkTeal}`,
+                    boxShadow: `0 1px 6px ${BRAND.darkTeal}30`,
                     transform: 'translateY(-50%)',
                   }}
                   initial={{ left: '0%', opacity: 0, scale: 0 }}
@@ -766,7 +757,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.ink} label="Your taste fingerprint" minHeight={120}>
+      <HeroSection bg={BRAND.navy} label="Your taste fingerprint" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={12} duration={0.5}>
           <div style={{
             display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 4,
@@ -775,7 +766,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
               <span key={d.axis} style={{
                 fontFamily: FONT.sans, fontSize: 12,
                 fontWeight: top2.includes(d.axis) ? 700 : 400,
-                color: top2.includes(d.axis) ? BRAND.chromeYellow : 'rgba(255,255,255,0.5)',
+                color: top2.includes(d.axis) ? BRAND.ochre : 'rgba(255,255,255,0.5)',
               }}>
                 {d.axis}
               </span>
@@ -784,7 +775,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.ink} />
+      <WaveDivider from={BRAND.navy} />
 
       <ContentSection padding="16px 24px 28px">
         <SafeFadeIn delay={0.3} direction="none" scale={0.85} duration={0.8}>
@@ -805,14 +796,14 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
               ))}
               <defs>
                 <linearGradient id="radarFillBrand" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={BRAND.pantonOrange} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={BRAND.chromeYellow} stopOpacity={0.08} />
+                  <stop offset="0%" stopColor={BRAND.coral} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={BRAND.ochre} stopOpacity={0.08} />
                 </linearGradient>
               </defs>
               <motion.path
                 d={pathD}
                 fill="url(#radarFillBrand)"
-                stroke={BRAND.pantonOrange}
+                stroke={BRAND.coral}
                 strokeWidth={2}
                 strokeLinejoin="round"
                 initial={{ pathLength: 0, opacity: 0 }}
@@ -821,7 +812,7 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
               />
               {points.map((p, i) => (
                 <motion.circle key={i} cx={p.x} cy={p.y} r={4.5}
-                  fill="white" stroke={BRAND.pantonOrange} strokeWidth={2}
+                  fill="white" stroke={BRAND.coral} strokeWidth={2}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ ...SPRING_BOUNCY, delay: 0.6 + i * 0.06 }}
@@ -836,9 +827,9 @@ function TasteFingerprintReveal({ profile }: { profile: GeneratedTasteProfile })
             fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.7,
             color: TEXT.secondary, textAlign: 'center', margin: '12px 0 0',
           }}>
-            <span style={{ fontWeight: 700, color: BRAND.pantonOrange }}>{top2[0]}</span>
+            <span style={{ fontWeight: 700, color: BRAND.coral }}>{top2[0]}</span>
             {' and '}
-            <span style={{ fontWeight: 700, color: BRAND.pantonOrange }}>{top2[1]}</span>
+            <span style={{ fontWeight: 700, color: BRAND.coral }}>{top2[1]}</span>
             {' drive you. Most travelers lead with other dimensions — you lead with these.'}
           </p>
         </SafeFadeIn>
@@ -856,7 +847,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.pantonViolet} label="The interesting part" minHeight={140}>
+      <HeroSection bg={BRAND.olive} label="The interesting part" minHeight={140}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -867,7 +858,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.pantonViolet} />
+      <WaveDivider from={BRAND.olive} />
 
       <ContentSection padding="24px 20px 24px">
         {/* The two poles */}
@@ -881,8 +872,8 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
               fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
               color: TEXT.primary, textAlign: 'center',
               padding: '18px 16px', borderRadius: 16,
-              background: `linear-gradient(135deg, ${BRAND.pantonOrange}08, white)`,
-              border: `1px solid ${BRAND.pantonOrange}20`,
+              background: `linear-gradient(135deg, ${BRAND.coral}08, white)`,
+              border: `1px solid ${BRAND.coral}20`,
             }}>
               {c.stated}
             </div>
@@ -892,7 +883,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{
                 fontFamily: FONT.sans, fontSize: 18, fontWeight: 300,
-                color: `${BRAND.pantonViolet}50`,
+                color: `${BRAND.olive}50`,
               }}>
                 &times;
               </span>
@@ -905,8 +896,8 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
               fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
               color: TEXT.primary, textAlign: 'center',
               padding: '18px 16px', borderRadius: 16,
-              background: `linear-gradient(135deg, ${BRAND.pantonViolet}06, white)`,
-              border: `1px solid ${BRAND.pantonViolet}15`,
+              background: `linear-gradient(135deg, ${BRAND.olive}06, white)`,
+              border: `1px solid ${BRAND.olive}15`,
             }}>
               {c.revealed}
             </div>
@@ -932,7 +923,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
         <SafeFadeIn delay={0.7} direction="none" duration={0.5}>
           <p style={{
-            fontFamily: FONT.sans, fontSize: 13, color: BRAND.pantonViolet,
+            fontFamily: FONT.sans, fontSize: 13, color: BRAND.olive,
             marginTop: 16, fontStyle: 'italic', textAlign: 'center',
           }}>
             We&apos;ll find places that understand both sides.
@@ -950,14 +941,14 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.perfectDay) return null;
 
   const segments = [
-    { label: 'Morning', text: profile.perfectDay.morning, color: BRAND.chromeYellow },
-    { label: 'Afternoon', text: profile.perfectDay.afternoon, color: BRAND.pantonOrange },
-    { label: 'Evening', text: profile.perfectDay.evening, color: BRAND.signalRed },
+    { label: 'Morning', text: profile.perfectDay.morning, color: BRAND.ochre },
+    { label: 'Afternoon', text: profile.perfectDay.afternoon, color: BRAND.coral },
+    { label: 'Evening', text: profile.perfectDay.evening, color: BRAND.coral },
   ];
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.pantonOrange} label="Your perfect day" minHeight={120}>
+      <HeroSection bg={BRAND.coral} label="Your perfect day" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -968,7 +959,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.pantonOrange} />
+      <WaveDivider from={BRAND.coral} />
 
       <ContentSection padding="20px 20px 24px">
         <div style={{
@@ -979,7 +970,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
           <div style={{
             position: 'absolute', left: 17, top: 32, bottom: 32,
             width: 2, borderRadius: 1,
-            background: `linear-gradient(to bottom, ${BRAND.chromeYellow}40, ${BRAND.pantonOrange}60, ${BRAND.signalRed}40)`,
+            background: `linear-gradient(to bottom, ${BRAND.ochre}40, ${BRAND.coral}60, ${BRAND.coral}40)`,
             pointerEvents: 'none',
           }} />
 
@@ -1031,11 +1022,11 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
 function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
   if (!profile.howYouShift?.length) return null;
 
-  const cardColors = [BRAND.signalRed, BRAND.verde, BRAND.pantonViolet];
+  const cardColors = [BRAND.coral, BRAND.darkTeal, BRAND.olive];
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.verde} label="How you shift" minHeight={120}>
+      <HeroSection bg={BRAND.darkTeal} label="How you shift" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -1046,7 +1037,7 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.verde} />
+      <WaveDivider from={BRAND.darkTeal} />
 
       <ContentSection padding="20px 20px 24px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1100,7 +1091,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.royerePink} label="Your taste neighbors" minHeight={140}>
+      <HeroSection bg={BRAND.peach} label="Your taste neighbors" minHeight={140}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -1111,7 +1102,7 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.royerePink} />
+      <WaveDivider from={BRAND.peach} />
 
       <ContentSection padding="24px 24px 28px">
         {/* Nearby archetypes as pills */}
@@ -1125,8 +1116,8 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 fontFamily: FONT.serif, fontSize: 15, fontStyle: 'italic',
                 color: TEXT.primary, padding: '10px 22px', borderRadius: 100,
                 background: 'white',
-                border: `1px solid ${BRAND.royerePink}25`,
-                boxShadow: `0 2px 12px ${BRAND.royerePink}10`,
+                border: `1px solid ${BRAND.peach}25`,
+                boxShadow: `0 2px 12px ${BRAND.peach}10`,
                 display: 'inline-block',
               }}>
                 {name}
@@ -1149,8 +1140,8 @@ function TasteNeighborsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         <SafeFadeIn delay={0.65} scale={0.95} direction="up" distance={10} duration={0.5}>
           <div style={{
             padding: '16px 24px', borderRadius: 14,
-            background: `${BRAND.royerePink}08`,
-            border: `1px solid ${BRAND.royerePink}18`,
+            background: `${BRAND.peach}08`,
+            border: `1px solid ${BRAND.peach}18`,
           }}>
             <p style={{
               fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.65,
@@ -1174,7 +1165,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.signalRed} label="Where you'd thrive" minHeight={120}>
+      <HeroSection bg={BRAND.coral} label="Where you'd thrive" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -1185,7 +1176,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.signalRed} />
+      <WaveDivider from={BRAND.coral} />
 
       <ContentSection padding="20px 20px 24px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -1201,7 +1192,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
               }}>
                 <div style={{
                   width: 4, height: 24, borderRadius: 2,
-                  background: BRAND.signalRed,
+                  background: BRAND.coral,
                   flexShrink: 0,
                 }} />
                 {dest}
@@ -1218,17 +1209,17 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         >
           <div style={{
             padding: '20px 22px', borderRadius: 16,
-            background: `linear-gradient(135deg, ${BRAND.chromeYellow}10, ${BRAND.pantonOrange}08)`,
-            border: `1px solid ${BRAND.chromeYellow}30`,
-            boxShadow: `0 4px 20px ${BRAND.chromeYellow}10`,
+            background: `linear-gradient(135deg, ${BRAND.ochre}10, ${BRAND.coral}08)`,
+            border: `1px solid ${BRAND.ochre}30`,
+            boxShadow: `0 4px 20px ${BRAND.ochre}10`,
             position: 'relative', overflow: 'hidden',
           }}>
-            <OrgBlob color={`${BRAND.chromeYellow}08`} size={80} style={{ top: -20, right: -20 }} />
+            <OrgBlob color={`${BRAND.ochre}08`} size={80} style={{ top: -20, right: -20 }} />
             <div style={{ position: 'relative', zIndex: 2 }}>
               <div style={{
                 fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
                 textTransform: 'uppercase', letterSpacing: '0.1em',
-                color: BRAND.pantonOrange, marginBottom: 8,
+                color: BRAND.coral, marginBottom: 8,
               }}>
                 ✦ This one might surprise you
               </div>
@@ -1258,7 +1249,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
   return (
     <CardShell>
-      <HeroSection bg={BRAND.chromeYellow} label="Already started" minHeight={140}>
+      <HeroSection bg={BRAND.ochre} label="Already started" minHeight={140}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -1277,7 +1268,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.chromeYellow} />
+      <WaveDivider from={BRAND.ochre} />
 
       <ContentSection padding="20px 20px 24px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1293,8 +1284,8 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, height: 3,
                   background: trip.status === 'planning'
-                    ? `linear-gradient(90deg, ${BRAND.verde}, ${BRAND.verde}40)`
-                    : `linear-gradient(90deg, ${BRAND.chromeYellow}, ${BRAND.chromeYellow}40)`,
+                    ? `linear-gradient(90deg, ${BRAND.darkTeal}, ${BRAND.darkTeal}40)`
+                    : `linear-gradient(90deg, ${BRAND.ochre}, ${BRAND.ochre}40)`,
                 }} />
 
                 <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 6, marginTop: 4 }}>
@@ -1314,8 +1305,8 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                   <span style={{
                     fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
                     padding: '4px 12px', borderRadius: 100,
-                    background: trip.status === 'planning' ? `${BRAND.verde}12` : `${BRAND.chromeYellow}15`,
-                    color: trip.status === 'planning' ? BRAND.verde : BRAND.pantonOrange,
+                    background: trip.status === 'planning' ? `${BRAND.darkTeal}12` : `${BRAND.ochre}15`,
+                    color: trip.status === 'planning' ? BRAND.darkTeal : BRAND.coral,
                   }}>
                     {trip.status}
                   </span>
@@ -1381,7 +1372,7 @@ function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.chromeYellow} label="What we noticed" minHeight={120}>
+      <HeroSection bg={BRAND.ochre} label="What we noticed" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -1392,7 +1383,7 @@ function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.chromeYellow} />
+      <WaveDivider from={BRAND.ochre} />
 
       <ContentSection padding="20px 20px 24px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1427,7 +1418,7 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
 
   return (
     <CardShell>
-      <HeroSection bg={BRAND.verde} label="Already thinking ahead" minHeight={120}>
+      <HeroSection bg={BRAND.darkTeal} label="Already thinking ahead" minHeight={120}>
         <SafeFadeIn delay={0.2} direction="up" distance={16} duration={0.6}>
           <h2 style={{
             fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
@@ -1438,7 +1429,7 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
         </SafeFadeIn>
       </HeroSection>
 
-      <WaveDivider from={BRAND.verde} />
+      <WaveDivider from={BRAND.darkTeal} />
 
       <ContentSection padding="20px 20px 24px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1454,7 +1445,7 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 {/* Bold accent stripe */}
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                  background: `linear-gradient(90deg, ${BRAND.verde}, ${BRAND.verde}40)`,
+                  background: `linear-gradient(90deg, ${BRAND.darkTeal}, ${BRAND.darkTeal}40)`,
                 }} />
 
                 <div style={{
@@ -1481,7 +1472,7 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
                     marginTop: 14, paddingTop: 14,
                     borderTop: `1px solid ${INK['06']}`,
                     fontFamily: FONT.sans, fontSize: 12,
-                    color: BRAND.verde, fontStyle: 'italic',
+                    color: BRAND.darkTeal, fontStyle: 'italic',
                   }}>
                     {m.tensionResolved}
                   </div>
@@ -1510,13 +1501,13 @@ function ShareReveal({
     <CardShell>
       <div style={{
         position: 'relative', overflow: 'hidden',
-        padding: '56px 28px 48px', background: BRAND.ink,
+        padding: '56px 28px 48px', background: BRAND.navy,
         textAlign: 'center',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         minHeight: 380,
       }}>
-        <OrgBlob color={`${BRAND.signalRed}08`} size={200} style={{ top: -60, right: -50 }} />
-        <OrgBlob color={`${BRAND.verde}06`} size={150} style={{ bottom: -40, left: -40 }} />
+        <OrgBlob color={`${BRAND.coral}08`} size={200} style={{ top: -60, right: -50 }} />
+        <OrgBlob color={`${BRAND.darkTeal}06`} size={150} style={{ bottom: -40, left: -40 }} />
 
         <div style={{ position: 'relative', zIndex: 2, width: '100%' }}>
           <GoldDivider width={40} delay={0} />
@@ -1579,7 +1570,7 @@ function ShareReveal({
               border: 'none',
               cursor: 'pointer',
               fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-              color: BRAND.ink,
+              color: BRAND.navy,
             }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

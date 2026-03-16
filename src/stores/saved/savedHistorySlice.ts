@@ -38,7 +38,7 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
       location: histItem.location,
       source: { type: 'email', name: `Promoted from ${histItem.detectedFrom}` },
       matchScore: 0,
-      matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0.5 },
+      matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
       tasteNote: '',
       status: 'available',
       ghostSource: 'manual',
