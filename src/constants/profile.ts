@@ -131,27 +131,27 @@ export const WRAPPED = {
 
 // Domain colors — mapped to new brand palette
 export const DIMENSION_COLORS: Record<string, string> = {
-  "Design": "#E86F5A",       // Coral
-  "Atmosphere": "#E8B84B",    // Ochre
+  "Design": "#ee716d",       // Coral
+  "Atmosphere": "#e0a501",    // Ochre
   "Character": "#6B7C4E",     // Olive
-  "Service": "#E8B84B",       // Ochre
-  "FoodDrink": "#1A2D4A",     // Navy
-  "Setting": "#5EC4B2",       // Teal
-  "Wellness": "#E86F5A",      // Coral
-  "Sustainability": "#5EC4B2", // Teal
+  "Service": "#e0a501",       // Ochre
+  "FoodDrink": "#002a55",     // Navy
+  "Setting": "#92ced6",       // Teal
+  "Wellness": "#ee716d",      // Coral
+  "Sustainability": "#92ced6", // Teal
   "Rejection": "#A89888",     // Warm Gray
 };
 
 // Taste radar axis colors — each domain gets a distinct brand color
 export const AXIS_COLORS: Record<string, string> = {
-  Design: "#E86F5A",         // Coral
-  Atmosphere: "#E8B84B",      // Ochre
+  Design: "#ee716d",         // Coral
+  Atmosphere: "#e0a501",      // Ochre
   Character: "#6B7C4E",       // Olive
-  Service: "#E8B84B",         // Ochre
-  FoodDrink: "#1A2D4A",       // Navy
-  Setting: "#5EC4B2",          // Teal
-  Wellness: "#F4BFA0",         // Peach
-  Sustainability: "#5EC4B2",    // Teal
+  Service: "#e0a501",         // Ochre
+  FoodDrink: "#002a55",       // Navy
+  Setting: "#92ced6",          // Teal
+  Wellness: "#e7a8a1",         // Peach
+  Sustainability: "#92ced6",    // Teal
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
@@ -164,4 +164,4 @@ export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
 };
 
 // Context shift card colors — brand palette rotation
-export const CONTEXT_COLORS = ["#1A2D4A", "#5EC4B2", "#E86F5A", "#6B7C4E", "#E8B84B", "#F4BFA0"];
+export const CONTEXT_COLORS = ["#002a55", "#92ced6", "#ee716d", "#6B7C4E", "#e0a501", "#e7a8a1"];

@@ -41,7 +41,7 @@ import {
   type DeepMatch,
 } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { TasteTensionCard, DeepMatchBreakdown, StretchPickAxis } from '@/components/intelligence';
 import type { TasteTension as IntelTasteTension, DeepMatch as IntelDeepMatch, StretchPick as IntelStretchPick } from '@/components/intelligence';
 import type { TasteDomain } from '@/types';
@@ -51,7 +51,6 @@ import PlaceLink from '@/components/PlaceLink';
 import { PlaceDetailProvider } from '@/context/PlaceDetailContext';
 import { useSavedStore } from '@/stores/savedStore';
 import { useEmailScanStore } from '@/stores/emailScanStore';
-import { BrandGraphicTransition } from '@/components/brand';
 
 // ─── Discover cache TTL (2 hours) ─────────────────────────────────────────────
 const DISCOVER_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
@@ -528,7 +527,7 @@ function ProfilePageContent() {
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(232,111,90,0.1)' }}
+            style={{ background: 'rgba(238,113,109,0.1)' }}
           >
             <PerriandIcon name="profile" size={24} color="var(--t-honey)" />
           </div>
@@ -642,24 +641,24 @@ function ProfilePageContent() {
           <div
             className="rounded-2xl overflow-hidden mb-8"
             style={{
-              background: 'var(--t-cream)',
+              background: '#ffffff',
               border: '1px solid var(--t-linen)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
             }}
           >
-            {/* Navy header section */}
-            <div style={{ background: 'var(--t-navy)', padding: '24px 32px 20px' }}>
+            {/* Dark teal header section — editorial pattern */}
+            <div style={{ background: 'var(--t-dark-teal)', padding: '24px 32px 20px' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div
                     className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(232,111,90,0.15)' }}
+                    style={{ background: 'rgba(224,165,1,0.15)' }}
                   >
-                    <PerriandIcon name="profile" size={28} color="var(--t-coral)" />
+                    <PerriandIcon name="profile" size={28} color={COLOR.ochre} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[15px] font-semibold" style={{ color: 'var(--t-cream)', fontFamily: FONT.sans }}>{userName}</div>
-                    <div className="text-[11px]" style={{ color: 'rgba(251,245,236,0.72)', fontFamily: FONT.mono }}>{profile.overallArchetype}</div>
+                    <div className="text-[15px] font-semibold" style={{ color: '#ffffff', fontFamily: FONT.sans }}>{userName}</div>
+                    <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: FONT.mono }}>{profile.overallArchetype}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-5">
@@ -675,8 +674,8 @@ function ProfilePageContent() {
                         onClick={() => setActiveTab(tab)}
                         className="py-1.5 px-4 rounded-md text-[11px] font-medium transition-all"
                         style={{
-                          background: activeTab === tab ? 'var(--t-coral)' : 'transparent',
-                          color: activeTab === tab ? 'white' : 'rgba(251,245,236,0.8)',
+                          background: activeTab === tab ? COLOR.ochre : 'transparent',
+                          color: activeTab === tab ? 'white' : 'rgba(255,255,255,0.8)',
                           border: 'none',
                           cursor: 'pointer',
                           fontFamily: FONT.sans,
@@ -691,21 +690,21 @@ function ProfilePageContent() {
               </div>
             </div>
 
-            {/* Bottom bar: stats + CTAs in a horizontal row */}
-            <div className="flex items-center gap-6 px-8 py-4">
+            {/* Bottom bar: stats + CTAs — plain pattern with coral gradient */}
+            <div className="flex items-center gap-6 px-8 py-4" style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)' }}>
               {/* Quick stats */}
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: TEXT.primary }}>{signalCount}</div>
-                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: COLOR.darkTeal }}>{signalCount}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
                 </div>
                 <div className="text-center">
-                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: TEXT.primary }}>{profile.contradictions?.length || 0}</div>
-                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: COLOR.darkTeal }}>{profile.contradictions?.length || 0}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
                 </div>
                 <div className="text-center">
-                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: TEXT.primary }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
-                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: COLOR.darkTeal }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
                 </div>
               </div>
 
@@ -716,27 +715,27 @@ function ProfilePageContent() {
                 <SafeMotionButton
                   onClick={() => setShowWrapped(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
-                  style={{ background: 'var(--t-navy)' }}
+                  style={{ background: COLOR.darkTeal }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-cream)', fontFamily: FONT.sans }}>
+                  <span className="text-[11px] font-semibold" style={{ color: '#ffffff', fontFamily: FONT.sans }}>
                     Taste Dossier
                   </span>
-                  <span className="text-[10px]" style={{ color: 'rgba(251,245,236,0.6)', fontFamily: FONT.mono }}>→</span>
+                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONT.mono }}>→</span>
                 </SafeMotionButton>
 
                 <SafeMotionButton
                   onClick={() => setShowMosaic(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, var(--t-peach) 0%, var(--t-cream) 100%)', border: '1px solid rgba(230,111,90,0.15)' }}
+                  style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.15) 0%, rgba(238,113,109,0.06) 100%)', border: `1px solid ${INK['06']}` }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="text-[11px] font-semibold" style={{ color: 'var(--t-navy)', fontFamily: FONT.sans }}>
+                  <span className="text-[11px] font-semibold" style={{ color: COLOR.darkTeal, fontFamily: FONT.sans }}>
                     Expand Mosaic
                   </span>
-                  <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>→</span>
+                  <span className="text-[10px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
                 </SafeMotionButton>
               </div>
 
@@ -749,9 +748,9 @@ function ProfilePageContent() {
                       className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all"
                       style={{
                         fontSize: 11,
-                        color: expandedSection === action ? 'var(--t-ink)' : INK['50'],
+                        color: expandedSection === action ? COLOR.darkTeal : COLOR.navy,
                         fontFamily: FONT.sans,
-                        background: expandedSection === action ? 'rgba(232,111,90,0.06)' : 'transparent',
+                        background: expandedSection === action ? 'rgba(238,113,109,0.06)' : 'transparent',
                         border: 'none',
                       }}
                     >
@@ -777,7 +776,7 @@ function ProfilePageContent() {
                     {emailLoading ? (
                       <span className="text-[10px]" style={{ color: TEXT.secondary }}>Checking…</span>
                     ) : emailStatus?.connected ? (
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(94,196,178,0.08)', color: 'var(--t-teal)' }}>Connected</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(146,206,214,0.08)', color: 'var(--t-teal)' }}>Connected</span>
                     ) : (
                       <a href="/api/auth/nylas/connect" className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--t-teal)', color: 'white', textDecoration: 'none' }}>Connect</a>
                     )}
@@ -808,7 +807,7 @@ function ProfilePageContent() {
                           </span>
                         )}
                       </div>
-                      <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(232,111,90,0.08)', color: 'var(--t-coral)' }}>Disconnect</button>
+                      <button onClick={handleDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(238,113,109,0.08)', color: 'var(--t-coral)' }}>Disconnect</button>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
@@ -817,7 +816,7 @@ function ProfilePageContent() {
                       <span style={{ color: TEXT.primary }}>Google Maps</span>
                     </div>
                     {hasGoogleMapsImport ? (
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(94,196,178,0.08)', color: 'var(--t-teal)' }}>Imported</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(146,206,214,0.08)', color: 'var(--t-teal)' }}>Imported</span>
                     ) : (
                       <Link href="/onboarding" className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--t-peach)', color: 'var(--t-navy)', textDecoration: 'none' }}>Import</Link>
                     )}
@@ -882,7 +881,7 @@ function ProfilePageContent() {
                 {isAuthenticated ? (
                   <div className="ml-auto flex items-center gap-2">
                     <span className="text-[10px]" style={{ color: TEXT.secondary }}>{user?.email}</span>
-                    <button onClick={signOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(232,111,90,0.08)', color: 'var(--t-coral)', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
+                    <button onClick={signOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(238,113,109,0.08)', color: 'var(--t-coral)', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
                   </div>
                 ) : (
                   <Link href="/login" className="ml-auto text-[11px] font-semibold" style={{ color: 'var(--t-teal)', textDecoration: 'none' }}>Sign in →</Link>
@@ -956,7 +955,7 @@ function ProfilePageContent() {
               className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #e8dcc8 0%, #f5f0e6 100%)',
-                border: '1px solid rgba(232,111,90,0.12)',
+                border: '1px solid rgba(238,113,109,0.12)',
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -978,7 +977,7 @@ function ProfilePageContent() {
               <span
                 className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
                 style={{
-                  background: 'rgba(26,45,74,0.06)',
+                  background: 'rgba(0,42,85,0.06)',
                   color: TEXT.primary,
                   fontFamily: FONT.mono,
                 }}
@@ -1005,7 +1004,7 @@ function ProfilePageContent() {
                   <div
                     onClick={() => handleSettingTap(action)}
                     className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all"
-                    style={{ background: expandedSection === action ? 'rgba(232,111,90,0.06)' : INK['03'] }}
+                    style={{ background: expandedSection === action ? 'rgba(238,113,109,0.06)' : INK['03'] }}
                   >
                     <span className="text-[12px]" style={{ color: TEXT.primary }}>{label}</span>
                     <span style={{ color: TEXT.secondary, transform: expandedSection === action ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
@@ -1218,7 +1217,7 @@ function ProfilePageContent() {
                     onClick={signOut}
                     className="text-[11px] font-medium px-3 py-1.5 rounded-full cursor-pointer"
                     style={{
-                      background: 'rgba(232,111,90,0.08)',
+                      background: 'rgba(238,113,109,0.08)',
                       color: 'var(--t-coral)',
                       border: 'none',
                       fontFamily: FONT.sans,
@@ -1279,7 +1278,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
     <SafeMotionDiv
 
       className="px-5 pt-5 pb-6 rounded-2xl"
-      style={{ background: 'var(--t-navy)' }}
+      style={{ background: 'var(--t-dark-teal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -1289,7 +1288,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         <div className="flex items-center gap-2 mb-4">
           <SafeMotionDiv
             className="w-5 h-[1px]"
-            style={{ background: 'var(--t-coral)' }}
+            style={{ background: 'var(--t-light-yellow)' }}
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             transition={{ duration: 0.8, delay: 0.1 }}
@@ -1297,7 +1296,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
           />
           <SafeMotionSpan
             className="text-[9px] uppercase tracking-[0.25em]"
-            style={{ color: 'var(--t-coral)', fontFamily: FONT.mono }}
+            style={{ color: 'var(--t-light-yellow)', fontFamily: FONT.mono }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -1308,7 +1307,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         </div>
         <SafeMotionH2
           className="text-[20px] leading-snug mb-4"
-          style={{ fontFamily: FONT.serif, color: 'var(--t-cream)' }}
+          style={{ fontFamily: FONT.serif, color: '#ffffff' }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
@@ -1318,7 +1317,7 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         </SafeMotionH2>
         <SafeMotionP
           className="text-[13px] leading-relaxed"
-          style={{ color: 'rgba(251,245,236,0.8)', fontFamily: FONT.sans }}
+          style={{ color: 'rgba(255,255,255,0.8)', fontFamily: FONT.sans }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
@@ -1334,13 +1333,10 @@ function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
         transition={{ duration: 0.5, delay: 0.5 }}
         viewport={{ once: true, margin: '-100px' }}
       >
-        <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(232,111,90,0.08)', color: 'var(--t-coral)', fontFamily: FONT.mono }}>
+        <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(235,216,150,0.2)', color: 'var(--t-light-yellow)', fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
       </SafeMotionDiv>
-      <div className="mt-8 -mx-5">
-        <BrandGraphicTransition variant="fields" height={80} opacity={0.85} objectPosition="center 40%" />
-      </div>
     </SafeMotionDiv>
   );
 }
@@ -1350,27 +1346,27 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
   const displayCards = cards || BECAUSE_YOU_CARDS;
   return (
     <SafeMotionDiv
-      
-      className="mb-7 px-5"
+
+      className="mt-4 mb-10 px-5"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
       <div className="mb-3">
-        <SectionLabel>Because you...</SectionLabel>
+        <SectionLabel color={COLOR.coral}>Because you...</SectionLabel>
       </div>
       <div
         className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5"
         style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}
       >
         {displayCards.map((card, idx) => {
-          const domainColor = DIMENSION_COLORS[card.signalDomain] || '#8b6b4a';
+          const domainColor = DIMENSION_COLORS[card.signalDomain] || '#413800';
           return (
             <PlaceLink key={card.place} name={card.place} location={card.location} googlePlaceId={card.googlePlaceId}>
               <SafeMotionDiv
                 className="flex-shrink-0 p-5 rounded-2xl flex flex-col justify-between"
-                style={{ background: 'var(--t-navy)', width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
+                style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: `1px solid ${INK['06']}`, width: 280, minHeight: 230, scrollSnapAlign: 'start' }}
                 initial={{ opacity: 0, x: -20, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
@@ -1378,35 +1374,32 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
               >
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <PerriandIcon name="sparkle" size={12} color={domainColor} />
-                    <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${domainColor}40`, color: domainColor, fontFamily: FONT.mono }}>
+                    <PerriandIcon name="sparkle" size={12} color={COLOR.coral} />
+                    <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${COLOR.coral}12`, color: COLOR.coral, fontFamily: FONT.mono }}>
                       {card.signalDomain}
                     </span>
                   </div>
-                  <p className="text-[12px] leading-relaxed mb-1" style={{ color: 'rgba(251,245,236,0.72)', fontFamily: FONT.sans }}>
+                  <p className="text-[12px] leading-relaxed mb-1" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
                     Because you love
                   </p>
-                  <p className="text-[16px] font-semibold mb-4 italic" style={{ color: 'var(--t-cream)', fontFamily: FONT.serif }}>
+                  <p className="text-[16px] font-semibold mb-4 italic" style={{ color: COLOR.darkTeal, fontFamily: FONT.serif }}>
                     &ldquo;{card.signal}&rdquo;
                   </p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5 mb-2">
-                    <ScoreArc score={card.score} size={34} color="var(--t-cream)" />
+                    <ScoreArc score={card.score} size={34} color="var(--t-coral)" />
                     <div>
-                      <div className="text-[14px] font-semibold" style={{ color: 'var(--t-cream)' }}>{card.place}</div>
-                      <div className="text-[11px]" style={{ color: 'rgba(251,245,236,0.6)' }}>{card.location}</div>
+                      <div className="text-[14px] font-semibold" style={{ color: COLOR.darkTeal }}>{card.place}</div>
+                      <div className="text-[11px]" style={{ color: COLOR.navy }}>{card.location}</div>
                     </div>
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(251,245,236,0.7)' }}>{card.why}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: COLOR.navy }}>{card.why}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>
           );
         })}
-      </div>
-      <div className="mt-8 -mx-5">
-        <BrandGraphicTransition variant="palette" height={80} opacity={0.85} objectPosition="center 55%" mirror />
       </div>
     </SafeMotionDiv>
   );
@@ -1415,33 +1408,33 @@ function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
 // ── SIGNAL THREAD — One signal, many manifestations ──
 function SignalThreadSection({ thread }: { thread?: SignalThread }) {
   const t = thread || SIGNAL_THREAD;
-  const domainColor = DIMENSION_COLORS[t.domain] || '#8b6b4a';
+  const domainColor = DIMENSION_COLORS[t.domain] || '#413800';
   const TYPE_ICONS: Record<string, string> = { hotel: 'hotel', restaurant: 'restaurant', bar: 'bar', cafe: 'cafe', neighborhood: 'neighborhood' };
 
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-7 rounded-2xl"
-      style={{ background: 'var(--t-olive)' }}
+      className="px-5 py-6 mb-10 rounded-2xl"
+      style={{ background: 'var(--t-dark-teal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-peach)">The thread</SectionLabel>
+      <SectionLabel color="var(--t-light-yellow)">The thread</SectionLabel>
       <SafeMotionDiv
         className="mt-3 p-5 rounded-2xl"
-        style={{ background: 'var(--t-cream)', border: 'none' }}
+        style={{ background: '#ffffff', border: 'none' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.mono }}>
+          <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${COLOR.ochre}12`, color: COLOR.ochre, fontFamily: FONT.mono }}>
             {t.signal}
           </span>
         </div>
-        <p className="text-[13px] leading-relaxed mb-5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+        <p className="text-[13px] leading-relaxed mb-5" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           {t.thread}
         </p>
         {/* Vertical thread line connecting places */}
@@ -1479,15 +1472,15 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 {/* Place card */}
                 <div className="flex-1 pb-4">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <PerriandIcon name={(TYPE_ICONS[place.type] || 'discover') as import('@/types').PerriandIconName} size={12} color={INK['55']} />
-                    <span className="text-[9px] uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{place.type}</span>
+                    <PerriandIcon name={(TYPE_ICONS[place.type] || 'discover') as import('@/types').PerriandIconName} size={12} color={COLOR.darkTeal} />
+                    <span className="text-[9px] uppercase tracking-wider" style={{ color: COLOR.darkTeal, fontFamily: FONT.mono }}>{place.type}</span>
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[13px] font-semibold" style={{ color: TEXT.primary }}>{place.name}</span>
-                    <span className="text-[10px]" style={{ color: TEXT.secondary }}>{place.location}</span>
-                    <span className="text-[10px] font-bold ml-auto" style={{ color: domainColor, fontFamily: FONT.mono }}>{place.score <= 1 ? Math.round(place.score * 100) : place.score}</span>
+                    <span className="text-[13px] font-semibold" style={{ color: COLOR.ochre }}>{place.name}</span>
+                    <span className="text-[10px]" style={{ color: COLOR.navy }}>{place.location}</span>
+                    <span className="text-[10px] font-bold ml-auto" style={{ color: COLOR.ochre, fontFamily: FONT.mono }}>{place.score <= 1 ? Math.round(place.score * 100) : place.score}</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: TEXT.secondary }}>{place.connection}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: COLOR.navy }}>{place.connection}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>
@@ -1510,7 +1503,7 @@ function TasteTensionSection({ tension }: { tension?: TasteTension }) {
     resolvedBy: t.resolvedBy,
   };
   return (
-    <div className="px-5 mb-7">
+    <div className="px-5 mb-10">
       <TasteTensionCard
         tension={intelTension}
         onPlaceTap={undefined}
@@ -1525,20 +1518,21 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
   const collection = propCollection || WEEKLY_COLLECTION;
   return (
     <SafeMotionDiv
-      className="mb-7 px-5"
+      className="px-5 py-6 mb-10 rounded-2xl"
+      style={{ background: 'var(--t-dark-teal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <div className="mb-1"><SectionLabel>This week&apos;s edit</SectionLabel></div>
+      <div className="mb-1"><SectionLabel color="var(--t-light-yellow)">This week&apos;s edit</SectionLabel></div>
       <div className="mb-3">
-        <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>{collection.title}</h3>
-        <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{collection.subtitle}</p>
+        <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: '#ffffff' }}>{collection.title}</h3>
+        <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: FONT.mono }}>{collection.subtitle}</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
         {collection.places.map((place, idx) => {
-          const domainColor = DIMENSION_COLORS[place.signalDomain] || '#8b6b4a';
+          const domainColor = DIMENSION_COLORS[place.signalDomain] || '#413800';
           const imageUrl = getPlaceImage(place.name);
           return (
             <PlaceLink key={place.name} name={place.name} location={place.location} googlePlaceId={place.googlePlaceId}>
@@ -1558,25 +1552,22 @@ function WeeklyEditSection({ collection: propCollection }: { collection?: { titl
                 <div className="p-4 flex flex-col">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <div className="text-[14px] font-semibold" style={{ color: TEXT.primary }}>{place.name}</div>
-                      <div className="text-[11px]" style={{ color: TEXT.secondary }}>{place.location}</div>
+                      <div className="text-[14px] font-semibold" style={{ color: COLOR.ochre }}>{place.name}</div>
+                      <div className="text-[11px]" style={{ color: COLOR.navy }}>{place.location}</div>
                     </div>
-                    <ScoreArc score={place.score} size={38} color="var(--t-teal)" />
+                    <ScoreArc score={place.score} size={38} color={COLOR.ochre} />
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2.5">
                     {(Array.isArray(place.signals) ? place.signals : []).map(s => (
-                      <span key={s} className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: `${domainColor}12`, color: domainColor, fontFamily: FONT.sans }}>{s}</span>
+                      <span key={s} className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: `${COLOR.ochre}12`, color: COLOR.ochre, fontFamily: FONT.sans }}>{s}</span>
                     ))}
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: TEXT.secondary }}>{place.note}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: COLOR.navy }}>{place.note}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>
           );
         })}
-      </div>
-      <div className="mt-8 -mx-5">
-        <BrandGraphicTransition variant="geometric" height={80} opacity={0.8} objectPosition="center center" />
       </div>
     </SafeMotionDiv>
   );
@@ -1587,27 +1578,26 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
   const displayBoards = boards || MOOD_BOARDS;
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-7 rounded-2xl"
-      style={{ background: 'var(--t-ochre)' }}
+      className="mb-10 px-5"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-navy)">Travel moods</SectionLabel>
+      <SectionLabel color={COLOR.coral}>Travel moods</SectionLabel>
       <div className="flex flex-col gap-3 mt-3">
         {displayBoards.map((board, idx) => (
           <SafeMotionDiv
             key={board.mood}
             className="p-4 rounded-2xl"
-            style={{ background: 'white', border: '1px solid var(--t-linen)', borderLeft: `3px solid ${board.color}` }}
+            style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: `1px solid ${INK['06']}`, borderLeft: `3px solid ${board.color}` }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: idx * 0.1 }}
             viewport={{ once: true, margin: '-100px' }}
           >
-            <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>{board.mood}</h4>
-            <p className="text-[11px] mb-4" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>{board.description}</p>
+            <h4 className="text-[14px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}>{board.mood}</h4>
+            <p className="text-[11px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>{board.description}</p>
             <div className="flex flex-col gap-2">
               {board.places.map((p, pIdx) => {
                 const imageUrl = getPlaceImage(p.name);
@@ -1629,10 +1619,10 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>{p.name}</span>
-                          <span className="text-[10px]" style={{ color: TEXT.secondary }}>{p.location}</span>
+                          <span className="text-[12px] font-semibold" style={{ color: COLOR.darkTeal }}>{p.name}</span>
+                          <span className="text-[10px]" style={{ color: COLOR.navy }}>{p.location}</span>
                         </div>
-                        <p className="text-[10px] italic" style={{ color: TEXT.secondary }}>{p.vibe}</p>
+                        <p className="text-[10px] italic" style={{ color: COLOR.navy }}>{p.vibe}</p>
                       </div>
                       <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
                     </SafeMotionDiv>
@@ -1666,13 +1656,23 @@ function DeepMatchSection({ match }: { match?: DeepMatch }) {
     googlePlaceId: m.googlePlaceId,
   };
   return (
-    <div className="px-5 mb-7">
-      <DeepMatchBreakdown
-        match={intelMatch}
-        onPlaceTap={undefined}
-        variant="mobile"
-      />
-    </div>
+    <SafeMotionDiv
+      className="px-5 py-6 mb-10 rounded-2xl"
+      style={{ background: 'var(--t-dark-teal)' }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true, margin: '-100px' }}
+    >
+      <div className="mb-3"><SectionLabel color="var(--t-light-yellow)">Deep match</SectionLabel></div>
+      <div className="rounded-xl overflow-hidden" style={{ background: '#ffffff' }}>
+        <DeepMatchBreakdown
+          match={intelMatch}
+          onPlaceTap={undefined}
+          variant="mobile"
+        />
+      </div>
+    </SafeMotionDiv>
   );
 }
 
@@ -1694,7 +1694,7 @@ function StretchPickSection({ stretch }: { stretch?: typeof STRETCH_PICK }) {
     googlePlaceId: s.googlePlaceId,
   };
   return (
-    <div className="px-5 mb-7">
+    <div className="px-5 mb-10">
       <StretchPickAxis
         pick={intelStretch}
         onPlaceTap={undefined}
@@ -1710,17 +1710,17 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
   const label = contextLabel || 'Summer';
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-7 rounded-2xl"
-      style={{ background: 'var(--t-charcoal)' }}
+      className="px-5 py-6 mb-10 rounded-2xl"
+      style={{ background: 'var(--t-dark-teal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-peach)">Context mode</SectionLabel>
+      <SectionLabel color="var(--t-light-yellow)">Context mode</SectionLabel>
       <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
-        style={{ background: 'var(--t-cream)', border: 'none', borderTop: '3px solid var(--t-teal)' }}
+        style={{ background: '#ffffff', border: 'none', borderTop: '3px solid var(--t-light-yellow)' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -1728,11 +1728,11 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
       >
         <div className="flex items-center gap-2 mb-1">
           <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
-          <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+          <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.ochre }}>
             If you&apos;re traveling this {label.toLowerCase()}...
           </span>
         </div>
-        <p className="text-[11px] mb-4" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+        <p className="text-[11px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>
           {displayRecs.length > 0
             ? displayRecs.slice(0, 3).map(r => r.name).join(' · ')
             : 'Curated for your moment'}
@@ -1754,14 +1754,14 @@ function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; conte
                       <PlacePhoto src={imageUrl} alt={rec.name} fill sizes="36px" />
                     </div>
                   ) : (
-                    <ScoreArc score={rec.score} size={36} color="var(--t-teal)" />
+                    <ScoreArc score={rec.score} size={36} color={COLOR.ochre} />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>{rec.name}</span>
-                      <span className="text-[10px]" style={{ color: TEXT.secondary }}>{rec.location}</span>
+                      <span className="text-[12px] font-semibold" style={{ color: COLOR.ochre }}>{rec.name}</span>
+                      <span className="text-[10px]" style={{ color: COLOR.navy }}>{rec.location}</span>
                     </div>
-                    <p className="text-[10px] leading-snug" style={{ color: TEXT.secondary }}>{rec.whyFits}</p>
+                    <p className="text-[10px] leading-snug" style={{ color: COLOR.navy }}>{rec.whyFits}</p>
                   </div>
                 </SafeMotionDiv>
               </PlaceLink>
@@ -1783,17 +1783,17 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
 
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-7 rounded-2xl"
-      style={{ background: 'var(--t-teal)' }}
+      className="px-5 py-6 mb-10 rounded-2xl"
+      style={{ background: 'var(--t-dark-teal)' }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-cream)">Your taste vocabulary</SectionLabel>
+      <SectionLabel color="var(--t-light-yellow)">Your taste vocabulary</SectionLabel>
       <SafeMotionDiv
         className="p-4 rounded-xl mt-3"
-        style={{ background: 'rgba(255,255,255,0.85)', border: 'none' }}
+        style={{ background: '#ffffff', border: 'none' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -1801,7 +1801,7 @@ function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
       >
         <div className="flex flex-wrap gap-1.5 mb-3">
           {allTerms.map(({ term, domain }, idx) => {
-            const color = DIMENSION_COLORS[domain] || '#8b6b4a';
+            const color = DIMENSION_COLORS[domain] || '#413800';
             const isRejection = domain === 'Rejection';
             const randomDelay = Math.random() * 0.3;
             return (

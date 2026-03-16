@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection } from '@/components/animations/AnimatedElements';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ export function StretchPickAxis({
       <div
         className={`rounded-2xl overflow-hidden ${className || ''}`}
         style={{
-          background: `linear-gradient(155deg, ${T.pantonOrange}08, ${T.verde}06)`,
+          background: 'linear-gradient(155deg, rgba(238,113,109,0.06), rgba(238,113,109,0.12))',
           border: `1px solid ${INK['06']}`,
         }}
       >
@@ -150,20 +150,20 @@ export function StretchPickAxis({
                 width: 22,
                 height: 22,
                 borderRadius: 6,
-                background: `${T.pantonOrange}12`,
+                background: `${COLOR.coral}12`,
               }}
             >
-              <PerriandIcon name="discover" size={12} color={T.pantonOrange} />
+              <PerriandIcon name="discover" size={12} color={COLOR.coral} />
             </div>
             <span
               className="text-[9px] font-bold uppercase tracking-widest"
-              style={{ color: T.pantonOrange, fontFamily: FONT.mono }}
+              style={{ color: COLOR.coral, fontFamily: FONT.mono }}
             >
               Stretch pick
             </span>
             <span
               className="text-[11px] font-bold ml-auto"
-              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
+              style={{ color: COLOR.navy, fontFamily: FONT.mono }}
             >
               {pick.score}% match
             </span>
@@ -176,13 +176,13 @@ export function StretchPickAxis({
           >
             <h3
               className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} italic leading-snug m-0`}
-              style={{ fontFamily: FONT.serif, color: TEXT.primary }}
+              style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}
             >
               {pick.name}
             </h3>
             <span
               className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} mt-0.5 block`}
-              style={{ color: TEXT.secondary }}
+              style={{ color: COLOR.navy }}
             >
               {pick.location} · {pick.type}
             </span>
@@ -214,15 +214,15 @@ export function StretchPickAxis({
         >
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed m-0 mb-2`}
-            style={{ color: TEXT.secondary }}
+            style={{ color: COLOR.navy }}
           >
             {pick.why}
           </p>
           <div className="flex items-center gap-1.5">
-            <PerriandIcon name="sparkle" size={10} color={TEXT.secondary} />
+            <PerriandIcon name="sparkle" size={10} color={COLOR.coral} />
             <span
               className={`${isDesktop ? 'text-[10px]' : 'text-[9px]'} italic`}
-              style={{ color: TEXT.secondary }}
+              style={{ color: COLOR.navy }}
             >
               Breaks your pattern: {pick.tension}
             </span>

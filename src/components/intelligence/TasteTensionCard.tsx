@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TasteDomain, DOMAIN_COLORS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ export function TasteTensionCard({
       <div
         className={`rounded-2xl overflow-hidden ${className || ''}`}
         style={{
-          background: 'linear-gradient(145deg, rgba(104,68,160,0.06) 0%, rgba(232,104,48,0.04) 100%)',
+          background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)',
           border: `1px solid ${INK['06']}`,
         }}
       >
@@ -64,21 +64,21 @@ export function TasteTensionCard({
                 width: 22,
                 height: 22,
                 borderRadius: 6,
-                background: `${T.pantonViolet}12`,
+                background: `${COLOR.coral}12`,
               }}
             >
-              <PerriandIcon name="sparkle" size={12} color={T.pantonViolet} />
+              <PerriandIcon name="sparkle" size={12} color={COLOR.coral} />
             </div>
             <span
               className="text-[9px] font-bold uppercase tracking-widest"
-              style={{ color: T.pantonViolet, fontFamily: FONT.mono }}
+              style={{ color: COLOR.coral, fontFamily: FONT.mono }}
             >
               Taste tension
             </span>
           </div>
           <h3
             className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} leading-snug italic`}
-            style={{ fontFamily: FONT.serif, color: TEXT.primary, margin: 0 }}
+            style={{ fontFamily: FONT.serif, color: COLOR.darkTeal, margin: 0 }}
           >
             {tension.title}
           </h3>
@@ -111,9 +111,9 @@ export function TasteTensionCard({
             </div>
             <p
               className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
-              style={{ color: TEXT.secondary }}
+              style={{ color: COLOR.navy }}
             >
-              <span className="font-semibold" style={{ color: TEXT.primary }}>You say: </span>
+              <span className="font-semibold" style={{ color: COLOR.darkTeal }}>You say: </span>
               {tension.stated}
             </p>
           </div>
@@ -143,9 +143,9 @@ export function TasteTensionCard({
             </div>
             <p
               className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
-              style={{ color: TEXT.secondary }}
+              style={{ color: COLOR.navy }}
             >
-              <span className="font-semibold" style={{ color: TEXT.primary }}>But you keep saving: </span>
+              <span className="font-semibold" style={{ color: COLOR.darkTeal }}>But you keep saving: </span>
               {tension.revealed}
             </p>
           </div>
@@ -153,7 +153,7 @@ export function TasteTensionCard({
           {/* Editorial explanation */}
           <p
             className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed italic`}
-            style={{ color: TEXT.secondary, margin: 0 }}
+            style={{ color: COLOR.navy, margin: 0 }}
           >
             {tension.editorial}
           </p>
@@ -177,23 +177,23 @@ export function TasteTensionCard({
             tabIndex={onPlaceTap && tension.resolvedBy.googlePlaceId ? 0 : undefined}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <PerriandIcon name="terrazzo" size={11} color={T.honey} />
+              <PerriandIcon name="terrazzo" size={11} color={COLOR.coral} />
               <span
                 className="text-[9px] font-bold uppercase tracking-widest"
-                style={{ color: T.amber, fontFamily: FONT.mono }}
+                style={{ color: COLOR.coral, fontFamily: FONT.mono }}
               >
                 Bridges this tension
               </span>
             </div>
-            <p className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold m-0 mb-1`} style={{ color: TEXT.primary }}>
+            <p className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold m-0 mb-1`} style={{ color: COLOR.darkTeal }}>
               {tension.resolvedBy.name}
-              <span className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-normal ml-1.5`} style={{ color: TEXT.secondary }}>
+              <span className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-normal ml-1.5`} style={{ color: COLOR.navy }}>
                 {tension.resolvedBy.location}
               </span>
             </p>
             <p
               className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed m-0`}
-              style={{ color: TEXT.secondary }}
+              style={{ color: COLOR.navy }}
             >
               {tension.resolvedBy.how}
             </p>
