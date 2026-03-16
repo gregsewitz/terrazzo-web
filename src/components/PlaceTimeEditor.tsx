@@ -187,7 +187,7 @@ export default function PlaceTimeEditor({
         style={{
           background: 'var(--t-cream, #faf8f4)',
           border: '1px solid var(--t-verde-muted, rgba(42,122,86,0.25))',
-          boxShadow: '0 1px 3px rgba(26,45,74,0.06)',
+          boxShadow: '0 1px 3px rgba(0,42,85,0.06)',
           padding: '2px 6px',
         }}
       >

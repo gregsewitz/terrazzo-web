@@ -7,11 +7,11 @@ import Image from 'next/image';
  * Brand color map for inline SVG fills (icon variant only).
  */
 const BRAND_COLORS: Record<string, string> = {
-  navy: 'var(--t-navy, #1A2D4A)',
+  navy: 'var(--t-navy, #002a55)',
   cream: 'var(--t-cream, #FBF5EC)',
-  coral: 'var(--t-coral, #E86F5A)',
-  teal: 'var(--t-teal, #5EC4B2)',
-  ochre: 'var(--t-ochre, #E8B84B)',
+  coral: 'var(--t-coral, #ee716d)',
+  teal: 'var(--t-teal, #92ced6)',
+  ochre: 'var(--t-ochre, #e0a501)',
   olive: 'var(--t-olive, #6B7C4E)',
 };
 
@@ -21,8 +21,8 @@ const BRAND_COLORS: Record<string, string> = {
  */
 const DARK_BACKGROUNDS = new Set([
   'navy', 'charcoal', 'coral', 'olive',
-  '#1A2D4A', '#1a2d4a', '#2D2D2D', '#2d2d2d',
-  '#E86F5A', '#e86f5a', '#6B7C4E', '#6b7c4e',
+  '#002a55', '#002a55', '#2D2D2D', '#2d2d2d',
+  '#ee716d', '#ee716d', '#6B7C4E', '#6b7c4e',
 ]);
 
 /**

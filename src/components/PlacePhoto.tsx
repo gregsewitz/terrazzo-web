@@ -37,7 +37,7 @@ export default function PlacePhoto({
         style={{
           width: fill ? '100%' : width,
           height: fill ? '100%' : height,
-          background: 'linear-gradient(135deg, var(--t-linen) 0%, rgba(232,111,90,0.12) 100%)',
+          background: 'linear-gradient(135deg, var(--t-linen) 0%, rgba(238,113,109,0.12) 100%)',
           ...style,
         }}
         role="img"

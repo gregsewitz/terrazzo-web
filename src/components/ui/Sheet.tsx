@@ -81,13 +81,13 @@ export default function Sheet({
               style={{
                 width: 32,
                 height: 32,
-                background: 'rgba(26,45,74,0.04)',
+                background: 'rgba(0,42,85,0.04)',
                 color: 'var(--t-ink)',
                 fontSize: 16,
                 transition: 'background 150ms ease',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(26,45,74,0.08)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(26,45,74,0.04)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,42,85,0.08)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,42,85,0.04)')}
             >
               ✕
             </button>
@@ -150,13 +150,13 @@ export default function Sheet({
                   style={{
                     width: 28,
                     height: 28,
-                    background: 'rgba(26,45,74,0.04)',
+                    background: 'rgba(0,42,85,0.04)',
                     color: 'var(--t-ink)',
                     fontSize: 14,
                     transition: 'background 150ms ease',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(26,45,74,0.08)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(26,45,74,0.04)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,42,85,0.08)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,42,85,0.04)')}
                 >
                   ✕
                 </button>

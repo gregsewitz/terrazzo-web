@@ -264,7 +264,7 @@ function DreamCard({ item, onTap }: { item: ImportedPlace; onTap: (item: Importe
               background: item.matchScore >= 85
                 ? 'rgba(42,122,86,0.1)'
                 : item.matchScore >= 70
-                  ? 'rgba(232,111,90,0.1)'
+                  ? 'rgba(238,113,109,0.1)'
                   : INK['06'],
               color: item.matchScore >= 85
                 ? 'var(--t-verde)'

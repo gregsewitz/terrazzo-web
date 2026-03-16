@@ -102,7 +102,7 @@ export default function TripsPage() {
                     <div className="flex items-start gap-3">
                       <div
                         className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: destColor ? `${destColor.accent}15` : 'rgba(232,111,90,0.1)' }}
+                        style={{ background: destColor ? `${destColor.accent}15` : 'rgba(238,113,109,0.1)' }}
                       >
                         <PerriandIcon name="plan" size={20} color={destColor?.accent || TEXT.accent} />
                       </div>
@@ -121,7 +121,7 @@ export default function TripsPage() {
                         <span
                           className="text-[9px] px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1"
                           style={{
-                            background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(232,111,90,0.08)',
+                            background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(238,113,109,0.08)',
                             color: trip.status === 'planning' ? 'var(--t-verde)' : '#8a6a2a',
                             fontFamily: FONT.mono,
                           }}
@@ -243,7 +243,7 @@ export default function TripsPage() {
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-lg"
-                style={{ background: 'rgba(232,111,90,0.1)' }}
+                style={{ background: 'rgba(238,113,109,0.1)' }}
               >
                 <PerriandIcon name="plan" size={20} color={TEXT.accent} />
               </div>
@@ -253,7 +253,7 @@ export default function TripsPage() {
                     {trip.name}
                   </span>
                   {trip.status && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1" style={{ background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(232,111,90,0.08)', color: trip.status === 'planning' ? 'var(--t-verde)' : '#8a6a2a', fontFamily: FONT.mono }}>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap flex items-center gap-1" style={{ background: trip.status === 'planning' ? 'rgba(42,122,86,0.08)' : 'rgba(238,113,109,0.08)', color: trip.status === 'planning' ? 'var(--t-verde)' : '#8a6a2a', fontFamily: FONT.mono }}>
                       <PerriandIcon name={trip.status === 'planning' ? 'pin' : 'star'} size={10} color={trip.status === 'planning' ? 'var(--t-verde)' : TEXT.accent} />
                       {trip.status === 'planning' ? 'Planning' : 'Dreaming'}
                     </span>

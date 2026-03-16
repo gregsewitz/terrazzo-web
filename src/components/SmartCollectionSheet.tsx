@@ -297,7 +297,7 @@ function SmartCollectionSheet({
               {parsed.reasoning && (
                 <div
                   className="text-[11px] leading-relaxed px-3 py-2.5 rounded-[10px] flex gap-2 items-start"
-                  style={{ color: TEXT.primary, background: 'rgba(232,111,90,0.06)' }}
+                  style={{ color: TEXT.primary, background: 'rgba(238,113,109,0.06)' }}
                 >
                   <div style={{ flexShrink: 0 }}>
                     <PerriandIcon name="sparkle" size={11} />

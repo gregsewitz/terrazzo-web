@@ -17,7 +17,7 @@ const ENTRY_TYPES: { type: DreamBoardEntryType; label: string; icon: PerriandIco
 
 // ─── Vibe accent colors ───
 const VIBE_COLORS = [
-  { value: 'honey', label: 'Warm', bg: 'rgba(232,111,90,0.10)', border: 'rgba(232,111,90,0.25)' },
+  { value: 'honey', label: 'Warm', bg: 'rgba(238,113,109,0.10)', border: 'rgba(238,113,109,0.25)' },
   { value: 'verde', label: 'Fresh', bg: 'rgba(42,122,86,0.08)', border: 'rgba(42,122,86,0.20)' },
   { value: 'blue', label: 'Cool', bg: 'rgba(58,140,180,0.08)', border: 'rgba(58,140,180,0.20)' },
   { value: 'rose', label: 'Rosy', bg: 'rgba(180,80,80,0.08)', border: 'rgba(180,80,80,0.20)' },
@@ -35,7 +35,7 @@ function getVibeBorder(color?: string): string {
 const ACCENT_COLORS = [
   { value: undefined, bg: INK['06'] },
   { value: 'verde', bg: 'rgba(42,122,86,0.12)' },
-  { value: 'honey', bg: 'rgba(232,111,90,0.12)' },
+  { value: 'honey', bg: 'rgba(238,113,109,0.12)' },
   { value: 'blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', bg: 'rgba(180,80,80,0.12)' },
 ];
@@ -413,7 +413,7 @@ function DreamBoardCard({
   const cardBg = isVibe
     ? getVibeBg(entry.color)
     : entry.pinned
-      ? 'rgba(232,111,90,0.04)'
+      ? 'rgba(238,113,109,0.04)'
       : isQuestion
         ? (isResolved ? INK['04'] : 'rgba(58,140,180,0.04)')
         : getAccentBg(entry.color);
@@ -421,7 +421,7 @@ function DreamBoardCard({
   const cardBorder = isVibe
     ? getVibeBorder(entry.color)
     : entry.pinned
-      ? 'rgba(232,111,90,0.2)'
+      ? 'rgba(238,113,109,0.2)'
       : isQuestion && !isResolved
         ? 'rgba(58,140,180,0.2)'
         : 'var(--t-linen)';
@@ -437,7 +437,7 @@ function DreamBoardCard({
       <div className="flex items-center justify-between px-2.5 pt-2 pb-0.5">
         <div className="flex items-center gap-1.5">
           {entry.pinned && (
-            <PerriandIcon name="pin" size={10} color="var(--t-honey, #E86F5A)" />
+            <PerriandIcon name="pin" size={10} color="var(--t-honey, #ee716d)" />
           )}
           <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {TYPE_EMOJI[entry.type] || '✎'} {timeAgo}
@@ -455,7 +455,7 @@ function DreamBoardCard({
             style={{ background: 'transparent' }}
             title={entry.pinned ? 'Unpin' : 'Pin to top'}
           >
-            <PerriandIcon name="pin" size={10} color={entry.pinned ? 'var(--t-honey, #E86F5A)' : INK['30']} />
+            <PerriandIcon name="pin" size={10} color={entry.pinned ? 'var(--t-honey, #ee716d)' : INK['30']} />
           </button>
           {isQuestion && (
             <button

@@ -216,7 +216,7 @@ function PlaceDetailContent({
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(to top, rgba(26,45,74,0.55) 0%, rgba(26,45,74,0.15) 40%, transparent 70%)',
+            background: 'linear-gradient(to top, rgba(0,42,85,0.55) 0%, rgba(0,42,85,0.15) 40%, transparent 70%)',
             pointerEvents: 'none',
           }}
         />
@@ -229,15 +229,15 @@ function PlaceDetailContent({
             width: isDesktop ? 36 : 32,
             height: isDesktop ? 36 : 32,
             borderRadius: '50%',
-            background: 'rgba(26,45,74,0.45)',
+            background: 'rgba(0,42,85,0.45)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             color: 'white',
             fontSize: isDesktop ? 16 : 14,
             transition: 'background 150ms ease',
           }}
-          onMouseEnter={e => isDesktop && (e.currentTarget.style.background = 'rgba(26,45,74,0.6)')}
-          onMouseLeave={e => isDesktop && (e.currentTarget.style.background = 'rgba(26,45,74,0.45)')}
+          onMouseEnter={e => isDesktop && (e.currentTarget.style.background = 'rgba(0,42,85,0.6)')}
+          onMouseLeave={e => isDesktop && (e.currentTarget.style.background = 'rgba(0,42,85,0.45)')}
           aria-label="Close"
         >
           {isDesktop ? 'x' : '<'}
@@ -349,7 +349,7 @@ function PlaceDetailContent({
             {hydratedGoogle?.category && (
               <span
                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                style={{ background: 'rgba(232,111,90,0.15)', color: '#7a5e24' }}
+                style={{ background: 'rgba(238,113,109,0.15)', color: '#7a5e24' }}
               >
                 {hydratedGoogle.category}
               </span>
@@ -523,8 +523,8 @@ function PlaceDetailContent({
             <div
               className="flex items-center gap-4 p-4 rounded-2xl mb-5"
               style={{
-                background: 'linear-gradient(135deg, rgba(232,111,90,0.10), rgba(232,111,90,0.04))',
-                border: '1px solid rgba(232,111,90,0.18)',
+                background: 'linear-gradient(135deg, rgba(238,113,109,0.10), rgba(238,113,109,0.04))',
+                border: '1px solid rgba(238,113,109,0.18)',
                 cursor: onViewBriefing ? 'pointer' : 'default',
               }}
               onClick={onViewBriefing}

@@ -79,12 +79,11 @@ function AuthCallbackInner() {
       className="min-h-dvh flex flex-col items-center justify-center px-6"
       style={{ background: 'var(--t-cream)' }}
     >
-      <h1
-        className="text-[24px] mb-3"
-        style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
-      >
-        Terrazzo
-      </h1>
+      <img
+        src="/brand/logo-pixellance-navy.svg"
+        alt="Terrazzo"
+        style={{ height: 28, width: 'auto', marginBottom: 12 }}
+      />
       <p className="text-[13px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
         Signing you in...
       </p>
@@ -100,12 +99,11 @@ export default function AuthCallbackPage() {
           className="min-h-dvh flex flex-col items-center justify-center px-6"
           style={{ background: 'var(--t-cream)' }}
         >
-          <h1
-            className="text-[24px] mb-3"
-            style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: 'var(--t-ink)' }}
-          >
-            Terrazzo
-          </h1>
+          <img
+            src="/brand/logo-pixellance-navy.svg"
+            alt="Terrazzo"
+            style={{ height: 28, width: 'auto', marginBottom: 12 }}
+          />
           <p className="text-[13px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
             Signing you in...
           </p>

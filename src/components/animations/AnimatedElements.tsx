@@ -132,7 +132,7 @@ interface AnimatedBarProps {
 
 export function AnimatedBar({
   percentage, color, height = 8, delay = 0,
-  bgColor = 'rgba(26,45,74,0.06)', borderRadius = 999,
+  bgColor = 'rgba(0,42,85,0.06)', borderRadius = 999,
 }: AnimatedBarProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
 
@@ -177,8 +177,8 @@ interface AnimatedSpectrumProps {
 }
 
 export function AnimatedSpectrum({
-  percentage, markerColor = '#8b6b4a', delay = 0,
-  bgGradient = 'linear-gradient(90deg, rgba(26,45,74,0.06), rgba(26,45,74,0.15))',
+  percentage, markerColor = '#413800', delay = 0,
+  bgGradient = 'linear-gradient(90deg, rgba(0,42,85,0.06), rgba(0,42,85,0.15))',
 }: AnimatedSpectrumProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
 
@@ -265,7 +265,7 @@ export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 
     return (
       <div ref={ref} className="relative flex items-center justify-center" style={{ width: size, height: size }}>
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(26,45,74,0.08)" strokeWidth={strokeWidth} />
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(0,42,85,0.08)" strokeWidth={strokeWidth} />
           <circle
             cx={size / 2} cy={size / 2} r={radius}
             fill="none" stroke={color} strokeWidth={strokeWidth}
@@ -283,7 +283,7 @@ export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle
           cx={size / 2} cy={size / 2} r={radius}
-          fill="none" stroke="rgba(26,45,74,0.08)" strokeWidth={strokeWidth}
+          fill="none" stroke="rgba(0,42,85,0.08)" strokeWidth={strokeWidth}
         />
         <motion.circle
           cx={size / 2} cy={size / 2} r={radius}

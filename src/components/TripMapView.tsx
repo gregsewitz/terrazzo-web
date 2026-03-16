@@ -462,7 +462,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
               style={{
                 bottom: hasActive ? -60 : 16,
                 transform: 'translateX(-50%)',
-                background: 'rgba(26,45,74,0.85)',
+                background: 'rgba(0,42,85,0.85)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
                 color: 'var(--t-cream)',
@@ -862,7 +862,7 @@ function MobileDetailCard({
               className="flex items-center justify-center rounded-lg flex-shrink-0"
               style={{
                 fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: '#E86F5A', background: 'rgba(232,111,90,0.08)',
+                color: '#ee716d', background: 'rgba(238,113,109,0.08)',
                 padding: '4px 8px',
               }}
             >
@@ -1004,7 +1004,7 @@ function MobileGhostCard({
               className="flex items-center justify-center rounded-lg flex-shrink-0"
               style={{
                 fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: '#E86F5A', background: 'rgba(232,111,90,0.08)',
+                color: '#ee716d', background: 'rgba(238,113,109,0.08)',
                 padding: '4px 8px',
               }}
             >
@@ -1137,7 +1137,7 @@ function SidebarPlaceCard({
       </div>
       {place.matchScore && (
         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0" style={{
-          fontFamily: FONT.mono, color: '#E86F5A', background: 'rgba(232,111,90,0.08)',
+          fontFamily: FONT.mono, color: '#ee716d', background: 'rgba(238,113,109,0.08)',
         }}>
           {place.matchScore}%
         </span>
@@ -1194,7 +1194,7 @@ function DesktopDetailCard({
             </div>
           </div>
           {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#E86F5A', background: 'rgba(232,111,90,0.08)' }}>
+            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#ee716d', background: 'rgba(238,113,109,0.08)' }}>
               {place.matchScore}%
             </span>
           )}
@@ -1321,7 +1321,7 @@ function DesktopGhostCard({
             </div>
           </div>
           {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#E86F5A', background: 'rgba(232,111,90,0.08)' }}>
+            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#ee716d', background: 'rgba(238,113,109,0.08)' }}>
               {place.matchScore}%
             </span>
           )}

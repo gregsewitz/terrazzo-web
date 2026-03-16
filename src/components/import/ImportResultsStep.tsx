@@ -159,7 +159,7 @@ export const ImportResultsStep = React.memo(function ImportResultsStep({
                       {item.matchScore > 0 && (
                         <span
                           className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex-shrink-0"
-                          style={{ background: 'rgba(232,111,90,0.1)', color: '#8a6a2a', fontFamily: FONT.mono }}
+                          style={{ background: 'rgba(238,113,109,0.1)', color: '#8a6a2a', fontFamily: FONT.mono }}
                         >
                           {item.matchScore}%
                         </span>

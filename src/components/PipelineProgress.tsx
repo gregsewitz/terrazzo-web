@@ -85,7 +85,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
                 background: isCompleted
                   ? 'rgba(42,122,86,0.08)'
                   : isCurrent
-                    ? 'rgba(232,111,90,0.1)'
+                    ? 'rgba(238,113,109,0.1)'
                     : INK['04'],
               }}
             >

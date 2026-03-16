@@ -198,7 +198,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
             key={i}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
             style={{
-              background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(232,111,90,0.1)',
+              background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(238,113,109,0.1)',
               color: dest.lat ? 'var(--t-verde)' : TEXT.accent,
               fontFamily: FONT.sans,
               fontWeight: 500,
@@ -263,7 +263,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               onClick={() => handleSelect(prediction)}
               className="w-full flex items-start gap-2.5 px-3.5 py-2.5 border-none cursor-pointer text-left transition-colors"
               style={{
-                background: i === activeIndex ? 'rgba(232,111,90,0.06)' : 'transparent',
+                background: i === activeIndex ? 'rgba(238,113,109,0.06)' : 'transparent',
                 fontFamily: FONT.sans,
                 borderBottom: i < predictions.length - 1 ? '1px solid rgba(237,230,216,0.5)' : 'none',
               }}
@@ -289,7 +289,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               onClick={() => addDestination({ name: inputValue.trim() })}
               className="w-full flex items-center gap-2.5 px-3.5 py-2.5 border-none cursor-pointer text-left"
               style={{
-                background: activeIndex === predictions.length ? 'rgba(232,111,90,0.06)' : 'rgba(248,243,234,0.5)',
+                background: activeIndex === predictions.length ? 'rgba(238,113,109,0.06)' : 'rgba(248,243,234,0.5)',
                 fontFamily: FONT.sans,
                 borderTop: '1px solid var(--t-linen)',
               }}
@@ -345,7 +345,7 @@ function DestinationInputFallback({ destinations, onChange, isDreaming }: Destin
           <span
             key={i}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
-            style={{ background: 'rgba(232,111,90,0.1)', color: TEXT.accent }}
+            style={{ background: 'rgba(238,113,109,0.1)', color: TEXT.accent }}
           >
             {dest.name}
             <button

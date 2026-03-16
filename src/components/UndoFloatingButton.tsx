@@ -76,7 +76,7 @@ export default function UndoFloatingButton() {
       {showTooltip && label && (
         <div
           style={{
-            background: 'var(--t-ink, #1A2D4A)',
+            background: 'var(--t-ink, #002a55)',
             color: 'var(--t-cream, #faf8f5)',
             padding: '5px 10px',
             borderRadius: 8,
@@ -114,13 +114,13 @@ export default function UndoFloatingButton() {
           height: 48,
           borderRadius: '50%',
           border: 'none',
-          background: 'var(--t-ink, #1A2D4A)',
+          background: 'var(--t-ink, #002a55)',
           color: 'var(--t-cream, #faf8f5)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(26,45,74,0.25), 0 1px 3px rgba(26,45,74,0.15)',
+          boxShadow: '0 4px 16px rgba(0,42,85,0.25), 0 1px 3px rgba(0,42,85,0.15)',
           transition: 'transform 0.15s ease, box-shadow 0.15s ease',
         }}
         onPointerDown={(e) => {

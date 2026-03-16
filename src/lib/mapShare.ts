@@ -16,7 +16,7 @@ export function generateShareableMapHTML(
   // Type color mapping
   const typeColors: Record<string, string> = {
     restaurant: '#e87080',
-    hotel: '#E86F5A',
+    hotel: '#ee716d',
     bar: '#6844a0',
     museum: '#2a7a56',
     cafe: '#eeb420',
@@ -59,10 +59,10 @@ export function generateShareableMapHTML(
     }
     .header h1 {
       font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 18px; color: #1A2D4A; font-weight: 400; font-style: italic;
+      font-size: 18px; color: #002a55; font-weight: 400; font-style: italic;
     }
     .header .count {
-      font-size: 11px; color: rgba(26,45,74,0.7);
+      font-size: 11px; color: rgba(0,42,85,0.7);
       font-family: 'Space Mono', monospace;
     }
     .gm-style .info-window {
@@ -70,13 +70,13 @@ export function generateShareableMapHTML(
       padding: 4px 0;
     }
     .info-window h3 {
-      font-size: 14px; font-weight: 600; color: #1A2D4A; margin-bottom: 4px;
+      font-size: 14px; font-weight: 600; color: #002a55; margin-bottom: 4px;
       font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
     }
-    .info-window .meta { font-size: 11px; color: rgba(26,45,74,0.7); margin-bottom: 6px; }
-    .info-window .rating { color: #E86F5A; font-weight: 600; }
+    .info-window .meta { font-size: 11px; color: rgba(0,42,85,0.7); margin-bottom: 6px; }
+    .info-window .rating { color: #ee716d; font-weight: 600; }
     .info-window a {
-      font-size: 11px; color: #E86F5A; text-decoration: none; font-weight: 500;
+      font-size: 11px; color: #ee716d; text-decoration: none; font-weight: 500;
     }
     .info-window a:hover { text-decoration: underline; }
   </style>

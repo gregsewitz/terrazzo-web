@@ -196,8 +196,8 @@ export default function AddBarSearch({
               <div
                 className="mt-4 p-4 rounded-xl"
                 style={{
-                  background: 'rgba(232,111,90,0.05)',
-                  border: '1px solid rgba(232,111,90,0.12)',
+                  background: 'rgba(238,113,109,0.05)',
+                  border: '1px solid rgba(238,113,109,0.12)',
                 }}
               >
                 <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, margin: '0 0 8px' }}>

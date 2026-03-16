@@ -54,7 +54,7 @@ export default function RadarChart({ data, size = 280 }: RadarChartProps) {
       {/* Axis lines (colored per dimension) */}
       {data.map((d, i) => {
         const outer = getPoint(i, maxRadius);
-        const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+        const color = AXIS_COLORS[d.axis] || '#413800';
         return (
           <line
             key={`axis-${i}`}
@@ -78,7 +78,7 @@ export default function RadarChart({ data, size = 280 }: RadarChartProps) {
 
       {/* Outer endpoint dots (faded, at max radius) */}
       {outerPoints.map((p, i) => {
-        const color = AXIS_COLORS[data[i].axis] || '#8b6b4a';
+        const color = AXIS_COLORS[data[i].axis] || '#413800';
         return (
           <circle
             key={`outer-${i}`}
@@ -91,7 +91,7 @@ export default function RadarChart({ data, size = 280 }: RadarChartProps) {
 
       {/* Data point dots (solid, colored) */}
       {dataPoints.map((p, i) => {
-        const color = AXIS_COLORS[data[i].axis] || '#8b6b4a';
+        const color = AXIS_COLORS[data[i].axis] || '#413800';
         return (
           <g key={`data-${i}`}>
             <circle cx={p.x} cy={p.y} r={3.5} fill={color} />

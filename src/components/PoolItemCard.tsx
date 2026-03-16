@@ -39,7 +39,7 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
       <div
         className="absolute top-2 right-2 text-[10px] font-bold rounded-full px-1.5 py-0.5"
         style={{
-          background: `rgba(232,111,90,0.15)`,
+          background: `rgba(238,113,109,0.15)`,
           color: 'var(--t-amber)',
           fontFamily: FONT.mono,
         }}

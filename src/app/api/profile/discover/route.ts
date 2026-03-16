@@ -161,7 +161,7 @@ RULES:
 - Scores reflect genuine alignment with the profile.
 - The stretchPick should genuinely contradict one stated preference while matching a revealed one.
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a.
-- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #8b6b4a.
+- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800.
 - Context recs match the user's primary travel companion or current season.
 - Every "why", "note", "connection" must reference SPECIFIC profile signals, not generic praise.
 - Write like a well-traveled friend who also happens to have perfect recall of everything you've ever said about travel. Warm, specific, editorial — never promotional or corporate.

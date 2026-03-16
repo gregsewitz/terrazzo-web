@@ -82,7 +82,7 @@ export default function TasteStone({ data, size = 280 }: TasteStoneProps) {
 
         {/* Soft shadow for depth */}
         <filter id="tasteStone-shadow" x="-10%" y="-10%" width="120%" height="130%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#1A2D4A" floodOpacity="0.12" />
+          <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#002a55" floodOpacity="0.12" />
         </filter>
       </defs>
 
@@ -103,7 +103,7 @@ export default function TasteStone({ data, size = 280 }: TasteStoneProps) {
         if (i >= CHIP_POSITIONS.length) return null;
         const pos = CHIP_POSITIONS[i];
         const chipPath = CHIP_PATHS[i % CHIP_PATHS.length];
-        const color = AXIS_COLORS[d.axis] || '#8b6b4a';
+        const color = AXIS_COLORS[d.axis] || '#413800';
         const scale = getChipScale(d.value);
 
         // Map normalized position to actual stone bounds (roughly 12-96 x, 3-58 y)

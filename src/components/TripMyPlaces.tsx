@@ -195,7 +195,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
           <span
             className="px-2 py-0.5 rounded-md"
-            style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(232,111,90,0.1)', color: '#8a6a2a' }}
+            style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(238,113,109,0.1)', color: '#8a6a2a' }}
           >
             {place.matchScore}%
           </span>
@@ -250,7 +250,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
 
         {/* Terrazzo insight */}
         {place.terrazzoInsight?.why && (
-          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(232,111,90,0.04)', border: '1px solid rgba(232,111,90,0.1)' }}>
+          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(238,113,109,0.04)', border: '1px solid rgba(238,113,109,0.1)' }}>
             <div className="flex items-start gap-1.5">
               <div style={{ flexShrink: 0, marginTop: 1 }}>
                 <PerriandIcon name="terrazzo" size={11} color="var(--t-honey)" />

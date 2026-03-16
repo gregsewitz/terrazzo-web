@@ -87,7 +87,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
             width: 56,
             height: 56,
             borderRadius: 16,
-            background: 'rgba(26,45,74,0.04)',
+            background: 'rgba(0,42,85,0.04)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

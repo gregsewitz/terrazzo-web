@@ -215,11 +215,11 @@ export default function SharedViewPage() {
         <div className="px-4 pt-6">
           {/* Terrazzo branding */}
           <div className="text-center mb-6">
-            <span
-              style={{ fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic', color: 'var(--t-ink)', letterSpacing: -0.5 }}
-            >
-              Terrazzo
-            </span>
+            <img
+              src="/brand/logo-pixellance-navy.svg"
+              alt="Terrazzo"
+              style={{ height: 24, width: 'auto', display: 'inline-block' }}
+            />
           </div>
 
           {/* Collection header */}
@@ -322,11 +322,11 @@ export default function SharedViewPage() {
         <div className="px-4 pt-6">
           {/* Terrazzo branding */}
           <div className="text-center mb-6">
-            <span
-              style={{ fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic', color: 'var(--t-ink)', letterSpacing: -0.5 }}
-            >
-              Terrazzo
-            </span>
+            <img
+              src="/brand/logo-pixellance-navy.svg"
+              alt="Terrazzo"
+              style={{ height: 24, width: 'auto', display: 'inline-block' }}
+            />
           </div>
 
           {/* Trip header */}

@@ -38,7 +38,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
     leftLabel: 'Nice but not essential',
     rightLabel: 'I actively seek it out',
     leftColor: T.travertine,
-    rightColor: '#8b6b4a',
+    rightColor: '#413800',
     leftSignals: ['Local-economy-passive', 'Brand-agnostic'],
     rightSignals: ['Local-economy-supporter', 'Artisan-seeker', 'Community-investment'],
     sustainabilityDimension: 'ECONOMIC',
@@ -192,9 +192,9 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                 flexDirection: 'column',
                 gap: 10,
                 padding: '20px 24px',
-                background: 'rgba(26,45,74,0.02)',
+                background: 'rgba(0,42,85,0.02)',
                 borderRadius: 14,
-                border: '1px solid rgba(26,45,74,0.05)',
+                border: '1px solid rgba(0,42,85,0.05)',
                 animation: `fadeInUp 0.4s ease ${i * 0.08}s both`,
               }}
             >

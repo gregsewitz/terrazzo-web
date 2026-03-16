@@ -71,7 +71,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(26,45,74,0.5)' }}
+      style={{ background: 'rgba(0,42,85,0.5)' }}
       onClick={onClose}
     >
       <div

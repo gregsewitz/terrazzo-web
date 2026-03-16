@@ -27,7 +27,7 @@ export default function Error({
         style={{
           marginTop: '1rem',
           padding: '0.5rem 1rem',
-          background: '#1A2D4A',
+          background: '#002a55',
           color: '#f8f3ea',
           border: 'none',
           borderRadius: '6px',

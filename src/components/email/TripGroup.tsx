@@ -225,7 +225,7 @@ export const TripGroup = React.memo(function TripGroup({
       {!isMatched && mode === 'idle' && (
         <div
           className="flex items-center gap-2 px-3 py-2.5"
-          style={{ background: 'rgba(232,111,90,0.04)', borderBottom: '1px solid var(--t-linen)' }}
+          style={{ background: 'rgba(238,113,109,0.04)', borderBottom: '1px solid var(--t-linen)' }}
         >
           <PerriandIcon name="trips" size={12} color="var(--t-honey)" />
           <span className="text-[10px]" style={{ color: TEXT.secondary }}>Add to a trip?</span>
@@ -251,7 +251,7 @@ export const TripGroup = React.memo(function TripGroup({
 
       {/* ── Pick an existing trip ── */}
       {!isMatched && mode === 'pick' && (
-        <div style={{ background: 'rgba(232,111,90,0.04)', borderBottom: '1px solid var(--t-linen)' }}>
+        <div style={{ background: 'rgba(238,113,109,0.04)', borderBottom: '1px solid var(--t-linen)' }}>
           <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
             <span className="text-[10px] font-medium" style={{ color: TEXT.secondary }}>
               Choose a trip
@@ -320,7 +320,7 @@ export const TripGroup = React.memo(function TripGroup({
       {!isMatched && mode === 'create' && (
         <div
           className="flex items-center gap-2 px-3 py-2"
-          style={{ background: 'rgba(232,111,90,0.04)', borderBottom: '1px solid var(--t-linen)' }}
+          style={{ background: 'rgba(238,113,109,0.04)', borderBottom: '1px solid var(--t-linen)' }}
         >
           <PerriandIcon name="trips" size={12} color="var(--t-honey)" />
           <input

@@ -54,7 +54,7 @@ const BRAND = {
   verde: '#2a7a56',
   pantonViolet: '#6844a0',
   royerePink: '#e87080',
-  ink: '#1A2D4A',
+  ink: '#002a55',
   warmWhite: '#f5f0e6',
   travertine: '#e8dcc8',
   cream: '#f8f3ea',
@@ -143,7 +143,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       borderRadius: 24, overflow: 'hidden',
-      boxShadow: '0 4px 32px rgba(26,45,74,0.08), 0 1px 4px rgba(26,45,74,0.04)',
+      boxShadow: '0 4px 32px rgba(0,42,85,0.08), 0 1px 4px rgba(0,42,85,0.04)',
       background: BRAND.cream,
     }}>
       {children}
@@ -460,12 +460,12 @@ function CoverReveal({ firstName }: { firstName?: string }) {
 
         <div style={{ position: 'relative', zIndex: 2 }}>
           <SafeFadeIn delay={0.1} direction="up" distance={10}>
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.25em', textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.45)', marginBottom: 40,
-            }}>
-              Terrazzo
+            <div style={{ marginBottom: 40 }}>
+              <img
+                src="/brand/logo-pixellance-cream.svg"
+                alt="Terrazzo"
+                style={{ height: 14, width: 'auto', opacity: 0.45 }}
+              />
             </div>
           </SafeFadeIn>
 
@@ -910,7 +910,7 @@ function ContradictionReveal({ profile }: { profile: GeneratedTasteProfile }) {
           <div style={{
             padding: '22px 24px', borderRadius: 16,
             background: 'white',
-            boxShadow: `0 2px 16px rgba(26,45,74,0.04)`,
+            boxShadow: `0 2px 16px rgba(0,42,85,0.04)`,
             border: `1px solid ${INK['05']}`,
           }}>
             <p style={{
@@ -982,7 +982,7 @@ function PerfectDayReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 padding: '18px 20px', borderRadius: 16,
                 background: 'white',
                 border: `1px solid ${INK['05']}`,
-                boxShadow: '0 1px 8px rgba(26,45,74,0.03)',
+                boxShadow: '0 1px 8px rgba(0,42,85,0.03)',
                 position: 'relative',
               }}>
                 {/* Time dot */}
@@ -1049,7 +1049,7 @@ function HowYouShiftReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 <div style={{
                   padding: '20px 22px', borderRadius: 16,
                   background: 'white',
-                  boxShadow: '0 2px 12px rgba(26,45,74,0.04)',
+                  boxShadow: '0 2px 12px rgba(0,42,85,0.04)',
                   border: `1px solid ${INK['05']}`,
                   position: 'relative', overflow: 'hidden',
                 }}>
@@ -1188,7 +1188,7 @@ function DestinationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 color: TEXT.primary, padding: '14px 20px', borderRadius: 14,
                 background: 'white',
                 border: `1px solid ${INK['06']}`,
-                boxShadow: '0 2px 10px rgba(26,45,74,0.03)',
+                boxShadow: '0 2px 10px rgba(0,42,85,0.03)',
                 display: 'flex', alignItems: 'center', gap: 12,
               }}>
                 <div style={{
@@ -1278,7 +1278,7 @@ function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
               <div style={{
                 padding: '20px 22px', borderRadius: 16,
                 background: 'white',
-                boxShadow: '0 2px 12px rgba(26,45,74,0.04)',
+                boxShadow: '0 2px 12px rgba(0,42,85,0.04)',
                 border: `1px solid ${INK['06']}`,
                 position: 'relative', overflow: 'hidden',
               }}>
@@ -1394,7 +1394,7 @@ function ObservationsReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 padding: '20px 22px', borderRadius: 16,
                 background: 'white',
                 border: `1px solid ${INK['05']}`,
-                boxShadow: '0 2px 12px rgba(26,45,74,0.03)',
+                boxShadow: '0 2px 12px rgba(0,42,85,0.03)',
               }}>
                 <p style={{
                   fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.7,
@@ -1440,7 +1440,7 @@ function MatchesReveal({ profile }: { profile: GeneratedTasteProfile }) {
                 padding: '22px 22px', borderRadius: 16,
                 background: 'white',
                 border: `1px solid ${INK['05']}`,
-                boxShadow: '0 2px 12px rgba(26,45,74,0.04)',
+                boxShadow: '0 2px 12px rgba(0,42,85,0.04)',
                 position: 'relative', overflow: 'hidden',
               }}>
                 {/* Bold accent stripe */}
@@ -1584,12 +1584,12 @@ function ShareReveal({
 
           {/* Footer */}
           <SafeFadeIn delay={0.4} direction="up" distance={8}>
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.16em', textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.3)', marginTop: 28,
-            }}>
-              Terrazzo
+            <div style={{ marginTop: 28 }}>
+              <img
+                src="/brand/logo-pixellance-cream.svg"
+                alt="Terrazzo"
+                style={{ height: 14, width: 'auto', opacity: 0.3 }}
+              />
             </div>
             <div style={{
               fontFamily: FONT.sans, fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 4,

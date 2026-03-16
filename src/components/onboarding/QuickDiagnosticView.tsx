@@ -305,7 +305,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
       <div
         className="absolute top-3 right-3 px-3 py-1.5 rounded-full pointer-events-none"
         style={{
-          background: isSelected ? 'var(--t-honey)' : 'rgba(26,45,74,0.06)',
+          background: isSelected ? 'var(--t-honey)' : 'rgba(0,42,85,0.06)',
           transition: 'background 300ms ease, transform 300ms ease',
           transform: isSelected ? 'scale(1.05)' : 'scale(1)',
         }}

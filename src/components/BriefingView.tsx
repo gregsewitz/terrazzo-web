@@ -390,7 +390,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                       <TerrazzoMosaic profile={numericProfile} size="xs" />
                     </div>
                     {matchScore != null && (
-                      <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: 'linear-gradient(135deg, rgba(232,111,90,0.08), rgba(232,111,90,0.03))' }}>
+                      <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.08), rgba(238,113,109,0.03))' }}>
                         <div className="text-[20px] font-bold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
                           <AnimatedNumber value={matchScore} suffix="%" />
                         </div>
@@ -535,7 +535,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                   <div className="flex gap-3 mb-6 flex-wrap md:flex-nowrap">
                     {/* Score arc */}
                     {matchScore != null && (
-                      <div className="flex items-center gap-3 p-4 rounded-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(232,111,90,0.08), rgba(232,111,90,0.03))', border: '1px solid rgba(232,111,90,0.12)' }}>
+                      <div className="flex items-center gap-3 p-4 rounded-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.08), rgba(238,113,109,0.03))', border: '1px solid rgba(238,113,109,0.12)' }}>
                         <AnimatedScoreArc score={matchScore} size={52} color="#8a6a2a" />
                         <div>
                           <div className="text-[18px] font-bold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>

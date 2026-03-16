@@ -1292,7 +1292,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
             {smartResult.reasoning && (
               <div
                 className="text-[10px] leading-relaxed px-3 py-2 rounded-lg flex gap-2 items-start mb-3"
-                style={{ color: TEXT.primary, background: 'rgba(232,111,90,0.06)' }}
+                style={{ color: TEXT.primary, background: 'rgba(238,113,109,0.06)' }}
               >
                 <PerriandIcon name="sparkle" size={10} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span style={{ fontFamily: FONT.sans }}>{smartResult.reasoning}</span>

@@ -218,7 +218,7 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
               <div key={d.domain} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 80, fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{d.label}</div>
                 <div style={{ flex: 1, height: 4, borderRadius: 2, background: INK['06'] }}>
-                  <div style={{ width: `${d.pct}%`, height: '100%', borderRadius: 2, background: d.pct > 50 ? '#2a7a56' : d.pct > 20 ? '#E86F5A' : INK['20'], transition: 'width 0.4s ease' }} />
+                  <div style={{ width: `${d.pct}%`, height: '100%', borderRadius: 2, background: d.pct > 50 ? '#2a7a56' : d.pct > 20 ? '#ee716d' : INK['20'], transition: 'width 0.4s ease' }} />
                 </div>
                 <div style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, width: 36, textAlign: 'right' }}>{d.answered}/{d.total}</div>
               </div>

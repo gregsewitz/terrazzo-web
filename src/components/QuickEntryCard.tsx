@@ -24,7 +24,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
   const categoryColors: Record<string, string> = {
     activity: '#2a7a56',    // verde
     transport: '#5a7a9a',   // steel blue
-    dining: '#E86F5A',      // honey
+    dining: '#ee716d',      // honey
     logistics: '#6b8b9a',   // ghost
     other: '#6b8b9a',
   };
@@ -39,7 +39,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
       style={{
         background: isTentative ? 'var(--t-cream)' : 'white',
         border: isTentative
-          ? '1.5px dashed rgba(26,45,74,0.18)'
+          ? '1.5px dashed rgba(0,42,85,0.18)'
           : `1px solid ${accentColor}22`,
         opacity: isTentative ? 0.85 : 1,
         cursor: 'pointer',

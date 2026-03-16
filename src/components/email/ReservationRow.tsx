@@ -19,7 +19,7 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
 
 const REACTIONS: { id: ReactionId; icon: PerriandIconName; label: string; color: string }[] = [
   { id: 'myPlace', icon: 'myPlace', label: 'Obsessed', color: '#2a7a56' },
-  { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: '#E86F5A' },
+  { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: '#ee716d' },
   { id: 'mixed', icon: 'mixed', label: 'Mixed', color: '#eeb420' },
   { id: 'notMe', icon: 'notMe', label: 'Not me', color: '#d63020' },
 ];

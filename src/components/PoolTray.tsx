@@ -177,7 +177,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
             <span
               className="inline-flex items-center justify-center rounded-full text-[10px] font-bold"
               style={{
-                background: 'rgba(232,111,90,0.12)',
+                background: 'rgba(238,113,109,0.12)',
                 color: TEXT.accent,
                 padding: '2px 8px',
                 fontFamily: FONT.mono,

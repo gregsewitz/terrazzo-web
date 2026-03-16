@@ -7,7 +7,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 // ─── Color palette for destination blocks ───
 const DEST_COLORS = [
   { bg: 'rgba(42,122,86,0.12)', border: 'rgba(42,122,86,0.4)', text: 'var(--t-verde)' },
-  { bg: 'rgba(232,111,90,0.12)', border: 'rgba(232,111,90,0.4)', text: '#8a6a2a' },
+  { bg: 'rgba(238,113,109,0.12)', border: 'rgba(238,113,109,0.4)', text: '#8a6a2a' },
   { bg: 'rgba(120,90,160,0.12)', border: 'rgba(120,90,160,0.4)', text: '#6b4f8a' },
   { bg: 'rgba(58,140,180,0.12)', border: 'rgba(58,140,180,0.4)', text: '#2a6a8a' },
   { bg: 'rgba(180,80,80,0.12)', border: 'rgba(180,80,80,0.4)', text: '#8a3a3a' },

@@ -70,11 +70,13 @@ export default function OnboardingIntro() {
         className={`max-w-lg w-full text-center transition-all duration-500 ${isStarting ? 'opacity-0 translate-y-4' : 'opacity-100'}`}
       >
         {/* Logo / brand mark */}
-        <div className="mb-10">
-          <h1 className="font-display text-[42px] text-[var(--t-ink)] leading-none">
-            Terrazzo
-          </h1>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--t-ink)]/40 mt-1">
+        <div className="mb-10 flex flex-col items-center">
+          <img
+            src="/brand/logo-pixellance-navy.svg"
+            alt="Terrazzo"
+            style={{ height: 'clamp(36px, 5vh, 48px)', width: 'auto' }}
+          />
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--t-ink)]/40 mt-3">
             Your bespoke travel concierge
           </p>
         </div>

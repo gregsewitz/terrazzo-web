@@ -216,7 +216,7 @@ export const ImportBottomBar = React.memo(function ImportBottomBar({
                       onClick={() => setCreateMode(true)}
                       className="w-full flex items-center gap-2 px-3 py-2.5 border-none cursor-pointer transition-all text-left"
                       style={{ background: 'transparent', color: TEXT.accent }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(232,111,90,0.04)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(238,113,109,0.04)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       <span className="text-[13px] leading-none">+</span>

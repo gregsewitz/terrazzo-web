@@ -72,7 +72,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
             flexShrink: 0,
             background: 'white',
             borderLeft: '1px solid var(--t-linen)',
-            boxShadow: '-2px 0 8px rgba(26,45,74,0.04)',
+            boxShadow: '-2px 0 8px rgba(0,42,85,0.04)',
             transition: 'width 200ms ease, box-shadow 200ms ease',
           }}
           onClick={() => setCollapsed(false)}

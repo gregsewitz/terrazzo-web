@@ -194,7 +194,7 @@ function CollectionDetailContent() {
               onClick={() => setMapOpen(true)}
               className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
               style={{
-                background: 'rgba(232,111,90,0.08)',
+                background: 'rgba(238,113,109,0.08)',
                 color: '#8a6a2a',
                 border: 'none',
                 fontFamily: FONT.mono,
@@ -494,8 +494,8 @@ function CollectionDetailContent() {
     <div
       className="mt-6 p-4 rounded-xl flex items-center justify-between"
       style={{
-        background: 'rgba(232,111,90,0.06)',
-        border: '1px solid rgba(232,111,90,0.12)',
+        background: 'rgba(238,113,109,0.06)',
+        border: '1px solid rgba(238,113,109,0.12)',
       }}
     >
       <div>

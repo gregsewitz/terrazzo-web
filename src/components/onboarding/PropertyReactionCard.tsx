@@ -94,7 +94,7 @@ export default function PropertyReactionCard({
       {onDismiss && !selected && (
         <button
           onClick={() => onDismiss(exemplar.googlePlaceId)}
-          className="absolute top-3 right-3 flex items-center justify-center w-6 h-6 rounded-full hover:bg-[rgba(26,45,74,0.06)] transition-colors"
+          className="absolute top-3 right-3 flex items-center justify-center w-6 h-6 rounded-full hover:bg-[rgba(0,42,85,0.06)] transition-colors"
           style={{ color: 'var(--t-ink)', opacity: 0.25 }}
           aria-label={`Dismiss ${exemplar.propertyName}`}
         >

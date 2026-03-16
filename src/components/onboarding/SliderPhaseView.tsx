@@ -116,9 +116,9 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
                 flexDirection: 'column',
                 gap: 8,
                 padding: '20px 24px',
-                background: 'rgba(26,45,74,0.02)',
+                background: 'rgba(0,42,85,0.02)',
                 borderRadius: 14,
-                border: '1px solid rgba(26,45,74,0.05)',
+                border: '1px solid rgba(0,42,85,0.05)',
                 animation: `fadeInUp 0.4s ease ${i * 0.08}s both`,
               }}
             >

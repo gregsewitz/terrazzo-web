@@ -368,7 +368,7 @@ function TripDetailContent() {
             {trip.status === 'dreaming' && (
               <span
                 className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[1px]"
-                style={{ background: 'rgba(232,111,90,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
+                style={{ background: 'rgba(238,113,109,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
               >
                 Dreaming
               </span>
@@ -752,7 +752,7 @@ function TripDetailContent() {
                 />
                 <span
                   className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-[0.5px] flex-shrink-0"
-                  style={{ background: 'rgba(232,111,90,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
+                  style={{ background: 'rgba(238,113,109,0.12)', color: '#8a6a2a', fontFamily: FONT.mono }}
                 >
                   Dreaming
                 </span>

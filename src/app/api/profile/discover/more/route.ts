@@ -270,7 +270,7 @@ RULES:
 - Use REAL places that exist. Hotels, restaurants, cafes well-known in the design/boutique world.
 - Scores reflect genuine alignment with the profile.
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a.
-- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #8b6b4a.
+- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800.
 - Every explanation must reference SPECIFIC profile signals, not generic praise.
 - Write like a well-traveled friend with perfect recall. Warm, specific, editorial — never promotional.
 - Return ONLY the JSON object, nothing else.`;

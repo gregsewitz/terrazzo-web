@@ -17,7 +17,7 @@ const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIco
 const ACCENT_COLORS = [
   { value: undefined, label: 'None', bg: INK['06'] },
   { value: 'verde', label: 'Green', bg: 'rgba(42,122,86,0.12)' },
-  { value: 'honey', label: 'Gold', bg: 'rgba(232,111,90,0.12)' },
+  { value: 'honey', label: 'Gold', bg: 'rgba(238,113,109,0.12)' },
   { value: 'blue', label: 'Blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', label: 'Rose', bg: 'rgba(180,80,80,0.12)' },
 ];
@@ -311,8 +311,8 @@ function ScratchpadCard({
     <div
       className="group/sp rounded-lg border overflow-hidden transition-all"
       style={{
-        background: entry.pinned ? 'rgba(232,111,90,0.04)' : bg,
-        borderColor: entry.pinned ? 'rgba(232,111,90,0.2)' : 'var(--t-linen)',
+        background: entry.pinned ? 'rgba(238,113,109,0.04)' : bg,
+        borderColor: entry.pinned ? 'rgba(238,113,109,0.2)' : 'var(--t-linen)',
       }}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -321,7 +321,7 @@ function ScratchpadCard({
       <div className="flex items-center justify-between px-2.5 pt-2 pb-0.5">
         <div className="flex items-center gap-1.5">
           {entry.pinned && (
-            <PerriandIcon name="pin" size={10} color="var(--t-honey, #E86F5A)" />
+            <PerriandIcon name="pin" size={10} color="var(--t-honey, #ee716d)" />
           )}
           <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {entry.type === 'link' ? '🔗' : entry.type === 'checklist' ? '☑' : '✎'} {timeAgo}

@@ -42,7 +42,7 @@ RULES:
 - The tasteTension editorial should be genuinely psychologically insightful.
 - Every "why", "note", "connection" must reference SPECIFIC profile signals.
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a.
-- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #8b6b4a.
+- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800.
 
 Return valid JSON matching the EXACT structure specified in the context message.`;
 
@@ -330,7 +330,7 @@ RULES:
 - Reference specific signals in all copy. Never be generic or promotional
 - Write like a well-traveled friend with perfect recall. Warm, specific, editorial
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a
-- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #8b6b4a
+- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800
 - Return ONLY valid JSON, no wrapping text`;
 
 export interface MorePageConfig {

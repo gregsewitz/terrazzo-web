@@ -201,9 +201,9 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
               </div>
               {marker.matchScore && (
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: '#E86F5A',
+                  fontSize: 9, fontWeight: 700, color: '#ee716d',
                   fontFamily: FONT.mono,
-                  background: 'rgba(232,111,90,0.1)',
+                  background: 'rgba(238,113,109,0.1)',
                   padding: '2px 5px', borderRadius: 4,
                 }}>{marker.matchScore}%</span>
               )}

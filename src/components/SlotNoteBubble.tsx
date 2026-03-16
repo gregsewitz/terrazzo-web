@@ -30,7 +30,7 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
         onClick={() => setExpanded(true)}
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full transition-all"
         style={{
-          background: notes.length > 0 ? 'rgba(232,111,90,0.08)' : INK['05'],
+          background: notes.length > 0 ? 'rgba(238,113,109,0.08)' : INK['05'],
           border: 'none',
           cursor: 'pointer',
           fontFamily: FONT.mono,
@@ -38,7 +38,7 @@ export default function SlotNoteBubble({ notes, onAddNote, canAdd = false }: Slo
           color: notes.length > 0 ? 'TEXT.accent' : INK['60'],
         }}
       >
-        <PerriandIcon name="chatBubble" size={11} color={notes.length > 0 ? 'TEXT.accent' : INK['60']} accent={notes.length > 0 ? '#E86F5A' : INK['60']} />
+        <PerriandIcon name="chatBubble" size={11} color={notes.length > 0 ? 'TEXT.accent' : INK['60']} accent={notes.length > 0 ? '#ee716d' : INK['60']} />
         {notes.length > 0 ? `${notes.length} note${notes.length > 1 ? 's' : ''}` : 'Add note'}
       </button>
     );

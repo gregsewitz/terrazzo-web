@@ -351,7 +351,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
           <div style={{
             marginTop: 12, padding: '10px 12px',
             borderRadius: 10,
-            background: 'rgba(232,111,90,0.06)',
+            background: 'rgba(238,113,109,0.06)',
             fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.5,
             color: T.amber,
           }}>
@@ -998,12 +998,12 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
           background: INK['10'],
           margin: '0 auto 20px',
         }} />
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.16em',
-          textTransform: 'uppercase', color: TEXT.secondary,
-          marginBottom: 6,
-        }}>
-          Terrazzo
+        <div style={{ marginBottom: 6 }}>
+          <img
+            src="/brand/logo-pixellance-navy.svg"
+            alt="Terrazzo"
+            style={{ height: 14, width: 'auto', opacity: 0.5 }}
+          />
         </div>
         <div style={{
           fontFamily: FONT.sans, fontSize: 11,
