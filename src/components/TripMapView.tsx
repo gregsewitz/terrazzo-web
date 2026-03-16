@@ -7,7 +7,7 @@ import GoogleMapView from '@/components/GoogleMapView';
 import type { MapMarker } from '@/components/GoogleMapView';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, TEXT, INK } from '@/constants/theme';
-import { DEST_COLORS, SOURCE_STYLES, GhostSourceType, SLOT_ICONS, ImportedPlace, SuggestionItem } from '@/types';
+import { SOURCE_STYLES, GhostSourceType, SLOT_ICONS, ImportedPlace, SuggestionItem } from '@/types';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
@@ -46,8 +46,7 @@ interface GhostItem {
 }
 
 // ─── Helpers ───
-const getDestColor = (dest: string) =>
-  DEST_COLORS[dest] || generateDestColor(dest);
+const getDestColor = generateDestColor;
 
 /** Short label for day pills — e.g. "Mon 15" */
 function dayPillLabel(d: { dayNumber: number; date?: string; dayOfWeek?: string }): string {

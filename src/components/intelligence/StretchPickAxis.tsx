@@ -6,6 +6,7 @@ import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection } from '@/components/animations/AnimatedElements';
+import { formatDomain } from '@/constants/profile';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ function AxisBar({
           className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-semibold`}
           style={{ color, fontFamily: FONT.sans }}
         >
-          {domain}
+          {formatDomain(domain)}
         </span>
       </div>
 

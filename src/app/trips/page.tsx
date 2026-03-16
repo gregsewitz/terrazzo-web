@@ -10,7 +10,7 @@ import ProfileAvatar from '@/components/ProfileAvatar';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import { DEST_COLORS } from '@/types';
+import { getDestColor } from '@/types';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 /* ─── Animation constants (desktop only) ─── */
@@ -65,8 +65,7 @@ export default function TripsPage() {
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}
           >
             {trips.map((trip, index) => {
-              const destKey = trip.destinations?.[0];
-              const destColor = destKey && DEST_COLORS[destKey] ? DEST_COLORS[destKey] : null;
+              const destColor = getDestColor(index);
               const dayCount = trip.days.length;
               const placedCount = trip.days.reduce((n, d) => n + d.slots.filter(s => s.places.length > 0).length, 0);
 
@@ -93,7 +92,7 @@ export default function TripsPage() {
                     transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
                     style={{
                       height: 6,
-                      background: destColor?.accent || TEXT.accent,
+                      background: destColor.accent,
                       borderRadius: '14px 14px 0 0',
                       originX: 0,
                     }}
@@ -102,9 +101,9 @@ export default function TripsPage() {
                     <div className="flex items-start gap-3">
                       <div
                         className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: destColor ? `${destColor.accent}15` : 'rgba(238,113,109,0.1)' }}
+                        style={{ background: destColor.bg }}
                       >
-                        <PerriandIcon name="plan" size={20} color={destColor?.accent || TEXT.accent} />
+                        <PerriandIcon name="plan" size={20} color={destColor.accent} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div
@@ -234,7 +233,9 @@ export default function TripsPage() {
         <div
           className="flex flex-col gap-3"
         >
-          {trips.map(trip => (
+          {trips.map((trip, i) => {
+            const mColor = getDestColor(i);
+            return (
             <button
               key={trip.id}
               onClick={() => router.push(`/trips/${trip.id}`)}
@@ -243,9 +244,9 @@ export default function TripsPage() {
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-lg"
-                style={{ background: 'rgba(238,113,109,0.1)' }}
+                style={{ background: mColor.bg }}
               >
-                <PerriandIcon name="plan" size={20} color={TEXT.accent} />
+                <PerriandIcon name="plan" size={20} color={mColor.accent} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 min-w-0">
@@ -265,7 +266,8 @@ export default function TripsPage() {
               </div>
               <span style={{ color: TEXT.primary }}>→</span>
             </button>
-          ))}
+            );
+          })}
 
         </div>
       </div>

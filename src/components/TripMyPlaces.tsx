@@ -2,12 +2,13 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS, PerriandIconName } from '@/types';
+import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS } from '@/constants/placeTypes';
+import { generateDestColor } from '@/lib/destination-helpers';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -145,7 +146,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
   const { place } = item;
   const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
   const isReservation = place.ghostSource === 'email';
-  const destColor = DEST_COLORS[item.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+  const destColor = generateDestColor(item.destination || '');
   const typeIcon = TYPE_ICONS[place.type] || 'pin';
 
   // Google data

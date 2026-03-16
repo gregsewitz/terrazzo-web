@@ -48,7 +48,7 @@
   /* ─── Semantic Text Colors ─── */
   /* Change these 5 values to restyle ALL text across the app */
   --text-primary: var(--t-navy);       /* Headings, body text */
-  --text-secondary: var(--t-warm-gray); /* Labels, metadata, captions */
+  --text-secondary: var(--t-navy); /* Labels, metadata, captions */
   --text-tertiary: var(--t-olive);      /* Domain badges, category labels */
   --text-accent: var(--t-coral);        /* Links, CTAs, interactive highlights */
   --text-inverse: var(--t-cream);       /* Text on dark surfaces */

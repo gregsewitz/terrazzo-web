@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { TasteDomain, TasteProfile, DOMAIN_COLORS, CORE_TASTE_DOMAINS } from '@/types';
 import { FONT, INK, TEXT } from '@/constants/theme';
+import { formatDomain } from '@/constants/profile';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -306,7 +307,7 @@ export function OverlapMosaic({
                 fontFamily: FONT.mono,
               }}
             >
-              {domain}
+              {formatDomain(domain)}
             </span>
           ))}
         </div>

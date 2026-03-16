@@ -8,7 +8,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import DreamBoard from '@/components/DreamBoard';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { DEST_COLORS } from '@/types';
+import { generateDestColor } from '@/lib/destination-helpers';
 import type { Activity } from '@/stores/collaborationStore';
 
 type RightPanelTab = 'notes' | 'logistics' | 'activity';
@@ -31,7 +31,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
 
     const allMarkers: MapMarker[] = [];
     trip.days.forEach(day => {
-      const destColor = DEST_COLORS[day.destination || ''] || { accent: '#8a7a6a' };
+      const destColor = generateDestColor(day.destination || '');
       day.slots.forEach(slot => {
         slot.places.forEach(p => {
           allMarkers.push({
@@ -222,7 +222,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
           <div className="p-3">
             <div className="flex flex-col gap-2.5">
               {trip?.days.map(day => {
-                const destColor = DEST_COLORS[day.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+                const destColor = generateDestColor(day.destination || '');
                 return (
                   <div
                     key={day.dayNumber}

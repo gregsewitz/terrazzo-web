@@ -4,20 +4,9 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { ACT_1_PHASE_IDS, ACT_2_PHASE_IDS } from '@/constants/onboarding';
+import { DOMAIN_DISPLAY } from '@/constants/profile';
 import PropertyReactionCard from '@/components/onboarding/PropertyReactionCard';
 import type { PropertyAnchor, PropertyExemplar } from '@/types';
-
-/** Friendly domain names for headings */
-const DOMAIN_DISPLAY: Record<string, string> = {
-  Character: 'Character & Identity',
-  FoodDrink: 'Food & Drink',
-  Service: 'Service Philosophy',
-  Atmosphere: 'Atmosphere',
-  Design: 'Design Language',
-  Setting: 'Setting & Place',
-  Wellness: 'Wellness',
-  Sustainability: 'Sustainability',
-};
 
 /** Brief domain prompts to contextualize the reaction cards */
 const DOMAIN_PROMPTS: Record<string, string> = {

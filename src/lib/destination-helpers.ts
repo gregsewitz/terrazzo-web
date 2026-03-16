@@ -1,6 +1,43 @@
 /**
- * Helpers for extracting destination (city/region) info from Google Places results.
+ * Helpers for extracting destination (city/region) info from Google Places results
+ * and assigning brand-palette colors to destinations.
  */
+
+// ─── Brand destination palette ───
+// Single source of truth for destination colors across the app.
+// 7 brand colors that cycle for multi-city trips.
+
+export type DestColor = { bg: string; accent: string; text: string };
+
+const DEST_PALETTE: DestColor[] = [
+  { bg: 'rgba(238,113,109,0.08)', accent: '#ee716d', text: '#c44a46' }, // Coral
+  { bg: 'rgba(58,128,136,0.08)',  accent: '#3a8088', text: '#2a6068' }, // Dark Teal
+  { bg: 'rgba(224,165,1,0.08)',   accent: '#e0a501', text: '#b08401' }, // Ochre
+  { bg: 'rgba(107,124,78,0.08)',  accent: '#6B7C4E', text: '#4a5a30' }, // Olive
+  { bg: 'rgba(56,105,164,0.08)',  accent: '#3869a4', text: '#2a4f7a' }, // Periwinkle
+  { bg: 'rgba(231,168,161,0.08)', accent: '#e7a8a1', text: '#c08078' }, // Peach
+  { bg: 'rgba(146,206,214,0.08)', accent: '#92ced6', text: '#5a9aa4' }, // Teal
+];
+
+/** Get a destination color by index (cycles through brand palette). */
+export function getDestColor(index: number): DestColor {
+  return DEST_PALETTE[index % DEST_PALETTE.length];
+}
+
+/**
+ * Get a deterministic brand-palette color from a destination name.
+ * Hashes the name so the same destination always gets the same color.
+ */
+export function generateDestColor(name: string): DestColor {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0;
+  }
+  return DEST_PALETTE[Math.abs(hash) % DEST_PALETTE.length];
+}
+
+// ─── Google Places helpers ───
 
 const GEO_TYPES = new Set([
   'locality',
@@ -57,26 +94,4 @@ export function extractDestinationFromGooglePlace(
   // Fallback: first part before comma in the place name or address
   const parts = placeName.split(',');
   return parts[0]?.trim() || placeName;
-}
-
-/**
- * Generate a deterministic color palette from a destination name.
- * Used as fallback when destination isn't in the static DEST_COLORS map.
- */
-export function generateDestColor(name: string): { bg: string; accent: string; text: string } {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = ((hash << 5) - hash) + name.charCodeAt(i);
-    hash |= 0;
-  }
-  // Pick from a curated set of hues that look good as destination colors
-  const hues = [15, 35, 140, 175, 210, 260, 300, 330];
-  const hue = hues[Math.abs(hash) % hues.length];
-  const sat = 35 + (Math.abs(hash >> 4) % 20); // 35-55%
-
-  return {
-    bg: `hsl(${hue}, ${sat}%, 93%)`,
-    accent: `hsl(${hue}, ${sat + 10}%, 45%)`,
-    text: `hsl(${hue}, ${sat - 10}%, 30%)`,
-  };
 }

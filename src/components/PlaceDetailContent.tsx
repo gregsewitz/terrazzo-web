@@ -7,6 +7,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { useBriefing } from '@/hooks/useBriefing';
 import { getPlaceImage } from '@/constants/placeImages';
 import { PHOTO_GRADIENTS } from '@/constants/placeTypes';
+import { formatDomain } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
 import PipelineProgress from '@/components/PipelineProgress';
@@ -564,7 +565,7 @@ function PlaceDetailContent({
                           style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
                         >
                           <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
-                          {domain} {Math.round(score * 100)}
+                          {formatDomain(domain)} {Math.round(score * 100)}
                         </span>
                       ))}
                     </div>

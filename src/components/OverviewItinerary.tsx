@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Trip, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, DEST_COLORS } from '@/types';
+import { Trip, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
+import { generateDestColor } from '@/lib/destination-helpers';
 
 interface OverviewItineraryProps {
   trip: Trip;
@@ -29,7 +30,7 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
 
       <div className="flex flex-col gap-2.5">
         {trip.days.map(d => {
-          const dColor = DEST_COLORS[d.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+          const dColor = generateDestColor(d.destination || '');
           const shortDay = d.dayOfWeek?.slice(0, 3) || '';
           const allPlaced = d.slots.flatMap(s => s.places.map(p => ({ place: p, slot: s })));
 

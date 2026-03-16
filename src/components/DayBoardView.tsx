@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
+import { ImportedPlace, SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from './CollaboratorGhostCard';
@@ -317,9 +317,7 @@ function DayBoardView({
       .filter(d => d && !seen.has(d) && seen.add(d));
   }, [trip.days]);
 
-  const getDestColor = useCallback((dest: string) => {
-    return DEST_COLORS[dest] || generateDestColor(dest);
-  }, []);
+  const getDestColor = generateDestColor;
 
   // Desktop sizing
   const COL_WIDTH = isDesktop ? 280 : 240;
@@ -344,7 +342,7 @@ function DayBoardView({
       <style>{`.day-col:hover .day-col-menu-btn { opacity: 0.5 !important; } .day-col-menu-btn:hover { opacity: 0.9 !important; }`}</style>
       {trip.days.map(day => {
         if (day.transport?.length) console.log('[DayBoard] Day', day.dayNumber, 'has', day.transport.length, 'transports:', day.transport.map(t => `${t.id} ${t.mode} afterSlot=${t.afterSlot}`));
-        const destColor = DEST_COLORS[day.destination || ''] || generateDestColor(day.destination || '');
+        const destColor = generateDestColor(day.destination || '');
         const isFlexible = trip.flexibleDates === true;
         const shortDay = isFlexible ? '' : (day.dayOfWeek?.slice(0, 3) || '');
         const dateNum = isFlexible ? day.dayNumber : (day.date?.replace(/\D/g, ' ').trim().split(' ').pop() || day.dayNumber);

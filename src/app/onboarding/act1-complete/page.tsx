@@ -4,18 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { ACT_1_PHASE_IDS, ACT_2_PHASE_IDS, ALL_PHASE_IDS } from '@/constants/onboarding';
-
-/** Friendly domain display names */
-const DOMAIN_DISPLAY: Record<string, string> = {
-  Character: 'Character & Identity',
-  FoodDrink: 'Food & Drink',
-  Service: 'Service Philosophy',
-  Atmosphere: 'Atmosphere',
-  Design: 'Design Language',
-  Setting: 'Setting & Place',
-  Wellness: 'Wellness',
-  Sustainability: 'Sustainability',
-};
+import { DOMAIN_DISPLAY } from '@/constants/profile';
 
 export default function Act0CompletePage() {
   const router = useRouter();

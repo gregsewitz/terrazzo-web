@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 import { useInView, isMobileSafari } from '@/hooks/useAnimations';
-import { TASTE_PROFILE, WRAPPED, DIMENSION_COLORS, AXIS_COLORS, CONTEXT_ICONS, CONTEXT_COLORS } from '@/constants/profile';
+import { TASTE_PROFILE, WRAPPED, DIMENSION_COLORS, AXIS_COLORS, CONTEXT_ICONS, CONTEXT_COLORS, formatDomain } from '@/constants/profile';
 import type { TasteProfile as ProfileShape } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
@@ -509,15 +509,15 @@ function DimensionsSection({ profile }: { profile: ProfileShape }) {
   const domains = Object.keys(profile.microTasteSignals).filter(k => k !== 'Rejection');
   const totalSignals = Object.values(profile.microTasteSignals).flat().length;
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-warm-gray)' }}>
+    <div className="px-5 py-8" style={{ background: 'var(--t-navy)' }}>
       <FadeInSection>
-        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
+        <div className="text-[9px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-light-yellow)', fontFamily: FONT.mono, fontWeight: 700 }}>
           Taste Dimensions
         </div>
-        <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <h3 className="text-[20px] font-bold mb-2" style={{ color: '#ffffff', fontFamily: FONT.display }}>
           Confidence by Domain
         </h3>
-        <p className="text-[12px] mb-6" style={{ color: 'rgba(0,42,85,0.75)', fontFamily: FONT.sans }}>
+        <p className="text-[12px] mb-6" style={{ color: 'rgba(255,255,255,0.8)', fontFamily: FONT.sans }}>
           How deeply we understand your taste across {domains.length} dimensions, powered by {totalSignals} signals.
         </p>
       </FadeInSection>
@@ -531,7 +531,7 @@ function DimensionsSection({ profile }: { profile: ProfileShape }) {
             <StaggerItem key={domain}>
               <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,42,85,0.08)' }}>
                 <div className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: color }} />
-                <span className="text-[13px] font-bold flex-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{domain}</span>
+                <span className="text-[13px] font-bold flex-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{formatDomain(domain)}</span>
                 <span className="text-[10px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>{signalCount} signals</span>
                 <DimensionBar certainty={certainty} color={color} />
                 <div style={{ width: 36, textAlign: 'right' }}>
@@ -597,7 +597,7 @@ function VocabularySection({ profile }: { profile: ProfileShape }) {
             <StaggerContainer className="flex flex-wrap gap-2 px-4 pb-4" staggerDelay={0.04}>
               {rejectionTerms.map(term => (
                 <StaggerItem key={term}>
-                  <span className="text-[10px] px-3 py-1.5 rounded-full inline-block" style={{ background: 'var(--t-warm-gray)', color: 'var(--t-navy)', fontFamily: FONT.sans }}>
+                  <span className="text-[10px] px-3 py-1.5 rounded-full inline-block" style={{ background: 'var(--t-navy)', color: 'var(--t-cream)', fontFamily: FONT.sans }}>
                     {term}
                   </span>
                 </StaggerItem>

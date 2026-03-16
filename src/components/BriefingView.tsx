@@ -6,6 +6,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { formatDomain } from '@/constants/profile';
 import type { TasteProfile as NumericProfile } from '@/types';
 import PipelineProgress from '@/components/PipelineProgress';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
@@ -469,7 +470,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                                 <PerriandIcon name={icon} size={13} color={color} />
                               </div>
                               <span className="text-[10px] w-16 font-medium" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
-                                {domain}
+                                {formatDomain(domain)}
                               </span>
                               <div className="flex-1">
                                 <AnimatedBar percentage={score * 100} color={color} height={6} delay={i * 0.08} borderRadius={3} />
@@ -676,7 +677,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                               className="text-[10px] font-bold uppercase tracking-wider"
                               style={{ color, fontFamily: FONT.mono, letterSpacing: '1px' }}
                             >
-                              {domain}
+                              {formatDomain(domain)}
                             </span>
                             <span
                               className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"

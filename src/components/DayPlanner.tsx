@@ -3,7 +3,7 @@
 import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, DEST_COLORS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
+import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
 import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import TimeSlotCard from './TimeSlotCard';
@@ -140,10 +140,8 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
     return Array.from(dests);
   }, [trip]);
 
-  // Get destination color with hash-based fallback for new destinations
-  const getDestColor = useCallback((dest: string) => {
-    return DEST_COLORS[dest] || generateDestColor(dest);
-  }, []);
+  // Destination color accessor — uses brand palette via name hash
+  const getDestColor = generateDestColor;
 
   // Check if the current day's destination has any saved places
   const myPlaces = useSavedStore(s => s.myPlaces);

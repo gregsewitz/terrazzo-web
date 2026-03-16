@@ -129,17 +129,35 @@ export const WRAPPED = {
   rarestPercent: 4,
 };
 
-// Domain colors — mapped to new brand palette
+// Domain display names — canonical mapping from DB keys to user-facing labels
+export const DOMAIN_DISPLAY: Record<string, string> = {
+  Design: 'Design',
+  Atmosphere: 'Atmosphere',
+  Character: 'Character',
+  Service: 'Service',
+  FoodDrink: 'Food & Drink',
+  Setting: 'Setting',
+  Wellness: 'Wellness',
+  Sustainability: 'Sustainability',
+  Rejection: 'Rejection',
+};
+
+/** Format a domain key for display. Falls back to the raw key if not mapped. */
+export function formatDomain(key: string): string {
+  return DOMAIN_DISPLAY[key] || key;
+}
+
+// Domain colors — each domain gets a unique brand color
 export const DIMENSION_COLORS: Record<string, string> = {
   "Design": "#ee716d",       // Coral
   "Atmosphere": "#e0a501",    // Ochre
   "Character": "#6B7C4E",     // Olive
-  "Service": "#e0a501",       // Ochre
-  "FoodDrink": "#002a55",     // Navy
+  "Service": "#e7a8a1",       // Peach
+  "FoodDrink": "#3a8088",     // Dark Teal
   "Setting": "#92ced6",       // Teal
-  "Wellness": "#ee716d",      // Coral
-  "Sustainability": "#92ced6", // Teal
-  "Rejection": "#A89888",     // Warm Gray
+  "Wellness": "#3869a4",      // Periwinkle
+  "Sustainability": "#413800", // Dark Brown
+  "Rejection": "#002a55",     // Navy
 };
 
 // Taste radar axis colors — each domain gets a distinct brand color
@@ -147,11 +165,11 @@ export const AXIS_COLORS: Record<string, string> = {
   Design: "#ee716d",         // Coral
   Atmosphere: "#e0a501",      // Ochre
   Character: "#6B7C4E",       // Olive
-  Service: "#e0a501",         // Ochre
-  FoodDrink: "#002a55",       // Navy
+  Service: "#e7a8a1",         // Peach
+  FoodDrink: "#3a8088",       // Dark Teal
   Setting: "#92ced6",          // Teal
-  Wellness: "#e7a8a1",         // Peach
-  Sustainability: "#92ced6",    // Teal
+  Wellness: "#3869a4",         // Periwinkle
+  Sustainability: "#413800",    // Dark Brown
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {

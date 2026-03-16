@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { PropertyExemplar } from '@/types';
+import { DOMAIN_DISPLAY } from '@/constants/profile';
 
 /** Reaction sentiments the user can choose — mapped to blend weights */
 const REACTIONS = [
@@ -43,18 +44,6 @@ function shortLocation(address: string | null | undefined): string | null {
   // Take last 2 meaningful parts (typically city/region + country)
   return parts.slice(-2).join(', ');
 }
-
-/** Domain display names */
-const DOMAIN_DISPLAY: Record<string, string> = {
-  Character: 'Character',
-  FoodDrink: 'Food & Drink',
-  Service: 'Service',
-  Atmosphere: 'Atmosphere',
-  Design: 'Design',
-  Setting: 'Setting',
-  Wellness: 'Wellness',
-  Sustainability: 'Sustainability',
-};
 
 export default function PropertyReactionCard({
   exemplar,

@@ -6,6 +6,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import type { TasteDomain } from '@/types';
+import { formatDomain } from '@/constants/profile';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -142,7 +143,7 @@ export function ComparativeCard({
                   <div className="flex items-center gap-1">
                     <PerriandIcon name={DOMAIN_ICONS[domain as TasteDomain]} size={9} color={color} />
                     <span className="text-[9px] font-bold uppercase" style={{ color, fontFamily: FONT.mono }}>
-                      {domain}
+                      {formatDomain(domain)}
                     </span>
                   </div>
                   <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>

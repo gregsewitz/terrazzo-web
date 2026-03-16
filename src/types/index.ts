@@ -57,27 +57,9 @@ export const REACTIONS = [
   { id: 'notMe', icon: 'notMe' as PerriandIconName, label: 'Not me', color: RATING_COLORS.notMe },
 ] as const;
 
-// Destination colors (for multi-city trips)
-export const DEST_COLORS: Record<string, { bg: string; accent: string; text: string }> = {
-  // Japan
-  Tokyo: { bg: '#edf1f5', accent: '#5a7a9a', text: '#3a5a7a' },
-  Hakone: { bg: '#f0ede8', accent: '#9a7a5a', text: '#7a5a3a' },
-  Kyoto: { bg: '#edf5ef', accent: '#5a9a6a', text: '#3a7a4a' },
-  Osaka: { bg: '#f5ede8', accent: '#c87a4a', text: '#a85a2a' },
-  // Scandinavia
-  Stockholm: { bg: '#edf1f5', accent: '#4a7a9a', text: '#2a5a7a' },
-  Copenhagen: { bg: '#f5f0e8', accent: '#9a7a4a', text: '#7a5a2a' },
-  // Mexico
-  'Mexico City': { bg: '#f5ede8', accent: '#c8643a', text: '#a84a20' },
-  // France
-  Paris: { bg: '#f0edf5', accent: '#7a5a9a', text: '#5a3a7a' },
-  // Sicily
-  Palermo: { bg: '#f5ede8', accent: '#c87a4a', text: '#a85a2a' },
-  'West Coast': { bg: '#edf5f2', accent: '#4a9a7a', text: '#2a7a5a' },
-  Agrigento: { bg: '#f5f2e8', accent: '#9a8a4a', text: '#7a6a2a' },
-  'Noto / Syracuse': { bg: '#f5ede8', accent: '#c88a4a', text: '#a86a2a' },
-  Taormina: { bg: '#edf1f5', accent: '#5a7a9a', text: '#3a5a7a' },
-};
+// Re-export destination color helpers from their canonical location
+export { getDestColor, generateDestColor } from '@/lib/destination-helpers';
+export type { DestColor } from '@/lib/destination-helpers';
 
 // Ghost card source types — each source gets its own visual treatment
 export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: PerriandIconName; label: string }> = {

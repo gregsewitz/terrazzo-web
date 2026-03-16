@@ -3,15 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
-
-// ─── Color palette for destination blocks ───
-const DEST_COLORS = [
-  { bg: 'rgba(42,122,86,0.12)', border: 'rgba(42,122,86,0.4)', text: 'var(--t-verde)' },
-  { bg: 'rgba(238,113,109,0.12)', border: 'rgba(238,113,109,0.4)', text: '#8a6a2a' },
-  { bg: 'rgba(120,90,160,0.12)', border: 'rgba(120,90,160,0.4)', text: '#6b4f8a' },
-  { bg: 'rgba(58,140,180,0.12)', border: 'rgba(58,140,180,0.4)', text: '#2a6a8a' },
-  { bg: 'rgba(180,80,80,0.12)', border: 'rgba(180,80,80,0.4)', text: '#8a3a3a' },
-];
+import { getDestColor } from '@/types';
 
 interface DestinationAllocatorProps {
   destinations: string[];
@@ -125,7 +117,7 @@ function DestinationAllocator({
         {destinations.map((dest, i) => {
           const days = allocation[dest] || 1;
           const pct = (days / (currentTotal || 1)) * 100;
-          const color = DEST_COLORS[i % DEST_COLORS.length];
+          const color = getDestColor(i);
           return (
             <div
               key={dest}
@@ -172,7 +164,7 @@ function DestinationAllocator({
       <div className="flex flex-col gap-2">
         {destinations.map((dest, i) => {
           const days = allocation[dest] || 1;
-          const color = DEST_COLORS[i % DEST_COLORS.length];
+          const color = getDestColor(i);
           const isFirst = i === 0;
           const isLast = i === destinations.length - 1;
 
@@ -180,7 +172,7 @@ function DestinationAllocator({
             <div
               key={dest}
               className="flex items-center gap-3 px-3 py-2 rounded-lg"
-              style={{ background: color.bg, border: `1px solid ${color.border}` }}
+              style={{ background: color.bg, border: `1px solid ${color.accent}20` }}
             >
               {/* Color dot + name */}
               <div

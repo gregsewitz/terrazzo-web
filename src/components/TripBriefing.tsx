@@ -4,11 +4,12 @@ import React, { useMemo } from 'react';
 import {
   Trip, ImportedPlace, TasteDomain,
   DOMAIN_COLORS, SOURCE_STYLES,
-  GhostSourceType, DEST_COLORS, T,
+  GhostSourceType, T,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTripWeather, weatherEmoji, type DestinationWeather } from '@/hooks/useTripWeather';
+import { generateDestColor } from '@/lib/destination-helpers';
 
 // ─── Props ───
 
@@ -420,7 +421,7 @@ function DayCard({
   onTapDay: (n: number) => void;
   onTapDetail: (item: ImportedPlace) => void;
 }) {
-  const dColor = DEST_COLORS[day.destination || ''] || { bg: '#f5f0e6', accent: '#8a7a6a', text: '#5a4a3a' };
+  const dColor = generateDestColor(day.destination || '');
   const places = day.slots.flatMap(s => s.places.map(p => ({ place: p, time: s.time })));
 
   return (
@@ -670,7 +671,7 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
 // ─── Destination Hero Block ───
 
 function DestinationHero({ name, placeCount }: { name: string; placeCount: number }) {
-  const dColor = DEST_COLORS[name] || { bg: '#f0edf5', accent: '#7a5a9a', text: '#5a3a7a' };
+  const dColor = generateDestColor(name);
 
   return (
     <div style={{
