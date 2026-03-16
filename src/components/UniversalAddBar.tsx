@@ -129,9 +129,9 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     const isImage = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|heic)$/i);
     const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
     setImportProgress(0,
-      isImage ? 'Reading screenshot…'
-        : isPdf ? 'Extracting text from PDF…'
-        : 'Reading file…'
+      isImage ? 'Looking at your screenshot…'
+        : isPdf ? 'Reading the PDF…'
+        : 'Reading the file…'
     );
 
     try {
@@ -174,11 +174,11 @@ const UniversalAddBar = memo(function UniversalAddBar() {
     setMode('importing');
     const platformLabel = getPlatformLabel(platform);
     setImportProgress(0,
-      inputType === 'google-maps-list' ? 'Loading saved places...'
-        : inputType === 'google-maps-place' ? 'Resolving place from Google Maps…'
-        : isMultiLine ? 'Parsing list...'
-        : platform && platform !== 'generic' ? `Importing from ${platformLabel}…`
-        : 'Starting...'
+      inputType === 'google-maps-list' ? 'Opening your saved list…'
+        : inputType === 'google-maps-place' ? 'Looking up this place…'
+        : isMultiLine ? 'Reading your list…'
+        : platform && platform !== 'generic' ? `Reading from ${platformLabel}…`
+        : 'Getting started…'
     );
 
     try {

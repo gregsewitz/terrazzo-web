@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'detecting',
-          label: isImage ? 'Analyzing screenshot…' : isPdf ? 'Reading PDF…' : 'Reading file…',
+          label: isImage ? 'Looking at your screenshot…' : isPdf ? 'Reading the PDF…' : 'Reading the file…',
           percent: 5,
         });
 
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
           send({
             type: 'progress',
             stage: 'extracting',
-            label: 'AI is reading your screenshot…',
+            label: 'Scanning for places…',
             percent: 10,
           });
 
@@ -142,7 +142,7 @@ If the image does not contain any identifiable places or travel recommendations,
           send({
             type: 'progress',
             stage: 'extracting',
-            label: 'Extracting text from PDF…',
+            label: 'Scanning for places…',
             percent: 10,
           });
 
@@ -200,7 +200,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
             send({
               type: 'progress',
               stage: 'parsing',
-              label: 'Cleaning HTML content…',
+              label: 'Parsing the page…',
               percent: 10,
             });
             textContent = stripHtml(textContent, 60000);
@@ -209,7 +209,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
             send({
               type: 'progress',
               stage: 'parsing',
-              label: 'Parsing CSV data…',
+              label: 'Reading the data…',
               percent: 10,
             });
           }
@@ -219,7 +219,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
         send({
           type: 'progress',
           stage: 'extracting',
-          label: 'AI is finding & matching places…',
+          label: 'Finding the places…',
           percent: 20,
         });
 
@@ -236,7 +236,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
           inferredRegion = result.region;
         } catch (e) {
           console.error('File extraction failed:', e);
-          send({ type: 'error', error: 'AI extraction failed' });
+          send({ type: 'error', error: 'Something went wrong — try again in a moment' });
           controller.close();
           return;
         }
@@ -268,18 +268,18 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
         });
 
         // ── Enrich with Google Places ───────────────────────────────────────
-        send({ type: 'progress', stage: 'enriching', label: 'Looking up details on Google…', percent: 40 });
+        send({ type: 'progress', stage: 'enriching', label: 'Looking up each place…', percent: 40 });
         const enrichedPlaces = await enrichWithGooglePlaces(limited, 'file', inferredRegion, (done, total) => {
           const enrichPercent = 40 + Math.round((done / total) * 50);
           send({
             type: 'progress',
             stage: 'enriching',
-            label: `Enriching place ${done} of ${total}…`,
+            label: `Looking up ${done} of ${total}…`,
             percent: enrichPercent,
           });
         });
 
-        send({ type: 'progress', stage: 'finalizing', label: 'Compiling your results…', percent: 95 });
+        send({ type: 'progress', stage: 'finalizing', label: 'Finishing up…', percent: 95 });
 
         // ── Merge taste data ────────────────────────────────────────────────
         const mergedPlaces = enrichedPlaces.map((place, i) => {

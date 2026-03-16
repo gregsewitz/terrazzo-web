@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'detecting',
-          label: isUrl ? 'Link detected — fetching article…' : 'Reading your text…',
+          label: isUrl ? 'Opening the article…' : 'Reading your list…',
           percent: 5,
         });
 
@@ -76,8 +76,7 @@ export async function POST(request: NextRequest) {
         let textContent = trimmed;
 
         if (isUrl) {
-          const hasFirecrawl = !!process.env.FIRECRAWL_API_KEY;
-          send({ type: 'progress', stage: 'fetching', label: hasFirecrawl ? 'Reading article with Firecrawl…' : 'Fetching article content…', percent: 10 });
+          send({ type: 'progress', stage: 'fetching', label: 'Reading the article…', percent: 10 });
           const articleText = await fetchAndClean(trimmed);
           if (!articleText) {
             send({ type: 'error', error: 'Could not fetch URL content' });
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'extracting',
-          label: isUrl ? 'AI is reading & matching the article…' : 'AI is finding & matching places…',
+          label: isUrl ? 'Pulling out the places…' : 'Finding the places…',
           percent: isUrl ? 20 : 15,
         });
 
@@ -101,7 +100,7 @@ export async function POST(request: NextRequest) {
           inferredRegion = result.region;
         } catch (e) {
           console.error('Combined extraction failed:', e);
-          send({ type: 'error', error: 'AI extraction failed' });
+          send({ type: 'error', error: 'Something went wrong — try again in a moment' });
           controller.close();
           return;
         }
@@ -133,18 +132,18 @@ export async function POST(request: NextRequest) {
         });
 
         // ── 3. Enrich with Google Places (8 concurrent) ───────────────────
-        send({ type: 'progress', stage: 'enriching', label: 'Looking up details on Google…', percent: 40 });
+        send({ type: 'progress', stage: 'enriching', label: 'Looking up each place…', percent: 40 });
         const enrichedPlaces = await enrichWithGooglePlaces(limited, detectedType, inferredRegion, (done, total) => {
           const enrichPercent = 40 + Math.round((done / total) * 50);
           send({
             type: 'progress',
             stage: 'enriching',
-            label: `Enriching place ${done} of ${total}…`,
+            label: `Looking up ${done} of ${total}…`,
             percent: enrichPercent,
           });
         });
 
-        send({ type: 'progress', stage: 'finalizing', label: 'Compiling your results…', percent: 95 });
+        send({ type: 'progress', stage: 'finalizing', label: 'Finishing up…', percent: 95 });
 
         // ── 4. Merge taste data from combined call onto enriched places ────
         const mergedPlaces = enrichedPlaces.map((place, i) => {

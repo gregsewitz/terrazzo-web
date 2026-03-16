@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'starting',
-          label: 'Resolving Google Maps link…',
+          label: 'Opening your saved list…',
           percent: 5,
         });
 
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'fetching',
-          label: 'Fetching places from Google Maps…',
+          label: 'Loading your places…',
           percent: 15,
         });
 
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'preview',
-          label: `Found ${placeNames.length} places! Enriching details…`,
+          label: `Found ${placeNames.length} places — getting the details…`,
           percent: 30,
           placeNames: placeNames.slice(0, 20),
         });
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
                 send({
                   type: 'progress',
                   stage: 'enriching',
-                  label: `Enriched ${enrichedCount} of ${totalPlaces} places…`,
+                  label: `Looking up ${enrichedCount} of ${totalPlaces}…`,
                   percent: pct,
                 });
               }
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'taste',
-          label: 'Matching to your taste profile…',
+          label: 'Matching to your taste…',
           percent: 75,
         });
 
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
         send({
           type: 'progress',
           stage: 'done',
-          label: 'All done!',
+          label: 'Wrapping up…',
           percent: 100,
         });
 
