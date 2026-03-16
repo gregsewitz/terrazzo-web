@@ -25,7 +25,7 @@ function CollectionCardInner({
       className="rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
       style={{
         background: 'white',
-        border: '1px solid var(--t-navy)',
+        border: `1px solid ${INK['10']}`,
         boxSizing: 'border-box',
         padding: '10px 12px',
         overflow: 'hidden',

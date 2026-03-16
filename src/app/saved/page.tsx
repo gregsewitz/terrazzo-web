@@ -20,6 +20,7 @@ import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } f
 import BrandLoader from '@/components/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { getDisplayLocation } from '@/lib/place-display';
+import { smartTruncate } from '@/lib/smart-truncate';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -709,18 +710,22 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
   collectionCount: number;
 }) {
   const typeIcon = TYPE_ICONS[place.type] || 'location';
+  const typeColor = TYPE_BRAND_COLORS[place.type] || TEXT.secondary;
   const google = place.google;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
-  const srcStyle = SOURCE_STYLES[place.ghostSource as keyof typeof SOURCE_STYLES] || SOURCE_STYLES.manual;
   const ratingReaction = place.rating ? REACTIONS.find(r => r.id === place.rating!.reaction) : null;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const subtitle = place.friendAttribution?.note
-    || (place.rating?.personalNote)
+  const displayLocation = getDisplayLocation(place.location, place.name, place.google?.address);
+
+  // Narrative: prefer match explanation, then personal note / insight / taste note
+  const narrative = place.matchExplanation?.narrative
+    || place.friendAttribution?.note
+    || place.rating?.personalNote
     || place.terrazzoInsight?.why
     || place.tasteNote
     || '';
-  const truncSub = subtitle.length > 90 ? subtitle.slice(0, 87) + '…' : subtitle;
+  const smartNarrative = smartTruncate(narrative, 320);
 
   const handlePointerDown = useCallback(() => {
     longPressTimer.current = setTimeout(() => {
@@ -743,73 +748,82 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
       className="rounded-xl cursor-pointer transition-all overflow-hidden card-hover"
-      style={{
-        background: 'white',
-        border: '1px solid var(--t-navy)',
-      }}
+      style={{ background: 'white', border: `1px solid ${INK['10']}` }}
     >
-      <div className="flex gap-2.5 p-3 pb-0">
-        {/* Thumbnail */}
+      {/* ── Primary tier: icon + name + score ── */}
+      <div
+        className="flex items-center gap-2.5 px-3 py-2.5"
+        style={{ borderBottom: `1px solid ${INK['06']}` }}
+      >
+        {/* Type icon thumbnail */}
         <div
           className="rounded-lg flex items-center justify-center flex-shrink-0"
           style={{
-            width: 48, height: 48,
+            width: 40, height: 40,
             background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
           }}
         >
-          <PerriandIcon name={typeIcon as any} size={20} color={TYPE_BRAND_COLORS[place.type] || TEXT.secondary} />
+          <PerriandIcon name={typeIcon as any} size={18} color={typeColor} />
         </div>
 
+        {/* Name + location */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="text-[13px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
-                {place.name}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
-                  {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
-                </span>
-                {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
-              </div>
-            </div>
+          <div className="text-[13px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
+            {place.name}
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
+              {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
+            </span>
+            {displayLocation && (
+              <span style={{ fontSize: 10, color: TEXT.secondary }}>· {displayLocation}</span>
+            )}
+          </div>
+        </div>
 
-            {/* Collection bookmark */}
-            <button
-              onClick={(e) => { e.stopPropagation(); onToggleCollections(); }}
-              className="flex items-center gap-1 rounded-full px-2 py-1 transition-all flex-shrink-0"
-              style={{
-                background: collectionCount > 0 ? 'rgba(58,128,136,0.10)' : INK['06'],
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <PerriandIcon name="bookmark" size={12} color={collectionCount > 0 ? 'var(--t-dark-teal)' : INK['40']} />
-              {collectionCount > 0 && (
-                <span style={{
-                  fontFamily: FONT.mono,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: 'var(--t-dark-teal)',
-                }}>
-                  {collectionCount}
-                </span>
-              )}
-            </button>
+        {/* Match score — colored by place type */}
+        <div className="flex-shrink-0 text-right">
+          <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, lineHeight: 1, color: typeColor }}>
+            {Math.round(place.matchScore)}%
+          </div>
+          <div style={{ fontFamily: FONT.mono, fontSize: 7, textTransform: 'uppercase' as const, letterSpacing: 0.3, color: TEXT.secondary }}>
+            match
           </div>
         </div>
       </div>
 
-      <div className="px-3 pt-2 pb-3">
-        <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-          {ratingReaction && (
-            <span
-              className="px-1.5 py-0.5 rounded flex items-center gap-1"
-              style={{ fontSize: 9, fontWeight: 600, background: `${ratingReaction.color}10`, color: ratingReaction.color, fontFamily: FONT.mono }}
-            >
-              <PerriandIcon name={ratingReaction.icon} size={10} color={ratingReaction.color} /> {ratingReaction.label}
-            </span>
-          )}
+      {/* ── Secondary tier: narrative + metadata ── */}
+      <div className="px-3 pt-2 pb-2.5">
+        {/* Narrative — smart-truncated at sentence boundaries */}
+        {smartNarrative && (
+          <p
+            style={{
+              fontFamily: FONT.sans,
+              fontSize: 11,
+              lineHeight: 1.5,
+              color: TEXT.secondary,
+              margin: 0,
+              marginBottom: 8,
+            }}
+          >
+            {smartNarrative}
+          </p>
+        )}
+
+        {/* Pills: reaction, friend, Google rating, price, bookmark */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {ratingReaction && (() => {
+            // Use coral for 'myPlace' so it's visually distinct from the teal bookmark
+            const rxColor = place.rating?.reaction === 'myPlace' ? '#ee716d' : ratingReaction.color;
+            return (
+              <span
+                className="px-1.5 py-0.5 rounded flex items-center gap-1"
+                style={{ fontSize: 9, fontWeight: 600, background: `${rxColor}12`, color: rxColor, fontFamily: FONT.mono }}
+              >
+                <PerriandIcon name={ratingReaction.icon} size={10} color={rxColor} /> {ratingReaction.label}
+              </span>
+            );
+          })()}
           {place.friendAttribution && (
             <span
               className="px-1.5 py-0.5 rounded flex items-center gap-1"
@@ -819,39 +833,40 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
             </span>
           )}
           {google?.rating && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span
+              className="px-1.5 py-0.5 rounded flex items-center gap-1"
+              style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, background: INK['04'] }}
+            >
               <PerriandIcon name="star" size={10} color={TEXT.secondary} /> {google.rating}
             </span>
           )}
           {priceStr && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
+            <span
+              className="px-1.5 py-0.5 rounded"
+              style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, background: INK['04'] }}
+            >
               {priceStr}
             </span>
           )}
-          <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: '#8a6a2a' }}>
-            {Math.round(place.matchScore)}%
-          </span>
-        </div>
 
-        {/* Intelligence narrative or fallback subtitle */}
-        {place.matchExplanation?.narrative ? (
-          <p
-            className="text-[10px] leading-snug mt-1.5 mb-1 line-clamp-2"
-            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
+          {/* Bookmark — pushed to the right */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleCollections(); }}
+            className="flex items-center gap-1 rounded-full px-2 py-0.5 transition-all flex-shrink-0 ml-auto"
+            style={{
+              background: collectionCount > 0 ? 'rgba(58,128,136,0.10)' : INK['06'],
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            {place.matchExplanation.narrative}
-          </p>
-        ) : truncSub ? (
-          <div style={{
-            fontFamily: FONT.sans,
-            fontSize: 11,
-            color: TEXT.secondary,
-            fontStyle: 'italic',
-            lineHeight: 1.4,
-          }}>
-            {truncSub}
-          </div>
-        ) : null}
+            <PerriandIcon name="bookmark" size={11} color={collectionCount > 0 ? 'var(--t-dark-teal)' : INK['40']} />
+            {collectionCount > 0 && (
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, color: 'var(--t-dark-teal)' }}>
+                {collectionCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

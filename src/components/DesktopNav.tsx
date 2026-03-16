@@ -26,8 +26,8 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
       className="flex items-center justify-between px-6"
       style={{
         height: 56,
-        background: 'var(--t-cream)',
-        boxShadow: '0 1px 0 var(--t-linen)',
+        background: '#ee716d',
+        boxShadow: 'none',
       }}
     >
       {/* Left: Terrazzo wordmark */}
@@ -36,7 +36,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
         className="flex items-center bg-transparent border-none cursor-pointer"
         style={{ padding: 0 }}
       >
-        <Logo variant="wordmark" font="pixellance" theme="dark" style={{ height: 22, width: 'auto' }} />
+        <Logo variant="wordmark" font="pixellance" theme="light" style={{ height: 22, width: 'auto' }} />
       </button>
 
       {/* Center: Collect · + Place · Plan */}
@@ -59,7 +59,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
           onMouseLeave={() => setHoveredNav(null)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-full"
           style={{
-            background: hoveredNav === 'add' ? INK['04'] : 'transparent',
+            background: hoveredNav === 'add' ? 'rgba(255,255,255,0.25)' : 'transparent',
             border: 'none',
             cursor: 'pointer',
             transition: 'background 150ms ease',
@@ -82,7 +82,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
               fontFamily: FONT.sans,
               fontSize: 14,
               fontWeight: 400,
-              color: hoveredNav === 'add' ? TEXT.primary : TEXT.secondary,
+              color: hoveredNav === 'add' ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.85)',
               letterSpacing: 0.2,
               transition: 'color 150ms ease',
             }}
@@ -146,24 +146,25 @@ function NavLink({
       onMouseLeave={onMouseLeave}
       className="flex items-center gap-1.5 px-4 py-2 rounded-full"
       style={{
-        background: isActive ? INK['06'] : isHovered ? INK['04'] : 'transparent',
+        background: isActive ? 'rgba(255,255,255,0.92)' : isHovered ? 'rgba(255,255,255,0.25)' : 'transparent',
         border: 'none',
         cursor: 'pointer',
         transition: 'background 150ms ease, color 150ms ease',
+        boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
       }}
     >
       <PerriandIcon
         name={icon}
         size={16}
-        color={isActive ? 'var(--t-coral)' : 'var(--t-navy)'}
-        opacity={isActive ? 1 : isHovered ? 0.7 : 0.5}
+        color={isActive ? '#ee716d' : 'rgba(255,255,255,0.85)'}
+        opacity={1}
       />
       <span
         style={{
           fontFamily: FONT.sans,
           fontSize: 14,
           fontWeight: isActive ? 600 : 400,
-          color: isActive ? TEXT.primary : isHovered ? TEXT.primary : TEXT.secondary,
+          color: isActive ? 'var(--t-navy)' : isHovered ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.85)',
           letterSpacing: 0.2,
           transition: 'color 150ms ease',
         }}

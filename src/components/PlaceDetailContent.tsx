@@ -357,12 +357,12 @@ function PlaceDetailContent({
                 via {item.source?.name || sourceStyle.label}
               </span>
             )}
-            {hydratedGoogle?.category && (
+            {hydratedGoogle?.category && hydratedGoogle.category.toLowerCase() !== item.type.toLowerCase() && (
               <span
                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
                 style={{ background: 'rgba(238,113,109,0.15)', color: '#7a5e24' }}
               >
-                {hydratedGoogle.category}
+                {hydratedGoogle.category.replace(/\b\w/g, c => c.toUpperCase())}
               </span>
             )}
             {hydratedGoogle?.rating && (

@@ -18,6 +18,7 @@ import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet'
 import BrandLoader from '@/components/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { getDisplayLocation } from '@/lib/place-display';
+import { smartTruncate } from '@/lib/smart-truncate';
 
 export default function CollectionDetailPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
@@ -895,58 +896,96 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
   const rating = place.rating;
   const reaction = rating ? REACTIONS.find(r => r.id === rating.reaction) : null;
   const typeIcon = place.type;
+  const typeColor = TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || TEXT.secondary;
+  const displayLocation = getDisplayLocation(place.location, place.name, place.google?.address);
+
+  const narrative = place.matchExplanation?.narrative
+    || place.friendAttribution?.note
+    || place.rating?.personalNote
+    || place.terrazzoInsight?.why
+    || place.tasteNote
+    || '';
+  const smartNarrative = smartTruncate(narrative, 300);
 
   return (
     <div
       onClick={onTap}
-      className="p-3 rounded-xl cursor-pointer transition-all"
-      style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+      className="rounded-xl cursor-pointer transition-all overflow-hidden"
+      style={{ background: 'white', border: `1px solid ${INK['10']}` }}
     >
-      <div className="flex gap-3">
-        {/* Thumbnail */}
+      {/* ── Primary tier: icon + name + score ── */}
+      <div
+        className="flex items-center gap-2.5 px-3 py-2.5"
+        style={{ borderBottom: `1px solid ${INK['06']}` }}
+      >
         <div
-          className="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center"
-          style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
+          className="rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ width: 40, height: 40, background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
         >
-          <PerriandIcon name={typeIcon as any} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || TEXT.secondary} />
+          <PerriandIcon name={typeIcon as any} size={18} color={typeColor} />
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-0.5">
-            <h3 className="text-[13px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
-              {place.name}
-            </h3>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {reaction && (
-                <PerriandIcon name={reaction.icon as any} size={14} color={reaction.color} />
-              )}
-              {onRemove && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                  className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: INK['04'], border: 'none' }}
-                >
-                  <PerriandIcon name="close" size={8} color={TEXT.secondary} />
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
+          <h3 className="text-[13px] font-semibold truncate" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
+            {place.name}
+          </h3>
+          <div className="flex items-center gap-1.5 mt-0.5">
             <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
               {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
             </span>
-            {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
-            {place.google?.rating && (
-              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
-                ★ {place.google.rating}
-              </span>
+            {displayLocation && (
+              <span style={{ fontSize: 10, color: TEXT.secondary }}>· {displayLocation}</span>
             )}
           </div>
-          {place.tasteNote && (
-            <p className="text-[10px] mt-1" style={{ color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.3 }}>
-              {place.tasteNote.length > 80 ? place.tasteNote.slice(0, 77) + '…' : place.tasteNote}
-            </p>
+        </div>
+
+        {/* Match score — colored by place type */}
+        <div className="flex-shrink-0 text-right">
+          <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, lineHeight: 1, color: typeColor }}>
+            {Math.round(place.matchScore)}%
+          </div>
+          <div style={{ fontFamily: FONT.mono, fontSize: 7, textTransform: 'uppercase' as const, letterSpacing: 0.3, color: TEXT.secondary }}>
+            match
+          </div>
+        </div>
+      </div>
+
+      {/* ── Secondary tier: narrative + metadata ── */}
+      <div className="px-3 pt-2 pb-2.5">
+        {smartNarrative && (
+          <p style={{ fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.5, color: TEXT.secondary, margin: 0, marginBottom: 8 }}>
+            {smartNarrative}
+          </p>
+        )}
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {reaction && (() => {
+            const rxColor = place.rating?.reaction === 'myPlace' ? '#ee716d' : reaction.color;
+            return (
+              <span
+                className="px-1.5 py-0.5 rounded flex items-center gap-1"
+                style={{ fontSize: 9, fontWeight: 600, background: `${rxColor}12`, color: rxColor, fontFamily: FONT.mono }}
+              >
+                <PerriandIcon name={reaction.icon as any} size={10} color={rxColor} /> {reaction.label}
+              </span>
+            );
+          })()}
+          {place.google?.rating && (
+            <span
+              className="px-1.5 py-0.5 rounded flex items-center gap-1"
+              style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, background: INK['04'] }}
+            >
+              <PerriandIcon name="star" size={10} color={TEXT.secondary} /> {place.google.rating}
+            </span>
+          )}
+          {onRemove && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer ml-auto"
+              style={{ background: INK['04'], border: 'none' }}
+            >
+              <PerriandIcon name="close" size={8} color={TEXT.secondary} />
+            </button>
           )}
         </div>
       </div>
