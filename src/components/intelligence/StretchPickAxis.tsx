@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
+import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection } from '@/components/animations/AnimatedElements';
@@ -111,7 +111,7 @@ function AxisBar({
       <span
         className={`${isDesktop ? 'text-[9px]' : 'text-[8px]'} font-semibold uppercase tracking-wider`}
         style={{
-          color: isStrong ? T.verde : T.pantonOrange,
+          color: isStrong ? COLOR.darkTeal : COLOR.coral,
           fontFamily: FONT.mono,
           minWidth: isDesktop ? 68 : 56,
           textAlign: 'right',

@@ -16,7 +16,7 @@ const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIco
 // ─── Accent color options ───
 const ACCENT_COLORS = [
   { value: undefined, label: 'None', bg: INK['06'] },
-  { value: 'verde', label: 'Green', bg: 'rgba(42,122,86,0.12)' },
+  { value: 'verde', label: 'Green', bg: 'rgba(58,128,136,0.12)' },
   { value: 'honey', label: 'Gold', bg: 'rgba(238,113,109,0.12)' },
   { value: 'blue', label: 'Blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', label: 'Rose', bg: 'rgba(180,80,80,0.12)' },
@@ -462,7 +462,7 @@ function ScratchpadCard({
                     type="checkbox"
                     checked={item.done}
                     onChange={() => handleChecklistToggle(idx)}
-                    className="mt-0.5 accent-[var(--t-verde)]"
+                    className="mt-0.5 accent-[var(--t-dark-teal)]"
                     style={{ width: 14, height: 14 }}
                   />
                   <span

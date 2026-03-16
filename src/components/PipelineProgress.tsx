@@ -41,7 +41,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               style={{
                 width: 12,
                 background: completedSet.has(stage.key)
-                  ? 'var(--t-verde)'
+                  ? 'var(--t-dark-teal)'
                   : stage.key === currentStage
                     ? 'var(--t-honey)'
                     : 'var(--t-travertine)',
@@ -83,7 +83,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               className="flex items-center gap-1 px-2 py-1 rounded-lg"
               style={{
                 background: isCompleted
-                  ? 'rgba(42,122,86,0.08)'
+                  ? 'rgba(58,128,136,0.08)'
                   : isCurrent
                     ? 'rgba(238,113,109,0.1)'
                     : INK['04'],
@@ -91,7 +91,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
             >
               <div
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? TEXT.accent : TEXT.primary,
+                  color: isCompleted ? 'var(--t-dark-teal)' : isCurrent ? TEXT.accent : TEXT.primary,
                   ...(isCurrent ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
                 }}
               >
@@ -103,7 +103,7 @@ export default function PipelineProgress({ currentStage, stagesCompleted, starte
               <span
                 className="text-[9px] font-medium"
                 style={{
-                  color: isCompleted ? 'var(--t-verde)' : isCurrent ? TEXT.accent : TEXT.primary,
+                  color: isCompleted ? 'var(--t-dark-teal)' : isCurrent ? TEXT.accent : TEXT.primary,
                   fontFamily: FONT.mono,
                 }}
               >

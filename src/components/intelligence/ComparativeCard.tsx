@@ -3,8 +3,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
-import { DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
+import { DOMAIN_COLORS, DOMAIN_ICONS } from '@/types';
 import type { TasteDomain } from '@/types';
 import { formatDomain } from '@/constants/profile';
 
@@ -80,16 +80,16 @@ export function ComparativeCard({
       <div
         className="px-4 py-3"
         style={{
-          background: `${T.honey}06`,
-          borderBottom: `1px solid ${T.honey}10`,
+          background: `${COLOR.ochre}06`,
+          borderBottom: `1px solid ${COLOR.ochre}10`,
         }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <PerriandIcon name="discover" size={12} color={T.honey} />
+            <PerriandIcon name="discover" size={12} color={COLOR.ochre} />
             <span
               className="text-[10px] font-bold uppercase tracking-wider"
-              style={{ color: T.honey, fontFamily: FONT.mono, letterSpacing: '1px' }}
+              style={{ color: COLOR.ochre, fontFamily: FONT.mono, letterSpacing: '1px' }}
             >
               Comparison
             </span>
@@ -97,8 +97,8 @@ export function ComparativeCard({
           <span
             className="text-[10px] font-medium px-2 py-0.5 rounded-md"
             style={{
-              background: `${T.honey}0a`,
-              color: T.honey,
+              background: `${COLOR.ochre}0a`,
+              color: COLOR.ochre,
               fontFamily: FONT.mono,
             }}
           >

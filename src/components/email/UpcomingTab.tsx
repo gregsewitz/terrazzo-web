@@ -63,7 +63,7 @@ export const UpcomingTab = React.memo(function UpcomingTab({
           <button
             onClick={onSelectAll}
             className="text-[10px] font-semibold bg-transparent border-none cursor-pointer"
-            style={{ color: 'var(--t-verde)' }}
+            style={{ color: 'var(--t-dark-teal)' }}
           >
             Select all
           </button>

@@ -150,12 +150,12 @@ export const TripGroup = React.memo(function TripGroup({
       <div className="flex items-center gap-2.5 px-3 py-3" style={{ borderBottom: '1px solid var(--t-linen)' }}>
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: isMatched ? 'rgba(42,122,86,0.06)' : INK['06'] }}
+          style={{ background: isMatched ? 'rgba(58,128,136,0.06)' : INK['06'] }}
         >
           <PerriandIcon
             name={isMatched ? 'trips' : 'discover'}
             size={14}
-            color={isMatched ? 'var(--t-verde)' : INK['50']}
+            color={isMatched ? 'var(--t-dark-teal)' : INK['50']}
           />
         </div>
         <div className="flex-1 min-w-0">
@@ -186,7 +186,7 @@ export const TripGroup = React.memo(function TripGroup({
           }}
           className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all"
           style={{
-            background: isLinked ? 'rgba(42,122,86,0.04)' : INK['04'],
+            background: isLinked ? 'rgba(58,128,136,0.04)' : INK['04'],
             borderBottom: '1px solid var(--t-linen)',
           }}
         >
@@ -194,7 +194,7 @@ export const TripGroup = React.memo(function TripGroup({
           <div
             className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all"
             style={{
-              background: isLinked ? 'var(--t-verde)' : 'white',
+              background: isLinked ? 'var(--t-dark-teal)' : 'white',
               border: isLinked ? 'none' : `1.5px solid ${INK['20']}`,
             }}
           >
@@ -204,7 +204,7 @@ export const TripGroup = React.memo(function TripGroup({
               </svg>
             )}
           </div>
-          <PerriandIcon name="trips" size={12} color={isLinked ? 'var(--t-verde)' : INK['30']} />
+          <PerriandIcon name="trips" size={12} color={isLinked ? 'var(--t-dark-teal)' : INK['30']} />
           <span
             className="text-[10px]"
             style={{
@@ -277,12 +277,12 @@ export const TripGroup = React.memo(function TripGroup({
                     onClick={() => handlePickTrip(trip)}
                     className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left border-none cursor-pointer transition-all"
                     style={{
-                      background: isRecommended ? 'rgba(42,122,86,0.05)' : 'transparent',
+                      background: isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(42,122,86,0.10)' : 'rgba(42,122,86,0.06)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(42,122,86,0.05)' : 'transparent'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(58,128,136,0.10)' : 'rgba(58,128,136,0.06)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent'; }}
                   >
-                    <PerriandIcon name="trips" size={12} color={isRecommended ? 'var(--t-verde)' : INK['40']} />
+                    <PerriandIcon name="trips" size={12} color={isRecommended ? 'var(--t-dark-teal)' : INK['40']} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[11px] font-medium truncate" style={{ color: TEXT.primary }}>
@@ -292,8 +292,8 @@ export const TripGroup = React.memo(function TripGroup({
                           <span
                             className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
                             style={{
-                              background: 'rgba(42,122,86,0.10)',
-                              color: 'var(--t-verde)',
+                              background: 'rgba(58,128,136,0.10)',
+                              color: 'var(--t-dark-teal)',
                               fontFamily: FONT.mono,
                               letterSpacing: '0.03em',
                             }}
@@ -303,7 +303,7 @@ export const TripGroup = React.memo(function TripGroup({
                         )}
                       </div>
                       {trip.location && (
-                        <div className="text-[9px] truncate" style={{ color: isRecommended ? 'var(--t-verde)' : TEXT.secondary, opacity: isRecommended ? 0.7 : 1 }}>
+                        <div className="text-[9px] truncate" style={{ color: isRecommended ? 'var(--t-dark-teal)' : TEXT.secondary, opacity: isRecommended ? 0.7 : 1 }}>
                           {trip.location}
                         </div>
                       )}

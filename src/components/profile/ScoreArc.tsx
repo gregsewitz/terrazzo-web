@@ -9,8 +9,8 @@ interface ScoreArcProps {
 }
 
 export default function ScoreArc({ score, size = 52, color = '#4a6741' }: ScoreArcProps) {
-  // Normalize: accept both 0–1 decimals and 0–100 integers
-  const pct = score <= 1 ? Math.round(score * 100) : Math.round(score);
+  // All scores should be 0–100 integers; round for safety
+  const pct = Math.round(score);
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;

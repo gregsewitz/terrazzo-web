@@ -25,7 +25,7 @@ function CollectionCardInner({
       className="rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
       style={{
         background: 'white',
-        border: '1px solid var(--t-linen)',
+        border: '1px solid var(--t-navy)',
         boxSizing: 'border-box',
         padding: '10px 12px',
         overflow: 'hidden',
@@ -66,7 +66,7 @@ function CollectionCardInner({
             {collection.isSmartCollection && (
               <>
                 <span style={{ color: INK['15'], fontSize: 8 }}>·</span>
-                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-verde)', whiteSpace: 'nowrap' }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-dark-teal)', whiteSpace: 'nowrap' }}>
                   Auto
                 </span>
               </>

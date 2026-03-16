@@ -12,8 +12,8 @@ const SENTIMENT_LABELS: Record<string, string> = {
 
 const SENTIMENT_COLORS: Record<string, { bg: string; text: string }> = {
   love: { bg: 'rgba(200, 146, 58, 0.15)', text: 'var(--t-honey-text)' },
-  like: { bg: 'rgba(42, 122, 86, 0.12)', text: 'var(--t-verde)' },
-  visited: { bg: 'rgba(232, 220, 200, 0.5)', text: 'var(--t-ink)' },
+  like: { bg: 'rgba(58, 128, 136, 0.12)', text: 'var(--t-dark-teal)' },
+  visited: { bg: 'rgba(232, 220, 200, 0.5)', text: 'var(--t-navy)' },
   dislike: { bg: 'rgba(214, 48, 32, 0.10)', text: 'var(--t-signal-red)' },
 };
 
@@ -78,11 +78,11 @@ export default function AnchorVerificationCard({
     return (
       <div
         className="rounded-xl px-3.5 py-3 mt-2 transition-all duration-300"
-        style={{ backgroundColor: 'var(--t-travertine)', border: '1px solid rgba(28, 26, 23, 0.06)' }}
+        style={{ backgroundColor: 'var(--t-peach)', border: '1px solid rgba(28, 26, 23, 0.06)' }}
       >
         <p
           className="text-[12px] mb-2"
-          style={{ color: 'var(--t-ink)' }}
+          style={{ color: 'var(--t-navy)' }}
         >
           What was the place you meant?
         </p>
@@ -94,21 +94,21 @@ export default function AnchorVerificationCard({
             onChange={(e) => setClarifyText(e.target.value)}
             onKeyDown={handleClarifyKeyDown}
             placeholder="Type the name..."
-            className="flex-1 text-[14px] bg-transparent outline-none text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/30"
+            className="flex-1 text-[14px] bg-transparent outline-none text-[var(--t-navy)] placeholder:text-[var(--t-navy)]/30"
             style={{ fontFamily: 'var(--font-sans)' }}
           />
           <button
             onClick={handleClarifySubmit}
             disabled={!clarifyText.trim()}
             className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all disabled:opacity-20"
-            style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)' }}
+            style={{ backgroundColor: 'var(--t-navy)', color: 'var(--t-cream)' }}
           >
             Search
           </button>
           <button
             onClick={() => setStatus('dismissed')}
             className="text-[12px] transition-all"
-            style={{ color: 'var(--t-ink)', opacity: 0.3 }}
+            style={{ color: 'var(--t-navy)', opacity: 0.3 }}
           >
             Skip
           </button>
@@ -130,14 +130,14 @@ export default function AnchorVerificationCard({
       <div className="flex-1 min-w-0">
         <p
           className="text-[14px] leading-tight truncate"
-          style={{ fontFamily: 'var(--font-display)', color: 'var(--t-ink)' }}
+          style={{ fontFamily: 'var(--font-display)', color: 'var(--t-navy)' }}
         >
           {anchor.propertyName}
         </p>
         {anchor.placeType && (
           <p
             className="text-[11px] tracking-wide uppercase mt-0.5 truncate"
-            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-ink)' }}
+            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-navy)' }}
           >
             {anchor.placeType}
           </p>
@@ -158,7 +158,7 @@ export default function AnchorVerificationCard({
           <button
             onClick={handleConfirm}
             className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:scale-105 active:scale-95"
-            style={{ backgroundColor: 'rgba(42, 122, 86, 0.12)', color: 'var(--t-verde)' }}
+            style={{ backgroundColor: 'rgba(58, 128, 136, 0.12)', color: 'var(--t-dark-teal)' }}
           >
             Yes
           </button>
@@ -173,7 +173,7 @@ export default function AnchorVerificationCard({
       ) : (
         <span
           className="text-[11px] shrink-0"
-          style={{ color: 'var(--t-verde)', opacity: 0.7 }}
+          style={{ color: 'var(--t-dark-teal)', opacity: 0.7 }}
         >
           confirmed
         </span>

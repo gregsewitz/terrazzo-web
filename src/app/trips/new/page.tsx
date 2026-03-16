@@ -345,7 +345,7 @@ function TripSeedForm({ onStart, initialSeed }: {
                   <PerriandIcon
                     name={opt.iconName}
                     size={14}
-                    color={status === opt.key ? 'var(--t-verde)' : INK['90']}
+                    color={status === opt.key ? 'var(--t-dark-teal)' : INK['90']}
                   />
                   <span
                     className="text-[12px] font-medium"
@@ -443,7 +443,7 @@ function DestinationAllocationStep({
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">
-            <PerriandIcon name="location" size={40} color="var(--t-verde)" />
+            <PerriandIcon name="location" size={40} color="var(--t-dark-teal)" />
           </div>
           <h1
             className="text-2xl mb-2"
@@ -678,7 +678,7 @@ function TripConversation({
           <SafeFadeIn direction="up" distance={10} duration={0.45}>
             <div
               className="mt-3 p-3 rounded-xl border-l-[3px]"
-              style={{ background: 'rgba(42,122,86,0.04)', borderLeftColor: 'var(--t-verde)' }}
+              style={{ background: 'rgba(58,128,136,0.04)', borderLeftColor: 'var(--t-dark-teal)' }}
             >
               <div
                 className="text-[8px] font-bold uppercase tracking-[1.5px] mb-2"
@@ -697,7 +697,7 @@ function TripConversation({
                   >
                     <span
                       className="text-[10px] px-2 py-1 rounded-full"
-                      style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}
+                      style={{ background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)' }}
                     >
                       {signal}
                     </span>
@@ -786,7 +786,7 @@ function TripComplete({ seed, onDone }: {
         duration={0.5}
         className="text-5xl mb-4 flex justify-center"
       >
-        <PerriandIcon name="check" size={48} color="var(--t-verde)" />
+        <PerriandIcon name="check" size={48} color="var(--t-dark-teal)" />
       </SafeFadeIn>
       <SafeFadeIn
         delay={0.1}

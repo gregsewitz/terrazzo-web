@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, ForceRankItem } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 
 interface ForceRankViewProps {
   onComplete: () => void;
@@ -96,7 +96,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Instruction */}
         <p style={{
-          color: T.ink,
+          color: TEXT.primary,
           fontSize: 14,
           margin: '0 0 20px',
           textAlign: 'center',
@@ -124,11 +124,11 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
                 gap: 14,
                 padding: '16px 18px',
                 background: isRanked
-                  ? 'rgba(42, 122, 86, 0.06)'
+                  ? 'rgba(58, 128, 136, 0.06)'
                   : 'rgba(28, 26, 23, 0.02)',
                 borderRadius: 14,
                 border: isRanked
-                  ? '1.5px solid rgba(42, 122, 86, 0.25)'
+                  ? '1.5px solid rgba(58, 128, 136, 0.25)'
                   : '1px solid rgba(28, 26, 23, 0.06)',
                 cursor: submitted ? 'default' : (isFull && !isRanked) ? 'default' : 'pointer',
                 opacity: submitted ? 0.6 : (isFull && !isRanked) ? 0.35 : 1,
@@ -147,8 +147,8 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                background: isRanked ? T.verde : 'rgba(28, 26, 23, 0.04)',
-                color: isRanked ? T.cream : T.ink,
+                background: isRanked ? COLOR.darkTeal : 'rgba(28, 26, 23, 0.04)',
+                color: isRanked ? COLOR.cream : TEXT.primary,
                 fontSize: 14,
                 fontWeight: 600,
                 fontFamily: FONT.mono,
@@ -162,7 +162,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
                 <p style={{
                   fontSize: 15,
                   fontFamily: FONT.serif,
-                  color: T.ink,
+                  color: TEXT.primary,
                   margin: 0,
                   lineHeight: 1.3,
                 }}>
@@ -171,7 +171,7 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
                 {item.description && (
                   <p style={{
                     fontSize: 12,
-                    color: T.ink,
+                    color: TEXT.primary,
                     fontFamily: FONT.sans,
                     margin: '3px 0 0',
                     lineHeight: 1.35,
@@ -192,8 +192,8 @@ export default function ForceRankView({ onComplete, items }: ForceRankViewProps)
           style={{
             marginTop: 24,
             padding: '15px 40px',
-            background: (submitted || ranked.length < MAX_RANK) ? T.travertine : T.ink,
-            color: (submitted || ranked.length < MAX_RANK) ? T.ink : T.cream,
+            background: (submitted || ranked.length < MAX_RANK) ? COLOR.peach : TEXT.primary,
+            color: (submitted || ranked.length < MAX_RANK) ? TEXT.primary : COLOR.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

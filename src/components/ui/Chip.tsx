@@ -59,7 +59,7 @@ export default function Chip({
       break;
 
     case 'solid':
-      bg = color || 'var(--t-verde)';
+      bg = color || 'var(--t-dark-teal)';
       fg = 'white';
       break;
 

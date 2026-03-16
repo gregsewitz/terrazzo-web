@@ -9,9 +9,9 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 // ─── Activity type → PerriandIcon + color mapping ───
 const ACTIVITY_CONFIG: Record<string, { icon: PerriandIconName; color: string; accent: string; bg: string }> = {
   collaborator_invited: { icon: 'invite',        color: '#6366f1', accent: '#6366f1', bg: 'rgba(99,102,241,0.06)' },
-  collaborator_joined:  { icon: 'wave',          color: '#2a7a56', accent: '#2a7a56', bg: 'rgba(42,122,86,0.06)' },
+  collaborator_joined:  { icon: 'wave',          color: '#3a8088', accent: '#3a8088', bg: 'rgba(58,128,136,0.06)' },
   suggestion_added:     { icon: 'lightbulb',     color: '#ee716d', accent: '#eeb420', bg: 'rgba(238,113,109,0.06)' },
-  suggestion_accepted:  { icon: 'acceptCircle',  color: '#2a7a56', accent: '#2a7a56', bg: 'rgba(42,122,86,0.06)' },
+  suggestion_accepted:  { icon: 'acceptCircle',  color: '#3a8088', accent: '#3a8088', bg: 'rgba(58,128,136,0.06)' },
   suggestion_rejected:  { icon: 'rejectCircle',  color: '#d63020', accent: '#d63020', bg: 'rgba(214,48,32,0.06)' },
   reaction_added:       { icon: 'loveReaction',  color: '#e87080', accent: '#e87080', bg: 'rgba(232,112,128,0.06)' },
   note_added:           { icon: 'chatBubble',    color: '#8b5cf6', accent: '#8b5cf6', bg: 'rgba(139,92,246,0.06)' },

@@ -76,16 +76,16 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
     <div className="flex flex-col h-full px-5 py-6">
       {/* Header */}
       <div className="mb-6">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--t-ink)] mb-2">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--t-navy)] mb-2">
           {isPlanning ? 'Trip you\'re planning' : 'Dream trip'}
         </p>
-        <h2 className="font-display text-[26px] text-[var(--t-ink)] leading-tight">
+        <h2 className="font-display text-[26px] text-[var(--t-navy)] leading-tight">
           {isPlanning
             ? 'Do you have a trip coming up?'
             : 'What about a trip you\'ve always dreamed of?'
           }
         </h2>
-        <p className="text-[14px] text-[var(--t-ink)] mt-2">
+        <p className="text-[14px] text-[var(--t-navy)] mt-2">
           {isPlanning
             ? 'Add one or more destinations — we\'ll build your itinerary from there.'
             : 'The one that\'s been on your list forever.'
@@ -97,7 +97,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
       <div className="flex-1 space-y-5">
         {/* Trip name (optional) */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-navy)] mb-1.5">
             Trip name (optional)
           </label>
           <input
@@ -108,8 +108,8 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
               ? destinations.map(d => d.name).join(' & ')
               : 'e.g., Family Ireland Trip'
             }
-            className="w-full bg-transparent border-b-2 border-[var(--t-travertine)] focus:border-[var(--t-honey)]
-              text-[17px] text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/25
+            className="w-full bg-transparent border-b-2 border-[var(--t-peach)] focus:border-[var(--t-ochre)]
+              text-[17px] text-[var(--t-navy)] placeholder:text-[var(--t-navy)]/25
               outline-none py-2 transition-colors"
             style={{ fontFamily: FONT.sans }}
           />
@@ -117,7 +117,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
 
         {/* Destinations (Google autocomplete) */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-navy)] mb-1.5">
             Where?
           </label>
           <DestinationInput
@@ -129,7 +129,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
 
         {/* When */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-navy)] mb-1.5">
             When? (optional)
           </label>
           <input
@@ -137,8 +137,8 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
             value={dates}
             onChange={(e) => setDates(e.target.value)}
             placeholder="e.g., September 2025, or just 'fall'"
-            className="w-full bg-transparent border-b-2 border-[var(--t-travertine)] focus:border-[var(--t-honey)]
-              text-[15px] text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/25
+            className="w-full bg-transparent border-b-2 border-[var(--t-peach)] focus:border-[var(--t-ochre)]
+              text-[15px] text-[var(--t-navy)] placeholder:text-[var(--t-navy)]/25
               outline-none py-2 transition-colors"
             style={{ fontFamily: FONT.sans }}
           />
@@ -146,7 +146,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
 
         {/* Who with */}
         <div>
-          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-ink)] mb-1.5">
+          <label className="block text-[12px] font-mono uppercase tracking-wider text-[var(--t-navy)] mb-1.5">
             Who with?
           </label>
           <div className="flex gap-2 flex-wrap">
@@ -157,8 +157,8 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
                 className={`
                   px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all
                   ${context === c
-                    ? 'border-[var(--t-ink)] bg-[var(--t-ink)] text-[var(--t-cream)]'
-                    : 'border-[var(--t-travertine)] text-[var(--t-ink)] hover:border-[var(--t-honey)]'
+                    ? 'border-[var(--t-navy)] bg-[var(--t-navy)] text-[var(--t-cream)]'
+                    : 'border-[var(--t-peach)] text-[var(--t-navy)] hover:border-[var(--t-ochre)]'
                   }
                 `}
               >
@@ -176,7 +176,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
           disabled={!canSubmit}
           className="w-full py-3 rounded-xl text-[14px] font-medium text-white transition-all
             hover:opacity-90 active:scale-[0.98] disabled:opacity-30"
-          style={{ backgroundColor: 'var(--t-ink)' }}
+          style={{ backgroundColor: 'var(--t-navy)' }}
         >
           {isPlanning ? 'Save & add dream trip' : 'Save dream trip'}
         </button>
@@ -184,7 +184,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
         {isDreaming && (
           <button
             onClick={handleSkipDream}
-            className="w-full py-2 text-[13px] text-[var(--t-ink)]/40 hover:text-[var(--t-ink)]/60 transition-colors"
+            className="w-full py-2 text-[13px] text-[var(--t-navy)]/40 hover:text-[var(--t-navy)]/60 transition-colors"
           >
             Skip — I don&apos;t have one right now
           </button>
@@ -193,7 +193,7 @@ export default function TripSeedView({ onComplete }: TripSeedViewProps) {
         {isPlanning && (
           <button
             onClick={() => { setStep('dream'); }}
-            className="w-full py-2 text-[13px] text-[var(--t-ink)]/40 hover:text-[var(--t-ink)]/60 transition-colors"
+            className="w-full py-2 text-[13px] text-[var(--t-navy)]/40 hover:text-[var(--t-navy)]/60 transition-colors"
           >
             Nothing planned right now — skip to dream trip
           </button>

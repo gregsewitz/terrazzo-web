@@ -5,7 +5,7 @@ import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TravelContext } from '@/types';
 import { T } from '@/types';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 
 // ─── Companion chip options ───
 
@@ -252,11 +252,11 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
                     transition: 'background 0.1s ease',
                   }}
                 >
-                  <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.ink }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: COLOR.navy }}>
                     {p.structured_formatting?.main_text || p.description}
                   </span>
                   {p.structured_formatting?.secondary_text && (
-                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.ink, marginTop: 1 }}>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 11, color: COLOR.navy, marginTop: 1 }}>
                       {p.structured_formatting.secondary_text}
                     </span>
                   )}
@@ -281,9 +281,9 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
                   style={{
                     padding: '10px 18px',
                     borderRadius: 100,
-                    border: `1.5px solid ${active ? T.ink : 'rgba(0,42,85,0.1)'}`,
-                    background: active ? T.ink : 'transparent',
-                    color: active ? T.cream : T.ink,
+                    border: `1.5px solid ${active ? COLOR.navy : 'rgba(0,42,85,0.1)'}`,
+                    background: active ? COLOR.navy : 'transparent',
+                    color: active ? COLOR.cream : COLOR.navy,
                     fontSize: 14,
                     fontWeight: 500,
                     fontFamily: FONT.sans,
@@ -323,8 +323,8 @@ export default function QuickBioFormView({ onComplete }: QuickBioFormViewProps) 
           style={{
             marginTop: 8,
             padding: '15px 40px',
-            background: submitted ? T.travertine : isValid ? T.ink : 'rgba(0,42,85,0.15)',
-            color: submitted ? TEXT.secondary : isValid ? T.cream : TEXT.secondary,
+            background: submitted ? COLOR.peach : isValid ? COLOR.navy : 'rgba(0,42,85,0.15)',
+            color: submitted ? TEXT.secondary : isValid ? COLOR.cream : TEXT.secondary,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,
@@ -353,7 +353,7 @@ const labelStyle: React.CSSProperties = {
   fontWeight: 500,
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
-  color: T.ink,
+  color: COLOR.navy,
   fontFamily: FONT.mono,
   marginBottom: 8,
 };
@@ -363,7 +363,7 @@ const inputStyle = (disabled: boolean): React.CSSProperties => ({
   padding: '14px 18px',
   fontSize: 16,
   fontFamily: FONT.sans,
-  color: T.ink,
+  color: COLOR.navy,
   background: 'rgba(0,42,85,0.02)',
   border: '1px solid rgba(0,42,85,0.08)',
   borderRadius: 12,

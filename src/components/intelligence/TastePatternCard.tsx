@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
-import { DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
+import { DOMAIN_COLORS, DOMAIN_ICONS } from '@/types';
 import type { TasteDomain } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ export function TastePatternCard({
       className={`rounded-2xl overflow-hidden ${className || ''}`}
       style={{
         background: 'white',
-        border: `1px solid ${T.pantonViolet}10`,
+        border: `1px solid ${COLOR.periwinkle}10`,
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}
     >
@@ -61,20 +61,20 @@ export function TastePatternCard({
       <div
         className="flex items-center justify-between px-4 py-2.5"
         style={{
-          background: `${T.pantonViolet}06`,
-          borderBottom: `1px solid ${T.pantonViolet}10`,
+          background: `${COLOR.periwinkle}06`,
+          borderBottom: `1px solid ${COLOR.periwinkle}10`,
         }}
       >
         <div className="flex items-center gap-2">
           <div
             className="w-5 h-5 rounded-md flex items-center justify-center"
-            style={{ background: `${T.pantonViolet}12` }}
+            style={{ background: `${COLOR.periwinkle}12` }}
           >
-            <PerriandIcon name="character" size={11} color={T.pantonViolet} />
+            <PerriandIcon name="character" size={11} color={COLOR.periwinkle} />
           </div>
           <span
             className="text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: T.pantonViolet, fontFamily: FONT.mono, letterSpacing: '1px' }}
+            style={{ color: COLOR.periwinkle, fontFamily: FONT.mono, letterSpacing: '1px' }}
           >
             Your Taste Patterns
           </span>
@@ -105,10 +105,10 @@ export function TastePatternCard({
         {hiddenPatterns.length > 0 && (
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${INK['95']}06` }}>
             <div className="flex items-center gap-1.5 mb-2">
-              <PerriandIcon name="sparkle" size={10} color={T.honey} />
+              <PerriandIcon name="sparkle" size={10} color={COLOR.ochre} />
               <span
                 className="text-[9px] font-bold uppercase tracking-wider"
-                style={{ color: T.honey, fontFamily: FONT.mono }}
+                style={{ color: COLOR.ochre, fontFamily: FONT.mono }}
               >
                 Hidden Preferences
               </span>
@@ -181,7 +181,7 @@ function PatternRow({
           {isHidden && (
             <span
               className="ml-1.5 text-[8px] font-bold uppercase px-1 py-0.5 rounded"
-              style={{ background: `${T.honey}15`, color: T.honey, fontFamily: FONT.mono }}
+              style={{ background: `${COLOR.ochre}15`, color: COLOR.ochre, fontFamily: FONT.mono }}
             >
               New
             </span>

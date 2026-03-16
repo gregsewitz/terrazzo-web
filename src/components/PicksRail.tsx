@@ -9,8 +9,9 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
-import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
+import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
+import { getDestColor } from '@/lib/destination-helpers';
 
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant', hotel: 'Hotel', bar: 'Bar', cafe: 'Café',
@@ -125,10 +126,10 @@ function PicksRailInner({
       onPointerCancel={handlePointerCancel}
       style={{
         width,
-        background: isDropTarget ? 'rgba(42,122,86,0.06)' : 'white',
+        background: isDropTarget ? 'rgba(58,128,136,0.06)' : 'white',
         flexShrink: 0,
         transition: 'background 150ms ease',
-        outline: isDropTarget ? '2px dashed var(--t-verde)' : 'none',
+        outline: isDropTarget ? '2px dashed var(--t-dark-teal)' : 'none',
         outlineOffset: -2,
       }}
     >
@@ -160,8 +161,8 @@ function PicksRailInner({
                 fontFamily: FONT.mono,
                 fontSize: 9,
                 fontWeight: 700,
-                background: 'rgba(42,122,86,0.08)',
-                color: 'var(--t-verde)',
+                background: 'rgba(58,128,136,0.08)',
+                color: 'var(--t-dark-teal)',
               }}
             >
               {allUnplacedPicks.length}
@@ -249,10 +250,11 @@ function PicksRailInner({
         className="flex-1 overflow-y-auto flex flex-col gap-1 py-2 px-2"
         style={{ scrollbarWidth: 'thin' }}
       >
-        {sortedPicks.map(place => {
+        {sortedPicks.map((place, index) => {
           const typeIcon = TYPE_ICONS[place.type] || 'location';
           const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
           const typeLabel = TYPE_LABELS[place.type] || place.type;
+          const brandColor = getDestColor(index);
           const isHovered = hoveredId === place.id;
           const tasteNote = place.tasteNote;
           const location = place.location?.split(',')[0]?.trim() || '';
@@ -274,10 +276,10 @@ function PicksRailInner({
               style={{
                 padding: '8px 8px',
                 borderRadius: 10,
-                background: isHolding ? `${typeColor}18` : isHovered ? `${typeColor}12` : 'transparent',
-                border: isHolding ? `1.5px solid ${typeColor}50` : isHovered ? `1px solid ${typeColor}30` : '1px solid transparent',
+                background: isHolding ? `${typeColor}18` : isHovered ? `${typeColor}12` : brandColor.bg,
+                border: isHolding ? `1.5px solid ${typeColor}50` : isHovered ? `1px solid ${typeColor}30` : `1px solid ${brandColor.accent}20`,
                 transform: isHolding ? 'scale(1.02)' : isHovered ? 'translateX(2px)' : 'translateX(0)',
-                opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.45 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
+                opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.35 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
                 cursor: 'grab',
                 touchAction: 'none',
                 userSelect: 'none',
@@ -290,11 +292,11 @@ function PicksRailInner({
                   width: 36,
                   height: 36,
                   borderRadius: 8,
-                  background: `linear-gradient(135deg, ${typeColor}30, ${typeColor}12)`,
+                  background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
                   marginTop: 1,
                 }}
               >
-                <PerriandIcon name={typeIcon} size={18} color={typeColor} />
+                <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
                 {/* Match score pip */}
                 {place.matchScore >= 80 && (
                   <div
@@ -305,14 +307,14 @@ function PicksRailInner({
                       width: 16,
                       height: 16,
                       borderRadius: '50%',
-                      background: 'var(--t-verde)',
+                      background: 'var(--t-dark-teal)',
                       color: 'white',
                       fontFamily: FONT.mono,
                       fontSize: 7,
                       fontWeight: 800,
                     }}
                   >
-                    {place.matchScore}
+                    {Math.round(place.matchScore)}
                   </div>
                 )}
               </div>

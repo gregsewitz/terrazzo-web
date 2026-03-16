@@ -9,7 +9,7 @@ import type { ImportedPlace } from '@/types';
 
 export const TYPE_COLORS: Record<string, string> = {
   restaurant: 'var(--t-honey)',
-  hotel: 'var(--t-verde)',
+  hotel: 'var(--t-dark-teal)',
   bar: '#C87B6B',
   cafe: '#B8956A',
   museum: '#8B7EC8',
@@ -94,7 +94,7 @@ export function PlaceRow({
       className="flex items-center gap-3 w-full px-3 rounded-xl cursor-pointer transition-all text-left"
       style={{
         background: 'white',
-        border: '1px solid var(--t-linen)',
+        border: '1px solid var(--t-navy)',
         padding: compact ? '8px 12px' : '10px 12px',
         marginTop: 4,
       }}
@@ -117,7 +117,7 @@ export function PlaceRow({
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {inLibrary && <span style={{ color: 'var(--t-verde)', marginRight: 4, fontSize: 11 }}>&#10003;</span>}
+          {inLibrary && <span style={{ color: 'var(--t-dark-teal)', marginRight: 4, fontSize: 11 }}>&#10003;</span>}
           {place.name}
         </p>
         <p style={{
@@ -156,7 +156,7 @@ export function PlaceRow({
           className="flex items-center justify-center rounded-full flex-shrink-0"
           style={{ width: 28, height: 28, background: INK['06'] }}
         >
-          <PerriandIcon name="add" size={14} color="var(--t-verde)" />
+          <PerriandIcon name="add" size={14} color="var(--t-dark-teal)" />
         </div>
       ) : (
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, opacity: 0.3 }}>

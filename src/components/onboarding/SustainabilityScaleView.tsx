@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, SustainabilitySignal } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLOR } from '@/constants/theme';
 
 // ─── Scale Options ───
 
@@ -126,7 +126,7 @@ export default function SustainabilityScaleView({ onComplete }: SustainabilitySc
         <p style={{
           fontSize: 17,
           fontWeight: 400,
-          color: T.ink,
+          color: COLOR.navy,
           margin: '0 0 24px',
           textAlign: 'center',
           fontFamily: FONT.serif,
@@ -157,7 +157,7 @@ export default function SustainabilityScaleView({ onComplete }: SustainabilitySc
                   : 'rgba(0,42,85,0.015)',
                 borderRadius: 14,
                 border: isSelected
-                  ? `1.5px solid ${T.ink}`
+                  ? `1.5px solid ${COLOR.navy}`
                   : '1px solid rgba(0,42,85,0.06)',
                 cursor: submitted ? 'default' : 'pointer',
                 transition: 'all 0.3s ease',
@@ -171,7 +171,7 @@ export default function SustainabilityScaleView({ onComplete }: SustainabilitySc
               <span style={{
                 fontSize: 15,
                 fontWeight: 600,
-                color: T.ink,
+                color: COLOR.navy,
                 fontFamily: FONT.sans,
                 marginBottom: 3,
               }}>
@@ -179,7 +179,7 @@ export default function SustainabilityScaleView({ onComplete }: SustainabilitySc
               </span>
               <span style={{
                 fontSize: 13,
-                color: T.ink,
+                color: COLOR.navy,
                 fontFamily: FONT.sans,
                 lineHeight: 1.4,
               }}>

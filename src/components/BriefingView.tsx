@@ -49,7 +49,7 @@ const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Serv
 function TrustBadge({ score, reviewCount }: { score: number | null; reviewCount: number }) {
   const level = score == null ? 0 : score >= 0.75 ? 3 : score >= 0.5 ? 2 : 1;
   const labels = ['Low', 'Fair', 'Good', 'Strong'];
-  const colors = ['var(--t-signal-red)', 'var(--t-amber)', 'var(--t-verde)', 'var(--t-verde)'];
+  const colors = ['var(--t-signal-red)', 'var(--t-amber)', 'var(--t-dark-teal)', 'var(--t-dark-teal)'];
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-0.5">
@@ -115,9 +115,9 @@ function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }) {
       {corroboratedCount > 0 && (
         <span
           className="text-[9px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1"
-          style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+          style={{ background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}
         >
-          <PerriandIcon name="check" size={9} color="var(--t-verde)" />
+          <PerriandIcon name="check" size={9} color="var(--t-dark-teal)" />
           {corroboratedCount} corroborated
         </span>
       )}
@@ -177,8 +177,8 @@ function HeadlineSignal({ signal, color }: { signal: BriefingSignal; color: stri
           </span>
         )}
         {signal.review_corroborated && (
-          <span className="flex items-center gap-0.5 text-[8px]" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}>
-            <PerriandIcon name="check" size={9} color="var(--t-verde)" /> verified
+          <span className="flex items-center gap-0.5 text-[8px]" style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}>
+            <PerriandIcon name="check" size={9} color="var(--t-dark-teal)" /> verified
           </span>
         )}
       </div>
@@ -195,7 +195,7 @@ function CompactSignal({ signal }: { signal: BriefingSignal }) {
       <span className="text-[11px] leading-snug" style={{ color: TEXT.primary }}>
         {signal.signal}
         {signal.review_corroborated && (
-          <PerriandIcon name="check" size={9} color="var(--t-verde)" style={{ display: 'inline', marginLeft: 3, verticalAlign: 'middle' }} />
+          <PerriandIcon name="check" size={9} color="var(--t-dark-teal)" style={{ display: 'inline', marginLeft: 3, verticalAlign: 'middle' }} />
         )}
       </span>
     </div>
@@ -415,13 +415,13 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                     <div className="mb-6">
                       <div
                         className="text-[10px] font-bold uppercase tracking-wider mb-2.5"
-                        style={{ color: 'var(--t-verde)', fontFamily: FONT.mono, letterSpacing: '1px' }}
+                        style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono, letterSpacing: '1px' }}
                       >
                         Why This Place
                       </div>
                       <div
                         className="p-4 rounded-2xl"
-                        style={{ background: 'rgba(42,122,86,0.04)', border: '1px solid rgba(42,122,86,0.12)' }}
+                        style={{ background: 'rgba(58,128,136,0.04)', border: '1px solid rgba(58,128,136,0.12)' }}
                       >
                         <p className="text-[13px] leading-relaxed" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
                           {place.terrazzoInsight.why}
@@ -552,11 +552,11 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                     </div>
                     {/* Stat cards */}
                     <div className="flex-1 grid grid-cols-2 gap-2">
-                      <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(42,122,86,0.04)' }}>
+                      <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(58,128,136,0.04)' }}>
                         <div
                           className="text-[18px] font-bold"
                           style={{
-                            color: data.reliabilityScore && data.reliabilityScore >= 0.6 ? 'var(--t-verde)' : 'var(--t-amber)',
+                            color: data.reliabilityScore && data.reliabilityScore >= 0.6 ? 'var(--t-dark-teal)' : 'var(--t-amber)',
                             fontFamily: FONT.mono,
                           }}
                         >

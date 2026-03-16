@@ -3,8 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, SceneQuestion } from '@/types';
-import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 
 interface SceneChoiceViewProps {
   onComplete: () => void;
@@ -126,8 +125,8 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: i < currentIdx ? T.verde
-                  : i === currentIdx ? T.ink
+                background: i < currentIdx ? COLOR.darkTeal
+                  : i === currentIdx ? TEXT.primary
                   : 'rgba(28, 26, 23, 0.12)',
                 transition: 'all 0.3s ease',
               }}
@@ -137,7 +136,7 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
 
         {/* Question prompt */}
         <p style={{
-          color: T.ink,
+          color: TEXT.primary,
           fontSize: 18,
           fontFamily: FONT.serif,
           margin: '0 0 24px',
@@ -165,11 +164,11 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
                 gap: 14,
                 padding: '16px 18px',
                 background: isSelected
-                  ? 'rgba(42, 122, 86, 0.08)'
+                  ? 'rgba(58, 128, 136, 0.08)'
                   : 'rgba(28, 26, 23, 0.02)',
                 borderRadius: 14,
                 border: isSelected
-                  ? '1.5px solid rgba(42, 122, 86, 0.3)'
+                  ? '1.5px solid rgba(58, 128, 136, 0.3)'
                   : '1px solid rgba(28, 26, 23, 0.06)',
                 cursor: (transitioning || completed) ? 'default' : 'pointer',
                 opacity: completed ? 0.6 : 1,
@@ -188,12 +187,12 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                background: isSelected ? T.verde : 'rgba(28, 26, 23, 0.04)',
+                background: isSelected ? COLOR.darkTeal : 'rgba(28, 26, 23, 0.04)',
                 transition: 'all 0.25s ease',
               }}>
                 {isSelected && (
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 7l3 3 5-6" stroke={T.cream} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 7l3 3 5-6" stroke={COLOR.cream} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </div>
@@ -201,7 +200,7 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
               <p style={{
                 fontSize: 15,
                 fontFamily: FONT.serif,
-                color: T.ink,
+                color: TEXT.primary,
                 margin: 0,
                 lineHeight: 1.35,
               }}>
@@ -215,7 +214,7 @@ export default function SceneChoiceView({ onComplete, questions }: SceneChoiceVi
         <p style={{
           fontSize: 11,
           fontFamily: FONT.mono,
-          color: T.ink,
+          color: TEXT.primary,
           textAlign: 'center',
           margin: '20px 0 0',
           letterSpacing: '0.05em',

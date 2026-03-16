@@ -5,7 +5,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 import PropertyReactionCard from './PropertyReactionCard';
 import type { PropertyExemplar, TasteDomain, PropertyAnchor } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLOR } from '@/constants/theme';
 import { apiFetch } from '@/lib/api-client';
 
 interface PropertyReactionPhaseViewProps {
@@ -175,15 +175,15 @@ export default function PropertyReactionPhaseView({
         <div style={{
           width: 28,
           height: 28,
-          border: `2px solid ${T.travertine}`,
-          borderTopColor: T.ink,
+          border: `2px solid ${COLOR.peach}`,
+          borderTopColor: COLOR.navy,
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />
         <p style={{
           marginTop: 16,
           fontSize: 14,
-          color: T.ink,
+          color: COLOR.navy,
           fontFamily: FONT.sans,
         }}>
           Finding properties for you…
@@ -206,7 +206,7 @@ export default function PropertyReactionPhaseView({
       }}>
         <p style={{
           fontSize: 14,
-          color: T.ink,
+          color: COLOR.navy,
           fontFamily: FONT.sans,
           textAlign: 'center',
           maxWidth: 320,
@@ -219,8 +219,8 @@ export default function PropertyReactionPhaseView({
           className="btn-hover"
           style={{
             padding: '12px 32px',
-            background: T.ink,
-            color: T.cream,
+            background: COLOR.navy,
+            color: COLOR.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 14,
@@ -249,7 +249,7 @@ export default function PropertyReactionPhaseView({
       }}>
         <p style={{
           fontSize: 14,
-          color: T.ink,
+          color: COLOR.navy,
           fontFamily: FONT.sans,
           textAlign: 'center',
         }}>
@@ -260,8 +260,8 @@ export default function PropertyReactionPhaseView({
           className="btn-hover"
           style={{
             padding: '12px 32px',
-            background: T.ink,
-            color: T.cream,
+            background: COLOR.navy,
+            color: COLOR.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 14,
@@ -291,7 +291,7 @@ export default function PropertyReactionPhaseView({
         {/* Progress indicator */}
         <p style={{
           fontSize: 12,
-          color: T.ink,
+          color: COLOR.navy,
           fontFamily: FONT.mono,
           textAlign: 'center',
           marginBottom: 16,
@@ -329,7 +329,7 @@ export default function PropertyReactionPhaseView({
               style={{
                 padding: '10px 24px',
                 background: 'transparent',
-                color: T.ink,
+                color: COLOR.navy,
                 border: `1px solid rgba(0,42,85,0.1)`,
                 borderRadius: 100,
                 fontSize: 13,

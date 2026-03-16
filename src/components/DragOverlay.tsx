@@ -44,13 +44,13 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
         className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl"
         style={{
           background: isOverTarget
-            ? 'rgba(42,122,86,0.06)'
+            ? 'rgba(58,128,136,0.06)'
             : 'white',
           border: isOverTarget
-            ? '2px solid var(--t-verde)'
+            ? '2px solid var(--t-dark-teal)'
             : `1.5px solid ${INK['08']}`,
           boxShadow: isOverTarget
-            ? '0 8px 32px rgba(42,122,86,0.18), 0 2px 8px rgba(42,122,86,0.08)'
+            ? '0 8px 32px rgba(58,128,136,0.18), 0 2px 8px rgba(58,128,136,0.08)'
             : '0 12px 40px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.06)',
           backdropFilter: 'blur(8px)',
         }}
@@ -60,14 +60,14 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
           style={{
             background: isOverTarget
-              ? 'rgba(42,122,86,0.12)'
+              ? 'rgba(58,128,136,0.12)'
               : 'var(--t-linen)',
           }}
         >
           <PerriandIcon
             name={typeIcon}
             size={16}
-            color={isOverTarget ? 'var(--t-verde)' : 'var(--t-ink)'}
+            color={isOverTarget ? 'var(--t-dark-teal)' : 'var(--t-ink)'}
           />
         </div>
 
@@ -75,7 +75,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
         <div className="flex-1 min-w-0">
           <div
             className="text-[12px] font-semibold truncate"
-            style={{ color: isOverTarget ? 'var(--t-verde)' : 'var(--t-ink)' }}
+            style={{ color: isOverTarget ? 'var(--t-dark-teal)' : 'var(--t-ink)' }}
           >
             {item.name}
           </div>
@@ -92,8 +92,8 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
         <span
           className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
           style={{
-            background: isOverTarget ? 'rgba(42,122,86,0.15)' : 'rgba(42,122,86,0.08)',
-            color: 'var(--t-verde)',
+            background: isOverTarget ? 'rgba(58,128,136,0.15)' : 'rgba(58,128,136,0.08)',
+            color: 'var(--t-dark-teal)',
             fontFamily: FONT.mono,
           }}
         >
@@ -110,7 +110,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
           }}
         >
           <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
-            <path d="M2 2L8 8L14 2" stroke="var(--t-verde)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 2L8 8L14 2" stroke="var(--t-dark-teal)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       )}

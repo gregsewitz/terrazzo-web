@@ -5,7 +5,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, Collection, REACTIONS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { THUMB_GRADIENTS } from '@/constants/placeTypes';
+import { THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import BaseSheet from '@/components/ui/BaseSheet';
 import SortPills from '@/components/ui/SortPills';
 
@@ -155,7 +155,7 @@ export default function AddPlacesToCollectionSheet({
                     className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center"
                     style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
                   >
-                    <PerriandIcon name={typeIcon as any} size={14} color={INK['60']} />
+                    <PerriandIcon name={typeIcon as any} size={14} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || INK['60']} />
                   </div>
 
                   {/* Info */}
@@ -187,7 +187,7 @@ export default function AddPlacesToCollectionSheet({
                         fontWeight: 700,
                       }}
                     >
-                      {place.matchScore}
+                      {Math.round(place.matchScore)}
                     </span>
                   )}
 
@@ -196,11 +196,11 @@ export default function AddPlacesToCollectionSheet({
                     onClick={() => handleAdd(place)}
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer transition-all btn-hover"
                     style={{
-                      background: 'rgba(42,122,86,0.08)',
-                      border: '1.5px solid var(--t-verde)',
+                      background: 'rgba(58,128,136,0.08)',
+                      border: '1.5px solid var(--t-dark-teal)',
                     }}
                   >
-                    <span style={{ fontSize: 14, color: 'var(--t-verde)', fontWeight: 600, lineHeight: 1 }}>+</span>
+                    <span style={{ fontSize: 14, color: 'var(--t-dark-teal)', fontWeight: 600, lineHeight: 1 }}>+</span>
                   </button>
                 </div>
               );
@@ -214,12 +214,12 @@ export default function AddPlacesToCollectionSheet({
         <div
           className="flex items-center justify-center gap-1.5 py-2.5"
           style={{
-            background: 'rgba(42,122,86,0.06)',
-            borderTop: '1px solid rgba(42,122,86,0.12)',
+            background: 'rgba(58,128,136,0.06)',
+            borderTop: '1px solid rgba(58,128,136,0.12)',
           }}
         >
-          <PerriandIcon name="saved" size={12} color="var(--t-verde)" />
-          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: 'var(--t-verde)', fontWeight: 600 }}>
+          <PerriandIcon name="saved" size={12} color="var(--t-dark-teal)" />
+          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: 'var(--t-dark-teal)', fontWeight: 600 }}>
             {justAdded.size} {justAdded.size === 1 ? 'place' : 'places'} added
           </span>
         </div>

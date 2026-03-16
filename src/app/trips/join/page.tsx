@@ -141,7 +141,7 @@ function JoinTripInner() {
           <div
             className="text-[10px] font-semibold mb-3"
             style={{
-              color: 'var(--t-verde)',
+              color: 'var(--t-dark-teal)',
               fontFamily: FONT.mono,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
@@ -188,7 +188,7 @@ function JoinTripInner() {
             disabled={accepting}
             className="w-full py-3.5 rounded-xl text-[14px] font-semibold btn-hover"
             style={{
-              background: 'var(--t-verde)',
+              background: 'var(--t-dark-teal)',
               color: 'white',
               border: 'none',
               cursor: accepting ? 'default' : 'pointer',

@@ -76,7 +76,7 @@ export default function OnboardingIntro() {
             alt="Terrazzo"
             style={{ height: 'clamp(36px, 5vh, 48px)', width: 'auto' }}
           />
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--t-ink)]/40 mt-3">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--t-navy)]/40 mt-3">
             Your bespoke travel concierge
           </p>
         </div>
@@ -85,21 +85,21 @@ export default function OnboardingIntro() {
         <div className="space-y-4 mb-10">
           {hasInProgressSession ? (
             <>
-              <p className="text-[17px] leading-relaxed text-[var(--t-ink)]/80">
+              <p className="text-[17px] leading-relaxed text-[var(--t-navy)]/80">
                 Welcome back — you&apos;re {completedPhaseIds.length} of {ALL_PHASE_IDS.length} sections
                 into building your taste profile.
               </p>
-              <p className="text-[15px] leading-relaxed text-[var(--t-ink)]/50">
+              <p className="text-[15px] leading-relaxed text-[var(--t-navy)]/50">
                 Pick up right where you left off, or start fresh.
               </p>
             </>
           ) : (
             <>
-              <p className="text-[17px] leading-relaxed text-[var(--t-ink)]/80">
+              <p className="text-[17px] leading-relaxed text-[var(--t-navy)]/80">
                 I&apos;m going to learn how you see the world when you travel — the details you notice,
                 the places that stuck with you, the things that drive you crazy.
               </p>
-              <p className="text-[15px] leading-relaxed text-[var(--t-ink)]/50">
+              <p className="text-[15px] leading-relaxed text-[var(--t-navy)]/50">
                 Takes about 12 minutes across three acts. You can talk or type — whatever feels natural.
               </p>
             </>
@@ -113,7 +113,7 @@ export default function OnboardingIntro() {
               onClick={handleResume}
               className="w-full py-3.5 rounded-xl text-[15px] font-medium text-white transition-all
                 hover:opacity-90 active:scale-[0.98]"
-              style={{ backgroundColor: 'var(--t-ink)' }}
+              style={{ backgroundColor: 'var(--t-navy)' }}
             >
               Continue where I left off
             </button>
@@ -131,14 +131,14 @@ export default function OnboardingIntro() {
             onClick={handleStart}
             className="w-full py-3.5 rounded-xl text-[15px] font-medium text-white transition-all
               hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: 'var(--t-ink)' }}
+            style={{ backgroundColor: 'var(--t-navy)' }}
           >
             Let&apos;s get started
           </button>
         )}
 
         {/* Subtle reassurance */}
-        <p className="text-[12px] text-[var(--t-ink)]/30 mt-4">
+        <p className="text-[12px] text-[var(--t-navy)]/30 mt-4">
           You can always refine your profile later
         </p>
 

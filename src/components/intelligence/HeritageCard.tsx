@@ -3,8 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
-import { T } from '@/types';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import type { HeritageData } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -49,7 +48,7 @@ function hasSubstance(h: HeritageData): boolean {
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
-const HERITAGE_COLOR = T.pantonViolet; // Character domain — heritage is about soul
+const HERITAGE_COLOR = COLOR.periwinkle; // Character domain — heritage is about soul
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 

@@ -9,7 +9,7 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from './ui/FilterSortBar';
-import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
+import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
 
 type SortOption = 'match' | 'name' | 'source' | 'recent';
@@ -197,8 +197,8 @@ function PicksStrip({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       style={{
-        background: isDropTarget ? 'rgba(42,122,86,0.04)' : 'white',
-        borderTop: isDropTarget ? '2px solid var(--t-verde)' : '1px solid var(--t-linen)',
+        background: isDropTarget ? 'rgba(58,128,136,0.04)' : 'white',
+        borderTop: isDropTarget ? '2px solid var(--t-dark-teal)' : '1px solid var(--t-linen)',
         minWidth: 0,
         maxWidth: '100%',
         overflow: 'hidden',
@@ -264,8 +264,8 @@ function PicksStrip({
         <span
           className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
           style={{
-            background: 'rgba(42,122,86,0.08)',
-            color: 'var(--t-verde)',
+            background: 'rgba(58,128,136,0.08)',
+            color: 'var(--t-dark-teal)',
             fontFamily: FONT.mono,
           }}
         >
@@ -277,8 +277,8 @@ function PicksStrip({
           onClick={() => setExpanded(prev => !prev)}
           className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
           style={{
-            background: expanded ? 'var(--t-verde)' : 'transparent',
-            border: expanded ? 'none' : '1px solid rgba(42,122,86,0.2)',
+            background: expanded ? 'var(--t-dark-teal)' : 'transparent',
+            border: expanded ? 'none' : '1px solid rgba(58,128,136,0.2)',
             cursor: 'pointer',
             transition: 'all 0.2s',
           }}
@@ -294,7 +294,7 @@ function PicksStrip({
             <path
               d="M1 7 L5 3 L9 7"
               fill="none"
-              stroke={expanded ? 'white' : 'var(--t-verde)'}
+              stroke={expanded ? 'white' : 'var(--t-dark-teal)'}
               strokeWidth={1.5}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -342,7 +342,7 @@ function PicksStrip({
         <span style={{
           fontFamily: FONT.mono,
           fontSize: 8,
-          color: isDropTarget ? 'var(--t-verde)' : TEXT.secondary,
+          color: isDropTarget ? 'var(--t-dark-teal)' : TEXT.secondary,
           letterSpacing: '0.3px',
           fontWeight: isDropTarget ? 700 : undefined,
           transition: 'color 0.2s',
@@ -399,13 +399,13 @@ function PicksStrip({
                     className="rounded-xl flex items-center justify-center relative w-full"
                     style={{
                       aspectRatio: '1',
-                      background: `linear-gradient(135deg, ${typeColor}40, ${typeColor}25)`,
-                      border: isHolding ? '2px solid var(--t-verde)' : `1px solid ${typeColor}50`,
-                      boxShadow: isHolding ? '0 4px 12px rgba(42,122,86,0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
+                      background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
+                      border: isHolding ? `2px solid ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}` : `1px solid ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}30`,
+                      boxShadow: isHolding ? `0 4px 12px ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}30` : '0 1px 3px rgba(0,0,0,0.04)',
                       transition: 'border 0.15s, box-shadow 0.15s',
                     }}
                   >
-                    <PerriandIcon name={typeIcon} size={22} />
+                    <PerriandIcon name={typeIcon} size={22} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
                     {/* Match score pip */}
                     <div
                       className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
@@ -416,12 +416,12 @@ function PicksStrip({
                         border: '1px solid var(--t-linen)',
                         fontSize: 8,
                         fontWeight: 700,
-                        color: 'var(--t-verde)',
+                        color: 'var(--t-dark-teal)',
                         fontFamily: FONT.mono,
                         boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
                       }}
                     >
-                      {place.matchScore}
+                      {Math.round(place.matchScore)}
                     </div>
                   </div>
 
@@ -530,13 +530,13 @@ function PicksStrip({
                       style={{
                         width: 50,
                         height: 50,
-                        background: `linear-gradient(135deg, ${typeColor}40, ${typeColor}25)`,
-                        border: isHolding ? '2px solid var(--t-verde)' : `1px solid ${typeColor}50`,
-                        boxShadow: isHolding ? '0 4px 12px rgba(42,122,86,0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
+                        background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
+                        border: isHolding ? `2px solid ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}` : `1px solid ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}30`,
+                        boxShadow: isHolding ? `0 4px 12px ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}30` : '0 1px 3px rgba(0,0,0,0.04)',
                         transition: 'border 0.15s, box-shadow 0.15s',
                       }}
                     >
-                      <PerriandIcon name={typeIcon} size={18} />
+                      <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
                       {/* Match score pip */}
                       <div
                         className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
@@ -547,12 +547,12 @@ function PicksStrip({
                           border: '1px solid var(--t-linen)',
                           fontSize: 8,
                           fontWeight: 700,
-                          color: 'var(--t-verde)',
+                          color: 'var(--t-dark-teal)',
                           fontFamily: FONT.mono,
                           boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
                         }}
                       >
-                        {place.matchScore}
+                        {Math.round(place.matchScore)}
                       </div>
                     </div>
 

@@ -239,7 +239,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               <button
                 onClick={onShare}
                 className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
-                style={{ background: INK['04'], color: 'var(--t-verde)' }}
+                style={{ background: INK['04'], color: 'var(--t-dark-teal)' }}
                 title="Share trip"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -24,7 +24,7 @@ function HotelInputInner({
   legacyValue,
   onSave,
   onCancel,
-  accentColor = 'var(--t-verde)',
+  accentColor = 'var(--t-dark-teal)',
   textColor = TEXT.primary,
   destination,
 }: HotelInputProps) {

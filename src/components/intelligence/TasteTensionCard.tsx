@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TasteDomain, DOMAIN_COLORS, T } from '@/types';
+import { TasteDomain, DOMAIN_COLORS } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
@@ -94,7 +94,7 @@ export function TasteTensionCard({
                 width: 16,
                 height: 16,
                 borderRadius: '50%',
-                background: `${T.verde}14`,
+                background: `${COLOR.darkTeal}14`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -105,7 +105,7 @@ export function TasteTensionCard({
                   width: 5,
                   height: 5,
                   borderRadius: '50%',
-                  background: T.verde,
+                  background: COLOR.darkTeal,
                 }}
               />
             </div>
@@ -126,7 +126,7 @@ export function TasteTensionCard({
                 width: 16,
                 height: 16,
                 borderRadius: '50%',
-                background: `${T.pantonOrange}14`,
+                background: `${COLOR.coral}14`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -137,7 +137,7 @@ export function TasteTensionCard({
                   width: 5,
                   height: 5,
                   borderRadius: '50%',
-                  background: T.pantonOrange,
+                  background: COLOR.coral,
                 }}
               />
             </div>
@@ -165,7 +165,7 @@ export function TasteTensionCard({
             className={`${isDesktop ? 'px-5 py-4' : 'px-4 py-3'}`}
             style={{
               borderTop: `1px solid ${INK['06']}`,
-              background: `${T.honey}06`,
+              background: `${COLOR.ochre}06`,
               cursor: onPlaceTap && tension.resolvedBy.googlePlaceId ? 'pointer' : 'default',
             }}
             onClick={() => {

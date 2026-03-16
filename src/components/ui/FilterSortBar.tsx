@@ -104,7 +104,7 @@ export default function FilterSortBar({
             style={{
               background: isFilterActive || openPanel === 'filter' ? TEXT.primary : 'white',
               color: isFilterActive || openPanel === 'filter' ? 'white' : TEXT.secondary,
-              border: isFilterActive || openPanel === 'filter' ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
+              border: isFilterActive || openPanel === 'filter' ? `1px solid ${TEXT.primary}` : '1px solid var(--t-navy)',
               fontFamily: FONT.sans,
             }}
           >
@@ -125,7 +125,7 @@ export default function FilterSortBar({
             style={{
               background: isSortActive || openPanel === 'sort' ? TEXT.primary : 'white',
               color: isSortActive || openPanel === 'sort' ? 'white' : TEXT.secondary,
-              border: isSortActive || openPanel === 'sort' ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
+              border: isSortActive || openPanel === 'sort' ? `1px solid ${TEXT.primary}` : '1px solid var(--t-navy)',
               fontFamily: FONT.sans,
             }}
           >
@@ -140,7 +140,7 @@ export default function FilterSortBar({
           <button
             onClick={onResetAll}
             className="text-[10px] font-medium cursor-pointer ml-1"
-            style={{ background: 'none', border: 'none', color: 'var(--t-verde)', fontFamily: FONT.sans, padding: 0 }}
+            style={{ background: 'none', border: 'none', color: 'var(--t-dark-teal)', fontFamily: FONT.sans, padding: 0 }}
           >
             Reset
           </button>
@@ -178,7 +178,7 @@ export default function FilterSortBar({
                       style={{
                         background: isActive ? TEXT.primary : 'white',
                         color: isActive ? 'white' : TEXT.secondary,
-                        border: isActive ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
+                        border: isActive ? `1px solid ${TEXT.primary}` : '1px solid var(--t-navy)',
                         fontFamily: FONT.sans,
                       }}
                     >
@@ -200,7 +200,7 @@ export default function FilterSortBar({
             <button
               onClick={() => setOpenPanel(null)}
               className="text-[10px] font-semibold mt-2 cursor-pointer"
-              style={{ background: 'none', border: 'none', color: 'var(--t-verde)', fontFamily: FONT.sans, padding: 0 }}
+              style={{ background: 'none', border: 'none', color: 'var(--t-dark-teal)', fontFamily: FONT.sans, padding: 0 }}
             >
               Done
             </button>
@@ -227,7 +227,7 @@ export default function FilterSortBar({
                 style={{
                   background: isActive ? TEXT.primary : 'white',
                   color: isActive ? 'white' : TEXT.secondary,
-                  border: isActive ? `1px solid ${TEXT.primary}` : '1px solid var(--t-linen)',
+                  border: isActive ? `1px solid ${TEXT.primary}` : '1px solid var(--t-navy)',
                   fontFamily: FONT.sans,
                 }}
               >

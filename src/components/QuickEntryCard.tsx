@@ -22,7 +22,7 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
 
   // Category accent colors — subtle, muted
   const categoryColors: Record<string, string> = {
-    activity: '#2a7a56',    // verde
+    activity: '#3a8088',    // dark-teal
     transport: '#5a7a9a',   // steel blue
     dining: '#ee716d',      // honey
     logistics: '#6b8b9a',   // ghost
@@ -125,14 +125,14 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
               onClick={(e) => { e.stopPropagation(); onConfirm(); }}
               className="w-6 h-6 rounded-full flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover/qe:opacity-100"
               style={{
-                background: 'rgba(42,122,86,0.08)',
+                background: 'rgba(58,128,136,0.08)',
                 border: 'none',
                 cursor: 'pointer',
               }}
               aria-label="Confirm entry"
               title="Confirm this entry"
             >
-              <PerriandIcon name="check" size={10} color="var(--t-verde)" />
+              <PerriandIcon name="check" size={10} color="var(--t-dark-teal)" />
             </button>
           )}
 

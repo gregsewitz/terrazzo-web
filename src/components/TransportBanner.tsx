@@ -152,10 +152,10 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
       {transport.isConfirmed && (
         <div
           className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ background: 'rgba(42,122,86,0.1)' }}
+          style={{ background: 'rgba(58,128,136,0.1)' }}
         >
-          <PerriandIcon name="check" size={8} color="var(--t-verde)" />
-          <span style={{ fontFamily: FONT.mono, fontSize: 8, fontWeight: 700, color: 'var(--t-verde)' }}>
+          <PerriandIcon name="check" size={8} color="var(--t-dark-teal)" />
+          <span style={{ fontFamily: FONT.mono, fontSize: 8, fontWeight: 700, color: 'var(--t-dark-teal)' }}>
             Booked
           </span>
         </div>

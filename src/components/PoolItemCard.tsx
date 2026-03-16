@@ -26,7 +26,7 @@ function PoolItemCardInner({ item, onTapDetail, compact = false }: PoolItemCardP
       style={{
         background: item.status === 'placed' ? 'white' : 'rgba(107,139,154,0.06)',
         border: item.status === 'placed'
-          ? `1.5px solid var(--t-verde)`
+          ? `1.5px solid var(--t-dark-teal)`
           : '1.5px dashed var(--t-travertine)',
         borderRadius: 12,
         padding: compact ? '8px 10px' : '10px 12px',

@@ -4,12 +4,13 @@ import React, { useMemo } from 'react';
 import {
   Trip, ImportedPlace, TasteDomain,
   DOMAIN_COLORS, SOURCE_STYLES,
-  GhostSourceType, T,
+  GhostSourceType,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR, SECTION } from '@/constants/theme';
 import { useTripWeather, weatherEmoji, type DestinationWeather } from '@/hooks/useTripWeather';
 import { generateDestColor } from '@/lib/destination-helpers';
+import { TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 
 // ─── Props ───
 
@@ -55,25 +56,10 @@ function placePhotoUrl(placeId?: string, maxWidth = 800): string | null {
   return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${placeId}&key=${key}`;
 }
 
-// Simple hash for consistent placeholder gradients
-function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-// Warm editorial gradient based on a name — used when no photo available
-const PLACE_GRADIENTS = [
-  'linear-gradient(135deg, #e8dcc8 0%, #d4c4a8 100%)',
-  'linear-gradient(135deg, #dce4d8 0%, #b8c8a8 100%)',
-  'linear-gradient(135deg, #d8dce8 0%, #a8b8c8 100%)',
-  'linear-gradient(135deg, #e8d8d4 0%, #c8a8a0 100%)',
-  'linear-gradient(135deg, #e8e0d0 0%, #c8b898 100%)',
-  'linear-gradient(135deg, #d8e0e4 0%, #a8b8c0 100%)',
-];
-
-function placeholderGradient(name: string): string {
-  return PLACE_GRADIENTS[hashString(name) % PLACE_GRADIENTS.length];
+// Brand-palette gradient based on place type — used when no photo available
+function placeholderGradient(type: string): string {
+  const brandHex = TYPE_BRAND_COLORS[type as keyof typeof TYPE_BRAND_COLORS] || COLOR.navy;
+  return `linear-gradient(135deg, ${brandHex}18 0%, ${brandHex}30 100%)`;
 }
 
 // Place type labels for editorial copy
@@ -161,12 +147,14 @@ function useBriefingData(trip: Trip) {
 
 // ─── Section Header ───
 
-function SectionHeader({ kicker, title }: { kicker: string; title?: string }) {
+function SectionHeader({ kicker, title, variant = 'plain' }: { kicker: string; title?: string; variant?: 'plain' | 'editorial' }) {
+  const isEditorial = variant === 'editorial';
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{
-        fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-        textTransform: 'uppercase', color: TEXT.secondary,
+        fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.2em',
+        textTransform: 'uppercase',
+        color: isEditorial ? SECTION.editorial.label : SECTION.plain.accent,
         marginBottom: title ? 6 : 0,
       }}>
         {kicker}
@@ -174,7 +162,8 @@ function SectionHeader({ kicker, title }: { kicker: string; title?: string }) {
       {title && (
         <div style={{
           fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-          color: TEXT.primary, lineHeight: 1.25,
+          color: isEditorial ? SECTION.editorial.headline : SECTION.plain.primary,
+          lineHeight: 1.25,
         }}>
           {title}
         </div>
@@ -187,8 +176,10 @@ function SectionHeader({ kicker, title }: { kicker: string; title?: string }) {
 
 function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }) {
   const photoUrl = place.google?.photoUrl;
-  const gradient = placeholderGradient(place.name);
+  const gradient = placeholderGradient(place.type);
   const typeLabel = TYPE_LABELS[place.type] || place.type;
+  const typeIcon = TYPE_ICONS[place.type as keyof typeof TYPE_ICONS] || 'pin';
+  const brandColor = TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || COLOR.navy;
   const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
 
   return (
@@ -199,7 +190,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
         borderRadius: 16,
         overflow: 'hidden',
         background: 'white',
-        border: '1px solid var(--t-linen)',
+        border: '1px solid var(--t-navy)',
         cursor: 'pointer',
         transition: 'box-shadow 0.2s',
       }}
@@ -209,7 +200,14 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
         height: 180,
         background: photoUrl ? `url(${photoUrl}) center/cover` : gradient,
         position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}>
+        {/* Centered type icon when no photo */}
+        {!photoUrl && (
+          <PerriandIcon name={typeIcon} size={40} color={brandColor} />
+        )}
         {/* Type badge */}
         <div style={{
           position: 'absolute', bottom: 12, left: 14,
@@ -245,13 +243,13 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
       <div style={{ padding: '18px 20px 20px' }}>
         <div style={{
           fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
-          color: TEXT.primary, marginBottom: 4, lineHeight: 1.25,
+          color: SECTION.plain.primary, marginBottom: 4, lineHeight: 1.25,
         }}>
           {place.name}
         </div>
         <div style={{
           fontFamily: FONT.sans, fontSize: 12,
-          color: TEXT.secondary, marginBottom: 12,
+          color: SECTION.plain.secondary, marginBottom: 12,
         }}>
           {place.location}
         </div>
@@ -260,7 +258,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
         {place.terrazzoInsight?.why && (
           <div style={{
             fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-            color: TEXT.primary, marginBottom: 12,
+            color: SECTION.plain.secondary, marginBottom: 12,
           }}>
             {place.terrazzoInsight.why}
           </div>
@@ -321,10 +319,10 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
           }}>
             <div style={{
               width: 26, height: 26, borderRadius: '50%',
-              background: 'rgba(42,122,86,0.1)',
+              background: 'rgba(58,128,136,0.10)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-              color: T.verde, flexShrink: 0,
+              color: COLOR.darkTeal, flexShrink: 0,
             }}>
               {place.friendAttribution.name.charAt(0)}
             </div>
@@ -354,7 +352,7 @@ function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () => void }
             borderRadius: 10,
             background: 'rgba(238,113,109,0.06)',
             fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.5,
-            color: T.amber,
+            color: COLOR.coral,
           }}>
             {place.terrazzoInsight.caveat}
           </div>
@@ -378,7 +376,7 @@ function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: () => v
       {/* Time */}
       {time && (
         <span style={{
-          fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: TEXT.primary,
+          fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: SECTION.editorial.body,
           width: 56, flexShrink: 0,
         }}>
           {time}
@@ -388,12 +386,12 @@ function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: () => v
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{
           fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
-          color: TEXT.primary,
+          color: SECTION.editorial.headline,
         }}>
           {place.name}
         </span>
         <span style={{
-          fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary,
+          fontFamily: FONT.sans, fontSize: 11, color: SECTION.editorial.body,
           marginLeft: 8,
         }}>
           {place.location}
@@ -402,7 +400,7 @@ function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: () => v
       {/* Source indicator */}
       {place.ghostSource && place.ghostSource !== 'manual' && (
         <span style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: TEXT.secondary,
+          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: SECTION.editorial.label,
           textTransform: 'uppercase', letterSpacing: '0.04em',
         }}>
           {SOURCE_STYLES[place.ghostSource]?.label}
@@ -427,7 +425,7 @@ function DayCard({
   return (
     <div style={{
       padding: '20px 0',
-      borderBottom: '1px solid var(--t-linen)',
+      borderBottom: '1px solid rgba(255,255,255,0.12)',
     }}>
       {/* Day header */}
       <div
@@ -436,14 +434,14 @@ function DayCard({
       >
         <span style={{
           fontFamily: FONT.serif, fontSize: 32, fontStyle: 'italic',
-          color: TEXT.secondary, lineHeight: 1,
+          color: SECTION.editorial.cardPrimary, lineHeight: 1,
         }}>
           {day.dayNumber}
         </span>
         <div>
           <div style={{
             fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-            color: TEXT.primary,
+            color: SECTION.editorial.headline,
           }}>
             {trip.flexibleDates
               ? `Day ${day.dayNumber}`
@@ -454,17 +452,17 @@ function DayCard({
             {day.destination && (
               <span style={{
                 fontFamily: FONT.sans, fontSize: 11, fontWeight: 500,
-                color: dColor.text,
+                color: SECTION.editorial.label,
               }}>
                 {day.destination}
               </span>
             )}
             {(day.hotelInfo?.name || day.hotel) && (
               <span style={{
-                fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary,
+                fontFamily: FONT.sans, fontSize: 10, color: SECTION.editorial.body,
                 display: 'flex', alignItems: 'center', gap: 3,
               }}>
-                <PerriandIcon name="hotel" size={10} color={TEXT.secondary} />
+                <PerriandIcon name="hotel" size={10} color={SECTION.editorial.body} />
                 {day.hotelInfo?.name || day.hotel}
               </span>
             )}
@@ -488,7 +486,7 @@ function DayCard({
         <div style={{
           paddingLeft: 44,
           fontFamily: FONT.sans, fontSize: 12,
-          color: TEXT.secondary, fontStyle: 'italic',
+          color: SECTION.editorial.body, fontStyle: 'italic',
         }}>
           Open day — still dreaming
         </div>
@@ -528,9 +526,9 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
     <div style={{
       margin: '0 20px',
       padding: '28px 24px',
-      background: 'white',
+      background: SECTION.plain.cardBg,
       borderRadius: 20,
-      border: '1px solid var(--t-linen)',
+      border: SECTION.plain.cardBorder,
       marginTop: 28,
     }}>
       <SectionHeader
@@ -650,7 +648,7 @@ function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                       {day.precipMm > 1 && (
                         <span style={{
                           fontFamily: FONT.sans, fontSize: 9,
-                          color: '#6b8b9a',
+                          color: COLOR.darkTeal,
                           marginTop: -2,
                         }}>
                           {day.precipMm}mm
@@ -740,8 +738,8 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
       <div style={{ padding: '48px 24px 40px' }}>
         {/* Terrazzo kicker */}
         <div style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.16em',
-          textTransform: 'uppercase', color: TEXT.secondary,
+          fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.2em',
+          textTransform: 'uppercase', color: SECTION.plain.accent,
           marginBottom: 28,
         }}>
           Terrazzo · Trip Briefing
@@ -750,7 +748,7 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
         {/* Trip name */}
         <h1 style={{
           fontFamily: FONT.serif, fontSize: 42, fontStyle: 'italic',
-          fontWeight: 400, color: TEXT.primary,
+          fontWeight: 400, color: SECTION.plain.primary,
           margin: 0, lineHeight: 1.1, letterSpacing: '-0.015em',
           maxWidth: 560,
         }}>
@@ -846,13 +844,13 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
       <div style={{
         margin: '40px 20px 0',
         padding: '36px 24px 12px',
-        background: 'white',
+        background: SECTION.editorial.bg,
         borderRadius: 20,
-        border: '1px solid var(--t-linen)',
       }}>
         <SectionHeader
           kicker="Day by Day"
           title="Your itinerary"
+          variant="editorial"
         />
         <div>
           {trip.days.map(d => (
@@ -910,22 +908,22 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
                 display: 'flex', alignItems: 'flex-start', gap: 14,
                 padding: '18px 20px',
                 borderRadius: 14,
-                background: 'white',
-                border: '1px solid var(--t-linen)',
+                background: SECTION.plain.cardBg,
+                border: SECTION.plain.cardBorder,
               }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%',
-                  background: 'rgba(42,122,86,0.08)',
+                  background: 'rgba(58,128,136,0.10)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic',
-                  color: T.verde, flexShrink: 0,
+                  color: COLOR.darkTeal, flexShrink: 0,
                 }}>
                   {f.name.charAt(0)}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{
                     fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-                    color: 'var(--t-ink)', marginBottom: 4,
+                    color: TEXT.primary, marginBottom: 4,
                   }}>
                     {f.name}
                   </div>
@@ -970,8 +968,8 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
                   <div key={key} style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '8px 14px', borderRadius: 10,
-                    background: 'white',
-                    border: '1px solid var(--t-linen)',
+                    background: SECTION.plain.cardBg,
+                    border: SECTION.plain.cardBorder,
                   }}>
                     <PerriandIcon name={style.icon} size={13} color={style.color} />
                     <span style={{

@@ -5,6 +5,7 @@ import { Trip, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS } from 
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
+import { TYPE_BRAND_COLORS } from '@/constants/placeTypes';
 
 interface OverviewItineraryProps {
   trip: Trip;
@@ -89,10 +90,10 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
                         className="flex items-start gap-2.5 px-3 py-2 cursor-pointer"
                         style={{ background: 'white', borderTop: idx > 0 ? '1px solid var(--t-linen)' : undefined }}
                       >
-                        <div style={{ width: isReservation ? 3 : 2, height: 30, borderRadius: 2, background: isReservation ? srcStyle.color : 'var(--t-verde)', flexShrink: 0, marginTop: 2 }} />
+                        <div style={{ width: isReservation ? 3 : 2, height: 30, borderRadius: 2, background: isReservation ? srcStyle.color : (TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || dColor.accent), flexShrink: 0, marginTop: 2 }} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <PerriandIcon name={SLOT_ICONS[slot.id] as any || 'pin'} size={12} color="var(--t-ink)" />
+                            <PerriandIcon name={SLOT_ICONS[slot.id] as any || 'pin'} size={12} color={dColor.accent} />
                             <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
                             </span>

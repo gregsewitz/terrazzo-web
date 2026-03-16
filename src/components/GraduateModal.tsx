@@ -85,7 +85,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
           style={{ borderBottom: '1px solid var(--t-linen)' }}
         >
           <div className="flex items-center gap-2">
-            <PerriandIcon name="pin" size={18} color="var(--t-verde)" />
+            <PerriandIcon name="pin" size={18} color="var(--t-dark-teal)" />
             <h2
               className="text-lg"
               style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
@@ -208,7 +208,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
                 {totalNights > 0 && (
                   <div
                     className="mt-3 text-[12px] font-medium"
-                    style={{ color: 'var(--t-verde)', fontFamily: FONT.sans }}
+                    style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.sans }}
                   >
                     {totalNights} night{totalNights !== 1 ? 's' : ''}
                     {isMultiCity && ` across ${destinations.length} destinations`}

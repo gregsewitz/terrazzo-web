@@ -32,12 +32,12 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
   return (
     <>
       {/* Success banner */}
-      <div className="flex items-center gap-3 rounded-2xl p-4 mt-1 mb-4" style={{ background: 'rgba(42,122,86,0.06)' }}>
+      <div className="flex items-center gap-3 rounded-2xl p-4 mt-1 mb-4" style={{ background: 'rgba(58,128,136,0.06)' }}>
         <div className="text-2xl">
-          <PerriandIcon name="check" size={28} color="var(--t-verde)" />
+          <PerriandIcon name="check" size={28} color="var(--t-dark-teal)" />
         </div>
         <div>
-          <div className="text-[13px] font-semibold" style={{ color: 'var(--t-verde)' }}>
+          <div className="text-[13px] font-semibold" style={{ color: 'var(--t-dark-teal)' }}>
             {savedPlaces.length} places saved
           </div>
           <div className="text-[10px]" style={{ color: TEXT.secondary }}>
@@ -148,7 +148,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
                     fontFamily: FONT.mono,
                   }}
                 >
-                  {place.matchScore}%
+                  {Math.round(place.matchScore)}%
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>

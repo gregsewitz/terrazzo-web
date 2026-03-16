@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLOR } from '@/constants/theme';
 import { apiFetch } from '@/lib/api-client';
 
 interface EmailConnectViewProps {
@@ -95,7 +95,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
             animation: 'fadeInUp 0.4s ease 0s both',
           }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.ink} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={COLOR.navy} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="4" width="20" height="16" rx="2" />
             <path d="M22 7l-10 7L2 7" />
           </svg>
@@ -107,7 +107,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
             fontFamily: FONT.serif,
             fontSize: 22,
             fontWeight: 400,
-            color: T.ink,
+            color: COLOR.navy,
             lineHeight: 1.3,
             marginBottom: 12,
             animation: 'fadeInUp 0.4s ease 0.05s both',
@@ -121,7 +121,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
           style={{
             fontFamily: FONT.sans,
             fontSize: 14,
-            color: T.ink,
+            color: COLOR.navy,
             lineHeight: 1.6,
             marginBottom: 32,
             animation: 'fadeInUp 0.4s ease 0.1s both',
@@ -130,7 +130,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
           {status === 'connected' ? (
             <>
               {connectedEmail && (
-                <span style={{ fontWeight: 500, color: T.ink }}>{connectedEmail}</span>
+                <span style={{ fontWeight: 500, color: COLOR.navy }}>{connectedEmail}</span>
               )}
               {connectedEmail ? ' is connected. ' : ''}
               We&apos;ll scan for hotel and restaurant confirmations in the background so we can ask you about real places you&apos;ve been.
@@ -139,7 +139,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
             <>
               We can scan your booking confirmations to find hotels and restaurants you&apos;ve actually visited — so later we&apos;ll ask about real places, not random ones.
               <br /><br />
-              <span style={{ fontSize: 12, color: T.ink }}>
+              <span style={{ fontSize: 12, color: COLOR.navy }}>
                 Read-only access. We only look for booking confirmations — nothing else.
               </span>
             </>
@@ -161,8 +161,8 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
               style={{
                 width: 24,
                 height: 24,
-                border: `2px solid ${T.travertine}`,
-                borderTopColor: T.ink,
+                border: `2px solid ${COLOR.peach}`,
+                borderTopColor: COLOR.navy,
                 borderRadius: '50%',
                 animation: 'spin 0.8s linear infinite',
               }}
@@ -179,8 +179,8 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
                   alignItems: 'center',
                   gap: 10,
                   padding: '14px 32px',
-                  background: T.ink,
-                  color: T.cream,
+                  background: COLOR.navy,
+                  color: COLOR.cream,
                   border: 'none',
                   borderRadius: 100,
                   fontSize: 15,
@@ -203,7 +203,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
                 style={{
                   padding: '10px 24px',
                   background: 'transparent',
-                  color: T.ink,
+                  color: COLOR.navy,
                   border: 'none',
                   borderRadius: 100,
                   fontSize: 13,
@@ -224,8 +224,8 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
               className="btn-hover"
               style={{
                 padding: '14px 36px',
-                background: T.ink,
-                color: T.cream,
+                background: COLOR.navy,
+                color: COLOR.cream,
                 border: 'none',
                 borderRadius: 100,
                 fontSize: 15,

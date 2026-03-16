@@ -73,7 +73,7 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   bar:        '#6844a0', // Panton Violet
   hotel:      '#ee716d', // Honey
   cafe:       '#eeb420', // Chrome Yellow
-  museum:     '#2a7a56', // Verde
+  museum:     '#3a8088', // Verde
   activity:   '#e86830', // Panton Orange
   neighborhood: '#6b8b9a', // Ghost
   shop:       '#a06c28', // Amber
@@ -88,22 +88,22 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   design:     '#d63020',
   character:  '#6844a0',
   food:       '#e87080',
-  location:   '#2a7a56',
+  location:   '#3a8088',
   service:    '#a06c28',
   wellness:   '#eeb420',
   // Reactions (use reaction color as accent)
-  myPlace:    '#2a7a56',
+  myPlace:    '#3a8088',
   enjoyed:    '#ee716d',
   mixed:      '#eeb420',
   notMe:      '#d63020',
   // Sources
-  friend:     '#2a7a56',
+  friend:     '#3a8088',
   terrazzo:   '#d63020',
   // Navigation
   plan:       '#d63020',
   // Misc
   star:       '#eeb420',
-  pin:        '#2a7a56',
+  pin:        '#3a8088',
   sparkle:    '#eeb420',
   summer:     '#e86830',
   lightning:  '#e86830',
@@ -111,9 +111,9 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   transport:    '#6b8b9a',
   // Collaboration / Activity
   invite:       '#6366f1',
-  wave:         '#2a7a56',
+  wave:         '#3a8088',
   lightbulb:    '#eeb420',
-  acceptCircle: '#2a7a56',
+  acceptCircle: '#3a8088',
   rejectCircle: '#d63020',
   chatBubble:   '#ee716d',
   loveReaction: '#e87080',
@@ -492,7 +492,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
   bookmark: (s, a) => (
     <>
       <path d="M10,6 L10,26 L16,21 L22,26 L22,6 Z" stroke={s} strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-      <circle cx="16" cy="12" r="1.2" fill={a || 'var(--t-verde, #2a7a56)'} />
+      <circle cx="16" cy="12" r="1.2" fill={a || 'var(--t-verde, #3a8088)'} />
     </>
   ),
 

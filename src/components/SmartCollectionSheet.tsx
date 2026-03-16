@@ -343,7 +343,7 @@ function SmartCollectionSheet({
                         key={tag}
                         className="px-2.5 py-1 rounded-full text-[10px]"
                         style={{
-                          backgroundColor: 'var(--t-verde)', color: 'white',
+                          backgroundColor: 'var(--t-dark-teal)', color: 'white',
                           fontFamily: FONT.mono,
                         }}
                       >

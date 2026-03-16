@@ -125,7 +125,7 @@ export default function DreamingBoard({ onTapDetail, onGraduate }: DreamingBoard
             onClick={onGraduate}
             className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover flex-shrink-0"
             style={{
-              background: 'var(--t-verde)',
+              background: 'var(--t-dark-teal)',
               border: 'none',
               fontFamily: FONT.sans,
               fontSize: 12,
@@ -262,12 +262,12 @@ function DreamCard({ item, onTap }: { item: ImportedPlace; onTap: (item: Importe
             className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
             style={{
               background: item.matchScore >= 85
-                ? 'rgba(42,122,86,0.1)'
+                ? 'rgba(58,128,136,0.1)'
                 : item.matchScore >= 70
                   ? 'rgba(238,113,109,0.1)'
                   : INK['06'],
               color: item.matchScore >= 85
-                ? 'var(--t-verde)'
+                ? 'var(--t-dark-teal)'
                 : item.matchScore >= 70
                   ? '#8a6a2a'
                   : INK['50'],

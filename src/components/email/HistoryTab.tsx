@@ -87,7 +87,7 @@ export const HistoryTab = React.memo(function HistoryTab({
           <button
             onClick={() => onTypeFilterChange('all')}
             className="text-[11px] font-semibold mt-2 bg-transparent border-none cursor-pointer"
-            style={{ color: 'var(--t-verde)' }}
+            style={{ color: 'var(--t-dark-teal)' }}
           >
             Show all
           </button>
@@ -103,7 +103,7 @@ export const HistoryTab = React.memo(function HistoryTab({
               <button
                 onClick={onSelectAll}
                 className="text-[10px] font-semibold bg-transparent border-none cursor-pointer"
-                style={{ color: 'var(--t-verde)' }}
+                style={{ color: 'var(--t-dark-teal)' }}
               >
                 Select all
               </button>

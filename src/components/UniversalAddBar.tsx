@@ -484,7 +484,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 style={{
                   height: 44,
                   background: 'white',
-                  border: '1.5px solid var(--t-linen)',
+                  border: '1.5px solid var(--t-navy)',
                   transition: 'border-color 200ms ease',
                 }}
               >

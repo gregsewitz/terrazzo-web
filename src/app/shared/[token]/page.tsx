@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
 import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { TYPE_ICONS, THUMB_GRADIENTS } from '@/constants/placeTypes';
+import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/placeTypes';
 import { trackInteraction } from '@/lib/interaction-tracker';
 
 // ─── Types for shared data ───
@@ -194,7 +194,7 @@ export default function SharedViewPage() {
           <button
             onClick={() => router.push('/')}
             className="mt-4 text-[11px] cursor-pointer"
-            style={{ color: 'var(--t-verde)', background: 'none', border: 'none', fontFamily: FONT.mono }}
+            style={{ color: 'var(--t-dark-teal)', background: 'none', border: 'none', fontFamily: FONT.mono }}
           >
             Go to Terrazzo →
           </button>
@@ -253,7 +253,7 @@ export default function SharedViewPage() {
               disabled={saving}
               className="w-full py-3 rounded-xl text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 mb-5"
               style={{
-                background: 'var(--t-verde)',
+                background: 'var(--t-dark-teal)',
                 color: 'white',
                 border: 'none',
                 fontFamily: FONT.sans,
@@ -269,13 +269,13 @@ export default function SharedViewPage() {
             <div
               className="w-full py-3 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 mb-5"
               style={{
-                background: 'rgba(42,122,86,0.08)',
-                color: 'var(--t-verde)',
-                border: '1px solid rgba(42,122,86,0.2)',
+                background: 'rgba(58,128,136,0.08)',
+                color: 'var(--t-dark-teal)',
+                border: '1px solid rgba(58,128,136,0.2)',
                 fontFamily: FONT.sans,
               }}
             >
-              <PerriandIcon name="check" size={14} color="var(--t-verde)" />
+              <PerriandIcon name="check" size={14} color="var(--t-dark-teal)" />
               Saved to your library!
             </div>
           )}
@@ -390,7 +390,7 @@ export default function SharedViewPage() {
                           <PerriandIcon
                             name={TYPE_ICONS[slot.placed.type as keyof typeof TYPE_ICONS] || 'location'}
                             size={12}
-                            color={INK['70']}
+                            color={TYPE_BRAND_COLORS[slot.placed.type as keyof typeof TYPE_BRAND_COLORS] || INK['70']}
                           />
                         </div>
                         <div className="min-w-0">
@@ -458,7 +458,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
             background: THUMB_GRADIENTS[place.type as keyof typeof THUMB_GRADIENTS] || THUMB_GRADIENTS.restaurant,
           }}
         >
-          <PerriandIcon name={typeIcon} size={18} color={INK['70']} />
+          <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || INK['70']} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -483,15 +483,15 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
               disabled={isSaved}
               className="text-[9px] px-2 py-1 rounded-full cursor-pointer flex items-center gap-1 flex-shrink-0 transition-all"
               style={{
-                background: isSaved ? 'rgba(42,122,86,0.08)' : INK['04'],
-                color: isSaved ? 'var(--t-verde)' : TEXT.secondary,
-                border: isSaved ? '1px solid rgba(42,122,86,0.2)' : '1px solid transparent',
+                background: isSaved ? 'rgba(58,128,136,0.08)' : INK['04'],
+                color: isSaved ? 'var(--t-dark-teal)' : TEXT.secondary,
+                border: isSaved ? '1px solid rgba(58,128,136,0.2)' : '1px solid transparent',
                 fontFamily: FONT.mono,
                 fontWeight: 600,
               }}
             >
               {isSaved ? (
-                <><PerriandIcon name="check" size={8} color="var(--t-verde)" /> Saved</>
+                <><PerriandIcon name="check" size={8} color="var(--t-dark-teal)" /> Saved</>
               ) : (
                 <><PerriandIcon name="saved" size={8} color={INK['50']} /> Save</>
               )}
@@ -514,7 +514,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
           )}
           {place.matchScore && (
             <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: '#8a6a2a' }}>
-              {place.matchScore}%
+              {Math.round(place.matchScore)}%
             </span>
           )}
         </div>

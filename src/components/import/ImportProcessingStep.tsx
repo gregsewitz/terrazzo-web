@@ -35,7 +35,7 @@ export const ImportProcessingStep = React.memo(function ImportProcessingStep({
             className="h-full rounded-full"
             style={{
               width: `${progressPercent}%`,
-              background: 'linear-gradient(90deg, var(--t-honey), var(--t-verde))',
+              background: 'linear-gradient(90deg, var(--t-honey), var(--t-dark-teal))',
               transition: 'width 0.5s ease-out',
             }}
           />

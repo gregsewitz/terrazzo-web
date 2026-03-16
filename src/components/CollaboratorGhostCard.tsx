@@ -92,7 +92,7 @@ export default function CollaboratorGhostCard({
               onClick={(e) => { e.stopPropagation(); onAccept(); }}
               className="px-2 py-0.5 rounded-md font-semibold transition-all flex items-center gap-0.5 btn-hover"
               style={{
-                background: 'var(--t-verde)',
+                background: 'var(--t-dark-teal)',
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
@@ -118,8 +118,8 @@ export default function CollaboratorGhostCard({
           <span
             className="font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
             style={{
-              background: suggestion.status === 'accepted' ? 'rgba(42,122,86,0.08)' : 'rgba(200,50,50,0.06)',
-              color: suggestion.status === 'accepted' ? 'var(--t-verde)' : TEXT.secondary,
+              background: suggestion.status === 'accepted' ? 'rgba(58,128,136,0.08)' : 'rgba(200,50,50,0.06)',
+              color: suggestion.status === 'accepted' ? 'var(--t-dark-teal)' : TEXT.secondary,
               fontFamily: FONT.mono,
               fontSize: 8,
             }}

@@ -528,7 +528,7 @@ function TripDetailContent() {
                 <button
                   onClick={() => setShowGraduateModal(true)}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover flex-shrink-0"
-                  style={{ background: 'var(--t-verde)', border: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'white' }}
+                  style={{ background: 'var(--t-dark-teal)', border: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'white' }}
                 >
                   <PerriandIcon name="pin" size={13} color="white" />
                   Start Planning
@@ -768,7 +768,7 @@ function TripDetailContent() {
                 <button
                   onClick={() => setShowShareSheet(true)}
                   className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
-                  style={{ background: INK['04'], color: 'var(--t-verde)' }}
+                  style={{ background: INK['04'], color: 'var(--t-dark-teal)' }}
                   title="Share trip"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -803,7 +803,7 @@ function TripDetailContent() {
               <button
                 onClick={() => setShowGraduateModal(true)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer"
-                style={{ background: 'var(--t-verde)', border: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'white' }}
+                style={{ background: 'var(--t-dark-teal)', border: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: 'white' }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7" />

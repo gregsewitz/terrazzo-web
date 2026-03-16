@@ -165,7 +165,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
       style={{
         width: RAIL_WIDTH,
         minHeight: accent ? undefined : 44,
-        borderRight: accent ? `2px solid var(--t-verde)` : `1px solid var(--t-linen)`,
+        borderRight: accent ? `2px solid var(--t-dark-teal)` : `1px solid var(--t-linen)`,
         position: 'relative',
       }}
     >
@@ -176,7 +176,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           fontFamily: FONT.mono,
           fontSize: 9,
           fontWeight: accent ? 600 : 400,
-          color: accent ? 'var(--t-verde)' : INK['50'],
+          color: accent ? 'var(--t-dark-teal)' : INK['50'],
           textTransform: 'uppercase' as const,
           letterSpacing: 1.5,
           whiteSpace: 'nowrap',
@@ -241,9 +241,9 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget;
-          el.style.background = 'rgba(42,122,86,0.06)';
-          el.style.borderColor = 'rgba(42,122,86,0.2)';
-          el.style.color = 'var(--t-verde)';
+          el.style.background = 'rgba(58,128,136,0.06)';
+          el.style.borderColor = 'rgba(58,128,136,0.2)';
+          el.style.color = 'var(--t-dark-teal)';
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget;
@@ -265,7 +265,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         className="flex"
         style={{
           borderBottom: '1px solid var(--t-linen)',
-          background: isDropTarget ? 'rgba(42,122,86,0.04)' : undefined,
+          background: isDropTarget ? 'rgba(58,128,136,0.04)' : undefined,
           transition: 'background 0.15s ease-out',
         }}
       >
@@ -322,8 +322,8 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         className="flex"
         style={{
           borderBottom: '1px solid var(--t-linen)',
-          borderLeft: isDropTarget ? '3px solid var(--t-verde)' : '3px solid transparent',
-          background: isDropTarget ? 'rgba(42,122,86,0.06)' : undefined,
+          borderLeft: isDropTarget ? '3px solid var(--t-dark-teal)' : '3px solid transparent',
+          background: isDropTarget ? 'rgba(58,128,136,0.06)' : undefined,
           transition: 'background 0.2s ease-out, border-left 0.15s ease-out',
         }}
       >
@@ -351,8 +351,8 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                 style={{
                   background: 'white',
                   border: isHolding
-                    ? '1.5px solid var(--t-verde)'
-                    : '1px solid rgba(42,122,86,0.12)',
+                    ? '1.5px solid var(--t-dark-teal)'
+                    : '1px solid rgba(58,128,136,0.12)',
                   opacity: isDragging ? 0.3 : 1,
                   transform: isDragging
                     ? 'scale(0.95)'
@@ -360,7 +360,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                       ? 'scale(0.97) translateY(-1px)'
                       : 'none',
                   boxShadow: isHolding
-                    ? '0 4px 12px rgba(42,122,86,0.15)'
+                    ? '0 4px 12px rgba(58,128,136,0.15)'
                     : 'none',
                   transition: 'opacity 0.2s, transform 0.2s ease-out, border 0.15s, box-shadow 0.15s',
                   touchAction: 'none',
@@ -373,7 +373,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     style={{
                       width: isReservation ? 3 : 2,
                       height: 30,
-                      background: isReservation ? srcStyle.color : 'var(--t-verde)',
+                      background: isReservation ? srcStyle.color : 'var(--t-dark-teal)',
                       opacity: isReservation ? 1 : 0.5,
                     }}
                   />
@@ -544,7 +544,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
       onClick={handleEmptyClick}
       style={{
         borderBottom: '1px solid var(--t-linen)',
-        background: isDropTarget ? 'rgba(42,122,86,0.06)' : 'transparent',
+        background: isDropTarget ? 'rgba(58,128,136,0.06)' : 'transparent',
         transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
     >
@@ -556,7 +556,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
         <span
           className="text-[11px]"
           style={{
-            color: isDropTarget ? 'var(--t-verde)' : INK['70'],
+            color: isDropTarget ? 'var(--t-dark-teal)' : INK['70'],
             fontWeight: isDropTarget ? 600 : 400,
             fontFamily: FONT.sans,
             transition: 'color 0.15s',

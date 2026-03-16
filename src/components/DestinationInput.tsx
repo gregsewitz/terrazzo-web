@@ -198,8 +198,8 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
             key={i}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px]"
             style={{
-              background: dest.lat ? 'rgba(42,122,86,0.08)' : 'rgba(238,113,109,0.1)',
-              color: dest.lat ? 'var(--t-verde)' : TEXT.accent,
+              background: dest.lat ? 'rgba(58,128,136,0.08)' : 'rgba(238,113,109,0.1)',
+              color: dest.lat ? 'var(--t-dark-teal)' : TEXT.accent,
               fontFamily: FONT.sans,
               fontWeight: 500,
             }}

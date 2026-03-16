@@ -113,7 +113,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
               onClick={() => setScope('starred')}
               className="flex-1 py-2.5 rounded-xl text-[12px] font-medium border-none cursor-pointer transition-all flex items-center justify-center gap-1"
               style={{
-                background: scope === 'starred' ? 'var(--t-verde)' : 'var(--t-cream)',
+                background: scope === 'starred' ? 'var(--t-dark-teal)' : 'var(--t-cream)',
                 color: scope === 'starred' ? 'white' : 'var(--t-ink)',
                 fontFamily: FONT.sans,
               }}
@@ -129,7 +129,7 @@ export default function ExportToMaps({ places, collectionName, onClose }: Export
             onClick={handleDownloadKML}
             className="w-full py-3 rounded-xl text-[13px] font-semibold border-none cursor-pointer transition-all active:scale-[0.98]"
             style={{
-              background: exported ? 'var(--t-verde)' : 'var(--t-ink)',
+              background: exported ? 'var(--t-dark-teal)' : 'var(--t-ink)',
               color: 'white',
               fontFamily: FONT.sans,
             }}

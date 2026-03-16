@@ -113,11 +113,11 @@ export default function AddBarSearch({
               className="flex items-center gap-2.5 w-full px-3 py-3 rounded-xl cursor-pointer transition-all"
               style={{
                 background: 'white',
-                border: '1px solid var(--t-linen)',
+                border: '1px solid var(--t-navy)',
                 textAlign: 'left',
               }}
             >
-              <PerriandIcon name="add" size={14} color="var(--t-verde)" />
+              <PerriandIcon name="add" size={14} color="var(--t-dark-teal)" />
               <span style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.primary }}>
                 Search Google for &ldquo;{query}&rdquo;
               </span>
@@ -146,7 +146,7 @@ export default function AddBarSearch({
                         className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl cursor-pointer transition-all text-left"
                         style={{
                           background: 'white',
-                          border: '1px solid var(--t-linen)',
+                          border: '1px solid var(--t-navy)',
                         }}
                       >
                         <span style={{ fontSize: 16, width: 22, textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -158,7 +158,7 @@ export default function AddBarSearch({
                           <p style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, margin: 0 }}>
                             {sl.name}
                           </p>
-                          <p style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-verde)', margin: '1px 0 0' }}>
+                          <p style={{ fontFamily: FONT.mono, fontSize: 9, color: 'var(--t-dark-teal)', margin: '1px 0 0' }}>
                             {sl.matchCount} {sl.matchCount === 1 ? 'place' : 'places'} in {tripContext.destination}
                           </p>
                         </div>
@@ -211,7 +211,7 @@ export default function AddBarSearch({
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl cursor-pointer transition-all"
                   style={{
                     background: 'white',
-                    border: '1px solid var(--t-linen)',
+                    border: '1px solid var(--t-navy)',
                     textAlign: 'left',
                   }}
                 >

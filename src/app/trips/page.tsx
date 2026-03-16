@@ -85,7 +85,7 @@ export default function TripsPage() {
                     className="rounded-2xl border-none cursor-pointer text-left overflow-hidden card-hover w-full"
                     style={{
                       background: 'white',
-                      border: '1.5px solid var(--t-linen)',
+                      border: '1px solid var(--t-navy)',
                     }}
                   >
                   <div className="p-5">
@@ -238,7 +238,7 @@ export default function TripsPage() {
               key={trip.id}
               onClick={() => router.push(`/trips/${trip.id}`)}
               className="flex items-center gap-3 p-4 rounded-xl border-none cursor-pointer text-left transition-all hover:scale-[1.01]"
-              style={{ background: 'white', border: '1.5px solid var(--t-linen)' }}
+              style={{ background: 'white', border: '1px solid var(--t-navy)' }}
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-lg"

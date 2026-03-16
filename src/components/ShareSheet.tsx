@@ -249,7 +249,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
                   onClick={copyLink}
                   className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all"
                   style={{
-                    background: copied ? 'var(--t-verde)' : TEXT.primary,
+                    background: copied ? 'var(--t-dark-teal)' : TEXT.primary,
                     color: TEXT.inverse,
                     border: 'none',
                     fontFamily: FONT.sans,

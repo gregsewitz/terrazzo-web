@@ -50,10 +50,10 @@ export default function RevealPage() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-6 bg-[var(--t-cream)]">
         <div className="max-w-lg w-full text-center">
-          <h2 className="font-display text-[28px] text-[var(--t-ink)] mb-3">
+          <h2 className="font-display text-[28px] text-[var(--t-navy)] mb-3">
             You&apos;re all set
           </h2>
-          <p className="text-[15px] text-[var(--t-ink)]/60 mb-6">
+          <p className="text-[15px] text-[var(--t-navy)]/60 mb-6">
             We captured enough to start showing you personalized recommendations.
             Your profile will sharpen as you use the app.
           </p>
@@ -61,7 +61,7 @@ export default function RevealPage() {
             onClick={handleComplete}
             className="w-full py-3.5 rounded-xl text-[15px] font-medium text-white transition-all
               hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: 'var(--t-ink)' }}
+            style={{ backgroundColor: 'var(--t-navy)' }}
           >
             Start exploring
           </button>

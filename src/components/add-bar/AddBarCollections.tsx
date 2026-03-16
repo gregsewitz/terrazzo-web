@@ -36,7 +36,7 @@ export default function AddBarCollections({
       {/* Place card with photo + AI blurb */}
       <div
         className="rounded-xl mt-3 mb-4 overflow-hidden"
-        style={{ background: 'white', border: '1px solid var(--t-linen)' }}
+        style={{ background: 'white', border: '1px solid var(--t-navy)' }}
       >
         {previewPlace.google?.photoUrl && (
           <div style={{ position: 'relative', width: '100%', height: 180 }}>
@@ -56,7 +56,7 @@ export default function AddBarCollections({
             {previewPlace.type}{previewPlace.location ? ` \u00B7 ${previewPlace.location}` : ''}
           </p>
           {previewPlace.matchScore ? (
-            <p style={{ fontFamily: FONT.mono, fontSize: 10, color: 'var(--t-verde)', margin: '3px 0 0' }}>
+            <p style={{ fontFamily: FONT.mono, fontSize: 10, color: 'var(--t-dark-teal)', margin: '3px 0 0' }}>
               {previewPlace.matchScore}% taste match
             </p>
           ) : null}
@@ -106,7 +106,7 @@ export function AddBarCollectionsCTA({
         disabled={saving}
         className="w-full py-3.5 rounded-xl cursor-pointer transition-all"
         style={{
-          background: saving ? 'var(--t-verde)' : TEXT.primary,
+          background: saving ? 'var(--t-dark-teal)' : TEXT.primary,
           color: 'white',
           border: 'none',
           fontFamily: FONT.sans,

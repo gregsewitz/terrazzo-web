@@ -25,7 +25,7 @@ function place(
     type,
     location,
     source: { type: 'text', name: 'Demo' },
-    matchScore: 0.85 + Math.random() * 0.12,
+    matchScore: Math.round(85 + Math.random() * 12),
     matchBreakdown: {
       Design: 0.8, Atmosphere: 0.7, Character: 0.75,
       Service: 0.6, FoodDrink: 0.85, Setting: 0.7,
@@ -50,7 +50,7 @@ function place(
 
 const septime = place('demo-p1', 'Septime', 'restaurant', 'Paris, France', {
   tasteNote: 'Neo-bistro with a vegetable-forward tasting menu that feels like edible architecture.',
-  matchScore: 0.94,
+  matchScore: 94,
   google: { placeId: 'demo-septime', rating: 4.6, reviewCount: 3200, category: 'restaurant' },
   whatToOrder: ['Seasonal tasting menu', 'Natural wine pairing'],
   tips: ['Book 3 weeks ahead on the dot at midnight', 'Sister bar Septime La Cave next door for a pre-dinner glass'],
@@ -59,58 +59,58 @@ const septime = place('demo-p1', 'Septime', 'restaurant', 'Paris, France', {
 
 const hotelGrandAmour = place('demo-p2', 'Hôtel Grand Amour', 'hotel', 'Paris, France', {
   tasteNote: 'André Saraiva\'s love letter to Parisian bohemia — art-filled, intimate, and effortlessly cool.',
-  matchScore: 0.91,
+  matchScore: 91,
   google: { placeId: 'demo-grandamour', rating: 4.4, reviewCount: 890, category: 'hotel' },
 });
 
 const lefMarais = place('demo-p3', 'Le Marais', 'neighborhood', 'Paris, France', {
   tasteNote: 'The best walking neighborhood in Paris — galleries, vintage shops, falafel, and medieval architecture.',
-  matchScore: 0.88,
+  matchScore: 88,
   status: 'available',
 });
 
 const clown = place('demo-p4', 'Clown Bar', 'bar', 'Paris, France', {
   tasteNote: 'Natural wine bar with a circus-themed Art Nouveau ceiling and inventive small plates.',
-  matchScore: 0.89,
+  matchScore: 89,
   google: { placeId: 'demo-clown', rating: 4.5, reviewCount: 1600, category: 'bar' },
   whatToOrder: ['Sea urchin crème brûlée', 'Whatever\'s open from the Jura'],
 });
 
 const museeDorsay = place('demo-p5', 'Musée d\'Orsay', 'museum', 'Paris, France', {
   tasteNote: 'Impressionist heaven in a converted train station — the building is as much art as the collection.',
-  matchScore: 0.86,
+  matchScore: 86,
   google: { placeId: 'demo-orsay', rating: 4.7, reviewCount: 45000, category: 'museum' },
   tips: ['Go late Thursday when it\'s open until 9:45pm — the crowds thin beautifully'],
 });
 
 const fragments = place('demo-p6', 'Fragments', 'cafe', 'Paris, France', {
   tasteNote: 'Third-wave coffee in a sun-drenched corner of the Haut-Marais, with some of the best pastries in the 3rd.',
-  matchScore: 0.87,
+  matchScore: 87,
   google: { placeId: 'demo-fragments', rating: 4.4, reviewCount: 950, category: 'cafe' },
 });
 
 const sessionsArts = place('demo-p7', 'Sessions Arts Club', 'restaurant', 'London, England', {
   tasteNote: 'Hidden restaurant in a former courthouse — Florence Knight\'s seasonal British cooking in the most dramatic room in London.',
-  matchScore: 0.93,
+  matchScore: 93,
   google: { placeId: 'demo-sessions', rating: 4.5, reviewCount: 1100, category: 'restaurant' },
 });
 
 const ettHem = place('demo-p8', 'Ett Hem', 'hotel', 'Stockholm, Sweden', {
   tasteNote: 'A private home that happens to accept guests — Ilse Crawford\'s masterpiece of warm minimalism.',
-  matchScore: 0.96,
+  matchScore: 96,
   google: { placeId: 'demo-etthem', rating: 4.8, reviewCount: 420, category: 'hotel' },
   accolades: [{ type: 'award', value: 'World\'s 50 Best Hotels', year: '2024' }],
 });
 
 const fotografiska = place('demo-p9', 'Fotografiska', 'museum', 'Stockholm, Sweden', {
   tasteNote: 'Contemporary photography museum with a rooftop restaurant that\'s worth a visit on its own.',
-  matchScore: 0.84,
+  matchScore: 84,
   google: { placeId: 'demo-foto', rating: 4.5, reviewCount: 8200, category: 'museum' },
 });
 
 const oaxen = place('demo-p10', 'Oaxen Krog', 'restaurant', 'Stockholm, Sweden', {
   tasteNote: 'New Nordic fine dining in a converted boathouse on Djurgården — the setting is the story.',
-  matchScore: 0.90,
+  matchScore: 90,
   google: { placeId: 'demo-oaxen', rating: 4.6, reviewCount: 1800, category: 'restaurant' },
   accolades: [{ type: 'michelin', value: '2 Stars', year: '2024' }],
 });

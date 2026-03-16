@@ -159,7 +159,7 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
     <div className="flex flex-col h-full">
       {/* Compact header — prompt + progress inline */}
       <div className="flex-shrink-0 px-4 pt-1 pb-2 flex items-center gap-4">
-        <h2 className="font-display text-[18px] text-[var(--t-ink)] leading-tight whitespace-nowrap">
+        <h2 className="font-display text-[18px] text-[var(--t-navy)] leading-tight whitespace-nowrap">
           {promptText}
         </h2>
         {/* Thin progress bar — fills remaining space */}
@@ -170,15 +170,15 @@ export default function VisualTasteView({ onComplete }: VisualTasteViewProps) {
               className="flex-1 h-[2px] rounded-full transition-all duration-500"
               style={{
                 backgroundColor: i < round
-                  ? 'var(--t-ink)'
+                  ? 'var(--t-navy)'
                   : i === round
-                    ? 'var(--t-honey)'
-                    : 'var(--t-travertine)',
+                    ? 'var(--t-ochre)'
+                    : 'var(--t-peach)',
               }}
             />
           ))}
         </div>
-        <span className="font-mono text-[10px] text-[var(--t-ink)] whitespace-nowrap">
+        <span className="font-mono text-[10px] text-[var(--t-navy)] whitespace-nowrap">
           {round + 1}/{TOTAL_ROUNDS}
         </span>
       </div>
@@ -300,7 +300,7 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
             : 'scale(1)',
         opacity: isDeselected ? 0.35 : 1,
         boxShadow: isSelected
-          ? '0 8px 30px rgba(0,0,0,0.25), inset 0 0 0 2.5px var(--t-honey)'
+          ? '0 8px 30px rgba(0,0,0,0.25), inset 0 0 0 2.5px var(--t-ochre)'
           : '0 2px 12px rgba(0,0,0,0.08)',
       }}
       onClick={handleClick}
@@ -364,7 +364,7 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
         <div
           className="absolute inset-0 rounded-[16px] pointer-events-none"
           style={{
-            boxShadow: 'inset 0 0 0 3px var(--t-honey)',
+            boxShadow: 'inset 0 0 0 3px var(--t-ochre)',
           }}
         />
       )}
@@ -429,7 +429,7 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
       <div
         className="absolute top-3 right-3 px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none"
         style={{
-          background: isSelected ? 'var(--t-honey)' : 'rgba(255,255,255,0.15)',
+          background: isSelected ? 'var(--t-ochre)' : 'rgba(255,255,255,0.15)',
           transition: 'background 300ms ease, transform 300ms ease',
           transform: isSelected ? 'scale(1.05)' : 'scale(1)',
         }}
@@ -438,7 +438,7 @@ function SplashCard({ item, isSelected, isDeselected, isAnimating, onSelect }: S
           className="font-mono uppercase tracking-wider"
           style={{
             fontSize: 10,
-            color: isSelected ? 'var(--t-ink)' : 'rgba(255,255,255,0.8)',
+            color: isSelected ? 'var(--t-navy)' : 'rgba(255,255,255,0.8)',
           }}
         >
           {isSelected ? 'Chosen' : 'Choose'}

@@ -213,7 +213,7 @@ function PlaceSearchInputInner({
     { value: 'neighborhood', label: 'Neighborhood' },
   ];
 
-  const accentColor = 'var(--t-verde)';
+  const accentColor = 'var(--t-dark-teal)';
 
   // Shared input style
   const inputStyle: React.CSSProperties = {
@@ -231,7 +231,7 @@ function PlaceSearchInputInner({
   };
 
   const inputFocusBorder = `1.5px solid ${accentColor}`;
-  const inputFocusShadow = `0 0 0 3px rgba(42, 122, 86, 0.08)`;
+  const inputFocusShadow = `0 0 0 3px rgba(58, 128, 136, 0.08)`;
 
   // ═══ CUSTOM MODE ═══
   if (mode === 'custom') {

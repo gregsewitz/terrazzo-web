@@ -100,17 +100,17 @@ export default function GapFillPage() {
       <div className="flex-shrink-0 px-5 pt-5 pb-3">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/30">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-navy)]/30">
               Gap fill &middot; {currentDomainIndex + 1} of {totalDomains}
             </p>
-            <h1 className="font-display text-[22px] text-[var(--t-ink)] leading-tight">
+            <h1 className="font-display text-[22px] text-[var(--t-navy)] leading-tight">
               {DOMAIN_DISPLAY[currentDomain.domain] || currentDomain.domain}
             </h1>
           </div>
           <button
             onClick={handleNext}
             className="text-[13px] px-3 py-1 rounded-full"
-            style={{ color: 'var(--t-ink)', opacity: 0.4, border: '1px solid rgba(28, 26, 23, 0.1)' }}
+            style={{ color: 'var(--t-navy)', opacity: 0.4, border: '1px solid rgba(28, 26, 23, 0.1)' }}
           >
             Skip
           </button>
@@ -124,16 +124,16 @@ export default function GapFillPage() {
               className="h-1 rounded-full flex-1 transition-all duration-500"
               style={{
                 backgroundColor: i < currentDomainIndex
-                  ? 'var(--t-verde)'
+                  ? 'var(--t-dark-teal)'
                   : i === currentDomainIndex
-                    ? 'var(--t-honey)'
+                    ? 'var(--t-ochre)'
                     : 'var(--t-travertine)',
               }}
             />
           ))}
         </div>
 
-        <p className="text-[14px] text-[var(--t-ink)]/50 leading-relaxed mb-2">
+        <p className="text-[14px] text-[var(--t-navy)]/50 leading-relaxed mb-2">
           {DOMAIN_PROMPTS[currentDomain.domain] || 'React to these places to sharpen your taste profile.'}
         </p>
       </div>
@@ -160,7 +160,7 @@ export default function GapFillPage() {
             hover:opacity-90 active:scale-[0.98]
             ${allReacted ? 'opacity-100 translate-y-0' : 'opacity-40 translate-y-1'}
           `}
-          style={{ backgroundColor: 'var(--t-ink)' }}
+          style={{ backgroundColor: 'var(--t-navy)' }}
         >
           {isLastDomain ? "On to Act II" : "Next domain"}
         </button>

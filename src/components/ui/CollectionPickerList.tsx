@@ -96,16 +96,16 @@ export default function CollectionPickerList({
               onClick={() => onToggle(sl.id)}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer w-full text-left"
               style={{
-                background: active ? 'rgba(42,122,86,0.04)' : 'white',
-                border: active ? '1.5px solid var(--t-verde)' : '1px solid var(--t-linen)',
+                background: active ? 'rgba(58,128,136,0.04)' : 'white',
+                border: active ? '1.5px solid var(--t-dark-teal)' : '1px solid var(--t-navy)',
               }}
             >
               {/* Icon */}
               <span style={{ fontSize: isIcon ? 14 : 16, width: 20, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {isIcon ? (
-                  <PerriandIcon name={sl.emoji as any} size={14} color={active ? 'var(--t-verde)' : TEXT.secondary} />
+                  <PerriandIcon name={sl.emoji as any} size={14} color={active ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 ) : (
-                  <PerriandIcon name="pin" size={14} color={active ? 'var(--t-verde)' : TEXT.secondary} />
+                  <PerriandIcon name="pin" size={14} color={active ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 )}
               </span>
 
@@ -122,7 +122,7 @@ export default function CollectionPickerList({
               {/* Checkmark */}
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: active ? 'var(--t-verde)' : INK['06'] }}
+                style={{ background: active ? 'var(--t-dark-teal)' : INK['06'] }}
               >
                 {active && (
                   <span style={{ color: 'white', fontSize: 11, fontWeight: 700 }}>&#10003;</span>
@@ -174,7 +174,7 @@ export default function CollectionPickerList({
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer transition-all hover:opacity-80"
             style={{
               background: 'none',
-              border: `1.5px dashed ${INK['12']}`,
+              border: '1.5px dashed var(--t-navy)',
               color: TEXT.secondary,
               fontFamily: FONT.sans,
               fontSize: 12,

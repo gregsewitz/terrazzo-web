@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import { useSavedStore } from '@/stores/savedStore';
 import { useBriefing } from '@/hooks/useBriefing';
 import { getPlaceImage } from '@/constants/placeImages';
-import { PHOTO_GRADIENTS } from '@/constants/placeTypes';
+import { PHOTO_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import { formatDomain } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
@@ -202,15 +202,24 @@ function PlaceDetailContent({
         style={{
           height: photoHeight,
           background: PHOTO_GRADIENTS[item.type] || PHOTO_GRADIENTS.restaurant,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {getPlaceImage(item.name) && (
+        {getPlaceImage(item.name) ? (
           <PlacePhoto
             src={getPlaceImage(item.name)}
             alt={item.name}
             fill
             sizes={isDesktop ? '440px' : '100vw'}
             style={{ position: 'absolute', top: 0, left: 0 }}
+          />
+        ) : (
+          <PerriandIcon
+            name={TYPE_ICONS[item.type] || 'pin'}
+            size={48}
+            color={TYPE_BRAND_COLORS[item.type] || '#002a55'}
           />
         )}
         {/* Gradient overlay for text legibility */}
@@ -311,13 +320,13 @@ function PlaceDetailContent({
                 onClick={onCollectionTap}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${collectionBadgeHoverClass}`}
                 style={{
-                  background: isInCollections ? 'rgba(42,122,86,0.06)' : INK['03'],
-                  border: isInCollections ? '1.5px solid rgba(42,122,86,0.2)' : `1.5px solid ${INK['08']}`,
+                  background: isInCollections ? 'rgba(58,128,136,0.08)' : INK['03'],
+                  border: isInCollections ? '1.5px solid rgba(58,128,136,0.2)' : `1.5px solid ${INK['08']}`,
                 }}
               >
-                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isInCollections ? 'var(--t-verde)' : TEXT.secondary} />
+                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isInCollections ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 <span className={`${collectionBadgeFontSize} font-semibold`} style={{
-                  color: isInCollections ? 'var(--t-verde)' : TEXT.secondary,
+                  color: isInCollections ? 'var(--t-dark-teal)' : TEXT.secondary,
                   fontFamily: FONT.mono,
                 }}>
                   {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
@@ -471,9 +480,9 @@ function PlaceDetailContent({
         {/* Friend attribution */}
         {item.friendAttribution && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
-            <div className="mb-5" style={{ background: 'rgba(42,122,86,0.08)', borderLeft: '3px solid var(--t-verde)', padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
-              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'var(--t-verde)', fontFamily: FONT.mono }}>
-                <PerriandIcon name="friend" size={12} color="var(--t-verde)" />{item.friendAttribution.name}
+            <div className="mb-5" style={{ background: 'rgba(58,128,136,0.08)', borderLeft: '3px solid var(--t-dark-teal)', padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
+              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}>
+                <PerriandIcon name="friend" size={12} color="var(--t-dark-teal)" />{item.friendAttribution.name}
               </div>
               {item.friendAttribution.note && <p className={`${friendAttributionFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>&ldquo;{item.friendAttribution.note}&rdquo;</p>}
             </div>
@@ -502,7 +511,7 @@ function PlaceDetailContent({
         {item.terrazzoInsight && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="flex flex-col gap-3 mb-5">
-              <div className="p-4 rounded-2xl" style={{ background: 'rgba(42,122,86,0.08)', border: '1px solid rgba(42,122,86,0.16)' }}>
+              <div className="p-4 rounded-2xl" style={{ background: 'rgba(58,128,136,0.08)', border: '1px solid rgba(58,128,136,0.16)' }}>
                 <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5" style={{ color: '#226848', fontFamily: FONT.mono }}>
                   <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You&apos;ll Love It
                 </h4>

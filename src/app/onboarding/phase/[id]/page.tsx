@@ -142,7 +142,7 @@ export default function PhasePage() {
   if (!phase) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-[var(--t-cream)]">
-        <p className="text-[var(--t-ink)]">Phase not found</p>
+        <p className="text-[var(--t-navy)]">Phase not found</p>
       </div>
     );
   }
@@ -156,19 +156,19 @@ export default function PhasePage() {
             {!isFirstPhase && (
               <button
                 onClick={handleBack}
-                className="flex items-center justify-center w-7 h-7 rounded-full bg-[var(--t-ink)]/5 hover:bg-[var(--t-ink)]/10 transition-colors"
+                className="flex items-center justify-center w-7 h-7 rounded-full bg-[var(--t-navy)]/5 hover:bg-[var(--t-navy)]/10 transition-colors"
                 aria-label="Go back"
               >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[var(--t-ink)]">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[var(--t-navy)]">
                   <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
             )}
-            <h1 className="font-display text-[20px] text-[var(--t-ink)] leading-tight">
+            <h1 className="font-display text-[20px] text-[var(--t-navy)] leading-tight">
               {phase.title}
             </h1>
           </div>
-          <span className="font-mono text-[10px] text-[var(--t-ink)] tabular-nums">
+          <span className="font-mono text-[10px] text-[var(--t-navy)] tabular-nums">
             {completedCount}/{activePhaseCount}
           </span>
         </div>

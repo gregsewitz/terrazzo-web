@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
-import { T } from '@/types';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { computeValueAssessment, getPriceLabel } from '@/lib/price-value';
 import type { ValueAssessment } from '@/lib/price-value';
 
@@ -20,9 +19,9 @@ interface ValueBadgeProps {
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
 const SENTIMENT_COLORS: Record<ValueAssessment['sentiment'], string> = {
-  positive: T.verde,
-  neutral: T.amber,
-  cautious: T.signalRed,
+  positive: COLOR.darkTeal,
+  neutral: COLOR.ochre,
+  cautious: COLOR.signalRed,
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────────

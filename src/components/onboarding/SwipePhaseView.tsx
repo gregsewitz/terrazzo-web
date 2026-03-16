@@ -3,8 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal } from '@/types';
-import { T } from '@/types';
-import { FONT, TEXT, INK } from '@/constants/theme';
+import { COLOR, FONT, TEXT, INK } from '@/constants/theme';
 
 // ─── Swipe Card Definitions ───
 
@@ -81,7 +80,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
       <div style={{
         textAlign: 'center',
         padding: 48,
-        color: T.ink,
+        color: TEXT.primary,
         animation: 'fadeInUp 0.4s ease both',
       }}>
         <p style={{ fontSize: 16, fontFamily: FONT.serif, color: TEXT.secondary }}>
@@ -110,7 +109,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
                 width: i === currentIndex ? 24 : 8,
                 height: 8,
                 borderRadius: 4,
-                background: i < currentIndex ? T.honey : i === currentIndex ? T.ink : INK['12'],
+                background: i < currentIndex ? COLOR.ochre : i === currentIndex ? TEXT.primary : INK['12'],
                 transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             />
@@ -124,7 +123,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
           style={{
             fontSize: 18,
             fontWeight: 500,
-            color: T.ink,
+            color: TEXT.primary,
             textAlign: 'center',
             margin: 0,
             padding: '0 8px',
@@ -155,9 +154,9 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
             style={{
               flex: 1,
               padding: '28px 16px',
-              border: `1.5px solid ${selectedChoice === 'a' ? T.honey : INK['10']}`,
+              border: `1.5px solid ${selectedChoice === 'a' ? COLOR.ochre : INK['10']}`,
               borderRadius: 16,
-              background: selectedChoice === 'a' ? 'rgba(238,113,109,0.06)' : T.cream,
+              background: selectedChoice === 'a' ? 'rgba(238,113,109,0.06)' : COLOR.cream,
               cursor: 'pointer',
               textAlign: 'center',
               transition: 'all 0.2s ease',
@@ -173,7 +172,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
               display: 'block',
               fontSize: 15,
               fontWeight: 500,
-              color: T.ink,
+              color: TEXT.primary,
               fontFamily: FONT.sans,
               lineHeight: 1.35,
             }}>
@@ -182,7 +181,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
             {currentCard.optionA.description && (
               <span style={{
                 fontSize: 12,
-                color: T.ink,
+                color: TEXT.primary,
                 fontFamily: FONT.sans,
                 letterSpacing: '0.02em',
               }}>
@@ -198,9 +197,9 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
             style={{
               flex: 1,
               padding: '28px 16px',
-              border: `1.5px solid ${selectedChoice === 'b' ? T.honey : INK['10']}`,
+              border: `1.5px solid ${selectedChoice === 'b' ? COLOR.ochre : INK['10']}`,
               borderRadius: 16,
-              background: selectedChoice === 'b' ? 'rgba(238,113,109,0.06)' : T.cream,
+              background: selectedChoice === 'b' ? 'rgba(238,113,109,0.06)' : COLOR.cream,
               cursor: 'pointer',
               textAlign: 'center',
               transition: 'all 0.2s ease',
@@ -216,7 +215,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
               display: 'block',
               fontSize: 15,
               fontWeight: 500,
-              color: T.ink,
+              color: TEXT.primary,
               fontFamily: FONT.sans,
               lineHeight: 1.35,
             }}>
@@ -225,7 +224,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
             {currentCard.optionB.description && (
               <span style={{
                 fontSize: 12,
-                color: T.ink,
+                color: TEXT.primary,
                 fontFamily: FONT.sans,
                 letterSpacing: '0.02em',
               }}>
@@ -238,7 +237,7 @@ export default function SwipePhaseView({ onComplete, cards }: SwipePhaseViewProp
         {/* Card counter */}
         <p style={{
           fontSize: 11,
-          color: T.ink,
+          color: TEXT.primary,
           fontFamily: FONT.mono,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',

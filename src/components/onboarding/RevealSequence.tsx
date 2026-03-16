@@ -48,16 +48,24 @@ const stageVariants = {
 
 // ─── Brand Palette ───
 const BRAND = {
+  coral: '#ee716d',
+  ochre: '#e0a501',
+  darkTeal: '#3a8088',
+  olive: '#6B7C4E',
+  periwinkle: '#3869a4',
+  peach: '#e7a8a1',
+  navy: '#002a55',
+  cream: '#FBF5EC',
+  blush: '#f1e7e5',
   signalRed: '#d63020',
-  chromeYellow: '#eeb420',
-  pantonOrange: '#e86830',
-  verde: '#2a7a56',
-  pantonViolet: '#6844a0',
-  royerePink: '#e87080',
+  // Legacy aliases
   ink: '#002a55',
-  warmWhite: '#f5f0e6',
-  travertine: '#e8dcc8',
-  cream: '#f8f3ea',
+  chromeYellow: '#e0a501',
+  pantonOrange: '#ee716d',
+  verde: '#3a8088',
+  pantonViolet: '#6B7C4E',
+  royerePink: '#e7a8a1',
+  warmWhite: '#FBF5EC',
 };
 
 // ─── Shared decorative elements ───
@@ -401,7 +409,7 @@ const RevealSequence = memo(function RevealSequence({
             style={{
               width: '100%', padding: '14px 0',
               borderRadius: 14, border: 'none',
-              background: 'var(--t-ink)', color: 'var(--t-cream)',
+              background: 'var(--t-navy)', color: 'var(--t-cream)',
               fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
               cursor: 'pointer',
             }}

@@ -18,7 +18,7 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
 };
 
 const REACTIONS: { id: ReactionId; icon: PerriandIconName; label: string; color: string }[] = [
-  { id: 'myPlace', icon: 'myPlace', label: 'Obsessed', color: '#2a7a56' },
+  { id: 'myPlace', icon: 'myPlace', label: 'Obsessed', color: '#3a8088' },
   { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: '#ee716d' },
   { id: 'mixed', icon: 'mixed', label: 'Mixed', color: '#eeb420' },
   { id: 'notMe', icon: 'notMe', label: 'Not me', color: '#d63020' },
@@ -61,13 +61,13 @@ export const ReservationRow = React.memo(function ReservationRow({
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); }
         }}
         className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors"
-        style={{ background: isSelected ? 'rgba(42,122,86,0.03)' : 'transparent' }}
+        style={{ background: isSelected ? 'rgba(58,128,136,0.03)' : 'transparent' }}
       >
         {/* Checkbox */}
         <div
           className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 transition-all"
           style={{
-            background: isSelected ? 'var(--t-verde)' : 'white',
+            background: isSelected ? 'var(--t-dark-teal)' : 'white',
             border: isSelected ? 'none' : '1.5px solid var(--t-linen)',
           }}
         >

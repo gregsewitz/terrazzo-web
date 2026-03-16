@@ -198,7 +198,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
             className="px-2 py-0.5 rounded-md"
             style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(238,113,109,0.1)', color: '#8a6a2a' }}
           >
-            {place.matchScore}%
+            {Math.round(place.matchScore)}%
           </span>
         </div>
       </div>
@@ -230,9 +230,9 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
           {isReservation && (
             <span
               className="px-2 py-0.5 rounded-md flex items-center gap-0.5"
-              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}
             >
-              <PerriandIcon name="check" size={10} color="var(--t-verde)" />
+              <PerriandIcon name="check" size={10} color="var(--t-dark-teal)" />
               Reservation
             </span>
           )}
@@ -276,13 +276,13 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
 
         {/* Friend note */}
         {place.friendAttribution && (
-          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(42,122,86,0.03)', border: '1px solid rgba(42,122,86,0.08)' }}>
+          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(58,128,136,0.03)', border: '1px solid rgba(58,128,136,0.08)' }}>
             <div className="flex items-start gap-1.5">
               <div style={{ flexShrink: 0, marginTop: 1 }}>
-                <PerriandIcon name="friend" size={11} color="var(--t-verde)" />
+                <PerriandIcon name="friend" size={11} color="var(--t-dark-teal)" />
               </div>
               <div>
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: 'var(--t-verde)' }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: 'var(--t-dark-teal)' }}>
                   {place.friendAttribution.name}
                 </span>
                 {place.friendAttribution.note && (

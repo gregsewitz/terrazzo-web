@@ -1017,14 +1017,14 @@ function ProfilePageContent() {
                         {emailLoading ? (
                           <span className="text-[10px]" style={{ color: TEXT.secondary }}>Checking…</span>
                         ) : emailStatus?.connected ? (
-                          <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
+                          <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)' }}>
                             Connected
                           </span>
                         ) : (
                           <a
                             href="/api/auth/nylas/connect"
                             className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                            style={{ background: 'var(--t-verde)', color: 'white', textDecoration: 'none' }}
+                            style={{ background: 'var(--t-dark-teal)', color: 'white', textDecoration: 'none' }}
                           >
                             Connect
                           </a>
@@ -1041,7 +1041,7 @@ function ProfilePageContent() {
                               onClick={handleScanNow}
                               disabled={scanState === 'scanning' || scanState === 'parsing'}
                               className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer"
-                              style={{ background: '#2a7a56', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}
+                              style={{ background: '#3a8088', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}
                             >
                               {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${scanResult?.emailsParsed ? ` ${scanResult.emailsParsed}/${scanResult.emailsFound}` : '…'}` : scanState === 'done' ? '✓ Done' : scanState === 'failed' ? 'Retry Scan' : 'Scan Inbox'}
                             </button>
@@ -1087,7 +1087,7 @@ function ProfilePageContent() {
                           <PerriandIcon name="pin" size={12} color="var(--t-ink)" />
                           <span className="text-[11px]" style={{ color: TEXT.primary }}>Google Maps</span>
                         </div>
-                        <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(42,122,86,0.08)', color: 'var(--t-verde)' }}>
+                        <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)' }}>
                           Via import
                         </span>
                       </div>
@@ -1180,8 +1180,8 @@ function ProfilePageContent() {
               disabled={isResynthesizing}
               className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-2"
               style={{
-                background: isResynthesizing ? 'rgba(42,122,86,0.03)' : 'rgba(42,122,86,0.06)',
-                border: '1px dashed rgba(42,122,86,0.2)',
+                background: isResynthesizing ? 'rgba(58,128,136,0.03)' : 'rgba(58,128,136,0.06)',
+                border: '1px dashed rgba(58,128,136,0.2)',
                 opacity: isResynthesizing ? 0.7 : 1,
               }}
             >
@@ -1194,7 +1194,7 @@ function ProfilePageContent() {
                 {resynthesisResult === 'error' && <span style={{ color: '#c44', fontSize: 12 }}>Failed</span>}
               </div>
               {!isResynthesizing && !resynthesisResult && (
-                <span style={{ color: 'var(--t-verde)', fontSize: 12 }}>→</span>
+                <span style={{ color: 'var(--t-dark-teal)', fontSize: 12 }}>→</span>
               )}
             </button>
 
@@ -1475,7 +1475,7 @@ function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-[13px] font-semibold" style={{ color: COLOR.ochre }}>{place.name}</span>
                     <span className="text-[10px]" style={{ color: COLOR.navy }}>{place.location}</span>
-                    <span className="text-[10px] font-bold ml-auto" style={{ color: COLOR.ochre, fontFamily: FONT.mono }}>{place.score <= 1 ? Math.round(place.score * 100) : place.score}</span>
+                    <span className="text-[10px] font-bold ml-auto" style={{ color: COLOR.ochre, fontFamily: FONT.mono }}>{Math.round(place.score)}</span>
                   </div>
                   <p className="text-[11px] leading-relaxed" style={{ color: COLOR.navy }}>{place.connection}</p>
                 </div>
@@ -1621,7 +1621,7 @@ function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                         </div>
                         <p className="text-[10px] italic" style={{ color: COLOR.navy }}>{p.vibe}</p>
                       </div>
-                      <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{p.score <= 1 ? Math.round(p.score * 100) : p.score}</span>
+                      <span className="text-[10px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{Math.round(p.score)}</span>
                     </SafeMotionDiv>
                   </PlaceLink>
                 );

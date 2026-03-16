@@ -315,16 +315,16 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           >
             {msg.role === 'ai' ? (
               <div className="space-y-1">
-                <p className="text-[15px] leading-relaxed text-[var(--t-ink)]">
+                <p className="text-[15px] leading-relaxed text-[var(--t-navy)]">
                   {msg.text}
                 </p>
               </div>
             ) : (
               <div
                 className="rounded-2xl rounded-br-sm px-4 py-3"
-                style={{ backgroundColor: 'var(--t-travertine)' }}
+                style={{ backgroundColor: 'var(--t-peach)' }}
               >
-                <p className="text-[15px] leading-relaxed text-[var(--t-ink)]">
+                <p className="text-[15px] leading-relaxed text-[var(--t-navy)]">
                   {msg.text}
                 </p>
               </div>
@@ -339,7 +339,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
               className="rounded-2xl rounded-br-sm px-4 py-3 opacity-50"
               style={{ backgroundColor: 'var(--t-travertine)' }}
             >
-              <p className="text-[15px] leading-relaxed text-[var(--t-ink)] italic">
+              <p className="text-[15px] leading-relaxed text-[var(--t-navy)] italic">
                 {transcript}
               </p>
             </div>
@@ -348,16 +348,16 @@ export default function ConversationView({ phase, onComplete }: ConversationView
 
         {isAnalyzing && (
           <div className="mr-auto flex items-center gap-1.5 py-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-honey)] animate-pulse" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-honey)] animate-pulse [animation-delay:0.2s]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-honey)] animate-pulse [animation-delay:0.4s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-ochre)] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-ochre)] animate-pulse [animation-delay:0.2s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--t-ochre)] animate-pulse [animation-delay:0.4s]" />
           </div>
         )}
 
         {/* End-of-phase anchor verification — batched */}
         {isPhaseComplete && anchorsForReview.length > 0 && (
           <div className="mr-auto max-w-[85%] space-y-2 message-enter">
-            <p className="text-[15px] leading-relaxed text-[var(--t-ink)]">
+            <p className="text-[15px] leading-relaxed text-[var(--t-navy)]">
               Before we move on — you mentioned {anchorsForReview.length === 1 ? 'a place' : 'a few places'}. Just want to make sure I caught {anchorsForReview.length === 1 ? 'it' : 'them'} right.
             </p>
             {anchorsForReview.map((anchor) => (
@@ -374,7 +374,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
       </div>
 
       {/* Input Area — anchored to bottom */}
-      <div className="flex-shrink-0 border-t border-[var(--t-travertine)] px-4 py-3 bg-[var(--t-cream)] max-w-2xl mx-auto w-full">
+      <div className="flex-shrink-0 border-t border-[var(--t-peach)] px-4 py-3 bg-[var(--t-cream)] max-w-2xl mx-auto w-full">
         {isPhaseComplete ? (
           <button
             onClick={() => {
@@ -384,13 +384,13 @@ export default function ConversationView({ phase, onComplete }: ConversationView
             }}
             className="w-full py-3 rounded-xl text-[14px] font-medium text-white transition-all
               hover:opacity-90 active:scale-[0.98] relative overflow-hidden"
-            style={{ backgroundColor: 'var(--t-ink)' }}
+            style={{ backgroundColor: 'var(--t-navy)' }}
           >
             {autoAdvancing ? (
               <>
                 <span className="relative z-10">Continuing...</span>
                 <div
-                  className="absolute inset-0 bg-[var(--t-honey)]/20 origin-left animate-[fillBar_2s_ease-out_forwards]"
+                  className="absolute inset-0 bg-[var(--t-ochre)]/20 origin-left animate-[fillBar_2s_ease-out_forwards]"
                 />
               </>
             ) : 'Continue'}
@@ -408,8 +408,8 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center transition-all border
                   ${ttsEnabled
-                    ? 'border-[var(--t-honey)] text-[var(--t-honey)]'
-                    : 'border-[var(--t-travertine)] text-[var(--t-ink)]/30'
+                    ? 'border-[var(--t-ochre)] text-[var(--t-ochre)]'
+                    : 'border-[var(--t-peach)] text-[var(--t-navy)]/30'
                   }
                 `}
                 title={ttsEnabled ? 'Voice output on' : 'Voice output off'}
@@ -435,10 +435,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                   ${voiceState === 'listening'
                     ? 'bg-[var(--t-signal-red)] text-white scale-110'
                     : voiceState === 'speaking'
-                      ? 'bg-[var(--t-honey)] text-white'
+                      ? 'bg-[var(--t-ochre)] text-white'
                       : voiceState === 'thinking'
-                        ? 'bg-[var(--t-travertine)] text-[var(--t-ink)]/40'
-                        : 'bg-[var(--t-ink)] text-[var(--t-cream)] hover:scale-105 active:scale-110'
+                        ? 'bg-[var(--t-peach)] text-[var(--t-navy)]/40'
+                        : 'bg-[var(--t-navy)] text-[var(--t-cream)] hover:scale-105 active:scale-110'
                   }
                 `}
               >
@@ -473,7 +473,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                   if (isListening) stopListening();
                 }}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all
-                  border border-[var(--t-travertine)] text-[var(--t-ink)]/30 hover:text-[var(--t-ink)]/60"
+                  border border-[var(--t-peach)] text-[var(--t-navy)]/30 hover:text-[var(--t-navy)]/60"
                 title="Switch to typing"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -488,7 +488,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
             </div>
 
             {/* Status text */}
-            <p className="text-[12px] font-mono text-[var(--t-ink)]">
+            <p className="text-[12px] font-mono text-[var(--t-navy)]">
               {voiceState === 'listening' && 'Listening...'}
               {voiceState === 'speaking' && 'Speaking...'}
               {voiceState === 'thinking' && 'Thinking...'}
@@ -507,8 +507,8 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                   resetTranscript();
                 }}
                 className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
-                  transition-all border border-[var(--t-travertine)] text-[var(--t-ink)]/40
-                  hover:border-[var(--t-honey)] hover:text-[var(--t-honey)]"
+                  transition-all border border-[var(--t-peach)] text-[var(--t-navy)]/40
+                  hover:border-[var(--t-ochre)] hover:text-[var(--t-ochre)]"
                 title="Switch to voice"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -528,7 +528,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
               placeholder="Type your response..."
               rows={1}
               className="flex-1 resize-none bg-transparent text-[15px] leading-relaxed
-                text-[var(--t-ink)] placeholder:text-[var(--t-ink)]/30
+                text-[var(--t-navy)] placeholder:text-[var(--t-navy)]/30
                 outline-none py-2 overflow-y-auto"
               style={{ maxHeight: '200px' }}
               disabled={isAnalyzing}
@@ -540,7 +540,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
               disabled={!inputText.trim() || isAnalyzing}
               className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
                 transition-all disabled:opacity-20"
-              style={{ backgroundColor: 'var(--t-ink)', color: 'var(--t-cream)' }}
+              style={{ backgroundColor: 'var(--t-navy)', color: 'var(--t-cream)' }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />

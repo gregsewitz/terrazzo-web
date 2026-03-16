@@ -88,8 +88,8 @@ function PlacedCard({
       className={`group/card mx-${CARD_PX} mb-1.5 rounded card-hover relative`}
       style={{
         minHeight: CARD_H,
-        background: isHolding ? 'rgba(42,122,86,0.08)' : 'rgba(42,122,86,0.03)',
-        border: isHolding ? '1.5px solid rgba(42,122,86,0.3)' : '1px solid rgba(42,122,86,0.1)',
+        background: isHolding ? 'rgba(58,128,136,0.08)' : 'rgba(58,128,136,0.03)',
+        border: isHolding ? '1.5px solid rgba(58,128,136,0.3)' : '1px solid rgba(58,128,136,0.1)',
         padding: isDesktop ? '6px 10px' : '4px 8px',
         display: 'flex',
         flexDirection: 'column',
@@ -112,8 +112,8 @@ function PlacedCard({
           {place.type}
         </span>
         {place.matchScore >= 70 && (
-          <span className="flex-shrink-0 px-1 rounded" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, fontWeight: 700, background: 'rgba(42,122,86,0.1)', color: 'var(--t-verde)' }}>
-            {place.matchScore}%
+          <span className="flex-shrink-0 px-1 rounded" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, fontWeight: 700, background: 'rgba(58,128,136,0.1)', color: 'var(--t-dark-teal)' }}>
+            {Math.round(place.matchScore)}%
           </span>
         )}
         {/* Remove button — returns place to pick pool */}
@@ -213,8 +213,8 @@ function SlotContainer({
       className="flex flex-col"
       style={{
         borderBottom: '1px solid var(--t-linen)',
-        background: isDropActive ? 'rgba(42,122,86,0.06)' : undefined,
-        borderLeft: isDropActive ? '3px solid var(--t-verde)' : '3px solid transparent',
+        background: isDropActive ? 'rgba(58,128,136,0.06)' : undefined,
+        borderLeft: isDropActive ? '3px solid var(--t-dark-teal)' : '3px solid transparent',
         transition: 'all 150ms ease',
         minHeight,
         ...style,
@@ -284,7 +284,7 @@ function DayBoardView({
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         // Brief highlight flash
         (el as HTMLElement).style.transition = 'background 300ms ease';
-        (el as HTMLElement).style.background = 'rgba(42,122,86,0.12)';
+        (el as HTMLElement).style.background = 'rgba(58,128,136,0.12)';
         setTimeout(() => { (el as HTMLElement).style.background = ''; }, 1500);
       }
     });
@@ -360,7 +360,7 @@ function DayBoardView({
               width: COL_WIDTH,
               position: 'relative',
               borderRight: '1px solid var(--t-linen)',
-              background: currentDay === day.dayNumber ? 'rgba(42,122,86,0.02)' : 'white',
+              background: currentDay === day.dayNumber ? '#fbf8f7' : 'white',
               transition: 'background 150ms ease',
             }}
           >
@@ -422,7 +422,7 @@ function DayBoardView({
                 paddingBottom: 6,
                 background: destColor.bg,
                 borderBottom: currentDay === day.dayNumber
-                  ? `2px solid var(--t-verde)`
+                  ? `2px solid var(--t-dark-teal)`
                   : `2px solid ${destColor.accent}30`,
                 transition: 'border-color 150ms ease',
               }}
@@ -721,7 +721,7 @@ function DayBoardView({
                             <button
                               onClick={(e) => { e.stopPropagation(); confirmGhost(day.dayNumber, slot.id, ghost.id); }}
                               className="flex-shrink-0 px-1.5 py-px rounded font-semibold btn-hover"
-                              style={{ background: 'var(--t-verde)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9 }}
+                              style={{ background: 'var(--t-dark-teal)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9 }}
                             >
                               Add
                             </button>
@@ -804,8 +804,8 @@ function DayBoardView({
                         className={`mx-${CARD_PX} mb-1.5 rounded flex items-center justify-center cursor-pointer`}
                         style={{
                           height: CARD_H,
-                          border: isDropActive ? '2px dashed var(--t-verde)' : '1px dashed var(--t-linen)',
-                          background: isDropActive ? 'rgba(42,122,86,0.06)' : INK['02'],
+                          border: isDropActive ? '2px dashed var(--t-dark-teal)' : '1px dashed var(--t-linen)',
+                          background: isDropActive ? 'rgba(58,128,136,0.06)' : INK['02'],
                           transition: 'all 150ms ease',
                         }}
                       >
@@ -846,9 +846,9 @@ function DayBoardView({
                           }}
                           onMouseEnter={(e) => {
                             const el = e.currentTarget;
-                            el.style.background = 'rgba(42,122,86,0.06)';
-                            el.style.borderColor = 'rgba(42,122,86,0.2)';
-                            el.style.color = 'var(--t-verde)';
+                            el.style.background = 'rgba(58,128,136,0.06)';
+                            el.style.borderColor = 'rgba(58,128,136,0.2)';
+                            el.style.color = 'var(--t-dark-teal)';
                           }}
                           onMouseLeave={(e) => {
                             const el = e.currentTarget;

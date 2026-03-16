@@ -16,7 +16,7 @@ type ReactionKey = typeof REACTIONS[number]['key'];
 
 const REACTION_COLORS: Record<ReactionKey, { bg: string; border: string }> = {
   love: { bg: 'rgba(200, 146, 58, 0.15)', border: 'rgba(200, 146, 58, 0.3)' },
-  like: { bg: 'rgba(42, 122, 86, 0.12)', border: 'rgba(42, 122, 86, 0.25)' },
+  like: { bg: 'rgba(58, 128, 136, 0.12)', border: 'rgba(58, 128, 136, 0.25)' },
   meh: { bg: 'rgba(232, 220, 200, 0.5)', border: 'rgba(232, 220, 200, 0.8)' },
   'not-me': { bg: 'rgba(214, 48, 32, 0.08)', border: 'rgba(214, 48, 32, 0.2)' },
 };
@@ -84,7 +84,7 @@ export default function PropertyReactionCard({
         <button
           onClick={() => onDismiss(exemplar.googlePlaceId)}
           className="absolute top-3 right-3 flex items-center justify-center w-6 h-6 rounded-full hover:bg-[rgba(0,42,85,0.06)] transition-colors"
-          style={{ color: 'var(--t-ink)', opacity: 0.25 }}
+          style={{ color: 'var(--t-navy)', opacity: 0.25 }}
           aria-label={`Dismiss ${exemplar.propertyName}`}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -96,7 +96,7 @@ export default function PropertyReactionCard({
       {/* Domain chip */}
       <p
         className="font-mono text-[9px] uppercase tracking-widest mb-2"
-        style={{ color: 'var(--t-ink)' }}
+        style={{ color: 'var(--t-navy)' }}
       >
         {DOMAIN_DISPLAY[domain] || domain}
       </p>
@@ -104,7 +104,7 @@ export default function PropertyReactionCard({
       {/* Property name */}
       <h3
         className="text-[18px] leading-tight mb-1"
-        style={{ fontFamily: 'var(--font-display)', color: 'var(--t-ink)' }}
+        style={{ fontFamily: 'var(--font-display)', color: 'var(--t-navy)' }}
       >
         {exemplar.propertyName}
       </h3>
@@ -114,18 +114,18 @@ export default function PropertyReactionCard({
         {exemplar.placeType && (
           <span
             className="text-[11px] tracking-wide uppercase"
-            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-ink)' }}
+            style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--t-navy)' }}
           >
             {exemplar.placeType}
           </span>
         )}
         {exemplar.placeType && shortLocation(exemplar.locationHint) && (
-          <span style={{ color: 'var(--t-ink)', opacity: 0.2 }}>·</span>
+          <span style={{ color: 'var(--t-navy)', opacity: 0.2 }}>·</span>
         )}
         {shortLocation(exemplar.locationHint) && (
           <span
             className="text-[11px]"
-            style={{ color: 'var(--t-ink)' }}
+            style={{ color: 'var(--t-navy)' }}
           >
             {shortLocation(exemplar.locationHint)}
           </span>
@@ -152,7 +152,7 @@ export default function PropertyReactionCard({
               style={{
                 backgroundColor: isSelected ? colors.bg : 'transparent',
                 border: `1px solid ${isSelected ? colors.border : 'rgba(28, 26, 23, 0.08)'}`,
-                color: 'var(--t-ink)',
+                color: 'var(--t-navy)',
               }}
             >
               {reaction.label}

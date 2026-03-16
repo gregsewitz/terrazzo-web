@@ -138,17 +138,17 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
       <div className="flex-shrink-0 px-4 pt-1 pb-3 flex items-center gap-4">
         <div className="flex items-center gap-3 whitespace-nowrap">
           {dimensionLabel && (
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--t-honey)] bg-[var(--t-honey)]/10 px-2 py-0.5 rounded-full">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--t-ochre)] bg-[var(--t-ochre)]/10 px-2 py-0.5 rounded-full">
               {dimensionLabel}
             </span>
           )}
-          <h2 className="font-display text-[18px] text-[var(--t-ink)] leading-tight">
+          <h2 className="font-display text-[18px] text-[var(--t-navy)] leading-tight">
             {promptText}
           </h2>
         </div>
         {/* Elo ranking hint — shown only on the first round */}
         {round === 0 && (
-          <p className="hidden sm:block text-[10px] text-[var(--t-ink)] font-mono whitespace-nowrap">
+          <p className="hidden sm:block text-[10px] text-[var(--t-navy)] font-mono whitespace-nowrap">
             Some options may reappear — that&apos;s how we rank them
           </p>
         )}
@@ -160,15 +160,15 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
               className="flex-1 h-[2px] rounded-full transition-all duration-500"
               style={{
                 backgroundColor: i < round
-                  ? 'var(--t-ink)'
+                  ? 'var(--t-navy)'
                   : i === round
-                    ? 'var(--t-honey)'
+                    ? 'var(--t-ochre)'
                     : 'var(--t-travertine)',
               }}
             />
           ))}
         </div>
-        <span className="font-mono text-[10px] text-[var(--t-ink)] whitespace-nowrap">
+        <span className="font-mono text-[10px] text-[var(--t-navy)] whitespace-nowrap">
           {round + 1}/{TOTAL_ROUNDS}
         </span>
       </div>
@@ -176,7 +176,7 @@ export default function QuickDiagnosticView({ onComplete }: QuickDiagnosticViewP
       {/* Elo hint — mobile-friendly, fades out after round 2 */}
       {round < 2 && (
         <p
-          className="sm:hidden text-center text-[10px] text-[var(--t-ink)] font-mono px-4 -mt-1 mb-1"
+          className="sm:hidden text-center text-[10px] text-[var(--t-navy)] font-mono px-4 -mt-1 mb-1"
           style={{ transition: 'opacity 500ms ease', opacity: round === 0 ? 1 : 0.5 }}
         >
           Some options may reappear — that&apos;s how we rank them
@@ -243,7 +243,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
             : 'scale(1)',
         opacity: isDeselected ? 0.35 : 1,
         boxShadow: isSelected
-          ? '0 8px 30px rgba(0,0,0,0.12), inset 0 0 0 2.5px var(--t-honey)'
+          ? '0 8px 30px rgba(0,0,0,0.12), inset 0 0 0 2.5px var(--t-ochre)'
           : '0 2px 12px rgba(0,0,0,0.04)',
       }}
     >
@@ -272,7 +272,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
           className="font-serif italic leading-tight mb-3"
           style={{
             fontSize: 'clamp(20px, 3.5vw, 26px)',
-            color: 'var(--t-ink)',
+            color: 'var(--t-navy)',
           }}
         >
           {label}
@@ -284,7 +284,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
             className="font-serif italic leading-relaxed"
             style={{
               fontSize: 'clamp(13px, 2vw, 15px)',
-              color: 'var(--t-ink)',
+              color: 'var(--t-navy)',
               maxWidth: 320,
             }}
           >
@@ -305,7 +305,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
       <div
         className="absolute top-3 right-3 px-3 py-1.5 rounded-full pointer-events-none"
         style={{
-          background: isSelected ? 'var(--t-honey)' : 'rgba(0,42,85,0.06)',
+          background: isSelected ? 'var(--t-ochre)' : 'rgba(0,42,85,0.06)',
           transition: 'background 300ms ease, transform 300ms ease',
           transform: isSelected ? 'scale(1.05)' : 'scale(1)',
         }}
@@ -314,7 +314,7 @@ function AtmosphereCard({ item, isSelected, isDeselected, isAnimating, onSelect 
           className="font-mono uppercase tracking-wider"
           style={{
             fontSize: 10,
-            color: 'var(--t-ink)',
+            color: 'var(--t-navy)',
           }}
         >
           {isSelected ? 'Chosen' : 'Choose'}

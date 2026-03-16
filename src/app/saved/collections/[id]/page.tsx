@@ -13,7 +13,7 @@ import DesktopNav from '@/components/DesktopNav';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
+import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet';
 import BrandLoader from '@/components/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
@@ -147,7 +147,7 @@ function CollectionDetailContent() {
           <button
             onClick={() => router.back()}
             className="mt-4 text-[12px] cursor-pointer"
-            style={{ color: 'var(--t-verde)', background: 'none', border: 'none' }}
+            style={{ color: 'var(--t-dark-teal)', background: 'none', border: 'none' }}
           >
             ← Back
           </button>
@@ -183,8 +183,8 @@ function CollectionDetailContent() {
             onClick={() => setShowShareSheet(true)}
             className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
             style={{
-              background: 'rgba(42,122,86,0.08)',
-              color: 'var(--t-verde)',
+              background: 'rgba(58,128,136,0.08)',
+              color: 'var(--t-dark-teal)',
               border: 'none',
               fontFamily: FONT.mono,
             }}
@@ -218,8 +218,8 @@ function CollectionDetailContent() {
           onClick={() => setShowAddPlaces(true)}
           className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
           style={{
-            background: 'rgba(42,122,86,0.08)',
-            color: 'var(--t-verde)',
+            background: 'rgba(58,128,136,0.08)',
+            color: 'var(--t-dark-teal)',
             border: 'none',
             fontFamily: FONT.mono,
           }}
@@ -356,8 +356,8 @@ function CollectionDetailContent() {
             className="text-[9px] px-2 py-1 rounded-full"
             style={{
               fontFamily: FONT.mono,
-              background: 'rgba(42,122,86,0.08)',
-              color: 'var(--t-verde)',
+              background: 'rgba(58,128,136,0.08)',
+              color: 'var(--t-dark-teal)',
             }}
           >
             Auto-updating · Curated Collection
@@ -378,7 +378,7 @@ function CollectionDetailContent() {
               key={tag}
               className="px-2 py-1 rounded-full text-[9px]"
               style={{
-                background: 'var(--t-verde)',
+                background: 'var(--t-dark-teal)',
                 color: 'white',
                 fontFamily: FONT.mono,
               }}
@@ -585,7 +585,7 @@ function CollectionDetailContent() {
             <button
               onClick={() => router.back()}
               className="cursor-pointer flex items-center gap-1.5 link-hover"
-              style={{ color: 'var(--t-verde)', background: 'none', border: 'none', fontSize: 13, fontFamily: FONT.sans }}
+              style={{ color: 'var(--t-dark-teal)', background: 'none', border: 'none', fontSize: 13, fontFamily: FONT.sans }}
             >
               ← Back to Library
             </button>
@@ -708,7 +708,7 @@ function CollectionDetailContent() {
           <button
             onClick={() => router.back()}
             className="cursor-pointer"
-            style={{ color: 'var(--t-verde)', background: 'none', border: 'none', fontSize: 16 }}
+            style={{ color: 'var(--t-dark-teal)', background: 'none', border: 'none', fontSize: 16 }}
           >
             ←
           </button>
@@ -907,7 +907,7 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
           className="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center"
           style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
         >
-          <PerriandIcon name={typeIcon as any} size={18} color={TEXT.secondary} />
+          <PerriandIcon name={typeIcon as any} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || TEXT.secondary} />
         </div>
 
         {/* Content */}

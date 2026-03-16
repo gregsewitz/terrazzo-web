@@ -1,34 +1,34 @@
 import type { PerriandIconName } from '../components/icons/PerriandIcons';
-import { INK } from '@/constants/theme';
+import { COLOR, INK } from '@/constants/theme';
 export type { PerriandIconName };
 
-// Forme Libere Design Tokens
+// ─── Brand Palette (legacy T.* aliases kept for backward compat) ───
 export const T = {
-  ink: '#002a55',
-  honey: '#ee716d',
-  amber: '#a06c28',
-  verde: '#2a7a56',
-  pantonViolet: '#6844a0',
-  pantonOrange: '#e86830',
-  royerePink: '#e87080',
-  warmWhite: '#f5f0e6',
-  travertine: '#e8dcc8',
-  cream: '#fdfaf3',
-  signalRed: '#d63020',
-  chromeYellow: '#eeb420',
-  linen: '#ede6d8',
-  ghost: '#6b8b9a',
+  ink: COLOR.navy,
+  honey: COLOR.ochre,
+  amber: COLOR.ochre,
+  verde: COLOR.darkTeal,
+  pantonViolet: COLOR.olive,
+  pantonOrange: COLOR.coral,
+  royerePink: COLOR.peach,
+  warmWhite: COLOR.cream,
+  travertine: COLOR.peach,
+  cream: COLOR.cream,
+  signalRed: COLOR.signalRed,
+  chromeYellow: COLOR.ochre,
+  linen: COLOR.cream,
+  ghost: COLOR.darkTeal,
 } as const;
 
 export const DOMAIN_COLORS: Record<TasteDomain, string> = {
-  Design: T.signalRed,
-  Atmosphere: T.pantonOrange,
-  Character: T.pantonViolet,
-  Service: T.amber,
-  FoodDrink: T.royerePink,
-  Setting: T.verde,
-  Wellness: T.chromeYellow,
-  Sustainability: T.ghost,
+  Design: COLOR.coral,
+  Atmosphere: COLOR.coral,
+  Character: COLOR.olive,
+  Service: COLOR.ochre,
+  FoodDrink: COLOR.peach,
+  Setting: COLOR.darkTeal,
+  Wellness: COLOR.ochre,
+  Sustainability: COLOR.darkTeal,
 };
 
 export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
@@ -44,10 +44,10 @@ export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
 
 // Rating system
 export const RATING_COLORS = {
-  myPlace: T.verde,
-  enjoyed: T.honey,
-  mixed: T.chromeYellow,
-  notMe: T.signalRed,
+  myPlace: COLOR.darkTeal,
+  enjoyed: COLOR.ochre,
+  mixed: COLOR.ochre,
+  notMe: COLOR.signalRed,
 } as const;
 
 export const REACTIONS = [
@@ -63,12 +63,12 @@ export type { DestColor } from '@/lib/destination-helpers';
 
 // Ghost card source types — each source gets its own visual treatment
 export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: PerriandIconName; label: string }> = {
-  email: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'email', label: 'Email' },
-  friend: { color: T.verde, bg: 'rgba(42,122,86,0.12)', icon: 'friend', label: 'Friend' },
-  terrazzo: { color: '#4a6e7a', bg: 'rgba(107,139,154,0.12)', icon: 'terrazzo', label: 'Terrazzo pick' },
-  maps: { color: '#a84018', bg: 'rgba(232,104,48,0.10)', icon: 'maps', label: 'Google Maps' },
-  article: { color: '#7a5a20', bg: 'rgba(238,113,109,0.12)', icon: 'article', label: 'Article' },
-  manual: { color: T.ink, bg: INK['06'], icon: 'manual', label: 'Added' },
+  email: { color: COLOR.darkTeal, bg: 'rgba(58,128,136,0.12)', icon: 'email', label: 'Email' },
+  friend: { color: COLOR.darkTeal, bg: 'rgba(58,128,136,0.12)', icon: 'friend', label: 'Friend' },
+  terrazzo: { color: COLOR.coral, bg: 'rgba(238,113,109,0.12)', icon: 'terrazzo', label: 'Terrazzo pick' },
+  maps: { color: COLOR.coral, bg: 'rgba(238,113,109,0.10)', icon: 'maps', label: 'Google Maps' },
+  article: { color: COLOR.ochre, bg: 'rgba(224,165,1,0.12)', icon: 'article', label: 'Article' },
+  manual: { color: COLOR.navy, bg: INK['06'], icon: 'manual', label: 'Added' },
 };
 
 /**

@@ -423,7 +423,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
             className="flex items-center justify-center rounded-full flex-shrink-0"
             style={{
               width: 34, height: 34,
-              background: showDirections ? 'var(--t-verde)' : 'rgba(255,255,255,0.92)',
+              background: showDirections ? 'var(--t-dark-teal)' : 'rgba(255,255,255,0.92)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               color: showDirections ? 'white' : INK['60'],
@@ -649,7 +649,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-medium"
                     style={{
                       fontFamily: FONT.sans,
-                      background: showDirections ? 'var(--t-verde)' : INK['04'],
+                      background: showDirections ? 'var(--t-dark-teal)' : INK['04'],
                       color: showDirections ? 'white' : INK['60'],
                       border: 'none', cursor: 'pointer',
                       transition: 'all 200ms ease',
@@ -865,7 +865,7 @@ function MobileDetailCard({
                 padding: '4px 8px',
               }}
             >
-              {place.matchScore}%
+              {Math.round(place.matchScore)}%
             </div>
           )}
           {/* Chevron hint */}
@@ -1007,7 +1007,7 @@ function MobileGhostCard({
                 padding: '4px 8px',
               }}
             >
-              {place.matchScore}%
+              {Math.round(place.matchScore)}%
             </div>
           )}
         </div>
@@ -1138,7 +1138,7 @@ function SidebarPlaceCard({
         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0" style={{
           fontFamily: FONT.mono, color: '#ee716d', background: 'rgba(238,113,109,0.08)',
         }}>
-          {place.matchScore}%
+          {Math.round(place.matchScore)}%
         </span>
       )}
     </div>
@@ -1194,7 +1194,7 @@ function DesktopDetailCard({
           </div>
           {place.matchScore && (
             <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#ee716d', background: 'rgba(238,113,109,0.08)' }}>
-              {place.matchScore}%
+              {Math.round(place.matchScore)}%
             </span>
           )}
         </div>
@@ -1321,7 +1321,7 @@ function DesktopGhostCard({
           </div>
           {place.matchScore && (
             <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#ee716d', background: 'rgba(238,113,109,0.08)' }}>
-              {place.matchScore}%
+              {Math.round(place.matchScore)}%
             </span>
           )}
         </div>

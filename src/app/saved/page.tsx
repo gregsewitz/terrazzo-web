@@ -16,7 +16,7 @@ import PlaceSearchBar from '@/components/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
-import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
+import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import { SignalResonanceStrip } from '@/components/intelligence';
 import type { ResonanceCluster } from '@/components/intelligence';
 import type { TasteDomain } from '@/types';
@@ -746,7 +746,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
       className="rounded-xl cursor-pointer transition-all overflow-hidden card-hover"
       style={{
         background: 'white',
-        border: '1px solid var(--t-linen)',
+        border: '1px solid var(--t-navy)',
       }}
     >
       <div className="flex gap-2.5 p-3 pb-0">
@@ -758,7 +758,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
             background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
           }}
         >
-          <PerriandIcon name={typeIcon as any} size={20} color={TEXT.secondary} />
+          <PerriandIcon name={typeIcon as any} size={20} color={TYPE_BRAND_COLORS[place.type] || TEXT.secondary} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -780,18 +780,18 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
               onClick={(e) => { e.stopPropagation(); onToggleCollections(); }}
               className="flex items-center gap-1 rounded-full px-2 py-1 transition-all flex-shrink-0"
               style={{
-                background: collectionCount > 0 ? 'rgba(42,122,86,0.08)' : INK['06'],
+                background: collectionCount > 0 ? 'rgba(58,128,136,0.10)' : INK['06'],
                 border: 'none',
                 cursor: 'pointer',
               }}
             >
-              <PerriandIcon name="bookmark" size={12} color={collectionCount > 0 ? 'var(--t-verde)' : INK['40']} />
+              <PerriandIcon name="bookmark" size={12} color={collectionCount > 0 ? 'var(--t-dark-teal)' : INK['40']} />
               {collectionCount > 0 && (
                 <span style={{
                   fontFamily: FONT.mono,
                   fontSize: 9,
                   fontWeight: 700,
-                  color: 'var(--t-verde)',
+                  color: 'var(--t-dark-teal)',
                 }}>
                   {collectionCount}
                 </span>
@@ -814,9 +814,9 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
           {place.friendAttribution && (
             <span
               className="px-1.5 py-0.5 rounded flex items-center gap-1"
-              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(42,122,86,0.06)', color: 'var(--t-verde)', fontFamily: FONT.mono }}
+              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}
             >
-              <PerriandIcon name="friend" size={10} color="var(--t-verde)" /> {place.friendAttribution.name}
+              <PerriandIcon name="friend" size={10} color="var(--t-dark-teal)" /> {place.friendAttribution.name}
             </span>
           )}
           {google?.rating && (
@@ -830,7 +830,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
             </span>
           )}
           <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: '#8a6a2a' }}>
-            {place.matchScore}%
+            {Math.round(place.matchScore)}%
           </span>
         </div>
 
@@ -1153,7 +1153,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                   className="aspect-square rounded-lg flex items-center justify-center cursor-pointer transition-all"
                   style={{
                     background: selectedEmoji === icon.name ? 'var(--t-ink)' : 'white',
-                    border: selectedEmoji === icon.name ? 'none' : '1px solid var(--t-linen)',
+                    border: selectedEmoji === icon.name ? 'none' : '1px solid var(--t-navy)',
                   }}
                 >
                   <PerriandIcon
@@ -1176,7 +1176,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
               style={{
                 fontSize: 16,
                 background: isDesktop ? 'var(--t-cream)' : 'white',
-                border: '1px solid var(--t-linen)',
+                border: '1px solid var(--t-navy)',
                 color: TEXT.primary,
                 fontFamily: FONT.sans,
                 outline: 'none',
@@ -1331,7 +1331,7 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className="text-[11px] font-bold"
-                  style={{ fontFamily: FONT.mono, color: 'var(--t-verde)' }}
+                  style={{ fontFamily: FONT.mono, color: 'var(--t-dark-teal)' }}
                 >
                   {smartResult.matchCount ?? 0} places
                 </span>
@@ -1343,8 +1343,8 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
                       key={tag}
                       className="px-2 py-0.5 rounded-full text-[9px]"
                       style={{
-                        background: 'rgba(42,122,86,0.08)',
-                        color: 'var(--t-verde)',
+                        background: 'rgba(58,128,136,0.08)',
+                        color: 'var(--t-dark-teal)',
                         fontFamily: FONT.mono,
                       }}
                     >

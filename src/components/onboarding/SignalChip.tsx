@@ -9,7 +9,7 @@ interface SignalChipProps {
 }
 
 export default function SignalChip({ signal, animate = true }: SignalChipProps) {
-  const color = DOMAIN_COLORS[signal.cat as TasteDomain] ?? 'var(--t-ink)';
+  const color = DOMAIN_COLORS[signal.cat as TasteDomain] ?? 'var(--t-navy)';
   const isRejection = signal.cat === 'Rejection' || signal.tag.startsWith('Anti-');
 
   return (

@@ -4,8 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, ImagePairQuestion } from '@/types';
-import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 
 interface ImagePairViewProps {
   onComplete: () => void;
@@ -121,7 +120,7 @@ export default function ImagePairView({ onComplete, questions }: ImagePairViewPr
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: i < currentIdx ? T.honey : i === currentIdx ? T.ink : 'rgba(0,42,85,0.15)',
+              background: i < currentIdx ? COLOR.ochre : i === currentIdx ? TEXT.primary : 'rgba(0,42,85,0.15)',
               transition: 'background 0.3s',
             }}
           />
@@ -132,7 +131,7 @@ export default function ImagePairView({ onComplete, questions }: ImagePairViewPr
       <p style={{
         fontFamily: FONT.serif,
         fontSize: 22,
-        color: T.ink,
+        color: TEXT.primary,
         textAlign: 'center',
         margin: 0,
         lineHeight: 1.3,
@@ -167,7 +166,7 @@ export default function ImagePairView({ onComplete, questions }: ImagePairViewPr
                 padding: 0,
                 borderRadius: 12,
                 overflow: 'hidden',
-                outline: isSelected ? `3px solid ${T.honey}` : '3px solid transparent',
+                outline: isSelected ? `3px solid ${COLOR.ochre}` : '3px solid transparent',
                 outlineOffset: -3,
                 opacity: isOther ? 0.5 : 1,
                 transform: isSelected ? 'scale(1.02)' : 'scale(1)',
@@ -209,7 +208,7 @@ export default function ImagePairView({ onComplete, questions }: ImagePairViewPr
       <p style={{
         fontFamily: FONT.sans,
         fontSize: 13,
-        color: T.ink,
+        color: TEXT.primary,
         textAlign: 'center',
         margin: 0,
       }}>

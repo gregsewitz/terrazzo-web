@@ -18,7 +18,7 @@ const ENTRY_TYPES: { type: DreamBoardEntryType; label: string; icon: PerriandIco
 // ─── Vibe accent colors ───
 const VIBE_COLORS = [
   { value: 'honey', label: 'Warm', bg: 'rgba(238,113,109,0.10)', border: 'rgba(238,113,109,0.25)' },
-  { value: 'verde', label: 'Fresh', bg: 'rgba(42,122,86,0.08)', border: 'rgba(42,122,86,0.20)' },
+  { value: 'verde', label: 'Fresh', bg: 'rgba(58,128,136,0.08)', border: 'rgba(58,128,136,0.20)' },
   { value: 'blue', label: 'Cool', bg: 'rgba(58,140,180,0.08)', border: 'rgba(58,140,180,0.20)' },
   { value: 'rose', label: 'Rosy', bg: 'rgba(180,80,80,0.08)', border: 'rgba(180,80,80,0.20)' },
   { value: 'violet', label: 'Rich', bg: 'rgba(104,68,160,0.08)', border: 'rgba(104,68,160,0.20)' },
@@ -34,7 +34,7 @@ function getVibeBorder(color?: string): string {
 // ─── Accent color options (for generic cards) ───
 const ACCENT_COLORS = [
   { value: undefined, bg: INK['06'] },
-  { value: 'verde', bg: 'rgba(42,122,86,0.12)' },
+  { value: 'verde', bg: 'rgba(58,128,136,0.12)' },
   { value: 'honey', bg: 'rgba(238,113,109,0.12)' },
   { value: 'blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', bg: 'rgba(180,80,80,0.12)' },
@@ -464,7 +464,7 @@ function DreamBoardCard({
               style={{ background: 'transparent' }}
               title={isResolved ? 'Reopen' : 'Mark resolved'}
             >
-              <PerriandIcon name="check" size={10} color={isResolved ? 'var(--t-verde, #2a7a56)' : INK['30']} />
+              <PerriandIcon name="check" size={10} color={isResolved ? 'var(--t-dark-teal, #3a8088)' : INK['30']} />
             </button>
           )}
           {(entry.type === 'note' || entry.type === 'vibe' || entry.type === 'question') && (
@@ -627,7 +627,7 @@ function DreamBoardCard({
                     type="checkbox"
                     checked={item.done}
                     onChange={() => handleChecklistToggle(idx)}
-                    className="mt-0.5 accent-[var(--t-verde)]"
+                    className="mt-0.5 accent-[var(--t-dark-teal)]"
                     style={{ width: 14, height: 14 }}
                   />
                   <span

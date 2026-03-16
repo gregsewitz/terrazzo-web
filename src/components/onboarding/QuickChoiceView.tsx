@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, QuickChoiceOption } from '@/types';
 import { T } from '@/types';
-import { FONT, INK } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 
 interface QuickChoiceViewProps {
   onComplete: () => void;
@@ -85,7 +85,7 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Instruction */}
         <p style={{
-          color: T.ink,
+          color: TEXT.primary,
           fontSize: 14,
           margin: '0 0 20px',
           textAlign: 'center',
@@ -141,14 +141,14 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    background: T.honey,
+                    background: COLOR.ochre,
                   }} />
                 )}
 
                 <p style={{
                   fontSize: 15,
                   fontFamily: FONT.serif,
-                  color: T.ink,
+                  color: TEXT.primary,
                   margin: 0,
                   lineHeight: 1.3,
                   paddingRight: 16,
@@ -158,7 +158,7 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
                 {opt.description && (
                   <p style={{
                     fontSize: 12,
-                    color: T.ink,
+                    color: TEXT.primary,
                     fontFamily: FONT.sans,
                     margin: 0,
                     lineHeight: 1.35,
@@ -179,8 +179,8 @@ export default function QuickChoiceView({ onComplete, options, maxSelections = 3
           style={{
             marginTop: 24,
             padding: '15px 40px',
-            background: (submitted || selected.size < MIN_SELECTIONS) ? T.travertine : T.ink,
-            color: (submitted || selected.size < MIN_SELECTIONS) ? T.ink : T.cream,
+            background: (submitted || selected.size < MIN_SELECTIONS) ? COLOR.peach : TEXT.primary,
+            color: (submitted || selected.size < MIN_SELECTIONS) ? TEXT.primary : COLOR.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

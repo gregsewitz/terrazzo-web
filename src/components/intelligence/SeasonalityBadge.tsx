@@ -3,8 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
-import { T } from '@/types';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import type { SeasonalityData } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -100,8 +99,8 @@ function getCrowdContext(
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
-const TIMING_COLOR_GOOD = T.verde;
-const TIMING_COLOR_NEUTRAL = T.amber;
+const TIMING_COLOR_GOOD = COLOR.darkTeal;
+const TIMING_COLOR_NEUTRAL = COLOR.ochre;
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
@@ -265,9 +264,9 @@ export function SeasonalityBadge({
         {seasonality.seasonalClosures && seasonality.seasonalClosures.length > 0 && (
           <div
             className="flex items-start gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg"
-            style={{ background: `${T.signalRed}08` }}
+            style={{ background: `${COLOR.signalRed}08` }}
           >
-            <PerriandIcon name="sparkle" size={10} color={T.signalRed} className="mt-0.5" />
+            <PerriandIcon name="sparkle" size={10} color={COLOR.signalRed} className="mt-0.5" />
             <span
               className="text-[10px]"
               style={{ color: TEXT.secondary, fontFamily: FONT.mono }}

@@ -282,14 +282,14 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
           <div
             className="mx-4 mb-2 px-3 py-2.5 rounded-lg"
             style={{
-              background: 'linear-gradient(135deg, rgba(42,122,86,0.06) 0%, rgba(42,122,86,0.02) 100%)',
-              border: '1px solid rgba(42,122,86,0.15)',
+              background: 'linear-gradient(135deg, rgba(58,128,136,0.06) 0%, rgba(58,128,136,0.02) 100%)',
+              border: '1px solid rgba(58,128,136,0.15)',
             }}
           >
             <div className="flex items-center justify-between mb-1">
               <span
                 className="text-[12px] font-semibold"
-                style={{ color: 'var(--t-verde)', fontFamily: FONT.sans }}
+                style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.sans }}
               >
                 Picking for {slotContext.slotLabel} · Day {slotContext.dayNumber}
               </span>
@@ -322,14 +322,14 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                       onClick={() => setFilterType(filterType === t ? 'all' : t as FilterType)}
                       className="text-[10px] px-2 py-0.5 rounded-full cursor-pointer transition-all flex items-center gap-1"
                       style={{
-                        background: filterType === t ? 'var(--t-verde)' : 'rgba(42,122,86,0.08)',
-                        color: filterType === t ? 'white' : 'var(--t-verde)',
+                        background: filterType === t ? 'var(--t-dark-teal)' : 'rgba(58,128,136,0.08)',
+                        color: filterType === t ? 'white' : 'var(--t-dark-teal)',
                         border: 'none',
                         fontFamily: FONT.mono,
                         fontWeight: 600,
                       }}
                     >
-                      {chip && <PerriandIcon name={chip.icon} size={11} color={filterType === t ? 'white' : 'var(--t-verde)'} />}
+                      {chip && <PerriandIcon name={chip.icon} size={11} color={filterType === t ? 'white' : 'var(--t-dark-teal)'} />}
                       {t}
                     </button>
                   );
@@ -393,9 +393,9 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 key={item.id}
                 className="flex items-start rounded-lg mb-2.5 cursor-pointer transition-all select-none"
                 style={{
-                  background: isSuggestedType ? 'rgba(42,122,86,0.03)' : 'var(--t-cream)',
-                  border: isSuggestedType ? '1.5px solid rgba(42,122,86,0.15)' : '1.5px solid var(--t-linen)',
-                  borderLeft: '3px solid var(--t-verde)',
+                  background: isSuggestedType ? 'rgba(58,128,136,0.03)' : 'var(--t-cream)',
+                  border: isSuggestedType ? '1.5px solid rgba(58,128,136,0.15)' : '1.5px solid var(--t-linen)',
+                  borderLeft: '3px solid var(--t-dark-teal)',
                   opacity: isDragging ? 0.35 : 1,
                   transform: isDragging ? 'scale(0.97)' : 'none',
                   transition: 'opacity 0.2s, transform 0.2s',
@@ -428,13 +428,13 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                       <span
                         className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1"
                         style={{
-                          background: isSuggestedType ? 'rgba(42,122,86,0.1)' : INK['05'],
-                          color: isSuggestedType ? 'var(--t-verde)' : INK['95'],
+                          background: isSuggestedType ? 'rgba(58,128,136,0.1)' : INK['05'],
+                          color: isSuggestedType ? 'var(--t-dark-teal)' : INK['95'],
                           fontFamily: FONT.mono,
                           fontWeight: 600,
                         }}
                       >
-                        <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-verde)' : INK['95']} />
+                        <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-dark-teal)' : INK['95']} />
                         {item.type}
                       </span>
                     )}
@@ -458,8 +458,8 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                   <span
                     className="text-[11px] font-bold px-2 py-0.5 rounded-full"
                     style={{
-                      background: 'rgba(42,122,86,0.08)',
-                      color: 'var(--t-verde)',
+                      background: 'rgba(58,128,136,0.08)',
+                      color: 'var(--t-dark-teal)',
                       fontFamily: FONT.mono,
                     }}
                   >
@@ -484,7 +484,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               </p>
               <p className="text-[11px]" style={{ color: TEXT.secondary }}>
                 {filterType !== 'all'
-                  ? <button onClick={() => setFilterType('all')} className="underline cursor-pointer bg-transparent border-none" style={{ color: 'var(--t-verde)', fontSize: '11px' }}>Show all types</button>
+                  ? <button onClick={() => setFilterType('all')} className="underline cursor-pointer bg-transparent border-none" style={{ color: 'var(--t-dark-teal)', fontSize: '11px' }}>Show all types</button>
                   : 'Star places in My Places or Collect to add them here'}
               </p>
             </div>

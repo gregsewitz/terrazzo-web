@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal, SustainabilitySignal } from '@/types';
 import { T } from '@/types';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 
 // ─── Spectrum Definitions ───
 
@@ -26,7 +26,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
     prompt: 'How much does environmental impact shape where you stay?',
     leftLabel: 'Not a factor',
     rightLabel: "It\u2019s a dealbreaker",
-    leftColor: T.travertine,
+    leftColor: COLOR.peach,
     rightColor: '#4a7a4a',
     leftSignals: ['Eco-indifferent', 'Convenience-first'],
     rightSignals: ['Eco-leading', 'Carbon-conscious', 'Green-certification-seeker'],
@@ -37,7 +37,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
     prompt: 'Supporting local businesses and artisans when you travel\u2026',
     leftLabel: 'Nice but not essential',
     rightLabel: 'I actively seek it out',
-    leftColor: T.travertine,
+    leftColor: COLOR.peach,
     rightColor: '#413800',
     leftSignals: ['Local-economy-passive', 'Brand-agnostic'],
     rightSignals: ['Local-economy-supporter', 'Artisan-seeker', 'Community-investment'],
@@ -48,7 +48,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
     prompt: 'How important is cultural sensitivity in your travel choices?',
     leftLabel: 'I go with the flow',
     rightLabel: 'I research deeply',
-    leftColor: T.travertine,
+    leftColor: COLOR.peach,
     rightColor: '#4a6b8b',
     leftSignals: ['Cultural-casual', 'Spontaneous-visitor'],
     rightSignals: ['Cultural-researcher', 'Respectful-traveler', 'Heritage-preservationist'],
@@ -59,7 +59,7 @@ const SUSTAINABILITY_SPECTRUMS: SpectrumDef[] = [
     prompt: 'Staff welfare and community impact of where you stay\u2026',
     leftLabel: 'Rarely consider it',
     rightLabel: 'Always on my mind',
-    leftColor: T.travertine,
+    leftColor: COLOR.peach,
     rightColor: '#6b4a8b',
     leftSignals: ['Social-passive', 'Price-driven'],
     rightSignals: ['Social-conscious', 'Fair-wage-advocate', 'Community-benefit-seeker'],
@@ -167,7 +167,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Instruction */}
         <p style={{
-          color: T.ink,
+          color: COLOR.navy,
           fontSize: 14,
           margin: '0 0 16px',
           textAlign: 'center',
@@ -201,7 +201,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
               <p style={{
                 fontSize: 14,
                 fontWeight: 500,
-                color: T.ink,
+                color: COLOR.navy,
                 margin: 0,
                 textAlign: 'center',
                 fontFamily: FONT.sans,
@@ -219,7 +219,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                 <span style={{
                   fontSize: 12,
                   fontWeight: leftActive ? 600 : 400,
-                  color: leftActive ? T.ink : TEXT.secondary,
+                  color: leftActive ? COLOR.navy : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   flex: '0 1 auto',
@@ -230,7 +230,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                 <span style={{
                   fontSize: 12,
                   fontWeight: rightActive ? 600 : 400,
-                  color: rightActive ? T.ink : TEXT.secondary,
+                  color: rightActive ? COLOR.navy : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   textAlign: 'right',
@@ -269,7 +269,7 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
                     height: 22,
                     borderRadius: '50%',
                     background: gradientColor,
-                    border: `2.5px solid ${T.cream}`,
+                    border: `2.5px solid ${COLOR.cream}`,
                     boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
                     pointerEvents: 'none',
                     transition: submitted ? 'none' : 'box-shadow 0.15s ease',
@@ -288,8 +288,8 @@ export default function SpectrumPhaseView({ onComplete, spectrums = SUSTAINABILI
           style={{
             marginTop: 20,
             padding: '15px 40px',
-            background: submitted ? T.travertine : T.ink,
-            color: submitted ? TEXT.secondary : T.cream,
+            background: submitted ? COLOR.peach : COLOR.navy,
+            color: submitted ? TEXT.secondary : COLOR.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

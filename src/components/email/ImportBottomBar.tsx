@@ -121,20 +121,20 @@ export const ImportBottomBar = React.memo(function ImportBottomBar({
                 onClick={() => setPickerOpen(!pickerOpen)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl border-none cursor-pointer transition-all mx-auto"
                 style={{
-                  background: 'rgba(42,122,86,0.06)',
-                  color: 'var(--t-verde)',
+                  background: 'rgba(58,128,136,0.06)',
+                  color: 'var(--t-dark-teal)',
                 }}
               >
-                {renderIcon(selectedCollection.emoji, 12, 'var(--t-verde)')}
+                {renderIcon(selectedCollection.emoji, 12, 'var(--t-dark-teal)')}
                 <span className="text-[11px] font-semibold" style={{ fontFamily: FONT.sans }}>
                   {selectedCollection.name}
                 </span>
                 <span
                   onClick={handleRemoveCollection}
                   className="ml-0.5 w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(42,122,86,0.10)' }}
+                  style={{ background: 'rgba(58,128,136,0.10)' }}
                 >
-                  <span className="text-[9px] leading-none" style={{ color: 'var(--t-verde)' }}>✕</span>
+                  <span className="text-[9px] leading-none" style={{ color: 'var(--t-dark-teal)' }}>✕</span>
                 </span>
               </button>
             )}
@@ -177,15 +177,15 @@ export const ImportBottomBar = React.memo(function ImportBottomBar({
                         }}
                         className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left border-none cursor-pointer transition-all"
                         style={{
-                          background: isActive ? 'rgba(42,122,86,0.06)' : 'transparent',
+                          background: isActive ? 'rgba(58,128,136,0.06)' : 'transparent',
                         }}
                         onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = INK['04']; }}
                         onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                       >
                         <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                          style={{ background: isActive ? 'rgba(42,122,86,0.10)' : INK['06'] }}
+                          style={{ background: isActive ? 'rgba(58,128,136,0.10)' : INK['06'] }}
                         >
-                          {renderIcon(col.emoji, 12, isActive ? 'var(--t-verde)' : INK['50'])}
+                          {renderIcon(col.emoji, 12, isActive ? 'var(--t-dark-teal)' : INK['50'])}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[11px] font-medium truncate" style={{ color: TEXT.primary }}>
@@ -196,7 +196,7 @@ export const ImportBottomBar = React.memo(function ImportBottomBar({
                           </div>
                         </div>
                         {isActive && (
-                          <PerriandIcon name="check" size={12} color="var(--t-verde)" />
+                          <PerriandIcon name="check" size={12} color="var(--t-dark-teal)" />
                         )}
                       </button>
                     );

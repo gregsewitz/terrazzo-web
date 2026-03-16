@@ -69,8 +69,8 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
       className="rounded-lg overflow-hidden"
       style={{
         background: 'white',
-        border: '1.5px solid var(--t-verde)',
-        boxShadow: '0 2px 8px rgba(42,122,86,0.10)',
+        border: '1.5px solid var(--t-dark-teal)',
+        boxShadow: '0 2px 8px rgba(58,128,136,0.10)',
       }}
     >
       <div className="flex items-center gap-2 px-2.5 py-1.5">
@@ -106,7 +106,7 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
             onMouseDown={(e) => e.preventDefault()} // Prevent blur from firing first
             className="flex-shrink-0 px-3 py-2 sm:px-2 sm:py-1 rounded-md flex items-center justify-center"
             style={{
-              background: 'var(--t-verde)',
+              background: 'var(--t-dark-teal)',
               border: 'none',
               cursor: 'pointer',
               touchAction: 'manipulation',

@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terrazzo — Place Card Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f8f3ea;
+    --ink: #1c1a17;
+    --linen: #e8dcc8;
+    --coral: #E86F5A;
+    --navy: #1A2D4A;
+    --mint: #5EC4B2;
+    --ochre: #E8B84B;
+    --peach: #F4BFA0;
+    --verde: #2a7a56;
+    --honey: #c8923a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--cream); font-family: 'DM Sans', sans-serif; color: var(--ink); }
+
+  .page { max-width: 1400px; margin: 0 auto; padding: 48px; }
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 36px;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: rgba(28,26,23,0.5);
+    margin-bottom: 48px;
+  }
+
+  .concept-section {
+    margin-bottom: 64px;
+  }
+  .concept-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .concept-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--coral);
+  }
+  .concept-title {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 22px;
+  }
+  .concept-desc {
+    font-size: 13px;
+    color: rgba(28,26,23,0.6);
+    margin-bottom: 24px;
+    max-width: 700px;
+    line-height: 1.6;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* ═══════════════════════════════════════ */
+  /* CONCEPT A: Color-Blocked Hero Cards    */
+  /* ═══════════════════════════════════════ */
+
+  .card-a {
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 12px rgba(28,26,23,0.04);
+  }
+  .card-a:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(28,26,23,0.1);
+  }
+
+  .card-a .hero {
+    position: relative;
+    padding: 20px 20px 28px;
+    min-height: 100px;
+    overflow: hidden;
+  }
+  .card-a .hero .org-blob {
+    position: absolute;
+    border-radius: 42% 58% 35% 65% / 48% 32% 68% 52%;
+    opacity: 0.12;
+  }
+  .card-a .hero .blob-1 {
+    width: 120px; height: 120px;
+    top: -30px; right: -20px;
+    background: white;
+  }
+  .card-a .hero .blob-2 {
+    width: 80px; height: 80px;
+    bottom: -20px; left: 30%;
+    background: rgba(0,0,0,0.1);
+  }
+  .card-a .hero .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+  }
+  .card-a .hero .type-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+  }
+  .card-a .hero .match-score {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: white;
+    line-height: 1;
+  }
+  .card-a .hero .match-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.1em;
+  }
+  .card-a .hero .place-name {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: white;
+    margin-top: 12px;
+    position: relative;
+    z-index: 2;
+    line-height: 1.15;
+  }
+  .card-a .hero .location {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .card-a .wave-divider {
+    display: block;
+    margin-top: -1px;
+  }
+
+  .card-a .content {
+    padding: 14px 20px 18px;
+  }
+  .card-a .signal-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .card-a .signal-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+  }
+  .card-a .narrative {
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgba(28,26,23,0.65);
+  }
+  .card-a .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--linen);
+  }
+  .card-a .meta-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.45);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ═══════════════════════════════════════ */
+  /* CONCEPT B: Editorial Side-Accent Cards */
+  /* ═══════════════════════════════════════ */
+
+  .card-b {
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 12px rgba(28,26,23,0.04);
+    display: flex;
+    min-height: 140px;
+  }
+  .card-b:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(28,26,23,0.08);
+  }
+
+  .card-b .accent-bar {
+    width: 5px;
+    flex-shrink: 0;
+  }
+  .card-b .card-body {
+    flex: 1;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card-b .top-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-b .place-name {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .card-b .type-location {
+    font-size: 11px;
+    color: rgba(28,26,23,0.5);
+    margin-top: 3px;
+  }
+  .card-b .match-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-b .match-badge .pct {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: white;
+    line-height: 1;
+  }
+  .card-b .match-badge .pct-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 1px;
+  }
+
+  .card-b .signal-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 12px;
+  }
+  .card-b .signal-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.01em;
+  }
+  .card-b .narrative {
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: rgba(28,26,23,0.6);
+    margin-top: 10px;
+  }
+  .card-b .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .card-b .meta-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: rgba(28,26,23,0.4);
+  }
+
+  /* ═══════════════════════════════════════ */
+  /* CONCEPT C: Geometric Slab Cards        */
+  /* ═══════════════════════════════════════ */
+
+  .card-c {
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 12px rgba(28,26,23,0.04);
+    position: relative;
+  }
+  .card-c:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(28,26,23,0.1);
+  }
+
+  .card-c .card-inner {
+    display: flex;
+  }
+  .card-c .color-slab {
+    width: 88px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-c .color-slab .geo-shape {
+    position: absolute;
+    opacity: 0.12;
+  }
+  .card-c .color-slab .geo-circle {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: white;
+    top: -15px; right: -15px;
+  }
+  .card-c .color-slab .geo-rect {
+    width: 40px; height: 50px;
+    background: rgba(0,0,0,0.15);
+    bottom: 10px; left: -10px;
+    transform: rotate(-12deg);
+  }
+  .card-c .color-slab .icon-wrap {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+  .card-c .color-slab .icon-wrap svg {
+    width: 18px; height: 18px;
+    fill: white;
+    opacity: 0.9;
+  }
+  .card-c .color-slab .match-num {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: white;
+    position: relative;
+    z-index: 2;
+    line-height: 1;
+  }
+  .card-c .color-slab .match-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: rgba(255,255,255,0.55);
+    position: relative;
+    z-index: 2;
+    margin-top: -4px;
+    letter-spacing: 0.1em;
+  }
+
+  .card-c .card-content {
+    flex: 1;
+    padding: 16px 18px;
+    min-width: 0;
+  }
+  .card-c .type-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .card-c .place-name {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .card-c .location {
+    font-size: 11px;
+    color: rgba(28,26,23,0.5);
+    margin-top: 2px;
+  }
+  .card-c .signal-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .card-c .signal-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 8.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .card-c .narrative {
+    font-size: 11px;
+    line-height: 1.5;
+    color: rgba(28,26,23,0.6);
+    margin-top: 8px;
+  }
+  .card-c .bottom-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(28,26,23,0.06);
+  }
+  .card-c .meta-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: rgba(28,26,23,0.4);
+  }
+
+  /* ═══════════════════════════════════════ */
+  /* Shared color utilities                  */
+  /* ═══════════════════════════════════════ */
+  .bg-coral { background: var(--coral); }
+  .bg-navy { background: var(--navy); }
+  .bg-mint { background: var(--mint); }
+  .bg-ochre { background: var(--ochre); }
+  .bg-peach { background: var(--peach); }
+  .bg-verde { background: var(--verde); }
+
+  .text-coral { color: var(--coral); }
+  .text-navy { color: var(--navy); }
+  .text-mint { color: var(--mint); }
+  .text-ochre { color: var(--ochre); }
+  .text-verde { color: var(--verde); }
+
+  .chip-coral { background: rgba(232,111,90,0.1); color: var(--coral); }
+  .chip-navy { background: rgba(26,45,74,0.08); color: var(--navy); }
+  .chip-mint { background: rgba(94,196,178,0.12); color: #3a9484; }
+  .chip-ochre { background: rgba(232,184,75,0.12); color: #a07820; }
+  .chip-verde { background: rgba(42,122,86,0.08); color: var(--verde); }
+  .chip-peach { background: rgba(244,191,160,0.2); color: #b06a3a; }
+
+  .divider {
+    height: 1px;
+    background: var(--linen);
+    margin: 48px 0;
+  }
+
+  /* Comparison toggle */
+  .current-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(28,26,23,0.35);
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+
+  /* Current card recreation */
+  .card-current {
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    border: 1px solid var(--linen);
+    padding: 12px;
+  }
+  .card-current .top {
+    display: flex;
+    gap: 10px;
+  }
+  .card-current .thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .card-current .name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .card-current .meta {
+    font-size: 10px;
+    color: rgba(28,26,23,0.5);
+    margin-top: 2px;
+  }
+  .card-current .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .card-current .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(28,26,23,0.04);
+    color: rgba(28,26,23,0.55);
+  }
+  .card-current .desc {
+    font-size: 11px;
+    color: rgba(28,26,23,0.55);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-title">Place Card Concepts</div>
+  <p class="page-subtitle">Three directions for the /saved library cards — bringing brand energy to the data</p>
+
+  <!-- ═══ CURRENT ═══ -->
+  <div class="concept-section">
+    <div class="concept-header">
+      <span class="concept-label" style="color: rgba(28,26,23,0.3);">Current</span>
+      <span class="concept-title">Existing Card</span>
+    </div>
+    <p class="concept-desc">
+      For reference — the current white-box card. Functional but flat, no brand personality.
+    </p>
+    <div class="card-grid">
+      <div class="card-current">
+        <div class="top">
+          <div class="thumb" style="background: linear-gradient(135deg, #fce8e0, #f8d4c8);">🍽</div>
+          <div>
+            <div class="name">Soso's</div>
+            <div class="meta">Restaurant · 191 Centre St</div>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="tag" style="background:rgba(232,111,90,0.08);color:var(--coral);">Code Dining Dress</span>
+          <span class="tag" style="background:rgba(94,196,178,0.08);color:#3a9484;">Available Check Dining</span>
+          <span class="tag" style="background:rgba(200,146,58,0.08);color:#8a6a2a;">Conversational Formal</span>
+        </div>
+        <div class="desc">Strong match on code dining dress — shared appreciation for dress code enforced and high energy dining room.</div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <span style="font-family:'Space Mono';font-size:9px;color:rgba(28,26,23,0.5);">⭐ 4.8</span>
+          <span style="font-family:'Space Mono';font-size:9px;font-weight:700;color:#8a6a2a;">88%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══ CONCEPT A ═══ -->
+  <div class="concept-section">
+    <div class="concept-header">
+      <span class="concept-label">Concept A</span>
+      <span class="concept-title">Color-Blocked Hero</span>
+    </div>
+    <p class="concept-desc">
+      Each place type gets a bold brand color as a hero header — coral for restaurants, navy for hotels, mint for cafés, ochre for bars. Organic blob shapes add the brand's geometric energy. Match score is the hero metric. Wave divider transitions to content.
+    </p>
+    <div class="card-grid">
+
+      <!-- Restaurant (Coral) -->
+      <div class="card-a">
+        <div class="hero bg-coral">
+          <div class="org-blob blob-1"></div>
+          <div class="org-blob blob-2"></div>
+          <div class="top-row">
+            <span class="type-badge">Restaurant</span>
+            <div style="text-align:right;">
+              <div class="match-score">88</div>
+              <div class="match-label">MATCH</div>
+            </div>
+          </div>
+          <div class="place-name">Soso's</div>
+          <div class="location">191 Centre St, New York</div>
+        </div>
+        <svg class="wave-divider" viewBox="0 0 400 24" preserveAspectRatio="none" style="width:100%;height:24px;display:block;">
+          <path d="M0,0 L400,0 L400,8 Q300,24 200,16 Q100,8 0,20 Z" fill="#E86F5A"/>
+          <path d="M0,20 Q100,8 200,16 Q300,24 400,8 L400,24 L0,24 Z" fill="white"/>
+        </svg>
+        <div class="content">
+          <div class="signal-row">
+            <span class="signal-chip chip-coral">Dress Code</span>
+            <span class="signal-chip chip-verde">High Energy</span>
+            <span class="signal-chip chip-ochre">Formal Service</span>
+          </div>
+          <div class="narrative">Shared appreciation for dress code dining, high energy rooms, and conversational service.</div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.8</span>
+            <span class="meta-item">$$$</span>
+            <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ My Place</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hotel (Navy) -->
+      <div class="card-a">
+        <div class="hero bg-navy">
+          <div class="org-blob blob-1"></div>
+          <div class="org-blob blob-2"></div>
+          <div class="top-row">
+            <span class="type-badge">Hotel</span>
+            <div style="text-align:right;">
+              <div class="match-score">93</div>
+              <div class="match-label">MATCH</div>
+            </div>
+          </div>
+          <div class="place-name">Passalacqua</div>
+          <div class="location">Via Besana, Lake Como</div>
+        </div>
+        <svg class="wave-divider" viewBox="0 0 400 24" preserveAspectRatio="none" style="width:100%;height:24px;display:block;">
+          <path d="M0,0 L400,0 L400,8 Q300,24 200,16 Q100,8 0,20 Z" fill="#1A2D4A"/>
+          <path d="M0,20 Q100,8 200,16 Q300,24 400,8 L400,24 L0,24 Z" fill="white"/>
+        </svg>
+        <div class="content">
+          <div class="signal-row">
+            <span class="signal-chip chip-navy">Boutique Intimate</span>
+            <span class="signal-chip chip-mint">Destination Honeymoon</span>
+            <span class="signal-chip chip-ochre">Architectural</span>
+          </div>
+          <div class="narrative">Boutique intimacy meets destination architecture — a honeymoon-worthy property with considered design.</div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.6</span>
+            <span class="meta-item">$$$$</span>
+            <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ My Place</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Museum (Ochre) -->
+      <div class="card-a">
+        <div class="hero bg-ochre">
+          <div class="org-blob blob-1"></div>
+          <div class="org-blob blob-2"></div>
+          <div class="top-row">
+            <span class="type-badge">Museum</span>
+            <div style="text-align:right;">
+              <div class="match-score">91</div>
+              <div class="match-label">MATCH</div>
+            </div>
+          </div>
+          <div class="place-name">Inhotim Museum</div>
+          <div class="location">Povoado Inhotim, Brazil</div>
+        </div>
+        <svg class="wave-divider" viewBox="0 0 400 24" preserveAspectRatio="none" style="width:100%;height:24px;display:block;">
+          <path d="M0,0 L400,0 L400,8 Q300,24 200,16 Q100,8 0,20 Z" fill="#E8B84B"/>
+          <path d="M0,20 Q100,8 200,16 Q300,24 400,8 L400,24 L0,24 Z" fill="white"/>
+        </svg>
+        <div class="content">
+          <div class="signal-row">
+            <span class="signal-chip chip-ochre">Destination Family</span>
+            <span class="signal-chip chip-verde">Multi-Generational</span>
+            <span class="signal-chip chip-coral">Architectural</span>
+          </div>
+          <div class="narrative">A destination for multi-generational appeal — open-air contemporary art set within botanical gardens.</div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.8</span>
+            <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ Enjoyed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Café (Mint) -->
+      <div class="card-a">
+        <div class="hero bg-mint">
+          <div class="org-blob blob-1"></div>
+          <div class="org-blob blob-2"></div>
+          <div class="top-row">
+            <span class="type-badge">Café</span>
+            <div style="text-align:right;">
+              <div class="match-score">77</div>
+              <div class="match-label">MATCH</div>
+            </div>
+          </div>
+          <div class="place-name">La Molienda Bisbe</div>
+          <div class="location">Mallorca</div>
+        </div>
+        <svg class="wave-divider" viewBox="0 0 400 24" preserveAspectRatio="none" style="width:100%;height:24px;display:block;">
+          <path d="M0,0 L400,0 L400,8 Q300,24 200,16 Q100,8 0,20 Z" fill="#5EC4B2"/>
+          <path d="M0,20 Q100,8 200,16 Q300,24 400,8 L400,24 L0,24 Z" fill="white"/>
+        </svg>
+        <div class="content">
+          <div class="signal-row">
+            <span class="signal-chip chip-mint">Baked Bread</span>
+            <span class="signal-chip chip-ochre">Homemade</span>
+            <span class="signal-chip chip-verde">Local Sourced</span>
+          </div>
+          <div class="narrative">House-baked bread, sourdough focus, and development-from-location sourcing philosophy.</div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.3</span>
+            <span class="meta-item">$$</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══ CONCEPT B ═══ -->
+  <div class="concept-section">
+    <div class="concept-header">
+      <span class="concept-label">Concept B</span>
+      <span class="concept-title">Editorial Side-Accent</span>
+    </div>
+    <p class="concept-desc">
+      Minimal and editorial — a colored side bar signals place type. Name gets serif italic treatment. Match score lives in a colored badge. Content-forward, works well at density. Inspired by the reveal card accent-bar pattern.
+    </p>
+    <div class="card-grid">
+
+      <div class="card-b">
+        <div class="accent-bar bg-coral"></div>
+        <div class="card-body">
+          <div>
+            <div class="top-section">
+              <div>
+                <div class="place-name">Soso's</div>
+                <div class="type-location">Restaurant · 191 Centre St, New York</div>
+              </div>
+              <div class="match-badge bg-coral">
+                <span class="pct">88</span>
+                <span class="pct-label">%</span>
+              </div>
+            </div>
+            <div class="signal-row">
+              <span class="signal-chip chip-coral">Dress Code</span>
+              <span class="signal-chip chip-verde">High Energy</span>
+              <span class="signal-chip chip-ochre">Formal</span>
+            </div>
+            <div class="narrative">Shared appreciation for dress code dining, high energy rooms, and conversational service.</div>
+          </div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.8 · $$$</span>
+            <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ My Place</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div class="accent-bar bg-navy"></div>
+        <div class="card-body">
+          <div>
+            <div class="top-section">
+              <div>
+                <div class="place-name">Passalacqua</div>
+                <div class="type-location">Hotel · Via Besana, Lake Como</div>
+              </div>
+              <div class="match-badge bg-navy">
+                <span class="pct">93</span>
+                <span class="pct-label">%</span>
+              </div>
+            </div>
+            <div class="signal-row">
+              <span class="signal-chip chip-navy">Boutique</span>
+              <span class="signal-chip chip-mint">Honeymoon</span>
+              <span class="signal-chip chip-ochre">Architectural</span>
+            </div>
+            <div class="narrative">Boutique intimacy meets destination architecture — a considered property with exceptional service.</div>
+          </div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.6 · $$$$</span>
+            <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ My Place</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div class="accent-bar bg-ochre"></div>
+        <div class="card-body">
+          <div>
+            <div class="top-section">
+              <div>
+                <div class="place-name">Inhotim Museum</div>
+                <div class="type-location">Museum · Povoado Inhotim, Brazil</div>
+              </div>
+              <div class="match-badge bg-ochre">
+                <span class="pct">91</span>
+                <span class="pct-label">%</span>
+              </div>
+            </div>
+            <div class="signal-row">
+              <span class="signal-chip chip-ochre">Destination</span>
+              <span class="signal-chip chip-verde">Family</span>
+              <span class="signal-chip chip-coral">Architectural</span>
+            </div>
+            <div class="narrative">Open-air contemporary art set within botanical gardens — multi-generational destination appeal.</div>
+          </div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.8</span>
+            <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ Enjoyed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div class="accent-bar bg-mint"></div>
+        <div class="card-body">
+          <div>
+            <div class="top-section">
+              <div>
+                <div class="place-name">La Molienda Bisbe</div>
+                <div class="type-location">Café · Mallorca</div>
+              </div>
+              <div class="match-badge bg-mint">
+                <span class="pct">77</span>
+                <span class="pct-label">%</span>
+              </div>
+            </div>
+            <div class="signal-row">
+              <span class="signal-chip chip-mint">Baked Bread</span>
+              <span class="signal-chip chip-ochre">Homemade</span>
+              <span class="signal-chip chip-verde">Local</span>
+            </div>
+            <div class="narrative">House-baked bread and sourdough focus with a local sourcing philosophy.</div>
+          </div>
+          <div class="meta-row">
+            <span class="meta-item">⭐ 4.3 · $$</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══ CONCEPT C ═══ -->
+  <div class="concept-section">
+    <div class="concept-header">
+      <span class="concept-label">Concept C</span>
+      <span class="concept-title">Geometric Slab</span>
+    </div>
+    <p class="concept-desc">
+      A bold colored slab on the left with match score and type icon — directly inspired by the brand posters' geometric color blocking. The slab uses organic blob shapes. Content on the right stays clean and scannable.
+    </p>
+    <div class="card-grid">
+
+      <div class="card-c">
+        <div class="card-inner">
+          <div class="color-slab bg-coral">
+            <div class="geo-shape geo-circle"></div>
+            <div class="geo-shape geo-rect"></div>
+            <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg></div>
+            <div class="match-num">88</div>
+            <div class="match-pct">MATCH</div>
+          </div>
+          <div class="card-content">
+            <div class="type-label text-coral">Restaurant</div>
+            <div class="place-name">Soso's</div>
+            <div class="location">191 Centre St, New York</div>
+            <div class="signal-row">
+              <span class="signal-chip chip-coral">Dress Code</span>
+              <span class="signal-chip chip-verde">High Energy</span>
+              <span class="signal-chip chip-ochre">Formal</span>
+            </div>
+            <div class="narrative">Shared appreciation for dress code dining and high energy rooms.</div>
+            <div class="bottom-meta">
+              <span class="meta-item">⭐ 4.8 · $$$</span>
+              <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ My Place</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-c">
+        <div class="card-inner">
+          <div class="color-slab bg-navy">
+            <div class="geo-shape geo-circle"></div>
+            <div class="geo-shape geo-rect"></div>
+            <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg></div>
+            <div class="match-num">93</div>
+            <div class="match-pct">MATCH</div>
+          </div>
+          <div class="card-content">
+            <div class="type-label text-navy">Hotel</div>
+            <div class="place-name">Passalacqua</div>
+            <div class="location">Via Besana, Lake Como</div>
+            <div class="signal-row">
+              <span class="signal-chip chip-navy">Boutique</span>
+              <span class="signal-chip chip-mint">Honeymoon</span>
+              <span class="signal-chip chip-ochre">Design</span>
+            </div>
+            <div class="narrative">Boutique intimacy meets destination architecture with considered design.</div>
+            <div class="bottom-meta">
+              <span class="meta-item">⭐ 4.6 · $$$$</span>
+              <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ My Place</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-c">
+        <div class="card-inner">
+          <div class="color-slab bg-ochre">
+            <div class="geo-shape geo-circle"></div>
+            <div class="geo-shape geo-rect"></div>
+            <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z"/></svg></div>
+            <div class="match-num">91</div>
+            <div class="match-pct">MATCH</div>
+          </div>
+          <div class="card-content">
+            <div class="type-label text-ochre">Museum</div>
+            <div class="place-name">Inhotim Museum</div>
+            <div class="location">Povoado Inhotim, Brazil</div>
+            <div class="signal-row">
+              <span class="signal-chip chip-ochre">Destination</span>
+              <span class="signal-chip chip-verde">Family</span>
+              <span class="signal-chip chip-coral">Architecture</span>
+            </div>
+            <div class="narrative">Open-air contemporary art within botanical gardens.</div>
+            <div class="bottom-meta">
+              <span class="meta-item">⭐ 4.8</span>
+              <span class="meta-item" style="margin-left:auto;color:var(--verde);font-weight:700;">♡ Enjoyed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-c">
+        <div class="card-inner">
+          <div class="color-slab bg-mint">
+            <div class="geo-shape geo-circle"></div>
+            <div class="geo-shape geo-rect"></div>
+            <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.9 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg></div>
+            <div class="match-num">77</div>
+            <div class="match-pct">MATCH</div>
+          </div>
+          <div class="card-content">
+            <div class="type-label text-mint">Café</div>
+            <div class="place-name">La Molienda Bisbe</div>
+            <div class="location">Mallorca</div>
+            <div class="signal-row">
+              <span class="signal-chip chip-mint">Baked Bread</span>
+              <span class="signal-chip chip-ochre">Homemade</span>
+              <span class="signal-chip chip-verde">Local</span>
+            </div>
+            <div class="narrative">House-baked bread and sourdough with local sourcing.</div>
+            <div class="bottom-meta">
+              <span class="meta-item">⭐ 4.3 · $$</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -8,7 +8,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
-import { TYPE_ICONS, TYPE_COLORS_MUTED } from '@/constants/placeTypes';
+import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS } from '@/constants/picksFilters';
 import { SignalResonanceStrip } from '@/components/intelligence';
 import type { ResonanceCluster } from '@/components/intelligence';
@@ -91,8 +91,8 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
               fontFamily: FONT.mono,
               fontSize: 9,
               fontWeight: 700,
-              background: 'rgba(42,122,86,0.08)',
-              color: 'var(--t-verde)',
+              background: 'rgba(58,128,136,0.08)',
+              color: 'var(--t-dark-teal)',
             }}
           >
             {allPicks.length}
@@ -171,8 +171,8 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
                   onClick={() => onTapDetail(place)}
                   className="rounded-xl cursor-pointer transition-all hover:shadow-md"
                   style={{
-                    background: `linear-gradient(135deg, ${typeColor}18, ${typeColor}08)`,
-                    border: `1px solid ${typeColor}30`,
+                    background: `linear-gradient(135deg, ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}08, ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}14)`,
+                    border: `1px solid ${TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor}20`,
                     padding: '10px 12px',
                   }}
                 >
@@ -183,10 +183,10 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
                       style={{
                         width: 32,
                         height: 32,
-                        background: `${typeColor}25`,
+                        background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
                       }}
                     >
-                      <PerriandIcon name={typeIcon} size={16} />
+                      <PerriandIcon name={typeIcon} size={16} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div
@@ -209,12 +209,12 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
                     <span
                       className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
                       style={{
-                        background: 'rgba(42,122,86,0.1)',
-                        color: 'var(--t-verde)',
+                        background: 'rgba(58,128,136,0.1)',
+                        color: 'var(--t-dark-teal)',
                         fontFamily: FONT.mono,
                       }}
                     >
-                      {place.matchScore}%
+                      {Math.round(place.matchScore)}%
                     </span>
                     <span
                       className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded"

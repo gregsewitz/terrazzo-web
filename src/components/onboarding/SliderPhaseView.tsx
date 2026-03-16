@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import type { TasteSignal } from '@/types';
 import { T } from '@/types';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 
 // ─── Slider Definitions ───
 
@@ -92,7 +92,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
       <div style={{ width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Instruction */}
         <p style={{
-          color: T.ink,
+          color: COLOR.navy,
           fontSize: 14,
           margin: '0 0 20px',
           textAlign: 'center',
@@ -131,7 +131,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
                 <span style={{
                   fontSize: 13,
                   fontWeight: leftActive ? 600 : 400,
-                  color: leftActive ? T.ink : TEXT.secondary,
+                  color: leftActive ? COLOR.navy : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   flex: '0 1 auto',
@@ -142,7 +142,7 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
                 <span style={{
                   fontSize: 13,
                   fontWeight: rightActive ? 600 : 400,
-                  color: rightActive ? T.ink : TEXT.secondary,
+                  color: rightActive ? COLOR.navy : TEXT.secondary,
                   fontFamily: FONT.sans,
                   transition: 'all 0.2s ease',
                   textAlign: 'right',
@@ -174,8 +174,8 @@ export default function SliderPhaseView({ onComplete, sliders }: SliderPhaseView
           style={{
             marginTop: 24,
             padding: '15px 40px',
-            background: submitted ? T.travertine : T.ink,
-            color: submitted ? TEXT.secondary : T.cream,
+            background: submitted ? COLOR.peach : COLOR.navy,
+            color: submitted ? TEXT.secondary : COLOR.cream,
             border: 'none',
             borderRadius: 100,
             fontSize: 15,

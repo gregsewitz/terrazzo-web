@@ -84,7 +84,7 @@ export const ImportResultsStep = React.memo(function ImportResultsStep({
           <button
             onClick={onSelectAll}
             className="text-[10px] font-semibold bg-transparent border-none cursor-pointer"
-            style={{ color: 'var(--t-verde)' }}
+            style={{ color: 'var(--t-dark-teal)' }}
           >
             Select all
           </button>
@@ -114,7 +114,7 @@ export const ImportResultsStep = React.memo(function ImportResultsStep({
                     {items.length}
                   </span>
                 </div>
-                <span className="text-[10px] font-semibold" style={{ color: 'var(--t-verde)' }}>
+                <span className="text-[10px] font-semibold" style={{ color: 'var(--t-dark-teal)' }}>
                   {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
                 </span>
               </div>
@@ -140,7 +140,7 @@ export const ImportResultsStep = React.memo(function ImportResultsStep({
                       <div
                         className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0"
                         style={{
-                          background: isSelected ? 'var(--t-verde)' : 'white',
+                          background: isSelected ? 'var(--t-dark-teal)' : 'white',
                           border: isSelected ? 'none' : '1.5px solid var(--t-linen)',
                         }}
                       >

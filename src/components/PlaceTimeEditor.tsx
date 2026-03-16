@@ -186,12 +186,12 @@ export default function PlaceTimeEditor({
         className="inline-flex items-center gap-1 rounded-md"
         style={{
           background: 'var(--t-cream, #faf8f4)',
-          border: '1px solid var(--t-verde-muted, rgba(42,122,86,0.25))',
+          border: '1px solid var(--t-verde-muted, rgba(58,128,136,0.25))',
           boxShadow: '0 1px 3px rgba(0,42,85,0.06)',
           padding: '2px 6px',
         }}
       >
-        <ClockIcon size={compact ? 8 : 9} color="rgba(42,122,86,0.6)" />
+        <ClockIcon size={compact ? 8 : 9} color="rgba(58,128,136,0.6)" />
         <input
           ref={inputRef}
           type="time"

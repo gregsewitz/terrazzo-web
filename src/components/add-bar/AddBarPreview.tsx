@@ -129,7 +129,7 @@ export default function AddBarPreview({
           <button
             onClick={allSelected ? onDeselectAll : onSelectAll}
             className="bg-transparent border-none cursor-pointer"
-            style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'var(--t-verde)' }}
+            style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'var(--t-dark-teal)' }}
           >
             {allSelected ? 'Deselect all' : 'Select all'}
           </button>
@@ -169,7 +169,7 @@ export default function AddBarPreview({
                     {items.length}
                   </span>
                 </div>
-                <span style={{ fontFamily: FONT.mono, fontSize: 10, fontWeight: 600, color: 'var(--t-verde)' }}>
+                <span style={{ fontFamily: FONT.mono, fontSize: 10, fontWeight: 600, color: 'var(--t-dark-teal)' }}>
                   {selectedInGroup === items.length ? 'All selected' : `${selectedInGroup}/${items.length}`}
                 </span>
               </div>
@@ -228,7 +228,7 @@ export default function AddBarPreview({
                           {isAlreadyInLibrary && (
                             <span style={{
                               fontFamily: FONT.mono, fontSize: 8, fontWeight: 700,
-                              color: 'var(--t-verde)', background: 'rgba(42,122,86,0.08)',
+                              color: 'var(--t-dark-teal)', background: 'rgba(58,128,136,0.08)',
                               padding: '1px 5px', borderRadius: 4, flexShrink: 0,
                             }}>
                               IN LIBRARY
@@ -327,16 +327,16 @@ export default function AddBarPreview({
                       )}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all"
                       style={{
-                        background: isSelected ? 'rgba(42,122,86,0.08)' : 'white',
-                        border: isSelected ? '1px solid var(--t-verde)' : '1px solid var(--t-linen)',
+                        background: isSelected ? 'rgba(58,128,136,0.08)' : 'white',
+                        border: isSelected ? '1px solid var(--t-dark-teal)' : '1px solid var(--t-linen)',
                         fontSize: 12,
                         fontFamily: FONT.sans,
-                        color: isSelected ? 'var(--t-verde)' : TEXT.primary,
+                        color: isSelected ? 'var(--t-dark-teal)' : TEXT.primary,
                       }}
                     >
                       <span style={{ fontSize: 13, display: 'inline-flex', alignItems: 'center' }}>
                         {sl.emoji && isPerriandIconName(sl.emoji)
-                          ? <PerriandIcon name={sl.emoji} size={13} color={isSelected ? 'var(--t-verde)' : INK['50']} />
+                          ? <PerriandIcon name={sl.emoji} size={13} color={isSelected ? 'var(--t-dark-teal)' : INK['50']} />
                           : sl.emoji || '📌'}
                       </span>
                       {sl.name}

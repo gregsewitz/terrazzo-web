@@ -107,10 +107,10 @@ export default function RightPanel({ activities }: RightPanelProps) {
                 width: 26,
                 height: 26,
                 borderRadius: '50%',
-                background: 'rgba(42,122,86,0.1)',
+                background: 'rgba(58,128,136,0.1)',
               }}
             >
-              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, color: 'var(--t-verde)' }}>
+              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, color: 'var(--t-dark-teal)' }}>
                 {markers.length}
               </span>
             </div>
@@ -178,7 +178,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
             style={{ background: 'var(--t-linen)' }}
           >
             <div className="flex items-center gap-1">
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--t-verde)' }} />
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--t-dark-teal)' }} />
               <span style={{ fontFamily: FONT.mono, fontSize: 8, color: TEXT.secondary }}>
                 {markers.length} place{markers.length !== 1 ? 's' : ''} planned
               </span>

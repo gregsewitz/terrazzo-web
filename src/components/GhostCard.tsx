@@ -102,7 +102,7 @@ function GhostCardInner({
               onClick={(e) => { e.stopPropagation(); onConfirm(); }}
               className="px-2 py-0.5 rounded-md font-semibold transition-all flex items-center gap-0.5 btn-hover"
               style={{
-                background: 'var(--t-verde)',
+                background: 'var(--t-dark-teal)',
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
@@ -216,7 +216,7 @@ function GhostCardInner({
           onClick={(e) => { e.stopPropagation(); onConfirm(); }}
           className="flex-1 px-2 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1 transition-all hover:scale-105"
           style={{
-            background: 'var(--t-verde)',
+            background: 'var(--t-dark-teal)',
             color: 'white',
             border: 'none',
             cursor: 'pointer',

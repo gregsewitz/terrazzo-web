@@ -94,7 +94,7 @@ export default function ProcessingPage() {
         {/* Animated brand mark */}
         <div className="text-center mb-10">
           <motion.h1
-            className="font-display text-[32px] text-[var(--t-ink)]"
+            className="font-display text-[32px] text-[var(--t-navy)]"
             initial={{ opacity: 0, y: -10 }}
             animate={hasError ? { opacity: 1, y: 0, x: [0, -4, 4, -4, 0] } : { opacity: 1, y: 0 }}
             transition={hasError ? { duration: 0.6, x: { duration: 0.5, delay: 0.1 } } : { duration: 0.6 }}
@@ -103,7 +103,7 @@ export default function ProcessingPage() {
           </motion.h1>
           {!hasError && (
             <motion.p
-              className="text-[14px] text-[var(--t-ink)]/45 mt-2 italic"
+              className="text-[14px] text-[var(--t-navy)]/45 mt-2 italic"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -114,7 +114,7 @@ export default function ProcessingPage() {
           )}
           {hasError && (
             <motion.p
-              className="text-[15px] text-[var(--t-ink)]/60 mt-2"
+              className="text-[15px] text-[var(--t-navy)]/60 mt-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -148,9 +148,9 @@ export default function ProcessingPage() {
                       className={`
                         w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
                         ${isDoneStep
-                          ? 'bg-[var(--t-verde)]'
+                          ? 'bg-[var(--t-dark-teal)]'
                           : isActive
-                            ? 'bg-[var(--t-honey)]'
+                            ? 'bg-[var(--t-ochre)]'
                             : 'bg-[var(--t-travertine)]'
                         }
                       `}
@@ -179,10 +179,10 @@ export default function ProcessingPage() {
                     <motion.span
                       className={`
                         font-mono text-[13px]
-                        ${isActive ? 'text-[var(--t-ink)]' : 'text-[var(--t-ink)]/50'}
+                        ${isActive ? 'text-[var(--t-navy)]' : 'text-[var(--t-navy)]/50'}
                       `}
                       animate={{
-                        color: isActive ? 'var(--t-ink)' : 'color: var(--t-ink)/50)',
+                        color: isActive ? 'var(--t-navy)' : 'color: var(--t-navy)/50)',
                       }}
                       transition={{ duration: 0.3 }}
                     >
@@ -206,7 +206,7 @@ export default function ProcessingPage() {
             <motion.button
               onClick={handleRetry}
               className="w-full py-3.5 rounded-xl text-[15px] font-medium text-white transition-all"
-              style={{ backgroundColor: 'var(--t-ink)' }}
+              style={{ backgroundColor: 'var(--t-navy)' }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -215,7 +215,7 @@ export default function ProcessingPage() {
             <motion.button
               onClick={handleSkipToReveal}
               className="w-full py-3 rounded-xl text-[14px] font-medium transition-all"
-              style={{ color: 'var(--t-ink)', opacity: 0.5 }}
+              style={{ color: 'var(--t-navy)', opacity: 0.5 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -228,7 +228,7 @@ export default function ProcessingPage() {
         {!hasError && (
           <div className="mt-8 h-1 rounded-full bg-[var(--t-travertine)] overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-[var(--t-honey)]"
+              className="h-full rounded-full bg-[var(--t-ochre)]"
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             />

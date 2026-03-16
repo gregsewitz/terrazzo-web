@@ -81,7 +81,7 @@ export default function Act1CompletePage() {
             <circle
               cx="50" cy="50" r="44"
               fill="none"
-              stroke="var(--t-honey)"
+              stroke="var(--t-ochre)"
               strokeWidth="4"
               strokeLinecap="round"
               strokeDasharray={circumference}
@@ -95,10 +95,10 @@ export default function Act1CompletePage() {
             transition-all duration-700
             ${stage >= 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}
           `}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--t-verde)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--t-dark-teal)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            <span className="font-mono text-[11px] text-[var(--t-ink)]/40 mt-1">
+            <span className="font-mono text-[11px] text-[var(--t-navy)]/40 mt-1">
               {Math.round(progress * 100)}%
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function Act1CompletePage() {
 
         {/* Headline */}
         <p className={`
-          font-mono text-[11px] uppercase tracking-widest text-[var(--t-honey)] mb-3
+          font-mono text-[11px] uppercase tracking-widest text-[var(--t-ochre)] mb-3
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
@@ -114,7 +114,7 @@ export default function Act1CompletePage() {
         </p>
 
         <h1 className={`
-          font-display text-[28px] text-[var(--t-ink)] leading-tight text-center mb-6
+          font-display text-[28px] text-[var(--t-navy)] leading-tight text-center mb-6
           transition-all duration-700
           ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
@@ -137,10 +137,10 @@ export default function Act1CompletePage() {
               className="flex-1 text-center py-3 rounded-xl"
               style={{ backgroundColor: 'var(--t-warm-white)' }}
             >
-              <p className="font-display text-[22px] text-[var(--t-ink)] leading-none mb-1">
+              <p className="font-display text-[22px] text-[var(--t-navy)] leading-none mb-1">
                 {stat.value}
               </p>
-              <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--t-ink)]/40 leading-tight px-1">
+              <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--t-navy)]/40 leading-tight px-1">
                 {stat.label}
               </p>
             </div>
@@ -156,10 +156,10 @@ export default function Act1CompletePage() {
           `}
             style={{ backgroundColor: 'var(--t-travertine)', border: '1px solid rgba(28, 26, 23, 0.06)' }}
           >
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-ink)]/40 mb-2">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--t-navy)]/40 mb-2">
               Still developing
             </p>
-            <p className="text-[14px] text-[var(--t-ink)]/70 leading-relaxed">
+            <p className="text-[14px] text-[var(--t-navy)]/70 leading-relaxed">
               {gapDomains.map((d) => DOMAIN_DISPLAY[d] || d).join(', ')}
               {' '}&mdash; Act III will deepen these areas.
             </p>
@@ -168,7 +168,7 @@ export default function Act1CompletePage() {
 
         {/* Motivational message */}
         <p className={`
-          text-[15px] text-[var(--t-ink)]/60 leading-relaxed text-center mb-8
+          text-[15px] text-[var(--t-navy)]/60 leading-relaxed text-center mb-8
           transition-all duration-700
           ${stage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
         `}>
@@ -187,14 +187,14 @@ export default function Act1CompletePage() {
             hover:opacity-90 active:scale-[0.98]
             ${stage >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
           `}
-          style={{ backgroundColor: 'var(--t-ink)' }}
+          style={{ backgroundColor: 'var(--t-navy)' }}
           disabled={stage < 3}
         >
           Continue to Act III
         </button>
 
         <p className={`
-          font-mono text-[11px] text-[var(--t-ink)]/25 mt-3
+          font-mono text-[11px] text-[var(--t-navy)]/25 mt-3
           transition-all duration-500
           ${stage >= 3 ? 'opacity-100' : 'opacity-0'}
         `}>

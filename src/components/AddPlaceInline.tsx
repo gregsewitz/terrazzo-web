@@ -57,8 +57,8 @@ function AddPlaceInline({ destination, variant }: AddPlaceInlineProps) {
           style={{
             minWidth: 220,
             background: 'white',
-            border: '1.5px dashed var(--t-verde)',
-            boxShadow: '0 2px 8px rgba(42,122,86,0.1)',
+            border: '1.5px dashed var(--t-dark-teal)',
+            boxShadow: '0 2px 8px rgba(58,128,136,0.1)',
           }}
         >
           <PlaceSearchInput
@@ -138,9 +138,9 @@ function AddPlaceInline({ destination, variant }: AddPlaceInlineProps) {
     >
       <div
         className="flex items-center justify-center flex-shrink-0"
-        style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--t-verde)12' }}
+        style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--t-dark-teal)12' }}
       >
-        <PerriandIcon name="add" size={14} color="var(--t-verde)" />
+        <PerriandIcon name="add" size={14} color="var(--t-dark-teal)" />
       </div>
       <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: TEXT.secondary }}>
         Add a place

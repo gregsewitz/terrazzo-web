@@ -253,7 +253,8 @@ interface AnimatedScoreArcProps {
 
 export function AnimatedScoreArc({ score, size = 52, color = '#4a6741', delay = 0 }: AnimatedScoreArcProps) {
   const [ref, isInView] = useInView({ threshold: 0.3 });
-  const pct = score <= 1 ? Math.round(score * 100) : Math.round(score);
+  // All scores should be 0–100 integers; round for safety
+  const pct = Math.round(score);
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;

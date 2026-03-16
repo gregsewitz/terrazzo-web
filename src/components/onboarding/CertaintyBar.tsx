@@ -78,7 +78,7 @@ export default function CertaintyBar() {
             <div
               className="w-full h-1.5 rounded-full overflow-hidden"
               style={{
-                backgroundColor: isFuture ? 'var(--t-travertine)' : 'color-mix(in srgb, var(--t-travertine) 60%, transparent)',
+                backgroundColor: isFuture ? 'var(--t-peach)' : 'color-mix(in srgb, var(--t-peach) 60%, transparent)',
                 opacity: isFuture ? 0.4 : 1,
               }}
             >
@@ -86,7 +86,7 @@ export default function CertaintyBar() {
                 className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{
                   width: `${fillPercent}%`,
-                  backgroundColor: isDone ? 'var(--t-honey)' : 'var(--t-ink)',
+                  backgroundColor: isDone ? 'var(--t-ochre)' : 'var(--t-navy)',
                   opacity: isDone ? 1 : 0.7,
                 }}
               />
