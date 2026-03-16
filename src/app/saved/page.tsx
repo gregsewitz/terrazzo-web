@@ -17,9 +17,6 @@ import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContex
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
-import { SignalResonanceStrip } from '@/components/intelligence';
-import type { ResonanceCluster } from '@/components/intelligence';
-import type { TasteDomain } from '@/types';
 import BrandLoader from '@/components/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
@@ -502,20 +499,38 @@ function SavedPageContent() {
                   {sortedCollections.length}
                 </span>
               </h2>
-              <button
-                onClick={() => setShowCreateCollection(true)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer"
-                style={{
-                  background: 'var(--t-ink)',
-                  color: 'white',
-                  border: 'none',
-                  fontFamily: FONT.sans,
-                  fontSize: 11,
-                  fontWeight: 600,
-                }}
-              >
-                <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>+</span> New
-              </button>
+              <div className="flex items-center gap-2">
+                {sortedCollections.length > 6 && !collectionsExpanded && (
+                  <button
+                    onClick={() => setCollectionsExpanded(true)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--t-linen)',
+                      fontFamily: FONT.sans,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: TEXT.secondary,
+                    }}
+                  >
+                    See all
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowCreateCollection(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer"
+                  style={{
+                    background: 'var(--t-ink)',
+                    color: 'white',
+                    border: 'none',
+                    fontFamily: FONT.sans,
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>+</span> New
+                </button>
+              </div>
             </div>
 
             {/* ≤6 collections: always show grid (no carousel needed) */}
@@ -571,24 +586,7 @@ function SavedPageContent() {
                     <CollectionCard collection={sl} places={myPlaces} onClick={() => router.push(`/saved/collections/${sl.id}`)} />
                   </div>
                 ))}
-                {/* See All pill at end of carousel */}
-                <button
-                  onClick={() => setCollectionsExpanded(true)}
-                  className="flex-shrink-0 flex items-center justify-center rounded-xl cursor-pointer"
-                  style={{
-                    width: 80,
-                    background: 'white',
-                    border: '1px solid var(--t-linen)',
-                    fontFamily: FONT.sans,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: TEXT.secondary,
-                    padding: '10px 12px',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  See all
-                </button>
+                {/* See All moved to header row for visibility */}
               </div>
             )}
           </div>
@@ -834,31 +832,15 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
           </span>
         </div>
 
-        {/* Intelligence narrative — progressive enhancement */}
-        {place.matchExplanation?.topClusters && place.matchExplanation.topClusters.length > 0 && (
-          <div className="mt-1.5 mb-1">
-            <SignalResonanceStrip
-              clusters={place.matchExplanation.topClusters.map(c => ({
-                label: c.label,
-                domain: c.domain as TasteDomain,
-                score: c.score,
-                signals: c.signals,
-              }))}
-              variant="compact"
-            />
-            {place.matchExplanation.narrative && (
-              <p
-                className="text-[10px] leading-snug mt-1.5 line-clamp-2"
-                style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
-              >
-                {place.matchExplanation.narrative}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Fallback subtitle when no intelligence available */}
-        {!(place.matchExplanation?.topClusters && place.matchExplanation.topClusters.length > 0) && truncSub && (
+        {/* Intelligence narrative or fallback subtitle */}
+        {place.matchExplanation?.narrative ? (
+          <p
+            className="text-[10px] leading-snug mt-1.5 mb-1 line-clamp-2"
+            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
+          >
+            {place.matchExplanation.narrative}
+          </p>
+        ) : truncSub ? (
           <div style={{
             fontFamily: FONT.sans,
             fontSize: 11,
@@ -868,7 +850,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
           }}>
             {truncSub}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
