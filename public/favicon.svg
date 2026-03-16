@@ -1,23 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <style>
-      @media (prefers-color-scheme: dark) {
-        rect { fill: transparent; }
-      }
-      @media (prefers-color-scheme: light) {
-        rect { fill: transparent; }
-      }
-    </style>
-  </defs>
-  <!-- Transparent background -->
-  <rect width="32" height="32" fill="transparent"/>
-
-  <!-- Zigzag icon scaled to fit 32x32 with padding -->
-  <!-- Original viewBox: 0 0 133.5 600, we'll scale it to fit within 32x32 with 2px padding (28x28 content area) -->
-  <!-- Scale factor: 28/600 ≈ 0.0467 for height, 28/133.5 ≈ 0.2098 for width -->
-  <!-- We'll use the smaller scale (0.0467) to maintain aspect ratio and center -->
-  <!-- Translate by 2px (padding) + offset to center horizontally -->
-  <g transform="translate(2, 2) scale(0.0467)">
-    <path d="M 66.85 598.88 L 66.85 532.04 L 133.68 532.04 L 133.68 598.88 Z M 133.68 134.79 L 133.68 67.96 L 66.85 67.96 L 66.85 117.14 L 0.01 117.14 L 0.01 183.98 L 66.85 183.98 L 66.85 134.79 Z M 0.01 465.21 L 0.01 532.04 L 66.85 532.04 L 66.85 482.86 L 133.68 482.86 L 133.68 416.02 L 66.85 416.02 L 66.85 465.21 Z M 0.01 349.18 L 0.01 416.02 L 66.85 416.02 L 66.85 366.84 L 133.68 366.84 L 133.68 300 L 66.85 300 L 66.85 349.18 Z M 0.01 233.16 L 0.01 300 L 66.85 300 L 66.85 250.82 L 133.68 250.82 L 133.68 183.98 L 66.85 183.98 L 66.85 233.16 Z M 0.01 1.12 L 0.01 67.96 L 66.85 67.96 L 66.85 1.12 Z" fill="#002a55" stroke="none"/>
+  <!-- Terrazzo pixellance "T" — navy on transparent -->
+  <g fill="#002a55">
+    <rect x="3.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="8.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="18.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="23.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="6.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="11.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="16.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="21.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="26.25" width="4.5" height="4.5" rx="0.3"/>
   </g>
 </svg>
