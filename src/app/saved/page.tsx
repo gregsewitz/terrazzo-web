@@ -19,6 +19,7 @@ import FilterSortBar from '@/components/ui/FilterSortBar';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import BrandLoader from '@/components/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { getDisplayLocation } from '@/lib/place-display';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -769,7 +770,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
                 <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                   {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                 </span>
-                <span style={{ fontSize: 10, color: TEXT.secondary }}>· {place.location.split(',')[0]}</span>
+                {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import type { ImportedPlace, Collection } from '@/types';
 import { dbSave } from '@/lib/db-save';
+import { getDisplayLocation } from '@/lib/place-display';
 
 // ═══════════════════════════════════════════
 // DB write wrapper
@@ -19,9 +20,9 @@ export function deriveCities(placeIds: string[], allPlaces: ImportedPlace[]): st
   placeIds.forEach(id => {
     const place = allPlaces.find(p => p.id === id);
     if (place) {
-      // Take first part of location (city name)
-      const city = place.location.split(',')[0].trim();
-      cities.add(city);
+      // Take first part of location (city name), filtering out bad data
+      const city = getDisplayLocation(place.location, place.name, place.google?.address);
+      if (city) cities.add(city);
     }
   });
   return Array.from(cities);

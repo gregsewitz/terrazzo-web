@@ -17,6 +17,8 @@ const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
  *
  * Error tracking: failures are written to the PlaceIntelligence record
  * (lastError, errorCount, lastErrorAt) for structured observability.
+ * When triggerRailwayEnrichment fails, the PI record is marked 'failed'
+ * so the orphan-sweep can retry it with exponential backoff.
  */
 export async function ensureEnrichment(
   googlePlaceId: string,
@@ -63,7 +65,12 @@ export async function ensureEnrichment(
       });
 
       await linkPlacesToIntelligence(googlePlaceId, existing.id);
-      await triggerRailwayEnrichment(googlePlaceId, propertyName, existing.id);
+
+      const triggered = await triggerRailwayEnrichment(googlePlaceId, propertyName, existing.id, placeType);
+      if (!triggered) {
+        // Mark as failed so orphan-sweep can retry later
+        await markTriggerFailed(existing.id, 'Railway trigger failed or PIPELINE_WORKER_URL not configured');
+      }
 
       return existing.id;
     }
@@ -82,7 +89,12 @@ export async function ensureEnrichment(
     });
 
     await linkPlacesToIntelligence(googlePlaceId, intel.id);
-    await triggerRailwayEnrichment(googlePlaceId, propertyName, intel.id);
+
+    const triggered = await triggerRailwayEnrichment(googlePlaceId, propertyName, intel.id, placeType);
+    if (!triggered) {
+      // Mark as failed so orphan-sweep can retry later
+      await markTriggerFailed(intel.id, 'Railway trigger failed or PIPELINE_WORKER_URL not configured');
+    }
 
     return intel.id;
   } catch (error) {
@@ -120,19 +132,43 @@ export async function ensureEnrichment(
 }
 
 /**
+ * Mark a PlaceIntelligence record as 'failed' when the Railway trigger
+ * didn't succeed. This ensures the orphan-sweep picks it up for retry
+ * instead of leaving it stuck in 'pending' forever.
+ */
+async function markTriggerFailed(intelligenceId: string, reason: string): Promise<void> {
+  try {
+    await prisma.placeIntelligence.update({
+      where: { id: intelligenceId },
+      data: {
+        status: 'failed',
+        lastError: reason,
+        lastErrorAt: new Date(),
+        errorCount: { increment: 1 },
+      },
+    });
+  } catch (err) {
+    console.error(`[ensureEnrichment] Failed to mark trigger failure for ${intelligenceId}:`, err);
+  }
+}
+
+/**
  * Fire-and-forget call to the Railway pipeline worker's /enrich endpoint.
  * The worker runs the full 14-stage pipeline asynchronously and writes
  * results directly to Supabase when complete.
+ *
+ * Returns true if the trigger was accepted by Railway, false if it failed.
+ * Callers should mark the PI record as 'failed' when this returns false.
  */
 async function triggerRailwayEnrichment(
   googlePlaceId: string,
   propertyName: string,
   placeIntelligenceId: string,
   placeType?: string,
-): Promise<void> {
+): Promise<boolean> {
   if (!PIPELINE_WORKER_URL) {
     console.error('[ensureEnrichment] PIPELINE_WORKER_URL not configured — enrichment will not run');
-    return;
+    return false;
   }
 
   try {
@@ -151,14 +187,15 @@ async function triggerRailwayEnrichment(
     if (!res.ok) {
       const errText = await res.text();
       console.error(`[ensureEnrichment] Railway /enrich returned ${res.status}: ${errText}`);
-      return;
+      return false;
     }
 
     const { jobId } = await res.json() as { jobId: string };
     console.log(`[ensureEnrichment] ${propertyName}: Railway job started (jobId: ${jobId})`);
+    return true;
   } catch (err) {
-    // Fire-and-forget — don't fail the caller if Railway is temporarily down
     console.error(`[ensureEnrichment] Failed to trigger Railway enrichment for ${propertyName}:`, err);
+    return false;
   }
 }
 

@@ -9,6 +9,7 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
+import { getDisplayLocation } from '@/lib/place-display';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -184,11 +185,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
                   · {google.category}
                 </span>
               )}
-              {place.location && (
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
-                  · {place.location.split(',')[0]}
-                </span>
-              )}
+              {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
             </div>
           </div>
         </div>

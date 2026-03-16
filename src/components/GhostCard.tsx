@@ -5,6 +5,7 @@ import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
+import { getDisplayLocation } from '@/lib/place-display';
 
 interface GhostCardProps {
   item: ImportedPlace;
@@ -93,7 +94,7 @@ function GhostCardInner({
               className="block truncate"
               style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, marginTop: 1 }}
             >
-              {item.type}{item.location ? ` · ${item.location.split(',')[0]}` : ''}
+              {item.type}{(() => { const dl = getDisplayLocation(item.location, item.name); return dl ? ` · ${dl}` : ''; })()}
             </span>
           </div>
           {/* Action buttons — inline right */}

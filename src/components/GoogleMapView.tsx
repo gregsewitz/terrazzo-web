@@ -6,6 +6,7 @@ import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS, TYPE_COLORS_VIBRANT } from '@/constants/placeTypes';
 import type { PlaceType } from '@/types';
+import { getDisplayLocation } from '@/lib/place-display';
 
 // ── Hook: track Google Maps zoom level reactively ──
 function useZoomLevel(defaultZoom = 13) {
@@ -196,7 +197,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
                 }}>{marker.name}</div>
                 <div style={{ fontSize: 9, color: TEXT.secondary, fontFamily: FONT.sans }}>
                   {marker.type ? marker.type.charAt(0).toUpperCase() + marker.type.slice(1) : ''}
-                  {marker.location ? ` · ${marker.location.split(',')[0]}` : ''}
+                  {(() => { const dl = getDisplayLocation(marker.location, marker.name); return dl ? ` · ${dl}` : ''; })()}
                 </div>
               </div>
               {marker.matchScore && (

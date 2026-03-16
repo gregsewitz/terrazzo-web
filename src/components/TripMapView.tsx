@@ -12,6 +12,7 @@ import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 import { trackInteraction } from '@/lib/interaction-tracker';
+import { getDisplayLocation } from '@/lib/place-display';
 
 // ─── Types ───
 interface TripMapViewProps {
@@ -846,14 +847,7 @@ function MobileDetailCard({
               <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
-              {place.location && (
-                <>
-                  <span style={{ color: INK['20'] }}>·</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
-                    {place.location.split(',')[0]}
-                  </span>
-                </>
-              )}
+              {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <><span style={{ color: INK['20'] }}>·</span><span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{dl}</span></> : null; })()}
             </div>
           </div>
           {place.matchScore && (
@@ -988,14 +982,7 @@ function MobileGhostCard({
               <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
-              {place.location && (
-                <>
-                  <span style={{ color: INK['20'] }}>·</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>
-                    {place.location.split(',')[0]}
-                  </span>
-                </>
-              )}
+              {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <><span style={{ color: INK['20'] }}>·</span><span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{dl}</span></> : null; })()}
             </div>
           </div>
           {place.matchScore && (
@@ -1189,7 +1176,7 @@ function DesktopDetailCard({
           <div className="flex-1 min-w-0">
             <div style={{ fontFamily: FONT.serif, fontSize: 16, fontWeight: 600, color: 'var(--t-ink)' }}>{place.name}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              {place.location && <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{place.location.split(',')[0]}</span>}
+              {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{dl}</span> : null; })()}
             </div>
           </div>
           {place.matchScore && (
@@ -1311,12 +1298,7 @@ function DesktopGhostCard({
               <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                 {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
               </span>
-              {place.location && (
-                <>
-                  <span style={{ color: INK['20'] }}>·</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{place.location.split(',')[0]}</span>
-                </>
-              )}
+              {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <><span style={{ color: INK['20'] }}>·</span><span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{dl}</span></> : null; })()}
             </div>
           </div>
           {place.matchScore && (

@@ -250,6 +250,10 @@ model SavedPlace {
   placeIntelligenceId String?
   intelligence        PlaceIntelligence? @relation("SavedPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
 
+  // Google resolution tracking (for places saved without a googlePlaceId)
+  resolveAttempts     Int       @default(0)  // how many times orphan-sweep tried to resolve
+  lastResolveAt       DateTime?              // when the last resolution attempt happened
+
   // Soft delete
   deletedAt           DateTime?          // null = active; set = soft-deleted (30-day recovery)
 

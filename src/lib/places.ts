@@ -361,6 +361,99 @@ export function resolveGooglePlaceType(
   return 'activity';
 }
 
+/**
+ * Try to resolve a Google Place using multiple query strategies.
+ *
+ * Strategies (tried in order, stops on first match):
+ *   1. "name, location" with locationBias (if lat/lng available)
+ *   2. "name, location" without locationBias
+ *   3. "name city" (extract city from location, skip street address noise)
+ *   4. "name" alone (broadest, catches places with wrong/missing location)
+ *   5. "type name city" (prepend type hint for ambiguous names)
+ *
+ * This replaces the single-attempt pattern used in both the save route
+ * and the orphan-sweep. Each strategy passes `nameHint` so the scoring
+ * logic in _fetchSinglePlace uses the clean name for matching.
+ */
+export async function resolveGooglePlaceWithRetry(
+  name: string,
+  location?: string | null,
+  placeType?: string | null,
+  locationBias?: { lat: number; lng: number; radiusMeters?: number },
+): Promise<PlaceSearchResult | null> {
+  // Build query strategies from most specific to least specific
+  const strategies: Array<{ query: string; bias?: typeof locationBias; label: string }> = [];
+
+  // Extract city from location (first segment before comma, if it looks like an address)
+  const locationParts = (location || '').split(',').map(s => s.trim()).filter(Boolean);
+  const city = locationParts.length >= 2 ? locationParts[locationParts.length >= 3 ? 1 : 0] : locationParts[0] || '';
+
+  // Strategy 1: Full "name, location" with lat/lng bias (most precise)
+  if (location && locationBias) {
+    strategies.push({
+      query: `${name}, ${location}`,
+      bias: locationBias,
+      label: 'name+location+bias',
+    });
+  }
+
+  // Strategy 2: Full "name, location" without bias
+  if (location) {
+    strategies.push({
+      query: `${name}, ${location}`,
+      label: 'name+location',
+    });
+  }
+
+  // Strategy 3: "name city" (skip street address noise)
+  if (city && city !== location) {
+    strategies.push({
+      query: `${name} ${city}`,
+      label: 'name+city',
+    });
+  }
+
+  // Strategy 4: Name alone (broadest search)
+  strategies.push({
+    query: name,
+    label: 'name-only',
+  });
+
+  // Strategy 5: "type name city" (helps disambiguate generic names like "The Table")
+  if (placeType && placeType !== 'activity') {
+    const typeLabel = placeType.charAt(0).toUpperCase() + placeType.slice(1);
+    strategies.push({
+      query: `${typeLabel} ${name}${city ? ` ${city}` : ''}`,
+      label: 'type+name+city',
+    });
+  }
+
+  // Deduplicate strategies by query string (avoid wasting API calls)
+  const seen = new Set<string>();
+  const uniqueStrategies = strategies.filter(s => {
+    const key = `${s.query}|${s.bias ? 'biased' : 'unbiased'}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  for (const strategy of uniqueStrategies) {
+    try {
+      const result = await searchPlace(strategy.query, strategy.bias, name);
+      if (result?.id) {
+        console.log(`[places] Resolved "${name}" via strategy "${strategy.label}" → ${result.displayName?.text} (${result.id})`);
+        return result;
+      }
+    } catch (err) {
+      console.warn(`[places] Strategy "${strategy.label}" failed for "${name}":`, err);
+      // Continue to next strategy
+    }
+  }
+
+  console.warn(`[places] All ${uniqueStrategies.length} resolution strategies failed for "${name}" (location: "${location || 'none'}")`);
+  return null;
+}
+
 export function priceLevelToString(priceLevel?: string): string {
   const map: Record<string, string> = {
     PRICE_LEVEL_FREE: 'Free',

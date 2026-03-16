@@ -494,7 +494,7 @@ export function computeMatchFromSignals(
  */
 export function normalizeScoresForDisplay<T extends { overallScore: number }>(
   scores: T[],
-  ceiling = 93,
+  ceiling = 96,
   floor = 35,
 ): T[] {
   if (scores.length === 0) return scores;

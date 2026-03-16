@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { validateBody, placeSchema } from '@/lib/api-validation';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
-import { searchPlace, resolveGooglePlaceType } from '@/lib/places';
+import { searchPlace, resolveGooglePlaceType, resolveGooglePlaceWithRetry } from '@/lib/places';
 import type { User } from '@prisma/client';
 
 interface ImportSourceEntry {
@@ -161,13 +161,19 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   let resolvedType = place.type;
 
   try {
-    const query = place.location ? `${place.name}, ${place.location}` : place.name;
     // Use lat/lng from googleData (e.g. from maps-list getlist) as locationBias
     const gd = place.googleData as Record<string, unknown> | null | undefined;
     const lat = gd?.lat as number | undefined;
     const lng = gd?.lng as number | undefined;
     const locationBias = (lat && lng) ? { lat, lng, radiusMeters: 2000 } : undefined;
-    const googleResult = await searchPlace(query, locationBias, place.name);
+
+    // Multi-strategy resolution: tries up to 5 query formats before giving up
+    const googleResult = await resolveGooglePlaceWithRetry(
+      place.name,
+      place.location,
+      place.type,
+      locationBias,
+    );
     if (googleResult?.id) {
       resolvedGooglePlaceId = googleResult.id;
       resolvedGoogleData = {

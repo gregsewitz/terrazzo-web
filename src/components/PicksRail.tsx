@@ -12,6 +12,7 @@ import FilterSortBar from './ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
 import { getDestColor } from '@/lib/destination-helpers';
+import { getDisplayLocation } from '@/lib/place-display';
 
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant', hotel: 'Hotel', bar: 'Bar', cafe: 'Café',
@@ -257,7 +258,7 @@ function PicksRailInner({
           const brandColor = getDestColor(index);
           const isHovered = hoveredId === place.id;
           const tasteNote = place.tasteNote;
-          const location = place.location?.split(',')[0]?.trim() || '';
+          const location = getDisplayLocation(place.location, place.name, place.google?.address);
           const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
           // Score-based dimming: 1.0 = full opacity, 0.5 = slightly dimmed, 0 = heavily dimmed
           const dScore = hasDestFilter ? destinationScore(place) : 1;

@@ -432,7 +432,7 @@ function buildExplanation(
  */
 export function normalizeVectorScoresForDisplay<T extends { overallScore: number }>(
   scores: T[],
-  ceiling = 93,
+  ceiling = 96,
   floor = 35,
 ): T[] {
   if (scores.length === 0) return scores;
@@ -453,9 +453,10 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
     return scores.map((s) => ({ ...s, overallScore: Math.round((ceiling + floor) / 2 + 10) }));
   }
 
+  const SPREAD_FACTOR = 0.55;
   const displayRange = ceiling - floor;
   // Median display score — where an average property lands
-  const medianDisplay = floor + displayRange * 0.50; // ~64 for default floor=35, ceil=93
+  const medianDisplay = floor + displayRange * 0.50; // ~65.5 for default floor=35, ceil=96
 
   return scores.map((s) => {
     // Z-score: how many stddevs above/below mean
@@ -463,13 +464,13 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
 
     // Sigmoid-like mapping: z=0 → median, z=+2 → near ceiling, z=-2 → near floor
     // tanh gives us a nice smooth curve in [-1, 1]
-    // Spread factor 0.8 gives better separation:
-    //   z=+2  → tanh(1.6)=0.92 → display ~91
-    //   z=+1  → tanh(0.8)=0.66 → display ~83
-    //   z=0   → tanh(0)=0      → display ~64
-    //   z=-1  → tanh(-0.8)=-0.66 → display ~45
-    //   z=-2  → tanh(-1.6)=-0.92 → display ~37
-    const curved = Math.tanh(z * 0.8);
+    // Spread factor 0.55 (was 0.8) gives wider differentiation:
+    //   z=+2  → tanh(1.1)=0.80  → display ~89
+    //   z=+1  → tanh(0.55)=0.50 → display ~81
+    //   z=0   → tanh(0)=0       → display ~66
+    //   z=-1  → tanh(-0.55)=-0.50 → display ~50
+    //   z=-2  → tanh(-1.1)=-0.80  → display ~41
+    const curved = Math.tanh(z * SPREAD_FACTOR);
 
     const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
     return { ...s, overallScore: Math.max(floor, Math.min(ceiling, displayScore)) };
@@ -492,7 +493,7 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
 export async function normalizeSingleVectorScore(
   rawScore: number,
   userId: string,
-  ceiling = 93,
+  ceiling = 96,
   floor = 35,
 ): Promise<number> {
   try {
@@ -523,10 +524,11 @@ export async function normalizeSingleVectorScore(
     }
 
     // Same tanh curve as normalizeVectorScoresForDisplay
+    const SPREAD_FACTOR = 0.55;
     const displayRange = ceiling - floor;
     const medianDisplay = floor + displayRange * 0.50;
     const z = (rawScore - mean) / stddev;
-    const curved = Math.tanh(z * 0.8);
+    const curved = Math.tanh(z * SPREAD_FACTOR);
     const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
     return Math.max(floor, Math.min(ceiling, displayScore));
   } catch (err) {

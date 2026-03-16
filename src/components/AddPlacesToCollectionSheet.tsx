@@ -8,6 +8,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import { THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import BaseSheet from '@/components/ui/BaseSheet';
 import SortPills from '@/components/ui/SortPills';
+import { getDisplayLocation } from '@/lib/place-display';
 
 type PlaceSortKey = 'match' | 'az' | 'type';
 
@@ -167,9 +168,7 @@ export default function AddPlacesToCollectionSheet({
                       <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
                         {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                       </span>
-                      <span style={{ fontSize: 10, color: TEXT.secondary }}>
-                        · {place.location.split(',')[0]}
-                      </span>
+                      {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
                       {reaction && (
                         <PerriandIcon name={reaction.icon as any} size={10} color={reaction.color} />
                       )}

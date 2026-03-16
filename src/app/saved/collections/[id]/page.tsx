@@ -17,6 +17,7 @@ import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WIT
 import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet';
 import BrandLoader from '@/components/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { getDisplayLocation } from '@/lib/place-display';
 
 export default function CollectionDetailPage() {
   const ratePlace = useSavedStore(s => s.ratePlace);
@@ -935,7 +936,7 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
             <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
               {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
             </span>
-            <span style={{ fontSize: 10, color: TEXT.secondary }}>· {place.location.split(',')[0]}</span>
+            {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
             {place.google?.rating && (
               <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
                 ★ {place.google.rating}

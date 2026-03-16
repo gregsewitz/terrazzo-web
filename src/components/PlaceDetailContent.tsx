@@ -19,6 +19,7 @@ import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar, AnimatedNumb
 import { SignalResonanceStrip, OverlapMosaic, DeepMatchBreakdown } from '@/components/intelligence';
 import type { ResonanceCluster, DeepMatch, DeepMatchSignal } from '@/components/intelligence';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { getDisplayLocation } from '@/lib/place-display';
 
 export interface PlaceDetailContentProps {
   item: ImportedPlace;
@@ -459,7 +460,7 @@ function PlaceDetailContent({
                 {siblingPlaces.slice(0, 5).map(sibling => (
                   <div key={sibling.id} className={`${siblingCardWidth} rounded-2xl p-3 flex-shrink-0 card-hover`} style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                     <div className={`${siblingNameFontSize} font-semibold`} style={{ color: TEXT.primary }}>{sibling.name}</div>
-                    <div className={`${siblingTypeFontSize} mt-0.5`} style={{ color: TEXT.secondary }}>{sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)} · {sibling.location.split(',')[0]}</div>
+                    <div className={`${siblingTypeFontSize} mt-0.5`} style={{ color: TEXT.secondary }}>{sibling.type.charAt(0).toUpperCase() + sibling.type.slice(1)}{(() => { const dl = getDisplayLocation(sibling.location, sibling.name); return dl ? ` · ${dl}` : ''; })()}</div>
                   </div>
                 ))}
               </div>

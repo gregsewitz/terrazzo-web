@@ -8,6 +8,7 @@ import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/compo
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/placeTypes';
 import { trackInteraction } from '@/lib/interaction-tracker';
+import { getDisplayLocation } from '@/lib/place-display';
 
 // ─── Types for shared data ───
 
@@ -471,9 +472,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
                 <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['70'] }}>
                   {place.type.charAt(0).toUpperCase() + place.type.slice(1)}
                 </span>
-                {place.location && (
-                  <span style={{ fontSize: 10, color: INK['70'] }}>· {place.location.split(',')[0]}</span>
-                )}
+                {(() => { const dl = getDisplayLocation(place.location, place.name); return dl ? <span style={{ fontSize: 10, color: INK['70'] }}>· {dl}</span> : null; })()}
               </div>
             </div>
 
