@@ -224,6 +224,7 @@ function GhostCardInner({
             cursor: 'pointer',
             fontFamily: FONT.sans,
           }}
+          aria-label="Add suggestion"
         >
           <PerriandIcon name="check" size={12} color="white" />
         </button>
@@ -237,6 +238,7 @@ function GhostCardInner({
             cursor: 'pointer',
             fontFamily: FONT.sans,
           }}
+          aria-label="Dismiss suggestion"
         >
           <PerriandIcon name="close" size={12} color={TEXT.primary} />
         </button>

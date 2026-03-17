@@ -202,6 +202,7 @@ function DayBoardView({
                   boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                 }}
                 title="Day options"
+                aria-label="Day options"
               >
                 ⋯
               </button>
@@ -533,6 +534,7 @@ function DayBoardView({
                               onClick={(e) => { e.stopPropagation(); confirmGhost(day.dayNumber, slot.id, ghost.id); }}
                               className="flex-shrink-0 px-1.5 py-px rounded font-semibold btn-hover"
                               style={{ background: 'var(--t-dark-teal)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: isDesktop ? 10 : 9 }}
+                              aria-label="Add place"
                             >
                               Add
                             </button>
@@ -540,6 +542,7 @@ function DayBoardView({
                               onClick={(e) => { e.stopPropagation(); dismissGhost(day.dayNumber, slot.id, ghost.id); }}
                               className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center nav-hover"
                               style={{ background: INK['08'], border: 'none', cursor: 'pointer' }}
+                              aria-label="Dismiss suggestion"
                             >
                               <PerriandIcon name="close" size={9} color={INK['70']} />
                             </button>
@@ -667,6 +670,7 @@ function DayBoardView({
                             el.style.borderColor = INK['10'];
                             el.style.color = INK['80'];
                           }}
+                          aria-label="Add entry"
                         >
                           <span style={{ fontSize: 11, lineHeight: 1 }}>+</span> add entry
                         </button>

@@ -57,6 +57,7 @@ export default function BaseSheet({
             onClick={onClose}
             className="cursor-pointer"
             style={{ color: TEXT.secondary, background: 'none', border: 'none' }}
+            aria-label="Close"
           >
             <PerriandIcon name="close" size={16} color={TEXT.secondary} />
           </button>

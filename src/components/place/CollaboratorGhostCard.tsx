@@ -99,6 +99,7 @@ export default function CollaboratorGhostCard({
                 fontFamily: FONT.sans,
                 fontSize: 10,
               }}
+              aria-label="Accept suggestion"
             >
               <PerriandIcon name="check" size={10} color="white" /> Add
             </button>
@@ -110,6 +111,7 @@ export default function CollaboratorGhostCard({
                 border: 'none',
                 cursor: 'pointer',
               }}
+              aria-label="Reject suggestion"
             >
               <PerriandIcon name="close" size={10} color={TEXT.primary} />
             </button>

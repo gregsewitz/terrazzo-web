@@ -251,6 +251,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
           el.style.borderColor = INK['10'];
           el.style.color = INK['80'];
         }}
+        aria-label="Add entry"
       >
         <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> add entry
       </button>

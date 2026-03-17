@@ -40,11 +40,11 @@ These need refactoring into smaller, focused sub-components:
 - `profile/discover/more/route.ts` (518 lines) — 15 page configurations inline
 - `intelligence/backfill-google-data/route.ts` (428 lines) — 6 distinct phases
 
-### 1e. 70+ components at root level
-`src/components/` has 70+ files dumped at the root with no feature-based organization. Trip-related components, place components, and UI primitives are all siblings.
+### ~~1e. 70+ components at root level~~
+**Done** — `src/components/` reorganized into feature directories: `trip/` (21 files), `place/` (15 files), `library/` (6 files), `maps/` (3 files), `chat/` (5 files), plus additions to `ui/`, `profile/`, `add-bar/`, `import/`. Zero files remain at root.
 
-### 1f. Oversized onboarding store
-`src/stores/onboardingStore.ts` (682 lines) manages phases, signals, contradictions, sustainability, and more. Trip and saved stores properly use slice composition — onboarding should too.
+### ~~1f. Oversized onboarding store~~
+**Done** — `onboardingStore.ts` split into 4 slices in `stores/onboarding/`: `progressSlice.ts` (205 lines), `profileSlice.ts` (186 lines), `contextSlice.ts` (113 lines), `mosaicSlice.ts` (111 lines). Orchestrator reduced from 682 to 165 lines.
 
 ---
 
@@ -81,8 +81,8 @@ Only ~2,600 lines of test code for ~91,000 lines of source. No e2e tests. Unit t
 
 ## 6. Inconsistent Patterns
 
-### 6a. Cache headers inconsistent
-74 of 86 API routes have no Cache-Control headers. `places/mine` uses `private, no-cache`, `places/autocomplete` uses `public, max-age=60`, `shared/[token]` uses `public, max-age=300`. A `cache-policy.ts` helper now exists — routes should adopt it.
+### ~~6a. Cache headers inconsistent~~
+**Done** — Applied `cache-policy.ts` to 13 previously uncached GET routes (email, places, trips collaboration, intelligence, import history). All user-data routes now return `private, no-cache`. Public/shared routes retain their existing long-cache headers.
 
 ---
 

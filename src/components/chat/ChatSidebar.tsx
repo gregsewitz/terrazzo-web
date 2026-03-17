@@ -213,6 +213,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-full border-none cursor-pointer"
             style={{ background: INK['06'] }}
+            aria-label="Close chat"
           >
             <PerriandIcon name="close" size={16} color={TEXT.primary} />
           </button>
@@ -293,6 +294,7 @@ export default function ChatSidebar({ isOpen, onClose, tripContext }: ChatSideba
                 color: 'white',
                 opacity: !input.trim() || isLoading ? 0.5 : 1,
               }}
+              aria-label="Send message"
             >
               ↑
             </button>

@@ -242,6 +242,7 @@ export default function PlaceTimeEditor({
             border: 'none',
             cursor: 'pointer',
           }}
+          aria-label="Clear time"
         >
           <PerriandIcon name="close" size={7} color={INK['55']} />
         </button>

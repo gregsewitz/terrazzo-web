@@ -206,6 +206,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 className="flex items-center justify-center flex-shrink-0 bg-transparent border-none cursor-pointer"
                 style={{ width: 28, height: 28, padding: 0, marginLeft: -6 }}
                 title="Back to trips"
+                aria-label="Back to trips"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT.secondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 18l-6-6 6-6" />
@@ -241,6 +242,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
                 style={{ background: INK['04'], color: 'var(--t-dark-teal)' }}
                 title="Share trip"
+                aria-label="Share trip"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
@@ -255,6 +257,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                 className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
                 style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
                 title="Ask Terrazzo"
+                aria-label="Ask Terrazzo"
               >
                 <PerriandIcon name="chatBubble" size={14} color="var(--t-cream)" accent="var(--t-cream)" />
               </button>
@@ -267,6 +270,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
                   className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
                   style={{ background: INK['04'] }}
                   title="More options"
+                  aria-label="More options"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill={TEXT.secondary}>
                     <circle cx="12" cy="5" r="2" />
