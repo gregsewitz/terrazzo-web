@@ -7,31 +7,6 @@
 
 ---
 
-## Completed
-
-The following issues have been resolved:
-
-- ~~**Security** Admin taste dashboard auth~~ — Added ADMIN_SECRET bearer token check
-- ~~**Security** SQL injection in backfill-photos LIMIT~~ — Switched to parameterized query
-- ~~**Security** No env validation~~ — Created `src/lib/env.ts` with fail-fast startup validation
-- ~~**Security** Fire-and-forget silent failures~~ — 16 silent `.catch(() => {})` replaced with `console.warn`
-- ~~**Security** Rate limiting on all public endpoints~~ — Added to nylas webhook, autocomplete, search, reservations, batch-dismiss (import/file and import/ already had it)
-- ~~**Hardcoded** Claude model strings scattered~~ — Centralized in `src/lib/models.ts`, all 14 files updated
-- ~~**Hardcoded** Webhook URL~~ — Now reads from `NYLAS_WEBHOOK_URL` env var with production fallback
-- ~~**Duplicated** Haversine distance in two hooks~~ — Extracted to `src/lib/geo.ts`
-- ~~**Duplicated** Place resolution logic in 4 routes~~ — Extracted to `src/lib/resolve-place.ts`
-- ~~**Duplicated** Taste scoring in 2 routes~~ — Extracted to `src/lib/taste-score.ts`
-- ~~**Dead code** Orphaned components~~ — Deleted AddPlaceInline, PoolItemCard, SmartCollectionSheet + 7 more
-- ~~**Dead code** Deprecated import/maps route~~ — Deleted
-- ~~**Dead code** Root-level design artifacts~~ — Moved 6 .docx + 4 .html files to `/docs`
-- ~~**Type safety** sessionStorage SSR guard~~ — Added `typeof window` check in `usePlaceResolver.ts`
-- ~~**Infra** No `.env.example`~~ — Created with all 22+ vars documented as required/optional
-- ~~**Infra** No `.nvmrc`~~ — Added, pinned to Node 22
-- ~~**Infra** No Prettier config~~ — Added `.prettierrc` + `.prettierignore`
-- ~~**Performance** FIFO cache eviction~~ — Converted `MemoryCache` in `places-cache.ts` to true LRU
-
----
-
 ## 1. Hardcoded Values (Centralize)
 
 ### 1a. Magic numbers in timeouts, thresholds, and limits
@@ -67,7 +42,7 @@ These need refactoring into smaller, focused sub-components:
 
 | Component | Lines | Issue |
 |-----------|-------|-------|
-| `profile/page.tsx` | 1,833 | Largest file in the codebase; multiple responsibilities |
+| `profile/page.tsx` | 1,262 | Down from 1,833 — still has header + discover feed logic combined |
 | `onboarding/RevealSequence.tsx` | 1,603 | Animation + data + UI interleaved |
 | `saved/page.tsx` | 1,473 | Full page logic in one file |
 | `TripMapView.tsx` | 1,364 | 40+ responsibilities, map + gestures + UI |
@@ -120,9 +95,6 @@ Should be `catch (err: unknown)` with type guards. Found in `anthropic.ts`, `use
 ### 7a. N+1 in import/file route
 `src/app/api/import/file/route.ts` lines 309-335 — Loops through places, calling `prisma.savedPlace.findFirst()` inside the loop. Should batch with `findMany` and a single `WHERE IN`.
 
-### 7b. N+1 in email reservations route
-`src/app/api/email/reservations/route.ts` — Returns all reservations then runs separate COUNT queries for each status group. Should use `_count` aggregation in the initial query.
-
 ---
 
 ## 8. Accessibility
@@ -145,9 +117,6 @@ No GitHub Actions, no Vercel config, no deployment pipeline visible.
 
 ### 9b. Low test coverage
 Only ~2,600 lines of test code for ~91,000 lines of source. No e2e tests. Unit tests cover import pipeline, validation, and matching, but hooks, stores, and components are untested.
-
-### 9c. No per-page error boundaries
-Only a global `src/app/error.tsx`. Pages like `places/[googlePlaceId]`, `saved/`, and trip views should have their own error boundaries to prevent full-app crashes.
 
 ---
 

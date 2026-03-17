@@ -29,13 +29,27 @@ export async function GET(request: NextRequest) {
     if (statusFilter !== 'all') where.status = statusFilter;
     if (typeFilter !== 'all') where.placeType = typeFilter;
 
-    const reservations = await prisma.emailReservation.findMany({
-      where,
-      orderBy: [
-        { reservationDate: 'asc' },
-        { createdAt: 'desc' },
-      ],
-    });
+    // Fetch reservations and status counts in parallel (avoids 3 separate COUNT queries)
+    const [reservations, statusCounts] = await Promise.all([
+      prisma.emailReservation.findMany({
+        where,
+        orderBy: [
+          { reservationDate: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      }),
+      prisma.emailReservation.groupBy({
+        by: ['status'],
+        where: { userId: user.id },
+        _count: true,
+      }),
+    ]);
+
+    const counts = { pending: 0, confirmed: 0, dismissed: 0 };
+    for (const group of statusCounts) {
+      const status = group.status as keyof typeof counts;
+      if (status in counts) counts[status] = group._count;
+    }
 
     return NextResponse.json({
       reservations: reservations.map((r: any) => ({
@@ -84,11 +98,7 @@ export async function GET(request: NextRequest) {
 
         createdAt: r.createdAt.toISOString(),
       })),
-      counts: {
-        pending: await prisma.emailReservation.count({ where: { userId: user.id, status: 'pending' } }),
-        confirmed: await prisma.emailReservation.count({ where: { userId: user.id, status: 'confirmed' } }),
-        dismissed: await prisma.emailReservation.count({ where: { userId: user.id, status: 'dismissed' } }),
-      },
+      counts,
     });
   } catch (error) {
     console.error('Fetch reservations error:', error);
