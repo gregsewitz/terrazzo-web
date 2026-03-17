@@ -7,6 +7,7 @@ import { matchReservationsToTrips } from '@/lib/trip-matcher';
 import { resolveGooglePlaceId } from '@/lib/resolve-place';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { RESERVATION_SEARCH_QUERIES } from '@/types/email';
+import { EMAIL_CONFIDENCE_THRESHOLD } from '@/lib/constants';
 
 /**
  * GET /api/email/webhooks/nylas
@@ -246,7 +247,7 @@ async function handleWebhookEvent(payload: NylasWebhookPayload) {
   const createdIds: string[] = [];
 
   for (const res of parseResult.reservations) {
-    if (res.confidence < 0.4) continue;
+    if (res.confidence < EMAIL_CONFIDENCE_THRESHOLD) continue;
 
     // Try to resolve Google Place ID
     const googlePlaceId = await resolveGooglePlaceId(

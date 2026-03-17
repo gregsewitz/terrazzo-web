@@ -154,11 +154,12 @@ export async function POST(
       cacheKey,
       generatedAt: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[suggestions/generate] Error:', err);
 
     // Rate limited by Anthropic
-    if (err?.status === 429) {
+    const status = err instanceof Error ? (err as any).status : undefined;
+    if (status === 429) {
       return NextResponse.json(
         { error: 'Suggestion engine temporarily unavailable. Try again shortly.' },
         { status: 429 }

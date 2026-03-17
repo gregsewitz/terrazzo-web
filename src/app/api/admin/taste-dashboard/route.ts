@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { computeMatchFromSignals } from '@/lib/taste-match-v3';
 import type { TasteProfile } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
+import { TASTE_DOMAIN_RANGES } from '@/lib/constants';
 
 /**
  * GET /api/admin/taste-dashboard
@@ -163,16 +164,7 @@ export async function GET(req: Request) {
     });
 
     // 5. Domain stats
-    const domainRanges = [
-      { domain: 'Atmosphere', start: 0, end: 50 },
-      { domain: 'Character', start: 51, end: 135 },
-      { domain: 'Design', start: 136, end: 191 },
-      { domain: 'FoodDrink', start: 192, end: 263 },
-      { domain: 'Service', start: 264, end: 336 },
-      { domain: 'Geography', start: 337, end: 379 },
-      { domain: 'Sustainability', start: 380, end: 386 },
-      { domain: 'Wellness', start: 387, end: 399 },
-    ];
+    const domainRanges = TASTE_DOMAIN_RANGES;
 
     const domains = domainRanges.map((dr: { domain: string; start: number; end: number }) => {
       const slice = clusterSizes.slice(dr.start, dr.end + 1);

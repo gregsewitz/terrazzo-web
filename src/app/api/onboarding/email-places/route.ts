@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       places,
       total: places.length,
-      scanComplete: true, // TODO: check if email scan is still running
+      scanComplete: true, // TODO(Q2-2026): check actual scan status via Nylas job polling
     });
   } catch (error) {
     console.error('[email-places] Error:', error);

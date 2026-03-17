@@ -10,7 +10,7 @@
  * - src/app/trips/[id]/page.tsx (trip planner import)
  * - src/components/FloatingImportBar.tsx (background processing indicator)
  *
- * TODO: Migrate trip planner import to use UAB with tripContext, then remove this file.
+ * TODO(Q2-2026): Migrate trip planner import to use UAB with tripContext, then remove this file.
  */
 
 import { useState, useMemo, useEffect } from 'react';

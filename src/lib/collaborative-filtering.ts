@@ -87,7 +87,7 @@ export async function runMatrixFactorization(): Promise<{
   userEmbeddings: Map<string, number[]>;
   propertyEmbeddings: Map<string, number[]>;
 }> {
-  // TODO: Implement when we have enough data
+  // TODO(deferred): Implement when we have ~500+ active users
   // The algorithm:
   //   1. Load interaction matrix from buildInteractionMatrix()
   //   2. Initialize random user and property factor matrices (n_users × k, n_items × k)
@@ -153,7 +153,7 @@ export async function discoverArchetypes(
   userEmbeddings: Map<string, number[]>,
   k: number = 8,
 ): Promise<TasteArchetype[]> {
-  // TODO: Implement when embeddings are available
+  // TODO(deferred): Implement when embeddings are available from runMatrixFactorization
   // Steps:
   //   1. Extract embedding vectors into a matrix
   //   2. Run k-means with k (or HDBSCAN for automatic k)

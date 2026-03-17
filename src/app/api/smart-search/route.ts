@@ -82,11 +82,12 @@ export async function POST(req: NextRequest) {
     const parsed = JSON.parse(textBlock.text);
 
     return NextResponse.json(parsed);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Smart search error:', error);
 
     // Fallback to basic keyword parsing if API fails
-    if (error.status === 401 || error.status === 403) {
+    const status = error instanceof Error ? (error as any).status : undefined;
+    if (status === 401 || status === 403) {
       return NextResponse.json(
         { error: 'Invalid API key. Check ANTHROPIC_API_KEY in environment variables.' },
         { status: 401 }
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to parse query', details: error.message },
+      { error: 'Failed to parse query', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -202,14 +202,14 @@ export function useTripSuggestions(
           timestamp: Date.now(),
         });
       }
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
         // Could be user-triggered or our timeout — either way, stop loading
         setIsLoading(false);
         return;
       }
       console.error('[useTripSuggestions] Fetch error:', err);
-      setError(err?.message || 'Failed to load suggestions');
+      setError(err instanceof Error ? err.message : 'Failed to load suggestions');
       // Keep existing suggestions on error (graceful degradation)
     } finally {
       clearTimeout(timeoutId);

@@ -82,9 +82,9 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ ok: true }, { status: 201 });
-  } catch (err) {
-    console.error('[interactions] Failed to log event:', err);
-    // Return 200 anyway — interaction logging should never cause client errors
-    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err: unknown) {
+    console.warn('[interactions] Failed to log event:', err);
+    // Return 202 — accepted but not persisted. Clients can distinguish from 201.
+    return NextResponse.json({ ok: false, warning: 'Event not persisted' }, { status: 202 });
   }
 }

@@ -1027,9 +1027,9 @@ function CreateCollectionModal({ onClose, onCreate, onCreateSmart }: {
       result.matchingIds = ids;
       setSmartResult(result);
       setSmartStep('result');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Smart search failed:', err);
-      setSmartError(err.message || 'Something went wrong');
+      setSmartError(err instanceof Error ? err.message : 'Something went wrong');
       const fallback = fallbackParse(smartQuery);
       const { count, ids } = resolveMatches(fallback);
       fallback.matchCount = count;

@@ -44,8 +44,9 @@ async function callClaudeWithRetry(
         return response;
       }
       return await client.messages.create(params);
-    } catch (err: any) {
-      if (err?.status === 429 && attempt < maxRetries - 1) {
+    } catch (err: unknown) {
+      const status = err instanceof Error ? (err as any).status : undefined;
+      if (status === 429 && attempt < maxRetries - 1) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
         console.warn(`[anthropic] Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
         await new Promise(r => setTimeout(r, delay));

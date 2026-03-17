@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingSynthesizeSchema } from '@/lib/api-validation';
 import { getUser } from '@/lib/supabase-server';
+import { apiError, errorMessage } from '@/lib/api-error';
 import { CLAUDE_SONNET } from '@/lib/models';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
@@ -300,8 +301,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(profile);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Profile synthesis error:', error);
-    return NextResponse.json({ error: 'Synthesis failed' }, { status: 500 });
+    return apiError('Synthesis failed', 500, { details: errorMessage(error) });
   }
 }

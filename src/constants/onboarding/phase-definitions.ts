@@ -72,7 +72,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
   //   subtitle: 'Real hotels — react honestly',
   //   modality: 'property-reactions',
   //   act: 1,
-  //   ... TODO: re-enable once Gmail/Nylas email parsing surfaces real places
+  //   ... TODO(deferred): re-enable once email parsing surfaces real places
   // },
 
   // ═══════════════════════════════════════

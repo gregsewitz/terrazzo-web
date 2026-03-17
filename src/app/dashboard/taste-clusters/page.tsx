@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Script from 'next/script';
+import { TASTE_DOMAIN_RANGES } from '@/lib/constants';
 
 /* ═══════════════════════════════════════════════════════════
    Taste Intelligence Dashboard — /dashboard/taste-clusters
@@ -37,14 +38,7 @@ const DOMAIN_COLORS: Record<string, string> = {
 };
 
 const DOMAIN_RANGES = [
-  { domain: 'Atmosphere', start: 0, end: 50 },
-  { domain: 'Character', start: 51, end: 135 },
-  { domain: 'Design', start: 136, end: 191 },
-  { domain: 'FoodDrink', start: 192, end: 263 },
-  { domain: 'Service', start: 264, end: 336 },
-  { domain: 'Geography', start: 337, end: 379 },
-  { domain: 'Sustainability', start: 380, end: 386 },
-  { domain: 'Wellness', start: 387, end: 399 },
+  ...TASTE_DOMAIN_RANGES,
 ];
 
 // Approach colors

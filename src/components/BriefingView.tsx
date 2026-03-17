@@ -764,7 +764,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                     <div className="mb-6">
                       <SeasonalityBadge
                         seasonality={data.seasonality as SeasonalityData}
-                        rhythmTempo={undefined /* TODO: pass from SavedPlace when available */}
+                        rhythmTempo={undefined /* TODO(deferred): pass from SavedPlace when rhythmTempo is added to schema */}
                         seasonalNote={typeof data.facts === 'object' && data.facts ? (data.facts as any).seasonalNote : undefined}
                         variant="full"
                         layout="desktop"

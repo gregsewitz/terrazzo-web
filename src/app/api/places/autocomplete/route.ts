@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { searchPlaces, getPhotoUrl, priceLevelToString, mapGoogleTypeToPlaceType } from '@/lib/places';
+import { apiError, errorMessage } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const ip = getClientIp(req.headers);
@@ -31,11 +32,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results }, {
       headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Autocomplete error:', err);
-    return NextResponse.json({ results: [] }, {
-      status: 500,
-      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' }
-    });
+    return apiError('Autocomplete search failed', 500, { details: errorMessage(err) });
   }
 }

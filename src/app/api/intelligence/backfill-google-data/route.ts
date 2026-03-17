@@ -25,6 +25,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { searchPlace, getPlaceById, priceLevelToString, getPhotoUrl } from '@/lib/places';
 import { completeTasteFields } from '@/lib/taste-completion';
+import { GOOGLE_API_RATE_LIMIT_MS } from '@/lib/constants';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
             }
 
             updated.push(sp.name);
-            await new Promise((r: (value?: void) => void) => setTimeout(r, 250));
+            await new Promise((r: (value?: void) => void) => setTimeout(r, GOOGLE_API_RATE_LIMIT_MS));
           } catch (err) {
             errors.push({ name: sp.name, error: (err as Error).message });
           }
@@ -314,8 +315,8 @@ export async function POST(req: NextRequest) {
 
             updated.push(pi.propertyName);
 
-            // Rate limit: 250ms between Google API calls
-            await new Promise<void>((resolve) => setTimeout(resolve, 250));
+            // Rate limit between Google API calls
+            await new Promise<void>((resolve) => setTimeout(resolve, GOOGLE_API_RATE_LIMIT_MS));
           } catch (err) {
             errors.push({ name: pi.propertyName, error: (err as Error).message });
           }

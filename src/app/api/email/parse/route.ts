@@ -5,6 +5,7 @@ import { fetchMessageBodies } from '@/lib/nylas';
 import { parseEmailBatch } from '@/lib/email-parser';
 import { matchReservationsToTrips } from '@/lib/trip-matcher';
 import { resolveGooglePlaceId } from '@/lib/resolve-place';
+import { EMAIL_CONFIDENCE_THRESHOLD } from '@/lib/constants';
 
 /**
  * POST /api/email/parse
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
       for (const res of result.reservations) {
         // Skip low-confidence extractions
-        if (res.confidence < 0.4) continue;
+        if (res.confidence < EMAIL_CONFIDENCE_THRESHOLD) continue;
 
         // Try to resolve Google Place ID
         const googlePlaceId = await resolveGooglePlaceId(

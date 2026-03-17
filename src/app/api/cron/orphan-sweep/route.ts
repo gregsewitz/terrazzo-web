@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { resolveGooglePlaceWithRetry, resolveGooglePlaceType } from '@/lib/places';
+import { resolveBackoffDays, enrichmentBackoffHours } from '@/lib/constants';
 
 export const maxDuration = 300; // 5 min — may need to resolve many places via Google
 
@@ -129,11 +130,7 @@ export async function GET(req: NextRequest) {
     for (const place of unresolved) {
       // Apply backoff based on previous attempts
       if (place.lastResolveAt && place.resolveAttempts > 0) {
-        const backoffDays = place.resolveAttempts < 3 ? 1
-          : place.resolveAttempts < 6 ? 3
-          : place.resolveAttempts < 10 ? 7
-          : 30;
-        const backoffMs = backoffDays * 24 * 60 * 60 * 1000;
+        const backoffMs = resolveBackoffDays(place.resolveAttempts) * 24 * 60 * 60 * 1000;
         const timeSinceLastAttempt = now - new Date(place.lastResolveAt).getTime();
         if (timeSinceLastAttempt < backoffMs) {
           continue; // Not enough time since last attempt
@@ -231,11 +228,7 @@ export async function GET(req: NextRequest) {
     for (const pi of stuck) {
       // Apply exponential backoff for failed records
       if (pi.status === 'failed' && pi.lastErrorAt) {
-        const backoffHours = pi.errorCount < 3 ? 1
-          : pi.errorCount < 6 ? 24
-          : pi.errorCount < 10 ? 72
-          : 168;
-        const backoffMs = backoffHours * 60 * 60 * 1000;
+        const backoffMs = enrichmentBackoffHours(pi.errorCount) * 60 * 60 * 1000;
         const timeSinceLastError = now - new Date(pi.lastErrorAt).getTime();
 
         if (timeSinceLastError < backoffMs) {

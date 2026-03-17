@@ -309,10 +309,10 @@ export function useTripWeather(trip: Trip | null | undefined) {
           setResults(allResults);
           setIsLoading(false);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
           console.warn('[useTripWeather] Error:', err);
-          setError(err?.message || 'Failed to load weather');
+          setError(err instanceof Error ? err.message : 'Failed to load weather');
           setIsLoading(false);
         }
       }

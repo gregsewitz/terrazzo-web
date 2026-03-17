@@ -8,7 +8,7 @@ export const ACT_1_PHASE_IDS = [
   'email-connect',
   'instinct-round',
   'visual-taste',
-  // 'property-reactions-0', // TODO: re-enable once Gmail email parsing surfaces real places
+  // 'property-reactions-0', // TODO(deferred): re-enable once email parsing surfaces real places
 ] as const;
 
 export const ACT_2_PHASE_IDS = [

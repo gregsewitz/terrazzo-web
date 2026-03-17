@@ -38,6 +38,7 @@ import {
   allocateSlots,
 } from '@/lib/discover-allocation';
 import { generateEditorialCopy } from '@/lib/discover-editorial';
+import { apiError, errorMessage } from '@/lib/api-error';
 
 const anthropic = new Anthropic();
 
@@ -547,8 +548,8 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     triggerEnrichmentBatch(extractAllFeedPlaces(legacyFeed), user.id, 'discover_legacy').catch((err: unknown) => console.warn('[discover] triggerEnrichmentBatch failed:', err));
 
     return NextResponse.json(legacyFeed);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Discover generation error:', error);
-    return NextResponse.json({ error: 'Failed to generate discover content' }, { status: 500 });
+    return apiError('Failed to generate discover content', 500, { details: errorMessage(error) });
   }
 });
