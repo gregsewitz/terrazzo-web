@@ -6,7 +6,7 @@ import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { useImportStore } from '@/stores/importStore';
 import type { SlotContext } from '@/stores/poolStore';
-import { ImportedPlace, PlaceRating } from '@/types';
+import { ImportedPlace } from '@/types';
 import TabBar from '@/components/ui/TabBar';
 import DayPlanner from '@/components/trip/DayPlanner';
 import type { TripViewMode } from '@/components/trip/DayPlanner';
@@ -19,7 +19,6 @@ import type { FilterType } from '@/hooks/useTypeFilter';
 import ImportDrawer from '@/components/import/ImportDrawer';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ShareSheet from '@/components/trip/ShareSheet';
-import ActivityFeed from '@/components/chat/ActivityFeed';
 import DragOverlay from '@/components/trip/DragOverlay';
 import ExportToMaps from '@/components/trip/ExportToMaps';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
@@ -31,13 +30,11 @@ import DesktopNav from '@/components/ui/DesktopNav';
 import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import DayBoardView from '@/components/trip/DayBoardView';
-import PicksGrid from '@/components/library/PicksGrid';
 import PicksRail from '@/components/library/PicksRail';
 import RightPanel from '@/components/ui/RightPanel';
 import DreamBoard from '@/components/profile/DreamBoard';
 import GraduateModal from '@/components/profile/GraduateModal';
 import TripMapView from '@/components/trip/TripMapView';
-import OverviewItinerary from '@/components/trip/OverviewItinerary';
 import TripBriefing from '@/components/trip/TripBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import EditableTripName from '@/components/trip/EditableTripName';
@@ -89,15 +86,11 @@ function TripDetailContent() {
 
   // Auto-repair missing geoDestination coordinates (geocode destination names)
   useGeoDestinationRepair();
-  const [ghostsInjected, setGhostsInjected] = useState(false);
+  const ghostsInjectedRef = useRef(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
   const [showGraduateModal, setShowGraduateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map'>('board');
-
-  // Desktop resizable split
-  const [boardHeight, setBoardHeight] = useState(60); // percentage of left workspace
-  const resizing = useRef(false);
 
   // Picks rail resizable width
   const RAIL_MIN = 220;
@@ -128,13 +121,11 @@ function TripDetailContent() {
   // Collaboration state
   const collabSuggestions = useCollaborationStore(s => s.suggestions);
   const collabReactions = useCollaborationStore(s => s.reactions);
-  const collabSlotNotes = useCollaborationStore(s => s.slotNotes);
   const collabMyRole = useCollaborationStore(s => s.myRole);
   const collabCollaborators = useCollaborationStore(s => s.collaborators);
   const collabActivities = useCollaborationStore(s => s.activities);
   const respondToSuggestion = useCollaborationStore(s => s.respondToSuggestion);
   const addReaction = useCollaborationStore(s => s.addReaction);
-  const addSlotNote = useCollaborationStore(s => s.addSlotNote);
   const tripId = params.id as string;
 
   // Start collaboration sync polling
@@ -300,39 +291,13 @@ function TripDetailContent() {
 
   // On trip load, inject all saved places as ghost candidates (once)
   useEffect(() => {
-    if (trip && !ghostsInjected) {
+    if (trip && !ghostsInjectedRef.current) {
       if (myPlaces.length > 0) {
         injectGhostCandidates(myPlaces);
       }
-      setGhostsInjected(true);
+      ghostsInjectedRef.current = true;
     }
-  }, [trip, myPlaces, ghostsInjected, injectGhostCandidates]);
-
-  // ─── Desktop resize handle ───
-  const handleResizeStart = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    resizing.current = true;
-    const startY = e.clientY;
-    const startHeight = boardHeight;
-    const container = (e.target as HTMLElement).closest('[data-desktop-workspace]');
-    if (!container) return;
-    const containerRect = container.getBoundingClientRect();
-
-    const onMove = (ev: PointerEvent) => {
-      if (!resizing.current) return;
-      const delta = ev.clientY - startY;
-      const pctDelta = (delta / containerRect.height) * 100;
-      const newHeight = Math.min(85, Math.max(25, startHeight + pctDelta));
-      setBoardHeight(newHeight);
-    };
-    const onUp = () => {
-      resizing.current = false;
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-    };
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-  }, [boardHeight]);
+  }, [trip, myPlaces, injectGhostCandidates]);
 
   // ─── Context values ─────────────────────────────────────────────────────────
   // Build stable context objects so providers don't force-rerender on every tick.

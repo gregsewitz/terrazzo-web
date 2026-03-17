@@ -90,15 +90,17 @@ function DayBoardView() {
     setDayHotelInfo(dayNumber, hotelInfo);
   }, [setDayHotelInfo]);
 
-  if (!trip) return null;
-
   // Unique destinations for picker (preserve order of first appearance)
+  // Must be before early return to satisfy rules-of-hooks
   const uniqueDestinations = useMemo(() => {
+    if (!trip) return [];
     const seen = new Set<string>();
     return trip.days
       .map(d => d.destination || '')
       .filter(d => d && !seen.has(d) && seen.add(d));
-  }, [trip.days]);
+  }, [trip]);
+
+  if (!trip) return null;
 
   const getDestColor = generateDestColor;
 

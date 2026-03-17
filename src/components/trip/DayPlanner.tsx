@@ -86,18 +86,22 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
     swipeLocked.current = null;
   }, [currentDay, setCurrentDay, trip]);
 
-  const [addingTransport, setAddingTransport] = useState(false);
-  const [editingTransportId, setEditingTransportId] = useState<string | null>(null);
+  // State keyed to currentDay — values automatically become false/null when
+  // the day changes, avoiding the setState-in-effect anti-pattern entirely.
+  const [addingTransportDay, setAddingTransportDay] = useState<number | null>(null);
+  const addingTransport = addingTransportDay === currentDay;
+  const setAddingTransport = (value: boolean) =>
+    setAddingTransportDay(value ? currentDay : null);
+
+  const [editingTransportKey, setEditingTransportKey] = useState<{ day: number; id: string } | null>(null);
+  const editingTransportId = editingTransportKey?.day === currentDay ? editingTransportKey.id : null;
+  const setEditingTransportId = (id: string | null) =>
+    setEditingTransportKey(id ? { day: currentDay, id } : null);
+
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [showDeleteDayConfirm, setShowDeleteDayConfirm] = useState(false);
   const [showDayContextMenu, setShowDayContextMenu] = useState(false);
   const headerMenuRef = useRef<HTMLDivElement>(null);
-
-  // Reset editing state when switching days
-  useEffect(() => {
-    setAddingTransport(false);
-    setEditingTransportId(null);
-  }, [currentDay]);
 
   // Close header menu on outside click
   useEffect(() => {

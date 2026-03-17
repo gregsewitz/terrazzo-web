@@ -20,6 +20,121 @@ const SLOT_HOLD_DELAY = 250;
 const SLOT_DRAG_THRESHOLD = 6;
 const RAIL_WIDTH = 36;
 
+// ─── Module-level sub-components ───────────────────────────────────────────
+// Defined outside TimeSlotCard to satisfy react-hooks/static-components.
+
+function RailLabel({ accent, label }: { accent: boolean; label: string }) {
+  return (
+    <div
+      className="flex-shrink-0 flex items-center justify-center"
+      style={{
+        width: RAIL_WIDTH,
+        minHeight: accent ? undefined : 44,
+        borderRight: accent ? `2px solid var(--t-dark-teal)` : `1px solid var(--t-linen)`,
+        position: 'relative',
+      }}
+    >
+      <span
+        style={{
+          writingMode: 'vertical-lr',
+          transform: 'rotate(180deg)',
+          fontFamily: FONT.mono,
+          fontSize: 9,
+          fontWeight: accent ? 600 : 400,
+          color: accent ? 'var(--t-dark-teal)' : INK['50'],
+          textTransform: 'uppercase' as const,
+          letterSpacing: 1.5,
+          whiteSpace: 'nowrap',
+          padding: '8px 0',
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+interface QuickEntriesBlockProps {
+  quickEntries: QuickEntry[];
+  slotLabel: string;
+  editingEntryId: string | null;
+  onSetEditing: (id: string | null) => void;
+  updateEntry: (entryId: string, entry: QuickEntry) => void;
+  removeEntry: (entryId: string) => void;
+  confirmEntry: (entryId: string) => void;
+}
+
+function QuickEntriesBlock({
+  quickEntries, slotLabel, editingEntryId, onSetEditing,
+  updateEntry, removeEntry, confirmEntry,
+}: QuickEntriesBlockProps) {
+  if (!quickEntries.length) return null;
+  return (
+    <>
+      {quickEntries.map(qe =>
+        editingEntryId === qe.id ? (
+          <QuickEntryInput
+            key={qe.id}
+            slotLabel={slotLabel}
+            initialValue={qe.text}
+            onSubmit={(updated) => {
+              updateEntry(qe.id, { ...updated, id: qe.id, createdAt: qe.createdAt });
+              onSetEditing(null);
+            }}
+            onCancel={() => onSetEditing(null)}
+          />
+        ) : (
+          <QuickEntryCard
+            key={qe.id}
+            entry={qe}
+            onRemove={() => removeEntry(qe.id)}
+            onConfirm={qe.status === 'tentative' ? () => confirmEntry(qe.id) : undefined}
+            onTap={() => onSetEditing(qe.id)}
+          />
+        )
+      )}
+    </>
+  );
+}
+
+function AddMoreRow({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <button
+        onClick={(e) => { e.stopPropagation(); onAdd(); }}
+        className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
+        style={{
+          color: TEXT.primary,
+          fontFamily: FONT.sans,
+          fontWeight: 500,
+          background: INK['04'],
+          border: `1px solid ${INK['10']}`,
+          padding: '4px 8px',
+          transition: 'all 0.15s',
+          touchAction: 'manipulation',
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget;
+          el.style.background = 'rgba(58,128,136,0.06)';
+          el.style.borderColor = 'rgba(58,128,136,0.2)';
+          el.style.color = 'var(--t-dark-teal)';
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget;
+          el.style.background = INK['04'];
+          el.style.borderColor = INK['10'];
+          el.style.color = INK['80'];
+        }}
+        aria-label="Add entry"
+      >
+        <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> add entry
+      </button>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 interface TimeSlotCardProps {
   slot: TimeSlot;
   dayNumber: number;
@@ -142,108 +257,6 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
   }, []);
 
 
-  // ─── Rail + Content layout (horizontal flex) ───
-
-  // Rail label component — vertical text, no icon
-  const RailLabel = ({ accent }: { accent: boolean }) => (
-    <div
-      className="flex-shrink-0 flex items-center justify-center"
-      style={{
-        width: RAIL_WIDTH,
-        minHeight: accent ? undefined : 44,
-        borderRight: accent ? `2px solid var(--t-dark-teal)` : `1px solid var(--t-linen)`,
-        position: 'relative',
-      }}
-    >
-      <span
-        style={{
-          writingMode: 'vertical-lr',
-          transform: 'rotate(180deg)',
-          fontFamily: FONT.mono,
-          fontSize: 9,
-          fontWeight: accent ? 600 : 400,
-          color: accent ? 'var(--t-dark-teal)' : INK['50'],
-          textTransform: 'uppercase' as const,
-          letterSpacing: 1.5,
-          whiteSpace: 'nowrap',
-          padding: '8px 0',
-        }}
-      >
-        {slot.label}
-      </span>
-    </div>
-  );
-
-  // ─── Shared: Quick entries renderer ───
-  const QuickEntriesBlock = () => {
-    if (!slot.quickEntries?.length) return null;
-    return (
-      <>
-        {slot.quickEntries.map(qe =>
-          editingEntryId === qe.id ? (
-            <QuickEntryInput
-              key={qe.id}
-              slotLabel={slot.label}
-              initialValue={qe.text}
-              onSubmit={(updated) => {
-                updateQuickEntry(dayNumber, slot.id, qe.id, {
-                  ...updated,
-                  id: qe.id,
-                  createdAt: qe.createdAt,
-                });
-                setEditingEntryId(null);
-              }}
-              onCancel={() => setEditingEntryId(null)}
-            />
-          ) : (
-            <QuickEntryCard
-              key={qe.id}
-              entry={qe}
-              onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
-              onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
-              onTap={() => setEditingEntryId(qe.id)}
-            />
-          )
-        )}
-      </>
-    );
-  };
-
-  // ─── Shared: Add more button (shown in filled slots below existing content) ───
-  const AddMoreRow = () => (
-    <div className="flex items-center gap-2 mt-1.5">
-      <button
-        onClick={(e) => { e.stopPropagation(); setShowQuickInput(true); }}
-        className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
-        style={{
-          color: TEXT.primary,
-          fontFamily: FONT.sans,
-          fontWeight: 500,
-          background: INK['04'],
-          border: `1px solid ${INK['10']}`,
-          padding: '4px 8px',
-          transition: 'all 0.15s',
-          touchAction: 'manipulation',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget;
-          el.style.background = 'rgba(58,128,136,0.06)';
-          el.style.borderColor = 'rgba(58,128,136,0.2)';
-          el.style.color = 'var(--t-dark-teal)';
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget;
-          el.style.background = INK['04'];
-          el.style.borderColor = INK['10'];
-          el.style.color = INK['80'];
-        }}
-        aria-label="Add entry"
-      >
-        <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> add entry
-      </button>
-    </div>
-  );
-
   // ─── Ghost slots: rail + ghost cards ───
   if (hasGhosts && !hasContent) {
     return (
@@ -256,7 +269,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
           transition: 'background 0.15s ease-out',
         }}
       >
-        <RailLabel accent={false} />
+        <RailLabel accent={false} label={slot.label} />
         <div className="flex-1 min-w-0 py-2 pr-3 pl-2.5">
           <div className="flex flex-col gap-2">
             {slot.ghostItems!.map(ghost => (
@@ -281,7 +294,15 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
             ))}
 
             {/* Quick entries in ghost slots */}
-            <QuickEntriesBlock />
+            <QuickEntriesBlock
+              quickEntries={slot.quickEntries || []}
+              slotLabel={slot.label}
+              editingEntryId={editingEntryId}
+              onSetEditing={setEditingEntryId}
+              updateEntry={(id, entry) => updateQuickEntry(dayNumber, slot.id, id, entry)}
+              removeEntry={(id) => removeQuickEntry(dayNumber, slot.id, id)}
+              confirmEntry={(id) => confirmQuickEntry(dayNumber, slot.id, id)}
+            />
 
             {/* Inline quick entry input or add buttons */}
             {showQuickInput ? (
@@ -293,7 +314,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
                 />
               </div>
             ) : (
-              <AddMoreRow />
+              <AddMoreRow onAdd={() => setShowQuickInput(true)} />
             )}
           </div>
         </div>
@@ -314,10 +335,10 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
           transition: 'background 0.2s ease-out, border-left 0.15s ease-out',
         }}
       >
-        <RailLabel accent={true} />
+        <RailLabel accent={true} label={slot.label} />
         <div className="flex-1 min-w-0 py-1.5 pr-3 pl-2.5">
           {/* Confirmed places — draggable card style with source + insight */}
-          {slot.places.map((p, pIdx) => {
+          {slot.places.map((p) => {
             const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
             const isReservation = p.ghostSource === 'email';
             const isDragging = dragItemId === p.id;
@@ -462,7 +483,15 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
           })}
 
           {/* Quick entries */}
-          <QuickEntriesBlock />
+          <QuickEntriesBlock
+            quickEntries={slot.quickEntries || []}
+            slotLabel={slot.label}
+            editingEntryId={editingEntryId}
+            onSetEditing={setEditingEntryId}
+            updateEntry={(id, entry) => updateQuickEntry(dayNumber, slot.id, id, entry)}
+            removeEntry={(id) => removeQuickEntry(dayNumber, slot.id, id)}
+            confirmEntry={(id) => confirmQuickEntry(dayNumber, slot.id, id)}
+          />
 
           {/* Collaborator suggestions for this slot */}
           {suggestions && suggestions.length > 0 && (
@@ -489,7 +518,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
               />
             </div>
           ) : (
-            <AddMoreRow />
+            <AddMoreRow onAdd={() => setShowQuickInput(true)} />
           )}
 
         </div>
@@ -508,7 +537,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
           background: 'transparent',
         }}
       >
-        <RailLabel accent={false} />
+        <RailLabel accent={false} label={slot.label} />
         <div className="flex-1 min-w-0 py-1.5 pr-3 pl-2.5">
           <QuickEntryInput
             slotLabel={slot.label}
@@ -531,7 +560,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
         transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
     >
-      <RailLabel accent={false} />
+      <RailLabel accent={false} label={slot.label} />
       <div
         className="flex-1 min-w-0 flex items-center pl-2.5"
         style={{ minHeight: 44 }}

@@ -29,7 +29,7 @@ interface TripBriefingProps {
 function TripBriefingInner({ trip, onTapDay }: TripBriefingProps) {
   const { openDetail: onTapDetail } = usePlaceDetail();
   const data = useBriefingData(trip);
-  const { weather: tripWeather, isLoading: weatherLoading } = useTripWeather(trip);
+  const { weather: tripWeather } = useTripWeather(trip);
 
   // Type breakdown string for the summary
   const typeBreakdown = useMemo(() => {
@@ -313,6 +313,7 @@ function TripBriefingInner({ trip, onTapDay }: TripBriefingProps) {
           margin: '0 auto 20px',
         }} />
         <div style={{ marginBottom: 6 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/logo-pixellance-navy.svg"
             alt="Terrazzo"
