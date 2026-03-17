@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { completeTasteFields } from '@/lib/taste-completion';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
-import type { User } from '@prisma/client';
+import type { User, SavedPlace } from '@prisma/client';
 
 /**
  * POST /api/shared/[token]/save — Save shared places to your library
@@ -48,10 +48,17 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     return Response.json({ error: 'No places to save' }, { status: 400 });
   }
 
-  // Fetch source places
-  const sourcePlaces = await prisma.savedPlace.findMany({
+  // Fetch source places, then restore curated order.
+  // findMany with `id: { in: [...] }` does not preserve array order, so we
+  // re-sort into the targetIds sequence so that newPlaces (and ultimately
+  // newPlaceIds) reflect the original editorial ordering.
+  const targetIdOrder = new Map(targetIds.map((id, i) => [id, i]));
+  const rawSourcePlaces = await prisma.savedPlace.findMany({
     where: { id: { in: targetIds } },
   });
+  const sourcePlaces = rawSourcePlaces.sort(
+    (a: SavedPlace, b: SavedPlace) => (targetIdOrder.get(a.id) ?? 0) - (targetIdOrder.get(b.id) ?? 0),
+  );
 
   // Create copies for the recipient, skipping duplicates (same googlePlaceId)
   const existingGoogleIds = new Set(
@@ -130,7 +137,10 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     ).catch(err => console.error('[shared-save] taste completion error:', err));
   }
 
-  // Optionally create a collection with these places
+  // Optionally create a collection with these places.
+  // newPlaceIds is already in curated order: sourcePlaces was sorted by
+  // targetIds above, newPlaces is filtered from that, and prisma.$transaction
+  // preserves array order — so newPlaceIds reflects the original sequence.
   let newCollection = null;
   if (createCollection && newPlaceIds.length > 0) {
     const ownerName = (await prisma.user.findUnique({

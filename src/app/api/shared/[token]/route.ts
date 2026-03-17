@@ -45,9 +45,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
       return Response.json({ error: 'Collection no longer exists' }, { status: 404 });
     }
 
-    // Fetch the places in this collection
+    // Fetch the places in this collection, then restore curated order.
+    // findMany with `id: { in: [...] }` does not preserve array order, so we
+    // re-sort the results back into the original placeIds sequence.
     const placeIds = (collection.placeIds as string[]) || [];
-    const places = placeIds.length > 0
+    const rawPlaces = placeIds.length > 0
       ? await prisma.savedPlace.findMany({
           where: { id: { in: placeIds }, deletedAt: null },
           select: {
@@ -68,6 +70,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
           },
         })
       : [];
+    type RawPlace = (typeof rawPlaces)[number];
+    const rawById = new Map<string, RawPlace>();
+    for (const p of rawPlaces) rawById.set(p.id, p);
+    const places = placeIds.map(id => rawById.get(id)).filter((p): p is RawPlace => p !== undefined);
 
     return Response.json({
       type: 'collection',
