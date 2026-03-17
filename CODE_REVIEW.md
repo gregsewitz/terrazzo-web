@@ -17,10 +17,10 @@ These need refactoring into smaller, focused sub-components:
 
 | Component | Lines | Issue |
 |-----------|-------|-------|
-| `onboarding/RevealSequence.tsx` | 1,603 | Animation + data + UI interleaved |
+| ~~`onboarding/RevealSequence.tsx`~~ | ~~1,603~~ → 311 | **Split** — 13 card components + shared primitives extracted to `components/onboarding/reveal/` |
 | ~~`saved/page.tsx`~~ | ~~1,473~~ → 698 | **Split** — PlaceCard, CreateCollectionModal, AddToTripSheet extracted to `components/saved/` |
-| `TripMapView.tsx` | 1,364 | 40+ responsibilities, map + gestures + UI |
-| `profile/ProfileDeepDive.tsx` | 1,332 | Long component tree |
+| ~~`TripMapView.tsx`~~ | ~~1,364~~ → 757 | **Split** — 5 card components + shared types extracted to `components/trip-map/` |
+| ~~`profile/ProfileDeepDive.tsx`~~ | ~~1,332~~ → 64 | **Split** — 15 section components extracted to `profile/sections.tsx` |
 | `profile/page.tsx` | 1,262 | Down from 1,833 — still has header + discover feed logic combined |
 | `TripBriefing.tsx` | 1,020 | Briefing data + rendering combined |
 | `DayBoardView.tsx` | 957 | Complex drag/drop + state |
