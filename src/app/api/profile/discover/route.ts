@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, profileDiscoverSchema } from '@/lib/api-validation';
 import { authHandler } from '@/lib/api-auth-handler';
+import { CLAUDE_SONNET } from '@/lib/models';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
@@ -220,7 +221,7 @@ async function resolveAllPlaces(
       const resolvedName = googleResult.displayName?.text || name;
 
       const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
-      ensureEnrichment(googlePlaceId, resolvedName, userId, 'discover', placeType).catch(() => {});
+      ensureEnrichment(googlePlaceId, resolvedName, userId, 'discover', placeType).catch((err: unknown) => console.warn('[discover] ensureEnrichment failed:', err));
 
       return { name, location, googlePlaceId };
     }),
@@ -308,7 +309,7 @@ CONTEXT LABEL FOR RECS: "${contextLabel}"
 Generate the full discover feed. Return valid JSON only.`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     system: [{ type: 'text', text: DISCOVER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: contextMessage }],
@@ -531,7 +532,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
       if (ragFeed) {
         // Defensive: ensure all surfaced places have enrichment triggered
-        triggerEnrichmentBatch(extractAllFeedPlaces(ragFeed), user.id, 'discover_rag').catch(() => {});
+        triggerEnrichmentBatch(extractAllFeedPlaces(ragFeed), user.id, 'discover_rag').catch((err: unknown) => console.warn('[discover] triggerEnrichmentBatch failed:', err));
         return NextResponse.json(ragFeed);
       }
     } catch (ragError) {
@@ -543,7 +544,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     //  the batch trigger for consistency and to catch any places missed)
     console.log('[discover] Using legacy LLM-only flow');
     const legacyFeed = await generateLegacyFeed(userProfile, lifeContext, user.id);
-    triggerEnrichmentBatch(extractAllFeedPlaces(legacyFeed), user.id, 'discover_legacy').catch(() => {});
+    triggerEnrichmentBatch(extractAllFeedPlaces(legacyFeed), user.id, 'discover_legacy').catch((err: unknown) => console.warn('[discover] triggerEnrichmentBatch failed:', err));
 
     return NextResponse.json(legacyFeed);
   } catch (error) {

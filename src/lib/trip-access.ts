@@ -53,5 +53,5 @@ export function logTripActivity(
   // Fire and forget — don't await
   prisma.tripActivity.create({
     data: { tripId, userId, type, summary, data: (data ?? undefined) as Prisma.InputJsonValue | undefined },
-  }).catch(() => {}); // Silently ignore errors
+  }).catch((err: unknown) => console.warn('[trip-access] access log failed:', err));
 }

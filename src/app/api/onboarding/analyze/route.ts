@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingAnalyzeSchema } from '@/lib/api-validation';
 import { TASTE_ONTOLOGY_SYSTEM_PROMPT, ONBOARDING_PHASES } from '@/constants/onboarding';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 const anthropic = new Anthropic();
 
@@ -124,7 +125,7 @@ If this is the "emotional-core" phase (Phase 10), also extract:
 Return valid JSON only.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 1024,
       system: [{ type: 'text', text: TASTE_ONTOLOGY_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],

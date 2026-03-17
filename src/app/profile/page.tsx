@@ -322,7 +322,7 @@ function ProfilePageContent() {
       apiFetch('/api/profile/discover/ensure-places', {
         method: 'POST',
         body: JSON.stringify({ places }),
-      }).catch(() => {}); // fire-and-forget
+      }).catch((err: unknown) => console.warn('[profile] fire-and-forget failed:', err));
     }
   }, []);
 

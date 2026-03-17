@@ -91,7 +91,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
     // Now that we have a googlePlaceId, fire the enrichment pipeline
     if (googlePlaceId) {
-      ensureEnrichment(googlePlaceId, name, user.id, 'user_import', enriched.type).catch(() => {});
+      ensureEnrichment(googlePlaceId, name, user.id, 'user_import', enriched.type).catch((err: unknown) => console.warn('[backfill-enrichment] ensureEnrichment failed:', err));
     }
 
     patched++;

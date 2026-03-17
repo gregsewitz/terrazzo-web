@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { authHandler } from '@/lib/api-auth-handler';
+import { CLAUDE_SONNET } from '@/lib/models';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
@@ -239,7 +240,7 @@ async function resolveFreshPicks(feed: any, userId: string): Promise<void> {
       obj.googlePlaceId = googleResult.id;
       const resolvedName = googleResult.displayName?.text || name;
       const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
-      ensureEnrichment(googleResult.id, resolvedName, userId, 'discover_more_fresh', placeType).catch(() => {});
+      ensureEnrichment(googleResult.id, resolvedName, userId, 'discover_more_fresh', placeType).catch((err: unknown) => console.warn('[discover/more] ensureEnrichment failed:', err));
     }),
   );
 
@@ -311,7 +312,7 @@ async function resolveAllPlacesLegacy(
       const googlePlaceId = googleResult.id;
       const resolvedName = googleResult.displayName?.text || name;
       const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
-      ensureEnrichment(googlePlaceId, resolvedName, userId, 'discover_more', placeType).catch(() => {});
+      ensureEnrichment(googlePlaceId, resolvedName, userId, 'discover_more', placeType).catch((err: unknown) => console.warn('[discover/more] ensureEnrichment failed:', err));
       return { name, location, googlePlaceId };
     }),
   );
@@ -427,7 +428,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         await resolveFreshPicks(editorialFeed, user.id);
 
         // Defensive enrichment for all places
-        triggerEnrichmentBatch(extractAllFeedPlaces(editorialFeed), user.id, 'discover_more_rag').catch(() => {});
+        triggerEnrichmentBatch(extractAllFeedPlaces(editorialFeed), user.id, 'discover_more_rag').catch((err: unknown) => console.warn('[discover/more] triggerEnrichmentBatch failed:', err));
 
         // Attach context label
         const month = new Date().getMonth();
@@ -483,7 +484,7 @@ ${pageConfig.instructions}
 Return valid JSON only.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 4096,
       system: [{ type: 'text', text: LEGACY_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],

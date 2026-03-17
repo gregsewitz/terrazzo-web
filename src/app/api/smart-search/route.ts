@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, smartSearchSchema } from '@/lib/api-validation';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     }
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 512,
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [

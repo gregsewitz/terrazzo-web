@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { searchPlaces, getPhotoUrl, priceLevelToString, mapGoogleTypeToPlaceType } from '@/lib/places';
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(ip + ':places-autocomplete', { maxRequests: 30, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
   try {
     const { query } = await req.json();
     if (!query || typeof query !== 'string' || query.trim().length < 2) {

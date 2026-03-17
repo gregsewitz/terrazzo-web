@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
 
   // Find places needing photos via raw SQL, return IDs
   const rows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
-    `SELECT id FROM "SavedPlace" WHERE ${NEEDS_PHOTO_WHERE} ORDER BY "createdAt" ASC LIMIT ${Number(limit)}`
+    `SELECT id FROM "SavedPlace" WHERE ${NEEDS_PHOTO_WHERE} ORDER BY "createdAt" ASC LIMIT $1`,
+    Number(limit)
   );
 
   if (rows.length === 0) {

@@ -13,7 +13,13 @@ import { ALL_TASTE_DOMAINS } from '@/types';
  *   - cluster size distribution
  *   - domain statistics
  */
-export async function GET() {
+export async function GET(req: Request) {
+  // Admin auth: require ADMIN_SECRET bearer token
+  const secret = req.headers.get('authorization')?.replace('Bearer ', '');
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // 1. Get the user with taste vectors + taste profile (for LLM scoring)
     const users = await prisma.$queryRawUnsafe<

@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingSynthesizeSchema } from '@/lib/api-validation';
 import { getUser } from '@/lib/supabase-server';
+import { CLAUDE_SONNET } from '@/lib/models';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 
@@ -164,7 +165,7 @@ async function callAndParse(
 ): Promise<Record<string, any>> {
   const t0 = Date.now();
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: CLAUDE_SONNET,
     max_tokens: maxTokens,
     system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: userMessage }],
@@ -215,7 +216,7 @@ async function resolveMatchedProperties(
       if (userId) {
         const resolvedName = googleResult.displayName?.text || prop.name;
         const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
-        ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis', placeType).catch(() => {});
+        ensureEnrichment(googlePlaceId, resolvedName, userId, 'onboarding_synthesis', placeType).catch((err: unknown) => console.warn('[synthesize] ensureEnrichment failed:', err));
       }
       return googlePlaceId;
     })

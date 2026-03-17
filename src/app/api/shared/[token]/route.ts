@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
   prisma.shareLink.update({
     where: { id: shareLink.id },
     data: { viewCount: { increment: 1 } },
-  }).catch(() => {});
+  }).catch((err: unknown) => console.warn('[shared] viewCount update failed:', err));
 
   const ownerName = shareLink.user.name
     || shareLink.user.email.split('@')[0]

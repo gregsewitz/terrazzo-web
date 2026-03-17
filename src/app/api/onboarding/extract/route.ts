@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingAnalyzeSchema } from '@/lib/api-validation';
 import { TASTE_ONTOLOGY_SYSTEM_PROMPT, ONBOARDING_PHASES } from '@/constants/onboarding';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 /**
  * Background signal extraction endpoint — runs AFTER /api/onboarding/respond
@@ -92,7 +93,7 @@ Return valid JSON:
 }`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 800,
       system: [{ type: 'text', text: TASTE_ONTOLOGY_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],

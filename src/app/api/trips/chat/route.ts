@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, tripChatSchema } from '@/lib/api-validation';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 const anthropic = new Anthropic();
 
@@ -75,7 +76,7 @@ User's message: "${userMessage}"
 Return valid JSON only.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 256,
       system: [{ type: 'text', text: CHAT_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],

@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { TERRAZZO_VOICE } from '@/types';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 let _anthropic: Anthropic | null = null;
 function getClient(): Anthropic {
@@ -11,7 +12,8 @@ function getClient(): Anthropic {
   return _anthropic;
 }
 
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
+// Re-export CLAUDE_SONNET as MODEL for backward compatibility
+export { CLAUDE_SONNET as MODEL };
 
 function extractJSON(text: string): string {
   // Strip markdown code fences if present
@@ -199,7 +201,7 @@ Return ONLY JSON. No markdown. No truncation. Every place must appear.`;
   const scaledTokens = Math.min(Math.max(baseTokens, maxPlaces * 200), 32000);
 
   const response = await callClaudeWithRetry({
-    model: MODEL,
+    model: CLAUDE_SONNET,
     max_tokens: scaledTokens,
     system: [{ type: 'text', text: extractSystemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: content.slice(0, 60000) }],
@@ -259,7 +261,7 @@ Return a JSON array in the SAME ORDER as the input list. Each element correspond
 Return ONLY the JSON array, no markdown.`;
 
   const response = await callClaudeWithRetry({
-    model: MODEL,
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     system: [{ type: 'text', text: tasteMatchSystemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: [

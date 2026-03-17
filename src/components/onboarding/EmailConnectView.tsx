@@ -45,7 +45,7 @@ export default function EmailConnectView({ onComplete }: EmailConnectViewProps) 
       // Re-check to get the email address
       apiFetch<EmailStatus>('/api/email/status').then((result) => {
         if (result?.email) setConnectedEmail(result.email);
-      }).catch(() => {});
+      }).catch((err: unknown) => console.warn('[EmailConnect] action failed:', err));
     }
   }, [status]);
 

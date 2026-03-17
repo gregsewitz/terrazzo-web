@@ -10,6 +10,7 @@ import {
   stripHtml,
 } from '@/lib/import-pipeline';
 import Anthropic from '@anthropic-ai/sdk';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 // Allow up to 120s — Claude extraction + Google Places enrichment for large files
 export const maxDuration = 120;
@@ -25,8 +26,6 @@ export const maxDuration = 120;
  * 5. Enrich with Google Places + taste match
  * 6. Stream results via SSE
  */
-
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
 export async function POST(request: NextRequest) {
   const clientIp = getClientIp(request.headers);
@@ -100,7 +99,7 @@ export async function POST(request: NextRequest) {
           // Use Claude vision directly to extract text/places from the image
           const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
           const visionResponse = await anthropic.messages.create({
-            model: MODEL,
+            model: CLAUDE_SONNET,
             max_tokens: 4096,
             messages: [{
               role: 'user',
@@ -152,7 +151,7 @@ If the image does not contain any identifiable places or travel recommendations,
           // Use Claude's document understanding capability
           const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
           const pdfResponse = await anthropic.messages.create({
-            model: MODEL,
+            model: CLAUDE_SONNET,
             max_tokens: 8192,
             messages: [{
               role: 'user',

@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
           // Fire-and-forget enrichment
           const resolvedName = googleResult.displayName?.text || prop.name;
           const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
-          ensureEnrichment(googleResult.id, resolvedName, user.id, 'backfill', placeType).catch(() => {});
+          ensureEnrichment(googleResult.id, resolvedName, user.id, 'backfill', placeType).catch((err: unknown) => console.warn('[backfill-place-ids] ensureEnrichment failed:', err));
         } catch (err) {
           failed.push(`${prop.name}: ${err instanceof Error ? err.message : 'error'}`);
         }

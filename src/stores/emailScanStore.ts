@@ -141,7 +141,7 @@ export const useEmailScanStore = create<EmailScanStore>((set, get) => ({
           progress: { ...s.progress, status: 'done' },
         }));
         // Also fix it in the DB
-        await apiFetch(`/api/email/scan/${latest.id}/complete`, { method: 'POST' }).catch(() => {});
+        await apiFetch(`/api/email/scan/${latest.id}/complete`, { method: 'POST' }).catch((err: unknown) => console.warn('[emailScan] complete failed:', err));
       }
     } catch {
       // No scan history — fine
@@ -204,7 +204,7 @@ export const useEmailScanStore = create<EmailScanStore>((set, get) => ({
       const { progress } = get();
       await apiFetch(`/api/email/scan/${progress.scanId}/complete`, {
         method: 'POST',
-      }).catch(() => {});
+      }).catch((err: unknown) => console.warn('[emailScan] scan failed:', err));
 
       console.log('[email-scan] All batches complete');
     } catch (err) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
@@ -13,6 +14,9 @@ import { prisma } from '@/lib/prisma';
  *   type?   = restaurant | hotel | flight | activity | all (default: all)
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  const rl = rateLimit(ip + ':email-reservations', { maxRequests: 20, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
   const user = await getUser(request);
   if (!user) return unauthorized();
 

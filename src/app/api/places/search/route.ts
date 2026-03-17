@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { searchPlace, searchPlaces, priceLevelToString, mapGoogleTypeToPlaceType, getPhotoUrl } from '@/lib/places';
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  const rl = rateLimit(ip + ':places-search', { maxRequests: 20, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
   try {
     const { query, locationBias, multi } = await request.json();
 

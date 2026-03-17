@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { GeoDestination } from '@/types';
+import { distKm } from '@/lib/geo';
 
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -103,11 +104,7 @@ export function useGeoDestinationRepair() {
         // results that are wildly off (>200km) and use hotel coords instead.
         const hotel = hotelByDest.get(destName.toLowerCase());
         if (hotel) {
-          const R = 6371;
-          const dLat = (coords.lat - hotel.lat) * Math.PI / 180;
-          const dLng = (coords.lng - hotel.lng) * Math.PI / 180;
-          const a = Math.sin(dLat / 2) ** 2 + Math.cos(hotel.lat * Math.PI / 180) * Math.cos(coords.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-          const drift = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const drift = distKm(hotel.lat, hotel.lng, coords.lat, coords.lng);
           if (drift > 200) {
             console.warn(`[GeoRepair] Geocoded "${destName}" to (${coords.lat}, ${coords.lng}) but hotel is ${drift.toFixed(0)}km away — using hotel coords instead`);
             coords.lat = hotel.lat;

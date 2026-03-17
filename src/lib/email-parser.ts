@@ -7,6 +7,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { ExtractedReservation, EmailParseResult, NylasEmailMessage } from '@/types/email';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -97,7 +98,7 @@ export async function parseEmailForReservations(
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 2048,
       messages: [
         {

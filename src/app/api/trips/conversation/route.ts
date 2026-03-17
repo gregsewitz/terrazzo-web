@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, tripConversationSchema } from '@/lib/api-validation';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 const anthropic = new Anthropic();
 
@@ -82,7 +83,7 @@ User's latest message: "${userMessage}"
 Return valid JSON only.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 512,
       system: [{ type: 'text', text: TRIP_CONVERSATION_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: contextMessage }],

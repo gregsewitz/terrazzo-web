@@ -8,6 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { GeneratedTasteProfile, OnboardingLifeContext } from '@/types';
+import { CLAUDE_SONNET } from '@/lib/models';
 import type {
   AllocatedFeed,
   AllocatedBecauseYou,
@@ -296,7 +297,7 @@ export async function generateEditorialCopy(
   const contextMessage = buildContextMessage(allocated, userProfile, lifeContext);
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     system: [
       {
@@ -500,7 +501,7 @@ export async function generateMoreEditorialCopy(
   );
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     system: [
       {

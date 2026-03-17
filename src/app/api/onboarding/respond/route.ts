@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingAnalyzeSchema } from '@/lib/api-validation';
 import { ONBOARDING_PHASES } from '@/constants/onboarding';
+import { CLAUDE_SONNET } from '@/lib/models';
 
 /**
  * Streaming conversational endpoint — generates ONLY the followUp response.
@@ -95,7 +96,7 @@ Return valid JSON only.`;
 
     // Stream from Anthropic — we forward tokens to the client as SSE
     const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: CLAUDE_SONNET,
       max_tokens: 200,
       system: [{ type: 'text', text: CONVERSATION_SYSTEM_PROMPT }],
       messages: [{ role: 'user', content: contextMessage }],

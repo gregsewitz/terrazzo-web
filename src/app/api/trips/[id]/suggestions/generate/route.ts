@@ -10,6 +10,7 @@ import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody } from '@/lib/api-validation';
+import { CLAUDE_SONNET } from '@/lib/models';
 import { getUserTasteProfile } from '@/lib/user-profile';
 import { fetchDayWeather } from '@/lib/weather';
 import {
@@ -20,7 +21,6 @@ import {
 } from '@/services/suggestionEngine';
 
 const anthropic = new Anthropic();
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
 // ─── Request validation ───────────────────────────────────────────────────────
 
@@ -124,7 +124,7 @@ export async function POST(
 
     // Call Claude with prompt caching on system prompt
     const response = await anthropic.messages.create({
-      model: MODEL,
+      model: CLAUDE_SONNET,
       max_tokens: 1024,
       system: [{
         type: 'text',
