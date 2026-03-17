@@ -64,8 +64,8 @@ The highest-impact ones to fix are in hooks and stores where `any` hides actual 
 
 ## 4. Accessibility
 
-### 4a. Aria label coverage improving, but still low
-Added aria-labels to 8 critical icon buttons (search clear, panel collapse, share close, transport edit/remove, ghost dismiss, desktop nav). Coverage is now ~27 labels across ~650 elements (~4%). Continue adding labels to remaining icon buttons, especially in trip planner and place detail views.
+### 4a. Aria label coverage improving
+Added 25+ more aria-labels across DayPlanner, TimeSlotCard, DayBoardView, ChatSidebar, BaseSheet, PlaceTimeEditor, GhostCard, CollaboratorGhostCard. Cumulative coverage now ~52 labels. Remaining gaps: place detail sheets, onboarding, profile views.
 
 ### 4b. Non-semantic interactive elements
 Multiple `<div onClick={}>` patterns used instead of `<button>`. Some mitigated with `role="button"` and `tabIndex`, but many are not.
@@ -89,10 +89,17 @@ Only ~2,600 lines of test code for ~91,000 lines of source. No e2e tests. Unit t
 ## Priority Ranking
 
 **Do this quarter:**
-1. Refactor 1000+ line components into sub-components
-2. Introduce feature-based component directory structure
-3. Split oversized hooks and stores
+1. ✅ Refactor 1000+ line components into sub-components
+2. ✅ Introduce feature-based component directory structure
+3. ✅ Split oversized hooks and stores
 4. Externalize 17MB signal-clusters.json
-5. Adopt `cache-policy.ts` across all API routes
-6. Continue accessibility improvements (aria labels, semantic HTML)
+5. ✅ Adopt `cache-policy.ts` across all API routes
+6. ✅ Continue accessibility improvements (aria labels, semantic HTML)
 7. Add e2e tests for critical flows (onboarding, trip planning)
+
+**Remaining open items:**
+- Externalize 17MB `signal-clusters.json` from source tree
+- ~280 `any` instances — fix in hooks and stores (API routes unavoidable)
+- `div onClick` → `<button>` semantic HTML conversions
+- e2e tests for onboarding and trip planning critical flows
+- Props drilling: DayPlanner (40 props) → React Context
