@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface UseTTSOptions {
   voice?: string;
@@ -20,18 +20,92 @@ interface UseTTSReturn {
   queueSentence: (sentence: string) => void;
   /** Signal that no more sentences will be queued (triggers onDone after last sentence plays) */
   finishQueue: () => void;
+  /** Hard stop — immediately silences and clears everything. */
   stop: () => void;
+  /**
+   * Smooth duck — fades volume to 0 over ~150ms, then stops.
+   * Use for barge-in (user starts talking). Feels natural, like the AI is yielding.
+   */
+  duck: () => void;
   enabled: boolean;
   setEnabled: (v: boolean) => void;
 }
 
+// ── Web Audio API ducking pipeline ──
+// We route all audio through a GainNode so we can smoothly fade volume.
+// Created lazily on first use (AudioContext requires user gesture on mobile).
+let sharedAudioContext: AudioContext | null = null;
+let sharedGainNode: GainNode | null = null;
+let sharedMediaSource: MediaElementAudioSourceNode | null = null;
+let sharedAudioElement: HTMLAudioElement | null = null;
+
+function getAudioContext(): AudioContext {
+  if (!sharedAudioContext) {
+    sharedAudioContext = new AudioContext();
+  }
+  // Resume if suspended (browsers suspend AudioContext until user gesture)
+  if (sharedAudioContext.state === 'suspended') {
+    sharedAudioContext.resume().catch(() => {});
+  }
+  return sharedAudioContext;
+}
+
+function getGainNode(): GainNode {
+  if (!sharedGainNode) {
+    const ctx = getAudioContext();
+    sharedGainNode = ctx.createGain();
+    sharedGainNode.connect(ctx.destination);
+  }
+  return sharedGainNode;
+}
+
 /**
- * TTS hook with progressive sentence-level playback.
+ * Connect an audio element to the Web Audio API GainNode pipeline.
+ * This allows us to control volume smoothly (ducking) while still using
+ * the simple HTMLAudioElement for playback/buffering.
+ *
+ * IMPORTANT: Each audio element can only be connected once. We track the
+ * currently connected element and disconnect before connecting a new one.
+ */
+function connectAudioToGain(audio: HTMLAudioElement): void {
+  try {
+    const ctx = getAudioContext();
+    const gainNode = getGainNode();
+
+    // Disconnect previous source if any
+    if (sharedMediaSource) {
+      try { sharedMediaSource.disconnect(); } catch { /* already disconnected */ }
+      sharedMediaSource = null;
+    }
+
+    // Only connect if this is a new element (can't re-connect same element)
+    if (sharedAudioElement !== audio) {
+      const source = ctx.createMediaElementSource(audio);
+      source.connect(gainNode);
+      sharedMediaSource = source;
+      sharedAudioElement = audio;
+    }
+
+    // Ensure gain is at full volume (reset from any previous duck)
+    gainNode.gain.cancelScheduledValues(ctx.currentTime);
+    gainNode.gain.setValueAtTime(1, ctx.currentTime);
+  } catch {
+    // Web Audio API not available — audio will play through default pipeline
+    // (no ducking support, but playback still works)
+  }
+}
+
+/**
+ * TTS hook with progressive sentence-level playback and audio ducking.
  *
  * Two modes:
  * 1. `speak(text)` — batch mode, single TTS call (backward compatible)
  * 2. `queueSentence(s)` + `finishQueue()` — streaming mode, fires TTS per sentence,
  *    plays them sequentially as they resolve, overlapping TTS generation with playback.
+ *
+ * Audio ducking:
+ * - `duck()` smoothly fades volume to 0 over 150ms, then stops. Use for barge-in.
+ * - `stop()` immediately silences. Use for unmount/hard cancel.
  *
  * Uses a generation counter to prevent stale processQueue instances from interfering
  * with new ones after stop() is called.
@@ -51,19 +125,25 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
   const stoppedRef = useRef(false);
 
   // Shared AbortController for all in-flight queue TTS fetches.
-  // Aborted on stop() so we don't waste bandwidth/API credits on audio that will never play.
   const queueAbortRef = useRef<AbortController | null>(null);
 
-  // Generation counter — incremented on every stop(). Each processQueue captures its
-  // generation at start and exits immediately if it no longer matches. This prevents
-  // stale async processQueue loops from interfering with new ones.
+  // Generation counter — incremented on every stop/duck.
   const generationRef = useRef(0);
+
+  // Duck timer — tracks the fade-out timeout so we can clean up
+  const duckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
-  // ── Shared: fetch TTS for a text chunk ──
-  // Handles 429 rate-limit responses with a single retry after the suggested delay.
+  // Clean up shared AudioContext on unmount of last instance
+  useEffect(() => {
+    return () => {
+      // Don't destroy shared context — other instances may use it
+    };
+  }, []);
+
+  // ── Fetch TTS blob with 429 retry ──
   const fetchTTSBlob = useCallback(async (text: string, signal?: AbortSignal): Promise<Blob | null> => {
     const doFetch = async (): Promise<Response> => {
       return fetch('/api/tts', {
@@ -77,10 +157,9 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
     try {
       let res = await doFetch();
 
-      // Retry once on rate-limit (429) after the server's suggested delay
       if (res.status === 429) {
         const retryAfter = parseInt(res.headers.get('Retry-After') || '3', 10);
-        const delayMs = Math.min(retryAfter * 1000, 10000); // cap at 10s
+        const delayMs = Math.min(retryAfter * 1000, 10000);
         console.warn(`[tts] Rate-limited, retrying in ${delayMs}ms`);
         await new Promise((r) => setTimeout(r, delayMs));
         if (signal?.aborted) return null;
@@ -99,15 +178,16 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
     }
   }, [voice]);
 
-  // ── Shared: play a blob and return a promise that resolves when done ──
-  // Waits for canplaythrough before calling play() to avoid choppy starts from
-  // insufficient buffering.
+  // ── Play a blob via Audio element routed through Web Audio GainNode ──
   const playBlob = useCallback((blob: Blob): Promise<void> => {
     return new Promise((resolve) => {
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.preload = 'auto';
+
+      // Route through Web Audio API for ducking support
+      connectAudioToGain(audio);
 
       let resolved = false;
       const finish = () => {
@@ -123,17 +203,12 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
         audio.play().catch(finish);
       };
 
-      // Safety net: if canplaythrough never fires within 2s, just play anyway
       const fallbackTimer = setTimeout(() => {
         if (audioRef.current === audio && audio.paused) tryPlay();
       }, 2000);
 
       audio.onended = finish;
       audio.onerror = finish;
-
-      // Wait for enough data to be buffered before playing.
-      // This prevents the "choppy start" where playback begins before the
-      // browser has decoded enough audio.
       audio.oncanplaythrough = () => {
         clearTimeout(fallbackTimer);
         tryPlay();
@@ -141,13 +216,31 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
     });
   }, []);
 
-  // ── Stop everything ──
-  const stop = useCallback(() => {
-    stoppedRef.current = true;
-    // Bump generation so any in-flight processQueue exits on its next check
-    generationRef.current += 1;
+  // ── Internal cleanup (shared between stop and duck) ──
+  const cleanupInternal = useCallback(() => {
+    // Cancel in-flight batch fetch
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    // Cancel in-flight queue fetches
+    if (queueAbortRef.current) {
+      queueAbortRef.current.abort();
+      queueAbortRef.current = null;
+    }
+    // Cancel any pending duck timer
+    if (duckTimerRef.current) {
+      clearTimeout(duckTimerRef.current);
+      duckTimerRef.current = null;
+    }
+    // Clear queue
+    queueRef.current = [];
+    isPlayingQueueRef.current = false;
+    queueFinishedRef.current = false;
+  }, []);
 
-    // Stop current audio
+  // ── Hard-kill audio element ──
+  const killAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.onended = null;
       audioRef.current.onerror = null;
@@ -156,31 +249,69 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
       audioRef.current.src = '';
       audioRef.current = null;
     }
-
-    // Cancel in-flight fetch (batch mode)
-    if (abortRef.current) {
-      abortRef.current.abort();
-      abortRef.current = null;
-    }
-
-    // Cancel in-flight queue TTS fetches
-    if (queueAbortRef.current) {
-      queueAbortRef.current.abort();
-      queueAbortRef.current = null;
-    }
-
-    // Clear queue
-    queueRef.current = [];
-    isPlayingQueueRef.current = false;
-    queueFinishedRef.current = false;
-
-    setIsSpeaking(false);
   }, []);
 
-  // ── Queue processor: plays sentences in order as their TTS resolves ──
-  // Each invocation captures the current generation and exits if it goes stale.
+  // ── Stop: immediate silence ──
+  const stop = useCallback(() => {
+    stoppedRef.current = true;
+    generationRef.current += 1;
+
+    killAudio();
+
+    // Reset gain to full (in case a duck was in progress)
+    try {
+      const ctx = sharedAudioContext;
+      const gain = sharedGainNode;
+      if (ctx && gain) {
+        gain.gain.cancelScheduledValues(ctx.currentTime);
+        gain.gain.setValueAtTime(1, ctx.currentTime);
+      }
+    } catch { /* ignore */ }
+
+    cleanupInternal();
+    setIsSpeaking(false);
+  }, [killAudio, cleanupInternal]);
+
+  // ── Duck: smooth fade-out over 150ms, then stop ──
+  // This is what should be called when the user barges in (starts talking).
+  // It feels natural — like the AI is yielding the floor — instead of a hard cut.
+  const duck = useCallback(() => {
+    stoppedRef.current = true;
+    generationRef.current += 1;
+    cleanupInternal();
+
+    try {
+      const ctx = sharedAudioContext;
+      const gain = sharedGainNode;
+      if (ctx && gain && audioRef.current) {
+        // Smooth exponential fade to near-zero over 150ms
+        gain.gain.cancelScheduledValues(ctx.currentTime);
+        gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+        // exponentialRampToValueAtTime can't ramp to 0, so ramp to 0.01 then stop
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+
+        // After the fade completes, kill the audio and reset gain
+        duckTimerRef.current = setTimeout(() => {
+          killAudio();
+          if (ctx && gain) {
+            gain.gain.cancelScheduledValues(ctx.currentTime);
+            gain.gain.setValueAtTime(1, ctx.currentTime);
+          }
+          setIsSpeaking(false);
+          duckTimerRef.current = null;
+        }, 170); // slightly longer than the ramp to ensure it completes
+        return;
+      }
+    } catch { /* Web Audio not available, fall through to hard stop */ }
+
+    // Fallback: hard stop if Web Audio isn't available
+    killAudio();
+    setIsSpeaking(false);
+  }, [killAudio, cleanupInternal]);
+
+  // ── Queue processor ──
   const processQueue = useCallback(async () => {
-    if (isPlayingQueueRef.current) return; // already running
+    if (isPlayingQueueRef.current) return;
     isPlayingQueueRef.current = true;
     setIsSpeaking(true);
 
@@ -188,11 +319,9 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
 
     let idx = 0;
     while (idx < queueRef.current.length || !queueFinishedRef.current) {
-      // Check both stopped flag AND generation to catch stale loops
       if (stoppedRef.current || generationRef.current !== myGeneration) break;
 
       if (idx >= queueRef.current.length) {
-        // Wait for more sentences to arrive
         await new Promise((r) => setTimeout(r, 50));
         continue;
       }
@@ -210,11 +339,7 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
       idx++;
     }
 
-    // Only do cleanup and fire onDone if this is still the active generation.
-    // Stale loops exit silently — the new generation owns the state.
     if (generationRef.current === myGeneration) {
-      // All done — small delay so the browser audio system fully finishes
-      // the last sentence before we signal completion (prevents abrupt cutoff feel)
       if (!stoppedRef.current) {
         await new Promise((r) => setTimeout(r, 150));
       }
@@ -229,42 +354,32 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
         onDoneRef.current?.();
       }
     }
-    // If generation is stale, DON'T touch isPlayingQueueRef or call onDone —
-    // the new generation's processQueue owns that responsibility.
   }, [playBlob]);
 
-  // ── Queue a sentence for progressive playback ──
+  // ── Queue a sentence ──
   const queueSentence = useCallback((sentence: string) => {
     if (!enabled || !sentence.trim()) return;
 
-    // Reset stopped flag — a new response is being queued, so we should play it.
-    // This is critical because stop() sets stoppedRef=true (to silence current audio
-    // when user starts speaking), and the new SSE response arrives before anyone
-    // resets it. Without this, streamed sentences are silently dropped.
     stoppedRef.current = false;
 
-    // Ensure we have an AbortController for this batch of queue fetches.
-    // Created lazily on the first queueSentence after a stop() or fresh start.
     if (!queueAbortRef.current) {
       queueAbortRef.current = new AbortController();
     }
 
-    // Immediately fire TTS request (don't wait for previous to finish)
     const audioPromise = fetchTTSBlob(sentence, queueAbortRef.current.signal);
     queueRef.current.push({ text: sentence, audioPromise });
 
-    // Start the queue processor if it's not already running
     if (!isPlayingQueueRef.current) {
       processQueue();
     }
   }, [enabled, fetchTTSBlob, processQueue]);
 
-  // ── Signal that no more sentences will be queued ──
+  // ── Finish queue ──
   const finishQueue = useCallback(() => {
     queueFinishedRef.current = true;
   }, []);
 
-  // ── Batch mode: speak all text at once (backward compatible) ──
+  // ── Batch speak ──
   const speak = useCallback(async (text: string) => {
     if (!enabled || !text.trim()) return;
 
@@ -303,5 +418,5 @@ export function useTTS({ voice = 'nova', enabled: initialEnabled = true, onDone 
     }
   }, [enabled, stop, fetchTTSBlob, playBlob]);
 
-  return { isSpeaking, speak, queueSentence, finishQueue, stop, enabled, setEnabled };
+  return { isSpeaking, speak, queueSentence, finishQueue, stop, duck, enabled, setEnabled };
 }

@@ -46,7 +46,8 @@ You MUST output a JSON object with exactly these fields, and NOTHING else (no ma
   "followUp": "your conversational response",
   "phaseComplete": boolean,
   "userRequestedSkip": boolean (optional, true if user said skip/move on/next OR if they clearly have nothing to share for this phase — e.g., "nothing comes to mind", "I can't think of anything", "not really"),
-  "correctedTranscript": "cleaned transcript if you corrected garbled speech" (optional)
+  "correctedTranscript": "cleaned transcript if you corrected garbled speech" (optional),
+  "expectedResponseType": "quick" | "reflective" (required — "quick" if your question expects a short yes/no/name/one-liner answer, "reflective" if it invites a longer story or detailed response. This helps the UI know how long to wait for the user to finish speaking.)
 }`;
 
 export async function POST(req: NextRequest) {
@@ -120,7 +121,7 @@ Return valid JSON only.`;
 
           // Parse the final result
           const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-          let result = { followUp: null as string | null, phaseComplete: false, userRequestedSkip: false, correctedTranscript: undefined as string | undefined };
+          let result = { followUp: null as string | null, phaseComplete: false, userRequestedSkip: false, correctedTranscript: undefined as string | undefined, expectedResponseType: 'reflective' as string };
           if (jsonMatch) {
             try {
               result = JSON.parse(jsonMatch[0]);

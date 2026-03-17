@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useConversationPhase } from '@/hooks/useConversationPhase';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useTTS } from '@/hooks/useTTS';
+import { useVoiceActivity } from '@/hooks/useVoiceActivity';
 import AnchorVerificationCard from './AnchorVerificationCard';
 import type { OnboardingPhase } from '@/types';
 
@@ -12,24 +13,58 @@ interface ConversationViewProps {
   onComplete: () => void;
 }
 
+/**
+ * Conversational state machine states:
+ *
+ *   ai-speaking  → TTS is playing the AI response
+ *   listening    → Mic is open, waiting for user to speak
+ *   processing   → User finished speaking, sending to API + waiting for AI response
+ *   idle         → Fallback state (shouldn't linger here in voice mode)
+ *
+ * Flow: ai-speaking → listening → (user speaks) → processing → ai-speaking → ...
+ *
+ * Barge-in: If the user starts speaking while AI is talking (detected via VAD),
+ * we duck the TTS audio (smooth fade-out) and transition directly to listening.
+ */
+type ConversationState = 'ai-speaking' | 'listening' | 'processing' | 'idle';
+
+// Silence timeout values (ms) — how long to wait after user stops speaking before auto-sending
+const SILENCE_QUICK = 1200;   // Quick response expected (yes/no, name, one-liner)
+const SILENCE_REFLECTIVE = 2500; // Reflective response expected (story, detailed answer)
+const SILENCE_DEFAULT = 1800;    // Default when we don't have a hint
+
 export default function ConversationView({ phase, onComplete }: ConversationViewProps) {
   const [inputText, setInputText] = useState('');
   const [voiceMode, setVoiceMode] = useState(true); // voice-first by default
   const [autoAdvancing, setAutoAdvancing] = useState(false);
+  const [micPermissionNeeded, setMicPermissionNeeded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const spokenCountRef = useRef(0);
   const sendingRef = useRef(false);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const holdingRef = useRef(false); // tracks whether user is actively holding the mic button
   const mountedRef = useRef(true); // tracks if component is still mounted
   const isSpeakingRef = useRef(false); // mirrors isSpeaking for async callbacks
   const streamHandledRef = useRef(false); // true when streaming pipeline is handling TTS for current response
+
+  // Conversational state
+  const [convState, setConvState] = useState<ConversationState>('idle');
+  const convStateRef = useRef<ConversationState>('idle');
+  const updateConvState = useCallback((state: ConversationState) => {
+    convStateRef.current = state;
+    setConvState(state);
+  }, []);
+
+  // Expected response type — controls silence timeout duration
+  const expectedResponseTypeRef = useRef<'quick' | 'reflective'>('reflective');
 
   // Refs for TTS queue integration (set after useTTS initializes)
   const queueSentenceRef = useRef<((s: string) => void) | null>(null);
   const finishQueueRef = useRef<(() => void) | null>(null);
   const ttsEnabledRef = useRef(true);
+
+  // VAD initialized flag
+  const vadInitializedRef = useRef(false);
 
   const {
     messages,
@@ -48,11 +83,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     onSentence: (sentence) => {
       if (ttsEnabledRef.current && queueSentenceRef.current) {
         // Safety filter: skip anything that looks like leaked JSON/internal commands
-        // (e.g., "phaseComplete", "userRequestedSkip", "correctedTranscript")
-        if (/^\s*"?(phaseComplete|userRequestedSkip|correctedTranscript|followUp)\s*"?\s*:/i.test(sentence)) return;
-        if (/^\s*\{?\s*"/.test(sentence) && /[{}]/.test(sentence)) return; // looks like raw JSON
-        if (/^(true|false|\d+)\s*[,}]?\s*$/.test(sentence.trim())) return; // bare JSON values
-        streamHandledRef.current = true; // streaming pipeline is handling this response
+        if (/^\s*"?(phaseComplete|userRequestedSkip|correctedTranscript|followUp|expectedResponseType)\s*"?\s*:/i.test(sentence)) return;
+        if (/^\s*\{?\s*"/.test(sentence) && /[{}]/.test(sentence)) return;
+        if (/^(true|false|\d+)\s*[,}]?\s*$/.test(sentence.trim())) return;
+        streamHandledRef.current = true;
         queueSentenceRef.current(sentence);
       }
     },
@@ -60,6 +94,12 @@ export default function ConversationView({ phase, onComplete }: ConversationView
       if (ttsEnabledRef.current && finishQueueRef.current) {
         finishQueueRef.current();
       }
+    },
+    onExpectedResponseType: (type) => {
+      expectedResponseTypeRef.current = type;
+      // Dynamically update the silence timeout for the next listening session
+      const timeout = type === 'quick' ? SILENCE_QUICK : SILENCE_REFLECTIVE;
+      setSilenceTimeoutRef.current?.(timeout);
     },
   });
 
@@ -75,8 +115,6 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     setAutoAdvancing(true);
     autoAdvanceTimerRef.current = setTimeout(function check() {
       if (!mountedRef.current) return;
-      // Safety check: don't advance while TTS is still speaking.
-      // If still speaking, poll every 500ms until it finishes.
       if (isSpeakingRef.current) {
         autoAdvanceTimerRef.current = setTimeout(check, 500);
         return;
@@ -86,39 +124,50 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     }, 1800);
   }, [onComplete]);
 
-  // Clean up on unmount — stop TTS, cancel timers
+  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
     };
   }, []);
 
-  // After TTS finishes speaking: auto-advance if phase is done (and no anchors to review),
-  // otherwise just idle (hold-to-speak)
+  // After TTS finishes speaking: auto-advance if phase is done,
+  // otherwise transition to listening state
   const handleTTSDone = useCallback(() => {
     if (isPhaseComplete && anchorsForReview.length === 0) {
       triggerAutoAdvance();
       return;
     }
-    // If anchors are present, skip auto-advance — let user interact with cards
-    // In hold-to-speak mode, we do NOT auto-start the mic. User initiates.
-  }, [isPhaseComplete, anchorsForReview.length, triggerAutoAdvance]);
 
-  // Handle sending speech transcript (called when user releases hold-to-speak, or silence detection fires)
+    // Transition to listening — auto-open mic for hands-free flow
+    if (voiceMode && !isPhaseComplete) {
+      // Apply the adaptive silence timeout BEFORE starting to listen,
+      // so the correct timeout is used from the very first word.
+      const timeout = expectedResponseTypeRef.current === 'quick' ? SILENCE_QUICK : SILENCE_REFLECTIVE;
+      setSilenceTimeoutRef.current?.(timeout);
+      updateConvState('listening');
+      startListeningRef.current?.();
+    } else {
+      updateConvState('idle');
+    }
+  }, [isPhaseComplete, anchorsForReview.length, triggerAutoAdvance, voiceMode, updateConvState]);
+
+  // Handle sending speech transcript
   const handleSendTranscript = useCallback(async (text: string) => {
     if (sendingRef.current || isAnalyzing || isPhaseComplete) return;
     const trimmed = text.trim();
     if (!trimmed) return;
 
     sendingRef.current = true;
+    updateConvState('processing');
     setInputText('');
-    streamHandledRef.current = false; // reset — new response hasn't been handled yet
+    streamHandledRef.current = false;
     resetTranscriptRef.current?.();
     stopListeningRef.current?.();
     stopTTSRef.current?.();
     await sendMessage(trimmed);
     if (mountedRef.current) sendingRef.current = false;
-  }, [isAnalyzing, isPhaseComplete, sendMessage]);
+  }, [isAnalyzing, isPhaseComplete, sendMessage, updateConvState]);
 
   const {
     isListening,
@@ -128,11 +177,11 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     stopListening,
     resetTranscript,
     hasFailed: speechFailed,
+    setSilenceTimeout,
   } = useSpeechRecognition({
-    // In hold-to-speak mode, we use a longer silence timeout as a safety net
-    // (user should release button, but if they hold and go silent, auto-send after 2s)
-    silenceTimeout: voiceMode ? 2000 : 0,
+    silenceTimeout: SILENCE_DEFAULT,
     onSilenceDetected: handleSendTranscript,
+    autoRestart: voiceMode, // Auto-restart in voice mode for hands-free experience
   });
 
   // Store refs for callbacks (avoid stale closures)
@@ -142,8 +191,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
   stopListeningRef.current = stopListening;
   const resetTranscriptRef = useRef(resetTranscript);
   resetTranscriptRef.current = resetTranscript;
+  const setSilenceTimeoutRef = useRef(setSilenceTimeout);
+  setSilenceTimeoutRef.current = setSilenceTimeout;
 
-  const { isSpeaking, speak, queueSentence, finishQueue, stop: stopTTS, enabled: ttsEnabled, setEnabled: setTTSEnabled } = useTTS({
+  const { isSpeaking, speak, queueSentence, finishQueue, stop: stopTTS, duck: duckTTS, enabled: ttsEnabled, setEnabled: setTTSEnabled } = useTTS({
     voice: 'nova',
     onDone: handleTTSDone,
   });
@@ -155,17 +206,69 @@ export default function ConversationView({ phase, onComplete }: ConversationView
 
   const stopTTSRef = useRef(stopTTS);
   stopTTSRef.current = stopTTS;
+  const duckTTSRef = useRef(duckTTS);
+  duckTTSRef.current = duckTTS;
   isSpeakingRef.current = isSpeaking;
 
-  // Stop TTS on unmount (prevents audio bleeding into next phase)
+  // ── Voice Activity Detection (VAD) for barge-in ──
+  // When the user starts speaking while the AI is talking, duck the TTS.
+  // Uses refs throughout to avoid stale closure issues — this callback is registered
+  // once when VAD initializes and must always see current state.
+  const handleBargeIn = useCallback(() => {
+    if (isSpeakingRef.current && convStateRef.current === 'ai-speaking') {
+      // Smooth duck instead of hard stop — feels natural
+      duckTTSRef.current?.();
+      updateConvState('listening');
+      // Always start listening on barge-in — speech recognition may not be active yet
+      startListeningRef.current?.();
+    }
+  }, [updateConvState]);
+
+  // VAD enabled state is tracked via ref to avoid re-creating the hook on every isSpeaking change.
+  // The useVoiceActivity hook reads `enabled` via its own ref internally,
+  // so passing a stable `true` here and controlling detection via the hook's polling loop is fine.
+  const vadEnabledRef = useRef(false);
+  vadEnabledRef.current = voiceMode && isSpeaking;
+
+  const {
+    isSupported: vadSupported,
+    permissionDenied: vadPermissionDenied,
+    init: initVAD,
+    destroy: destroyVAD,
+  } = useVoiceActivity({
+    threshold: 30, // Slightly above default to avoid false positives from speakers
+    silenceDelay: 200,
+    onVoiceStart: handleBargeIn,
+    enabled: voiceMode, // Keep VAD polling active in voice mode; it only fires callback when volume exceeds threshold
+  });
+
+  // Initialize VAD on first user interaction (needs gesture for getUserMedia)
+  const initVADOnGesture = useCallback(async () => {
+    if (vadInitializedRef.current || !vadSupported || vadPermissionDenied) return;
+    const success = await initVAD();
+    vadInitializedRef.current = success;
+    if (!success) {
+      // VAD not available — barge-in won't work, but that's OK
+      // User can still tap to interrupt
+      console.warn('[ConversationView] VAD init failed — barge-in disabled');
+    }
+  }, [vadSupported, vadPermissionDenied, initVAD]);
+
+  // Clean up VAD on unmount
+  useEffect(() => {
+    return () => {
+      destroyVAD();
+    };
+  }, [destroyVAD]);
+
+  // Stop TTS on unmount
   useEffect(() => {
     return () => {
       stopTTSRef.current?.();
     };
   }, []);
 
-  // Speak new AI messages — for the opening prompt use batch speak(),
-  // for streamed responses TTS is already handled via onSentence → queueSentence
+  // Speak new AI messages
   useEffect(() => {
     const newMessages = messages.slice(spokenCountRef.current);
     const latestAI = [...newMessages].reverse().find((m) => m.role === 'ai');
@@ -175,28 +278,26 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (!latestAI) return;
 
     if (!ttsEnabled) {
-      // TTS off — handle auto-advance via read-time estimate (only if no anchor cards)
       if (isPhaseComplete && anchorsForReview.length === 0) {
         const readTime = Math.max(2000, latestAI.text.split(/\s+/).length * 40);
         setTimeout(() => {
           if (mountedRef.current) triggerAutoAdvance();
         }, readTime);
+      } else if (voiceMode && !isPhaseComplete) {
+        // No TTS — go straight to listening
+        updateConvState('listening');
+        startListeningRef.current?.();
       }
       return;
     }
 
-    // Use batch speak() for the opening prompt AND for any message that wasn't
-    // handled by the streaming pipeline (error fallbacks, scripted follow-ups).
-    // The streaming pipeline handles messages via onSentence → queueSentence,
-    // but if the stream fails, the message still needs to be spoken.
+    // Transition to ai-speaking state
+    updateConvState('ai-speaking');
+
     const isOpeningPrompt = prevCount === 0 && messages.length === 1;
     if (isOpeningPrompt) {
       speak(latestAI.text);
     } else if (!streamHandledRef.current) {
-      // Only use batch speak as fallback if the streaming pipeline did NOT handle this.
-      // streamHandledRef is set to true by onSentence when the first streamed sentence
-      // arrives. If it's still false here, the stream failed and we need the fallback.
-      // Use a longer delay to give the streaming pipeline time to start.
       const fallbackTimer = setTimeout(() => {
         if (!streamHandledRef.current && !isSpeakingRef.current && mountedRef.current) {
           speak(latestAI.text);
@@ -204,17 +305,8 @@ export default function ConversationView({ phase, onComplete }: ConversationView
       }, 500);
       return () => clearTimeout(fallbackTimer);
     }
-    // Note: isSpeaking intentionally NOT in deps — we use isSpeakingRef inside the timeout
-    // to avoid re-running this effect every time speaking state changes (which caused loops).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, ttsEnabled, speak, isPhaseComplete, anchorsForReview.length, triggerAutoAdvance]);
-
-  // Stop TTS when user starts talking (holds mic button)
-  useEffect(() => {
-    if (isListening && isSpeaking) {
-      stopTTS();
-    }
-  }, [isListening, isSpeaking, stopTTS]);
+  }, [messages, ttsEnabled, speak, isPhaseComplete, anchorsForReview.length, triggerAutoAdvance, voiceMode, updateConvState]);
 
   // Auto-scroll
   useEffect(() => {
@@ -244,12 +336,13 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [inputText, voiceMode]);
 
+  // Text mode send
   const handleSend = useCallback(async () => {
     const text = inputText.trim();
     if (!text || sendingRef.current) return;
     sendingRef.current = true;
     setInputText('');
-    streamHandledRef.current = false; // reset — new response hasn't been handled yet
+    streamHandledRef.current = false;
     resetTranscript();
     if (isListening) stopListening();
     stopTTS();
@@ -264,32 +357,34 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     }
   };
 
-  // --- Hold-to-speak handlers ---
-  // On press down: start listening, interrupt TTS
-  const handleMicDown = useCallback(() => {
-    if (isAnalyzing || isPhaseComplete) return;
-    holdingRef.current = true;
-    setInputText('');
-    resetTranscript();
-    if (isSpeaking) stopTTS();
-    startListening();
-  }, [isAnalyzing, isPhaseComplete, isSpeaking, stopTTS, startListening, resetTranscript]);
+  // --- Tap-to-interrupt (during AI speech) ---
+  const handleTapInterrupt = useCallback(() => {
+    if (isSpeaking) {
+      duckTTS();
+      updateConvState('listening');
+      startListening();
+    }
+  }, [isSpeaking, duckTTS, updateConvState, startListening]);
 
-  // On release: stop listening and send whatever was captured
-  const handleMicUp = useCallback(() => {
-    if (!holdingRef.current) return;
-    holdingRef.current = false;
-    stopListening();
-    // Brief delay to let final recognition results arrive.
-    // The Web Speech API delivers final results asynchronously after stop().
-    // 120ms balances responsiveness with giving the API enough time to finalize.
-    setTimeout(() => {
-      const text = (latestTranscriptForSendRef.current || inputText).trim();
-      if (text && !sendingRef.current) {
-        handleSendTranscript(text);
-      }
-    }, 120);
-  }, [stopListening, inputText, handleSendTranscript]);
+  // --- Tap-to-speak (when idle, not yet listening) ---
+  const handleTapToSpeak = useCallback(() => {
+    if (isAnalyzing || isPhaseComplete) return;
+    // Initialize VAD on first tap
+    initVADOnGesture();
+
+    if (isSpeaking) stopTTS();
+    updateConvState('listening');
+    resetTranscript();
+    startListening();
+  }, [isAnalyzing, isPhaseComplete, isSpeaking, stopTTS, updateConvState, resetTranscript, startListening, initVADOnGesture]);
+
+  // Mic permission prompt — show once on first voice interaction
+  useEffect(() => {
+    if (voiceMode && speechSupported && !speechFailed && !micPermissionNeeded) {
+      // Check if we need mic permission by trying to start (will show permission dialog)
+      setMicPermissionNeeded(true);
+    }
+  }, [voiceMode, speechSupported, speechFailed, micPermissionNeeded]);
 
   // We need a ref to get the latest transcript at send time
   const latestTranscriptForSendRef = useRef('');
@@ -297,11 +392,11 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     latestTranscriptForSendRef.current = transcript;
   }, [transcript]);
 
-  // Determine current state for the voice-mode UI
+  // Derive voice state for UI rendering
   const voiceState: 'speaking' | 'listening' | 'thinking' | 'idle' =
-    isSpeaking ? 'speaking' :
+    convState === 'ai-speaking' ? 'speaking' :
     isListening ? 'listening' :
-    isAnalyzing ? 'thinking' : 'idle';
+    (isAnalyzing || convState === 'processing') ? 'thinking' : 'idle';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -335,7 +430,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           </div>
         ))}
 
-        {/* Live transcript preview while holding to speak */}
+        {/* Live transcript preview while listening */}
         {isListening && transcript && (
           <div className="ml-auto max-w-[85%]">
             <div
@@ -357,7 +452,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           </div>
         )}
 
-        {/* End-of-phase anchor verification — batched */}
+        {/* End-of-phase anchor verification */}
         {isPhaseComplete && anchorsForReview.length > 0 && (
           <div className="mr-auto max-w-[85%] space-y-2 message-enter">
             <p className="text-[15px] leading-relaxed text-[var(--t-navy)]">
@@ -382,7 +477,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
           <button
             onClick={() => {
               if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
-              stopTTS(); // Stop TTS immediately when user taps Continue
+              stopTTS();
               onComplete();
             }}
             className="w-full py-3 rounded-xl text-[14px] font-medium text-white transition-all
@@ -399,7 +494,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
             ) : 'Continue'}
           </button>
         ) : voiceMode && speechSupported && !speechFailed ? (
-          /* Voice-first mode — hold-to-speak UI */
+          /* Voice mode — conversational state machine UI */
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center justify-center gap-3 w-full">
               {/* TTS toggle (small) */}
@@ -423,18 +518,27 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                 </svg>
               </button>
 
-              {/* Main mic button — HOLD to speak (touch + mouse support) */}
+              {/* Main action button — context-dependent */}
               <button
-                onTouchStart={(e) => { e.preventDefault(); handleMicDown(); }}
-                onTouchEnd={(e) => { e.preventDefault(); handleMicUp(); }}
-                onTouchCancel={() => handleMicUp()}
-                onMouseDown={handleMicDown}
-                onMouseUp={handleMicUp}
-                onMouseLeave={() => { if (holdingRef.current) handleMicUp(); }}
-                onContextMenu={(e) => e.preventDefault()} // prevent long-press context menu on mobile
-                disabled={isAnalyzing}
+                onClick={() => {
+                  // Initialize VAD on first interaction
+                  initVADOnGesture();
+
+                  if (voiceState === 'speaking') {
+                    handleTapInterrupt();
+                  } else if (voiceState === 'listening') {
+                    // Tap while listening = send now (override silence timer)
+                    const text = latestTranscriptForSendRef.current.trim();
+                    if (text) {
+                      handleSendTranscript(text);
+                    }
+                  } else if (voiceState === 'idle') {
+                    handleTapToSpeak();
+                  }
+                }}
+                disabled={voiceState === 'thinking'}
                 className={`
-                  w-14 h-14 rounded-full flex items-center justify-center transition-all select-none touch-none
+                  w-14 h-14 rounded-full flex items-center justify-center transition-all select-none
                   ${voiceState === 'listening'
                     ? 'bg-[var(--t-signal-red)] text-white scale-110'
                     : voiceState === 'speaking'
@@ -446,7 +550,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                 `}
               >
                 {voiceState === 'speaking' ? (
-                  /* Waveform icon */
+                  /* Waveform icon — tap to interrupt */
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <line x1="4" y1="8" x2="4" y2="16" className="animate-pulse" />
                     <line x1="8" y1="5" x2="8" y2="19" className="animate-pulse [animation-delay:0.1s]" />
@@ -458,8 +562,16 @@ export default function ConversationView({ phase, onComplete }: ConversationView
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="animate-spin">
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
+                ) : voiceState === 'listening' ? (
+                  /* Active mic icon — pulsing to show recording */
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                    <line x1="8" y1="23" x2="16" y2="23" />
+                  </svg>
                 ) : (
-                  /* Mic icon */
+                  /* Mic icon — idle */
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -492,10 +604,10 @@ export default function ConversationView({ phase, onComplete }: ConversationView
 
             {/* Status text */}
             <p className="text-[12px] font-mono text-[var(--t-navy)]">
-              {voiceState === 'listening' && 'Listening...'}
-              {voiceState === 'speaking' && 'Speaking...'}
+              {voiceState === 'listening' && (transcript ? 'Listening... tap to send' : 'Listening...')}
+              {voiceState === 'speaking' && 'Tap to interrupt'}
               {voiceState === 'thinking' && 'Thinking...'}
-              {voiceState === 'idle' && (isAnalyzing ? 'Processing...' : 'Hold to speak')}
+              {voiceState === 'idle' && 'Tap to speak'}
             </p>
           </div>
         ) : (

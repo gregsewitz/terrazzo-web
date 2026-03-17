@@ -13,6 +13,12 @@ interface UseConversationPhaseOptions {
   onSentence?: (sentence: string) => void;
   /** Called when the full AI response is complete (all sentences sent) */
   onResponseComplete?: () => void;
+  /**
+   * Called when the AI indicates what kind of response it expects.
+   * "quick" = yes/no/name/one-liner → shorter silence timeout
+   * "reflective" = longer story → longer silence timeout
+   */
+  onExpectedResponseType?: (type: 'quick' | 'reflective') => void;
 }
 
 interface UseConversationPhaseReturn {
@@ -89,7 +95,7 @@ function splitSentences(text: string): [string[], string] {
 async function consumeRespondStream(
   response: Response,
   onSentence: (sentence: string) => void,
-): Promise<{ followUp: string | null; phaseComplete: boolean; userRequestedSkip?: boolean; correctedTranscript?: string }> {
+): Promise<{ followUp: string | null; phaseComplete: boolean; userRequestedSkip?: boolean; correctedTranscript?: string; expectedResponseType?: string }> {
   const reader = response.body?.getReader();
   if (!reader) {
     return { followUp: null, phaseComplete: false };
@@ -101,7 +107,7 @@ async function consumeRespondStream(
   let insideFollowUp = false;
   let followUpDone = false; // true once we've fully extracted the followUp value — prevents re-detection
   let sentFragment = ''; // un-sent partial sentence
-  let doneResult: { followUp: string | null; phaseComplete: boolean; userRequestedSkip?: boolean; correctedTranscript?: string } | null = null;
+  let doneResult: { followUp: string | null; phaseComplete: boolean; userRequestedSkip?: boolean; correctedTranscript?: string; expectedResponseType?: string } | null = null;
   const streamedSentences: string[] = []; // accumulate all sentences sent to TTS
 
   // Wrapper that sends to TTS AND records what was spoken
@@ -311,6 +317,7 @@ export function useConversationPhase({
   followUps,
   onSentence,
   onResponseComplete,
+  onExpectedResponseType,
 }: UseConversationPhaseOptions): UseConversationPhaseReturn {
   const {
     certainties,
@@ -338,6 +345,8 @@ export function useConversationPhase({
   onSentenceRef.current = onSentence;
   const onResponseCompleteRef = useRef(onResponseComplete);
   onResponseCompleteRef.current = onResponseComplete;
+  const onExpectedResponseTypeRef = useRef(onExpectedResponseType);
+  onExpectedResponseTypeRef.current = onExpectedResponseType;
 
   const previousMessages = storedMessages.filter((m) => m.phaseId === phaseId);
   const hasPreviousMessages = previousMessages.length > 0;
@@ -445,6 +454,11 @@ export function useConversationPhase({
 
       // Signal that all sentences have been sent
       onResponseCompleteRef.current?.();
+
+      // Notify caller of expected response type for adaptive silence detection
+      if (respondResult.expectedResponseType) {
+        onExpectedResponseTypeRef.current?.(respondResult.expectedResponseType as 'quick' | 'reflective');
+      }
 
       // Correct garbled speech
       if (respondResult.correctedTranscript) {
