@@ -41,7 +41,6 @@ interface ResolvedPlace {
     topClusters: Array<{ label: string; domain: string; score: number; signals: string[] }>;
     narrative: string;
   } | null;
-  tasteNote: string | null;
   intelligenceId: string | null;
   intelligenceStatus: string;
 }
@@ -77,7 +76,6 @@ function toImportedPlace(resolved: ResolvedPlace): ImportedPlace {
     matchScore: resolved.matchScore || 0,
     matchBreakdown: (resolved.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
     matchExplanation: resolved.matchExplanation || undefined,
-    tasteNote: resolved.tasteNote || '',
     google,
     status: 'available',
     ghostSource: 'terrazzo',

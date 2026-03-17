@@ -103,7 +103,7 @@ export interface MapMarker {
   color?: string;
   type?: string;
   matchScore?: number;
-  tasteNote?: string;
+  description?: string;
   count?: number;
   starred?: number;
   isDashed?: boolean;
@@ -209,12 +209,12 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
                 }}>{marker.matchScore}%</span>
               )}
             </div>
-            {marker.tasteNote && (
+            {marker.description && (
               <div style={{
                 fontSize: 10, color: TEXT.primary, fontStyle: 'italic',
                 fontFamily: FONT.sans, lineHeight: 1.4,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>{marker.tasteNote}</div>
+              }}>{marker.description}</div>
             )}
           </div>
         ) : hasCount ? (

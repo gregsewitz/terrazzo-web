@@ -27,7 +27,7 @@ function extractJSON(text: string): string {
 async function callClaudeWithRetry(
   params: Parameters<typeof Anthropic.prototype.messages.create>[0],
   maxRetries = 3
-): Promise<any> {
+): Promise<Anthropic.Message> {
   const client = getClient();
   // Use streaming for large requests to avoid the 10-minute timeout limit.
   // The SDK throws "Streaming is required for operations that may take longer
@@ -43,9 +43,9 @@ async function callClaudeWithRetry(
         const response = await stream.finalMessage();
         return response;
       }
-      return await client.messages.create(params);
+      return await client.messages.create(params) as Anthropic.Message;
     } catch (err: unknown) {
-      const status = err instanceof Error ? (err as any).status : undefined;
+      const status = err instanceof Error ? (err as { status?: number }).status : undefined;
       if (status === 429 && attempt < maxRetries - 1) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
         console.warn(`[anthropic] Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
@@ -241,12 +241,15 @@ export const extractPlaces = (content: string, isArticleFromUrl: boolean = false
 // ─── Batch taste matching (scores multiple places in one Claude call) ─────────
 
 export async function generateTasteMatchBatch(
-  places: Array<{ name: string; type: string; city?: string }>,
+  places: Array<{ name: string; type: string; city?: string; description?: string }>,
   userProfile: Record<string, number>
 ) {
   if (places.length === 0) return [];
 
-  const placeList = places.map((p, i) => `${i + 1}. ${p.name} (${p.type}${p.city ? `, ${p.city}` : ''})`).join('\n');
+  const placeList = places.map((p, i) => {
+    const base = `${i + 1}. ${p.name} (${p.type}${p.city ? `, ${p.city}` : ''})`;
+    return p.description ? `${base}\n   Description: ${p.description}` : base;
+  }).join('\n');
 
   const tasteMatchSystemPrompt = `You are Terrazzo's taste concierge. Given a list of places and a user's taste profile (scored 0-1 across 8 axes: Design, Atmosphere, Character, Service, FoodDrink, Setting, Wellness, Sustainability), generate taste match data for EACH place.
 
@@ -255,7 +258,6 @@ ${TERRAZZO_VOICE}
 For each place, return an object with:
 - matchScore: number 0-100 (overall match to the user's taste)
 - matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Geography: 0-1, Wellness: 0-1, Sustainability: 0-1 } (how the PLACE scores on each axis — this is about the place, not the user)
-- tasteNote: string (one-line description of the place's character, written in the Terrazzo voice — like a friend telling you why this place matters)
 - terrazzoInsight: { why: string (1-2 sentences on why this matches the user), caveat: string (honest heads-up) }
 
 Return a JSON array in the SAME ORDER as the input list. Each element corresponds to the place at that index.

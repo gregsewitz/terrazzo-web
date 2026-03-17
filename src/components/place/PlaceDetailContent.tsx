@@ -52,7 +52,6 @@ function PlaceDetailContent({
     hydratedMatchScore,
     hydratedBreakdown,
     hydratedGoogle,
-    hydratedTasteNote,
     hydratedLocation,
     userTasteProfile,
     effectiveGooglePlaceId,
@@ -375,12 +374,12 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Author's notes */}
-        {hydratedTasteNote && (
+        {/* Google editorial summary — real description from Google Places API */}
+        {item.google?.editorialSummary && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="mb-5" style={{ background: sourceStyle ? `${sourceStyle.color}14` : 'rgba(199,82,51,0.08)', borderLeft: `3px solid ${sourceStyle?.color || '#c75233'}`, padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
-              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>{item.source?.name ? `From ${item.source.name}` : 'Source note'}</div>
-              <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{hydratedTasteNote}</p>
+              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>{item.source?.name ? `From ${item.source.name}` : 'From Google Places'}</div>
+              <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.google.editorialSummary}</p>
             </div>
           </FadeInSection>
         )}

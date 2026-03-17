@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, Collection, REACTIONS } from '@/types';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import BaseSheet from '@/components/ui/BaseSheet';
@@ -47,7 +47,7 @@ export default function AddPlacesToCollectionSheet({
         p.name.toLowerCase().includes(q) ||
         p.location.toLowerCase().includes(q) ||
         p.type.includes(q) ||
-        p.tasteNote?.toLowerCase().includes(q)
+        p.enrichment?.description?.toLowerCase().includes(q)
       );
     }
     switch (sortBy) {
@@ -156,7 +156,7 @@ export default function AddPlacesToCollectionSheet({
                     className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center"
                     style={{ background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
                   >
-                    <PerriandIcon name={typeIcon as any} size={14} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || INK['60']} />
+                    <PerriandIcon name={typeIcon as PerriandIconName} size={14} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || INK['60']} />
                   </div>
 
                   {/* Info */}
@@ -170,7 +170,7 @@ export default function AddPlacesToCollectionSheet({
                       </span>
                       {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontSize: 10, color: TEXT.secondary }}>· {dl}</span> : null; })()}
                       {reaction && (
-                        <PerriandIcon name={reaction.icon as any} size={10} color={reaction.color} />
+                        <PerriandIcon name={reaction.icon as PerriandIconName} size={10} color={reaction.color} />
                       )}
                     </div>
                   </div>

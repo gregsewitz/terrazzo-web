@@ -226,6 +226,7 @@ export interface GooglePlaceData {
   phone?: string;
   lat?: number;
   lng?: number;
+  editorialSummary?: string;
 }
 
 export interface PlaceEnrichment {
@@ -267,7 +268,8 @@ export interface ImportedPlace {
     topClusters: Array<{ label: string; domain: string; score: number; signals: string[] }>;
     narrative: string;
   };
-  tasteNote: string;
+  /** @deprecated Use enrichment?.description instead. Will be removed once fully migrated. */
+  tasteNote?: string;
   google?: GooglePlaceData;
   enrichment?: PlaceEnrichment;
   terrazzoInsight?: TerrazzoInsight;

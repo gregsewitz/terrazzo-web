@@ -1,19 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Trip, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS } from '@/types';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { Trip, GhostSourceType, SOURCE_STYLES, SLOT_ICONS } from '@/types';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { TYPE_BRAND_COLORS } from '@/constants/placeTypes';
+import { usePlaceDetail } from '@/context/PlaceDetailContext';
 
 interface OverviewItineraryProps {
   trip: Trip;
   onTapDay: (dayNum: number) => void;
-  onTapDetail: (item: ImportedPlace) => void;
 }
 
-function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItineraryProps) {
+function OverviewItineraryInner({ trip, onTapDay }: OverviewItineraryProps) {
+  const { openDetail: onTapDetail } = usePlaceDetail();
   const totalPlaces = trip.days.reduce((acc, d) => acc + d.slots.reduce((a, s) => a + s.places.length, 0), 0);
   const totalSlots = trip.days.reduce((acc, d) => acc + d.slots.length, 0);
 
@@ -80,7 +81,7 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
                   allPlaced.map(({ place, slot }, idx) => {
                     const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
                     const isReservation = place.ghostSource === 'email';
-                    const subtitle = place.friendAttribution?.note || place.terrazzoReasoning?.rationale || place.tasteNote || '';
+                    const subtitle = place.friendAttribution?.note || place.terrazzoReasoning?.rationale || place.enrichment?.description || '';
                     const truncSub = subtitle.length > 65 ? subtitle.slice(0, 62) + '…' : subtitle;
 
                     return (
@@ -93,7 +94,7 @@ function OverviewItineraryInner({ trip, onTapDay, onTapDetail }: OverviewItinera
                         <div style={{ width: isReservation ? 3 : 2, height: 30, borderRadius: 2, background: isReservation ? srcStyle.color : (TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || dColor.accent), flexShrink: 0, marginTop: 2 }} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <PerriandIcon name={SLOT_ICONS[slot.id] as any || 'pin'} size={12} color={dColor.accent} />
+                            <PerriandIcon name={SLOT_ICONS[slot.id] as PerriandIconName || 'pin'} size={12} color={dColor.accent} />
                             <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
                             </span>

@@ -11,7 +11,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { backfillPropertyEmbeddingV3 } from '@/lib/taste-intelligence/backfill-v3';
 import { breakdownToNormalized } from '@/lib/taste-match-vectors';
@@ -53,8 +52,10 @@ export async function POST(req: NextRequest) {
 
     // ── 2. Promote synthesis fields from PlaceIntelligence → SavedPlace ──────
     let fieldsPromoted = 0;
+    // Hoisted so step 4 (taste text refresh) can reference the verified description
+    let intelForPromotion: Awaited<ReturnType<typeof prisma.placeIntelligence.findUnique>> | null = null;
     try {
-      const intelForPromotion = await prisma.placeIntelligence.findUnique({
+      intelForPromotion = await prisma.placeIntelligence.findUnique({
         where: { id: placeIntelligenceId },
         select: {
           description: true,
@@ -208,18 +209,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 4. Generate personalized taste text (tasteNote, terrazzoInsight) ──
+    // Always refresh after enrichment — the pipeline now has verified data
+    // that grounds the tasteNote, so stale import-time hallucinations get replaced.
     let tasteTextUpdated = 0;
     try {
-      // Find SPs linked to this PI that are missing tasteNote or terrazzoInsight
+      const intelDescription = intelForPromotion?.description || undefined;
+
+      // Fetch ALL SPs linked to this PI (not just those missing tasteNote)
       const spsNeedingTaste = await prisma.savedPlace.findMany({
-        where: {
-          placeIntelligenceId,
-          OR: [
-            { tasteNote: null },
-            { tasteNote: '' },
-            { terrazzoInsight: { equals: Prisma.DbNull } },
-          ],
-        },
+        where: { placeIntelligenceId },
         select: {
           id: true,
           name: true,
@@ -246,6 +244,7 @@ export async function POST(req: NextRequest) {
                 name: sp.name,
                 type: sp.type,
                 location: sp.location || undefined,
+                description: intelDescription, // ground tasteNote in verified pipeline data
               })),
               userId,
               { skipScores: true }, // signal-based scores already written above

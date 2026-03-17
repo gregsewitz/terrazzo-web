@@ -231,7 +231,6 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     google: enriched.google,
                     matchScore: enriched.matchScore,
                     matchBreakdown: enriched.matchBreakdown,
-                    tasteNote: enriched.tasteNote,
                     terrazzoInsight: enriched.terrazzoInsight,
                     enrichment: enriched.enrichment,
                     whatToOrder: enriched.whatToOrder,

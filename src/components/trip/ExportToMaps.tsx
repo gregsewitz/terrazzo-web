@@ -17,7 +17,7 @@ function generateKML(places: ImportedPlace[], name: string): string {
   const placemarks = places.map(p => {
     const lat = p.google?.lat || 0;
     const lng = p.google?.lng || 0;
-    const desc = [p.type, p.location, p.tasteNote].filter(Boolean).join(' · ');
+    const desc = [p.type, p.location, p.enrichment?.description].filter(Boolean).join(' · ');
     return `    <Placemark>
       <name>${escapeXml(p.name)}</name>
       <description>${escapeXml(desc)}</description>

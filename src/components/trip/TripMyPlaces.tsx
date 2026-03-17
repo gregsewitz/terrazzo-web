@@ -111,7 +111,7 @@ function TripMyPlaces({ onTapDetail }: TripMyPlacesProps) {
             { value: 'type', label: 'Type' },
           ]}
           sortValue={sortBy}
-          onSortChange={(v) => setSortBy(v as any)}
+          onSortChange={(v) => setSortBy(v as 'day' | 'name' | 'type')}
           onResetAll={() => { setFilter('all'); setSortBy('day'); }}
         />
       </div>
@@ -204,7 +204,7 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
       <div className="px-3.5 py-2.5">
         {/* When/where on this trip */}
         <div className="flex items-center gap-1.5 mb-2">
-          <PerriandIcon name={SLOT_ICONS[item.slotId] as any || 'pin'} size={13} color={TEXT.primary} />
+          <PerriandIcon name={SLOT_ICONS[item.slotId] as PerriandIconName || 'pin'} size={13} color={TEXT.primary} />
           <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: TEXT.secondary }}>
             {item.dayOfWeek ? `${item.dayOfWeek.slice(0, 3)} ${item.date}` : `Day ${item.dayNumber}`} · {item.slotTime}
           </span>
@@ -332,10 +332,10 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
         )}
 
         {/* Taste note fallback — if no insight or friend note */}
-        {!place.terrazzoInsight?.why && !place.friendAttribution?.note && place.tasteNote && (
+        {!place.terrazzoInsight?.why && !place.friendAttribution?.note && place.enrichment?.description && (
           <div className="mb-1">
             <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.4 }}>
-              {place.tasteNote}
+              {place.enrichment?.description}
             </span>
           </div>
         )}

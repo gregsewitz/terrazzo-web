@@ -7,35 +7,37 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
-import type { Reaction } from '@/stores/collaborationStore';
+import { usePlaceDetail } from '@/context/PlaceDetailContext';
+import { useTripCollaboration } from '@/context/TripCollaborationContext';
+import { useTripDrag } from '@/context/TripDragContext';
 
 /**
  * Inner component for a single placed card — uses useDragGesture for pointer-based drag.
+ * Reads drag state, collaboration reactions, and tap-detail handler from context.
  */
 function PlacedCard({
-  place, dayNumber, slotId, isDesktop, onTapDetail, onDragStartFromSlot, dragItemId,
-  reactions, CARD_H, CARD_PX,
+  place, dayNumber, slotId, isDesktop, CARD_H, CARD_PX,
 }: {
   place: ImportedPlace;
   dayNumber: number;
   slotId: string;
   isDesktop: boolean;
-  onTapDetail: (item: ImportedPlace) => void;
-  onDragStartFromSlot: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
-  dragItemId: string | null;
-  reactions?: Reaction[];
   CARD_H: number;
   CARD_PX: number;
 }) {
+  const { openDetail } = usePlaceDetail();
+  const { reactions } = useTripCollaboration();
+  const { dragItemId, onDragStartFromSlot } = useTripDrag();
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const setPlaceTime = useTripStore(s => s.setPlaceTime);
+
   const handleDragActivate = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
     onDragStartFromSlot(item, dayNumber, slotId, e);
   }, [onDragStartFromSlot, dayNumber, slotId]);
 
   const { handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel, holdingId } = useDragGesture({
     onDragActivate: handleDragActivate,
-    onTap: onTapDetail,
+    onTap: openDetail,
     layout: 'vertical',
     isDragging: !!dragItemId,
   });
@@ -45,7 +47,7 @@ function PlacedCard({
     ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
     : place.whatToOrder?.[0]
       ? `Order: ${place.whatToOrder[0]}`
-      : place.tips?.[0] || place.terrazzoReasoning?.rationale || place.tasteNote || '';
+      : place.tips?.[0] || place.terrazzoReasoning?.rationale || place.enrichment?.description || '';
   const placeKey = `${dayNumber}-${slotId}-${place.name}`;
   const placeReactions = reactions?.filter(r => r.placeKey === placeKey) || [];
   const loves = placeReactions.filter(r => r.reaction === 'love').length;

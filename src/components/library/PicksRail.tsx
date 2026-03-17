@@ -207,7 +207,7 @@ function PicksRailInner({
             { value: 'name', label: 'A–Z' },
           ]}
           sortValue={sortBy}
-          onSortChange={(v) => setSortBy(v as any)}
+          onSortChange={(v) => setSortBy(v as 'match' | 'name' | 'recent')}
           onResetAll={() => { toggleFilter('all'); setSortBy('match'); setSourceFilter('all'); setSearchQuery(''); }}
         />
       </div>
@@ -257,7 +257,7 @@ function PicksRailInner({
           const typeLabel = TYPE_LABELS[place.type] || place.type;
           const brandColor = getDestColor(index);
           const isHovered = hoveredId === place.id;
-          const tasteNote = place.tasteNote;
+          const tasteNote = place.enrichment?.description;
           const location = getDisplayLocation(place.location, place.name, place.google?.address);
           const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
           // Score-based dimming: 1.0 = full opacity, 0.5 = slightly dimmed, 0 = heavily dimmed

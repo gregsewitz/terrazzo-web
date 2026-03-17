@@ -60,7 +60,7 @@ export default function AddBarCollections({
               {previewPlace.matchScore}% taste match
             </p>
           ) : null}
-          {previewPlace.tasteNote && (
+          {previewPlace.enrichment?.description && (
             <p style={{
               fontFamily: FONT.sans,
               fontSize: 12,
@@ -69,7 +69,7 @@ export default function AddBarCollections({
               margin: '6px 0 0',
               lineHeight: 1.4,
             }}>
-              &ldquo;{previewPlace.tasteNote}&rdquo;
+              &ldquo;{previewPlace.enrichment?.description}&rdquo;
             </p>
           )}
         </div>

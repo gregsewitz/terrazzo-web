@@ -7,6 +7,7 @@
  * Extracted from TripMapView.tsx for readability.
  */
 
+import React from 'react';
 import { FONT, TEXT, INK } from '@/constants/theme';
 import { SOURCE_STYLES, GhostSourceType, ImportedPlace } from '@/types';
 import { TYPE_ICONS } from '@/constants/placeTypes';
@@ -140,14 +141,14 @@ export function MobileDetailCard({
         </div>
 
         {/* Taste note */}
-        {(place.terrazzoInsight?.why || place.tasteNote) && (
+        {(place.terrazzoInsight?.why || place.enrichment?.description) && (
           <p style={{
             fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary,
             fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0',
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as React.CSSProperties['WebkitBoxOrient'],
             overflow: 'hidden',
           }}>
-            {place.terrazzoInsight?.why || place.tasteNote}
+            {place.terrazzoInsight?.why || place.enrichment?.description}
           </p>
         )}
 
@@ -270,14 +271,14 @@ export function MobileGhostCard({
         </div>
 
         {/* Taste note */}
-        {(place.terrazzoInsight?.why || place.tasteNote) && (
+        {(place.terrazzoInsight?.why || place.enrichment?.description) && (
           <p style={{
             fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary,
             fontStyle: 'italic', lineHeight: 1.5, margin: '0 0 10px 0',
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as React.CSSProperties['WebkitBoxOrient'],
             overflow: 'hidden',
           }}>
-            {place.terrazzoInsight?.why || place.tasteNote}
+            {place.terrazzoInsight?.why || place.enrichment?.description}
           </p>
         )}
 

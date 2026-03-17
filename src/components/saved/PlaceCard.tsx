@@ -2,7 +2,7 @@
 
 import { useRef, useCallback } from 'react';
 import { ImportedPlace, REACTIONS, SOURCE_STYLES } from '@/types';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/placeTypes';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { getDisplayLocation } from '@/lib/place-display';
@@ -32,7 +32,7 @@ export default function PlaceCard({ place, onTap, onToggleCollections, onLongPre
     || place.friendAttribution?.note
     || place.rating?.personalNote
     || place.terrazzoInsight?.why
-    || place.tasteNote
+    || place.enrichment?.description
     || '';
   const smartNarrative = smartTruncate(narrative, 320);
 
@@ -72,7 +72,7 @@ export default function PlaceCard({ place, onTap, onToggleCollections, onLongPre
             background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
           }}
         >
-          <PerriandIcon name={typeIcon as any} size={18} color={typeColor} />
+          <PerriandIcon name={typeIcon as PerriandIconName} size={18} color={typeColor} />
         </div>
 
         {/* Name + location */}

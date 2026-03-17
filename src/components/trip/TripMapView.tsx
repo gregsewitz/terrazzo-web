@@ -183,7 +183,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
         type: item.place.type,
         matchScore: item.place.matchScore,
         color: destColor.accent,
-        tasteNote: item.place.tasteNote,
+        description: item.place.enrichment?.description,
         count: showDirections ? idx + 1 : undefined,
       };
     });
@@ -200,7 +200,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
         type: g.place.type,
         matchScore: g.place.matchScore,
         color: srcStyle?.color || INK['50'],
-        tasteNote: g.place.tasteNote,
+        description: g.place.enrichment?.description,
         isDashed: true,
       };
     }) : [];

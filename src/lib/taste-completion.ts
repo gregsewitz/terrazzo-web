@@ -19,6 +19,8 @@ interface PlaceInput {
   name: string;
   type: string;
   location?: string;
+  /** Verified description from enrichment pipeline — grounds the tasteNote instead of relying on training knowledge. */
+  description?: string;
 }
 
 interface CompletionOptions {
@@ -48,7 +50,7 @@ export async function completeTasteFields(
     select: { tasteProfile: true },
   });
 
-  const profileData = user?.tasteProfile as any;
+  const profileData = user?.tasteProfile as Record<string, unknown>;
   if (!profileData?.radarData) {
     // No taste profile — can't generate personalized data
     return 0;
@@ -56,17 +58,21 @@ export async function completeTasteFields(
 
   // Convert radarData (0-100) → flat profile (0-1) for the Anthropic call
   const userProfile: Record<string, number> = {};
-  for (const item of profileData.radarData) {
+  const radarData = profileData.radarData as Array<{ axis?: string; value?: number }>;
+  for (const item of radarData) {
     if (item.axis && typeof item.value === 'number') {
       userProfile[item.axis] = item.value / 100;
     }
   }
 
-  // Call Claude to generate taste data for all places in one batch
+  // Call Claude to generate taste data for all places in one batch.
+  // Pass the verified pipeline description when available so Claude doesn't
+  // hallucinate a tasteNote from training knowledge alone.
   const batchInput = places.map(p => ({
     name: p.name,
     type: p.type,
     city: p.location?.split(',')[0]?.trim(),
+    ...(p.description ? { description: p.description } : {}),
   }));
 
   const results = await generateTasteMatchBatch(batchInput, userProfile);
@@ -83,9 +89,6 @@ export async function completeTasteFields(
       const data: Record<string, any> = {};
 
       // Always write text fields
-      if (taste.tasteNote) {
-        data.tasteNote = taste.tasteNote;
-      }
       if (taste.terrazzoInsight) {
         data.terrazzoInsight = taste.terrazzoInsight;
       }

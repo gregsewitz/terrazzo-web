@@ -179,7 +179,7 @@ export default function AddBarPreview({
               <div className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
                 {items.slice(0, isExpanded ? items.length : MAX_VISIBLE).map((item, idx, visibleItems) => {
                   const isSelected = selectedIds.has(item.id);
-                  const isAlreadyInLibrary = (item as any).alreadyInLibrary;
+                  const isAlreadyInLibrary = (item as ImportedPlace).alreadyInLibrary;
                   const isLowConfidence = item.enrichment?.confidence != null && item.enrichment.confidence < 0.5;
                   const itemColor = isAllGroup ? (TYPE_COLORS[item.type] || INK['40']) : typeColor;
 
@@ -250,7 +250,7 @@ export default function AddBarPreview({
                           {item.location || item.type}
                           {item.matchScore > 0 && ` · ${item.matchScore}%`}
                         </p>
-                        {item.tasteNote && (
+                        {item.enrichment?.description && (
                           <p style={{
                             fontFamily: FONT.sans,
                             fontSize: 11,
@@ -261,7 +261,7 @@ export default function AddBarPreview({
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
                           }}>
-                            &ldquo;{item.tasteNote}&rdquo;
+                            &ldquo;{item.enrichment?.description}&rdquo;
                           </p>
                         )}
                       </div>

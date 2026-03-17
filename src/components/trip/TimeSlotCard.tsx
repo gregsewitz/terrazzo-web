@@ -2,8 +2,7 @@
 
 import { useCallback, useRef, useEffect, useState, memo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { TimeSlot, ImportedPlace, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, QuickEntry } from '@/types';
-import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
+import { TimeSlot, ImportedPlace, GhostSourceType, SOURCE_STYLES, QuickEntry } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from '../place/GhostCard';
 import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
@@ -13,7 +12,9 @@ import QuickEntryInput from '../chat/QuickEntryInput';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { hasGhostItems } from '@/utils/ghostFiltering';
 import PlaceTimeEditor from '../place/PlaceTimeEditor';
-import type { Suggestion, Reaction } from '@/stores/collaborationStore';
+import { usePlaceDetail } from '@/context/PlaceDetailContext';
+import { useTripCollaboration } from '@/context/TripCollaborationContext';
+import { useTripDrag } from '@/context/TripDragContext';
 
 const SLOT_HOLD_DELAY = 250;
 const SLOT_DRAG_THRESHOLD = 6;
@@ -22,43 +23,28 @@ const RAIL_WIDTH = 36;
 interface TimeSlotCardProps {
   slot: TimeSlot;
   dayNumber: number;
-  destColor: { bg: string; accent: string; text: string };
-  onTapDetail: (item: ImportedPlace) => void;
-  onOpenUnsorted: () => void;
-  onOpenForSlot?: (ctx: SlotContext) => void;
-  allSlots?: TimeSlot[];
-  slotIndex?: number;
-  isDropTarget?: boolean;
-  onRegisterRef?: (rect: DOMRect | null) => void;
-  onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
-  dragItemId?: string | null;
-  onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
-  // AI suggestion loading state
-  /** @deprecated shimmer removed — suggestions fade in when ready */
-  isLoadingSuggestions?: boolean;
-  // Collaboration
-  suggestions?: Suggestion[];
-  reactions?: Reaction[];
-  myRole?: 'owner' | 'suggester' | 'viewer' | null;
-  onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
-  onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
 }
 
-function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted, onOpenForSlot, allSlots, slotIndex, isDropTarget, onRegisterRef, onDragStartFromSlot, dragItemId, onUnplace, isLoadingSuggestions, suggestions, reactions, myRole, onRespondSuggestion, onAddReaction }: TimeSlotCardProps) {
+function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
+  const { openDetail: onTapDetail } = usePlaceDetail();
+  const { suggestions: allSuggestions, reactions, myRole, onRespondSuggestion, onAddReaction } = useTripCollaboration();
+  const { dropTarget, dragItemId, onDragStartFromSlot, onUnplace } = useTripDrag();
+  const isDropTarget = dropTarget?.dayNumber === dayNumber && dropTarget?.slotId === slot.id;
+  // Filter collaboration data for this specific slot
+  const suggestions = allSuggestions.filter(
+    s => s.targetDay === dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
+  );
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
-  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const setPlaceTime = useTripStore(s => s.setPlaceTime);
   const addQuickEntry = useTripStore(s => s.addQuickEntry);
   const removeQuickEntry = useTripStore(s => s.removeQuickEntry);
   const confirmQuickEntry = useTripStore(s => s.confirmQuickEntry);
   const updateQuickEntry = useTripStore(s => s.updateQuickEntry);
-  const icon = SLOT_ICONS[slot.id] || 'pin';
   const slotRef = useRef<HTMLDivElement>(null);
   const hasPlaces = slot.places.length > 0;
   const hasQuickEntries = (slot.quickEntries?.length || 0) > 0;
   const hasContent = hasPlaces || hasQuickEntries;
-  const isEmpty = !hasContent && !hasGhostItems(slot);
   const hasGhosts = hasGhostItems(slot);
 
   // ─── Quick entry inline input state ───
@@ -81,7 +67,6 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   }, []);
 
   const handlePlacePointerDown = useCallback((place: ImportedPlace, e: React.PointerEvent) => {
-    if (!onDragStartFromSlot) return;
     e.stopPropagation();
     pointerStart.current = { x: e.clientX, y: e.clientY };
     holdItem.current = place;
@@ -105,7 +90,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   }, [onDragStartFromSlot, dayNumber, slot.id]);
 
   const handlePlacePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!pointerStart.current || gestureDecided.current || !onDragStartFromSlot) return;
+    if (!pointerStart.current || gestureDecided.current) return;
     const dy = Math.abs(e.clientY - pointerStart.current.y);
     const dx = Math.abs(e.clientX - pointerStart.current.x);
 
@@ -125,11 +110,12 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
   }, [clearSlotHold]);
 
   // Register bounding rect on mount and resize — all slots are valid drop targets
+  const { onRegisterSlotRef } = useTripDrag();
   const updateRect = useCallback(() => {
-    if (onRegisterRef && slotRef.current) {
-      onRegisterRef(slotRef.current.getBoundingClientRect());
+    if (slotRef.current) {
+      onRegisterSlotRef(dayNumber, slot.id, slotRef.current.getBoundingClientRect());
     }
-  }, [onRegisterRef]);
+  }, [onRegisterSlotRef, dayNumber, slot.id]);
 
   useEffect(() => {
     updateRect();
@@ -338,7 +324,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
             const isHolding = holdingPlaceId === p.id;
             const subtitle = p.friendAttribution?.note
               || p.terrazzoReasoning?.rationale
-              || p.tasteNote
+              || p.enrichment?.description
               || '';
             return (
               <div
@@ -430,11 +416,7 @@ function TimeSlotCard({ slot, dayNumber, destColor, onTapDetail, onOpenUnsorted,
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onUnplace) {
-                          onUnplace(p.id, dayNumber, slot.id);
-                        } else {
-                          unplaceFromSlot(dayNumber, slot.id, p.id);
-                        }
+                        onUnplace(p.id, dayNumber, slot.id);
                       }}
                       className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
                       style={{

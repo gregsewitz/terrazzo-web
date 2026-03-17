@@ -97,7 +97,7 @@ export default function CreateCollectionModal({ onClose, onCreate, onCreateSmart
         if (!result.filters.reactions.includes(place.rating.reaction)) return false;
       }
       if (result.filters.keywords) {
-        const placeText = `${place.name} ${place.tasteNote || ''} ${place.location}`.toLowerCase();
+        const placeText = `${place.name} ${place.enrichment?.description || ''} ${place.location}`.toLowerCase();
         const matchesKeyword = result.filters.keywords.some(kw => placeText.includes(kw.toLowerCase()));
         if (!matchesKeyword) return false;
       }
