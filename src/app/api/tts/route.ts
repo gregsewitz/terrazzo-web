@@ -66,10 +66,10 @@ async function elevenLabsTTS(text: string, voice: string | undefined, apiKey: st
       text,
       model_id: 'eleven_flash_v2_5',
       voice_settings: {
-        stability: 0.5,
+        stability: 0.71,
         similarity_boost: 0.75,
-        style: 0.3,
-        use_speaker_boost: true,
+        style: 0.15,
+        use_speaker_boost: false,
       },
       output_format: 'mp3_44100_128',
     }),

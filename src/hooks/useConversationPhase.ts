@@ -28,21 +28,58 @@ interface UseConversationPhaseReturn {
 }
 
 /**
+ * Common abbreviations that end with a period but don't end a sentence.
+ * Used to prevent false sentence splits on "Mr. Smith loved it" → "Mr." + "Smith loved it"
+ */
+const ABBREVIATIONS = new Set([
+  'mr', 'mrs', 'ms', 'dr', 'prof', 'sr', 'jr', 'st', 'ave', 'blvd',
+  'vs', 'etc', 'approx', 'dept', 'est', 'govt', 'inc', 'ltd', 'corp',
+  // Two-letter abbreviations common in travel context
+  'u.s', 'u.k', 'e.g', 'i.e', 'a.m', 'p.m',
+]);
+
+/**
  * Split text into complete sentences. Returns [completeSentences[], remainingFragment].
- * A sentence ends with . ! or ? followed by a space or end-of-string.
+ * A sentence ends with . ! or ? followed by a space or end-of-string,
+ * UNLESS the period follows a known abbreviation.
  */
 function splitSentences(text: string): [string[], string] {
   const sentences: string[] = [];
-  // Match sentences ending with .!? — but NOT abbreviations like "Mr." or "e.g."
+  // Match sentences ending with .!? followed by space or end-of-string.
+  // We post-filter to reject abbreviation false-positives.
   const re = /([^.!?]*[.!?])(?:\s+|$)/g;
   let lastIndex = 0;
+  let pendingFragment = '';
   let match: RegExpExecArray | null;
+
   while ((match = re.exec(text)) !== null) {
-    sentences.push(match[1].trim());
+    const segment = match[1].trim();
+    const combined = pendingFragment ? pendingFragment + ' ' + segment : segment;
+
+    // Check if this ends with an abbreviation (e.g., "Mr." or "e.g.")
+    // Extract the last word before the terminal punctuation
+    const lastWordMatch = combined.match(/(\S+)[.]\s*$/);
+    if (lastWordMatch) {
+      const lastWord = lastWordMatch[1].replace(/\.$/, '').toLowerCase();
+      if (ABBREVIATIONS.has(lastWord) || (lastWord.length <= 2 && /^[a-z]$/i.test(lastWord))) {
+        // This is an abbreviation — don't split here, accumulate
+        pendingFragment = combined;
+        lastIndex = re.lastIndex;
+        continue;
+      }
+    }
+
+    if (combined.length > 0) sentences.push(combined);
+    pendingFragment = '';
     lastIndex = re.lastIndex;
   }
+
   const remaining = text.slice(lastIndex).trim();
-  return [sentences, remaining];
+  const finalRemaining = pendingFragment
+    ? (remaining ? pendingFragment + ' ' + remaining : pendingFragment)
+    : remaining;
+
+  return [sentences, finalRemaining];
 }
 
 /**
@@ -317,6 +354,12 @@ export function useConversationPhase({
   const followUpIndex = useRef(0);
   const phaseCompleteRef = useRef(wasAlreadyCompleted); // tracks phase completion for async callbacks
 
+  // Ref to track current messages for use inside sendMessage without adding
+  // `messages` to its dependency array (which would cause it to be recreated
+  // on every message change, cascading to handleSendTranscript and handleSend).
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
   const sendMessage = useCallback(async (text: string) => {
     if (isAnalyzing || isPhaseComplete) return;
 
@@ -325,7 +368,7 @@ export function useConversationPhase({
     setIsAnalyzing(true);
 
     try {
-      const allMsgs = [...messages, userMsg];
+      const allMsgs = [...messagesRef.current, userMsg];
       const userMessageCount = allMsgs.filter((m) => m.role === 'user').length;
 
       // Build cross-phase context
@@ -430,6 +473,8 @@ export function useConversationPhase({
       // If we overrode the AI's phaseComplete=true to false (MIN_EXCHANGES guard),
       // the AI's response is a wrap-up statement with no question — the user has nothing
       // to respond to. Append a gentle continuation question so the conversation can flow.
+      // IMPORTANT: The streaming pipeline has already spoken the original followUp via TTS.
+      // We queue the continuation question as a separate sentence so the voice matches the chat.
       if (aiWantedComplete && !phaseComplete && respondResult.followUp) {
         const hasQuestion = /\?/.test(respondResult.followUp);
         if (!hasQuestion) {
@@ -439,8 +484,11 @@ export function useConversationPhase({
             "Tell me more — what else sticks with you?",
             "Anything else about that experience you want to share?",
           ];
-          const pick = continuations[userMessageCount % continuations.length];
-          respondResult.followUp = respondResult.followUp.trimEnd() + ' ' + pick;
+          const continuation = continuations[userMessageCount % continuations.length];
+          respondResult.followUp = respondResult.followUp.trimEnd() + ' ' + continuation;
+          // Queue the appended question for TTS so the voice matches the chat text.
+          // The streaming pipeline already spoke the original followUp; this adds the extra bit.
+          onSentenceRef.current?.(continuation);
         }
       }
 
@@ -588,7 +636,10 @@ export function useConversationPhase({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, isPhaseComplete, messages, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, addPendingAnchors, flushPendingAnchors, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace, storedMessages, addPropertyAnchors, removePropertyAnchor]);
+  // Note: `messages` is intentionally NOT in deps — we use messagesRef.current inside
+  // the callback to avoid recreating sendMessage (and its dependents) on every message change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnalyzing, isPhaseComplete, phaseId, certainties, followUps, addSignals, updateCertainties, addContradictions, addMessages, setLifeContext, addTrustedSource, setGoBackPlace, addPendingAnchors, flushPendingAnchors, setCurrentPhaseProgress, completedPhaseIds, allSignals, lifeContext, trustedSources, goBackPlace, storedMessages, addPropertyAnchors, removePropertyAnchor]);
 
   const confirmAnchor = useCallback((googlePlaceId: string) => {
     setAnchorsForReview((prev) => prev.filter((a) => a.googlePlaceId !== googlePlaceId));

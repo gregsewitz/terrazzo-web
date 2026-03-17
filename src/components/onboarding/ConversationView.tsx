@@ -249,6 +249,7 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (!text || sendingRef.current) return;
     sendingRef.current = true;
     setInputText('');
+    streamHandledRef.current = false; // reset — new response hasn't been handled yet
     resetTranscript();
     if (isListening) stopListening();
     stopTTS();
@@ -279,13 +280,15 @@ export default function ConversationView({ phase, onComplete }: ConversationView
     if (!holdingRef.current) return;
     holdingRef.current = false;
     stopListening();
-    // Brief delay to let final recognition results arrive (reduced from 150ms)
+    // Brief delay to let final recognition results arrive.
+    // The Web Speech API delivers final results asynchronously after stop().
+    // 120ms balances responsiveness with giving the API enough time to finalize.
     setTimeout(() => {
       const text = (latestTranscriptForSendRef.current || inputText).trim();
       if (text && !sendingRef.current) {
         handleSendTranscript(text);
       }
-    }, 50);
+    }, 120);
   }, [stopListening, inputText, handleSendTranscript]);
 
   // We need a ref to get the latest transcript at send time
