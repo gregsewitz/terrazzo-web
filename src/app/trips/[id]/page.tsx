@@ -9,7 +9,10 @@ import type { SlotContext } from '@/stores/poolStore';
 import { ImportedPlace, PlaceRating } from '@/types';
 import TabBar from '@/components/ui/TabBar';
 import DayPlanner from '@/components/trip/DayPlanner';
-import type { TripViewMode, DropTarget } from '@/components/trip/DayPlanner';
+import type { TripViewMode } from '@/components/trip/DayPlanner';
+import { TripCollaborationProvider } from '@/context/TripCollaborationContext';
+import { TripDragProvider } from '@/context/TripDragContext';
+import type { DropTarget } from '@/context/TripDragContext';
 import TripMyPlaces from '@/components/trip/TripMyPlaces';
 import PicksStrip from '@/components/library/PicksStrip';
 import type { FilterType } from '@/hooks/useTypeFilter';
@@ -331,6 +334,24 @@ function TripDetailContent() {
     window.addEventListener('pointerup', onUp);
   }, [boardHeight]);
 
+  // ─── Context values ─────────────────────────────────────────────────────────
+  // Build stable context objects so providers don't force-rerender on every tick.
+  const collaborationContextValue = useMemo(() => ({
+    suggestions: collabSuggestions,
+    reactions: collabReactions,
+    myRole: collabMyRole,
+    onRespondSuggestion: (id: string, status: 'accepted' | 'rejected') => respondToSuggestion(tripId, id, status),
+    onAddReaction: (key: string, reaction: 'love' | 'not_for_me') => addReaction(tripId, key, reaction),
+  }), [collabSuggestions, collabReactions, collabMyRole, respondToSuggestion, addReaction, tripId]);
+
+  const dragContextValue = useMemo(() => ({
+    dropTarget,
+    dragItemId: dragItem?.id ?? null,
+    onRegisterSlotRef: handleRegisterSlotRef,
+    onDragStartFromSlot: handleDragStartFromSlot,
+    onUnplace: handleUnplace,
+  }), [dropTarget, dragItem, handleRegisterSlotRef, handleDragStartFromSlot, handleUnplace]);
+
   if (!dbHydrated) {
     return <BrandLoader message="Loading your trip…" />;
   }
@@ -348,6 +369,8 @@ function TripDetailContent() {
   // ═══════════════════════════════════════════════════════════════════════════
   if (isDesktop) {
     return (
+      <TripCollaborationProvider value={collaborationContextValue}>
+      <TripDragProvider value={dragContextValue}>
       <div className="flex flex-col" style={{ height: '100dvh', background: 'var(--t-cream)' }}>
         {/* Desktop top nav */}
         <DesktopNav />
@@ -545,7 +568,6 @@ function TripDetailContent() {
                 <TripBriefing
                   trip={trip}
                   onTapDay={(dayNum) => { useTripStore.getState().setCurrentDay(dayNum); setDesktopView('board'); }}
-                  onTapDetail={openDetail}
                 />
               </div>
               <RightPanel activities={collabActivities} />
@@ -572,18 +594,7 @@ function TripDetailContent() {
 
               {/* ── CENTER: ITINERARY BOARD ── */}
               <div className="flex-1 min-w-0 overflow-hidden">
-                <DayBoardView
-                  onTapDetail={openDetail}
-                  suggestions={collabSuggestions}
-                  reactions={collabReactions}
-                  myRole={collabMyRole}
-                  onRespondSuggestion={(id, status) => respondToSuggestion(tripId, id, status)}
-                  onAddReaction={(key, reaction) => addReaction(tripId, key, reaction)}
-                  onRegisterSlotRef={handleRegisterSlotRef}
-                  onDragStartFromSlot={handleDragStartFromSlot}
-                  dropTarget={dropTarget}
-                  dragItemId={dragItem?.id ?? null}
-                />
+                <DayBoardView />
               </div>
 
               {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
@@ -712,6 +723,8 @@ function TripDetailContent() {
           } : undefined}
         />
       </div>
+      </TripDragProvider>
+      </TripCollaborationProvider>
     );
   }
 
@@ -719,6 +732,8 @@ function TripDetailContent() {
   //  MOBILE LAYOUT (existing — unchanged)
   // ═══════════════════════════════════════════════════════════════════════════
   return (
+    <TripCollaborationProvider value={collaborationContextValue}>
+    <TripDragProvider value={dragContextValue}>
     <div
       className="relative flex flex-col"
       style={{
@@ -820,13 +835,7 @@ function TripDetailContent() {
             <DayPlanner
               viewMode={viewMode}
               onSetViewMode={setViewMode}
-              onTapDetail={openDetail}
               onOpenUnsorted={() => {}}
-              dropTarget={null}
-              onRegisterSlotRef={handleRegisterSlotRef}
-              onDragStartFromSlot={handleDragStartFromSlot}
-              dragItemId={null}
-              onUnplace={handleUnplace}
               onBack={() => router.push('/trips')}
               onShare={() => setShowShareSheet(true)}
               onChat={() => setChatOpen(true)}
@@ -843,22 +852,11 @@ function TripDetailContent() {
           <DayPlanner
             viewMode={viewMode}
             onSetViewMode={setViewMode}
-            onTapDetail={openDetail}
             onOpenUnsorted={() => { expandStripRef.current?.(); }}
             onOpenForSlot={(ctx: SlotContext) => {
               setSlotTarget({ dayNumber: ctx.dayNumber, slotId: ctx.slotId });
               expandStripRef.current?.(ctx.suggestedTypes?.[0] as FilterType | undefined);
             }}
-            dropTarget={dropTarget}
-            onRegisterSlotRef={handleRegisterSlotRef}
-            onDragStartFromSlot={handleDragStartFromSlot}
-            dragItemId={dragItem?.id ?? null}
-            onUnplace={handleUnplace}
-            suggestions={collabSuggestions}
-            reactions={collabReactions}
-            myRole={collabMyRole}
-            onRespondSuggestion={(suggestionId, status) => respondToSuggestion(tripId, suggestionId, status)}
-            onAddReaction={(placeKey, reaction) => addReaction(tripId, placeKey, reaction)}
             onBack={() => router.push('/trips')}
             onShare={() => setShowShareSheet(true)}
             onChat={() => setChatOpen(true)}
@@ -1039,6 +1037,8 @@ function TripDetailContent() {
         } : undefined}
       />
     </div>
+    </TripDragProvider>
+    </TripCollaborationProvider>
   );
 }
 

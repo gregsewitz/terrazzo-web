@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, memo, useCallback } from 'react';
-import { Trip, TripDay, SOURCE_STYLES, HotelInfo, TransportEvent, ImportedPlace } from '@/types';
+import { Trip, TripDay, SOURCE_STYLES, HotelInfo, TransportEvent } from '@/types';
 import GoogleMapView from '@/components/maps/GoogleMapView';
 import type { MapMarker } from '@/components/maps/GoogleMapView';
-import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
+import { TransportBanner, TransportInput, getTransportsBeforeSlots } from './TransportBanner';
 import HotelInput from './HotelInput';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, TEXT } from '@/constants/theme';
 import { filterGhostsByDestination } from '@/utils/ghostFiltering';
 
 export interface DayContextBarProps {
@@ -15,9 +15,7 @@ export interface DayContextBarProps {
   trip: Trip;
   currentDay: number;
   destColor: { accent: string; bg: string; text: string };
-  onTapDetail: (item: ImportedPlace) => void;
   setDayHotelInfo: (day: number, info: HotelInfo | null) => void;
-  setMultipleDaysHotelInfo: (days: number[], info: HotelInfo) => void;
   addTransport: (day: number, t: Omit<TransportEvent, 'id'>) => void;
   removeTransport: (day: number, id: string) => void;
   updateTransport: (day: number, id: string, updates: Partial<TransportEvent>) => void;
@@ -32,9 +30,7 @@ const DayContextBar = memo(({
   trip,
   currentDay,
   destColor,
-  onTapDetail,
   setDayHotelInfo,
-  setMultipleDaysHotelInfo,
   addTransport,
   removeTransport,
   updateTransport,
@@ -44,7 +40,7 @@ const DayContextBar = memo(({
   setEditingTransportId,
 }: DayContextBarProps) => {
   const [editingHotel, setEditingHotel] = useState(false);
-  const [dayMapOpen, setDayMapOpen] = useState(false);
+  const dayMapOpen = false;
 
   const handleHotelSave = useCallback((hotelInfo: HotelInfo | null) => {
     setEditingHotel(false);

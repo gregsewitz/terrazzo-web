@@ -3,14 +3,15 @@
 import React from 'react';
 import {
   Trip, ImportedPlace, GhostSourceType,
-  DOMAIN_COLORS, SOURCE_STYLES,
+  SOURCE_STYLES,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT, COLOR, SECTION } from '@/constants/theme';
+import { FONT, TEXT, COLOR, SECTION } from '@/constants/theme';
 import { weatherEmoji, type DestinationWeather } from '@/hooks/useTripWeather';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
-import { placeholderGradient, TYPE_LABELS, formatDateShort } from './helpers';
+import { placeholderGradient, TYPE_LABELS } from './helpers';
+import { usePlaceDetail } from '@/context/PlaceDetailContext';
 
 // ─── Section Header ───
 
@@ -280,13 +281,12 @@ export function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: 
 // ─── Day Card ───
 
 export function DayCard({
-  day, trip, onTapDay, onTapDetail,
+  day, trip, onTapDay,
 }: {
   day: Trip['days'][0]; trip: Trip;
   onTapDay: (n: number) => void;
-  onTapDetail: (item: ImportedPlace) => void;
 }) {
-  const dColor = generateDestColor(day.destination || '');
+  const { openDetail: onTapDetail } = usePlaceDetail();
   const places = day.slots.flatMap(s => s.places.map(p => ({ place: p, time: s.time })));
 
   return (

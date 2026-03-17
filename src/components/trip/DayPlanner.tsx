@@ -3,11 +3,10 @@
 import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType, TimeSlot, Trip, SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
-import { SlotContext, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
+import { ImportedPlace } from '@/types';
+import { SlotContext } from '@/stores/poolStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import TimeSlotCard from './TimeSlotCard';
-import OverviewItinerary from './OverviewItinerary';
 import TripBriefing from './TripBriefing';
 import DaySelector from './DaySelector';
 import DayContextBar from './DayContextBar';
@@ -17,48 +16,28 @@ import { generateDestColor } from '@/lib/destination-helpers';
 import EditableTripName from './EditableTripName';
 import DayContextMenu from './DayContextMenu';
 import UndoFloatingButton from './UndoFloatingButton';
-import type { Suggestion, Reaction } from '@/stores/collaborationStore';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 
 export type TripViewMode = 'planner' | 'overview' | 'mapView' | 'featuredPlaces' | 'dreamBoard';
 
-export interface DropTarget {
-  dayNumber: number;
-  slotId: string;
-}
-
 interface DayPlannerProps {
   viewMode: TripViewMode;
   onSetViewMode: (mode: TripViewMode) => void;
-  onTapDetail: (item: ImportedPlace) => void;
   onOpenUnsorted: () => void;
   onOpenForSlot?: (ctx: SlotContext) => void;
-  dropTarget?: DropTarget | null;
-  onRegisterSlotRef?: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
-  onDragStartFromSlot?: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
-  dragItemId?: string | null;
-  /** Called when a place is removed from a slot (× button) — parent can animate the return */
-  onUnplace?: (placeId: string, dayNumber: number, slotId: string) => void;
-  // Collaboration props
-  suggestions?: Suggestion[];
-  reactions?: Reaction[];
-  myRole?: 'owner' | 'suggester' | 'viewer' | null;
-  onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
-  onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
   onBack?: () => void;
   onShare?: () => void;
   onChat?: () => void;
   onDelete?: () => void;
 }
 
-export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpenUnsorted, onOpenForSlot, dropTarget, onRegisterSlotRef, onDragStartFromSlot, dragItemId, onUnplace, suggestions, reactions, myRole, onRespondSuggestion, onAddReaction, onBack, onShare, onChat, onDelete }: DayPlannerProps) {
+export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, onChat, onDelete }: DayPlannerProps) {
   const currentDay = useTripStore(s => s.currentDay);
   const setCurrentDay = useTripStore(s => s.setCurrentDay);
   const reorderDays = useTripStore(s => s.reorderDays);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const setDayHotelInfo = useTripStore(s => s.setDayHotelInfo);
-  const setMultipleDaysHotelInfo = useTripStore(s => s.setMultipleDaysHotelInfo);
   const setDayDestination = useTripStore(s => s.setDayDestination);
   const renameTrip = useTripStore(s => s.renameTrip);
   const deleteDay = useTripStore(s => s.deleteDay);
@@ -148,7 +127,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
 
   // ─── Tier 2: Claude-powered contextual suggestions ───
-  const { suggestions: claudeSuggestions, isLoading: suggestionsLoading } = useTripSuggestions(
+  const { suggestions: claudeSuggestions } = useTripSuggestions(
     trip ?? null, currentDay,
     { enabled: true, libraryPlaces: myPlaces }
   );
@@ -379,9 +358,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         trip={trip}
         currentDay={currentDay}
         destColor={destColor}
-        onTapDetail={onTapDetail}
         setDayHotelInfo={setDayHotelInfo}
-        setMultipleDaysHotelInfo={setMultipleDaysHotelInfo}
         addTransport={addTransport}
         removeTransport={removeTransport}
         updateTransport={updateTransport}
@@ -400,17 +377,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
         onTouchMove={handleSwipeMove}
         onTouchEnd={handleSwipeEnd}
       >
-        {day.slots.map((slot, idx) => {
-          // Filter collaboration data for this slot
-          const slotSuggestions = suggestions?.filter(
-            s => s.targetDay === day.dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
-          ) || [];
-          const slotReactions = reactions?.filter(r => {
-            // placeKey format: "dayNumber-slotId-placeName"
-            return r.placeKey.startsWith(`${day.dayNumber}-${slot.id}-`);
-          }) || [];
-          // Notes module removed — collaboration mode not yet implemented
-
+        {day.slots.map((slot) => {
           // Transport banners that should appear AFTER this slot
           // Always show existing transports, even while adding a new one
           const transportsAfter = getTransportsAfterSlot(day.transport, slot.id);
@@ -420,25 +387,6 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
               <TimeSlotCard
                 slot={slot}
                 dayNumber={day.dayNumber}
-                destColor={destColor}
-                onTapDetail={onTapDetail}
-                onOpenUnsorted={onOpenUnsorted}
-                onOpenForSlot={onOpenForSlot}
-                allSlots={day.slots}
-                slotIndex={idx}
-                isDropTarget={dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id}
-                onRegisterRef={onRegisterSlotRef
-                  ? (rect) => onRegisterSlotRef(day.dayNumber, slot.id, rect)
-                  : undefined}
-                onDragStartFromSlot={onDragStartFromSlot}
-                dragItemId={dragItemId}
-                onUnplace={onUnplace}
-                isLoadingSuggestions={suggestionsLoading}
-                suggestions={slotSuggestions}
-                reactions={slotReactions}
-                myRole={myRole}
-                onRespondSuggestion={onRespondSuggestion}
-                onAddReaction={onAddReaction}
               />
               {/* Transport banners positioned after this slot based on departure time */}
               {transportsAfter.map(t => (
@@ -474,7 +422,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onTapDetail, onOpe
 
       {/* Overview mode: editorial trip briefing */}
       {viewMode === 'overview' && (
-        <TripBriefing trip={trip} onTapDay={(dayNum) => { setCurrentDay(dayNum); onSetViewMode('planner'); }} onTapDetail={onTapDetail} />
+        <TripBriefing trip={trip} onTapDay={(dayNum) => { setCurrentDay(dayNum); onSetViewMode('planner'); }} />
       )}
 
       {/* Delete day confirmation dialog */}

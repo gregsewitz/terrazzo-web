@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import {
-  Trip, ImportedPlace, GhostSourceType,
+  Trip, GhostSourceType,
   SOURCE_STYLES,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -13,20 +13,21 @@ import {
 } from '../trip-briefing/sections';
 import { useBriefingData } from '../trip-briefing/useBriefingData';
 import { formatDateLong, TYPE_LABELS } from '../trip-briefing/helpers';
+import { usePlaceDetail } from '@/context/PlaceDetailContext';
 
 // ─── Props ───
 
 interface TripBriefingProps {
   trip: Trip;
   onTapDay: (dayNum: number) => void;
-  onTapDetail: (item: ImportedPlace) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════
 
-function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
+function TripBriefingInner({ trip, onTapDay }: TripBriefingProps) {
+  const { openDetail: onTapDetail } = usePlaceDetail();
   const data = useBriefingData(trip);
   const { weather: tripWeather, isLoading: weatherLoading } = useTripWeather(trip);
 
@@ -174,7 +175,6 @@ function TripBriefingInner({ trip, onTapDay, onTapDetail }: TripBriefingProps) {
               day={d}
               trip={trip}
               onTapDay={onTapDay}
-              onTapDetail={onTapDetail}
             />
           ))}
         </div>

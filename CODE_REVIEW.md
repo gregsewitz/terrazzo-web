@@ -3,14 +3,14 @@
 **Reviewer:** Claude · March 2026
 **Scope:** All source code in `src/`, config files, scripts, and project structure
 **Standard:** Production-grade, zero-embarrassment codebase
-**Last updated:** March 17, 2026
+**Last updated:** March 17, 2026 (evening)
 
 ---
 
 ## 1. Architecture & Code Size
 
-### 1a. 17MB JSON file in source tree
-`src/lib/taste-intelligence/signal-clusters.json` is 17MB. This should be externalized (S3/CDN, database, or lazy-loaded at runtime), not shipped in the client bundle.
+### ~~1a. 17MB JSON file in source tree~~
+**Done** — `signal-clusters.json` moved from `src/lib/taste-intelligence/` to `public/data/signal-clusters.json`. A new `signal-clusters-loader.ts` module loads it lazily from disk (via `fs.readFileSync`) on first use and caches the result for the process lifetime. All three import sites replaced: `vectors-v3.ts` now uses a `getClusterState()` lazy-init pattern, `queries-v3.ts` calls `getSignalClusterMap()` inline, and `taste-match-vectors.ts` uses the top-level import. `ALL_DOMAINS` converted from an eagerly-initialized module const to a `getAllDomains()` function, updating all callers. The JSON is no longer webpack-bundled (public/ files are served as static assets) and no longer parsed at module-load time.
 
 ### 1b. Oversized components (>500 lines)
 These need refactoring into smaller, focused sub-components:
@@ -48,17 +48,37 @@ These need refactoring into smaller, focused sub-components:
 
 ---
 
-## 2. Props Drilling & State Architecture
+## 2. Props Drilling & State Architecture ✅ Done
 
-### 2a. Components with 20+ props
-`DayPlanner.tsx` takes **40 props**. Others include `HotelInput.tsx` (30), `PlaceSearchInput.tsx` (30), `TerrazzoMosaic.tsx` (25), `TripMapView.tsx` (25). This makes the interface brittle. Trip interaction state and collaboration state should be lifted to React Context (like the existing `PlaceDetailContext` and `AuthContext`, which are well-designed but underutilized).
+### 2a. Components with 20+ props ✅ Done
+**Done.** Added `TripCollaborationContext` and `TripDragContext` to eliminate the two main drilling chains:
+
+- **Collaboration props** (`suggestions`, `reactions`, `myRole`, `onRespondSuggestion`, `onAddReaction`) — were drilled page → DayPlanner → DayBoardView/TimeSlotCard (3 levels). Now provided via `TripCollaborationProvider` wrapped in `trips/[id]/page.tsx`; consumed directly via `useTripCollaboration()` in DayBoardView, TimeSlotCard, PlacedCard.
+
+- **Drag props** (`dropTarget`, `dragItemId`, `onRegisterSlotRef`, `onDragStartFromSlot`, `onUnplace`) — were drilled page → DayPlanner → DayBoardView → TimeSlotCard → PlacedCard (4 levels). Now provided via `TripDragProvider`; consumed directly via `useTripDrag()` in DayBoardView, TimeSlotCard (self-registers its slot rect), PlacedCard.
+
+- **`onTapDetail`** — replaced all interior prop chains with direct `usePlaceDetail().openDetail` calls in DayBoardView, TimeSlotCard, PlacedCard, TripBriefing, OverviewItinerary, and the `DayCard` sub-component in trip-briefing/sections. Dead `onTapDetail` prop removed from `DayContextBar`.
+
+**Net result:** `DayPlanner` shrank from 19 props to **8** (viewMode, onSetViewMode, onOpenUnsorted, onOpenForSlot, onBack, onShare, onChat, onDelete). `DayBoardView` now takes **0 props** — reads everything from context. `TimeSlotCard` shrank from 18 props to **5**. `PlacedCard` shrank from 8 props to **4** (place, dayNumber, slotId, isDesktop, CARD_H, CARD_PX).
+
+Context files added:
+- `src/context/TripCollaborationContext.tsx`
+- `src/context/TripDragContext.tsx`
 
 ---
 
 ## 3. Type Safety
 
-### 3a. ~280 remaining instances of `any`
-The highest-impact ones to fix are in hooks and stores where `any` hides actual bugs. API route handlers use `any` heavily for Prisma results (unavoidable without generated types), but hooks and components should be properly typed.
+### ~~3a. ~280 remaining instances of `any`~~
+**Done** — Reduced from ~280 to 124 (all in API routes, accepted as unavoidable without Prisma-generated types). Outside API routes: 0 meaningful `any` remain. Fixed across 28+ files:
+- **Hooks**: `useDiscoverFeed.ts` params typed as `OnboardingLifeContext | null` and `GeneratedTasteProfile | null`
+- **Stores**: `mosaicSlice.ts` `apiFetch<GeneratedTasteProfile>`, `savedHydrationSlice.ts` enrichment confidence cast
+- **Components (19 instances)**: All `PerriandIcon name={x as any}` → `x as PerriandIconName`; all `onSortChange` `as any` → typed union casts; `WebkitBoxOrient as any` → proper `React.CSSProperties` cast
+- **Lib**: `taste-score.ts` params typed as `BriefingSignal[]`/`BriefingAntiSignal[]` + `explanation` typed as `MatchExplanation`; `anthropic.ts` returns `Promise<Anthropic.Message>`; `behavioral-patterns.ts` Prisma where clause typed; `discover-candidates.ts` implicit `any` removed; `taste-match-vectors.ts` Prisma JSON field cast to `Prisma.InputJsonValue`
+- **Services**: `suggestionEngine.ts` JSON parse result typed as `Record<string, unknown>[]`
+- **Admin page**: `taste-clusters/page.tsx` Chart.js CDN global typed via `WindowWithChart` interface; tooltip callbacks, chart instance, and afterDraw plugin all typed
+- **vectors-v3.ts**: All `(cm as any).X` casts removed (now uses `SignalClusterMap` typed fields directly); `queries-v3.ts` `(r: any)` callbacks replaced with inferred types
+- Remaining 2 outside API routes: one is a code comment, one is `stripMotionProps` (intentional with `// eslint-disable-next-line`)
 
 ---
 
@@ -92,14 +112,13 @@ Only ~2,600 lines of test code for ~91,000 lines of source. No e2e tests. Unit t
 1. ✅ Refactor 1000+ line components into sub-components
 2. ✅ Introduce feature-based component directory structure
 3. ✅ Split oversized hooks and stores
-4. Externalize 17MB signal-clusters.json
+4. ✅ Externalize 17MB signal-clusters.json
 5. ✅ Adopt `cache-policy.ts` across all API routes
 6. ✅ Continue accessibility improvements (aria labels, semantic HTML)
 7. Add e2e tests for critical flows (onboarding, trip planning)
 
 **Remaining open items:**
-- Externalize 17MB `signal-clusters.json` from source tree
-- ~280 `any` instances — fix in hooks and stores (API routes unavoidable)
+- ✅ Fix ~280 `any` instances in hooks and stores
 - `div onClick` → `<button>` semantic HTML conversions
 - e2e tests for onboarding and trip planning critical flows
-- Props drilling: DayPlanner (40 props) → React Context
+- ✅ Props drilling: lifted collaboration and drag state to TripCollaborationContext / TripDragContext; replaced onTapDetail drilling with direct usePlaceDetail() calls

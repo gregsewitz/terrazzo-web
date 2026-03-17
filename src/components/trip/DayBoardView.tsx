@@ -2,52 +2,27 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo, TransportEvent } from '@/types';
+import { SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
 import HotelInput from './HotelInput';
 import DayContextMenu from './DayContextMenu';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
-import { useDragGesture } from '@/hooks/useDragGesture';
+
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import QuickEntryCard from '../chat/QuickEntryCard';
 import QuickEntryInput from '../chat/QuickEntryInput';
 import { PlacedCard, SlotContainer } from '../day-board';
-import type { QuickEntry } from '@/types';
-import type { Suggestion, Reaction } from '@/stores/collaborationStore';
+import { usePlaceDetail } from '@/context/PlaceDetailContext';
+import { useTripCollaboration } from '@/context/TripCollaborationContext';
+import { useTripDrag } from '@/context/TripDragContext';
 
-interface DayBoardViewProps {
-  onTapDetail: (item: ImportedPlace) => void;
-  suggestions?: Suggestion[];
-  reactions?: Reaction[];
-  myRole?: 'owner' | 'suggester' | 'viewer' | null;
-  onRespondSuggestion?: (suggestionId: string, status: 'accepted' | 'rejected') => void;
-  onAddReaction?: (placeKey: string, reaction: 'love' | 'not_for_me') => void;
-  /** Pointer-based: register each slot's bounding rect for hit-testing */
-  onRegisterSlotRef: (dayNumber: number, slotId: string, rect: DOMRect | null) => void;
-  /** Pointer-based: drag a placed card out of a slot */
-  onDragStartFromSlot: (item: ImportedPlace, dayNumber: number, slotId: string, e: React.PointerEvent) => void;
-  /** Which slot the drag pointer is currently over (from parent hit-testing) */
-  dropTarget: { dayNumber: number; slotId: string } | null;
-  /** ID of item currently being dragged (to dim it) */
-  dragItemId: string | null;
-}
-
-function DayBoardView({
-  onTapDetail,
-  suggestions,
-  reactions,
-  myRole,
-  onRespondSuggestion,
-  onAddReaction,
-  onRegisterSlotRef,
-  onDragStartFromSlot,
-  dropTarget,
-  dragItemId,
-}: DayBoardViewProps) {
+function DayBoardView() {
+  const { openDetail: onTapDetail } = usePlaceDetail();
+  const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
+  const { dropTarget, onRegisterSlotRef } = useTripDrag();
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const currentDay = useTripStore(s => s.currentDay);
@@ -55,17 +30,14 @@ function DayBoardView({
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const setDayHotelInfo = useTripStore(s => s.setDayHotelInfo);
-  const setMultipleDaysHotelInfo = useTripStore(s => s.setMultipleDaysHotelInfo);
   const addTransport = useTripStore(s => s.addTransport);
   const removeTransport = useTripStore(s => s.removeTransport);
   const updateTransport = useTripStore(s => s.updateTransport);
-  const reorderDays = useTripStore(s => s.reorderDays);
   const deleteDay = useTripStore(s => s.deleteDay);
   const insertDay = useTripStore(s => s.insertDay);
   const duplicateDay = useTripStore(s => s.duplicateDay);
   const clearDay = useTripStore(s => s.clearDay);
   const setDayDestination = useTripStore(s => s.setDayDestination);
-  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const addQuickEntry = useTripStore(s => s.addQuickEntry);
   const removeQuickEntry = useTripStore(s => s.removeQuickEntry);
   const confirmQuickEntry = useTripStore(s => s.confirmQuickEntry);
@@ -468,7 +440,7 @@ function DayBoardView({
                       className="flex items-center gap-1.5"
                       style={{ height: SLOT_LABEL_H, paddingLeft: isDesktop ? 12 : 10, paddingRight: isDesktop ? 12 : 10 }}
                     >
-                      <PerriandIcon name={icon as any} size={SLOT_ICON_SIZE} color={INK['60']} />
+                      <PerriandIcon name={icon as PerriandIconName} size={SLOT_ICON_SIZE} color={INK['60']} />
                       <span style={{
                         fontFamily: FONT.mono,
                         fontSize: SLOT_LABEL_SIZE,
@@ -490,10 +462,6 @@ function DayBoardView({
                         dayNumber={day.dayNumber}
                         slotId={slot.id}
                         isDesktop={isDesktop}
-                        onTapDetail={onTapDetail}
-                        onDragStartFromSlot={onDragStartFromSlot}
-                        dragItemId={dragItemId}
-                        reactions={reactions}
                         CARD_H={CARD_H}
                         CARD_PX={CARD_PX}
                       />
