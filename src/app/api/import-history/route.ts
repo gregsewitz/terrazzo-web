@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/import-history
@@ -111,7 +112,9 @@ export async function GET(request: NextRequest) {
     // ── Sort all items by date descending ────────────────────────────────
     timeline.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    return NextResponse.json({ timeline });
+    return NextResponse.json({ timeline }, {
+      headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
+    });
   } catch (error) {
     console.error('Import history error:', error);
     return NextResponse.json({ error: 'Failed to fetch import history' }, { status: 500 });

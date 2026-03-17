@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTripAccess } from '@/lib/trip-access';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/trips/[id]/activity — Poll for recent activity.
@@ -35,5 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     activities,
     lastActivityAt,
     count: activities.length,
+  }, {
+    headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
   });
 }

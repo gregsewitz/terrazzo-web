@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
           provider: grant.provider,
           grantId: grant.grantId,
           connectedAt: grant.createdAt,
+        }, {
+          headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
         });
       }
     }
@@ -45,12 +48,16 @@ export async function GET(request: NextRequest) {
         provider: migrated.provider,
         grantId: migrated.grantId,
         connectedAt: migrated.createdAt,
+      }, {
+        headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
       });
     }
 
     return NextResponse.json({
       connected: !!cookieGrantId,
       ...(cookieGrantId ? { grantId: cookieGrantId } : {}),
+    }, {
+      headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
     });
   } catch (error) {
     console.error('Email status error:', error);

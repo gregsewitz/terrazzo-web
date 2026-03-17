@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { apiHandler } from '@/lib/api-handler';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -34,7 +35,9 @@ export const GET = apiHandler(async (req: NextRequest) => {
     },
   });
 
-  return Response.json({ places });
+  return Response.json({ places }, {
+    headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
+  });
 });
 
 /**

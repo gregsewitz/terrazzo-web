@@ -3,6 +3,7 @@ import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { searchConfirmationEmails } from '@/lib/nylas';
 import { RESERVATION_SEARCH_QUERIES } from '@/types/email';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * POST /api/email/scan
@@ -122,6 +123,8 @@ export async function GET(request: NextRequest) {
         createdAt: s.createdAt.toISOString(),
         completedAt: s.completedAt?.toISOString(),
       })),
+    }, {
+      headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
     });
   } catch (error) {
     console.error('Email scan history error:', error);

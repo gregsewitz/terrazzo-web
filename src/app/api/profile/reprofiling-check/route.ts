@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { decayConfidence, checkReprofilingTriggers } from '@/lib/signal-decay';
 import { ALL_TASTE_DOMAINS } from '@/types';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('userId');
@@ -94,5 +95,7 @@ export async function GET(req: NextRequest) {
       totalSignals,
       totalContradictions: contradictions,
     },
+  }, {
+    headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
   });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/email/scan/[id]
@@ -35,6 +36,8 @@ export async function GET(
       errorMessage: scan.errorMessage,
       createdAt: scan.createdAt.toISOString(),
       completedAt: scan.completedAt?.toISOString() || null,
+    }, {
+      headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
     });
   } catch (error) {
     console.error('Scan status error:', error);

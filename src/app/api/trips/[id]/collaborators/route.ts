@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTripAccess, logTripActivity } from '@/lib/trip-access';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/trips/[id]/collaborators — List all collaborators for a trip.
@@ -38,6 +39,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       invitedAt: c.invitedAt,
       acceptedAt: c.acceptedAt,
     })),
+  }, {
+    headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
   });
 }
 

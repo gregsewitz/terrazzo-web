@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 export async function GET(
   req: Request,
@@ -56,6 +57,8 @@ export async function GET(
           signalCount: intel.signalCount,
           antiSignalCount: intel.antiSignalCount,
         },
+      }, {
+        headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
       });
     }
 
@@ -115,6 +118,8 @@ export async function GET(
             durationMs: latestRun.durationMs,
           }
         : null,
+    }, {
+      headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
     });
   } catch (error) {
     console.error('Intelligence fetch error:', error);

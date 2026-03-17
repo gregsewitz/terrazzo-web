@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/email/reservations
@@ -99,6 +100,8 @@ export async function GET(request: NextRequest) {
         createdAt: r.createdAt.toISOString(),
       })),
       counts,
+    }, {
+      headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
     });
   } catch (error) {
     console.error('Fetch reservations error:', error);

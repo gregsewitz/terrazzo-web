@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTripAccess, logTripActivity } from '@/lib/trip-access';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/trips/[id]/notes — List all slot notes for a trip.
@@ -18,7 +19,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     orderBy: { createdAt: 'asc' },
   });
 
-  return Response.json({ notes });
+  return Response.json({ notes }, {
+    headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
+  });
 }
 
 /**

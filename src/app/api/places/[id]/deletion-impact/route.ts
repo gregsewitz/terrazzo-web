@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { apiHandler } from '@/lib/api-handler';
+import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
 
 /**
  * GET /api/places/[id]/deletion-impact
@@ -67,5 +68,7 @@ export const GET = apiHandler(async (req: NextRequest, { params }: { params: Pro
     collections: memberCollections.map((c: any) => ({ id: c.id, name: c.name })),
     tripCount: tripRefs.length,
     trips: tripRefs,
+  }, {
+    headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
   });
 });
