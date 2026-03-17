@@ -3,26 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
-import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
-import { computeVectorMatchFromDb, breakdownToNormalized, normalizeSingleVectorScore } from '@/lib/taste-match-vectors';
-import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
-import { ALL_TASTE_DOMAINS } from '@/types';
+import { normalizeSingleVectorScore } from '@/lib/taste-match-vectors';
+import { computeTasteScore } from '@/lib/taste-score';
 import type { User, Prisma } from '@prisma/client';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const VALID_DOMAINS = new Set<string>(ALL_TASTE_DOMAINS);
-
-/** Build a TasteProfile from the stored GeneratedTasteProfile (radarData). */
-function buildTasteProfile(generated: GeneratedTasteProfile): TasteProfile {
-  const profile: TasteProfile = { ...DEFAULT_USER_PROFILE };
-  for (const r of generated.radarData || []) {
-    if (VALID_DOMAINS.has(r.axis)) {
-      profile[r.axis as TasteDomain] = Math.max(profile[r.axis as TasteDomain], r.value);
-    }
-  }
-  return profile;
-}
 
 /**
  * POST /api/places/resolve
@@ -188,28 +171,15 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // If SavedPlace doesn't have scores but intelligence is complete, compute them now
     if (intel?.status === 'complete' && !savedPlace?.matchScore) {
       try {
-        // v4: Try vector-first scoring
-        const vectorMatch = await computeVectorMatchFromDb(user.id, googlePlaceId);
+        const signals = (intel.signals as any[]) || [];
+        const antiSignals = (intel.antiSignals as any[]) || [];
+        const score = await computeTasteScore(user.id, googlePlaceId, signals, antiSignals);
 
-        if (vectorMatch) {
-          // Normalize raw cosine score to same 35-93 display range as discover feed
-          computedMatchScore = await normalizeSingleVectorScore(vectorMatch.overallScore, user.id);
-          computedMatchBreakdown = vectorMatch.breakdown;
-        } else {
-          // Fallback: signal-based scoring (no V3 vectors available)
-          const userRecord = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { tasteProfile: true },
-          });
-          const generated = userRecord?.tasteProfile as unknown as GeneratedTasteProfile | null;
-          const tasteProfile = generated ? buildTasteProfile(generated) : DEFAULT_USER_PROFILE;
-
-          const signals = (intel.signals as any[]) || [];
-          const antiSignals = (intel.antiSignals as any[]) || [];
-          const match = computeMatchFromSignals(signals, antiSignals, tasteProfile);
-
-          computedMatchScore = match.overallScore;
-          computedMatchBreakdown = match.breakdown;
+        if (score) {
+          computedMatchScore = score.source === 'vector'
+            ? await normalizeSingleVectorScore(score.overallScore, user.id)
+            : score.overallScore;
+          computedMatchBreakdown = score.breakdown;
         }
       } catch (err) {
         console.error(`[resolve] Failed to compute match:`, err);

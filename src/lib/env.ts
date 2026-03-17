@@ -49,6 +49,7 @@ export const NYLAS_WEBHOOK_SECRET = optional('NYLAS_WEBHOOK_SECRET');
 export const FIRECRAWL_API_KEY = optional('FIRECRAWL_API_KEY');
 export const PIPELINE_WORKER_URL = optional('PIPELINE_WORKER_URL');
 export const PIPELINE_WEBHOOK_SECRET = optional('PIPELINE_WEBHOOK_SECRET');
+export const NYLAS_WEBHOOK_URL = optional('NYLAS_WEBHOOK_URL');
 export const UPSTASH_REDIS_REST_URL = optional('UPSTASH_REDIS_REST_URL');
 export const UPSTASH_REDIS_REST_TOKEN = optional('UPSTASH_REDIS_REST_TOKEN');
 

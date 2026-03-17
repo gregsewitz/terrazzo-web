@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { fetchMessage } from '@/lib/nylas';
 import { parseEmailForReservations } from '@/lib/email-parser';
 import { matchReservationsToTrips } from '@/lib/trip-matcher';
-import { searchPlace } from '@/lib/places';
+import { resolveGooglePlaceId } from '@/lib/resolve-place';
+import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { RESERVATION_SEARCH_QUERIES } from '@/types/email';
 
 /**
@@ -94,6 +95,11 @@ function isLikelyReservation(fromEmail: string, subject: string): boolean {
  *   4. If yes: fetch full body, parse with Claude, create EmailReservation
  */
 export async function POST(request: NextRequest) {
+  // ── 0. Rate limit (defense-in-depth, especially when HMAC is disabled) ─
+  const ip = getClientIp(request.headers);
+  const rl = rateLimit(ip + ':nylas-webhook', { maxRequests: 60, windowMs: 60000 });
+  if (!rl.success) return rateLimitResponse();
+
   // ── 1. Verify HMAC signature ───────────────────────────────────────────
   const webhookSecret = process.env.NYLAS_WEBHOOK_SECRET;
   if (webhookSecret) {
@@ -243,18 +249,9 @@ async function handleWebhookEvent(payload: NylasWebhookPayload) {
     if (res.confidence < 0.4) continue;
 
     // Try to resolve Google Place ID
-    let googlePlaceId: string | undefined;
-    if (res.placeName && res.location && res.placeType !== 'flight' && res.placeType !== 'rental') {
-      try {
-        const searchQuery = `${res.placeName} ${res.location}`.trim();
-        const placeResult = await searchPlace(searchQuery, undefined, res.placeName);
-        if (placeResult) {
-          googlePlaceId = placeResult.id;
-        }
-      } catch {
-        // Non-fatal — place resolution is best-effort
-      }
-    }
+    const googlePlaceId = await resolveGooglePlaceId(
+      res.placeName, res.location, res.placeType, 'nylas-webhook',
+    );
 
     const record = await prisma.emailReservation.create({
       data: {

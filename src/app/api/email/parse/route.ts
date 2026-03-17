@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { fetchMessageBodies } from '@/lib/nylas';
 import { parseEmailBatch } from '@/lib/email-parser';
 import { matchReservationsToTrips } from '@/lib/trip-matcher';
-import { searchPlace } from '@/lib/places';
+import { resolveGooglePlaceId } from '@/lib/resolve-place';
 
 /**
  * POST /api/email/parse
@@ -57,21 +57,9 @@ export async function POST(request: NextRequest) {
         if (res.confidence < 0.4) continue;
 
         // Try to resolve Google Place ID
-        let googlePlaceId: string | undefined;
-        if (res.placeName && res.location && res.placeType !== 'flight' && res.placeType !== 'rental') {
-          try {
-            const searchQuery = `${res.placeName} ${res.location}`.trim();
-            const placeResult = await searchPlace(searchQuery, undefined, res.placeName);
-            if (placeResult) {
-              googlePlaceId = placeResult.id;
-              console.log(`[parse] Resolved "${res.placeName}" → ${placeResult.id}`);
-            } else {
-              console.warn(`[parse] searchPlace returned null for "${res.placeName}" (query: "${searchQuery}")`);
-            }
-          } catch (searchErr) {
-            console.error(`[parse] searchPlace failed for "${res.placeName}":`, searchErr);
-          }
-        }
+        const googlePlaceId = await resolveGooglePlaceId(
+          res.placeName, res.location, res.placeType, 'parse',
+        );
 
         reservationsToCreate.push({
           userId: user.id,

@@ -27,11 +27,18 @@ class MemoryCache {
       this.cache.delete(key);
       return null;
     }
+    // LRU: move to end (most recently used) by re-inserting
+    this.cache.delete(key);
+    this.cache.set(key, entry);
     return entry.value as T;
   }
 
   async set<T>(key: string, value: T, ttlSeconds: number): Promise<void> {
-    // Evict oldest entries if over max size
+    // If key exists, delete first so re-insert moves it to end
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    }
+    // Evict least recently used (first in Map) if over max size
     if (this.cache.size >= MEMORY_CACHE_MAX_SIZE) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) this.cache.delete(firstKey);

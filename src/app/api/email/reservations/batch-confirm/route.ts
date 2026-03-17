@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
-import { searchPlace } from '@/lib/places';
+import { resolveGooglePlace } from '@/lib/resolve-place';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { completeTasteFields } from '@/lib/taste-completion';
 import type { Prisma } from '@prisma/client';
@@ -77,19 +77,13 @@ export async function POST(request: NextRequest) {
         let googlePlaceId = reservation.googlePlaceId;
         let googleData: Record<string, unknown> | null = null;
 
-        if (!googlePlaceId && reservation.placeType !== 'flight' && reservation.placeType !== 'rental') {
-          try {
-            const searchQuery = `${reservation.placeName} ${reservation.location || ''}`.trim();
-            const placeResult = await searchPlace(searchQuery, undefined, reservation.placeName);
-            if (placeResult) {
-              googlePlaceId = placeResult.id;
-              googleData = placeResult as unknown as Record<string, unknown>;
-              console.log(`[batch-confirm] Resolved "${reservation.placeName}" → ${placeResult.id}`);
-            } else {
-              console.warn(`[batch-confirm] searchPlace returned null for "${searchQuery}"`);
-            }
-          } catch (searchErr) {
-            console.error(`[batch-confirm] searchPlace failed for "${reservation.placeName}":`, searchErr);
+        if (!googlePlaceId) {
+          const placeResult = await resolveGooglePlace(
+            reservation.placeName, reservation.location, reservation.placeType, 'batch-confirm',
+          );
+          if (placeResult) {
+            googlePlaceId = placeResult.id;
+            googleData = placeResult as unknown as Record<string, unknown>;
           }
         }
 

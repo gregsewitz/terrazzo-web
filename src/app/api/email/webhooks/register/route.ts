@@ -61,7 +61,9 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Create webhook ────────────────────────────────────────────────────────
-  const webhookUrl = body.webhookUrl || 'https://www.terrazzo.travel/api/email/webhooks/nylas';
+  const webhookUrl = body.webhookUrl
+    || process.env.NYLAS_WEBHOOK_URL
+    || 'https://www.terrazzo.travel/api/email/webhooks/nylas';
 
   const createPayload = {
     description: 'Terrazzo real-time email reservation detection',

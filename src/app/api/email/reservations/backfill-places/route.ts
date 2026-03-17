@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, unauthorized } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
-import { searchPlace } from '@/lib/places';
+import { resolveGooglePlace } from '@/lib/resolve-place';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { Prisma } from '@prisma/client';
 
@@ -59,49 +59,43 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      try {
-        const searchQuery = `${res.placeName} ${res.location}`.trim();
-        const placeResult = await searchPlace(searchQuery, undefined, res.placeName);
+      const placeResult = await resolveGooglePlace(
+        res.placeName, res.location, res.placeType, 'backfill',
+      );
 
-        if (placeResult) {
-          // Update the EmailReservation
-          await prisma.emailReservation.update({
-            where: { id: res.id },
-            data: { googlePlaceId: placeResult.id },
+      if (placeResult) {
+        // Update the EmailReservation
+        await prisma.emailReservation.update({
+          where: { id: res.id },
+          data: { googlePlaceId: placeResult.id },
+        });
+
+        // Also backfill the linked SavedPlace and trigger enrichment
+        if (res.savedPlaceId) {
+          const intelligenceId = await ensureEnrichment(
+            placeResult.id, res.placeName, user.id, 'backfill', res.placeType || undefined
+          ).catch((err: unknown) => {
+            console.error(`[backfill] ensureEnrichment failed for "${res.placeName}":`, err);
+            return null;
           });
 
-          // Also backfill the linked SavedPlace and trigger enrichment
-          if (res.savedPlaceId) {
-            const intelligenceId = await ensureEnrichment(
-              placeResult.id, res.placeName, user.id, 'backfill', res.placeType || undefined
-            ).catch((err: unknown) => {
-              console.error(`[backfill] ensureEnrichment failed for "${res.placeName}":`, err);
-              return null;
-            });
-
-            await prisma.savedPlace.update({
-              where: { id: res.savedPlaceId },
-              data: {
-                googlePlaceId: placeResult.id,
-                googleData: placeResult as unknown as Prisma.InputJsonValue,
-                ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
-              },
-            }).catch((err: unknown) => {
-              console.error(`[backfill] Failed to update SavedPlace ${res.savedPlaceId}:`, err);
-            });
-          }
-
-          resolved++;
-          results.push({ name: res.placeName, status: 'resolved', googlePlaceId: placeResult.id });
-          console.log(`[backfill] Resolved "${res.placeName}" → ${placeResult.id}`);
-        } else {
-          failed++;
-          results.push({ name: res.placeName, status: 'no match' });
-          console.warn(`[backfill] No match for "${res.placeName}" (location: "${res.location}")`);
+          await prisma.savedPlace.update({
+            where: { id: res.savedPlaceId },
+            data: {
+              googlePlaceId: placeResult.id,
+              googleData: placeResult as unknown as Prisma.InputJsonValue,
+              ...(intelligenceId ? { placeIntelligenceId: intelligenceId } : {}),
+            },
+          }).catch((err: unknown) => {
+            console.error(`[backfill] Failed to update SavedPlace ${res.savedPlaceId}:`, err);
+          });
         }
-      } catch (err) {
+
+        resolved++;
+        results.push({ name: res.placeName, status: 'resolved', googlePlaceId: placeResult.id });
+      } else {
         failed++;
-        results.push({ name: res.placeName, status: `error: ${(err as Error).message}` });
+        results.push({ name: res.placeName, status: 'no match' });
       }
 
       // Small delay to avoid rate limiting

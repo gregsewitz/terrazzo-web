@@ -17,6 +17,8 @@ export function usePlaceResolver() {
 
   const navigateToPlace = useCallback(
     (name: string, location: string, googlePlaceId?: string, lat?: number, lng?: number) => {
+      if (typeof window === 'undefined') return;
+
       // Save scroll position so the profile page can restore it on back-nav
       sessionStorage.setItem('profile_scroll_y', String(window.scrollY));
 

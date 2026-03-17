@@ -14,10 +14,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { backfillPropertyEmbeddingV3 } from '@/lib/taste-intelligence/backfill-v3';
-import { computeMatchFromSignals } from '@/lib/taste-match-v3';
-import { computeVectorMatchFromDb, breakdownToNormalized } from '@/lib/taste-match-vectors';
+import { breakdownToNormalized } from '@/lib/taste-match-vectors';
+import { computeTasteScore, buildTasteProfileFromRadar } from '@/lib/taste-score';
 import { completeTasteFields } from '@/lib/taste-completion';
-import type { TasteProfile } from '@/types';
 
 export async function POST(req: NextRequest) {
   // Auth check — Railway must send the shared secret
@@ -168,51 +167,31 @@ export async function POST(req: NextRequest) {
         if (signals.length > 0) {
           for (const sp of savedPlaces) {
             try {
-              // v4: Try vector-first scoring
-              const vectorMatch = await computeVectorMatchFromDb(sp.user.id, googlePlaceId);
-
-              if (vectorMatch) {
-                // Vector match available — use as sole scoring source
-                const normalizedBreakdown = breakdownToNormalized(vectorMatch.breakdown);
-
-                await prisma.savedPlace.update({
-                  where: { id: sp.id },
-                  // matchExplanation: added in v4 migration — Prisma types update on next `prisma generate`
-                  data: {
-                    matchScore: vectorMatch.overallScore,
-                    matchBreakdown: normalizedBreakdown,
-                    matchExplanation: vectorMatch.explanation,
-                  } as any,
-                });
-
-                matchesUpdated++;
-                continue;
-              }
-
-              // Fallback: signal-based scoring (user has no V3 vector)
+              // Build user profile from stored radar data for signal fallback
               const profileData = sp.user.tasteProfile as any;
-              if (!profileData?.radarData) continue;
+              const userProfile = profileData?.radarData
+                ? buildTasteProfileFromRadar(profileData.radarData)
+                : undefined;
 
-              const userProfile: TasteProfile = {} as TasteProfile;
-              for (const item of profileData.radarData) {
-                if (item.axis && typeof item.value === 'number') {
-                  (userProfile as any)[item.axis] = item.value / 100;
-                }
-              }
+              const score = await computeTasteScore(
+                sp.user.id, googlePlaceId, signals, antiSignals, userProfile,
+              );
 
-              const match = computeMatchFromSignals(signals, antiSignals, userProfile);
+              if (!score) continue;
 
-              const normalizedBreakdown: Record<string, number> = {};
-              for (const [domain, score] of Object.entries(match.breakdown)) {
-                normalizedBreakdown[domain] = Math.round(score) / 100;
-              }
+              const normalizedBreakdown = score.source === 'vector'
+                ? breakdownToNormalized(score.breakdown)
+                : Object.fromEntries(
+                    Object.entries(score.breakdown).map(([k, v]) => [k, Math.round(v) / 100]),
+                  );
 
               await prisma.savedPlace.update({
                 where: { id: sp.id },
                 data: {
-                  matchScore: match.overallScore,
+                  matchScore: score.overallScore,
                   matchBreakdown: normalizedBreakdown,
-                },
+                  ...(score.explanation ? { matchExplanation: score.explanation } : {}),
+                } as any,
               });
 
               matchesUpdated++;
