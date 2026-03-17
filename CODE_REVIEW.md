@@ -18,7 +18,7 @@ These need refactoring into smaller, focused sub-components:
 | Component | Lines | Issue |
 |-----------|-------|-------|
 | `onboarding/RevealSequence.tsx` | 1,603 | Animation + data + UI interleaved |
-| `saved/page.tsx` | 1,473 | Full page logic in one file |
+| ~~`saved/page.tsx`~~ | ~~1,473~~ → 698 | **Split** — PlaceCard, CreateCollectionModal, AddToTripSheet extracted to `components/saved/` |
 | `TripMapView.tsx` | 1,364 | 40+ responsibilities, map + gestures + UI |
 | `profile/ProfileDeepDive.tsx` | 1,332 | Long component tree |
 | `profile/page.tsx` | 1,262 | Down from 1,833 — still has header + discover feed logic combined |
@@ -30,8 +30,8 @@ These need refactoring into smaller, focused sub-components:
 | `UniversalAddBar.tsx` | 710 | All add-bar variants in one file |
 
 ### 1c. Oversized hooks
-- `usePicksFilter.ts` — 30KB, ~750 lines. Should split filtering, sorting, and geo logic.
-- `useConversationPhase.ts` — 29KB, ~680 lines. The SSE stream consumer alone is 250 lines and should be its own module.
+- ~~`usePicksFilter.ts`~~ — **Split** (750 → 355 lines). Pure destination-matching functions extracted to `lib/destination-matching.ts` (333 lines).
+- ~~`useConversationPhase.ts`~~ — **Split** (692 → 415 lines). `splitSentences` and `consumeRespondStream` extracted to `lib/sse-stream-consumer.ts` (299 lines).
 - `useEmailReservations.ts` — 17KB, ~512 lines. Orchestrates too many concerns.
 
 ### 1d. Oversized API routes (>200 lines)
