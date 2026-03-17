@@ -150,6 +150,7 @@ export default function RightPanel({ activities }: RightPanelProps) {
           Map & Notes
         </span>
         <button
+          aria-label="Collapse panel"
           onClick={() => setCollapsed(true)}
           className="flex items-center justify-center cursor-pointer nav-hover"
           style={{

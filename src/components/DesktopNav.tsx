@@ -32,6 +32,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
     >
       {/* Left: Terrazzo wordmark */}
       <button
+        aria-label="Go to trips"
         onClick={() => router.push('/trips')}
         className="flex items-center bg-transparent border-none cursor-pointer"
         style={{ padding: 0 }}

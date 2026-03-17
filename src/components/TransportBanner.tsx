@@ -166,6 +166,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
         <div className="flex items-center gap-1 flex-shrink-0">
           {onEdit && (
             <button
+              aria-label="Edit transport"
               onClick={onEdit}
               className="flex items-center justify-center"
               style={{
@@ -178,6 +179,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
           )}
           {onRemove && (
             <button
+              aria-label="Remove transport"
               onClick={onRemove}
               className="flex items-center justify-center"
               style={{

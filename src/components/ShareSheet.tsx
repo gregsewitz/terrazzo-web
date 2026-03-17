@@ -165,6 +165,7 @@ export default function ShareSheet({ resourceType, resourceId, resourceName, onC
               </div>
             </div>
             <button
+              aria-label="Close share sheet"
               onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center"
               style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}

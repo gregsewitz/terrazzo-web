@@ -50,6 +50,7 @@ export default function PlaceSearchBar({ placeholder }: PlaceSearchBarProps = {}
       />
       {searchQuery && (
         <button
+          aria-label="Clear search"
           onClick={() => {
             setSearchQuery('');
             inputRef.current?.focus();

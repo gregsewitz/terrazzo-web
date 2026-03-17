@@ -39,6 +39,7 @@ import {
 } from '@/lib/discover-allocation';
 import { generateEditorialCopy } from '@/lib/discover-editorial';
 import { apiError, errorMessage } from '@/lib/api-error';
+import { flags } from '@/lib/feature-flags';
 
 const anthropic = new Anthropic();
 
@@ -523,21 +524,23 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { userProfile, lifeContext } = validation.data as any;
 
-    // Try RAG-grounded flow first
-    try {
-      const ragFeed = await generateGroundedFeed(
-        userProfile as GeneratedTasteProfile,
-        lifeContext as OnboardingLifeContext | null,
-        user.id,
-      );
+    // Try RAG-grounded flow first (controlled by FF_RAG_DISCOVER flag)
+    if (flags.RAG_DISCOVER) {
+      try {
+        const ragFeed = await generateGroundedFeed(
+          userProfile as GeneratedTasteProfile,
+          lifeContext as OnboardingLifeContext | null,
+          user.id,
+        );
 
-      if (ragFeed) {
-        // Defensive: ensure all surfaced places have enrichment triggered
-        triggerEnrichmentBatch(extractAllFeedPlaces(ragFeed), user.id, 'discover_rag').catch((err: unknown) => console.warn('[discover] triggerEnrichmentBatch failed:', err));
-        return NextResponse.json(ragFeed);
+        if (ragFeed) {
+          // Defensive: ensure all surfaced places have enrichment triggered
+          triggerEnrichmentBatch(extractAllFeedPlaces(ragFeed), user.id, 'discover_rag').catch((err: unknown) => console.warn('[discover] triggerEnrichmentBatch failed:', err));
+          return NextResponse.json(ragFeed);
+        }
+      } catch (ragError) {
+        console.error('[discover-rag] RAG flow failed, falling back to legacy:', ragError);
       }
-    } catch (ragError) {
-      console.error('[discover-rag] RAG flow failed, falling back to legacy:', ragError);
     }
 
     // Fallback: legacy LLM-only flow

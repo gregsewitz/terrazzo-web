@@ -114,6 +114,7 @@ function GhostCardInner({
               <PerriandIcon name="check" size={10} color="white" /> Add
             </button>
             <button
+              aria-label="Dismiss suggestion"
               onClick={(e) => { e.stopPropagation(); onDismiss(); }}
               className="w-6 h-6 rounded-full flex items-center justify-center transition-all nav-hover"
               style={{
