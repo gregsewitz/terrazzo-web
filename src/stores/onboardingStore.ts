@@ -2,568 +2,56 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type {
-  TasteSignal, TasteContradiction, ConversationMessage,
-  GeneratedTasteProfile, TrustedSource, GoBackPlace,
-  SeedTripInput, OnboardingLifeContext, OnboardingDepth,
-  SustainabilitySignal, TasteDomain, PropertyAnchor,
-  DomainGapCheckResult,
-} from '@/types';
-import { ALL_TASTE_DOMAINS, CORE_TASTE_DOMAINS, PREFERENCE_DIMENSIONS } from '@/types';
+import { createProgressSlice, type OnboardingProgressState } from './onboarding/progressSlice';
+import { createProfileSlice, type OnboardingProfileState } from './onboarding/profileSlice';
+import { createContextSlice, type OnboardingContextState } from './onboarding/contextSlice';
+import { createMosaicSlice, type OnboardingMosaicState } from './onboarding/mosaicSlice';
+import type { OnboardingState } from './onboarding/types';
 import {
   ACT_1_PHASE_IDS,
   ACT_2_PHASE_IDS,
   ACT_3_PHASE_IDS,
   ALL_PHASE_IDS,
-  ADAPTIVE_PHASE_IDS,
 } from '@/constants/onboarding';
-import type { ActNumber } from '@/constants/onboarding';
+import { CORE_TASTE_DOMAINS, PREFERENCE_DIMENSIONS } from '@/types';
+import { dbSave, flushSaves } from '@/lib/db-save';
+import { V2_DOMAIN_SET } from './onboarding/profileSlice';
 
-// ─── V1→V2 Domain Migration (one-time) ─────────────────────────────────────
-// Maps legacy v1 domain/category names to canonical v2 TasteDomain keys.
-// Used only by migrateStoreToV2() to remap existing signals and certainties.
-const V1_TO_V2: Record<string, TasteDomain> = {
-  // v2 domain names — identity mappings
-  'Design': 'Design', 'Atmosphere': 'Atmosphere', 'Character': 'Character',
-  'Service': 'Service', 'FoodDrink': 'FoodDrink', 'Geography': 'Geography',
-  'Wellness': 'Wellness', 'Sustainability': 'Sustainability',
-  // Display name variants the LLM may produce
-  'Design Language': 'Design', 'Design Sensibility': 'Design',
+// ─── V1→V2 Domain Migration (for selectors) ────────────────────────────
+const V1_TO_V2: Record<string, string> = {
+  'Design': 'Design',
+  'Atmosphere': 'Atmosphere',
+  'Character': 'Character',
+  'Service': 'Service',
+  'FoodDrink': 'FoodDrink',
+  'Geography': 'Geography',
+  'Wellness': 'Wellness',
+  'Sustainability': 'Sustainability',
+  'Design Language': 'Design',
+  'Design Sensibility': 'Design',
   'Character & Identity': 'Character',
-  'Service Philosophy': 'Service', 'Service Style': 'Service',
-  'Food & Drink': 'FoodDrink', 'Culinary': 'FoodDrink', 'F&B': 'FoodDrink',
-  'Location & Context': 'Geography', 'Setting & Place': 'Geography',
+  'Service Philosophy': 'Service',
+  'Service Style': 'Service',
+  'Food & Drink': 'FoodDrink',
+  'Culinary': 'FoodDrink',
+  'F&B': 'FoodDrink',
+  'Location & Context': 'Geography',
+  'Setting & Place': 'Geography',
   'Retreat & Wellbeing': 'Wellness',
   'Values & Sustainability': 'Sustainability',
 };
 
-const V2_DOMAIN_SET = new Set<string>(ALL_TASTE_DOMAINS);
-import { apiFetch } from '@/lib/api-client';
-import { dbSave, flushSaves } from '@/lib/db-save';
-
-/** Save profile data to DB with retry + error surfacing */
-function saveProfileToDB(data: Record<string, unknown>) {
-  dbSave('/api/profile/save', 'POST', data);
-}
-
-/** Milestones at which we re-synthesize the full taste profile */
-const RESYNTHESIS_MILESTONES = new Set([10, 25, 50, 75, 95]);
-
-/** Re-synthesize the full taste profile from all signals + contradictions */
-async function resynthesizeProfile() {
-  try {
-    const state = useOnboardingStore.getState();
-    const res = await apiFetch<GeneratedTasteProfile>('/api/onboarding/synthesize', {
-      method: 'POST',
-      body: JSON.stringify({
-        signals: state.allSignals,
-        messages: state.allMessages,
-        contradictions: state.allContradictions,
-        certainties: state.certainties,
-      }),
-    });
-
-    if (res && res.overallArchetype) {
-      useOnboardingStore.setState({ generatedProfile: res });
-      // Persist to DB
-      saveProfileToDB({ tasteProfile: res });
-      console.log('[mosaic] Profile re-synthesized:', res.overallArchetype);
-    }
-  } catch (err) {
-    console.warn('[mosaic] Re-synthesis failed (non-blocking):', err);
-  }
-}
-
-/** A single mosaic answer record for persistence */
-export interface MosaicAnswer {
-  questionId: number;
-  axes: Record<string, number>;   // axis deltas applied
-  signals: string[];              // signals emitted
-  answeredAt: number;             // timestamp
-}
-
-interface OnboardingState {
-  // ─── Progress ───
-  isComplete: boolean;
-  currentPhaseIndex: number;
-  completedPhaseIds: string[];
-  currentPhaseProgress: number; // 0-1, how far along the current phase conversation is
-  onboardingDepth: OnboardingDepth | null;
-
-  // ─── Taste Profiling ───
-  certainties: Record<string, number>;
-  allSignals: TasteSignal[];
-  allMessages: ConversationMessage[];
-  allContradictions: TasteContradiction[];
-  generatedProfile: GeneratedTasteProfile | null;
-
-  // ─── Sustainability Signals ───
-  sustainabilitySignals: SustainabilitySignal[];
-
-  // ─── Expand Your Mosaic ───
-  mosaicAnswers: MosaicAnswer[];      // full answer log (persisted)
-  mosaicAxes: Record<string, number>; // accumulated axis values (running totals, start at 0.5)
-
-  // ─── Life Context ───
-  lifeContext: OnboardingLifeContext;
-
-  // ─── Trip Seeding ───
-  seedTrips: SeedTripInput[];
-
-  // ─── Trusted Sources ───
-  trustedSources: TrustedSource[];
-
-  // ─── Go-Back Place ───
-  goBackPlace: GoBackPlace | null;
-
-  // ─── Property Anchors (resolved place mentions from voice onboarding) ───
-  propertyAnchors: PropertyAnchor[];
-  /** Anchors resolved during conversation but not yet shown to user for verification */
-  pendingAnchors: PropertyAnchor[];
-
-  // ─── Domain Gap Analysis (computed after Act 1) ───
-  gapCheckResult: DomainGapCheckResult | null;
-  gapCheckLoading: boolean;
-
-  // ─── 3-Act Adaptive Routing (v3) ───
-  currentAct: ActNumber;
-  skippedPhaseIds: string[];
-  act1GapResult: DomainGapCheckResult | null;
-  act2GapResult: DomainGapCheckResult | null;
-
-  // ─── Hydration ───
-  /** True once DB profile data has been loaded (or skipped for unauth users) */
-  dbHydrated: boolean;
-
-  // ─── Actions ───
-  setPhaseIndex: (index: number) => void;
-  setCurrentPhaseProgress: (progress: number) => void;
-  completePhase: (phaseId: string) => void;
-  updateCertainties: (values: Record<string, number>) => void;
-  addSignals: (signals: TasteSignal[]) => void;
-  addMessages: (messages: ConversationMessage[]) => void;
-  addContradictions: (contradictions: TasteContradiction[]) => void;
-  addSustainabilitySignals: (signals: SustainabilitySignal[]) => void;
-  setGeneratedProfile: (profile: GeneratedTasteProfile) => void;
-  setLifeContext: (update: Partial<OnboardingLifeContext>) => void;
-  addSeedTrip: (trip: SeedTripInput) => void;
-  addTrustedSource: (source: TrustedSource) => void;
-  setGoBackPlace: (place: GoBackPlace) => void;
-  addPropertyAnchors: (anchors: PropertyAnchor[]) => void;
-  removePropertyAnchor: (googlePlaceId: string) => void;
-  /** Queue anchors for end-of-phase batch verification (don't show inline) */
-  addPendingAnchors: (anchors: PropertyAnchor[]) => void;
-  /** Move all pending anchors into propertyAnchors and return them for display */
-  flushPendingAnchors: () => PropertyAnchor[];
-  /** Remove a pending anchor (user dismissed before verification) */
-  removePendingAnchor: (googlePlaceId: string) => void;
-  runDomainGapCheck: () => Promise<DomainGapCheckResult | null>;
-  setCurrentAct: (act: ActNumber) => void;
-  /** Run gap analysis after completing an act — determines which adaptive phases to skip */
-  runGapAnalysisForActTransition: (completedAct: 1 | 2) => Promise<void>;
-  finishOnboarding: (depth: OnboardingDepth) => Promise<void>;
-  setMosaicAxes: (axes: Record<string, number>) => void;
-  recordMosaicAnswer: (questionId: number, axes: Record<string, number>, signals: string[]) => void;
-  /** Manually trigger a full re-synthesis of the taste profile (e.g. after prompt updates) */
-  triggerResynthesis: () => Promise<boolean>;
-  /** Remap v1 signals/certainties to v2 domains, then re-synthesize */
-  migrateStoreToV2: () => Promise<boolean>;
-  reset: () => void;
-  /** Soft reset for "redo onboarding" — keeps all taste data & profile, only resets progress */
-  resetForRedo: () => void;
-  setDbHydrated: (hydrated: boolean) => void;
-}
-
-const INITIAL_CERTAINTIES: Record<TasteDomain, number> = {
-  // 6 Taste Domains — start low, rich signal space to fill
-  Design: 5, Atmosphere: 5, Character: 5, Service: 5, FoodDrink: 5, Geography: 5,
-  // 2 Preference Dimensions — start slightly higher, thinner signal space
-  Wellness: 10, Sustainability: 10,
-};
-
-
-const INITIAL_LIFE_CONTEXT: OnboardingLifeContext = {
-  primaryCompanions: [],
-};
+// ═══════════════════════════════════════════
+// Composed onboarding store (single store with all slices)
+// ═══════════════════════════════════════════
 
 export const useOnboardingStore = create<OnboardingState>()(
   persist(
-    (set, get) => ({
-      // ─── Initial State ───
-      isComplete: false,
-      currentPhaseIndex: 0,
-      completedPhaseIds: [],
-      currentPhaseProgress: 0,
-      onboardingDepth: null,
-      certainties: { ...INITIAL_CERTAINTIES },
-      allSignals: [],
-      allMessages: [],
-      allContradictions: [],
-      sustainabilitySignals: [],
-      generatedProfile: null,
-      mosaicAnswers: [],
-      mosaicAxes: {},
-      lifeContext: { ...INITIAL_LIFE_CONTEXT },
-      seedTrips: [],
-      trustedSources: [],
-      goBackPlace: null,
-      propertyAnchors: [],
-      pendingAnchors: [],
-      gapCheckResult: null,
-      gapCheckLoading: false,
-      currentAct: 1 as ActNumber,
-      skippedPhaseIds: [] as string[],
-      act1GapResult: null,
-      act2GapResult: null,
-      dbHydrated: false,
-
-      // ─── Actions ───
-      setPhaseIndex: (index) => set({ currentPhaseIndex: index, currentPhaseProgress: 0 }),
-
-      setCurrentPhaseProgress: (progress) => set({ currentPhaseProgress: Math.min(1, Math.max(0, progress)) }),
-
-      completePhase: (phaseId) => set((state) => ({
-        currentPhaseProgress: 1, // fill the bar when phase completes
-        completedPhaseIds: state.completedPhaseIds.includes(phaseId)
-          ? state.completedPhaseIds
-          : [...state.completedPhaseIds, phaseId],
-      })),
-
-      updateCertainties: (values) => set((state) => ({
-        certainties: { ...state.certainties, ...values },
-      })),
-
-      addSignals: (signals) => set((state) => ({
-        allSignals: [...state.allSignals, ...signals],
-      })),
-
-      addMessages: (messages) => set((state) => ({
-        allMessages: [...state.allMessages, ...messages],
-      })),
-
-      addContradictions: (contradictions) => set((state) => ({
-        allContradictions: [...state.allContradictions, ...contradictions],
-      })),
-
-      addSustainabilitySignals: (signals) => set((state) => ({
-        sustainabilitySignals: [...state.sustainabilitySignals, ...signals],
-      })),
-
-      setGeneratedProfile: (profile) => {
-        set({ generatedProfile: profile });
-        saveProfileToDB({ tasteProfile: profile });
-      },
-
-      setLifeContext: (update) => set((state) => ({
-        lifeContext: { ...state.lifeContext, ...update },
-      })),
-
-      addSeedTrip: (trip) => set((state) => ({
-        seedTrips: [...state.seedTrips, trip],
-      })),
-
-      addTrustedSource: (source) => set((state) => ({
-        trustedSources: [...state.trustedSources, source],
-      })),
-
-      setGoBackPlace: (place) => set({ goBackPlace: place }),
-
-      addPropertyAnchors: (anchors) => set((state) => {
-        // Deduplicate by googlePlaceId — keep the highest blendWeight
-        const existing = new Map(state.propertyAnchors.map((a) => [a.googlePlaceId, a]));
-        for (const anchor of anchors) {
-          const prev = existing.get(anchor.googlePlaceId);
-          if (!prev || Math.abs(anchor.blendWeight) > Math.abs(prev.blendWeight)) {
-            existing.set(anchor.googlePlaceId, anchor);
-          }
-        }
-        return { propertyAnchors: Array.from(existing.values()) };
-      }),
-
-      removePropertyAnchor: (googlePlaceId) => set((state) => ({
-        propertyAnchors: state.propertyAnchors.filter((a) => a.googlePlaceId !== googlePlaceId),
-      })),
-
-      addPendingAnchors: (anchors) => set((state) => {
-        // Deduplicate by googlePlaceId within pending list
-        const existing = new Map(state.pendingAnchors.map((a) => [a.googlePlaceId, a]));
-        for (const anchor of anchors) {
-          const prev = existing.get(anchor.googlePlaceId);
-          if (!prev || Math.abs(anchor.blendWeight) > Math.abs(prev.blendWeight)) {
-            existing.set(anchor.googlePlaceId, anchor);
-          }
-        }
-        return { pendingAnchors: Array.from(existing.values()) };
-      }),
-
-      flushPendingAnchors: () => {
-        const state = get();
-        const pending = state.pendingAnchors;
-        if (!pending.length) return [];
-        // Move pending into confirmed property anchors
-        const existingMap = new Map(state.propertyAnchors.map((a) => [a.googlePlaceId, a]));
-        for (const anchor of pending) {
-          const prev = existingMap.get(anchor.googlePlaceId);
-          if (!prev || Math.abs(anchor.blendWeight) > Math.abs(prev.blendWeight)) {
-            existingMap.set(anchor.googlePlaceId, anchor);
-          }
-        }
-        set({ propertyAnchors: Array.from(existingMap.values()), pendingAnchors: [] });
-        return pending;
-      },
-
-      removePendingAnchor: (googlePlaceId) => set((state) => ({
-        pendingAnchors: state.pendingAnchors.filter((a) => a.googlePlaceId !== googlePlaceId),
-      })),
-
-      runDomainGapCheck: async () => {
-        const state = get();
-        if (!state.allSignals.length || !state.generatedProfile?.radarData?.length) {
-          console.warn('[gap-check] Skipping — insufficient data');
-          return null;
-        }
-        set({ gapCheckLoading: true });
-        try {
-          const result = await apiFetch<DomainGapCheckResult>('/api/onboarding/domain-gap-check', {
-            method: 'POST',
-            body: JSON.stringify({
-              signals: state.allSignals,
-              radarData: state.generatedProfile.radarData,
-              existingAnchorIds: state.propertyAnchors.map((a) => a.googlePlaceId),
-            }),
-          });
-          set({ gapCheckResult: result, gapCheckLoading: false });
-          console.log('[gap-check] Result:', result?.coverage?.gapDomains?.length, 'gap domains');
-          return result;
-        } catch (err) {
-          console.error('[gap-check] Failed:', err);
-          set({ gapCheckLoading: false });
-          return null;
-        }
-      },
-
-      setCurrentAct: (act) => set({ currentAct: act }),
-
-      runGapAnalysisForActTransition: async (completedAct) => {
-        const state = get();
-        set({ gapCheckLoading: true });
-
-        try {
-          // Lightweight gap check — works from raw signals without full profile synthesis.
-          // The endpoint should handle missing radarData gracefully and compute
-          // coverage directly from signals when radarData is empty.
-          const result = await apiFetch<DomainGapCheckResult>('/api/onboarding/domain-gap-check', {
-            method: 'POST',
-            body: JSON.stringify({
-              signals: state.allSignals,
-              radarData: state.generatedProfile?.radarData ?? [],
-              existingAnchorIds: state.propertyAnchors.map((a) => a.googlePlaceId),
-            }),
-          });
-
-          if (completedAct === 1) {
-            set({ act1GapResult: result });
-            const gapDomains = result?.coverage?.gapDomains ?? [];
-            console.log('[gap-analysis] After Act 1 → cold domains:', gapDomains.length > 0 ? gapDomains : 'none');
-          } else if (completedAct === 2) {
-            set({ act2GapResult: result, gapCheckResult: result });
-
-            // If no cold domains after Act 2, skip gap-fill-reactions in Act 3
-            const gapDomains = result?.coverage?.gapDomains ?? [];
-            if (gapDomains.length === 0) {
-              set((s) => ({
-                skippedPhaseIds: [...s.skippedPhaseIds, 'gap-fill-reactions'],
-              }));
-              console.log('[gap-analysis] After Act 2 → no cold domains, skipping gap-fill-reactions');
-            } else {
-              console.log('[gap-analysis] After Act 2 → cold domains:', gapDomains);
-            }
-          }
-        } catch (err) {
-          console.error('[gap-analysis] Failed (fail-open — not skipping adaptive phases):', err);
-          // Fail-open: don't add any phases to skip list if gap check fails
-          if (completedAct === 1) {
-            set({ act1GapResult: null });
-          } else {
-            set({ act2GapResult: null });
-          }
-        } finally {
-          set({ gapCheckLoading: false });
-        }
-      },
-
-      finishOnboarding: async (depth) => {
-        set({ isComplete: true, onboardingDepth: depth });
-        const state = get();
-        saveProfileToDB({
-          tasteProfile: state.generatedProfile,
-          lifeContext: state.lifeContext,
-          allSignals: state.allSignals,
-          allContradictions: state.allContradictions,
-          sustainabilitySignals: state.sustainabilitySignals,
-          seedTrips: state.seedTrips,
-          trustedSources: state.trustedSources,
-          propertyAnchors: state.propertyAnchors,
-          completedPhaseIds: state.completedPhaseIds,
-          isOnboardingComplete: true,
-          onboardingDepth: depth,
-          // V3 act-routing state for DB persistence
-          currentAct: state.currentAct,
-          skippedPhaseIds: state.skippedPhaseIds,
-          act1GapResult: state.act1GapResult,
-          act2GapResult: state.act2GapResult,
-        });
-        // Wait for all pending saves to complete — this is the critical moment
-        await flushSaves();
-
-        // Fire-and-forget: compute taste vectors (v2.1 + v3) now that all data is persisted.
-        // v3 blends property anchor embeddings into the user's vector.
-        apiFetch('/api/onboarding/compute-vectors', { method: 'POST' })
-          .then((res) => console.log('[onboarding] Vectors computed:', res))
-          .catch((err) => console.warn('[onboarding] Vector computation failed (non-blocking):', err));
-      },
-
-      setMosaicAxes: (axes) => {
-        set({ mosaicAxes: axes });
-        // Persist to DB alongside existing mosaic data
-        const state = get();
-        saveProfileToDB({
-          mosaicData: { answers: state.mosaicAnswers, axes },
-        });
-      },
-
-      recordMosaicAnswer: (questionId, axes, signals) => {
-        const state = get();
-
-        // Build new answer record
-        const answer: MosaicAnswer = { questionId, axes, signals, answeredAt: Date.now() };
-        const newAnswers = [...state.mosaicAnswers, answer];
-
-        // Accumulate axis deltas (start at 0.5, clamp 0–1)
-        const newAxes = { ...state.mosaicAxes };
-        for (const [axis, delta] of Object.entries(axes)) {
-          const current = newAxes[axis] ?? 0.5;
-          newAxes[axis] = Math.max(0, Math.min(1, current + delta));
-        }
-
-        // Convert to TasteSignals and append to allSignals
-        const newTasteSignals: TasteSignal[] = signals.map(tag => ({
-          tag,
-          cat: 'Mosaic',
-          confidence: 0.75,
-        }));
-        const newAllSignals = [...state.allSignals, ...newTasteSignals];
-
-        set({
-          mosaicAnswers: newAnswers,
-          mosaicAxes: newAxes,
-          allSignals: newAllSignals,
-        });
-
-        // Fire-and-forget save to DB — persist signals + mosaic axes
-        saveProfileToDB({
-          allSignals: newAllSignals,
-          mosaicData: { answers: newAnswers, axes: newAxes },
-        });
-
-        // Trigger re-synthesis at milestones (non-blocking)
-        if (RESYNTHESIS_MILESTONES.has(newAnswers.length)) {
-          resynthesizeProfile();
-        }
-      },
-
-      triggerResynthesis: async () => {
-        try {
-          await resynthesizeProfile();
-          return true;
-        } catch {
-          return false;
-        }
-      },
-
-      migrateStoreToV2: async () => {
-        try {
-          const state = get();
-
-          // Remap signal categories
-          const migratedSignals = state.allSignals.map((s) => {
-            const mapped = V1_TO_V2[s.cat];
-            return mapped && mapped !== s.cat ? { ...s, cat: mapped } : s;
-          });
-
-          // Remap certainty keys — merge into v2 structure
-          const migratedCertainties: Record<string, number> = { ...INITIAL_CERTAINTIES };
-          for (const [key, value] of Object.entries(state.certainties)) {
-            const mapped = V1_TO_V2[key];
-            if (mapped) {
-              // Take the higher value when multiple v1 keys map to the same v2 domain
-              migratedCertainties[mapped] = Math.max(migratedCertainties[mapped] ?? 0, value);
-            }
-          }
-
-          // Update store with remapped data
-          set({
-            allSignals: migratedSignals,
-            certainties: migratedCertainties,
-          });
-
-          console.log('[mosaic] Store migrated to v2 taxonomy — triggering re-synthesis');
-
-          // Re-synthesize with v2-native prompts
-          await resynthesizeProfile();
-          return true;
-        } catch (err) {
-          console.error('[mosaic] V2 migration failed:', err);
-          return false;
-        }
-      },
-
-      reset: () => set({
-        isComplete: false,
-        currentPhaseIndex: 0,
-        completedPhaseIds: [],
-        currentPhaseProgress: 0,
-        onboardingDepth: null,
-        certainties: { ...INITIAL_CERTAINTIES },
-        allSignals: [],
-        allMessages: [],
-        allContradictions: [],
-        sustainabilitySignals: [],
-        generatedProfile: null,
-        mosaicAnswers: [],
-        mosaicAxes: {},
-        lifeContext: { ...INITIAL_LIFE_CONTEXT },
-        seedTrips: [],
-        trustedSources: [],
-        goBackPlace: null,
-        propertyAnchors: [],
-        pendingAnchors: [],
-        gapCheckResult: null,
-        gapCheckLoading: false,
-        currentAct: 1 as ActNumber,
-        skippedPhaseIds: [],
-        act1GapResult: null,
-        act2GapResult: null,
-      }),
-
-      resetForRedo: () => set({
-        // Only reset progress tracking — keep all taste data intact
-        isComplete: false,
-        currentPhaseIndex: 0,
-        completedPhaseIds: [],
-        currentPhaseProgress: 0,
-        onboardingDepth: null,
-        // Reset V3 act-routing state so redo starts fresh
-        currentAct: 1 as ActNumber,
-        skippedPhaseIds: [],
-        act1GapResult: null,
-        act2GapResult: null,
-        // Everything else (signals, messages, contradictions, generatedProfile,
-        // mosaicAnswers, mosaicAxes, lifeContext, seedTrips, trustedSources,
-        // goBackPlace, certainties) is intentionally preserved
-      }),
-
-      setDbHydrated: (hydrated) => set({ dbHydrated: hydrated }),
+    (...args) => ({
+      ...createProgressSlice(...args),
+      ...createProfileSlice(...args),
+      ...createContextSlice(...args),
+      ...createMosaicSlice(...args),
     }),
     {
       name: 'terrazzo-onboarding', // localStorage key
@@ -602,20 +90,18 @@ export const useOnboardingStore = create<OnboardingState>()(
 );
 
 // ─── Flush pending saves on tab close ───
-// During onboarding, profile data is saved via fire-and-forget `dbSave`.
-// If the user closes/refreshes the tab before `finishOnboarding` is called,
-// those queued writes could be lost. This listener flushes them synchronously.
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     const state = useOnboardingStore.getState();
-    // Only flush if onboarding is in progress (has signals but isn't complete)
     if (!state.isComplete && state.allSignals.length > 0) {
       flushSaves();
     }
   });
 }
 
-// ─── Selectors ───
+// ═══════════════════════════════════════════
+// Selectors
+// ═══════════════════════════════════════════
 
 export const selectCurrentPhaseId = (state: OnboardingState) =>
   ALL_PHASE_IDS[state.currentPhaseIndex] ?? null;
@@ -635,19 +121,16 @@ export const selectProfileIsComplete = (state: OnboardingState) => {
  * Checks signals (cat field) and certainty keys for non-v2 domain names.
  */
 export const selectNeedsV2Migration = (state: OnboardingState): boolean => {
-  // Check if any signal has a non-v2 category
   const hasV1Signals = state.allSignals.some(
     (s) => !V2_DOMAIN_SET.has(s.cat) && V1_TO_V2[s.cat] !== undefined
   );
   if (hasV1Signals) return true;
 
-  // Check if any certainty key is a v1 name
   const hasV1Certainties = Object.keys(state.certainties).some(
     (k) => !V2_DOMAIN_SET.has(k) && V1_TO_V2[k] !== undefined
   );
   if (hasV1Certainties) return true;
 
-  // Check if stored profile radarData has v1 axis names
   const profile = state.generatedProfile;
   if (profile?.radarData?.length) {
     const hasV1Axes = profile.radarData.some(
@@ -661,22 +144,22 @@ export const selectNeedsV2Migration = (state: OnboardingState): boolean => {
 
 // ─── Act-Completion Selectors ───
 
-/** Current phase ID */
 export const selectCurrentPhaseIdV2 = (state: OnboardingState) =>
   ALL_PHASE_IDS[state.currentPhaseIndex] ?? null;
 
-/** Whether Act 1 "Quick Read" is complete (all 4 structured phases done) */
 export const selectIsAct1Complete2 = (state: OnboardingState) =>
   ACT_1_PHASE_IDS.every((id) => state.completedPhaseIds.includes(id));
 
-/** Whether Act 2 "Your Story" is complete (7 voice + structured phases) */
 export const selectIsAct2Complete2 = (state: OnboardingState) =>
   ACT_2_PHASE_IDS.every((id) =>
     state.completedPhaseIds.includes(id) || state.skippedPhaseIds.includes(id)
   );
 
-/** Whether Act 3 "Deep Taste" is complete (14 deep taste phases) */
 export const selectIsAct3Complete = (state: OnboardingState) =>
   ACT_3_PHASE_IDS.every((id) =>
     state.completedPhaseIds.includes(id) || state.skippedPhaseIds.includes(id)
   );
+
+// ─── Re-exports ───
+
+export type { MosaicAnswer } from './onboarding/mosaicSlice';
