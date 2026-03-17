@@ -1033,7 +1033,7 @@ export function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                       fontFamily: FONT.serif, fontSize: 18, fontStyle: 'italic',
                       color: TEXT.primary,
                     }}>
-                      {trip.destination}
+                      {trip.name || trip.destinations?.map(d => d.name).join(' & ') || trip.destination || '—'}
                     </div>
                     {trip.dates && (
                       <div style={{ fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary, marginTop: 3 }}>
@@ -1054,8 +1054,8 @@ export function SeedTripsReveal({ seedTrips }: { seedTrips: SeedTripInput[] }) {
                   fontFamily: FONT.sans, fontSize: 12, color: TEXT.secondary,
                   display: 'flex', alignItems: 'center', gap: 6,
                 }}>
-                  <span>{trip.travelContext}</span>
-                  <span style={{ color: TEXT.secondary }}>·</span>
+                  {trip.travelContext && <span>{trip.travelContext}</span>}
+                  {trip.travelContext && <span style={{ color: TEXT.secondary }}>·</span>}
                   <span>{trip.seedSource === 'onboarding_planning' ? 'upcoming' : 'dream'}</span>
                 </div>
               </div>

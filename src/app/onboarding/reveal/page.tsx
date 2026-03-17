@@ -71,7 +71,7 @@ export default function RevealPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--t-cream)]">
+    <div className="h-dvh overflow-hidden bg-[var(--t-cream)]">
       <RevealSequence profile={generatedProfile} onComplete={handleComplete} />
     </div>
   );
