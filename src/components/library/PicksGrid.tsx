@@ -7,7 +7,7 @@ import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/type
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
-import FilterSortBar from './ui/FilterSortBar';
+import FilterSortBar from '../ui/FilterSortBar';
 import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS } from '@/constants/picksFilters';
 import { SignalResonanceStrip } from '@/components/intelligence';

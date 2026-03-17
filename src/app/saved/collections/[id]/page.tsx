@@ -2,20 +2,20 @@
 
 import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import TabBar from '@/components/TabBar';
+import TabBar from '@/components/ui/TabBar';
 import { useSavedStore } from '@/stores/savedStore';
 import { REACTIONS, ImportedPlace, PlaceType, SOURCE_STYLES } from '@/types';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import GoogleMapView from '@/components/GoogleMapView';
-import ShareSheet from '@/components/ShareSheet';
-import DesktopNav from '@/components/DesktopNav';
+import GoogleMapView from '@/components/maps/GoogleMapView';
+import ShareSheet from '@/components/trip/ShareSheet';
+import DesktopNav from '@/components/ui/DesktopNav';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
-import AddPlacesToCollectionSheet from '@/components/AddPlacesToCollectionSheet';
-import BrandLoader from '@/components/BrandLoader';
+import AddPlacesToCollectionSheet from '@/components/library/AddPlacesToCollectionSheet';
+import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { getDisplayLocation } from '@/lib/place-display';
 import { smartTruncate } from '@/lib/smart-truncate';

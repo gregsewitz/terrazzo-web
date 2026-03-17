@@ -4,10 +4,10 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { ImportedPlace, PlaceRating } from '@/types';
 import { useSavedStore } from '@/stores/savedStore';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import PlaceDetailSheet from '@/components/PlaceDetailSheet';
-import RatingSheet from '@/components/RatingSheet';
+import PlaceDetailSheet from '@/components/place/PlaceDetailSheet';
+import RatingSheet from '@/components/place/RatingSheet';
 import BriefingView from '@/components/briefing-view';
-import AddToCollectionSheet from '@/components/AddToCollectionSheet';
+import AddToCollectionSheet from '@/components/library/AddToCollectionSheet';
 
 // ─── Module-level bridge for PlaceLink ───
 // React context can fail in Next.js when modules are duplicated across chunks.

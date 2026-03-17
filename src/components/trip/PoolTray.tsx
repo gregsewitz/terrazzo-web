@@ -7,7 +7,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconName } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import FilterSortBar from './ui/FilterSortBar';
+import FilterSortBar from '../ui/FilterSortBar';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;

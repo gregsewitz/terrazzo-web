@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk, Space_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
-import GlobalImportUI from "@/components/GlobalImportUI";
-import UniversalAddBar from "@/components/UniversalAddBar";
-import StoreHydration from "@/components/StoreHydration";
-import EnrichmentWatcher from "@/components/EnrichmentWatcher";
-import SaveIndicator from "@/components/SaveIndicator";
+import GlobalImportUI from "@/components/add-bar/GlobalImportUI";
+import UniversalAddBar from "@/components/add-bar/UniversalAddBar";
+import StoreHydration from "@/components/ui/StoreHydration";
+import EnrichmentWatcher from "@/components/place/EnrichmentWatcher";
+import SaveIndicator from "@/components/place/SaveIndicator";
 import { AuthProvider } from "@/context/AuthContext";
-import MapsProvider from "@/components/MapsProvider";
+import MapsProvider from "@/components/maps/MapsProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],

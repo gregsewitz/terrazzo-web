@@ -8,7 +8,7 @@ import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { formatDomain } from '@/constants/profile';
 import type { TasteProfile as NumericProfile } from '@/types';
-import PipelineProgress from '@/components/PipelineProgress';
+import PipelineProgress from '@/components/place/PipelineProgress';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import {
   FadeInSection,
@@ -28,7 +28,7 @@ import {
   ImportedPlace,
 } from '@/types';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { ClusterInsightCard } from '@/components/ClusterInsightCard';
+import { ClusterInsightCard } from '@/components/place/ClusterInsightCard';
 import { HeritageCard } from '@/components/intelligence/HeritageCard';
 import { SeasonalityBadge } from '@/components/intelligence/SeasonalityBadge';
 import { ValueBadge } from '@/components/intelligence/ValueBadge';

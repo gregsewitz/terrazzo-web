@@ -12,11 +12,11 @@ import { useTripStore } from '@/stores/tripStore';
 import type { ImportedPlace } from '@/types';
 
 // Sub-components (extracted from this file)
-import { searchLibrary } from './add-bar/AddBarShared';
-import AddBarSearch from './add-bar/AddBarSearch';
-import AddBarImport from './add-bar/AddBarImport';
-import AddBarPreview from './add-bar/AddBarPreview';
-import AddBarCollections, { AddBarCollectionsCTA } from './add-bar/AddBarCollections';
+import { searchLibrary } from './AddBarShared';
+import AddBarSearch from './AddBarSearch';
+import AddBarImport from './AddBarImport';
+import AddBarPreview from './AddBarPreview';
+import AddBarCollections, { AddBarCollectionsCTA } from './AddBarCollections';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT

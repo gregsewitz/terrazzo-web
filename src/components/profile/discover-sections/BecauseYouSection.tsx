@@ -1,7 +1,7 @@
 import { SafeMotionDiv } from '@/components/animations/AnimatedElements';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import ScoreArc from '@/components/profile/ScoreArc';
-import PlaceLink from '@/components/PlaceLink';
+import PlaceLink from '@/components/place/PlaceLink';
 import { BECAUSE_YOU_CARDS, type BecauseYouCard } from '@/constants/discover';
 import { DIMENSION_COLORS } from '@/constants/profile';
 import { COLOR, FONT } from '@/constants/theme';

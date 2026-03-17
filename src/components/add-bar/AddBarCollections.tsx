@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import PlacePhoto from '@/components/PlacePhoto';
+import PlacePhoto from '@/components/place/PlacePhoto';
 import { SectionHeader } from './AddBarShared';
 import CollectionPickerList from '@/components/ui/CollectionPickerList';
 import type { ImportedPlace, Collection } from '@/types';

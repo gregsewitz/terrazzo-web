@@ -1,6 +1,6 @@
 'use client';
 
-import FloatingImportBar from '@/components/FloatingImportBar';
+import FloatingImportBar from '@/components/add-bar/FloatingImportBar';
 
 /**
  * GlobalImportUI — client component wrapper that renders the floating

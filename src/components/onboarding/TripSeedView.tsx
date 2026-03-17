@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { SeedTripInput, TravelContext, GeoDestination } from '@/types';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import DestinationInput, { type Destination } from '@/components/DestinationInput';
+import DestinationInput, { type Destination } from '@/components/trip/DestinationInput';
 import { FONT, INK } from '@/constants/theme';
 
 interface TripSeedViewProps {

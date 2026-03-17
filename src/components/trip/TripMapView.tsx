@@ -3,8 +3,8 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
-import GoogleMapView from '@/components/GoogleMapView';
-import type { MapMarker } from '@/components/GoogleMapView';
+import GoogleMapView from '@/components/maps/GoogleMapView';
+import type { MapMarker } from '@/components/maps/GoogleMapView';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, TEXT, INK } from '@/constants/theme';
 import { SOURCE_STYLES, GhostSourceType, ImportedPlace } from '@/types';

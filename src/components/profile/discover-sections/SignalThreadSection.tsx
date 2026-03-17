@@ -1,6 +1,6 @@
 import { SafeMotionDiv } from '@/components/animations/AnimatedElements';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import PlaceLink from '@/components/PlaceLink';
+import PlaceLink from '@/components/place/PlaceLink';
 import { SIGNAL_THREAD, type SignalThread } from '@/constants/discover';
 import { DIMENSION_COLORS } from '@/constants/profile';
 import { COLOR, FONT, INK } from '@/constants/theme';

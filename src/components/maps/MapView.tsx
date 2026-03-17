@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { SOURCE_STYLES } from '@/types';
-import GoogleMapView from '@/components/GoogleMapView';
-import type { MapMarker } from '@/components/GoogleMapView';
+import GoogleMapView from '@/components/maps/GoogleMapView';
+import type { MapMarker } from '@/components/maps/GoogleMapView';
 import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface MapViewProps {

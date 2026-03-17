@@ -6,7 +6,7 @@ import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, P
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
-import FilterSortBar from './ui/FilterSortBar';
+import FilterSortBar from '../ui/FilterSortBar';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { getDisplayLocation } from '@/lib/place-display';

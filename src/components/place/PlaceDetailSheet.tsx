@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ImportedPlace } from '@/types';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import PlaceDetailContent from '@/components/PlaceDetailContent';
+import PlaceDetailContent from '@/components/place/PlaceDetailContent';
 
 interface PlaceDetailSheetProps {
   item: ImportedPlace;

@@ -1,17 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import PageTransition from '@/components/PageTransition';
+import PageTransition from '@/components/ui/PageTransition';
 import { useTripStore } from '@/stores/tripStore';
 import { useRouter } from 'next/navigation';
-import TabBar from '@/components/TabBar';
-import DesktopNav from '@/components/DesktopNav';
-import ProfileAvatar from '@/components/ProfileAvatar';
+import TabBar from '@/components/ui/TabBar';
+import DesktopNav from '@/components/ui/DesktopNav';
+import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
-import BrandLoader from '@/components/BrandLoader';
+import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
 export default function TripsPage() {

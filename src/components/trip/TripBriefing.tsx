@@ -10,9 +10,9 @@ import { FONT, INK, TEXT, COLOR, SECTION } from '@/constants/theme';
 import { useTripWeather } from '@/hooks/useTripWeather';
 import {
   SectionHeader, PlaceCard, DayCard, Stat, WeatherSection, DestinationHero,
-} from './trip-briefing/sections';
-import { useBriefingData } from './trip-briefing/useBriefingData';
-import { formatDateLong, TYPE_LABELS } from './trip-briefing/helpers';
+} from '../trip-briefing/sections';
+import { useBriefingData } from '../trip-briefing/useBriefingData';
+import { formatDateLong, TYPE_LABELS } from '../trip-briefing/helpers';
 
 // ─── Props ───
 

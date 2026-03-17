@@ -1,7 +1,7 @@
 import { SafeMotionDiv } from '@/components/animations/AnimatedElements';
 import ScoreArc from '@/components/profile/ScoreArc';
-import PlacePhoto from '@/components/PlacePhoto';
-import PlaceLink from '@/components/PlaceLink';
+import PlacePhoto from '@/components/place/PlacePhoto';
+import PlaceLink from '@/components/place/PlaceLink';
 import { WEEKLY_COLLECTION, type CollectionPlace } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { DIMENSION_COLORS } from '@/constants/profile';

@@ -1,7 +1,7 @@
 import { SafeMotionDiv } from '@/components/animations/AnimatedElements';
 import ScoreArc from '@/components/profile/ScoreArc';
-import PlacePhoto from '@/components/PlacePhoto';
-import PlaceLink from '@/components/PlaceLink';
+import PlacePhoto from '@/components/place/PlacePhoto';
+import PlaceLink from '@/components/place/PlaceLink';
 import { MOOD_BOARDS, type MoodBoard } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { COLOR, FONT } from '@/constants/theme';

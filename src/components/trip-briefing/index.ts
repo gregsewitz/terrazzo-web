@@ -1,1 +1,1 @@
-export { default } from '../TripBriefing';
+export { default } from '../trip/TripBriefing';

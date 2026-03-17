@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import PlaceDetailContent from '@/components/PlaceDetailContent';
-import TabBar from '@/components/TabBar';
-import DesktopNav from '@/components/DesktopNav';
+import PlaceDetailContent from '@/components/place/PlaceDetailContent';
+import TabBar from '@/components/ui/TabBar';
+import DesktopNav from '@/components/ui/DesktopNav';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useAuth } from '@/context/AuthContext';

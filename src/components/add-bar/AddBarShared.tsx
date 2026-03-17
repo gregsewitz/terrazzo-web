@@ -2,7 +2,7 @@
 
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import PlacePhoto from '@/components/PlacePhoto';
+import PlacePhoto from '@/components/place/PlacePhoto';
 import type { ImportedPlace } from '@/types';
 
 // ─── Type badge color ───────────────────────────────────────────────────────

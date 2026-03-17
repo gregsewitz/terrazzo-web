@@ -7,9 +7,9 @@ import { PHOTO_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/plac
 import { formatDomain } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
-import PipelineProgress from '@/components/PipelineProgress';
+import PipelineProgress from '@/components/place/PipelineProgress';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import PlacePhoto from '@/components/PlacePhoto';
+import PlacePhoto from '@/components/place/PlacePhoto';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar, AnimatedNumber, AnimatedScoreArc } from '@/components/animations/AnimatedElements';

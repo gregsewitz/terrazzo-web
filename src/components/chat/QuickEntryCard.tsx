@@ -5,7 +5,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import type { QuickEntry, QUICK_ENTRY_CATEGORY_ICONS } from '@/types';
 import { QUICK_ENTRY_CATEGORY_ICONS as CATEGORY_ICONS } from '@/types';
-import { formatTime12h } from './PlaceTimeEditor';
+import { formatTime12h } from '../place/PlaceTimeEditor';
 
 // ─── Component ──────────────────────────────────────────────────────────
 

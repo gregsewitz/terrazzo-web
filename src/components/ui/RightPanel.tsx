@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import GoogleMapView from '@/components/GoogleMapView';
-import type { MapMarker } from '@/components/GoogleMapView';
-import ActivityFeed from '@/components/ActivityFeed';
+import GoogleMapView from '@/components/maps/GoogleMapView';
+import type { MapMarker } from '@/components/maps/GoogleMapView';
+import ActivityFeed from '@/components/chat/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import DreamBoard from '@/components/DreamBoard';
 import { FONT, INK, TEXT } from '@/constants/theme';

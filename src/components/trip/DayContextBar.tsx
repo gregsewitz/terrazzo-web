@@ -2,8 +2,8 @@
 
 import { useState, memo, useCallback } from 'react';
 import { Trip, TripDay, SOURCE_STYLES, HotelInfo, TransportEvent, ImportedPlace } from '@/types';
-import GoogleMapView from '@/components/GoogleMapView';
-import type { MapMarker } from '@/components/GoogleMapView';
+import GoogleMapView from '@/components/maps/GoogleMapView';
+import type { MapMarker } from '@/components/maps/GoogleMapView';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
 import HotelInput from './HotelInput';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';

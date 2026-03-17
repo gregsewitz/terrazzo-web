@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import PlaceSearchInput from './PlaceSearchInput';
-import type { PlaceSearchResult } from './PlaceSearchInput';
+import PlaceSearchInput from '../place/PlaceSearchInput';
+import type { PlaceSearchResult } from '../place/PlaceSearchInput';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { extractDestinationFromGooglePlace, isGeographicPlace } from '@/lib/destination-helpers';

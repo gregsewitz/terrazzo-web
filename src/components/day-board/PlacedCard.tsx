@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import PlaceTimeEditor from '../PlaceTimeEditor';
+import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
 import type { Reaction } from '@/stores/collaborationStore';

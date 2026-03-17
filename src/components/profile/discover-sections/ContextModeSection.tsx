@@ -1,8 +1,8 @@
 import { SafeMotionDiv } from '@/components/animations/AnimatedElements';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import ScoreArc from '@/components/profile/ScoreArc';
-import PlacePhoto from '@/components/PlacePhoto';
-import PlaceLink from '@/components/PlaceLink';
+import PlacePhoto from '@/components/place/PlacePhoto';
+import PlaceLink from '@/components/place/PlaceLink';
 import { SUMMER_RECS, type ContextRec } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { COLOR, FONT } from '@/constants/theme';

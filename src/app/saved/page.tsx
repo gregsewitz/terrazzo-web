@@ -2,23 +2,23 @@
 
 import { motion } from 'framer-motion';
 import { useMemo, useState, useCallback } from 'react';
-import PageTransition from '@/components/PageTransition';
+import PageTransition from '@/components/ui/PageTransition';
 import { useRouter } from 'next/navigation';
-import TabBar from '@/components/TabBar';
-import DesktopNav from '@/components/DesktopNav';
-import ProfileAvatar from '@/components/ProfileAvatar';
-import CollectionCard from '@/components/CollectionCard';
+import TabBar from '@/components/ui/TabBar';
+import DesktopNav from '@/components/ui/DesktopNav';
+import ProfileAvatar from '@/components/profile/ProfileAvatar';
+import CollectionCard from '@/components/library/CollectionCard';
 import { useSavedStore } from '@/stores/savedStore';
 import { useTripStore } from '@/stores/tripStore';
 import { PlaceType, ImportedPlace, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import PlaceSearchBar from '@/components/PlaceSearchBar';
+import PlaceSearchBar from '@/components/place/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import BrandLoader from '@/components/BrandLoader';
+import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { PlaceCard, CreateCollectionModal, AddToTripSheet } from '@/components/saved';
 

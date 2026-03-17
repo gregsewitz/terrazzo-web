@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import DestinationAllocator from '@/components/DestinationAllocator';
+import DestinationAllocator from '@/components/trip/DestinationAllocator';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 

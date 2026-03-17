@@ -16,7 +16,7 @@ import {
 import type { TasteProfile as ProfileShape } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
-import PlaceLink from '@/components/PlaceLink';
+import PlaceLink from '@/components/place/PlaceLink';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import type { TasteProfile as NumericProfile, GeneratedTasteProfile } from '@/types';
 import {
