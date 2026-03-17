@@ -21,18 +21,18 @@ These need refactoring into smaller, focused sub-components:
 | ~~`saved/page.tsx`~~ | ~~1,473~~ → 698 | **Split** — PlaceCard, CreateCollectionModal, AddToTripSheet extracted to `components/saved/` |
 | ~~`TripMapView.tsx`~~ | ~~1,364~~ → 757 | **Split** — 5 card components + shared types extracted to `components/trip-map/` |
 | ~~`profile/ProfileDeepDive.tsx`~~ | ~~1,332~~ → 64 | **Split** — 15 section components extracted to `profile/sections.tsx` |
-| `profile/page.tsx` | 1,262 | Down from 1,833 — still has header + discover feed logic combined |
-| `TripBriefing.tsx` | 1,020 | Briefing data + rendering combined |
-| `DayBoardView.tsx` | 957 | Complex drag/drop + state |
-| `BriefingView.tsx` | 835 | Multiple concerns |
-| `PlaceDetailContent.tsx` | 744 | Intelligence + place data mixed |
-| `DreamBoard.tsx` | 718 | Interaction + animation mixed |
-| `UniversalAddBar.tsx` | 710 | All add-bar variants in one file |
+| ~~`profile/page.tsx`~~ | ~~1,262~~ → 705 | **Split** — `useDiscoverFeed` hook + `SettingsPanel` component extracted |
+| ~~`TripBriefing.tsx`~~ | ~~1,020~~ → 335 | **Split** — helpers, `useBriefingData` hook, 7 section components extracted to `trip-briefing/` |
+| ~~`DayBoardView.tsx`~~ | ~~957~~ → 768 | **Split** — `PlacedCard` + `SlotContainer` extracted to `day-board/` |
+| ~~`BriefingView.tsx`~~ | ~~835~~ → 654 | **Split** — 6 sub-components + helper extracted to `briefing-view/cards.tsx` |
+| ~~`PlaceDetailContent.tsx`~~ | ~~744~~ → 651 | **Split** — data-fetching logic extracted to `usePlaceDetailData` hook |
+| ~~`DreamBoard.tsx`~~ | ~~718~~ → 312 | **Split** — helpers + 3 sub-components extracted to `dream-board/` |
+| ~~`UniversalAddBar.tsx`~~ | 710 | **Already split** — 5 sub-components in `add-bar/`; orchestrator is dense but appropriate |
 
 ### 1c. Oversized hooks
 - ~~`usePicksFilter.ts`~~ — **Split** (750 → 355 lines). Pure destination-matching functions extracted to `lib/destination-matching.ts` (333 lines).
 - ~~`useConversationPhase.ts`~~ — **Split** (692 → 415 lines). `splitSentences` and `consumeRespondStream` extracted to `lib/sse-stream-consumer.ts` (299 lines).
-- `useEmailReservations.ts` — 17KB, ~512 lines. Orchestrates too many concerns.
+- `useEmailReservations.ts` — 512 lines. Reviewed: already well-factored with pure logic in `lib/email-reservations-helpers.ts`. Remaining lines are tightly coupled React state — no further extraction worthwhile.
 
 ### 1d. Oversized API routes (>200 lines)
 12 routes exceed 200 lines. The worst offenders:
