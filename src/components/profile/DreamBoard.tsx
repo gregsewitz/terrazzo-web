@@ -5,8 +5,8 @@ import { useTripStore } from '@/stores/tripStore';
 import { DreamBoardEntry, DreamBoardEntryType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { VIBE_COLORS, getVibeBg, isUrl, extractDomain } from './dream-board/helpers';
-import { DreamBoardCard } from './dream-board/cards';
+import { VIBE_COLORS, getVibeBg, isUrl, extractDomain } from '../dream-board/helpers';
+import { DreamBoardCard } from '../dream-board/cards';
 
 // ─── Entry type config ───
 const ENTRY_TYPES: { type: DreamBoardEntryType; label: string; icon: PerriandIconName; placeholder: string }[] = [

@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useBriefing } from '@/hooks/useBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
+import { TerrazzoMosaic } from '@/components/profile/TerrazzoMosaic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { formatDomain } from '@/constants/profile';

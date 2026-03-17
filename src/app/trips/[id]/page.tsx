@@ -31,7 +31,7 @@ import DayBoardView from '@/components/trip/DayBoardView';
 import PicksGrid from '@/components/library/PicksGrid';
 import PicksRail from '@/components/library/PicksRail';
 import RightPanel from '@/components/ui/RightPanel';
-import DreamBoard from '@/components/DreamBoard';
+import DreamBoard from '@/components/profile/DreamBoard';
 import GraduateModal from '@/components/profile/GraduateModal';
 import TripMapView from '@/components/trip/TripMapView';
 import OverviewItinerary from '@/components/trip/OverviewItinerary';

@@ -6,7 +6,7 @@ import { getPlaceImage } from '@/constants/placeImages';
 import { PHOTO_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import { formatDomain } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
+import { TerrazzoMosaic, MosaicLegend } from '@/components/profile/TerrazzoMosaic';
 import PipelineProgress from '@/components/place/PipelineProgress';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import PlacePhoto from '@/components/place/PlacePhoto';

@@ -6,7 +6,7 @@ import GoogleMapView from '@/components/maps/GoogleMapView';
 import type { MapMarker } from '@/components/maps/GoogleMapView';
 import ActivityFeed from '@/components/chat/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import DreamBoard from '@/components/DreamBoard';
+import DreamBoard from '@/components/profile/DreamBoard';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
 import type { Activity } from '@/stores/collaborationStore';

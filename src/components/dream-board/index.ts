@@ -1,1 +1,1 @@
-export { default } from '../DreamBoard';
+export { default } from '../profile/DreamBoard';

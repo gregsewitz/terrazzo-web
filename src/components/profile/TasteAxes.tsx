@@ -8,7 +8,7 @@
  */
 
 import { TasteProfile } from '@/types';
-import { TerrazzoMosaic, MosaicLegend } from '@/components/TerrazzoMosaic';
+import { TerrazzoMosaic, MosaicLegend } from '@/components/profile/TerrazzoMosaic';
 
 interface TasteAxesProps {
   profile: TasteProfile;

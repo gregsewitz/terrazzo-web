@@ -11,7 +11,7 @@ import DesktopNav from '@/components/ui/DesktopNav';
 import ProfileDeepDive from '@/components/profile/ProfileDeepDive';
 import ExpandMosaicView from '@/components/profile/ExpandMosaicView';
 import WrappedExperience from '@/components/wrapped/WrappedExperience';
-import { TerrazzoMosaic } from '@/components/TerrazzoMosaic';
+import { TerrazzoMosaic } from '@/components/profile/TerrazzoMosaic';
 import { TASTE_PROFILE, DIMENSION_COLORS } from '@/constants/profile';
 import type { TasteProfile as NumericProfile, ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
