@@ -6,7 +6,7 @@ import { useSavedStore } from '@/stores/savedStore';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import PlaceDetailSheet from '@/components/PlaceDetailSheet';
 import RatingSheet from '@/components/RatingSheet';
-import BriefingView from '@/components/BriefingView';
+import BriefingView from '@/components/briefing-view';
 import AddToCollectionSheet from '@/components/AddToCollectionSheet';
 
 // ─── Module-level bridge for PlaceLink ───
