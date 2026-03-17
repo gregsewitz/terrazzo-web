@@ -56,7 +56,7 @@ export const DELETE = apiHandler(async (req: NextRequest, { params }: { params: 
     prisma.shareLink.updateMany({
       where: {
         userId: user.id,
-        resourceType: 'shortlist',
+        resourceType: 'collection',
         resourceId: id,
         isActive: true,
       },
