@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const parseResults = await parseEmailBatch(messages, 3);
 
     // ── Resolve Google Places for each extracted reservation ─────────────
-    const reservationsToCreate: Parameters<typeof prisma.emailReservation.create>[0]['data'][] = [];
+    const reservationsToCreate: any[] = [];
 
     for (const result of parseResults) {
       if (result.skipped || result.reservations.length === 0) continue;
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       });
 
       const matches = matchReservationsToTrips(
-        reservations.map((r) => ({
+        reservations.map((r: any) => ({
           id: r.id,
           placeName: r.placeName,
           placeType: r.placeType,
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
           departureAirport: r.departureAirport,
           arrivalAirport: r.arrivalAirport,
         })),
-        trips.map((t) => ({
+        trips.map((t: any) => ({
           id: t.id,
           name: t.name,
           location: t.location,
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
       scanId,
       parsed: messages.length,
       reservationsCreated: created.length,
-      reservations: stagedReservations.map((r) => ({
+      reservations: stagedReservations.map((r: any) => ({
         id: r.id,
         status: r.status,
         placeName: r.placeName,

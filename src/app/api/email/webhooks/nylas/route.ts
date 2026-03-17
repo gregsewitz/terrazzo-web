@@ -312,7 +312,7 @@ async function handleWebhookEvent(payload: NylasWebhookPayload) {
 
       if (trips.length > 0) {
         const matches = matchReservationsToTrips(
-          reservations.map((r) => ({
+          reservations.map((r: any) => ({
             id: r.id,
             placeName: r.placeName,
             placeType: r.placeType,
@@ -324,7 +324,7 @@ async function handleWebhookEvent(payload: NylasWebhookPayload) {
             departureAirport: r.departureAirport,
             arrivalAirport: r.arrivalAirport,
           })),
-          trips.map((t) => ({
+          trips.map((t: any) => ({
             id: t.id,
             name: t.name,
             location: t.location,

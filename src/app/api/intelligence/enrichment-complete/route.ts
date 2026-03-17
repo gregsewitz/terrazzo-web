@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
         for (const [userId, userPlaces] of byUser) {
           try {
             const count = await completeTasteFields(
-              userPlaces.map(sp => ({
+              userPlaces.map((sp: any) => ({
                 savedPlaceId: sp.id,
                 name: sp.name,
                 type: sp.type,

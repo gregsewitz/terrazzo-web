@@ -164,6 +164,7 @@ export async function POST(request: NextRequest) {
         // ── 5. Cross-reference against user's library ─────────────────────
         // Tag each place with alreadyInLibrary + existing source info so the
         // frontend can show "Already in your library (from Infatuation)"
+        type ExistingPlace = { googlePlaceId: string; source: string | null; importSources: string[] | null };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let finalPlaces: any[] = mergedPlaces;
         const user = await getUser(request);
@@ -183,8 +184,8 @@ export async function POST(request: NextRequest) {
               select: { googlePlaceId: true, source: true, importSources: true },
             });
 
-            const existingByGoogleId = new Map(
-              existingPlaces.map((p) => [p.googlePlaceId, p]),
+            const existingByGoogleId = new Map<string, ExistingPlace>(
+              existingPlaces.map((p: any) => [p.googlePlaceId, p]),
             );
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

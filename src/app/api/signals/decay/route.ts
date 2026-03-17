@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const now = new Date();
 
   // Compute decay for each signal
-  const decayedSignals = signals.map((sig) => {
+  const decayedSignals = signals.map((sig: any) => {
     const extractedAt = sig.extractedAt || sig.createdAt;
     const ageInDays = computeSignalAge(extractedAt, now);
     const decayed = decayConfidence(sig.confidence, extractedAt, 180, now);
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   });
 
   // Update decayed values in DB (batch)
-  const updates = decayedSignals.map((s) =>
+  const updates = decayedSignals.map((s: any) =>
     prisma.tasteNode.update({
       where: { id: s.id },
       data: {
@@ -64,12 +64,12 @@ export async function GET(req: NextRequest) {
 
   // Trajectory detection: split signals into recent (0-90 days) vs older (90-270 days)
   const recentSignals = decayedSignals
-    .filter((s) => s.ageInDays <= 90)
-    .map((s) => ({ domain: s.domain, signal: s.signal, confidence: s.originalConfidence }));
+    .filter((s: any) => s.ageInDays <= 90)
+    .map((s: any) => ({ domain: s.domain, signal: s.signal, confidence: s.originalConfidence }));
 
   const olderSignals = decayedSignals
-    .filter((s) => s.ageInDays > 90 && s.ageInDays <= 270)
-    .map((s) => ({ domain: s.domain, signal: s.signal, confidence: s.originalConfidence }));
+    .filter((s: any) => s.ageInDays > 90 && s.ageInDays <= 270)
+    .map((s: any) => ({ domain: s.domain, signal: s.signal, confidence: s.originalConfidence }));
 
   let trajectory = null;
   if (recentSignals.length >= 3 && olderSignals.length >= 3) {
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     // Persist trajectory shifts
     if (trajectory.shifts.length > 0) {
       await prisma.tasteTrajectoryShift.createMany({
-        data: trajectory.shifts.map((shift) => ({
+        data: trajectory.shifts.map((shift: any) => ({
           userId,
           domain: shift.domain,
           fromPattern: shift.fromPattern,
@@ -103,10 +103,10 @@ export async function GET(req: NextRequest) {
     trajectory,
     summary: {
       total: decayedSignals.length,
-      agedOut: decayedSignals.filter((s) => s.isAgedOut).length,
+      agedOut: decayedSignals.filter((s: any) => s.isAgedOut).length,
       avgDecayedConfidence:
         Math.round(
-          (decayedSignals.reduce((sum, s) => sum + s.decayedConfidence, 0) / decayedSignals.length) * 1000
+          (decayedSignals.reduce((sum: any, s: any) => sum + s.decayedConfidence, 0) / decayedSignals.length) * 1000
         ) / 1000,
     },
   });

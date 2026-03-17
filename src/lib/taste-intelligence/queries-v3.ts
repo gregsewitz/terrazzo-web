@@ -57,14 +57,14 @@ export async function findSimilarPropertiesV3(
   );
 
   return results
-    .map((r) => ({
+    .map((r: any) => ({
       id: r.id,
       googlePlaceId: r.googlePlaceId,
       propertyName: r.propertyName,
       similarity: 1 - r.distance,
       score: Math.round((1 - r.distance) * 100),
     }))
-    .filter((r) => r.score >= minScore);
+    .filter((r: any) => r.score >= minScore);
 }
 
 // ─── TG-05: User Nearest Neighbors (v3) ────────────────────────────────────
@@ -94,7 +94,7 @@ export async function findTasteNeighborsV3(
     limit,
   );
 
-  return results.map((r) => ({
+  return results.map((r: any) => ({
     id: r.id,
     name: r.name,
     similarity: 1 - r.distance,
@@ -131,7 +131,7 @@ export async function findSimilarPropertiesToPropertyV3(
     limit,
   );
 
-  return results.map((r) => ({
+  return results.map((r: any) => ({
     id: r.id,
     googlePlaceId: r.googlePlaceId,
     propertyName: r.propertyName,
@@ -241,7 +241,7 @@ export async function findDomainExemplars(
   );
 
   // Return top N with score
-  return results.slice(0, limit).map((r) => {
+  return results.slice(0, limit).map((r: any) => {
     const similarity = Math.round((1 - r.distance) * 100) / 100;
     return {
       id: r.id,

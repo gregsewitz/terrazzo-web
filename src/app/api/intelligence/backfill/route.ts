@@ -17,6 +17,22 @@ import { prisma } from '@/lib/prisma';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';
 
+type SavedPlace = {
+  id: string;
+  googlePlaceId: string | null;
+  name: string;
+  type: string;
+  userId: string;
+};
+
+type PlaceIntelligenceRecord = {
+  id: string;
+  googlePlaceId: string;
+  status: string;
+  signals: unknown;
+  signalCount: number;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const email = req.nextUrl.searchParams.get('email');
@@ -35,7 +51,7 @@ export async function POST(req: NextRequest) {
       whereClause.userId = user.id;
     }
 
-    const savedPlaces = await prisma.savedPlace.findMany({
+    const savedPlaces: SavedPlace[] = await prisma.savedPlace.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -48,10 +64,10 @@ export async function POST(req: NextRequest) {
 
     // 2. Get existing PlaceIntelligence records to skip places already enriched
     const existingGoogleIds = savedPlaces
-      .map(p => p.googlePlaceId)
+      .map((p): string | null => p.googlePlaceId)
       .filter((id): id is string => id !== null);
 
-    const existingIntel = await prisma.placeIntelligence.findMany({
+    const existingIntel: PlaceIntelligenceRecord[] = await prisma.placeIntelligence.findMany({
       where: {
         googlePlaceId: { in: existingGoogleIds },
       },
@@ -64,8 +80,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const intelByGoogleId = new Map(
-      existingIntel.map(i => [i.googlePlaceId, i])
+    const intelByGoogleId = new Map<string, PlaceIntelligenceRecord>(
+      existingIntel.map((i) => [i.googlePlaceId, i])
     );
 
     // 3. Determine which places need pipeline runs

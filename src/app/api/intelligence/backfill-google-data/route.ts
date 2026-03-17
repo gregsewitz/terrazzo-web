@@ -48,27 +48,27 @@ export async function POST(req: NextRequest) {
         select: { id: true, name: true, googlePlaceId: true, googleData: true, placeIntelligenceId: true },
       });
 
-      const needsGoogleRefresh = allSP.filter(p => {
+      const needsGoogleRefresh = allSP.filter((p: any) => {
         const gd = p.googleData as Record<string, unknown> | null;
         return !gd?.rating;
       }).slice(0, limit);
 
       if (dryRun) {
-        report.phase1 = { needed: needsGoogleRefresh.length, places: needsGoogleRefresh.map(p => p.name) };
+        report.phase1 = { needed: needsGoogleRefresh.length, places: needsGoogleRefresh.map((p: any) => p.name) };
       } else {
         const updated: string[] = [];
         const errors: { name: string; error: string }[] = [];
 
-        for (const place of needsGoogleRefresh) {
+        for (const sp of needsGoogleRefresh) {
           try {
-            const googleResult = await searchPlace(place.name);
-            if (!googleResult || googleResult.id !== place.googlePlaceId) {
-              errors.push({ name: place.name, error: 'Google result mismatch' });
+            const googleResult = await searchPlace(sp.name);
+            if (!googleResult || googleResult.id !== sp.googlePlaceId) {
+              errors.push({ name: sp.name, error: 'Google result mismatch' });
               continue;
             }
 
             const canonicalGoogleData = {
-              ...(place.googleData as Record<string, unknown>),
+              ...(sp.googleData as Record<string, unknown>),
               rating: googleResult.rating || null,
               reviewCount: googleResult.userRatingCount || null,
               priceLevel: googleResult.priceLevel || null,
@@ -77,21 +77,21 @@ export async function POST(req: NextRequest) {
             };
 
             await prisma.savedPlace.updateMany({
-              where: { googlePlaceId: place.googlePlaceId },
+              where: { googlePlaceId: sp.googlePlaceId },
               data: { googleData: canonicalGoogleData as any },
             });
 
-            if (place.placeIntelligenceId) {
+            if (sp.placeIntelligenceId) {
               await prisma.placeIntelligence.update({
-                where: { id: place.placeIntelligenceId },
+                where: { id: sp.placeIntelligenceId },
                 data: { googleData: canonicalGoogleData as any },
               });
             }
 
-            updated.push(place.name);
-            await new Promise(r => setTimeout(r, 250));
+            updated.push(sp.name);
+            await new Promise((r: (value?: void) => void) => setTimeout(r, 250));
           } catch (err) {
-            errors.push({ name: place.name, error: (err as Error).message });
+            errors.push({ name: sp.name, error: (err as Error).message });
           }
         }
 
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
       if (dryRun) {
         report.phase4 = {
           needed: piNeedsSynthesis.length,
-          places: piNeedsSynthesis.map(p => ({ name: p.propertyName, googlePlaceId: p.googlePlaceId })),
+          places: piNeedsSynthesis.map((p: any) => ({ name: p.propertyName, googlePlaceId: p.googlePlaceId })),
         };
       } else {
         const triggered: string[] = [];
@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
         report.phase5 = {
           needed: totalMissing,
           batch: piMissingGoogleData.length,
-          places: piMissingGoogleData.slice(0, 10).map(p => p.propertyName),
+          places: piMissingGoogleData.slice(0, 10).map((sp: any) => sp.propertyName),
         };
       } else {
         const updated: string[] = [];
@@ -315,7 +315,7 @@ export async function POST(req: NextRequest) {
             updated.push(pi.propertyName);
 
             // Rate limit: 250ms between Google API calls
-            await new Promise(r => setTimeout(r, 250));
+            await new Promise<void>((resolve) => setTimeout(resolve, 250));
           } catch (err) {
             errors.push({ name: pi.propertyName, error: (err as Error).message });
           }
@@ -373,7 +373,7 @@ export async function POST(req: NextRequest) {
         report.phase6 = {
           needed: totalMissing,
           batch: spsMissingTaste.length,
-          places: spsMissingTaste.slice(0, 10).map(p => ({
+          places: spsMissingTaste.slice(0, 10).map((p: any) => ({
             name: p.name,
             missingTasteNote: !p.tasteNote,
             missingInsight: p.terrazzoInsight === null,
@@ -395,11 +395,11 @@ export async function POST(req: NextRequest) {
         for (const [userId, userPlaces] of byUser) {
           try {
             const count = await completeTasteFields(
-              userPlaces.map(sp => ({
-                savedPlaceId: sp.id,
-                name: sp.name,
-                type: sp.type,
-                location: sp.location || undefined,
+              userPlaces.map((p: any) => ({
+                savedPlaceId: p.id,
+                name: p.name,
+                type: p.type,
+                location: p.location || undefined,
               })),
               userId,
             );

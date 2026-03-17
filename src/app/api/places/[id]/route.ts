@@ -65,11 +65,11 @@ export const DELETE = apiHandler(async (req: NextRequest, { params }: { params: 
   });
 
   const collectionUpdates = collections
-    .filter((c) => {
+    .filter((c: any) => {
       const ids = c.placeIds as string[];
       return ids.includes(id);
     })
-    .map((c) => {
+    .map((c: any) => {
       const filtered = (c.placeIds as string[]).filter((pid) => pid !== id);
       return prisma.shortlist.update({
         where: { id: c.id },

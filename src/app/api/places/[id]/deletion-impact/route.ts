@@ -44,13 +44,13 @@ export const GET = apiHandler(async (req: NextRequest, { params }: { params: Pro
     select: { id: true, name: true, placeIds: true },
   });
 
-  const memberCollections = collections.filter((c) => {
+  const memberCollections = collections.filter((c: { id: string; name: string; placeIds: string[] }) => {
     const ids = c.placeIds as string[];
     return ids.includes(id);
   });
 
   // Build trip references with day info
-  const tripRefs = place.tripPlaceRefs.map((ref) => {
+  const tripRefs = place.tripPlaceRefs.map((ref: any) => {
     const placedIn = ref.placedIn as { day: number; slot: string } | null;
     return {
       tripId: ref.trip.id,
@@ -64,7 +64,7 @@ export const GET = apiHandler(async (req: NextRequest, { params }: { params: Pro
     placeId: place.id,
     placeName: place.name,
     collectionCount: memberCollections.length,
-    collections: memberCollections.map((c) => ({ id: c.id, name: c.name })),
+    collections: memberCollections.map((c: any) => ({ id: c.id, name: c.name })),
     tripCount: tripRefs.length,
     trips: tripRefs,
   });

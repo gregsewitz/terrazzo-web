@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   // Fetch full records via Prisma
   const places = await prisma.savedPlace.findMany({
-    where: { id: { in: rows.map(r => r.id) } },
+    where: { id: { in: rows.map((r: any) => r.id) } },
     select: {
       id: true,
       name: true,

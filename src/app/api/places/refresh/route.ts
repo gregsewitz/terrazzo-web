@@ -44,7 +44,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   });
 
   // Map to a slim response — only the fields the client needs to patch
-  const results = places.map(p => {
+  const results = places.map((p: any) => {
     const intel = p.intelligence;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const googleData = (intel?.googleData || p.googleData) as any;

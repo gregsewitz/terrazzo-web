@@ -297,6 +297,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
         });
 
         // ── Cross-reference library ─────────────────────────────────────────
+        type ExistingPlace = { googlePlaceId: string; source: string | null; importSources: string[] | null };
         let finalPlaces: any[] = mergedPlaces;
         const user = await getUser(request);
         if (user) {
@@ -314,8 +315,8 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
               select: { googlePlaceId: true, source: true, importSources: true },
             });
 
-            const existingByGoogleId = new Map(
-              existingPlaces.map((p) => [p.googlePlaceId, p]),
+            const existingByGoogleId = new Map<string, ExistingPlace>(
+              existingPlaces.map((p: any) => [p.googlePlaceId, p]),
             );
 
             finalPlaces = mergedPlaces.map((place: any) => {

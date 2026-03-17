@@ -1,5 +1,6 @@
 import type { PerriandIconName } from '../components/icons/PerriandIcons';
 import { COLOR, INK } from '@/constants/theme';
+import './prisma-augment';
 export type { PerriandIconName };
 
 // ─── Brand Palette (legacy T.* aliases kept for backward compat) ───

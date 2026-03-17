@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({
-      scans: scans.map((s) => ({
+      scans: scans.map((s: any) => ({
         id: s.id,
         status: s.status,
         scanType: s.scanType,

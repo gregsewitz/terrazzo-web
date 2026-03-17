@@ -56,13 +56,13 @@ export async function GET(req: NextRequest) {
   const domainConfidences: Record<string, number> = {};
 
   for (const domain of ALL_TASTE_DOMAINS) {
-    const domainSigs = signals.filter((s) => s.domain === domain);
+    const domainSigs = signals.filter((s: any) => s.domain === domain);
     if (domainSigs.length === 0) {
       domainConfidences[domain] = 0;
       continue;
     }
     const avgDecayed =
-      domainSigs.reduce((sum, s) => {
+      domainSigs.reduce((sum: any, s: any) => {
         const extractedAt = s.extractedAt || s.createdAt;
         return sum + decayConfidence(s.confidence, extractedAt, 180, now);
       }, 0) / domainSigs.length;

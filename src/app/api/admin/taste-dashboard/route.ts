@@ -86,7 +86,15 @@ export async function GET() {
     `, user.id);
 
     // 3. Compute LLM scores for each property
-    const properties = rows.map((r) => {
+    const properties = rows.map((r: {
+        id: string;
+        name: string;
+        embedding_score: number;
+        clusters_score: number;
+        signalCount: number;
+        signals: any;
+        antiSignals: any;
+      }) => {
       const signals = Array.isArray(r.signals) ? r.signals : [];
       const antiSignals = Array.isArray(r.antiSignals) ? r.antiSignals : [];
 
@@ -115,7 +123,14 @@ export async function GET() {
     const embRanks = new Map(embRanked.map((r, i) => [r.id, i + 1]));
     const cluRanks = new Map(cluRanked.map((r, i) => [r.id, i + 1]));
 
-    const enriched = properties.map((r) => ({
+    const enriched = properties.map((r: {
+        id: string;
+        name: string;
+        llm: number;
+        embedding: number;
+        clusters: number;
+        signals: number;
+      }) => ({
       name: r.name,
       llm: r.llm,
       embedding: r.embedding,
@@ -137,7 +152,7 @@ export async function GET() {
     `);
 
     const clusterSizes = new Array(400).fill(0);
-    clusterRows.forEach((r) => {
+    clusterRows.forEach((r: { cluster_id: number; signal_count: number }) => {
       clusterSizes[Number(r.cluster_id)] = Number(r.signal_count);
     });
 
@@ -153,7 +168,7 @@ export async function GET() {
       { domain: 'Wellness', start: 387, end: 399 },
     ];
 
-    const domains = domainRanges.map((dr) => {
+    const domains = domainRanges.map((dr: { domain: string; start: number; end: number }) => {
       const slice = clusterSizes.slice(dr.start, dr.end + 1);
       const total = slice.reduce((s, v) => s + v, 0);
       return {
@@ -185,7 +200,7 @@ export async function GET() {
         propertyCount: enriched.length,
         clusterCount: 400,
         dimensions: 400,
-        mappedSignals: clusterRows.reduce((s, r) => s + Number(r.signal_count), 0),
+        mappedSignals: clusterRows.reduce((s: number, r: { cluster_id: number; signal_count: number }) => s + Number(r.signal_count), 0),
         generatedAt: new Date().toISOString(),
       },
     });

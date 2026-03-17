@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     const batch = records.slice(i, i + batchSize);
 
     const results = await Promise.allSettled(
-      batch.map(async (record) => {
+      batch.map(async (record: { id: string; googlePlaceId: string; propertyName: string }) => {
         try {
           const googleResult = await getPlaceById(record.googlePlaceId);
           if (!googleResult) {

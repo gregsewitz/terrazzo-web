@@ -48,14 +48,14 @@ export async function GET(request: NextRequest) {
 
     // Deduplicate by googlePlaceId (user may have visited same place multiple times)
     const seen = new Set<string>();
-    const unique = reservations.filter((r) => {
+    const unique = reservations.filter((r: any) => {
       if (!r.googlePlaceId || seen.has(r.googlePlaceId)) return false;
       seen.add(r.googlePlaceId);
       return true;
     });
 
     // Map to PropertyExemplar-compatible shape
-    const places = unique.map((r) => ({
+    const places = unique.map((r: any) => ({
       googlePlaceId: r.googlePlaceId!,
       propertyName: r.placeName,
       placeType: r.placeType,

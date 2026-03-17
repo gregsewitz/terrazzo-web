@@ -58,18 +58,18 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     (await prisma.savedPlace.findMany({
       where: {
         userId: user.id,
-        googlePlaceId: { in: sourcePlaces.filter(p => p.googlePlaceId).map(p => p.googlePlaceId!) },
+        googlePlaceId: { in: sourcePlaces.filter((p: any) => p.googlePlaceId).map((p: any) => p.googlePlaceId!) },
       },
       select: { googlePlaceId: true },
-    })).map(p => p.googlePlaceId)
+    })).map((p: any) => p.googlePlaceId)
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toJson = (v: unknown) => v === null || v === undefined ? undefined : v as any;
 
   const newPlaces = sourcePlaces
-    .filter(p => !p.googlePlaceId || !existingGoogleIds.has(p.googlePlaceId))
-    .map(p => ({
+    .filter((p: any) => !p.googlePlaceId || !existingGoogleIds.has(p.googlePlaceId))
+    .map((p: any) => ({
       userId: user.id,
       googlePlaceId: p.googlePlaceId,
       name: p.name,
@@ -95,10 +95,10 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
   if (newPlaces.length > 0) {
     // Create in a transaction
     const created = await prisma.$transaction(
-      newPlaces.map(p => prisma.savedPlace.create({ data: p }))
-    );
+      newPlaces.map((p: any) => prisma.savedPlace.create({ data: p }))
+    ) as Array<{ id: string }>;
     savedCount = created.length;
-    newPlaceIds.push(...created.map(p => p.id));
+    newPlaceIds.push(...created.map((p: { id: string }) => p.id));
   }
 
   // Ensure enrichment for any shared places with googlePlaceId (fire-and-forget)
@@ -120,7 +120,7 @@ export const POST = authHandler(async (req: NextRequest, { params }: { params: P
     });
 
     completeTasteFields(
-      createdPlaces.map(p => ({
+      createdPlaces.map((p: any) => ({
         savedPlaceId: p.id,
         name: p.name,
         type: p.type,

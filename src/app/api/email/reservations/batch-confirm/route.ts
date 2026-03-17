@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Process each reservation
     const results = await Promise.allSettled(
-      reservations.map(async (reservation) => {
+      reservations.map(async (reservation: any) => {
         // 1. Resolve googlePlaceId if missing (best-effort)
         let googlePlaceId = reservation.googlePlaceId;
         let googleData: Record<string, unknown> | null = null;
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
         select: { id: true, name: true, type: true, location: true },
       });
       completeTasteFields(
-        newlyCreated.map(p => ({
+        newlyCreated.map((p: any) => ({
           savedPlaceId: p.id,
           name: p.name,
           type: p.type,
