@@ -166,17 +166,17 @@ const UniversalAddBar = memo(function UniversalAddBar() {
 
     const detected = detectInput(trimmed);
     const { type: inputType, platform } = detected;
-    const isMultiLine = inputType === 'text' && trimmed.split('\n').filter(l => l.trim()).length >= 2;
+    const isList = inputType === 'text-list';
 
-    // Only proceed for importable input (URLs, maps links, multi-line lists)
-    if (inputType !== 'url' && inputType !== 'google-maps-list' && inputType !== 'google-maps-place' && !isMultiLine) return;
+    // Only proceed for importable input (URLs, maps links, text lists)
+    if (inputType !== 'url' && inputType !== 'google-maps-list' && inputType !== 'google-maps-place' && !isList) return;
 
     setMode('importing');
     const platformLabel = getPlatformLabel(platform);
     setImportProgress(0,
       inputType === 'google-maps-list' ? 'Opening your saved list…'
         : inputType === 'google-maps-place' ? 'Looking up this place…'
-        : isMultiLine ? 'Reading your list…'
+        : isList ? 'Reading your list…'
         : platform && platform !== 'generic' ? `Reading from ${platformLabel}…`
         : 'Getting started…'
     );
@@ -510,6 +510,19 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                         }
                       }
                     }
+
+                    // Handle pasted text that looks like a list of places.
+                    // Multi-line: <input type="text"> strips newlines, so we intercept
+                    // here before the browser flattens the text into a single line.
+                    // Single-line delimited: auto-submit comma/dash/bullet lists
+                    // so the user doesn't have to manually hit Enter.
+                    const pastedText = e.clipboardData?.getData('text/plain') ?? '';
+                    const detected = detectInput(pastedText.trim());
+                    if (detected.type === 'text-list') {
+                      e.preventDefault();
+                      setQuery(pastedText);
+                      handleInputSubmit(pastedText);
+                    }
                   }}
                   placeholder={tripContext ? `Search library or Google...` : 'Search, paste a link, or drop a file...'}
                   style={{
@@ -556,11 +569,10 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                {/* Submit arrow — shows when input looks importable (URL or multi-line) */}
+                {/* Submit arrow — shows when input looks importable (URL, list, etc.) */}
                 {query && (() => {
                   const d = detectInput(query.trim());
-                  const isImportable = d.type === 'url' || d.type === 'google-maps-list' || d.type === 'google-maps-place'
-                    || (d.type === 'text' && query.trim().split('\n').filter((l: string) => l.trim()).length >= 2);
+                  const isImportable = d.type === 'url' || d.type === 'google-maps-list' || d.type === 'google-maps-place' || d.type === 'text-list';
                   return isImportable ? (
                     <button
                       onClick={() => handleInputSubmit()}

@@ -8,6 +8,7 @@
  *   'google-maps-place' → /api/import/place       (single place — resolve via Google Places API)
  *   'url'               → /api/import             (articles, blogs, guides)
  *   'text'              → /api/import             (multi-line lists)
+ *   'text-list'         → /api/import             (single-line delimited lists: commas, dashes, bullets, numbered)
  *   'email'             → (future)
  */
 
@@ -16,6 +17,7 @@ export type InputType =
   | 'google-maps-list'
   | 'google-maps-place'
   | 'text'
+  | 'text-list'
   | 'email';
 
 /**
@@ -136,6 +138,57 @@ const PLATFORM_PATTERNS: PlatformPattern[] = [
   },
 ];
 
+// ─── Single-line list detection ────────────────────────────────────────────
+
+/**
+ * Heuristic: does this single-line string look like a delimited list of
+ * 3+ place names rather than a single search query?
+ *
+ * Catches:
+ *   "Brawn, Primeur, Western's Laundry, CRATE, Bull & Last"
+ *   "Brawn — Primeur — Western's Laundry — CRATE"
+ *   "Brawn - Primeur - Western's Laundry - CRATE"
+ *   "1. Brawn 2. Primeur 3. Western's Laundry"
+ *   "• Brawn • Primeur • Western's Laundry"
+ *   "Brawn / Primeur / Western's Laundry / CRATE"
+ *
+ * Requires 3+ items to avoid false positives on things like
+ * "Bull & Last — Best Sunday roast ever" (descriptive, not a list).
+ */
+function looksLikeDelimitedList(text: string): boolean {
+  // Comma-separated: 3+ segments, each ≤ 60 chars (place names, not sentences)
+  const commaSegments = text.split(',').map(s => s.trim()).filter(Boolean);
+  if (commaSegments.length >= 3 && commaSegments.every(s => s.length <= 60)) {
+    return true;
+  }
+
+  // Em-dash / en-dash / spaced-hyphen separated: "A — B — C" or "A – B – C" or "A - B - C"
+  const dashSegments = text.split(/\s+[—–\-]\s+/).map(s => s.trim()).filter(Boolean);
+  if (dashSegments.length >= 3 && dashSegments.every(s => s.length <= 60)) {
+    return true;
+  }
+
+  // Slash separated: "A / B / C"
+  const slashSegments = text.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean);
+  if (slashSegments.length >= 3 && slashSegments.every(s => s.length <= 60)) {
+    return true;
+  }
+
+  // Numbered list on one line: "1. Brawn 2. Primeur 3. Western's Laundry"
+  const numberedItems = text.match(/\d+\.\s+[^0-9]+/g);
+  if (numberedItems && numberedItems.length >= 3) {
+    return true;
+  }
+
+  // Bullet chars: "• A • B • C" or "· A · B · C"
+  const bulletSegments = text.split(/[•·‣▸►]\s*/).map(s => s.trim()).filter(Boolean);
+  if (bulletSegments.length >= 3 && bulletSegments.every(s => s.length <= 60)) {
+    return true;
+  }
+
+  return false;
+}
+
 // ─── Core detection ─────────────────────────────────────────────────────────
 
 /**
@@ -166,6 +219,21 @@ export function detectInput(input: string): InputMeta {
   // ── Check if it looks like a URL ────────────────────────────────────────
   const isUrl = /^https?:\/\//i.test(cleaned);
   if (!isUrl) {
+    // ── Check for multi-line lists (newlines survived via onPaste intercept) ──
+    const lines = trimmed.split('\n').filter(l => l.trim());
+    if (lines.length >= 2) {
+      return { type: 'text-list', cleanedInput: trimmed };
+    }
+
+    // ── Check for single-line delimited lists ───────────────────────────────
+    // Comma-separated: "Brawn, Primeur, Western's Laundry, CRATE"
+    // Dash/bullet: "Brawn — Primeur — Western's Laundry" or "Brawn - Primeur - Western's Laundry"
+    // Numbered: "1. Brawn 2. Primeur 3. Western's Laundry"
+    // Bullet chars: "• Brawn • Primeur • Western's Laundry"
+    if (looksLikeDelimitedList(trimmed)) {
+      return { type: 'text-list', cleanedInput: trimmed };
+    }
+
     return { type: 'text', cleanedInput: trimmed };
   }
 
