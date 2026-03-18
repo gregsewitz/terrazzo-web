@@ -29,8 +29,9 @@ const SLOT_LABELS: Record<string, { label: string; time: string }> = {
   evening:   { label: 'Evening',   time: '9:30 PM' },
 };
 
-const CARD_H = 50;
-const SLOT_ROW_H = (2 * CARD_H) + 8 + 22; // ~130px — 2 cards + padding + room for "View all" bar
+const CARD_H = 72;
+const CARD_SLOT_H = CARD_H + 6; // card + its bottom margin
+const SLOT_ROW_H = (2 * CARD_SLOT_H) + 6 + 22; // ~184px — 2 card slots + top padding + "View all" bar
 const TRANSPORT_ROW_H = 40;
 const HEADER_H = 36;
 const CONTEXT_BAR_H = 30;
@@ -186,7 +187,7 @@ function DayPlannerGrid() {
     <div
       ref={containerRef}
       className="flex h-full overflow-auto"
-      style={{ scrollbarWidth: 'thin' }}
+      style={{ scrollbarWidth: 'thin', background: 'white' }}
     >
       <style>{`
         .day-grid-col:hover .day-col-menu-btn { opacity: 0.5 !important; }

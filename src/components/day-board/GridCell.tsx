@@ -24,7 +24,7 @@ interface GridCellProps {
   onOpenOverlay: (dayNumber: number, slotId: string, rect: DOMRect) => void;
 }
 
-const CARD_H = 50;
+const CARD_H = 72;
 const CARD_PX = 3;
 const MAX_VISIBLE_CARDS = 2;
 const VIEW_ALL_H = 22;
@@ -114,32 +114,39 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     }
   }, [totalCount, quickInputOpen, handleOpenOverlay]);
 
-  /** Wrap any card in a fixed-height container so all cards are uniform */
+  /** Wrap any card in a fixed-height container so all cards are uniform.
+   *  Uses relative/absolute positioning to truly constrain children
+   *  that have their own minHeight (like PlacedCard). */
   const cardWrapper = (key: string, children: React.ReactNode) => (
     <div
       key={key}
       data-grid-card
-      className={`mx-${CARD_PX} mb-1`}
       style={{
-        height: CARD_H,
-        minHeight: CARD_H,
-        maxHeight: CARD_H,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
+        position: 'relative',
+        height: CARD_H + 6,
+        minHeight: CARD_H + 6,
+        maxHeight: CARD_H + 6,
+        flexShrink: 0,
       }}
     >
-      {children}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: CARD_H + 6,
+        overflow: 'hidden',
+      }}>
+        {children}
+      </div>
     </div>
   );
 
   const renderItem = (item: typeof allItems[number]) => {
     switch (item.type) {
       case 'place':
-        return (
+        return cardWrapper(item.id, (
           <PlacedCard
-            key={item.id}
             place={item.data as ImportedPlace}
             dayNumber={dayNumber}
             slotId={slot.id}
@@ -147,7 +154,7 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
             CARD_H={CARD_H}
             CARD_PX={CARD_PX}
           />
-        );
+        ));
       case 'quickEntry': {
         const qe = item.data as import('@/types').QuickEntry;
         return cardWrapper(item.id, (
@@ -164,16 +171,12 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         const gNote = ghost.friendAttribution?.note
           ? `"${ghost.friendAttribution.note}"`
           : ghost.terrazzoReasoning?.rationale || ghost.savedAt || '';
-        return (
+        return cardWrapper(item.id, (
           <div
-            key={item.id}
-            data-grid-card
             onClick={() => onTapDetail(ghost)}
-            className={`mx-${CARD_PX} mb-1 rounded cursor-pointer ghost-shimmer relative`}
+            className={`mx-${CARD_PX} mb-1.5 rounded cursor-pointer ghost-shimmer relative`}
             style={{
               height: CARD_H,
-              minHeight: CARD_H,
-              maxHeight: CARD_H,
               background: 'var(--t-cream)',
               border: `1.5px dashed ${gSrc.color}`,
               padding: '6px 10px',
@@ -210,7 +213,7 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
               {gNote && <span className="truncate italic" style={{ color: TEXT.secondary, fontSize: 10 }}>{gNote}</span>}
             </div>
           </div>
-        );
+        ));
       }
       case 'suggestion': {
         const sg = item.data as Parameters<typeof CollaboratorGhostCard>[0]['suggestion'];
@@ -238,7 +241,7 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         overflow: 'hidden',
         borderRight: '1px solid var(--t-linen)',
         borderBottom: '1px solid var(--t-linen)',
-        background: isDropActive ? 'rgba(58,128,136,0.06)' : undefined,
+        background: isDropActive ? 'rgba(58,128,136,0.06)' : 'white',
         borderLeft: isDropActive ? '3px solid var(--t-dark-teal)' : '3px solid transparent',
         transition: 'all 150ms ease',
         display: 'flex',
