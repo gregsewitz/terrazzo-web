@@ -1,6 +1,29 @@
 import Nylas from 'nylas';
 import type { NylasEmailMessage, RESERVATION_SEARCH_QUERIES } from '@/types/email';
 
+// ─── Raw Nylas API Response Types ──────────────────────────────────────────
+
+interface NylasRawMessageParticipant {
+  name?: string;
+  email: string;
+}
+
+interface NylasRawMessage {
+  id: string;
+  grantId?: string;
+  grant_id?: string;
+  subject?: string;
+  from?: NylasRawMessageParticipant[];
+  to?: NylasRawMessageParticipant[];
+  date?: number;
+  body?: string;
+  snippet?: string;
+  threadId?: string;
+  thread_id?: string;
+  folders?: string[];
+  labels?: Array<{ id: string; name: string }>;
+}
+
 const nylas = new Nylas({
   apiKey: process.env.NYLAS_API_KEY || '',
 });
@@ -143,14 +166,13 @@ export async function fetchMessageBodies(
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function mapNylasMessage(msg: any): NylasEmailMessage {
+function mapNylasMessage(msg: NylasRawMessage): NylasEmailMessage {
   return {
     id: msg.id,
     grantId: msg.grantId || msg.grant_id || '',
     subject: msg.subject || '',
-    from: (msg.from || []).map((f: any) => ({ name: f.name, email: f.email })),
-    to: (msg.to || []).map((t: any) => ({ name: t.name, email: t.email })),
+    from: (msg.from || []).map((f: NylasRawMessageParticipant) => ({ name: f.name, email: f.email })),
+    to: (msg.to || []).map((t: NylasRawMessageParticipant) => ({ name: t.name, email: t.email })),
     date: msg.date || 0,
     body: msg.body || undefined,
     snippet: msg.snippet || undefined,

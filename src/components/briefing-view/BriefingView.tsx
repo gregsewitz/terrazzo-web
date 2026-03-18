@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useBriefing } from '@/hooks/useBriefing';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic } from '@/components/profile/TerrazzoMosaic';
 import { DEFAULT_USER_PROFILE } from '@/lib/taste';
 import { useOnboardingStore } from '@/stores/onboardingStore';
@@ -409,8 +409,8 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
 
                 {/* Value badge — price-match framing */}
                 {(() => {
-                  const googleData = data.googleData as any;
-                  const priceLevel = googleData?.priceLevel ?? googleData?.price_level;
+                  const googleData = data.googleData as Record<string, unknown>;
+                  const priceLevel = (googleData?.priceLevel ?? googleData?.price_level) as number | undefined;
                   if (priceLevel == null) return null;
                   return (
                     <SafeFadeIn direction="up" distance={10} duration={0.4} delay={0.05}>
@@ -584,7 +584,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                       <SeasonalityBadge
                         seasonality={data.seasonality as SeasonalityData}
                         rhythmTempo={undefined /* TODO(deferred): pass from SavedPlace when rhythmTempo is added to schema */}
-                        seasonalNote={typeof data.facts === 'object' && data.facts ? (data.facts as any).seasonalNote : undefined}
+                        seasonalNote={typeof data.facts === 'object' && data.facts ? (data.facts as Record<string, unknown>).seasonalNote as string | undefined : undefined}
                         variant="full"
                         layout="desktop"
                       />
@@ -618,7 +618,7 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                               className="flex items-start gap-3 px-4 py-2.5"
                               style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--t-linen)' : 'none' }}
                             >
-                              <span className="flex-shrink-0 w-5 flex justify-center mt-0.5"><PerriandIcon name={getFactIconName(key) as any} size={12} color={TEXT.secondary} /></span>
+                              <span className="flex-shrink-0 w-5 flex justify-center mt-0.5"><PerriandIcon name={getFactIconName(key) as PerriandIconName} size={12} color={TEXT.secondary} /></span>
                               <div className="flex-1 min-w-0">
                                 <div className="text-[9px] uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>{displayKey}</div>
                                 <div className="text-[12px] font-medium mt-0.5" style={{ color: TEXT.primary }}>{String(value)}</div>

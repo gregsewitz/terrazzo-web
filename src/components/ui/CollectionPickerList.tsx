@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import SortPills from '@/components/ui/SortPills';
 import type { Collection } from '@/types';
@@ -103,7 +103,7 @@ export default function CollectionPickerList({
               {/* Icon */}
               <span style={{ fontSize: isIcon ? 14 : 16, width: 20, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {isIcon ? (
-                  <PerriandIcon name={sl.emoji as any} size={14} color={active ? 'var(--t-dark-teal)' : TEXT.secondary} />
+                  <PerriandIcon name={sl.emoji as PerriandIconName} size={14} color={active ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 ) : (
                   <PerriandIcon name="pin" size={14} color={active ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 )}

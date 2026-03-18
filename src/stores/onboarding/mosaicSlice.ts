@@ -1,7 +1,7 @@
 'use client';
 
 import { StateCreator } from 'zustand';
-import type { TasteSignal } from '@/types';
+import type { TasteSignal, GeneratedTasteProfile } from '@/types';
 import { dbSave } from '@/lib/db-save';
 import { RESYNTHESIS_MILESTONES } from './profileSlice';
 import type { OnboardingState } from './types';
@@ -25,7 +25,7 @@ async function resynthesizeProfile(getState: () => OnboardingState) {
     const state = getState();
     // Import here to avoid circular dependencies
     const { apiFetch } = await import('@/lib/api-client');
-    const res = await apiFetch<any>('/api/onboarding/synthesize', {
+    const res = await apiFetch<GeneratedTasteProfile>('/api/onboarding/synthesize', {
       method: 'POST',
       body: JSON.stringify({
         signals: state.allSignals,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import type { GeneratedTasteProfile } from '@/types';
+import type { GeneratedTasteProfile, OnboardingLifeContext } from '@/types';
 import {
   BECAUSE_YOU_CARDS,
   WEEKLY_COLLECTION,
@@ -76,8 +76,8 @@ interface UseDiscoverFeedReturn {
 
 export function useDiscoverFeed(
   generatedProfile: GeneratedTasteProfile | null,
-  lifeContext: any,
-  profile: any,
+  lifeContext: OnboardingLifeContext | null,
+  profile: GeneratedTasteProfile | null,
 ): UseDiscoverFeedReturn {
   const [discoverContent, setDiscoverContent] = useState<DiscoverContent | null>(null);
   const [isLoadingDiscover, setIsLoadingDiscover] = useState(false);

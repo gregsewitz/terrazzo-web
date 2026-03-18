@@ -57,14 +57,14 @@ export async function findSimilarPropertiesV3(
   );
 
   return results
-    .map((r: any) => ({
+    .map((r) => ({
       id: r.id,
       googlePlaceId: r.googlePlaceId,
       propertyName: r.propertyName,
       similarity: 1 - r.distance,
       score: Math.round((1 - r.distance) * 100),
     }))
-    .filter((r: any) => r.score >= minScore);
+    .filter((r) => r.score >= minScore);
 }
 
 // ─── TG-05: User Nearest Neighbors (v3) ────────────────────────────────────
@@ -94,7 +94,7 @@ export async function findTasteNeighborsV3(
     limit,
   );
 
-  return results.map((r: any) => ({
+  return results.map((r) => ({
     id: r.id,
     name: r.name,
     similarity: 1 - r.distance,
@@ -131,7 +131,7 @@ export async function findSimilarPropertiesToPropertyV3(
     limit,
   );
 
-  return results.map((r: any) => ({
+  return results.map((r) => ({
     id: r.id,
     googlePlaceId: r.googlePlaceId,
     propertyName: r.propertyName,
@@ -142,17 +142,16 @@ export async function findSimilarPropertiesToPropertyV3(
 
 // ─── PE-09: Domain Slice Queries (v3.4) ─────────────────────────────────────
 // With signal-only vectors, domain queries activate all clusters belonging to a domain.
-// Cluster-to-domain mapping comes from signal-clusters.json.
+// Cluster-to-domain mapping comes from signal-clusters.json (loaded lazily via loader).
 
-import clusterMap from './signal-clusters.json';
-
-const clusterInfoForDomain: Record<string, { domain?: string }> =
-  (clusterMap as any).clusters ?? {};
+import { getSignalClusterMap } from './signal-clusters-loader';
 
 /** Build a set of cluster indices belonging to a given domain */
 function clusterIndicesForDomain(domain: string): number[] {
+  const clusters: Record<string, { domain?: string }> =
+    getSignalClusterMap().clusters ?? {};
   const indices: number[] = [];
-  for (const [cidStr, info] of Object.entries(clusterInfoForDomain)) {
+  for (const [cidStr, info] of Object.entries(clusters)) {
     if (info.domain === domain) {
       indices.push(parseInt(cidStr, 10));
     }
@@ -241,7 +240,7 @@ export async function findDomainExemplars(
   );
 
   // Return top N with score
-  return results.slice(0, limit).map((r: any) => {
+  return results.slice(0, limit).map((r) => {
     const similarity = Math.round((1 - r.distance) * 100) / 100;
     return {
       id: r.id,

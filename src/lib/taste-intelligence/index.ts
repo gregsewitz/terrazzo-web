@@ -26,7 +26,7 @@ export {
   analyzeDomainCoverage,
   computeEffectiveActivation,
   getClusterIndicesForDomain,
-  ALL_DOMAINS,
+  getAllDomains,
   ACTIVATION_THRESHOLD,
 } from './vectors-v3';
 export type {

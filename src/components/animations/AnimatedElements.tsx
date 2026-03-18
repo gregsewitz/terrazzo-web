@@ -390,7 +390,7 @@ type MotionH2Props = React.ComponentProps<typeof motion.h2>;
 type MotionPProps = React.ComponentProps<typeof motion.p>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function stripMotionProps(props: any) {
+function stripMotionProps(props: any): any {
   const {
     initial, animate, whileInView, whileHover, whileTap, whileFocus, whileDrag,
     transition, viewport, variants, custom, exit, layout, layoutId,

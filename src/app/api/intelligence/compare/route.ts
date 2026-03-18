@@ -16,7 +16,7 @@ import {
   cosineSimilarityV3,
   getClusterIndicesForDomain,
   getAllClusterLabels,
-  ALL_DOMAINS,
+  getAllDomains,
 } from '@/lib/taste-intelligence';
 import { computeVectorMatch } from '@/lib/taste-match-vectors';
 import type { TasteDomain } from '@/types';
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     const diffA: Array<{ domain: TasteDomain; cluster: string; delta: number }> = [];
     const diffB: Array<{ domain: TasteDomain; cluster: string; delta: number }> = [];
 
-    for (const domain of ALL_DOMAINS) {
+    for (const domain of getAllDomains()) {
       const indices = getClusterIndicesForDomain(domain);
       let sumA = 0, sumB = 0;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import type { TransportEvent, TransportMode, TRANSPORT_ICONS } from '@/types';
 
@@ -107,7 +107,7 @@ function TransportBannerComponent({ transport, onEdit, onRemove, compact = false
           background: `${config.color}18`,
         }}
       >
-        <PerriandIcon name={config.icon as any} size={compact ? 11 : 13} color={config.color} />
+        <PerriandIcon name={config.icon as PerriandIconName} size={compact ? 11 : 13} color={config.color} />
       </div>
 
       {/* Content */}
@@ -274,7 +274,7 @@ export function TransportInput({ initial, onSave, onCancel, fromDefault, compact
                 border: 'none',
               }}
             >
-              <PerriandIcon name={c.icon as any} size={9} color={active ? 'white' : INK['55']} />
+              <PerriandIcon name={c.icon as PerriandIconName} size={9} color={active ? 'white' : INK['55']} />
               {c.label}
             </button>
           );

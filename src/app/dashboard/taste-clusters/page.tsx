@@ -4,6 +4,23 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Script from 'next/script';
 import { TASTE_DOMAIN_RANGES } from '@/lib/constants';
 
+// ─── Minimal Chart.js types (CDN-loaded, no npm package) ─────────────────────
+interface ChartInstance {
+  destroy(): void;
+}
+interface ChartTooltipCtx {
+  raw: { name: string; x: number; y: number };
+}
+interface ChartDrawContext {
+  ctx: CanvasRenderingContext2D;
+  scales: Record<string, { min: number; max: number; getPixelForValue(v: number): number }>;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ChartJsConfig = Record<string, any>;
+interface WindowWithChart extends Window {
+  Chart?: new (canvas: HTMLCanvasElement, config: ChartJsConfig) => ChartInstance;
+}
+
 /* ═══════════════════════════════════════════════════════════
    Taste Intelligence Dashboard — /dashboard/taste-clusters
    Compares three scoring approaches:
@@ -117,8 +134,10 @@ function Header({ meta }: { meta: DashboardData['meta'] }) {
 }
 
 // ═══ TAB BAR ═══
-function TabBar({ active, onChange }: { active: string; onChange: (t: any) => void }) {
-  const tabs = [
+type DashboardTab = 'overview' | 'comparison' | 'clusters' | 'rankings';
+
+function TabBar({ active, onChange }: { active: DashboardTab; onChange: (t: DashboardTab) => void }) {
+  const tabs: Array<{ key: DashboardTab; label: string }> = [
     { key: 'overview', label: 'Overview' },
     { key: 'comparison', label: 'LLM vs Embedding vs Clusters' },
     { key: 'clusters', label: 'Cluster Explorer' },
@@ -152,14 +171,15 @@ const Card = ({ title, children, style }: { title?: string; children: React.Reac
   </div>
 );
 
-function useChart(id: string, config: any) {
+function useChart(id: string, config: ChartJsConfig) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const chartRef = useRef<any>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
 
   useEffect(() => {
-    if (!canvasRef.current || typeof window === 'undefined' || !(window as any).Chart) return;
+    const win = window as unknown as WindowWithChart;
+    if (!canvasRef.current || typeof window === 'undefined' || !win.Chart) return;
     chartRef.current?.destroy();
-    chartRef.current = new (window as any).Chart(canvasRef.current, config);
+    chartRef.current = new win.Chart(canvasRef.current, config);
     return () => chartRef.current?.destroy();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, JSON.stringify(config.data?.datasets?.length)]);
@@ -293,7 +313,7 @@ function ComparisonPanel({ data }: { data: DashboardData }) {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx: any) => { const d = ctx.raw; return `${d.name}: Emb=${d.x}, Clu=${d.y}`; } } },
+        tooltip: { callbacks: { label: (ctx: ChartTooltipCtx) => { const d = ctx.raw; return `${d.name}: Emb=${d.x}, Clu=${d.y}`; } } },
       },
       scales: {
         x: { title: { display: true, text: 'Embedding Score', color: '#a1a1aa' }, ...chartTheme.scales.x },
@@ -319,7 +339,7 @@ function ComparisonPanel({ data }: { data: DashboardData }) {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx: any) => { const d = ctx.raw; return `${d.name}: LLM=${d.x}, Clu=${d.y}`; } } },
+        tooltip: { callbacks: { label: (ctx: ChartTooltipCtx) => { const d = ctx.raw; return `${d.name}: LLM=${d.x}, Clu=${d.y}`; } } },
       },
       scales: {
         x: { title: { display: true, text: 'LLM Score', color: '#a1a1aa' }, ...chartTheme.scales.x },
@@ -376,7 +396,7 @@ function ComparisonPanel({ data }: { data: DashboardData }) {
 /** Shared Chart.js plugin to draw y=x diagonal line */
 const diagonalPlugin = {
   id: 'diagonal',
-  afterDraw(chart: any) {
+  afterDraw(chart: ChartDrawContext) {
     const { ctx, scales: { x, y } } = chart;
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,0.15)';

@@ -8,8 +8,9 @@
 import { prisma } from '@/lib/prisma';
 import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
 import { computeVectorMatchFromDb, breakdownToNormalized } from '@/lib/taste-match-vectors';
-import type { TasteProfile, TasteDomain, GeneratedTasteProfile } from '@/types';
+import type { TasteProfile, TasteDomain, GeneratedTasteProfile, BriefingSignal, BriefingAntiSignal } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
+import type { MatchExplanation } from '@/lib/taste-match-vectors';
 
 const VALID_DOMAINS = new Set<string>(ALL_TASTE_DOMAINS);
 
@@ -31,7 +32,7 @@ export function buildTasteProfileFromRadar(
   const profile: TasteProfile = {} as TasteProfile;
   for (const item of radarData) {
     if (item.axis && typeof item.value === 'number') {
-      (profile as any)[item.axis] = item.value / 100;
+      (profile as Record<string, number>)[item.axis] = item.value / 100;
     }
   }
   return profile;
@@ -40,7 +41,7 @@ export function buildTasteProfileFromRadar(
 export interface TasteScoreResult {
   overallScore: number;
   breakdown: Record<string, number>;
-  explanation?: any;
+  explanation?: MatchExplanation;
   source: 'vector' | 'signal';
 }
 
@@ -59,8 +60,8 @@ export interface TasteScoreResult {
 export async function computeTasteScore(
   userId: string,
   googlePlaceId: string,
-  signals: any[],
-  antiSignals: any[],
+  signals: BriefingSignal[],
+  antiSignals: BriefingAntiSignal[],
   userProfile?: TasteProfile,
 ): Promise<TasteScoreResult | null> {
   // Try vector-first scoring

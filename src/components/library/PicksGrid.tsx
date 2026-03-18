@@ -139,7 +139,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
             { value: 'name', label: 'A–Z' },
           ]}
           sortValue={sortBy}
-          onSortChange={(v) => setSortBy(v as any)}
+          onSortChange={(v) => setSortBy(v as 'match' | 'name')}
           onResetAll={() => { toggleFilter('all'); setSortBy('match'); }}
         />
       </div>

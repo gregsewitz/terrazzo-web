@@ -93,7 +93,7 @@ export async function fetchCandidateProperties(): Promise<CandidateProperty[]> {
     },
   });
 
-  const candidates: CandidateProperty[] = records.map((r: any) => ({
+  const candidates: CandidateProperty[] = records.map((r: typeof records[number]) => ({
     googlePlaceId: r.googlePlaceId,
     propertyName: r.propertyName,
     signals: (r.signals as unknown as BriefingSignal[]) || [],

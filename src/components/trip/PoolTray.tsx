@@ -372,7 +372,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               { value: 'source', label: 'Source' },
             ]}
             sortValue={sortBy}
-            onSortChange={(v) => setSortBy(v as any)}
+            onSortChange={(v) => setSortBy(v as 'match' | 'name' | 'source')}
             onResetAll={() => { setFilterType('all'); setSourceFilter('all'); setSortBy('match'); }}
           />
         </div>

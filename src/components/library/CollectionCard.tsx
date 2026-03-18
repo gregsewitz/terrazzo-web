@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Collection, ImportedPlace } from '@/types';
-import { PerriandIcon, isPerriandIconName } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, isPerriandIconName, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 
 interface CollectionCardProps {
@@ -45,7 +45,7 @@ function CollectionCardInner({
           {collection.emoji && (
             <span style={{ fontSize: isPerriandIcon ? 13 : 15 }}>
               {isPerriandIcon ? (
-                <PerriandIcon name={collection.emoji as any} size={13} color={TEXT.secondary} />
+                <PerriandIcon name={collection.emoji as PerriandIconName} size={13} color={TEXT.secondary} />
               ) : (
                 collection.emoji
               )}

@@ -253,7 +253,7 @@ function SavedPageContent() {
                     { value: 'places', label: 'Most places' },
                   ]}
                   sortValue={collectionSortBy}
-                  onSortChange={(v) => setCollectionSortBy(v as any)}
+                  onSortChange={(v) => setCollectionSortBy(v as 'recent' | 'name' | 'places' | 'updated')}
                   compact
                 />
               </div>
@@ -357,7 +357,7 @@ function SavedPageContent() {
                   { value: 'source', label: 'Source' },
                 ]}
                 sortValue={sortBy}
-                onSortChange={(v) => setSortBy(v as any)}
+                onSortChange={(v) => setSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source')}
                 onResetAll={() => {
                   setTypeFilter('all');
                   setSourceFilter('all');
@@ -652,7 +652,7 @@ function SavedPageContent() {
                 { value: 'source', label: 'Source' },
               ]}
               sortValue={sortBy}
-              onSortChange={(v) => setSortBy(v as any)}
+              onSortChange={(v) => setSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source')}
               onResetAll={() => {
                 setTypeFilter('all');
                 setSourceFilter('all');

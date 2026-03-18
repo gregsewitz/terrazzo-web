@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { BriefingSignal, BriefingAntiSignal } from '@/types';
 import { FONT, INK, TEXT } from '@/constants/theme';
 
@@ -68,7 +68,7 @@ export function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }
             className="text-[9px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1"
             style={{ background: INK['04'], color: TEXT.primary, fontFamily: FONT.mono }}
           >
-            <PerriandIcon name={meta.iconName as any} size={10} color={TEXT.secondary} />
+            <PerriandIcon name={meta.iconName as PerriandIconName} size={10} color={TEXT.secondary} />
             {count} {meta.label}
           </span>
         );

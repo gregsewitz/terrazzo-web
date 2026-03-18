@@ -116,9 +116,10 @@ function formatCandidates(ctx: DaySuggestionContext): string {
     const extras: string[] = [];
     if (c.tasteNote) extras.push(`tasteNote: "${c.tasteNote}"`);
     // Include seasonality data when available for richer suggestions
-    if ((c as any).bestMonths?.length) extras.push(`bestMonths: [${(c as any).bestMonths.map((m: string) => `"${m}"`).join(', ')}]`);
-    if ((c as any).rhythmTempo) extras.push(`rhythm: "${(c as any).rhythmTempo}"`);
-    if ((c as any).seasonalNote) extras.push(`seasonalNote: "${(c as any).seasonalNote}"`);
+    const cExt = c as typeof c & { bestMonths?: string[]; rhythmTempo?: string; seasonalNote?: string };
+    if (cExt.bestMonths?.length) extras.push(`bestMonths: [${cExt.bestMonths.map((m: string) => `"${m}"`).join(', ')}]`);
+    if (cExt.rhythmTempo) extras.push(`rhythm: "${cExt.rhythmTempo}"`);
+    if (cExt.seasonalNote) extras.push(`seasonalNote: "${cExt.seasonalNote}"`);
     const extrasStr = extras.length > 0 ? `, ${extras.join(', ')}` : '';
     return `  { id: "${c.id}", name: "${c.name}", type: "${c.type}", location: "${c.location}", matchScore: ${c.matchScore}, topAxes: [${c.topAxes.map(a => `"${a}"`).join(', ')}]${extrasStr} }`;
   });
@@ -189,11 +190,11 @@ export function parseSuggestionResponse(raw: string): SuggestionItem[] {
     const json = JSON.parse(extractJSON(raw));
     if (!Array.isArray(json)) return [];
 
-    return json
-      .filter((item: any) =>
+    return (json as Record<string, unknown>[])
+      .filter((item) =>
         item.placeId && item.targetSlot && typeof item.confidence === 'number' && item.rationale
       )
-      .map((item: any) => ({
+      .map((item) => ({
         placeId: String(item.placeId),
         targetSlot: String(item.targetSlot),
         confidence: Math.max(0, Math.min(1, Number(item.confidence))),

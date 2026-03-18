@@ -234,7 +234,7 @@ export function allocateSlots(
   const contextCandidates = scored
     .filter((c) => !used.has(c.googlePlaceId))
     .map((c) => {
-      const bestMonths = (c as any).bestMonths as string[] | undefined;
+      const bestMonths = (c as ScoredCandidate & { bestMonths?: string[] }).bestMonths;
       const isSeasonalMatch = bestMonths?.some(
         (m: string) => m.toLowerCase() === currentMonthName.toLowerCase() || m.toLowerCase() === currentMonthShort.toLowerCase()
       ) ?? false;
