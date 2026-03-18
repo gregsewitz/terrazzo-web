@@ -33,6 +33,61 @@ export function enrichmentBackoffHours(errorCount: number): number {
   return 168;
 }
 
+// ── Signal decay ────────────────────────────────────────────────────────────
+
+/** Half-life (in days) for exponential confidence decay on taste signals */
+export const SIGNAL_HALF_LIFE_DAYS = 180;
+
+/** Signals with decayed confidence below this threshold are considered aged-out */
+export const SIGNAL_AGED_OUT_THRESHOLD = 0.05;
+
+// ── Taste vector scoring ────────────────────────────────────────────────────
+
+/** Anti-signal activations contribute at this fraction of their confidence (negative) */
+export const ANTI_SIGNAL_SCALE = 0.5;
+
+/** Bleed-only clusters (no direct hit) retain this fraction of their energy */
+export const BLEED_ONLY_DAMPEN = 0.3;
+
+/** Cluster is "activated" if |value| exceeds this threshold */
+export const CLUSTER_ACTIVATION_THRESHOLD = 0.03;
+
+/** Blend weight: fraction of signal vector vs. property anchor vector */
+export const USER_SIGNAL_WEIGHT = 0.6;
+
+// ── Display score normalization ─────────────────────────────────────────────
+
+/** Default ceiling for display score (best match ≈ this value) */
+export const SCORE_DISPLAY_CEILING = 96;
+
+/** Default floor for display score (worst match ≈ this value) */
+export const SCORE_DISPLAY_FLOOR = 35;
+
+/** Sigmoid spread factor for tanh z-score mapping */
+export const SCORE_SPREAD_FACTOR = 0.55;
+
+// ── Behavioral pattern detection ────────────────────────────────────────────
+
+/** Minimum mean cluster activation to consider a behavioral signal meaningful */
+export const BEHAVIORAL_SIGNAL_THRESHOLD = 0.02;
+
+/** Max clusters to surface per domain in behavioral analysis */
+export const TOP_CLUSTERS_PER_DOMAIN = 3;
+
+// ── Reprofiling triggers ────────────────────────────────────────────────────
+
+/** Months since last synthesis before time-based reprofiling triggers */
+export const REPROFILING_MONTHS_THRESHOLD = 6;
+
+/** New bookings since last synthesis before behavioral reprofiling triggers */
+export const REPROFILING_BOOKINGS_THRESHOLD = 3;
+
+/** Domain confidence below this triggers a gap-fill reprofiling phase */
+export const REPROFILING_CONFIDENCE_THRESHOLD = 0.5;
+
+/** Contradiction ratio above this triggers contradiction-resolution reprofiling */
+export const REPROFILING_CONTRADICTION_THRESHOLD = 0.3;
+
 // ── Taste vector domain ranges ───────────────────────────────────────────────
 
 export const TASTE_DOMAIN_RANGES = [

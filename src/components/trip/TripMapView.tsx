@@ -358,7 +358,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
               }}
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+              <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }} aria-label="Clear search">
                 <PerriandIcon name="close" size={14} color={INK['40']} />
               </button>
             )}

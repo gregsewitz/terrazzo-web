@@ -18,7 +18,7 @@ interface SharedPlace {
   type: string;
   location: string | null;
   matchScore: number | null;
-  enrichment: Record<string, unknown> | null;
+  enrichment: { description?: string; confidence?: number; [key: string]: unknown } | null;
   whatToOrder: string[] | null;
   tips: string[] | null;
   googleData: Record<string, unknown> | null;
@@ -437,7 +437,7 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
   const subtitle = (place.rating?.personalNote)
     || (place.terrazzoInsight?.why)
-    || (place.enrichment as { description?: string } | null)?.description
+    || place.enrichment?.description
     || '';
   const truncSub = subtitle.length > 90 ? subtitle.slice(0, 87) + '…' : subtitle;
 

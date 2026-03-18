@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -149,4 +149,6 @@ function PlacedCard({
   );
 }
 
-export default PlacedCard;
+// Memoize to prevent re-renders when props (place, dayNumber, slotId, etc.) haven't changed.
+// Parent should stabilize CARD_H and CARD_PX references if possible.
+export default memo(PlacedCard);

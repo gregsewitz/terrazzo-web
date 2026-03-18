@@ -97,6 +97,7 @@ export default function GraduateModal({ onClose }: GraduateModalProps) {
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center border-none cursor-pointer nav-hover"
             style={{ background: INK['06'], color: TEXT.secondary }}
+            aria-label="Close"
           >
             <PerriandIcon name="close" size={14} color={TEXT.secondary} />
           </button>

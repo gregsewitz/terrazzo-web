@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
@@ -17,8 +17,6 @@ import TripMyPlaces from '@/components/trip/TripMyPlaces';
 import PicksStrip from '@/components/library/PicksStrip';
 import type { FilterType } from '@/hooks/useTypeFilter';
 import ImportDrawer from '@/components/import/ImportDrawer';
-import ChatSidebar from '@/components/chat/ChatSidebar';
-import ShareSheet from '@/components/trip/ShareSheet';
 import DragOverlay from '@/components/trip/DragOverlay';
 import ExportToMaps from '@/components/trip/ExportToMaps';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
@@ -30,15 +28,20 @@ import DesktopNav from '@/components/ui/DesktopNav';
 import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import DayBoardView from '@/components/trip/DayBoardView';
+import DayPlannerGrid from '@/components/trip/DayPlannerGrid';
 import PicksRail from '@/components/library/PicksRail';
 import RightPanel from '@/components/ui/RightPanel';
 import DreamBoard from '@/components/profile/DreamBoard';
 import GraduateModal from '@/components/profile/GraduateModal';
-import TripMapView from '@/components/trip/TripMapView';
-import TripBriefing from '@/components/trip/TripBriefing';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import EditableTripName from '@/components/trip/EditableTripName';
 import { useGeoDestinationRepair } from '@/hooks/useGeoDestinationRepair';
+
+// Lazy-loaded components for conditionally rendered views
+const ChatSidebar = lazy(() => import('@/components/chat/ChatSidebar'));
+const ShareSheet = lazy(() => import('@/components/trip/ShareSheet'));
+const TripBriefing = lazy(() => import('@/components/trip/TripBriefing'));
+const TripMapView = lazy(() => import('@/components/trip/TripMapView'));
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -91,6 +94,7 @@ function TripDetailContent() {
   const [showGraduateModal, setShowGraduateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map'>('board');
+  const [useGridLayout, setUseGridLayout] = useState(true); // Feature toggle: grid vs legacy board
 
   // Picks rail resizable width
   const RAIL_MIN = 220;
@@ -433,9 +437,28 @@ function TripDetailContent() {
                 })}
               </div>
             )}
+            {/* Grid/Legacy layout toggle (dev only) */}
+            {desktopView === 'board' && (
+              <button
+                onClick={() => setUseGridLayout(v => !v)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full cursor-pointer"
+                style={{
+                  border: '1px solid var(--t-linen)',
+                  background: useGridLayout ? 'rgba(58,128,136,0.08)' : INK['04'],
+                  fontFamily: FONT.mono,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: useGridLayout ? 'var(--t-dark-teal)' : TEXT.secondary,
+                }}
+                title="Toggle between grid and legacy board layout"
+              >
+                <PerriandIcon name="plan" size={10} color={useGridLayout ? 'var(--t-dark-teal)' : TEXT.secondary} />
+                {useGridLayout ? 'Grid' : 'Legacy'}
+              </button>
+            )}
             {/* Collaborator avatars */}
             {collabCollaborators.filter(c => c.status === 'accepted').length > 0 && (
-              <div className="flex -space-x-2 mr-1" onClick={() => setShowShareSheet(true)} style={{ cursor: 'pointer' }}>
+              <button type="button" className="flex -space-x-2 mr-1" onClick={() => setShowShareSheet(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 {collabCollaborators.filter(c => c.status === 'accepted').slice(0, 4).map((c) => (
                   <div
                     key={c.id}
@@ -451,7 +474,7 @@ function TripDetailContent() {
                     {(c.name || c.email).charAt(0).toUpperCase()}
                   </div>
                 ))}
-              </div>
+              </button>
             )}
             <button
               onClick={() => setShowShareSheet(true)}
@@ -530,17 +553,21 @@ function TripDetailContent() {
             /* ── OVERVIEW — Editorial Briefing ── */
             <div className="flex flex-1 min-h-0">
               <div className="flex-1 overflow-y-auto">
-                <TripBriefing
-                  trip={trip}
-                  onTapDay={(dayNum) => { useTripStore.getState().setCurrentDay(dayNum); setDesktopView('board'); }}
-                />
+                <Suspense fallback={null}>
+                  <TripBriefing
+                    trip={trip}
+                    onTapDay={(dayNum) => { useTripStore.getState().setCurrentDay(dayNum); setDesktopView('board'); }}
+                  />
+                </Suspense>
               </div>
               <RightPanel activities={collabActivities} />
             </div>
         ) : desktopView === 'map' ? (
             /* ── FULL MAP VIEW ── */
             <div className="flex flex-1 min-h-0">
-              <TripMapView onTapDetail={openDetail} variant="desktop" />
+              <Suspense fallback={null}>
+                <TripMapView onTapDetail={openDetail} variant="desktop" />
+              </Suspense>
             </div>
         ) : (
             /* ── ITINERARY BOARD VIEW ── */
@@ -559,7 +586,7 @@ function TripDetailContent() {
 
               {/* ── CENTER: ITINERARY BOARD ── */}
               <div className="flex-1 min-w-0 overflow-hidden">
-                <DayBoardView />
+                {useGridLayout ? <DayPlannerGrid /> : <DayBoardView />}
               </div>
 
               {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
@@ -584,12 +611,14 @@ function TripDetailContent() {
           />
         )}
         {showShareSheet && trip && (
-          <ShareSheet
-            resourceType="trip"
-            resourceId={trip.id}
-            resourceName={trip.name}
-            onClose={() => setShowShareSheet(false)}
-          />
+          <Suspense fallback={null}>
+            <ShareSheet
+              resourceType="trip"
+              resourceId={trip.id}
+              resourceName={trip.name}
+              onClose={() => setShowShareSheet(false)}
+            />
+          </Suspense>
         )}
         {showDeleteConfirm && trip && (
           <div
@@ -665,28 +694,30 @@ function TripDetailContent() {
         {showGraduateModal && (
           <GraduateModal onClose={() => setShowGraduateModal(false)} />
         )}
-        <ChatSidebar
-          isOpen={chatOpen}
-          onClose={() => setChatOpen(false)}
-          tripContext={trip ? {
-            name: trip.name,
-            destinations: trip.destinations || [trip.location],
-            totalDays: trip.days.length,
-            currentDay: trip.days[0] ? {
-              dayNumber: trip.days[0].dayNumber,
-              destination: trip.days[0].destination,
-              slots: trip.days[0].slots.map(s => ({
-                label: s.label,
-                place: s.places[0] ? {
-                  name: s.places[0].name,
-                  type: s.places[0].type,
-                  matchScore: s.places[0].matchScore,
-                } : undefined,
-              })),
-              hotel: trip.days[0].hotel,
-            } : undefined,
-          } : undefined}
-        />
+        <Suspense fallback={null}>
+          <ChatSidebar
+            isOpen={chatOpen}
+            onClose={() => setChatOpen(false)}
+            tripContext={trip ? {
+              name: trip.name,
+              destinations: trip.destinations || [trip.location],
+              totalDays: trip.days.length,
+              currentDay: trip.days[0] ? {
+                dayNumber: trip.days[0].dayNumber,
+                destination: trip.days[0].destination,
+                slots: trip.days[0].slots.map(s => ({
+                  label: s.label,
+                  place: s.places[0] ? {
+                    name: s.places[0].name,
+                    type: s.places[0].type,
+                    matchScore: s.places[0].matchScore,
+                  } : undefined,
+                })),
+                hotel: trip.days[0].hotel,
+              } : undefined,
+            } : undefined}
+          />
+        </Suspense>
       </div>
       </TripDragProvider>
       </TripCollaborationProvider>
@@ -807,7 +838,9 @@ function TripDetailContent() {
               onDelete={() => setShowDeleteConfirm(true)}
             />
             <div className="flex-1 flex flex-col min-h-0">
-              <TripMapView onTapDetail={openDetail} variant="mobile" />
+              <Suspense fallback={null}>
+                <TripMapView onTapDetail={openDetail} variant="mobile" />
+              </Suspense>
             </div>
           </>
         ) : (
@@ -892,12 +925,14 @@ function TripDetailContent() {
 
       {/* Share Sheet */}
       {showShareSheet && trip && (
-        <ShareSheet
-          resourceType="trip"
-          resourceId={trip.id}
-          resourceName={trip.name}
-          onClose={() => setShowShareSheet(false)}
-        />
+        <Suspense fallback={null}>
+          <ShareSheet
+            resourceType="trip"
+            resourceId={trip.id}
+            resourceName={trip.name}
+            onClose={() => setShowShareSheet(false)}
+          />
+        </Suspense>
       )}
 
       {/* Delete Trip Confirmation */}
@@ -979,28 +1014,30 @@ function TripDetailContent() {
       )}
 
       {/* Chat Sidebar */}
-      <ChatSidebar
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        tripContext={trip ? {
-          name: trip.name,
-          destinations: trip.destinations || [trip.location],
-          totalDays: trip.days.length,
-          currentDay: trip.days[0] ? {
-            dayNumber: trip.days[0].dayNumber,
-            destination: trip.days[0].destination,
-            slots: trip.days[0].slots.map(s => ({
-              label: s.label,
-              place: s.places[0] ? {
-                name: s.places[0].name,
-                type: s.places[0].type,
-                matchScore: s.places[0].matchScore,
-              } : undefined,
-            })),
-            hotel: trip.days[0].hotel,
-          } : undefined,
-        } : undefined}
-      />
+      <Suspense fallback={null}>
+        <ChatSidebar
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          tripContext={trip ? {
+            name: trip.name,
+            destinations: trip.destinations || [trip.location],
+            totalDays: trip.days.length,
+            currentDay: trip.days[0] ? {
+              dayNumber: trip.days[0].dayNumber,
+              destination: trip.days[0].destination,
+              slots: trip.days[0].slots.map(s => ({
+                label: s.label,
+                place: s.places[0] ? {
+                  name: s.places[0].name,
+                  type: s.places[0].type,
+                  matchScore: s.places[0].matchScore,
+                } : undefined,
+              })),
+              hotel: trip.days[0].hotel,
+            } : undefined,
+          } : undefined}
+        />
+      </Suspense>
     </div>
     </TripDragProvider>
     </TripCollaborationProvider>

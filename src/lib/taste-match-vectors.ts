@@ -17,14 +17,21 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import {
   cosineSimilarityV3,
   getClusterIndicesForDomain,
   getAllClusterLabels,
-  ALL_DOMAINS,
+  getAllDomains,
   VECTOR_DIM_V3,
   vectorToSqlV3,
 } from '@/lib/taste-intelligence';
+import { getSignalClusterMap } from '@/lib/taste-intelligence/signal-clusters-loader';
+import {
+  SCORE_DISPLAY_CEILING,
+  SCORE_DISPLAY_FLOOR,
+  SCORE_SPREAD_FACTOR,
+} from '@/lib/constants';
 import type { TasteDomain } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -79,7 +86,7 @@ function deriveDomainBreakdown(
   const domainSums: Record<string, number> = {};
   const domainMaxPossible: Record<string, number> = {};
 
-  for (const domain of ALL_DOMAINS) {
+  for (const domain of getAllDomains()) {
     const indices = getClusterIndicesForDomain(domain);
     let sum = 0;
     let maxPossible = 0;
@@ -100,7 +107,7 @@ function deriveDomainBreakdown(
   const breakdown: Record<string, number> = {};
   let maxRatio = 0;
 
-  for (const domain of ALL_DOMAINS) {
+  for (const domain of getAllDomains()) {
     const maxP = domainMaxPossible[domain];
     const ratio = maxP > 0 ? domainSums[domain] / maxP : 0;
     breakdown[domain] = Math.max(0, ratio); // Keep positive ratios
@@ -109,7 +116,7 @@ function deriveDomainBreakdown(
 
   // Scale to 0-100 with top domain at ~95
   const scaleFactor = maxRatio > 0 ? 95 / maxRatio : 1;
-  for (const domain of ALL_DOMAINS) {
+  for (const domain of getAllDomains()) {
     breakdown[domain] = Math.round(Math.max(0, Math.min(100, breakdown[domain] * scaleFactor)));
   }
 
@@ -142,7 +149,7 @@ export function computeVectorMatch(
   const breakdown = deriveDomainBreakdown(userVector, propertyVector);
 
   // Find top domain
-  const topDimension = ALL_DOMAINS.reduce((best, d) =>
+  const topDimension = getAllDomains().reduce((best, d) =>
     (breakdown[d as TasteDomain] ?? 0) > (breakdown[best as TasteDomain] ?? 0) ? d : best,
   ) as TasteDomain;
 
@@ -324,8 +331,7 @@ function getTopSignalsForCluster(clusterId: number): string[] {
   // getAllClusterLabels doesn't include topSignals, so we need raw cluster data
   // For now, return the label as a proxy — we'll enrich this when we integrate
   // with the full cluster metadata
-  const clusterMap = require('@/lib/taste-intelligence/signal-clusters.json');
-  const info = clusterMap.clusters?.[String(clusterId)];
+  const info = getSignalClusterMap().clusters?.[String(clusterId)];
   return info?.topSignals?.slice(0, 3) ?? [];
 }
 
@@ -432,8 +438,8 @@ function buildExplanation(
  */
 export function normalizeVectorScoresForDisplay<T extends { overallScore: number }>(
   scores: T[],
-  ceiling = 96,
-  floor = 35,
+  ceiling = SCORE_DISPLAY_CEILING,
+  floor = SCORE_DISPLAY_FLOOR,
 ): T[] {
   if (scores.length === 0) return scores;
   if (scores.length === 1) {
@@ -453,7 +459,7 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
     return scores.map((s) => ({ ...s, overallScore: Math.round((ceiling + floor) / 2 + 10) }));
   }
 
-  const SPREAD_FACTOR = 0.55;
+  const SPREAD_FACTOR = SCORE_SPREAD_FACTOR;
   const displayRange = ceiling - floor;
   // Median display score — where an average property lands
   const medianDisplay = floor + displayRange * 0.50; // ~65.5 for default floor=35, ceil=96
@@ -493,8 +499,8 @@ export function normalizeVectorScoresForDisplay<T extends { overallScore: number
 export async function normalizeSingleVectorScore(
   rawScore: number,
   userId: string,
-  ceiling = 96,
-  floor = 35,
+  ceiling = SCORE_DISPLAY_CEILING,
+  floor = SCORE_DISPLAY_FLOOR,
 ): Promise<number> {
   try {
     // Fetch user vector and compute population stats in one query
@@ -524,7 +530,7 @@ export async function normalizeSingleVectorScore(
     }
 
     // Same tanh curve as normalizeVectorScoresForDisplay
-    const SPREAD_FACTOR = 0.55;
+    const SPREAD_FACTOR = SCORE_SPREAD_FACTOR;
     const displayRange = ceiling - floor;
     const medianDisplay = floor + displayRange * 0.50;
     const z = (rawScore - mean) / stddev;
@@ -624,8 +630,8 @@ export async function rescoreAllSavedPlacesV3(userId: string): Promise<RescoreRe
         data: {
           matchScore: match.overallScore,
           matchBreakdown: breakdownToNormalized(raw.result.breakdown),
-          matchExplanation: raw.result.explanation,
-        } as any,
+          matchExplanation: raw.result.explanation as unknown as Prisma.InputJsonValue,
+        },
       });
       scored++;
     } catch (err) {

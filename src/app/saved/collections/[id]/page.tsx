@@ -263,7 +263,7 @@ function CollectionDetailContent() {
       <div className="flex items-start gap-3">
         <span style={{ fontSize: isPerriandIcon ? 28 : 36 }}>
           {isPerriandIcon ? (
-            <PerriandIcon name={collection.emoji as any} size={28} color={TEXT.primary} />
+            <PerriandIcon name={collection.emoji as PerriandIconName} size={28} color={TEXT.primary} />
           ) : (
             collection.emoji
           )}
@@ -425,6 +425,7 @@ function CollectionDetailContent() {
             onClick={() => setCollectionSearch('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center"
             style={{ background: INK['06'], border: 'none', cursor: 'pointer' }}
+            aria-label="Clear search"
           >
             <PerriandIcon name="close" size={8} color={TEXT.secondary} />
           </button>
@@ -485,7 +486,7 @@ function CollectionDetailContent() {
           { value: 'source', label: 'Source' },
         ]}
         sortValue={detailSortBy}
-        onSortChange={(v) => setDetailSortBy(v as any)}
+        onSortChange={(v) => setDetailSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source')}
         onResetAll={() => {
           setTypeFilter('all');
           setSourceFilter('all');
@@ -841,7 +842,7 @@ function CollectionDetailContent() {
                   const types = new Set(placesInCollection.map(p => p.type));
                   return Array.from(types).slice(0, 4).map(type => (
                     <div key={type} className="flex items-center gap-1">
-                      <PerriandIcon name={type as any} size={11} color={TYPE_COLORS_VIBRANT[type as PlaceType] || INK['60']} />
+                      <PerriandIcon name={type as PerriandIconName} size={11} color={TYPE_COLORS_VIBRANT[type as PlaceType] || INK['60']} />
                       <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
                         {placesInCollection.filter(p => p.type === type).length}
                       </span>
@@ -922,7 +923,7 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
           className="rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ width: 40, height: 40, background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant }}
         >
-          <PerriandIcon name={typeIcon as any} size={18} color={typeColor} />
+          <PerriandIcon name={typeIcon as PerriandIconName} size={18} color={typeColor} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -966,7 +967,7 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
                 className="px-1.5 py-0.5 rounded flex items-center gap-1"
                 style={{ fontSize: 9, fontWeight: 600, background: `${rxColor}12`, color: rxColor, fontFamily: FONT.mono }}
               >
-                <PerriandIcon name={reaction.icon as any} size={10} color={rxColor} /> {reaction.label}
+                <PerriandIcon name={reaction.icon as PerriandIconName} size={10} color={rxColor} /> {reaction.label}
               </span>
             );
           })()}
@@ -983,6 +984,7 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
               className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer ml-auto"
               style={{ background: INK['04'], border: 'none' }}
+              aria-label="Remove place"
             >
               <PerriandIcon name="close" size={8} color={TEXT.secondary} />
             </button>

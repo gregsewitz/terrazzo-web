@@ -67,6 +67,7 @@ export default function EmailReservationsPage() {
             onClick={() => router.back()}
             className="bg-transparent border-none cursor-pointer p-1"
             style={{ color: 'var(--t-ink)' }}
+            aria-label="Go back"
           >
             <PerriandIcon name="arrow-left" size={16} color="var(--t-ink)" />
           </button>

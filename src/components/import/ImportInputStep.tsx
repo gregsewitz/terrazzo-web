@@ -58,6 +58,7 @@ export const ImportInputStep = React.memo(function ImportInputStep({
           onClick={onClose}
           className="bg-transparent border-none cursor-pointer flex items-center justify-center w-8 h-8 rounded-full nav-hover"
           style={{ color: TEXT.secondary }}
+          aria-label="Close"
         >
           <PerriandIcon name="close" size={16} color={TEXT.secondary} />
         </button>

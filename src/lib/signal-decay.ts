@@ -11,10 +11,19 @@
  * At 360 days, 25%. At 540 days, 12.5%. Effectively aged-out after ~2 years.
  */
 
-const DEFAULT_HALF_LIFE_DAYS = 180;
+import {
+  SIGNAL_HALF_LIFE_DAYS,
+  SIGNAL_AGED_OUT_THRESHOLD,
+  REPROFILING_MONTHS_THRESHOLD,
+  REPROFILING_BOOKINGS_THRESHOLD,
+  REPROFILING_CONFIDENCE_THRESHOLD,
+  REPROFILING_CONTRADICTION_THRESHOLD,
+} from '@/lib/constants';
+
+const DEFAULT_HALF_LIFE_DAYS = SIGNAL_HALF_LIFE_DAYS;
 
 /** Minimum confidence below which a signal is considered effectively aged-out. */
-const AGED_OUT_THRESHOLD = 0.05;
+const AGED_OUT_THRESHOLD = SIGNAL_AGED_OUT_THRESHOLD;
 
 // ─── Core Functions ──────────────────────────────────────────────────────────
 
@@ -92,7 +101,7 @@ export function checkReprofilingTriggers(input: ReprofilingInput): ReprofilingCh
       ? new Date(input.lastSynthesizedAt)
       : input.lastSynthesizedAt;
     const monthsSince = (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-    if (monthsSince >= 6) {
+    if (monthsSince >= REPROFILING_MONTHS_THRESHOLD) {
       triggers.push(`${Math.floor(monthsSince)} months since last profile synthesis`);
       suggestedPhases.push('full-refresh');
     }
@@ -102,7 +111,7 @@ export function checkReprofilingTriggers(input: ReprofilingInput): ReprofilingCh
   }
 
   // Trigger 2: Behavioral (new bookings)
-  if (input.newBookingsSinceSynthesis >= 3) {
+  if (input.newBookingsSinceSynthesis >= REPROFILING_BOOKINGS_THRESHOLD) {
     triggers.push(`${input.newBookingsSinceSynthesis} new bookings since last synthesis`);
     suggestedPhases.push('behavioral-update');
   }
@@ -110,7 +119,7 @@ export function checkReprofilingTriggers(input: ReprofilingInput): ReprofilingCh
   // Trigger 3: Domain confidence decay
   const weakDomains: string[] = [];
   for (const [domain, confidence] of Object.entries(input.domainConfidences)) {
-    if (confidence < 0.5) {
+    if (confidence < REPROFILING_CONFIDENCE_THRESHOLD) {
       weakDomains.push(domain);
     }
   }
@@ -120,7 +129,7 @@ export function checkReprofilingTriggers(input: ReprofilingInput): ReprofilingCh
   }
 
   // Trigger 4: Contradiction ratio
-  if (input.contradictionRatio > 0.3) {
+  if (input.contradictionRatio > REPROFILING_CONTRADICTION_THRESHOLD) {
     triggers.push(`Contradiction ratio ${Math.round(input.contradictionRatio * 100)}% (exceeds 30%)`);
     suggestedPhases.push('contradiction-resolution');
   }

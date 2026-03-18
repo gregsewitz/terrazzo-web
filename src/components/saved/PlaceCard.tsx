@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { ImportedPlace, REACTIONS, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/placeTypes';
@@ -17,7 +17,7 @@ interface PlaceCardProps {
   collectionCount: number;
 }
 
-export default function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionCount }: PlaceCardProps) {
+function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionCount }: PlaceCardProps) {
   const typeIcon = TYPE_ICONS[place.type] || 'location';
   const typeColor = TYPE_BRAND_COLORS[place.type] || TEXT.secondary;
   const google = place.google;
@@ -181,3 +181,7 @@ export default function PlaceCard({ place, onTap, onToggleCollections, onLongPre
     </div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders in grid of saved places (potentially hundreds of items).
+// Parent should stabilize onTap, onToggleCollections, onLongPress callback references.
+export default memo(PlaceCard);

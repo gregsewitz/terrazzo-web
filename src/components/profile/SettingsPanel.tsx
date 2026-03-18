@@ -128,13 +128,13 @@ export function SettingsPanel({
             ) : (
               <div className="flex flex-col gap-1.5">
                 {importHistory.slice(0, 10).map((item) => (
-                  <div key={item.id} className="flex items-center justify-between py-1 cursor-pointer" onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
+                  <button key={item.id} type="button" className="flex items-center justify-between py-1 cursor-pointer w-full text-left" style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
                     <div className="flex items-center gap-2 min-w-0">
                       <PerriandIcon name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'} size={10} color={INK['50']} />
                       <span className="text-[11px] truncate" style={{ color: TEXT.primary }}>{item.title}</span>
                     </div>
                     <span className="text-[10px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                  </div>
+                  </button>
                 ))}
                 <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left" style={{ color: TEXT.accent }}>View email reservations →</button>
               </div>

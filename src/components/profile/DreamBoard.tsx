@@ -207,6 +207,7 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
                   onClick={() => setChecklistItems(prev => prev.filter((_, j) => j !== i))}
                   className="w-4 h-4 flex items-center justify-center border-none cursor-pointer"
                   style={{ background: 'transparent' }}
+                  aria-label="Remove item"
                 >
                   <PerriandIcon name="close" size={8} color={INK['20']} />
                 </button>

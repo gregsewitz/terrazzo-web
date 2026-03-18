@@ -210,6 +210,7 @@ function DestinationInputInner({ destinations, onChange, isDreaming }: Destinati
               onClick={() => removeDestination(i)}
               className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-transparent border-none cursor-pointer hover:opacity-70"
               style={{ color: 'inherit' }}
+              aria-label="Remove destination"
             >
               <PerriandIcon name="close" size={10} />
             </button>

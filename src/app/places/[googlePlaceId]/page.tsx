@@ -331,6 +331,7 @@ export default function PlaceDetailPage() {
                 onClick={() => router.back()}
                 className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer border-none"
                 style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
+                aria-label="Go back"
               >
                 <PerriandIcon name="arrow-left" size={18} color="white" />
               </button>

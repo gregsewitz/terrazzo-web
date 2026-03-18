@@ -106,6 +106,7 @@ export default function AddPlacesToCollectionSheet({
               onClick={() => setSearchQuery('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center"
               style={{ background: INK['06'], border: 'none', cursor: 'pointer' }}
+              aria-label="Clear search"
             >
               <PerriandIcon name="close" size={8} color={TEXT.secondary} />
             </button>

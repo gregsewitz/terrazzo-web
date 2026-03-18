@@ -34,7 +34,13 @@
  */
 
 import type { TasteDomain, BriefingSignal, GeneratedTasteProfile } from '@/types';
-import clusterMap from './signal-clusters.json';
+import { getSignalClusterMap } from './signal-clusters-loader';
+import {
+  ANTI_SIGNAL_SCALE as ANTI_SIGNAL_SCALE_CONST,
+  BLEED_ONLY_DAMPEN as BLEED_ONLY_DAMPEN_CONST,
+  CLUSTER_ACTIVATION_THRESHOLD,
+  USER_SIGNAL_WEIGHT as USER_SIGNAL_WEIGHT_CONST,
+} from '@/lib/constants';
 
 // ─── Vector dimensions ──────────────────────────────────────────────────────
 
@@ -47,7 +53,7 @@ const SIGNAL_DIMS_V3 = 400;
  * 0.97 acts like a -0.485 activation — strong enough to meaningfully push the vector
  * away from that cluster without overwhelming positive signals.
  */
-export const ANTI_SIGNAL_SCALE = 0.5;
+export const ANTI_SIGNAL_SCALE = ANTI_SIGNAL_SCALE_CONST;
 
 /**
  * Domain index mapping. Used by front-end display code (analyzeDomainCoverage,
@@ -84,47 +90,86 @@ export function clearIdfWeightsV3(): void {
   corpusSize = 0;
 }
 
-// ─── Semantic cluster lookup ────────────────────────────────────────────────
+// ─── Lazy cluster state ─────────────────────────────────────────────────────
+// signal-clusters.json (17MB) is loaded from public/data/ on first use and
+// cached for the process lifetime. Nothing is parsed at module-load time.
 
-const signalToCluster: Record<string, number> = (clusterMap as any).signalToCluster;
-const clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[] }> =
-  (clusterMap as any).clusters;
+interface ClusterState {
+  signalToCluster: Record<string, number>;
+  clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[]; size?: number }>;
+  clusterCentroids: Record<string, number[]> | null;
+  intraBleedScale: number;
+  crossBleedScale: number;
+  legacyDecay: number;
+  neighborMap: Map<number, Array<{ idx: number; weight: number }>>;
+  domainClusterIndices: Map<string, number[]>;
+  allDomains: string[];
+}
 
-// ─── Cluster centroid embeddings for semantic fallback ─────────────────────
-// When signal-clusters.json includes clusterCentroids (1536-dim OpenAI embeddings),
-// we use cosine similarity to map unknown signals instead of the crude word-overlap fallback.
-// Centroids are exported by cluster-signals-v3.py as a flat array of floats per cluster.
-const clusterCentroids: Record<string, number[]> | null =
-  (clusterMap as any).clusterCentroids ?? null;
+let _clusterState: ClusterState | null = null;
 
-// Neighbor bleed map: cluster → [{cluster, similarity, tier}]
-// v3.5: Reduced bleed scales to prevent vector saturation.
-// Previous values (0.30/0.10) caused vectors with 300+ signals to become near-uniform
-// across all 400 dims, destroying discriminative power. Reduced to preserve sparsity.
-const INTRA_BLEED_SCALE = (clusterMap as any).intra_bleed_scale ?? 0.15;
-const CROSS_BLEED_SCALE = (clusterMap as any).cross_bleed_scale ?? 0.03;
-// Backward compat: if signal-clusters.json is still v3.2 with flat weight/no tier
-const LEGACY_DECAY = (clusterMap as any).neighbor_decay ?? 0.12;
+function getClusterState(): ClusterState {
+  if (_clusterState) return _clusterState;
 
-const clusterNeighborsRaw: Record<string, Array<{ cluster: number; similarity: number; weight?: number; tier?: string }>> =
-  (clusterMap as any).clusterNeighbors ?? {};
+  const cm = getSignalClusterMap();
 
-/** Pre-built neighbor lookup: clusterIndex → Array<{idx: number; weight: number}> */
-const neighborMap: Map<number, Array<{ idx: number; weight: number }>> = new Map();
-for (const [cidStr, neighbors] of Object.entries(clusterNeighborsRaw)) {
-  const cid = parseInt(cidStr, 10);
-  neighborMap.set(
-    cid,
-    neighbors.map((n) => {
-      if (n.tier) {
-        // v3.3: similarity-scaled weight based on tier
-        const scale = n.tier === 'cross' ? CROSS_BLEED_SCALE : INTRA_BLEED_SCALE;
-        return { idx: n.cluster, weight: n.similarity * scale };
-      }
-      // v3.2 backward compat: use legacy flat weight
-      return { idx: n.cluster, weight: n.weight ?? LEGACY_DECAY };
-    }),
-  );
+  const signalToCluster: Record<string, number> = cm.signalToCluster;
+  const clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[]; size?: number }> =
+    cm.clusters;
+  const clusterCentroids: Record<string, number[]> | null = cm.clusterCentroids ?? null;
+
+  // Neighbor bleed map: cluster → [{cluster, similarity, tier}]
+  // v3.5: Reduced bleed scales to prevent vector saturation.
+  // Previous values (0.30/0.10) caused vectors with 300+ signals to become near-uniform
+  // across all 400 dims, destroying discriminative power. Reduced to preserve sparsity.
+  const intraBleedScale: number = cm.intra_bleed_scale ?? 0.15;
+  const crossBleedScale: number = cm.cross_bleed_scale ?? 0.03;
+  // Backward compat: if signal-clusters.json is still v3.2 with flat weight/no tier
+  const legacyDecay: number = cm.neighbor_decay ?? 0.12;
+
+  const clusterNeighborsRaw: Record<string, Array<{ cluster: number; similarity: number; weight?: number; tier?: string }>> =
+    cm.clusterNeighbors ?? {};
+
+  /** Pre-built neighbor lookup: clusterIndex → Array<{idx: number; weight: number}> */
+  const neighborMap: Map<number, Array<{ idx: number; weight: number }>> = new Map();
+  for (const [cidStr, neighbors] of Object.entries(clusterNeighborsRaw)) {
+    const cid = parseInt(cidStr, 10);
+    neighborMap.set(
+      cid,
+      neighbors.map((n) => {
+        if (n.tier) {
+          // v3.3: similarity-scaled weight based on tier
+          const scale = n.tier === 'cross' ? crossBleedScale : intraBleedScale;
+          return { idx: n.cluster, weight: n.similarity * scale };
+        }
+        // v3.2 backward compat: use legacy flat weight
+        return { idx: n.cluster, weight: n.weight ?? legacyDecay };
+      }),
+    );
+  }
+
+  // Pre-computed domain → cluster indices mapping
+  const domainClusterIndices: Map<string, number[]> = new Map();
+  for (const [cidStr, info] of Object.entries(clusterInfo)) {
+    if (info.domain) {
+      const existing = domainClusterIndices.get(info.domain) || [];
+      existing.push(parseInt(cidStr, 10));
+      domainClusterIndices.set(info.domain, existing);
+    }
+  }
+
+  _clusterState = {
+    signalToCluster,
+    clusterInfo,
+    clusterCentroids,
+    intraBleedScale,
+    crossBleedScale,
+    legacyDecay,
+    neighborMap,
+    domainClusterIndices,
+    allDomains: Array.from(domainClusterIndices.keys()),
+  };
+  return _clusterState;
 }
 
 /**
@@ -143,6 +188,7 @@ for (const [cidStr, neighbors] of Object.entries(clusterNeighborsRaw)) {
  * lookupSignalClusterAsync() which calls OpenAI to embed the signal.
  */
 export function lookupSignalCluster(signal: string): number {
+  const { signalToCluster, clusterInfo } = getClusterState();
   const normalized = signal.toLowerCase().trim();
 
   // Direct lookup — covers corpus + singleton signals mapped during clustering
@@ -193,6 +239,7 @@ export function lookupSignalCluster(signal: string): number {
  * Returns null if centroids aren't available or embedding fails.
  */
 export async function lookupSignalClusterAsync(signal: string): Promise<number | null> {
+  const { clusterCentroids, signalToCluster } = getClusterState();
   if (!clusterCentroids) return null;
 
   const normalized = signal.toLowerCase().trim();
@@ -255,6 +302,7 @@ export async function lookupSignalClusterAsync(signal: string): Promise<number |
 // activations that push vectors apart in cosine similarity.
 
 function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
+  const { neighborMap } = getClusterState();
   const features = new Array(SIGNAL_DIMS_V3).fill(0);
   // Track which clusters have DIRECT signal hits (not just bleed)
   const directHits = new Set<number>();
@@ -301,7 +349,7 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
   // get dampened to prevent vector saturation for users with 300+ signals.
   // This ensures the vector retains discriminative structure even as signal
   // count grows — direct preferences stay strong, inferred adjacencies stay weak.
-  const BLEED_ONLY_DAMPEN = 0.3; // bleed-only clusters retain 30% of their value
+  const BLEED_ONLY_DAMPEN = BLEED_ONLY_DAMPEN_CONST; // bleed-only clusters retain 30% of their value
   for (let i = 0; i < SIGNAL_DIMS_V3; i++) {
     if (!directHits.has(i) && features[i] !== 0) {
       features[i] *= BLEED_ONLY_DAMPEN;
@@ -430,7 +478,7 @@ export interface PropertyAnchorForBlending {
  * those properties in embedding space — "I don't like The Standard" makes
  * the user vector less similar to The Standard's embedding.
  */
-export const USER_SIGNAL_WEIGHT = 0.6;
+export const USER_SIGNAL_WEIGHT = USER_SIGNAL_WEIGHT_CONST;
 
 export function blendPropertyAnchors(
   baseVector: number[],
@@ -480,6 +528,7 @@ export function cosineSimilarityV3(a: number[], b: number[]): number {
 
 /** Get human-readable cluster label for a signal */
 export function getSignalClusterLabel(signal: string): string | null {
+  const { clusterInfo } = getClusterState();
   const clusterId = lookupSignalCluster(signal);
   const info = clusterInfo[String(clusterId)];
   return info?.label ?? null;
@@ -487,33 +536,30 @@ export function getSignalClusterLabel(signal: string): string | null {
 
 /** Get all cluster labels and their IDs */
 export function getAllClusterLabels(): Array<{ id: number; label: string; domain?: string; size: number }> {
+  const { clusterInfo } = getClusterState();
   return Object.entries(clusterInfo).map(([id, info]) => ({
     id: parseInt(id, 10),
     label: info.label,
-    domain: (info as any).domain,
-    size: (info as any).size ?? 0,
+    domain: info.domain,
+    size: info.size ?? 0,
   }));
 }
 
 // ─── Domain Coverage Analysis ──────────────────────────────────────────────
 
-/** Pre-computed domain → cluster indices mapping (built once at import time) */
-const domainClusterIndices: Map<string, number[]> = new Map();
-for (const [cidStr, info] of Object.entries(clusterInfo)) {
-  if (info.domain) {
-    const existing = domainClusterIndices.get(info.domain) || [];
-    existing.push(parseInt(cidStr, 10));
-    domainClusterIndices.set(info.domain, existing);
-  }
-}
-
 /** Get cluster indices for a domain (exposed for queries) */
 export function getClusterIndicesForDomain(domain: string): number[] {
-  return domainClusterIndices.get(domain) || [];
+  return getClusterState().domainClusterIndices.get(domain) || [];
 }
 
-/** All 8 taste domains */
-export const ALL_DOMAINS = Array.from(domainClusterIndices.keys());
+/**
+ * All taste domains present in the cluster map (derived from cluster metadata).
+ * Lazily resolved on first call from the loaded cluster JSON.
+ */
+export function getAllDomains(): string[] {
+  return getClusterState().allDomains;
+}
+
 
 export interface DomainCoverage {
   domain: string;
@@ -543,7 +589,7 @@ export interface CoverageAnalysis {
   totalActivated: number;
 }
 
-export const ACTIVATION_THRESHOLD = 0.03; // Cluster is "activated" if |value| > this
+export const ACTIVATION_THRESHOLD = CLUSTER_ACTIVATION_THRESHOLD; // Cluster is "activated" if |value| > this
 
 /**
  * Analyze domain-level coverage of a 400-dim V3 taste vector.
@@ -555,6 +601,7 @@ export const ACTIVATION_THRESHOLD = 0.03; // Cluster is "activated" if |value| >
  *   - At onboarding completion to compute TasteStructure
  */
 export function analyzeDomainCoverage(vector: number[]): CoverageAnalysis {
+  const { domainClusterIndices, clusterInfo } = getClusterState();
   const domains: DomainCoverage[] = [];
 
   for (const [domain, indices] of domainClusterIndices) {
@@ -632,6 +679,7 @@ export function analyzeDomainCoverage(vector: number[]): CoverageAnalysis {
  * energy from activated neighbors — this corrects for that.
  */
 export function computeEffectiveActivation(vector: number[]): number[] {
+  const { neighborMap } = getClusterState();
   const effective = [...vector];
 
   for (let i = 0; i < VECTOR_DIM_V3; i++) {

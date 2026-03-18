@@ -1,4 +1,4 @@
-import type { ImportedPlace, PlaceRating, GhostSourceType, Collection } from '@/types';
+import type { ImportedPlace, PlaceRating, PlaceEnrichment, GhostSourceType, Collection } from '@/types';
 import { StateCreator } from 'zustand';
 import { deriveCities, dbWrite } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
@@ -38,9 +38,13 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       rating: dp.rating as PlaceRating | undefined,
       friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
-      enrichment: dp.intelligence?.description
-        ? { ...(dp.enrichment as ImportedPlace['enrichment'] || {}), confidence: (dp.enrichment as any)?.confidence ?? 1, description: dp.intelligence.description } as ImportedPlace['enrichment']
-        : dp.enrichment as ImportedPlace['enrichment'],
+      enrichment: (() => {
+        const base = (dp.enrichment ?? {}) as Partial<PlaceEnrichment>;
+        if (dp.intelligence?.description) {
+          return { ...base, confidence: base.confidence ?? 1, description: dp.intelligence.description } as PlaceEnrichment;
+        }
+        return dp.enrichment as PlaceEnrichment | undefined;
+      })(),
       google: normalizeGoogleData(dp.intelligence?.googleData || dp.googleData, dp.googlePlaceId),
       userContext: dp.userContext || undefined,
       timing: dp.timing || undefined,

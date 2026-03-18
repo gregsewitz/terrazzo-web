@@ -251,7 +251,7 @@ function PlaceDetailContent({
             </span>
             {item.alsoKnownAs && (
               <span className={`${akaFontSize}`} style={{ color: TEXT.secondary }}>
-                aka &ldquo;{item.alsoKnownAs}&rdquo;
+                aka {"\u201C"}{item.alsoKnownAs}{"\u201D"}
               </span>
             )}
             {sourceStyle && (
@@ -391,7 +391,7 @@ function PlaceDetailContent({
               <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}>
                 <PerriandIcon name="friend" size={12} color="var(--t-dark-teal)" />{item.friendAttribution.name}
               </div>
-              {item.friendAttribution.note && <p className={`${friendAttributionFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>&ldquo;{item.friendAttribution.note}&rdquo;</p>}
+              {item.friendAttribution.note && <p className={`${friendAttributionFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>{"\u201C"}{item.friendAttribution.note}{"\u201D"}</p>}
             </div>
           </FadeInSection>
         )}
@@ -399,7 +399,7 @@ function PlaceDetailContent({
         {/* Your notes */}
         {existingRating && ratingReaction && (existingRating.tags?.length || existingRating.personalNote || existingRating.contextTags?.length) && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
-            <div className="mb-5 px-4 py-3 rounded-2xl cursor-pointer" style={{ background: `${ratingReaction.color}06`, border: `1px solid ${ratingReaction.color}15` }} onClick={onEditRating || onRate} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (onEditRating || onRate)?.(); } }}>
+            <button type="button" className="mb-5 px-4 py-3 rounded-2xl cursor-pointer w-full text-left" style={{ background: `${ratingReaction.color}06`, border: `1px solid ${ratingReaction.color}15`, padding: '12px 16px' }} onClick={onEditRating || onRate}>
               <div className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1" style={{ color: ratingReaction.color, fontFamily: FONT.mono }}>
                 <PerriandIcon name="edit" size={11} color={ratingReaction.color} />Your notes
               </div>
@@ -409,8 +409,8 @@ function PlaceDetailContent({
                   {existingRating.returnIntent === 'absolutely' && <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: TEXT.primary }}>Would return <PerriandIcon name="check" size={11} color={TEXT.primary} /></span>}
                 </div>
               )}
-              {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: TEXT.primary }}>&ldquo;{existingRating.personalNote}&rdquo;</p>}
-            </div>
+              {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: TEXT.primary }}>{"\u201C"}{existingRating.personalNote}{"\u201D"}</p>}
+            </button>
           </FadeInSection>
         )}
 

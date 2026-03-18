@@ -239,6 +239,7 @@ function PicksRailInner({
             <button
               onClick={() => setSearchQuery('')}
               style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              aria-label="Clear search"
             >
               <PerriandIcon name="close" size={10} color={TEXT.secondary} />
             </button>

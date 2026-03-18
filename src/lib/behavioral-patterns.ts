@@ -17,11 +17,16 @@
  */
 
 import { prisma } from '@/lib/prisma';
+
 import {
   getClusterIndicesForDomain,
   getAllClusterLabels,
-  ALL_DOMAINS,
+  getAllDomains,
 } from '@/lib/taste-intelligence';
+import {
+  BEHAVIORAL_SIGNAL_THRESHOLD,
+  TOP_CLUSTERS_PER_DOMAIN,
+} from '@/lib/constants';
 import type { TasteDomain } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -74,7 +79,7 @@ export async function analyzeBehavioralPatterns(
     : { userId, deletedAt: null, placeIntelligenceId: { not: null } };
 
   const savedPlaces = await prisma.savedPlace.findMany({
-    where: whereClause as any,
+    where: whereClause as { userId: string; deletedAt: null; isFavorited?: boolean; placeIntelligenceId: { not: null } },
     select: {
       id: true,
       name: true,
@@ -138,13 +143,13 @@ export async function analyzeBehavioralPatterns(
   }
   const patterns: BehavioralPattern[] = [];
 
-  for (const domain of ALL_DOMAINS) {
+  for (const domain of getAllDomains()) {
     const indices = getClusterIndicesForDomain(domain);
     const clusterScores: Array<{ idx: number; label: string; score: number }> = [];
 
     for (const idx of indices) {
       const score = meanVec[idx] || 0;
-      if (score > 0.02) { // threshold for meaningful signal
+      if (score > BEHAVIORAL_SIGNAL_THRESHOLD) { // threshold for meaningful signal
         clusterScores.push({
           idx,
           label: clusterLabelMap.get(idx) || `cluster-${idx}`,
@@ -159,7 +164,7 @@ export async function analyzeBehavioralPatterns(
     clusterScores.sort((a, b) => b.score - a.score);
 
     // Take top clusters for this domain
-    const topClusters = clusterScores.slice(0, 3);
+    const topClusters = clusterScores.slice(0, TOP_CLUSTERS_PER_DOMAIN);
     const domainStrength = topClusters.reduce((sum, c) => sum + c.score, 0);
 
     // Count places that contribute to this pattern

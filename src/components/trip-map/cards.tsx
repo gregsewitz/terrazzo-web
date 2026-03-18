@@ -76,9 +76,9 @@ export function MobileDetailCard({
       }}
     >
       {/* Swipe handle */}
-      <div className="flex justify-center pt-2 pb-1" onClick={(e) => { e.stopPropagation(); onDismiss(); }} style={{ cursor: 'pointer' }}>
+      <button type="button" className="flex justify-center pt-2 pb-1 w-full" onClick={(e) => { e.stopPropagation(); onDismiss(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: INK['15'] }} />
-      </div>
+      </button>
 
       <div className="px-4 pb-3">
         {/* Name row */}
