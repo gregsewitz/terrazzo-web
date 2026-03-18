@@ -626,7 +626,7 @@ export interface BriefingData {
   propertyName: string;
   signals: BriefingSignal[];
   antiSignals: BriefingAntiSignal[];
-  reliability: { overall: number; categories: Record<string, unknown>; totalReviews: number } | null;
+  reliability: { overall: number; categories: Record<string, { score: number; failures: number }>; totalReviews: number } | null;
   facts: Record<string, unknown> | null;
   signalCount: number;
   antiSignalCount: number;

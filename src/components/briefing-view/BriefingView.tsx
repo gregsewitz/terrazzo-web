@@ -42,6 +42,7 @@ import {
   InlineAntiSignal,
   getFactIconName,
 } from './cards';
+import { ReliabilityBreakdown } from './ReliabilityBreakdown';
 
 interface BriefingViewProps {
   googlePlaceId: string;
@@ -405,6 +406,11 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                       </div>
                     </div>
                   </div>
+
+                  {/* Reliability category breakdown */}
+                  {data.reliability && Object.keys(data.reliability.categories || {}).length > 0 && (
+                    <ReliabilityBreakdown reliability={data.reliability} />
+                  )}
                 </SafeFadeIn>
 
                 {/* Value badge — price-match framing */}
