@@ -24,7 +24,7 @@ import AddBarCollections, { AddBarCollectionsCTA } from './AddBarCollections';
 
 const UniversalAddBar = memo(function UniversalAddBar() {
   const isDesktop = useIsDesktop();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Add Bar store
   const {
@@ -65,6 +65,13 @@ const UniversalAddBar = memo(function UniversalAddBar() {
       setTimeout(() => inputRef.current?.focus(), 120);
     }
   }, [isOpen, mode]);
+
+  // ─── Reset textarea height when query is cleared ─────────────────────
+  useEffect(() => {
+    if (!query && inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
+  }, [query]);
 
   // ─── Keyboard: Escape to close ─────────────────────────────────────────
   useEffect(() => {
@@ -479,22 +486,33 @@ const UniversalAddBar = memo(function UniversalAddBar() {
           {(mode === 'search' || mode === 'importing' || mode === 'error') && (
             <div className="px-5 pt-4 pb-2 flex-shrink-0">
               <div
-                className="flex items-center gap-2.5 rounded-xl px-3.5"
+                className="flex gap-2.5 rounded-xl px-3.5"
                 style={{
-                  height: 44,
+                  minHeight: 44,
                   background: 'white',
                   border: '1.5px solid var(--t-navy)',
                   transition: 'border-color 200ms ease',
+                  alignItems: 'flex-start',
+                  paddingTop: 12,
+                  paddingBottom: 12,
                 }}
               >
-                <PerriandIcon name="discover" size={16} color={INK['40']} />
-                <input
+                <PerriandIcon name="discover" size={16} color={INK['40']} style={{ flexShrink: 0, marginTop: 1 }} />
+                <textarea
                   ref={inputRef}
-                  type="text"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    // Auto-resize: reset to auto then set to scrollHeight
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleInputSubmit();
+                    // Enter submits (unless Shift held for manual newline)
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleInputSubmit();
+                    }
                     if (e.key === 'Escape') close();
                   }}
                   onPaste={(e) => {
@@ -510,20 +528,19 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                         }
                       }
                     }
+                    // Text paste is allowed through naturally — the textarea
+                    // preserves newlines. The submit arrow will appear so the
+                    // user can review and confirm before importing.
 
-                    // Handle pasted text that looks like a list of places.
-                    // Multi-line: <input type="text"> strips newlines, so we intercept
-                    // here before the browser flattens the text into a single line.
-                    // Single-line delimited: auto-submit comma/dash/bullet lists
-                    // so the user doesn't have to manually hit Enter.
-                    const pastedText = e.clipboardData?.getData('text/plain') ?? '';
-                    const detected = detectInput(pastedText.trim());
-                    if (detected.type === 'text-list') {
-                      e.preventDefault();
-                      setQuery(pastedText);
-                      handleInputSubmit(pastedText);
-                    }
+                    // Auto-resize after paste (runs after value updates)
+                    requestAnimationFrame(() => {
+                      if (inputRef.current) {
+                        inputRef.current.style.height = 'auto';
+                        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                      }
+                    });
                   }}
+                  rows={1}
                   placeholder={tripContext ? `Search library or Google...` : 'Search, paste a link, or drop a file...'}
                   style={{
                     flex: 1,
@@ -533,6 +550,11 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     fontFamily: FONT.sans,
                     fontSize: 14,
                     color: TEXT.primary,
+                    resize: 'none',
+                    overflow: 'hidden',
+                    lineHeight: '20px',
+                    padding: 0,
+                    margin: 0,
                   }}
                 />
                 {/* Hidden file input */}
@@ -559,6 +581,8 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                     color: TEXT.secondary,
                     display: 'flex',
                     alignItems: 'center',
+                    flexShrink: 0,
+                    marginTop: 1,
                     transition: 'color 150ms ease',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = TEXT.primary)}

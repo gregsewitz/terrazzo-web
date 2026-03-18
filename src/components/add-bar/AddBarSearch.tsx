@@ -29,7 +29,7 @@ interface AddBarSearchProps {
   setQuery: (q: string) => void;
   setLibraryResults: (r: ImportedPlace[]) => void;
   setMode: (m: AddBarMode) => void;
-  inputRef: React.RefObject<HTMLInputElement | null>;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 export default function AddBarSearch({

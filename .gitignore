@@ -47,3 +47,6 @@ enrich-log*.txt
 # large cache files
 signal-embeddings-cache.json
 .env*.local
+
+# skill cache (regenerated locally)
+*.skill
