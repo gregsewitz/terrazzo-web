@@ -39,10 +39,38 @@ export function TrustBadge({ score, reviewCount }: { score: number | null; revie
 
 // ─── SourceProvenanceStrip Component ───
 export function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }) {
+  // Normalize pipeline source_type values into display categories
   const sourceCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     signals.forEach(s => {
-      const src = s.source_type || 'analysis';
+      const raw = s.source_type || 'analysis';
+      // Map pipeline source types to display categories
+      let src: string;
+      if (raw === 'editorial' || raw === 'editorial_extraction') {
+        src = 'editorial';
+      } else if (raw === 'review_consensus' || raw === 'review_intelligence' || raw === 'review_taste_mismatch' || raw === 'review_bad_fit') {
+        src = 'review';
+      } else if (raw === 'instagram_vision' || raw === 'instagram') {
+        src = 'instagram';
+      } else if (raw === 'design_analysis') {
+        src = 'design';
+      } else if (raw === 'atmosphere_analysis') {
+        src = 'atmosphere';
+      } else if (raw === 'service_analysis') {
+        src = 'service';
+      } else if (raw === 'fooddrink_analysis') {
+        src = 'food_drink';
+      } else if (raw === 'character_analysis') {
+        src = 'character';
+      } else if (raw === 'setting_analysis') {
+        src = 'setting';
+      } else if (raw === 'wellness_analysis') {
+        src = 'wellness';
+      } else if (raw === 'sustainability_analysis') {
+        src = 'sustainability';
+      } else {
+        src = raw;
+      }
       counts[src] = (counts[src] || 0) + 1;
     });
     return counts;
@@ -53,6 +81,14 @@ export function SourceProvenanceStrip({ signals }: { signals: BriefingSignal[] }
     editorial: { iconName: 'article', label: 'Editorial' },
     review: { iconName: 'quote', label: 'Reviews' },
     instagram: { iconName: 'discover', label: 'Instagram' },
+    design: { iconName: 'lightbulb', label: 'Design' },
+    atmosphere: { iconName: 'lightbulb', label: 'Atmosphere' },
+    service: { iconName: 'lightbulb', label: 'Service' },
+    food_drink: { iconName: 'restaurant', label: 'Food & Drink' },
+    character: { iconName: 'lightbulb', label: 'Character' },
+    setting: { iconName: 'lightbulb', label: 'Setting' },
+    wellness: { iconName: 'lightbulb', label: 'Wellness' },
+    sustainability: { iconName: 'lightbulb', label: 'Sustainability' },
     menu: { iconName: 'restaurant', label: 'Menu' },
     awards: { iconName: 'sparkle', label: 'Awards' },
     analysis: { iconName: 'lightbulb', label: 'Analysis' },
