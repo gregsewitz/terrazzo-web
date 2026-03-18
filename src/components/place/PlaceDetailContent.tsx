@@ -17,6 +17,7 @@ import { SignalResonanceStrip, OverlapMosaic, DeepMatchBreakdown } from '@/compo
 import type { ResonanceCluster, DeepMatch, DeepMatchSignal } from '@/components/intelligence';
 import { getDisplayLocation } from '@/lib/place-display';
 import { usePlaceDetailData } from '@/hooks/usePlaceDetailData';
+import { ReliabilityBreakdown } from '@/components/briefing-view/ReliabilityBreakdown';
 
 export interface PlaceDetailContentProps {
   item: ImportedPlace;
@@ -517,6 +518,15 @@ function PlaceDetailContent({
                   Taste matching isn&apos;t available for private rentals and listings
                 </div>
               </div>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Reliability breakdown — category-level trust scores */}
+        {!isPrivateListing && intelData?.reliability && Object.keys((intelData.reliability as Record<string, unknown>)?.categories || {}).length > 0 && (
+          <FadeInSection delay={0.12} direction="up" distance={16}>
+            <div className="mb-5">
+              <ReliabilityBreakdown reliability={intelData.reliability as Parameters<typeof ReliabilityBreakdown>[0]['reliability']} />
             </div>
           </FadeInSection>
         )}
