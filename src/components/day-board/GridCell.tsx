@@ -103,14 +103,36 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     }
   }, [dayNumber, slot.id, onOpenOverlay]);
 
-  // Double-click to add entry on empty cells
-  const handleDoubleClick = useCallback(() => {
-    if (totalCount === 0) {
+  // Click on empty cell to add entry; click on populated cell opens overlay
+  const handleCellClick = useCallback((e: React.MouseEvent) => {
+    // Don't trigger if clicking on a card or button inside the cell
+    if ((e.target as HTMLElement).closest('[data-grid-card]') || (e.target as HTMLElement).closest('button')) return;
+    if (totalCount === 0 && !quickInputOpen) {
       setQuickInputOpen(true);
-    } else {
+    } else if (totalCount > 0) {
       handleOpenOverlay();
     }
-  }, [totalCount, handleOpenOverlay]);
+  }, [totalCount, quickInputOpen, handleOpenOverlay]);
+
+  /** Wrap any card in a fixed-height container so all cards are uniform */
+  const cardWrapper = (key: string, children: React.ReactNode) => (
+    <div
+      key={key}
+      data-grid-card
+      className={`mx-${CARD_PX} mb-1`}
+      style={{
+        height: CARD_H,
+        minHeight: CARD_H,
+        maxHeight: CARD_H,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+      }}
+    >
+      {children}
+    </div>
+  );
 
   const renderItem = (item: typeof allItems[number]) => {
     switch (item.type) {
@@ -128,15 +150,13 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         );
       case 'quickEntry': {
         const qe = item.data as import('@/types').QuickEntry;
-        return (
-          <div key={item.id} className={`px-${CARD_PX} pb-0.5`}>
-            <QuickEntryCard
-              entry={qe}
-              onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
-              onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
-            />
-          </div>
-        );
+        return cardWrapper(item.id, (
+          <QuickEntryCard
+            entry={qe}
+            onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
+            onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
+          />
+        ));
       }
       case 'ghost': {
         const ghost = item.data as ImportedPlace;
@@ -147,10 +167,13 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         return (
           <div
             key={item.id}
+            data-grid-card
             onClick={() => onTapDetail(ghost)}
-            className={`mx-${CARD_PX} mb-1.5 rounded cursor-pointer ghost-shimmer relative`}
+            className={`mx-${CARD_PX} mb-1 rounded cursor-pointer ghost-shimmer relative`}
             style={{
               height: CARD_H,
+              minHeight: CARD_H,
+              maxHeight: CARD_H,
               background: 'var(--t-cream)',
               border: `1.5px dashed ${gSrc.color}`,
               padding: '6px 10px',
@@ -191,16 +214,14 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
       }
       case 'suggestion': {
         const sg = item.data as Parameters<typeof CollaboratorGhostCard>[0]['suggestion'];
-        return (
-          <div key={item.id} className={`px-${CARD_PX} pb-0.5`}>
-            <CollaboratorGhostCard
-              suggestion={sg}
-              isOwner={myRole === 'owner'}
-              onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-              onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
-            />
-          </div>
-        );
+        return cardWrapper(item.id, (
+          <CollaboratorGhostCard
+            suggestion={sg}
+            isOwner={myRole === 'owner'}
+            onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
+            onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
+          />
+        ));
       }
       default:
         return null;
@@ -210,8 +231,8 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
   return (
     <div
       ref={cellRef}
-      className="relative"
-      onDoubleClick={handleDoubleClick}
+      className="relative cursor-pointer"
+      onClick={handleCellClick}
       style={{
         height: rowHeight,
         overflow: 'hidden',

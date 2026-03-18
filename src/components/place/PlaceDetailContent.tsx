@@ -421,7 +421,7 @@ function PlaceDetailContent({
             <div className="flex flex-col gap-3 mb-5">
               <div className="p-4 rounded-2xl" style={{ background: 'rgba(58,128,136,0.08)', border: '1px solid rgba(58,128,136,0.16)' }}>
                 <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5" style={{ color: '#226848', fontFamily: FONT.mono }}>
-                  <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You&apos;ll Love It
+                  <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You{"'"}ll Love It
                 </h4>
                 <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
               </div>
@@ -515,7 +515,7 @@ function PlaceDetailContent({
               <div className="flex-1 min-w-0">
                 <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: TEXT.primary }}>Private listing</div>
                 <div className={`${matchScoreSubFontSize} mt-0.5`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                  Taste matching isn&apos;t available for private rentals and listings
+                  Taste matching isn{"'"}t available for private rentals and listings
                 </div>
               </div>
             </div>
