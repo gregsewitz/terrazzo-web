@@ -19,6 +19,7 @@ export interface TripPlacementState {
   dismissGhost: (dayNumber: number, slotId: string, ghostId: string) => void;
   ratePlace: (itemId: string, rating: PlaceRating) => void;
   injectGhostCandidates: (candidates: ImportedPlace[]) => void;
+  refreshGhosts: (candidates: ImportedPlace[]) => void;
   placeFromSaved: (place: ImportedPlace, dayNumber: number, slotId: string) => void;
   moveToSlot: (place: ImportedPlace, fromDay: number, fromSlotId: string, toDay: number, toSlotId: string) => void;
   setPlaceTime: (dayNumber: number, slotId: string, placeId: string, specificTime: string | undefined, specificTimeLabel?: string) => void;
@@ -472,8 +473,12 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
                 ghostSource: candidate.rating?.reaction === 'myPlace' ? 'manual' : (candidate.ghostSource || 'manual'),
                 terrazzoReasoning: {
                   rationale: candidate.rating?.reaction === 'myPlace'
-                    ? `You starred ${candidate.name} — it's in ${trip.destinations?.[0] || trip.location}`
-                    : `Highly rated place matching your ${trip.name} trip`,
+                    ? `You starred ${candidate.name}`
+                    : candidate.matchExplanation?.topClusters?.[0]?.label
+                      ? `Fits your ${candidate.matchExplanation.topClusters[0].label} signal`
+                      : candidate.type
+                        ? `Top ${candidate.type.toLowerCase()} pick for this trip`
+                        : `Matches your taste profile`,
                   confidence: 0.85,
                 },
               };
@@ -494,6 +499,19 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
       const t = get().trips.find(tr => tr.id === tripId);
       return t ? { days: t.days } : {};
     });
+  },
+
+  /** Clear all ghost items and re-inject from candidates (useful to pick up rationale changes) */
+  refreshGhosts: (candidates) => {
+    set(state => updateCurrentTrip(state, trip => ({
+      ...trip,
+      days: trip.days.map(d => ({
+        ...d,
+        slots: d.slots.map(s => ({ ...s, ghostItems: [] })),
+      })),
+    })));
+    // Re-inject with fresh rationale text
+    get().injectGhostCandidates(candidates);
   },
 
   // ─── Quick Entry CRUD ───────────────────────────────────────────────────

@@ -70,6 +70,7 @@ function TripDetailContent() {
   const moveToSlot = useTripStore(s => s.moveToSlot);
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const injectGhostCandidates = useTripStore(s => s.injectGhostCandidates);
+  const refreshGhosts = useTripStore(s => s.refreshGhosts);
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
   const deleteTrip = useTripStore(s => s.deleteTrip);
@@ -454,6 +455,25 @@ function TripDetailContent() {
               >
                 <PerriandIcon name="plan" size={10} color={useGridLayout ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 {useGridLayout ? 'Grid' : 'Legacy'}
+              </button>
+            )}
+            {/* Refresh ghosts (dev only) */}
+            {desktopView === 'board' && myPlaces.length > 0 && (
+              <button
+                onClick={() => { refreshGhosts(myPlaces); ghostsInjectedRef.current = true; }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full cursor-pointer"
+                style={{
+                  border: '1px solid var(--t-linen)',
+                  background: INK['04'],
+                  fontFamily: FONT.mono,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: TEXT.secondary,
+                }}
+                title="Clear and re-inject ghost suggestions"
+              >
+                <PerriandIcon name="swap" size={10} color={TEXT.secondary} />
+                Refresh ghosts
               </button>
             )}
             {/* Collaborator avatars */}

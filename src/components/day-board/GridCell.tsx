@@ -170,7 +170,11 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         const gSrc = SOURCE_STYLES[(ghost.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
         const gNote = ghost.friendAttribution?.note
           ? `"${ghost.friendAttribution.note}"`
-          : ghost.terrazzoReasoning?.rationale || ghost.savedAt || '';
+          : ghost.terrazzoReasoning?.rationale
+            || ghost.enrichment?.description
+            || ghost.google?.editorialSummary
+            || ghost.tips?.[0]
+            || '';
         return cardWrapper(item.id, (
           <div
             onClick={() => onTapDetail(ghost)}
