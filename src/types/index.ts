@@ -392,24 +392,32 @@ export interface TripDay {
 }
 
 // ─── Dream Board ───
-export type DreamBoardEntryType = 'note' | 'link' | 'checklist' | 'question' | 'vibe';
+export type DreamBoardEntryType = 'text' | 'link' | 'checklist' | 'divider';
 
 export interface DreamBoardEntry {
   id: string;
   type: DreamBoardEntryType;
-  content: string;           // text for notes/vibes/questions, URL for links
-  title?: string;            // display title for links, or checklist title
+  content: string;           // body text (or URL for links)
+  title?: string;            // display title for links, checklist title, or divider label
   items?: { text: string; done: boolean }[]; // checklist items
   pinned?: boolean;
-  resolved?: boolean;        // for questions — marks as answered/figured out
+  section?: string;          // groups entry under a divider (matches divider id)
+  order?: number;            // manual ordering within a section
   createdAt: string;         // ISO timestamp
-  color?: string;            // accent color (used by vibes, optional for others)
 }
 
-/** @deprecated Use DreamBoardEntry — kept for migration compatibility */
+/** @deprecated Legacy type aliases — kept for migration compatibility */
 export type ScratchpadEntryType = DreamBoardEntryType;
-/** @deprecated Use DreamBoardEntry — kept for migration compatibility */
+/** @deprecated Legacy type aliases — kept for migration compatibility */
 export type ScratchpadEntry = DreamBoardEntry;
+
+/** Legacy entry type mapping for migration from old types to new */
+export function migrateLegacyEntryType(type: string): DreamBoardEntryType {
+  if (type === 'note' || type === 'question' || type === 'vibe') return 'text';
+  if (type === 'link') return 'link';
+  if (type === 'checklist') return 'checklist';
+  return 'text';
+}
 
 export interface Trip {
   id: string;

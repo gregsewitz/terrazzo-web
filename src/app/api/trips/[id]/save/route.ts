@@ -23,6 +23,7 @@ export const PATCH = apiHandler(async (req: NextRequest, { params }: { params: P
       ...(updates.name !== undefined && { name: updates.name }),
       ...(updates.days !== undefined && { days: updates.days }),
       ...(updates.pool !== undefined && { pool: updates.pool }),
+      ...(updates.dreamBoard !== undefined && { dreamBoard: updates.dreamBoard }),
       ...(updates.conversationHistory !== undefined && { conversationHistory: updates.conversationHistory }),
       ...(updates.status !== undefined && { status: updates.status }),
       ...(updates.destinations !== undefined && { destinations: updates.destinations }),

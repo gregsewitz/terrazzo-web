@@ -8,7 +8,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 
 // ─── Entry type config ───
 const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIconName; placeholder: string }[] = [
-  { type: 'note', label: 'Note', icon: 'edit', placeholder: 'Jot something down...' },
+  { type: 'text', label: 'Note', icon: 'edit', placeholder: 'Jot something down...' },
   { type: 'link', label: 'Link', icon: 'article', placeholder: 'Paste a URL...' },
   { type: 'checklist', label: 'Checklist', icon: 'check', placeholder: 'Checklist title...' },
 ];
@@ -65,7 +65,7 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
   }, [entries]);
 
   // ─── Input state ───
-  const [inputType, setInputType] = useState<ScratchpadEntryType>('note');
+  const [inputType, setInputType] = useState<ScratchpadEntryType>('text');
   const [inputValue, setInputValue] = useState('');
   const [showTypePicker, setShowTypePicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,13 +92,13 @@ export default function Scratchpad({ compact }: ScratchpadProps) {
       });
     } else {
       addEntry({
-        type: 'note',
+        type: 'text',
         content: text,
       });
     }
 
     setInputValue('');
-    setInputType('note');
+    setInputType('text');
     setTimeout(() => inputRef.current?.focus(), 50);
   }, [inputValue, inputType, addEntry]);
 
@@ -305,7 +305,7 @@ function ScratchpadCard({
     onUpdate(entry.id, { items: newItems });
   };
 
-  const bg = getAccentBg(entry.color);
+  const bg = 'white';
 
   return (
     <div
@@ -341,7 +341,7 @@ function ScratchpadCard({
           >
             <PerriandIcon name="pin" size={10} color={entry.pinned ? TEXT.accent : INK['30']} />
           </button>
-          {entry.type === 'note' && (
+          {entry.type === 'text' && (
             <button
               onClick={() => { setEditValue(entry.content); setEditing(!editing); }}
               className="w-5 h-5 flex items-center justify-center rounded border-none cursor-pointer"
@@ -364,7 +364,7 @@ function ScratchpadCard({
 
       {/* Card body — depends on type */}
       <div className="px-2.5 pb-2.5">
-        {entry.type === 'note' && (
+        {entry.type === 'text' && (
           editing ? (
             <div className="flex flex-col gap-1.5">
               <textarea

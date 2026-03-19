@@ -346,6 +346,9 @@ model Trip {
   days         Json      // TripDay[]
   pool         Json?     // PoolItem[] — unplaced items
 
+  // Dream board — freeform notes, links, checklists, etc.
+  dreamBoard   Json?     // DreamBoardEntry[]
+
   // Conversation history
   conversationHistory Json? // Message[]
 
