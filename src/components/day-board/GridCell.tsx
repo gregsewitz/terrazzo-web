@@ -23,7 +23,7 @@ interface GridCellProps {
   onOpenOverlay: (dayNumber: number, slotId: string, rect: DOMRect) => void;
 }
 
-const CARD_H = 56;
+const CARD_H = 82;
 const CARD_GAP = 4;
 const CARD_PX = 3;
 const MAX_VISIBLE_CARDS = 2;
@@ -118,46 +118,22 @@ function GridCard({
         userSelect: 'none',
       }}
     >
-      {/* Row 1: Name + type + score + source + actions */}
-      <div className="flex items-center gap-1.5 min-w-0">
+      {/* Row 1: Name (never truncated — wraps to 2 lines max) + action buttons */}
+      <div className="flex items-start gap-1.5 min-w-0">
         {/* Collaborator avatar dot */}
         {isSuggestion && collabColor && (
-          <div className="flex-shrink-0 rounded-full" style={{ width: 6, height: 6, background: collabColor }} />
+          <div className="flex-shrink-0 rounded-full mt-1" style={{ width: 6, height: 6, background: collabColor }} />
         )}
 
         <span
-          className="font-semibold truncate flex-1"
-          style={{ color: TEXT.primary, fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.2 }}
+          className="font-semibold flex-1"
+          style={{
+            color: TEXT.primary, fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.25,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}
         >
           {name}
         </span>
-
-        {typeLabel && (
-          <span
-            className="flex-shrink-0"
-            style={{ fontFamily: FONT.mono, fontSize: 8.5, fontWeight: 600, color: TEXT.tertiary, textTransform: 'uppercase', letterSpacing: 0.3 }}
-          >
-            {typeLabel}
-          </span>
-        )}
-
-        {matchScore != null && matchScore >= 70 && (
-          <span
-            className="flex-shrink-0 px-1 rounded"
-            style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: 'rgba(58,128,136,0.1)', color: COLOR.darkTeal }}
-          >
-            {Math.round(matchScore)}%
-          </span>
-        )}
-
-        {sourceBadge && (
-          <span
-            className="flex-shrink-0 px-1.5 py-px rounded font-bold"
-            style={{ background: sourceBadge.bg, color: sourceBadge.color, fontFamily: FONT.mono, fontSize: 8 }}
-          >
-            {sourceBadge.label}
-          </span>
-        )}
 
         {actionButton && (
           <button
@@ -182,11 +158,43 @@ function GridCard({
         )}
       </div>
 
-      {/* Row 2: Description — full width, italic, truncated */}
+      {/* Row 2: Metadata chips */}
+      <div className="flex items-center gap-1.5 min-w-0">
+        {typeLabel && (
+          <span
+            className="flex-shrink-0"
+            style={{ fontFamily: FONT.mono, fontSize: 8.5, fontWeight: 600, color: TEXT.tertiary, textTransform: 'uppercase', letterSpacing: 0.3 }}
+          >
+            {typeLabel}
+          </span>
+        )}
+
+        {matchScore != null && matchScore >= 70 && (
+          <span
+            className="flex-shrink-0 px-1 rounded"
+            style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: 'rgba(58,128,136,0.1)', color: COLOR.darkTeal }}
+          >
+            {Math.round(matchScore)}%
+          </span>
+        )}
+
+        {sourceBadge && (
+          <span
+            className="flex-shrink-0 px-1.5 py-px rounded font-bold"
+            style={{ background: sourceBadge.bg, color: sourceBadge.color, fontFamily: FONT.mono, fontSize: 8 }}
+          >
+            Via {sourceBadge.label}
+          </span>
+        )}
+      </div>
+
+      {/* Row 3: Description — dedicated line, 2-line clamp */}
       {description && (
         <div
-          className="truncate"
-          style={{ fontFamily: FONT.sans, fontSize: 10.5, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.3 }}
+          style={{
+            fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.35,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}
         >
           {description}
         </div>

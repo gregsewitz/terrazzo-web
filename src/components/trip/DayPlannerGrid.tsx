@@ -29,10 +29,10 @@ const SLOT_LABELS: Record<string, { label: string; time: string }> = {
   evening:   { label: 'Evening',   time: '9:30 PM' },
 };
 
-const CARD_H = 56;
+const CARD_H = 82;
 const CARD_GAP = 4;
 const CARD_SLOT_H = CARD_H + CARD_GAP; // card + gap between cards
-const SLOT_ROW_H = (2 * CARD_SLOT_H) + 4 + 22; // ~150px — 2 card slots + top padding + "View all" bar
+const SLOT_ROW_H = (2 * CARD_SLOT_H) + 4 + 22; // ~198px — 2 card slots + top padding + "View all" bar
 const TRANSPORT_ROW_H = 40;
 const HEADER_H = 36;
 const CONTEXT_BAR_H = 30;
@@ -178,9 +178,20 @@ function DayPlannerGrid() {
     }
   }
 
-  // Compute column width
+  // Column width: flex to fill available space, but never narrower than MIN_COL_W.
+  // When total content exceeds container, horizontal scroll kicks in.
   const dayCount = trip.days.length;
-  const colWidth = Math.max(MIN_COL_W, 280); // Will be constrained by CSS
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const availableForCols = Math.max(0, containerWidth - ROW_HEADER_W);
+  const naturalColW = dayCount > 0 ? Math.floor(availableForCols / dayCount) : MIN_COL_W;
+  const colWidth = Math.max(MIN_COL_W, naturalColW);
 
   const isFlexible = trip.flexibleDates === true;
 
@@ -284,9 +295,12 @@ function DayPlannerGrid() {
         return (
           <div
             key={day.dayNumber}
-            className="flex-shrink-0 day-grid-col"
+            className="day-grid-col"
             style={{
               width: colWidth,
+              minWidth: MIN_COL_W,
+              flexShrink: 0,
+              flexGrow: 1,
               background: currentDay === day.dayNumber ? '#fbf8f7' : 'white',
               transition: 'background 150ms ease',
               position: 'relative',
