@@ -2,18 +2,17 @@
 
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { SOURCE_STYLES, GhostSourceType } from '@/types';
 import type { ImportedPlace, TimeSlot } from '@/types';
-import { PlacedCard } from '@/components/day-board';
-import QuickEntryCard from '@/components/chat/QuickEntryCard';
 import QuickEntryInput from '@/components/chat/QuickEntryInput';
-import CollaboratorGhostCard from '@/components/place/CollaboratorGhostCard';
 import GhostBadge from './GhostBadge';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
+import { useDragGesture } from '@/hooks/useDragGesture';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
+import type { Suggestion } from '@/stores/collaborationStore';
 
 interface GridCellProps {
   dayNumber: number;
@@ -24,15 +23,235 @@ interface GridCellProps {
   onOpenOverlay: (dayNumber: number, slotId: string, rect: DOMRect) => void;
 }
 
-const CARD_H = 72;
+const CARD_H = 56;
+const CARD_GAP = 4;
 const CARD_PX = 3;
 const MAX_VISIBLE_CARDS = 2;
 const VIEW_ALL_H = 22;
 
-/**
- * A single cell in the day planner grid. Shows up to 2 cards, with a
- * "View all (N)" bar when there are 3+ items. Acts as a drop target.
- */
+// ─── Option A: "Magazine Row" unified card ─────────────────────────────────
+
+interface GridCardProps {
+  /** Card variant determines styling (border, background) */
+  variant: 'placed' | 'ghost' | 'quickEntry' | 'suggestion';
+  /** Primary label (place name, entry label, suggestion name) */
+  name: string;
+  /** Type chip: RESTAURANT, BAR, activity category, etc. */
+  typeLabel?: string;
+  /** Source badge: Friend, Article, Google Maps, Manual, etc. */
+  sourceBadge?: { label: string; bg: string; color: string };
+  /** Match score 0–100, only shown if >= 70 */
+  matchScore?: number;
+  /** One-line description (italic, truncated) */
+  description?: string;
+  /** Primary action button (Add for ghosts, Confirm for tentative) */
+  actionButton?: { label: string; onClick: (e: React.MouseEvent) => void };
+  /** Dismiss/remove button */
+  onDismiss?: (e: React.MouseEvent) => void;
+  /** Click handler for the entire card body */
+  onClick?: () => void;
+  /** Pointer handlers for drag support */
+  pointerHandlers?: {
+    onPointerDown: (e: React.PointerEvent) => void;
+    onPointerMove: (e: React.PointerEvent) => void;
+    onPointerUp: (e: React.PointerEvent) => void;
+    onPointerCancel: (e: React.PointerEvent) => void;
+  };
+  /** Visual state modifiers */
+  isHolding?: boolean;
+  isDragging?: boolean;
+  /** Collaborator accent color (for suggestion cards) */
+  collabColor?: string;
+}
+
+function GridCard({
+  variant, name, typeLabel, sourceBadge, matchScore, description,
+  actionButton, onDismiss, onClick, pointerHandlers,
+  isHolding, isDragging, collabColor,
+}: GridCardProps) {
+  const isGhost = variant === 'ghost';
+  const isSuggestion = variant === 'suggestion';
+  const isQuickEntry = variant === 'quickEntry';
+
+  // Determine card chrome
+  let bg = 'rgba(58,128,136,0.03)';
+  let border = '1px solid rgba(58,128,136,0.1)';
+  if (isGhost) {
+    bg = 'var(--t-cream)';
+    border = `1.5px dashed ${sourceBadge?.color || 'rgba(58,128,136,0.3)'}`;
+  } else if (isSuggestion) {
+    bg = `${collabColor || '#6366f1'}08`;
+    border = `1.5px dashed ${collabColor || '#6366f1'}55`;
+  } else if (isQuickEntry) {
+    bg = 'white';
+    border = `1px solid ${INK['10']}`;
+  }
+  if (isHolding) {
+    bg = 'rgba(58,128,136,0.08)';
+    border = '1.5px solid rgba(58,128,136,0.3)';
+  }
+
+  return (
+    <div
+      data-grid-card
+      onClick={onClick}
+      onPointerDown={pointerHandlers?.onPointerDown}
+      onPointerMove={pointerHandlers?.onPointerMove}
+      onPointerUp={pointerHandlers?.onPointerUp}
+      onPointerCancel={pointerHandlers?.onPointerCancel}
+      className={`mx-${CARD_PX} rounded group/card card-hover relative`}
+      style={{
+        height: CARD_H,
+        background: bg,
+        border,
+        padding: '6px 10px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        gap: 3,
+        overflow: 'hidden',
+        opacity: isDragging ? 0.3 : 1,
+        transform: isHolding ? 'scale(1.02)' : 'none',
+        transition: 'opacity 150ms, transform 100ms, background 100ms, border 100ms',
+        cursor: pointerHandlers ? 'grab' : 'pointer',
+        touchAction: 'none',
+        userSelect: 'none',
+      }}
+    >
+      {/* Row 1: Name + type + score + source + actions */}
+      <div className="flex items-center gap-1.5 min-w-0">
+        {/* Collaborator avatar dot */}
+        {isSuggestion && collabColor && (
+          <div className="flex-shrink-0 rounded-full" style={{ width: 6, height: 6, background: collabColor }} />
+        )}
+
+        <span
+          className="font-semibold truncate flex-1"
+          style={{ color: TEXT.primary, fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.2 }}
+        >
+          {name}
+        </span>
+
+        {typeLabel && (
+          <span
+            className="flex-shrink-0"
+            style={{ fontFamily: FONT.mono, fontSize: 8.5, fontWeight: 600, color: TEXT.tertiary, textTransform: 'uppercase', letterSpacing: 0.3 }}
+          >
+            {typeLabel}
+          </span>
+        )}
+
+        {matchScore != null && matchScore >= 70 && (
+          <span
+            className="flex-shrink-0 px-1 rounded"
+            style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: 'rgba(58,128,136,0.1)', color: COLOR.darkTeal }}
+          >
+            {Math.round(matchScore)}%
+          </span>
+        )}
+
+        {sourceBadge && (
+          <span
+            className="flex-shrink-0 px-1.5 py-px rounded font-bold"
+            style={{ background: sourceBadge.bg, color: sourceBadge.color, fontFamily: FONT.mono, fontSize: 8 }}
+          >
+            {sourceBadge.label}
+          </span>
+        )}
+
+        {actionButton && (
+          <button
+            onClick={(e) => { e.stopPropagation(); actionButton.onClick(e); }}
+            className="flex-shrink-0 px-1.5 py-px rounded font-semibold btn-hover"
+            style={{ background: COLOR.darkTeal, color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 10 }}
+          >
+            {actionButton.label}
+          </button>
+        )}
+
+        {onDismiss && (
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onDismiss(e); }}
+            className="flex-shrink-0 w-5 h-5 rounded-full items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity"
+            style={{ background: INK['08'], border: 'none', cursor: 'pointer', display: 'flex' }}
+            aria-label="Remove"
+          >
+            <PerriandIcon name="close" size={8} color={TEXT.secondary} />
+          </button>
+        )}
+      </div>
+
+      {/* Row 2: Description — full width, italic, truncated */}
+      {description && (
+        <div
+          className="truncate"
+          style={{ fontFamily: FONT.sans, fontSize: 10.5, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.3 }}
+        >
+          {description}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ─── Placed card with drag support ───────────────────────────────────────
+
+function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; dayNumber: number; slotId: string }) {
+  const { openDetail } = usePlaceDetail();
+  const { dragItemId, onDragStartFromSlot } = useTripDrag();
+  const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
+  const setPlaceTime = useTripStore(s => s.setPlaceTime);
+
+  const handleDragActivate = useCallback((item: ImportedPlace, e: React.PointerEvent) => {
+    onDragStartFromSlot(item, dayNumber, slotId, e);
+  }, [onDragStartFromSlot, dayNumber, slotId]);
+
+  const { handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel, holdingId } = useDragGesture({
+    onDragActivate: handleDragActivate,
+    onTap: openDetail,
+    layout: 'vertical',
+    isDragging: !!dragItemId,
+  });
+
+  const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+
+  // Build description from the richest available data
+  const description = place.friendAttribution?.note
+    ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
+    : place.enrichment?.description
+      || place.google?.editorialSummary
+      || place.whatToOrder?.[0] && `Order: ${place.whatToOrder[0]}`
+      || place.tips?.[0]
+      || place.terrazzoInsight?.why
+      || (place.specificTime ? `${place.specificTimeLabel ? `${place.specificTimeLabel} at ` : ''}${place.specificTime}` : '')
+      || '';
+
+  return (
+    <GridCard
+      variant="placed"
+      name={place.name}
+      typeLabel={place.type}
+      sourceBadge={srcStyle}
+      matchScore={place.matchScore}
+      description={description}
+      onDismiss={() => unplaceFromSlot(dayNumber, slotId, place.id)}
+      pointerHandlers={{
+        onPointerDown: (e) => handlePointerDown(place, e),
+        onPointerMove: handlePointerMove,
+        onPointerUp: handlePointerUp,
+        onPointerCancel: handlePointerCancel,
+      }}
+      isHolding={holdingId === place.id}
+      isDragging={dragItemId === place.id}
+    />
+  );
+}
+
+
+// ─── Main GridCell component ─────────────────────────────────────────────
+
 function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverlay }: GridCellProps) {
   const cellRef = useRef<HTMLDivElement>(null);
   const { openDetail: onTapDetail } = usePlaceDetail();
@@ -105,7 +324,6 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
 
   // Click on empty cell to add entry; click on populated cell opens overlay
   const handleCellClick = useCallback((e: React.MouseEvent) => {
-    // Don't trigger if clicking on a card or button inside the cell
     if ((e.target as HTMLElement).closest('[data-grid-card]') || (e.target as HTMLElement).closest('button')) return;
     if (totalCount === 0 && !quickInputOpen) {
       setQuickInputOpen(true);
@@ -114,122 +332,85 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     }
   }, [totalCount, quickInputOpen, handleOpenOverlay]);
 
-  /** Wrap any card in a fixed-height container so all cards are uniform.
-   *  Uses relative/absolute positioning to truly constrain children
-   *  that have their own minHeight (like PlacedCard). */
-  const cardWrapper = (key: string, children: React.ReactNode) => (
-    <div
-      key={key}
-      data-grid-card
-      style={{
-        position: 'relative',
-        height: CARD_H + 6,
-        minHeight: CARD_H + 6,
-        maxHeight: CARD_H + 6,
-        flexShrink: 0,
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: CARD_H + 6,
-        overflow: 'hidden',
-      }}>
-        {children}
-      </div>
+  /** Fixed-height wrapper to keep all cards uniform */
+  const cardSlot = (key: string, children: React.ReactNode) => (
+    <div key={key} style={{ height: CARD_H + CARD_GAP, minHeight: CARD_H + CARD_GAP, maxHeight: CARD_H + CARD_GAP, flexShrink: 0 }}>
+      {children}
     </div>
   );
 
   const renderItem = (item: typeof allItems[number]) => {
     switch (item.type) {
       case 'place':
-        return cardWrapper(item.id, (
-          <PlacedCard
-            place={item.data as ImportedPlace}
-            dayNumber={dayNumber}
-            slotId={slot.id}
-            isDesktop={isDesktop}
-            CARD_H={CARD_H}
-            CARD_PX={CARD_PX}
-          />
+        return cardSlot(item.id, (
+          <PlacedGridCard place={item.data as ImportedPlace} dayNumber={dayNumber} slotId={slot.id} />
         ));
+
       case 'quickEntry': {
         const qe = item.data as import('@/types').QuickEntry;
-        return cardWrapper(item.id, (
-          <QuickEntryCard
-            entry={qe}
-            onRemove={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
-            onConfirm={qe.status === 'tentative' ? () => confirmQuickEntry(dayNumber, slot.id, qe.id) : undefined}
+        const isTentative = qe.status === 'tentative';
+        const timeDesc = qe.specificTime
+          ? `${qe.specificTimeLabel ? `${qe.specificTimeLabel} at ` : ''}${qe.specificTime}`
+          : '';
+        return cardSlot(item.id, (
+          <GridCard
+            variant="quickEntry"
+            name={qe.label}
+            typeLabel={qe.category?.toUpperCase()}
+            description={timeDesc || (isTentative ? 'Tentative entry' : undefined)}
+            actionButton={isTentative && confirmQuickEntry ? { label: 'Confirm', onClick: () => confirmQuickEntry(dayNumber, slot.id, qe.id) } : undefined}
+            onDismiss={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
           />
         ));
       }
+
       case 'ghost': {
         const ghost = item.data as ImportedPlace;
         const gSrc = SOURCE_STYLES[(ghost.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
         const gNote = ghost.friendAttribution?.note
           ? `"${ghost.friendAttribution.note}"`
-          : ghost.terrazzoReasoning?.rationale
-            || ghost.enrichment?.description
+          : ghost.enrichment?.description
             || ghost.google?.editorialSummary
             || ghost.tips?.[0]
+            || ghost.terrazzoReasoning?.rationale
             || '';
-        return cardWrapper(item.id, (
-          <div
+        return cardSlot(item.id, (
+          <GridCard
+            variant="ghost"
+            name={ghost.name}
+            typeLabel={ghost.type}
+            sourceBadge={gSrc}
+            matchScore={ghost.matchScore}
+            description={gNote}
+            actionButton={{ label: 'Add', onClick: () => confirmGhost(dayNumber, slot.id, ghost.id) }}
+            onDismiss={() => dismissGhost(dayNumber, slot.id, ghost.id)}
             onClick={() => onTapDetail(ghost)}
-            className={`mx-${CARD_PX} mb-1.5 rounded cursor-pointer ghost-shimmer relative`}
-            style={{
-              height: CARD_H,
-              background: 'var(--t-cream)',
-              border: `1.5px dashed ${gSrc.color}`,
-              padding: '6px 10px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-semibold truncate flex-1" style={{ color: TEXT.primary, fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.2 }}>
-                {ghost.name}
-              </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); confirmGhost(dayNumber, slot.id, ghost.id); }}
-                className="flex-shrink-0 px-1.5 py-px rounded font-semibold btn-hover"
-                style={{ background: 'var(--t-dark-teal)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 10 }}
-              >
-                Add
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); dismissGhost(dayNumber, slot.id, ghost.id); }}
-                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: INK['08'], border: 'none', cursor: 'pointer' }}
-                aria-label="Dismiss suggestion"
-              >
-                <PerriandIcon name="close" size={9} color={INK['70']} />
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5 min-w-0" style={{ marginTop: 2 }}>
-              <span className="flex-shrink-0 px-1.5 py-px rounded-full flex items-center gap-0.5 font-semibold" style={{ background: gSrc.bg, color: gSrc.color, fontSize: 8 }}>
-                {gSrc.label}
-              </span>
-              {gNote && <span className="truncate italic" style={{ color: TEXT.secondary, fontSize: 10 }}>{gNote}</span>}
-            </div>
-          </div>
-        ));
-      }
-      case 'suggestion': {
-        const sg = item.data as Parameters<typeof CollaboratorGhostCard>[0]['suggestion'];
-        return cardWrapper(item.id, (
-          <CollaboratorGhostCard
-            suggestion={sg}
-            isOwner={myRole === 'owner'}
-            onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-            onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
           />
         ));
       }
+
+      case 'suggestion': {
+        const sg = item.data as Suggestion;
+        // Stable color from user ID
+        const COLLAB_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6'];
+        let hash = 0;
+        for (let i = 0; i < sg.userId.length; i++) hash = ((hash << 5) - hash + sg.userId.charCodeAt(i)) | 0;
+        const collabColor = COLLAB_COLORS[Math.abs(hash) % COLLAB_COLORS.length];
+        const userName = sg.user?.name || sg.user?.email?.split('@')[0] || 'Collaborator';
+
+        return cardSlot(item.id, (
+          <GridCard
+            variant="suggestion"
+            name={sg.placeName}
+            typeLabel={sg.placeType?.toUpperCase()}
+            description={sg.reason ? `${userName}: "${sg.reason}"` : `Suggested by ${userName}`}
+            collabColor={collabColor}
+            actionButton={myRole === 'owner' ? { label: 'Accept', onClick: () => onRespondSuggestion?.(sg.id, 'accepted') } : undefined}
+            onDismiss={myRole === 'owner' ? () => onRespondSuggestion?.(sg.id, 'rejected') : undefined}
+          />
+        ));
+      }
+
       default:
         return null;
     }
@@ -243,10 +424,10 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
       style={{
         height: rowHeight,
         overflow: 'hidden',
-        borderRight: '1px solid var(--t-linen)',
-        borderBottom: '1px solid var(--t-linen)',
+        borderRight: `1px solid ${INK['06']}`,
+        borderBottom: `1px solid ${INK['06']}`,
         background: isDropActive ? 'rgba(58,128,136,0.06)' : 'white',
-        borderLeft: isDropActive ? '3px solid var(--t-dark-teal)' : '3px solid transparent',
+        borderLeft: isDropActive ? `3px solid ${COLOR.darkTeal}` : '3px solid transparent',
         transition: 'all 150ms ease',
         display: 'flex',
         flexDirection: 'column',
@@ -280,11 +461,8 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
             height: VIEW_ALL_H,
             flexShrink: 0,
             background: INK['02'],
-            borderTop: `1px solid ${INK['06']}`,
             border: 'none',
-            borderTopWidth: 1,
-            borderTopStyle: 'solid',
-            borderTopColor: INK['06'],
+            borderTop: `1px solid ${INK['06']}`,
             fontFamily: FONT.mono,
             fontSize: 9,
             fontWeight: 600,
@@ -294,7 +472,7 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(58,128,136,0.06)';
-            e.currentTarget.style.color = 'var(--t-dark-teal)';
+            e.currentTarget.style.color = COLOR.darkTeal;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = INK['02'];

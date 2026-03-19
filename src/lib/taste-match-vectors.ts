@@ -134,6 +134,7 @@ function deriveDomainBreakdown(
 export function computeVectorMatch(
   userVector: number[],
   propertyVector: number[],
+  editorialDescription?: string,
 ): VectorMatchResult {
   // Cosine similarity (dot product of L2-normalized vectors) → [-1, 1]
   const rawCosine = cosineSimilarityV3(userVector, propertyVector);
@@ -157,7 +158,7 @@ export function computeVectorMatch(
   const topClusters = computeTopClusters(userVector, propertyVector, 5);
 
   // Generate explanation
-  const explanation = buildExplanation(topClusters, rawScore);
+  const explanation = buildExplanation(topClusters, rawScore, editorialDescription);
 
   return {
     overallScore: rawScore,
@@ -337,40 +338,25 @@ function getTopSignalsForCluster(clusterId: number): string[] {
 
 // ─── Explanation generation ─────────────────────────────────────────────────
 
-/**
- * Clean a raw cluster label like "Atmosphere:atmosphere-communal-dining"
- * into a human-readable form like "communal dining atmosphere".
- */
-function humanizeClusterLabel(rawLabel: string): string {
-  // Strip domain prefix (e.g. "Atmosphere:" or "Character:")
-  const stripped = rawLabel.includes(':') ? rawLabel.split(':').slice(1).join(':') : rawLabel;
-  // Remove the domain echo at the start (e.g. "atmosphere-communal-dining" → "communal-dining")
-  const domainPrefixes = ['atmosphere-', 'character-', 'design-', 'service-', 'setting-', 'fooddrink-', 'wellness-', 'sustainability-'];
-  let cleaned = stripped.toLowerCase();
-  for (const prefix of domainPrefixes) {
-    if (cleaned.startsWith(prefix)) {
-      cleaned = cleaned.slice(prefix.length);
-      break;
-    }
-  }
-  // Convert hyphens to spaces
-  return cleaned.replace(/-/g, ' ').trim();
-}
+// Re-export from standalone module to avoid circular/client-bundle issues
+export { humanizeClusterLabel } from './humanize-label';
 
-/**
- * Clean a raw signal name like "communal-dining-format" → "communal dining"
- */
-function humanizeSignal(signal: string): string {
-  return signal
-    .replace(/-/g, ' ')
-    .replace(/\b(format|model|philosophy|positioning|aesthetic|ritual|program|programming|structure|operation|style|emphasis|approach|driven|focused|based|oriented)\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+/** Human-readable domain phrases for narrative generation */
+const DOMAIN_PHRASES: Record<string, { noun: string; yours: string }> = {
+  Design:         { noun: 'design sensibility',      yours: 'your eye for interiors and space' },
+  Atmosphere:     { noun: 'sense of atmosphere',      yours: 'how a place makes you feel' },
+  Character:      { noun: 'personality and story',    yours: 'the kind of places you gravitate toward' },
+  Service:        { noun: 'hospitality style',        yours: 'how you like to be looked after' },
+  FoodDrink:      { noun: 'culinary point of view',   yours: 'what and how you like to eat' },
+  Geography:      { noun: 'neighborhood instinct',    yours: 'the neighborhoods you are drawn to' },
+  Wellness:       { noun: 'wellness approach',        yours: 'your pace and comfort priorities' },
+  Sustainability: { noun: 'values alignment',         yours: 'what you care about beyond the experience' },
+};
 
 function buildExplanation(
   topClusters: ClusterContribution[],
   overallScore: number,
+  editorialDescription?: string,
 ): MatchExplanation {
   const clusters = topClusters.map((c) => ({
     label: c.label,
@@ -379,43 +365,72 @@ function buildExplanation(
     signals: c.topSignals,
   }));
 
-  // Generate natural language narrative from diverse clusters
+  // Collect unique domains in contribution order
+  const seenDomains = new Set<string>();
+  const orderedDomains: string[] = [];
+  for (const c of topClusters) {
+    if (!seenDomains.has(c.domain)) {
+      seenDomains.add(c.domain);
+      orderedDomains.push(c.domain);
+    }
+  }
+
+  // Build narrative from domains, not individual cluster/signal keys
   const parts: string[] = [];
 
-  if (topClusters.length > 0) {
-    const top = topClusters[0];
-    const humanLabel = humanizeClusterLabel(top.label);
-    const humanSignals = top.topSignals.slice(0, 2).map(humanizeSignal).filter(Boolean);
-    const signalStr = humanSignals.length > 0 ? humanSignals.join(' and ') : '';
-
-    parts.push(
-      `Strong match on ${humanLabel}` +
-      (signalStr ? ` — shared appreciation for ${signalStr}` : ''),
-    );
+  // Optional lead-in from editorial description
+  if (editorialDescription) {
+    // Take the first sentence if it's short enough, otherwise truncate
+    const firstSentence = editorialDescription.split(/\.\s/)[0];
+    const lead = firstSentence.length <= 120
+      ? (firstSentence.endsWith('.') ? firstSentence : firstSentence + '.')
+      : editorialDescription.slice(0, 117).replace(/[,\s]+$/, '') + '...';
+    parts.push(lead);
   }
 
-  if (topClusters.length > 1) {
-    const second = topClusters[1];
-    const humanLabel = humanizeClusterLabel(second.label);
-    const humanSignals = second.topSignals.slice(0, 1).map(humanizeSignal).filter(Boolean);
-    parts.push(
-      `Also aligns with your ${humanLabel}${humanSignals.length > 0 ? ` sensibility (${humanSignals[0]})` : ''} taste`,
-    );
-  }
-
-  // Mention additional domains that appear in remaining clusters (if different from top 2)
-  if (topClusters.length > 2) {
-    const topDomains = new Set(topClusters.slice(0, 2).map((c) => c.domain));
-    const additionalDomains = [...new Set(topClusters.slice(2).map((c) => c.domain))]
-      .filter((d) => !topDomains.has(d));
-    if (additionalDomains.length > 0) {
-      parts.push(`Further overlap in ${additionalDomains.join(' and ')}`);
+  // Primary domain
+  if (orderedDomains.length > 0) {
+    const primary = DOMAIN_PHRASES[orderedDomains[0]];
+    if (primary) {
+      const opener = overallScore >= 85 ? 'Strong resonance with'
+        : overallScore >= 70 ? 'Resonates with'
+        : 'Some overlap with';
+      parts.push(`${opener} ${primary.yours}`);
     }
+  }
+
+  // Secondary domain (only if different from primary)
+  if (orderedDomains.length > 1) {
+    const secondary = DOMAIN_PHRASES[orderedDomains[1]];
+    if (secondary) {
+      parts.push(`also aligns with ${secondary.yours}`);
+    }
+  }
+
+  // Join: editorial sentence gets its own period, domain phrases are joined with a comma
+  let narrative: string;
+  if (parts.length === 0) {
+    narrative = '';
+  } else if (editorialDescription && parts.length > 1) {
+    // "Editorial sentence. Resonates with X, also aligns with Y."
+    const domainParts = parts.slice(1);
+    narrative = parts[0] + ' ' + domainParts.join(', ') + '.';
+    // Capitalize the first domain part
+    narrative = narrative.slice(0, parts[0].length + 1)
+      + narrative[parts[0].length + 1].toUpperCase()
+      + narrative.slice(parts[0].length + 2);
+  } else {
+    // No editorial: "Resonates with X, also aligns with Y."
+    narrative = parts[0][0].toUpperCase() + parts[0].slice(1);
+    if (parts.length > 1) {
+      narrative += ', ' + parts.slice(1).join(', ');
+    }
+    if (!narrative.endsWith('.')) narrative += '.';
   }
 
   return {
     topClusters: clusters,
-    narrative: parts.join('. ') + '.',
+    narrative,
   };
 }
 

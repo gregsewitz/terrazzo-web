@@ -3,6 +3,7 @@ import { StateCreator } from 'zustand';
 import { updateCurrentTrip, mapDaySlots, mapAllSlots, debouncedTripSave } from './tripHelpers';
 import type { TripState } from './types';
 import { trackInteraction } from '@/lib/interaction-tracker';
+import { humanizeClusterLabel } from '@/lib/humanize-label';
 
 // ═══════════════════════════════════════════
 // Placement slice state
@@ -475,7 +476,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
                   rationale: candidate.rating?.reaction === 'myPlace'
                     ? `You starred ${candidate.name}`
                     : candidate.matchExplanation?.topClusters?.[0]?.label
-                      ? `Fits your ${candidate.matchExplanation.topClusters[0].label} signal`
+                      ? `Fits your ${humanizeClusterLabel(candidate.matchExplanation.topClusters[0].label)} signal`
                       : candidate.type
                         ? `Top ${candidate.type.toLowerCase()} pick for this trip`
                         : `Matches your taste profile`,
