@@ -326,9 +326,10 @@ function PicksRailInner({
                 {/* Name */}
                 <span
                   style={{
-                    fontFamily: FONT.sans,
+                    fontFamily: FONT.serif,
                     fontSize: 11,
                     fontWeight: 600,
+                    fontStyle: 'italic',
                     color: TEXT.primary,
                     lineHeight: 1.25,
                     display: '-webkit-box',
@@ -358,8 +359,7 @@ function PicksRailInner({
                 {tasteNote && (
                   <span
                     style={{
-                      fontFamily: FONT.serif,
-                      fontStyle: 'italic',
+                      fontFamily: FONT.sans,
                       fontSize: 9,
                       color: TEXT.secondary,
                       lineHeight: 1.3,
