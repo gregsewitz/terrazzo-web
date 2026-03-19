@@ -4,22 +4,13 @@ import { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import GoogleMapView from '@/components/maps/GoogleMapView';
 import type { MapMarker } from '@/components/maps/GoogleMapView';
-import ActivityFeed from '@/components/chat/ActivityFeed';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import DreamBoard from '@/components/profile/DreamBoard';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
-import type { Activity } from '@/stores/collaborationStore';
 
-type RightPanelTab = 'notes' | 'logistics' | 'activity';
-
-interface RightPanelProps {
-  activities: Activity[];
-}
-
-export default function RightPanel({ activities }: RightPanelProps) {
+export default function RightPanel() {
   const [collapsed, setCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<RightPanelTab>('notes');
 
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
@@ -55,68 +46,82 @@ export default function RightPanel({ activities }: RightPanelProps) {
     return { markers: allMarkers, fallbackDest: firstDest, fallbackCoords: coords };
   }, [trip]);
 
-  const TABS: { id: RightPanelTab; label: string; icon: string }[] = [
-    { id: 'notes', label: 'Dream Board', icon: 'manual' },
-    { id: 'logistics', label: 'Logistics', icon: 'hotel' },
-    { id: 'activity', label: 'Activity', icon: 'chatBubble' },
-  ];
+  // Dream board entry count for the collapsed indicator
+  const entryCount = useMemo(() => {
+    const entries = trip?.dreamBoard || trip?.scratchpad || [];
+    return entries.filter((e: { type: string }) => e.type !== 'divider').length;
+  }, [trip?.dreamBoard, trip?.scratchpad]);
 
   // ═══ COLLAPSED STATE ═══
   if (collapsed) {
     return (
-      <>
+      <div
+        className="flex flex-col items-center h-full cursor-pointer"
+        style={{
+          width: 48,
+          flexShrink: 0,
+          background: 'white',
+          borderLeft: `1px solid ${INK['06']}`,
+          boxShadow: '-2px 0 8px rgba(0,42,85,0.04)',
+          transition: 'width 200ms ease, box-shadow 200ms ease',
+        }}
+        onClick={() => setCollapsed(false)}
+      >
+        {/* Expand chevron */}
         <div
-          className="flex flex-col items-center h-full cursor-pointer"
-          style={{
-            width: 48,
-            flexShrink: 0,
-            background: 'white',
-            borderLeft: '1px solid var(--t-linen)',
-            boxShadow: '-2px 0 8px rgba(0,42,85,0.04)',
-            transition: 'width 200ms ease, box-shadow 200ms ease',
-          }}
-          onClick={() => setCollapsed(false)}
+          className="flex items-center justify-center mt-3 mb-3"
+          style={{ width: 28, height: 28, borderRadius: '50%', background: INK['04'] }}
         >
-          {/* Expand chevron */}
-          <div
-            className="flex items-center justify-center mt-3 mb-3"
-            style={{ width: 30, height: 30, borderRadius: '50%', background: INK['06'] }}
-          >
-            <span style={{ fontSize: 13, color: TEXT.secondary, fontWeight: 500 }}>‹</span>
-          </div>
-          {/* Rotated label */}
-          <div
-            style={{
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              fontFamily: FONT.sans,
-              fontSize: 10,
-              fontWeight: 600,
-              color: TEXT.secondary,
-              letterSpacing: 1.2,
-              textTransform: 'uppercase',
-            }}
-          >
-            Map & Notes
-          </div>
-          {/* Map pin indicator */}
+          <PerriandIcon name="arrow-left" size={11} color={TEXT.secondary} />
+        </div>
+
+        {/* Rotated label */}
+        <div
+          style={{
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+            fontFamily: FONT.serif,
+            fontSize: 11,
+            fontWeight: 500,
+            fontStyle: 'italic',
+            color: TEXT.secondary,
+          }}
+        >
+          Dream Board
+        </div>
+
+        {/* Entry count + map pin indicator */}
+        <div className="flex flex-col items-center gap-2 mt-4">
+          {entryCount > 0 && (
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                background: INK['06'],
+              }}
+            >
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: TEXT.secondary }}>
+                {entryCount}
+              </span>
+            </div>
+          )}
           {markers.length > 0 && (
             <div
-              className="flex items-center justify-center mt-4"
+              className="flex items-center justify-center"
               style={{
-                width: 26,
-                height: 26,
+                width: 24,
+                height: 24,
                 borderRadius: '50%',
                 background: 'rgba(58,128,136,0.1)',
               }}
             >
-              <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, color: 'var(--t-dark-teal)' }}>
-                {markers.length}
-              </span>
+              <PerriandIcon name="location" size={10} color="var(--t-dark-teal)" />
             </div>
           )}
         </div>
-      </>
+      </div>
     );
   }
 
@@ -125,154 +130,72 @@ export default function RightPanel({ activities }: RightPanelProps) {
     <div
       className="flex flex-col h-full"
       style={{
-        width: 320,
+        width: 360,
         flexShrink: 0,
-        background: 'var(--t-cream)',
-        borderLeft: '1px solid var(--t-linen)',
+        background: 'white',
+        borderLeft: `1px solid ${INK['06']}`,
         transition: 'width 200ms ease',
       }}
     >
-      {/* Collapse button */}
+      {/* Header — collapse button */}
       <div
-        className="flex items-center justify-between px-3 py-2 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--t-linen)' }}
+        className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+        style={{ borderBottom: `1px solid ${INK['06']}` }}
       >
-        <span
-          style={{
-            fontFamily: FONT.mono,
-            fontSize: 9,
-            fontWeight: 700,
-            color: TEXT.secondary,
-            textTransform: 'uppercase',
-            letterSpacing: 1.5,
-          }}
-        >
-          Map & Notes
-        </span>
+        <div className="flex items-center gap-2">
+          <PerriandIcon name="edit" size={12} color={INK['35']} />
+          <span
+            style={{
+              fontFamily: FONT.serif,
+              fontSize: 13,
+              fontWeight: 500,
+              fontStyle: 'italic',
+              color: TEXT.primary,
+            }}
+          >
+            Dream Board
+          </span>
+        </div>
         <button
           aria-label="Collapse panel"
           onClick={() => setCollapsed(true)}
-          className="flex items-center justify-center cursor-pointer nav-hover"
+          className="flex items-center justify-center cursor-pointer"
           style={{
-            width: 24,
-            height: 24,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             background: INK['04'],
             border: 'none',
           }}
         >
-          <span style={{ fontSize: 11, color: TEXT.secondary }}>›</span>
+          <PerriandIcon name="arrow-right" size={11} color={TEXT.secondary} />
         </button>
       </div>
 
       {/* Map section */}
-      <div className="flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+      <div className="flex-shrink-0" style={{ borderBottom: `1px solid ${INK['06']}` }}>
         <GoogleMapView
           markers={markers}
-          height={220}
+          height={200}
           fallbackDestination={fallbackDest}
           fallbackCoords={fallbackCoords}
         />
         {markers.length > 0 && (
           <div
-            className="flex items-center gap-3 px-3 py-1.5"
-            style={{ background: 'var(--t-linen)' }}
+            className="flex items-center gap-2 px-4 py-1.5"
+            style={{ background: INK['04'] }}
           >
-            <div className="flex items-center gap-1">
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--t-dark-teal)' }} />
-              <span style={{ fontFamily: FONT.mono, fontSize: 8, color: TEXT.secondary }}>
-                {markers.length} place{markers.length !== 1 ? 's' : ''} planned
-              </span>
-            </div>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--t-dark-teal)' }} />
+            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
+              {markers.length} place{markers.length !== 1 ? 's' : ''} planned
+            </span>
           </div>
         )}
       </div>
 
-      {/* Tabs */}
-      <div
-        className="flex px-3 pt-2 pb-0 gap-0 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--t-linen)' }}
-      >
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className="px-3 pb-1.5 cursor-pointer transition-all"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === tab.id ? '2px solid var(--t-ink)' : '2px solid transparent',
-              fontFamily: FONT.sans,
-              fontSize: 11,
-              fontWeight: activeTab === tab.id ? 600 : 400,
-              color: activeTab === tab.id ? 'var(--t-ink)' : INK['45'],
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
+      {/* Dream Board — takes all remaining space */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-        {activeTab === 'notes' && (
-          <DreamBoard compact />
-        )}
-
-        {activeTab === 'logistics' && (
-          <div className="p-3">
-            <div className="flex flex-col gap-2.5">
-              {trip?.days.map(day => {
-                const destColor = generateDestColor(day.destination || '');
-                return (
-                  <div
-                    key={day.dayNumber}
-                    className="rounded-lg overflow-hidden"
-                    style={{ border: '1px solid var(--t-linen)' }}
-                  >
-                    <div
-                      className="px-3 py-1.5 flex items-center justify-between"
-                      style={{ background: destColor.bg }}
-                    >
-                      <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: destColor.text }}>
-                        Day {day.dayNumber} — {day.destination || 'TBD'}
-                      </span>
-                      {(day.hotelInfo || day.hotel) && (
-                        <div className="flex items-center gap-1">
-                          <PerriandIcon name="hotel" size={10} color={destColor.accent} />
-                          <span style={{ fontFamily: FONT.sans, fontSize: 10, color: destColor.accent }}>
-                            {day.hotelInfo?.name || day.hotel}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="px-3 py-2" style={{ background: 'white' }}>
-                      {day.slots.filter(s => s.places.length > 0).map(slot => (
-                        <div key={slot.id} className="flex items-center gap-2 py-1">
-                          <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, width: 50 }}>
-                            {slot.time || slot.label}
-                          </span>
-                          <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.primary }}>
-                            {slot.places[0]?.name}
-                          </span>
-                        </div>
-                      ))}
-                      {day.slots.filter(s => s.places.length > 0).length === 0 && (
-                        <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>
-                          No reservations yet
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'activity' && (
-          <ActivityFeed activities={activities} />
-        )}
+        <DreamBoard compact />
       </div>
     </div>
   );

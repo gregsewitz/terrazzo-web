@@ -567,7 +567,7 @@ function TripDetailContent() {
               </div>
               <DreamBoard />
             </div>
-            <RightPanel activities={collabActivities} />
+            <RightPanel />
           </div>
         ) : desktopView === 'overview' ? (
             /* ── OVERVIEW — Editorial Briefing ── */
@@ -580,7 +580,7 @@ function TripDetailContent() {
                   />
                 </Suspense>
               </div>
-              <RightPanel activities={collabActivities} />
+              <RightPanel />
             </div>
         ) : desktopView === 'map' ? (
             /* ── FULL MAP VIEW ── */
@@ -610,7 +610,7 @@ function TripDetailContent() {
               </div>
 
               {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
-              <RightPanel activities={collabActivities} />
+              <RightPanel />
             </div>
         )}
 

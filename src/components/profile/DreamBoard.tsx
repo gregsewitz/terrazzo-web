@@ -179,26 +179,26 @@ const DreamBoard = memo(function DreamBoard({ compact }: DreamBoardProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Header ── */}
-      <div
-        className="flex-shrink-0"
-        style={{
-          padding: compact ? '8px 12px' : '14px 20px',
-          borderBottom: `1px solid ${INK['06']}`,
-        }}
-      >
-        <h2
-          className={compact ? 'text-[14px]' : 'text-[18px]'}
-          style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
+      {/* ── Header — only in full mode (compact mode inherits from parent panel) ── */}
+      {!compact && (
+        <div
+          className="flex-shrink-0"
+          style={{
+            padding: '14px 20px',
+            borderBottom: `1px solid ${INK['06']}`,
+          }}
         >
-          Dream Board
-        </h2>
-        {!compact && (
+          <h2
+            className="text-[18px]"
+            style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary, margin: 0 }}
+          >
+            Dream Board
+          </h2>
           <p className="text-[11px] mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.sans, margin: 0 }}>
             The messy thinking that becomes a great trip.
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Freeform input area ── */}
       <div
