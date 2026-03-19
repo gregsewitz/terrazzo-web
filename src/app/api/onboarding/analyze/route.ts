@@ -119,8 +119,8 @@ Also extract if mentioned:
 - soloTravelIdentity: how they see themselves as a solo traveler (e.g. "escapist", "explorer")
 
 If this is the "emotional-core" phase (Phase 10), also extract:
-- emotionalDriverPrimary: their primary emotional driver for travel (e.g. "Aesthetic expansion")
-- emotionalDriverSecondary: secondary driver (e.g. "Partner connection")
+- emotionalDriverPrimary: their primary emotional driver for travel — freeform, synthesized from what they've shared (e.g. "Controlled surrender", "Narrative accumulation", "Quiet recalibration", "Ritual seeking")
+- emotionalDriverSecondary: a secondary driver that creates productive tension with the primary (e.g. "Partner connection", "Sensory immersion", "Cultural depth")
 
 Return valid JSON only.`;
 

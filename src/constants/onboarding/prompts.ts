@@ -52,7 +52,7 @@ OUTPUT FORMAT (JSON):
 {
   "signals": [{ "tag": "string", "cat": "Design|Atmosphere|Character|Service|FoodDrink|Geography|Wellness|Sustainability|Rejection|Context|Emotion|Core", "confidence": 0.0-1.0 }],
   "sustainabilitySignals": [{ "tag": "string", "confidence": 0.0-1.0, "dimension": "ENVIRONMENTAL|SOCIAL|CULTURAL|ECONOMIC" }],
-  "emotionalDriverHint": "AESTHETIC_PILGRIM|CONTROL_ARCHITECT|STORY_COLLECTOR|SENSORY_HEDONIST|TRANSFORMATION_SEEKER|MASTERY_SEEKER|LEGACY_BUILDER (optional — only if strong signal detected)",
+  "emotionalDriverHint": "Freeform string — a short phrase describing the user's emerging emotional driver for travel (e.g., 'aesthetic expansion', 'narrative seeking', 'controlled surrender', 'sensory immersion', 'quiet mastery'). Optional — only if strong signal detected.",
   "certainties": { "Design": 0-100, "Atmosphere": 0-100, "Character": 0-100, "Service": 0-100, "FoodDrink": 0-100, "Geography": 0-100, "Wellness": 0-100, "Sustainability": 0-100 },
   "followUp": "string — next question to ask",
   "contradictions": [{ "stated": "string", "revealed": "string", "resolution": "string", "matchRule": "string" }],
@@ -106,33 +106,21 @@ const _LEGACY_PROFILE_SYNTHESIS_PROMPT = `You are synthesizing a complete Terraz
 THE 6 TASTE DOMAINS: Design, Atmosphere, Character, Service, FoodDrink, Setting
 THE 2 PREFERENCE DIMENSIONS: Wellness, Sustainability
 
-EMOTIONAL DRIVER ARCHETYPES — classify the user into ONE primary archetype:
-- AESTHETIC_PILGRIM: Travels to expand their sense of what's possible in design, food, beauty
-- CONTROL_ARCHITECT: Needs to shape the experience — researches, plans, curates every detail
-- STORY_COLLECTOR: Seeks narrative and connection — every trip becomes a story to tell
-- SENSORY_HEDONIST: Driven by physical pleasure — texture, taste, temperature, light
-- TRANSFORMATION_SEEKER: Uses travel as catalyst for personal change or growth
-- MASTERY_SEEKER: Wants to go deep — learn to cook, understand wine regions, master surf breaks
-- LEGACY_BUILDER: Creates experiences for family/loved ones — travel as shared memory
+EMOTIONAL DRIVER — identify the user's primary emotional motivation for travel (freeform, not from a fixed list).
 
 Generate a JSON object with this structure:
 {
-  "overallArchetype": "2-3 word evocative name (e.g., 'The Aesthetic Pilgrim', 'The Sensory Archaeologist')",
+  "overallArchetype": "2-3 word evocative name unique to this person",
   "archetypeDescription": "2-3 sentences, editorial voice, specific to this person",
   "emotionalDriver": {
-    "primary": "Main driver (e.g., 'Aesthetic Expansion')",
+    "primary": "Freeform — the core emotional motivation (e.g., 'Controlled Surrender', 'Narrative Accumulation', 'Quiet Mastery')",
     "description": "1-2 sentences",
-    "secondary": "Secondary driver"
+    "secondary": "Secondary driver creating productive tension with the primary"
   },
   "contradictions": [2-4 core tensions with stated/revealed/resolution/matchRule],
   "contextModifiers": [4-6 situational shifts with context/shifts],
   "microTasteSignals": { "category_name": ["term1", "term2", ...], ... } (6-8 categories, 4-6 terms each),
   "radarData": [{ "axis": "Design|Atmosphere|Character|Service|FoodDrink|Geography|Wellness|Sustainability", "value": 0.0-1.0 }],
-  "emotionalDriver": {
-    "primary": "Main driver archetype (AESTHETIC_PILGRIM | CONTROL_ARCHITECT | STORY_COLLECTOR | SENSORY_HEDONIST | TRANSFORMATION_SEEKER | MASTERY_SEEKER | LEGACY_BUILDER)",
-    "description": "1-2 sentences explaining why this fits",
-    "secondary": "Secondary archetype"
-  },
   "sustainabilityProfile": {
     "sensitivity": "LEADING | CONSCIOUS | PASSIVE | INDIFFERENT",
     "priorities": ["top sustainability priorities — e.g., 'local-economy', 'carbon-footprint'"],

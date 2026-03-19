@@ -34,12 +34,12 @@ export interface TasteProfile {
 }
 
 export const TASTE_PROFILE: TasteProfile = {
-  overallArchetype: "The Aesthetic Pilgrim",
+  overallArchetype: "The Reluctant Maximalist",
   archetypeDescription: "You travel to expand your sense of what's possible — in design, in food, in how life can be lived. You seek places built by people with a point of view, not a business plan. Your taste is precise but not rigid: you want warmth in your minimalism, chaos in your wine bars, and silence in your bedrooms.",
   emotionalDriver: {
-    primary: "Aesthetic Expansion",
+    primary: "Controlled Surrender",
     description: "Travel rewires your aesthetic. You come home with new influences — a ceramic style, an ingredient, a spatial idea. The best trips change how you see the world.",
-    secondary: "Sensory Presence",
+    secondary: "Narrative Accumulation",
   },
   contradictions: [
     {

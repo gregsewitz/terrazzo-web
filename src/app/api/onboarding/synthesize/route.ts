@@ -36,23 +36,19 @@ const CORE_SYSTEM = `You are synthesizing the CORE ANALYTICAL section of a Terra
 THE 6 TASTE DOMAINS: Design, Atmosphere, Character, Service, FoodDrink, Geography
 THE 2 PREFERENCE DIMENSIONS: Wellness, Sustainability
 
-EMOTIONAL DRIVER ARCHETYPES — classify the user into ONE primary:
-- AESTHETIC_PILGRIM: Travels to expand their sense of what's possible in design, food, beauty
-- CONTROL_ARCHITECT: Needs to shape the experience — researches, plans, curates every detail
-- STORY_COLLECTOR: Seeks narrative and connection — every trip becomes a story to tell
-- SENSORY_HEDONIST: Driven by physical pleasure — texture, taste, temperature, light
-- TRANSFORMATION_SEEKER: Uses travel as catalyst for personal change or growth
-- MASTERY_SEEKER: Wants to go deep — learn to cook, understand wine regions, master surf breaks
-- LEGACY_BUILDER: Creates experiences for family/loved ones — travel as shared memory
+EMOTIONAL DRIVER — identify the user's primary emotional motivation for travel.
+This is freeform — synthesize from the signals. What actually drives this person?
+Common drivers include (but are NOT limited to): aesthetic expansion, narrative seeking, control/curation, sensory pleasure, transformation/growth, mastery/depth, legacy/memory-making, escape/solitude, connection/belonging, cultural immersion.
+The driver should feel SPECIFIC to this person, not a generic label.
 
 Generate a JSON object with ONLY these fields:
 {
-  "overallArchetype": "2-3 word evocative name (e.g., 'The Aesthetic Pilgrim', 'The Sensory Archaeologist')",
+  "overallArchetype": "2-3 word evocative name unique to this person. Examples of the RANGE of names (do NOT reuse these — invent one that fits THIS person): 'The Quiet Cartographer', 'The Reluctant Maximalist', 'The Ritual Keeper', 'The Precision Wanderer', 'The Narrative Forager', 'The Tender Curator', 'The Chaos Connoisseur'. The name should capture their specific relationship with travel, not just a domain they care about.",
   "archetypeDescription": "2-3 sentences, editorial voice, specific to this person",
   "emotionalDriver": {
-    "primary": "Main driver archetype (one of the 7 above)",
+    "primary": "Freeform — the core emotional motivation for how this person travels (e.g., 'Aesthetic Recalibration', 'Controlled Surrender', 'Narrative Accumulation', 'Quiet Mastery')",
     "description": "1-2 sentences explaining why this fits",
-    "secondary": "Secondary archetype"
+    "secondary": "A secondary driver that creates productive tension with the primary"
   },
   "contradictions": [2-4 core tensions with "stated", "revealed", "resolution", "matchRule"],
   "contextModifiers": [4-6 situational shifts with "context" and "shifts"],
