@@ -52,13 +52,49 @@ function saveProfileToDB(data: Record<string, unknown>) {
 async function resynthesizeProfile(getState: () => OnboardingState) {
   try {
     const state = getState();
+    let { allSignals, allMessages, allContradictions, certainties } = state;
+
+    // If the local store is empty (e.g. localStorage cleared, different browser),
+    // fetch signals from the server-side DB before synthesizing
+    if (!allSignals.length) {
+      console.log('[profile] Local store empty — fetching signals from DB for re-synthesis');
+      try {
+        const profile = await apiFetch<{
+          user: {
+            allSignals?: TasteSignal[];
+            allMessages?: ConversationMessage[];
+            allContradictions?: TasteContradiction[];
+          };
+        }>('/api/profile/mine');
+        if (profile?.user?.allSignals?.length) {
+          allSignals = profile.user.allSignals;
+          allMessages = (profile.user.allMessages as ConversationMessage[]) || [];
+          allContradictions = (profile.user.allContradictions as TasteContradiction[]) || [];
+          // Rebuild certainties from DB signals
+          const rebuilt: Record<string, number> = {};
+          for (const s of allSignals) {
+            const domain = s.cat;
+            if (domain && ALL_TASTE_DOMAINS.includes(domain as TasteDomain)) {
+              rebuilt[domain] = Math.min(100, (rebuilt[domain] || 0) + Math.round(s.confidence * 10));
+            }
+          }
+          if (Object.keys(rebuilt).length > 0) certainties = rebuilt;
+          console.log(`[profile] Loaded ${allSignals.length} signals from DB`);
+        } else {
+          console.warn('[profile] No signals in DB either — re-synthesis will produce a sparse profile');
+        }
+      } catch (err) {
+        console.warn('[profile] Failed to fetch signals from DB:', err);
+      }
+    }
+
     const res = await apiFetch<GeneratedTasteProfile>('/api/onboarding/synthesize', {
       method: 'POST',
       body: JSON.stringify({
-        signals: state.allSignals,
-        messages: state.allMessages,
-        contradictions: state.allContradictions,
-        certainties: state.certainties,
+        signals: allSignals,
+        messages: allMessages,
+        contradictions: allContradictions,
+        certainties,
       }),
     });
 

@@ -16,6 +16,7 @@ export const POST = apiHandler(async (req: NextRequest) => {
       ...(body.tasteProfile !== undefined && { tasteProfile: body.tasteProfile }),
       ...(body.lifeContext !== undefined && { lifeContext: body.lifeContext }),
       ...(body.allSignals !== undefined && { allSignals: body.allSignals }),
+      ...(body.allMessages !== undefined && { allMessages: body.allMessages }),
       ...(body.allContradictions !== undefined && { allContradictions: body.allContradictions }),
       ...(body.seedTrips !== undefined && { seedTrips: body.seedTrips }),
       ...(body.trustedSources !== undefined && { trustedSources: body.trustedSources }),

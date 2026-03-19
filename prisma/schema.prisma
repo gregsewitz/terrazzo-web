@@ -21,6 +21,7 @@ model User {
   tasteProfile         Json?        // GeneratedProfile
   lifeContext          Json?        // { primaryCompanions, firstName, etc. }
   allSignals           Json?        // Signal[]
+  allMessages          Json?        // ConversationMessage[] — onboarding conversation history
   allContradictions    Json?        // Contradiction[]
   seedTrips            Json?        // SeedTripInput[]
   trustedSources       Json?        // TrustedSource[]

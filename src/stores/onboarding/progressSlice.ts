@@ -162,6 +162,7 @@ export const createProgressSlice: StateCreator<OnboardingState, [], [], Onboardi
       tasteProfile: state.generatedProfile,
       lifeContext: state.lifeContext,
       allSignals: state.allSignals,
+      allMessages: state.allMessages,
       allContradictions: state.allContradictions,
       sustainabilitySignals: state.sustainabilitySignals,
       seedTrips: state.seedTrips,

@@ -25,6 +25,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
       tasteProfile: fullUser.tasteProfile,
       lifeContext: fullUser.lifeContext,
       allSignals: fullUser.allSignals,
+      allMessages: (fullUser as Record<string, unknown>).allMessages ?? null,
       allContradictions: fullUser.allContradictions,
       sustainabilitySignals: fullUser.sustainabilitySignals ?? [],
       seedTrips: fullUser.seedTrips,
