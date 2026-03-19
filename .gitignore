@@ -44,8 +44,20 @@ next-env.d.ts
 # enrichment logs
 enrich-log*.txt
 
-# large cache files
+# large cache / pipeline intermediate files
 signal-embeddings-cache.json
+signal-corpus.json
+signal-dimensions.json
+signal-singletons.json
+silhouette-sweep.json
+/signal-clusters.json
+
+# cluster audit one-off outputs
+cluster-*-audit-*.csv
+cluster-*-audit-*.json
+
+# cluster backup snapshots
+*.backup.json
 .env*.local
 
 # skill cache (regenerated locally)
