@@ -576,6 +576,7 @@ model PlaceIntelligence {
 
   // Pipeline status
   status          String   @default("pending") // pending | enriching | complete | failed
+  qualityTier     String?  // gold | silver | bronze | null — set by signal_validation stage based on data quality
   pipelineVersion String   @default("v3-ri")
 
   // Core intelligence payload
