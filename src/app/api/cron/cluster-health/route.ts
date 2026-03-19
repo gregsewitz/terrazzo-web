@@ -25,8 +25,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { getSignalClusterMap } from '@/lib/taste-intelligence/signal-clusters-loader';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const maxDuration = 60;
 
@@ -131,6 +134,33 @@ export async function GET(req: NextRequest) {
       console.warn(`[cron/cluster-health] RE-CLUSTERING RECOMMENDED:`);
       for (const flag of flags) {
         console.warn(`  - ${flag}`);
+      }
+
+      // Email notification
+      if (process.env.RESEND_API_KEY) {
+        try {
+          await resend.emails.send({
+            from: 'Terrazzo <onboarding@resend.dev>',
+            to: 'gsewitz@gmail.com',
+            subject: 'Terrazzo: Re-clustering recommended',
+            html: `
+              <h3>Cluster health check flagged ${flags.length} issue${flags.length > 1 ? 's' : ''}:</h3>
+              <ul>${flags.map(f => `<li>${f}</li>`).join('')}</ul>
+              <p><strong>Current metrics:</strong></p>
+              <ul>
+                <li>Frozen corpus: ${frozenCorpusSize.toLocaleString()} signals</li>
+                <li>Live unique signals: ${liveSignals.size.toLocaleString()}</li>
+                <li>New singletons: ${singletonCount}</li>
+                <li>New properties: ${newProperties}</li>
+                <li>Cache miss rate: ${(cacheMissRate * 100).toFixed(1)}%</li>
+              </ul>
+              <p>See <code>docs/recluster-handoff.md</code> for the re-clustering pipeline.</p>
+            `,
+          });
+          console.log('[cron/cluster-health] Email notification sent');
+        } catch (emailErr) {
+          console.error('[cron/cluster-health] Email failed:', emailErr);
+        }
       }
     } else {
       console.log(
