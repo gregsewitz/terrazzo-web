@@ -22,6 +22,7 @@ import path from 'path';
 
 export interface ClusterInfo {
   label: string;
+  displayLabel?: string;
   domain?: string;
   topSignals: string[];
   size?: number;

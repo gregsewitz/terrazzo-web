@@ -50,6 +50,8 @@ Domain assignment (contiguous cluster ranges — used for domain-slice queries):
 |------|---------|
 | `scripts/extract-signal-corpus.mjs` | Extracts signals from DB → `signal-corpus.json` |
 | `scripts/cluster-signals-v3.py` | Embeds signals via OpenAI, runs K-means → `signal-clusters.json` |
+| `scripts/surgery-clusters.py` | Post-clustering surgery: dissolve/split/auto-split clusters |
+| `scripts/sync-db-after-surgery.py` | Syncs DB staging tables + recomputes all vectors after surgery |
 | `src/lib/taste-intelligence/signal-clusters.json` | The cluster mapping (imported by vectors-v3.ts) |
 | `src/lib/taste-intelligence/vectors-v3.ts` | TypeScript vector computation (runtime / API use) |
 | `src/lib/taste-intelligence/backfill-v3.ts` | TypeScript backfill orchestrator |
@@ -712,6 +714,70 @@ If you want to tune:
 
 Tables that can be safely dropped: `_signal_cluster_map_v3` (legacy), `_signal_token_index` (legacy).
 
+## Cluster Surgery (Post-Clustering Fixes)
+
+Sometimes individual clusters need to be dissolved (bad grouping) or split (too heterogeneous) without re-running the full pipeline. The surgery scripts handle this.
+
+### When to Use
+
+- A cluster groups semantically unrelated signals (dissolve it — scatter signals to nearest remaining centroids)
+- A cluster is too broad / has low coherence (auto-split — move outlier signals below coherence threshold to nearest neighbors)
+- You want to remove a cluster entirely without re-clustering from scratch
+
+### Process
+
+**Step 1: Run surgery on `signal-clusters.json`**
+
+```bash
+# Dissolve clusters (scatter all signals to nearest centroids):
+python3 scripts/surgery-clusters.py dissolve 88 98
+
+# Auto-split (move outlier signals below coherence threshold):
+python3 scripts/surgery-clusters.py auto-split 37 128
+python3 scripts/surgery-clusters.py auto-split 71 351 374 375
+```
+
+The surgery script modifies `signal-clusters.json` in-place and prints an "IMPORTANT: After surgery, recompute vectors" message.
+
+**Step 2: Sync DB staging tables + recompute vectors**
+
+```bash
+python3 scripts/sync-db-after-surgery.py
+```
+
+This script reads the updated `signal-clusters.json` and:
+1. Reloads `v3_cluster_domain` (400 rows)
+2. Reloads `v3_cluster_neighbors` (~1,988 rows — unchanged by surgery)
+3. Reloads `v3_signal_cluster_map` (canonical corpus)
+4. Updates `v3_signal_cache` (deletes stale entries for affected clusters, re-seeds from corpus, remaps orphans via trigram similarity)
+5. Verifies all staging table row counts
+6. Nulls and recomputes all `embeddingV3` and `tasteVectorV3` vectors
+
+Options:
+- `--dry-run` — show what would happen without modifying the DB
+- `--skip-backfill` — sync staging tables only, skip vector recompute
+- `--batch-size N` — properties per batch during backfill (default 100)
+
+Typical runtime: ~2-3 minutes for ~1,100 properties + 6 users.
+
+### Critical: Do NOT Use Manual MCP Batch Inserts
+
+The sync script **must be run locally** via direct Postgres connection (`DIRECT_URL` in `.env.local`). Do NOT attempt to sync staging tables via Supabase MCP `execute_sql` batches — this approach is:
+- Extremely slow (hours vs seconds for staging table loads)
+- Error-prone (batch truncation, timeout issues, partial loads)
+- Painful to debug and recover from
+
+The local script completes the entire sync in ~2-3 minutes. The MCP approach took hours of manual babysitting and still produced partial/incorrect results. Always use the script.
+
+### v3.5 Surgery Log (March 19, 2026)
+
+Operations performed:
+- `dissolve 88 98` — dissolved 2 clusters (scattered signals to nearest centroids)
+- `auto-split 37 128` — split outlier signals from 2 clusters
+- `auto-split 71 351 374 375` — split outlier signals from 4 clusters
+
+Result: 8 affected clusters (37, 71, 88, 98, 128, 351, 374, 375) — all emptied/redistributed. Canonical corpus went from ~6,914 to 6,598 signals (redistributed, not lost). 131,643 total signalToCluster entries preserved. All 1,161 property vectors and 6 user vectors recomputed successfully.
+
 ## Version History
 
 | Version | Date | K | Dims | Signals | Properties | Notes |
@@ -721,3 +787,4 @@ Tables that can be safely dropped: `_signal_cluster_map_v3` (legacy), `_signal_t
 | v3.2 | Mar 2026 | 400 | 408 | 7,628 | 736 | + neighbor bleed, signal cache, trigram optimization |
 | v3.3 | Mar 2026 | 400 | 408 | 7,628 | 736 | + two-tier similarity-scaled bleed, cross-domain neighbors |
 | v3.4 | Mar 2026 | 400 | 400 | 7,628 | 736 | Dropped domain dims (signal-only), single L2 norm, std_dev 3.79→4.07 |
+| v3.5 | Mar 2026 | 400 | 400 | 6,598 | 1,161 | Cluster surgery: dissolved 88/98, auto-split 37/71/128/351/374/375 |

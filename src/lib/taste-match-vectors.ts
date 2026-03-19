@@ -317,7 +317,7 @@ function computeTopClusters(
 
     result.push({
       clusterId: idx,
-      label: info?.label ?? `cluster-${idx}`,
+      label: info?.displayLabel ?? info?.label ?? `cluster-${idx}`,
       domain,
       contribution,
       topSignals: getTopSignalsForCluster(idx),

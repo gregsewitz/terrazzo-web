@@ -96,7 +96,7 @@ export function clearIdfWeightsV3(): void {
 
 interface ClusterState {
   signalToCluster: Record<string, number>;
-  clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[]; size?: number }>;
+  clusterInfo: Record<string, { label: string; displayLabel?: string; domain?: string; topSignals: string[]; size?: number }>;
   clusterCentroids: Record<string, number[]> | null;
   intraBleedScale: number;
   crossBleedScale: number;
@@ -535,11 +535,12 @@ export function getSignalClusterLabel(signal: string): string | null {
 }
 
 /** Get all cluster labels and their IDs */
-export function getAllClusterLabels(): Array<{ id: number; label: string; domain?: string; size: number }> {
+export function getAllClusterLabels(): Array<{ id: number; label: string; displayLabel?: string; domain?: string; size: number }> {
   const { clusterInfo } = getClusterState();
   return Object.entries(clusterInfo).map(([id, info]) => ({
     id: parseInt(id, 10),
     label: info.label,
+    displayLabel: info.displayLabel,
     domain: info.domain,
     size: info.size ?? 0,
   }));
