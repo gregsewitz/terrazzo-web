@@ -1,22 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── Terrazzo Brand Palette (from Brand Identity Guide) ─── */
-  /* Primary */
-  --t-coral: #E86F5A;
-  --t-navy: #1A2D4A;
-  /* Secondary */
-  --t-teal: #5EC4B2;      /* Mint Teal */
-  --t-ochre: #E8B84B;     /* Ochre Gold */
+  /* ─── Terrazzo Brand Palette ─── */
+  --t-coral: #ee716d;
+  --t-navy: #002a55;
+  --t-teal: #92ced6;
+  --t-ochre: #e0a501;
   --t-olive: #6B7C4E;
-  /* Supporting */
-  --t-peach: #F4BFA0;
+  --t-peach: #e7a8a1;
   --t-cream: #FBF5EC;
   --t-charcoal: #2D2D2D;
   --t-warm-gray: #A89888;
-  /* Extended palette */
   --t-dark-teal: #3a8088;
   --t-periwinkle: #3869a4;
+  --t-mint: #5EC4B2;
+  --t-orange: #E86F5A;
+  /* Utility */
   --t-blush: #f1e7e5;
   --t-light-yellow: #ebd896;
   --t-dark-brown: #413800;
@@ -38,12 +37,12 @@
   --t-linen: var(--t-cream);
 
   /* ─── Domain Colors ─── */
-  --domain-design: #E86F5A;     /* Coral */
+  --domain-design: #ee716d;     /* Coral */
   --domain-character: #6B7C4E;  /* Olive */
-  --domain-service: #E8B84B;    /* Ochre Gold */
-  --domain-food: #F4BFA0;       /* Peach */
-  --domain-location: #5EC4B2;   /* Mint Teal */
-  --domain-wellness: #1A2D4A;   /* Navy */
+  --domain-service: #e0a501;    /* Ochre */
+  --domain-food: #e7a8a1;       /* Peach */
+  --domain-location: #5EC4B2;   /* Mint */
+  --domain-wellness: #002a55;   /* Navy */
 
   /* ─── Semantic Text Colors ─── */
   /* Change these 5 values to restyle ALL text across the app */
@@ -71,6 +70,8 @@
   --color-cream: var(--t-cream);
   --color-charcoal: var(--t-charcoal);
   --color-warm-gray: var(--t-warm-gray);
+  --color-mint: var(--t-mint);
+  --color-orange: var(--t-orange);
   --color-signal-red: var(--t-signal-red);
   /* Legacy aliases — point to new tokens so old classes still work */
   --color-ink: var(--t-navy);

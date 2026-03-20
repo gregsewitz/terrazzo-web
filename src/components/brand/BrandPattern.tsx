@@ -17,6 +17,8 @@ const BRAND_COLORS: Record<string, string> = {
   charcoal: `var(--t-charcoal, ${COLOR.charcoal})`,
   'warm-gray': `var(--t-warm-gray, ${COLOR.warmGray})`,
   peach: `var(--t-peach, ${COLOR.peach})`,
+  mint: `var(--t-mint, ${COLOR.mint})`,
+  orange: `var(--t-orange, ${COLOR.orange})`,
 };
 
 /**

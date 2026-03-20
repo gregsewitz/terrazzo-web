@@ -155,7 +155,7 @@ export const DIMENSION_COLORS: Record<string, string> = {
   "Character": COLOR.periwinkle,
   "Service": COLOR.navy,
   "FoodDrink": COLOR.peach,
-  "Geography": COLOR.mintTeal,
+  "Geography": COLOR.mint,
   "Wellness": COLOR.olive,
   "Sustainability": COLOR.darkTeal,
   "Rejection": COLOR.warmGray,
@@ -168,7 +168,7 @@ export const AXIS_COLORS: Record<string, string> = {
   Character: COLOR.periwinkle,
   Service: COLOR.navy,
   FoodDrink: COLOR.peach,
-  Geography: COLOR.mintTeal,
+  Geography: COLOR.mint,
   Wellness: COLOR.olive,
   Sustainability: COLOR.darkTeal,
 };
@@ -183,4 +183,4 @@ export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
 };
 
 // Context shift card colors — brand palette rotation
-export const CONTEXT_COLORS = [COLOR.navy, COLOR.mintTeal, COLOR.coral, COLOR.olive, COLOR.ochre, COLOR.peach];
+export const CONTEXT_COLORS = [COLOR.navy, COLOR.mint, COLOR.coral, COLOR.olive, COLOR.ochre, COLOR.peach];

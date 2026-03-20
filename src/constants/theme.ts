@@ -13,20 +13,20 @@ export const FONT = {
 
 export const COLOR = {
   // ── Brand palette ──
-  // 11 core brand colors (9 from Brand Identity Guide + dark teal, periwinkle)
-  coral: '#E86F5A',
-  navy: '#1A2D4A',
-  mintTeal: '#5EC4B2',
-  peach: '#F4BFA0',
-  ochre: '#E8B84B',
+  coral: '#ee716d',
+  navy: '#002a55',
+  teal: '#92ced6',
+  ochre: '#e0a501',
+  peach: '#e7a8a1',
   cream: '#FBF5EC',
   olive: '#6B7C4E',
   charcoal: '#2D2D2D',
   warmGray: '#A89888',
   darkTeal: '#3a8088',
   periwinkle: '#3869a4',
+  mint: '#5EC4B2',
+  orange: '#E86F5A',
   // ── Utility colors ──
-  teal: '#5EC4B2',     // alias for mintTeal
   blush: '#f1e7e5',
   lightYellow: '#ebd896',
   darkBrown: '#413800',

@@ -382,7 +382,7 @@ function PlaceDetailContent({
         {item.terrazzoInsight && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.mintTeal}18`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.mint}18`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.darkTeal, flexShrink: 0 }} />
                 <PerriandIcon name="terrazzo" size={10} color={COLOR.darkTeal} />
                 Why You{"'"}ll Love It

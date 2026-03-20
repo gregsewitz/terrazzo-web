@@ -98,7 +98,7 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   mixed:      COLOR.ochre,
   notMe:      COLOR.signalRed,
   // Sources
-  friend:     COLOR.mintTeal,
+  friend:     COLOR.mint,
   terrazzo:   COLOR.coral,
   // Navigation
   plan:       COLOR.coral,
@@ -112,7 +112,7 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   transport:  COLOR.warmGray,
   // Collaboration / Activity
   invite:     COLOR.periwinkle,
-  wave:       COLOR.mintTeal,
+  wave:       COLOR.mint,
   lightbulb:  COLOR.ochre,
   acceptCircle: COLOR.darkTeal,
   rejectCircle: COLOR.signalRed,
