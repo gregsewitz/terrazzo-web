@@ -170,105 +170,112 @@ function PlaceDetailContent({
             {item.name}
           </h2>
 
-          {/* Metadata chips — overlaid on photo */}
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className={`${locationFontSize}`} style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-              {hydratedLocation} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-            </span>
+          {/* Location subtitle */}
+          <div className={`${locationFontSize} mt-1.5`} style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+            {hydratedLocation}
             {item.alsoKnownAs && (
-              <span className={`${akaFontSize}`} style={{ color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-                aka {"\u201C"}{item.alsoKnownAs}{"\u201D"}
-              </span>
-            )}
-            {sourceStyle && item.source?.name && (
-              <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
-                style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-              >
-                <PerriandIcon name={sourceStyle.icon} size={10} color="white" />
-                via {item.source.name}
-              </span>
-            )}
-            {hydratedGoogle?.rating && (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white' }}>
-                <PerriandIcon name="star" size={11} color="var(--t-chrome-yellow)" />
-                {hydratedGoogle.rating}
-                {hydratedGoogle.reviewCount && (
-                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
-                )}
-              </span>
-            )}
-            {hydratedGoogle?.priceLevel && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white' }}>
-                {'$'.repeat(hydratedGoogle.priceLevel)}
-              </span>
+              <span style={{ color: 'rgba(255,255,255,0.65)' }}> · aka {"\u201C"}{item.alsoKnownAs}{"\u201D"}</span>
             )}
           </div>
 
-          {/* Action badges — overlaid on photo */}
-          <div className="flex items-center gap-1.5 mt-2">
-            {existingRating && ratingReaction ? (
-              <button
-                onClick={onRate}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${ratingBadgeHoverClass}`}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                }}
-              >
-                <PerriandIcon name={ratingReaction.icon} size={ratingBadgeIconSize} color="white" />
-                <span className={`${ratingBadgeFontSize} font-semibold`} style={{ color: 'white', fontFamily: FONT.mono }}>
-                  {ratingReaction.label}
+          {/* Unified chips row — all use same frosted style */}
+          {(() => {
+            const chipStyle = {
+              background: 'rgba(255,255,255,0.22)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              color: 'white',
+              fontFamily: FONT.mono,
+            } as const;
+            // Normalize the Google category: strip underscores, title-case, and check redundancy
+            const rawCategory = hydratedGoogle?.category || '';
+            const normalizedCategory = rawCategory.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+            const placeType = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+            // Show category chip only when it adds info beyond item.type
+            const showCategory = normalizedCategory &&
+              normalizedCategory.toLowerCase() !== item.type.toLowerCase() &&
+              !normalizedCategory.toLowerCase().includes(item.type.toLowerCase()) &&
+              !item.type.toLowerCase().includes(normalizedCategory.toLowerCase().replace(/\s+/g, ''));
+            return (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {/* Place type */}
+                <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
+                  {placeType}
                 </span>
-              </button>
-            ) : onRate && !isPreview ? (
-              <button
-                onClick={onRate}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${ratingBadgeHoverClass}`}
-                style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                }}
-              >
-                <PerriandIcon name="star" size={isDesktop ? 13 : 12} color="white" />
-                <span className={`${ratingBadgeFontSize} font-medium`} style={{ color: 'white', fontFamily: FONT.mono }}>
-                  Rate
-                </span>
-              </button>
-            ) : null}
-            {!isPreview && onCollectionTap && (
-              <button
-                onClick={onCollectionTap}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${collectionBadgeHoverClass}`}
-                style={{
-                  background: isInCollections ? 'rgba(58,128,136,0.35)' : 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  border: isInCollections ? '1px solid rgba(58,128,136,0.4)' : '1px solid rgba(255,255,255,0.2)',
-                }}
-              >
-                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color="white" />
-                <span className={`${collectionBadgeFontSize} font-semibold`} style={{
-                  color: 'white',
-                  fontFamily: FONT.mono,
-                }}>
-                  {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
-                </span>
-              </button>
-            )}
-            {hydratedGoogle?.category && hydratedGoogle.category.toLowerCase() !== item.type.toLowerCase() && (
-              <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white' }}
-              >
-                {hydratedGoogle.category.replace(/\b\w/g, c => c.toUpperCase())}
-              </span>
-            )}
-          </div>
+
+                {/* Google rating */}
+                {hydratedGoogle?.rating && (
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
+                    <PerriandIcon name="star" size={10} color="var(--t-chrome-yellow)" />
+                    {hydratedGoogle.rating}
+                    {hydratedGoogle.reviewCount != null && hydratedGoogle.reviewCount > 0 && (
+                      <span style={{ color: 'rgba(255,255,255,0.65)' }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
+                    )}
+                  </span>
+                )}
+
+                {/* Price level */}
+                {hydratedGoogle?.priceLevel && (
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg" style={chipStyle}>
+                    {'$'.repeat(hydratedGoogle.priceLevel)}
+                  </span>
+                )}
+
+                {/* Source attribution */}
+                {sourceStyle && item.source?.name && (
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
+                    <PerriandIcon name={sourceStyle.icon} size={10} color="white" />
+                    via {item.source.name}
+                  </span>
+                )}
+
+                {/* Google category — only if it genuinely differs from item.type */}
+                {showCategory && (
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg" style={chipStyle}>
+                    {normalizedCategory}
+                  </span>
+                )}
+
+                {/* Rating badge */}
+                {existingRating && ratingReaction ? (
+                  <button
+                    onClick={onRate}
+                    className={`text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${ratingBadgeHoverClass}`}
+                    style={chipStyle}
+                  >
+                    <PerriandIcon name={ratingReaction.icon} size={ratingBadgeIconSize} color="white" />
+                    {ratingReaction.label}
+                  </button>
+                ) : onRate && !isPreview ? (
+                  <button
+                    onClick={onRate}
+                    className={`text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${ratingBadgeHoverClass}`}
+                    style={chipStyle}
+                  >
+                    <PerriandIcon name="star" size={isDesktop ? 12 : 11} color="white" />
+                    Rate
+                  </button>
+                ) : null}
+
+                {/* Collection badge */}
+                {!isPreview && onCollectionTap && (
+                  <button
+                    onClick={onCollectionTap}
+                    className={`text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${collectionBadgeHoverClass}`}
+                    style={{
+                      ...chipStyle,
+                      background: isInCollections ? 'rgba(58,128,136,0.4)' : chipStyle.background,
+                      border: isInCollections ? '1px solid rgba(58,128,136,0.5)' : chipStyle.border,
+                    }}
+                  >
+                    <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color="white" />
+                    {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
+                  </button>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
