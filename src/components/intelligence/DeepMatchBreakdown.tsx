@@ -76,32 +76,14 @@ export function DeepMatchBreakdown({
         className={`overflow-hidden ${className || ''}`}
       >
         {/* Header — editorial headline */}
-        <div className={`${isDesktop ? 'px-5 pt-5 pb-3' : 'px-4 pt-4 pb-2.5'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
-                background: `${COLOR.coral}14`,
-              }}
-            >
-              <PerriandIcon name="terrazzo" size={12} color={COLOR.coral} />
-            </div>
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest"
-              style={{ color: COLOR.coral, fontFamily: FONT.mono }}
-            >
-              Deep match
-            </span>
-            <span
-              className="text-[11px] font-bold ml-auto"
-              style={{ color: COLOR.ochre, fontFamily: FONT.mono }}
-            >
-              {match.score}%
-            </span>
-          </div>
+        <div className="pb-3">
+          {/* Score */}
+          <span
+            className="text-[11px] font-bold"
+            style={{ color: COLOR.ochre, fontFamily: FONT.mono }}
+          >
+            {match.score}%
+          </span>
 
           {/* Place name — tappable */}
           <div
@@ -132,7 +114,7 @@ export function DeepMatchBreakdown({
         </div>
 
         {/* Signal breakdown — editorial stack, not a chart */}
-        <div className={`${isDesktop ? 'px-5 pb-4' : 'px-4 pb-3'}`}>
+        <div className="pb-2">
           <StaggerContainer staggerDelay={0.08} delayStart={0.15}>
             <div className="flex flex-col gap-3">
               {match.signalBreakdown.map((signal, i) => {
@@ -190,10 +172,13 @@ export function DeepMatchBreakdown({
         {/* Tension resolved — if applicable */}
         {match.tensionResolved && (
           <div
-            className={`${isDesktop ? 'px-5 py-3' : 'px-4 py-2.5'}`}
+            className="py-2.5"
             style={{
               borderTop: `1px solid ${INK['05']}`,
               background: `${COLOR.coral}08`,
+              borderRadius: 8,
+              marginTop: 8,
+              padding: '8px 12px',
             }}
           >
             <div className="flex items-center gap-2">
