@@ -43,10 +43,10 @@ export default function TasteEvolutionCard({ type, newSignalCount, onDismiss, on
           />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: TEXT.primary, margin: '0 0 4px' }}>
+          <h4 style={{ fontFamily: FONT.sans, fontSize: 16, fontWeight: 600, color: TEXT.primary, margin: '0 0 4px' }}>
             {isEvolution ? 'Your taste is evolving' : 'Sharpen your matches'}
           </h4>
-          <p style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.secondary, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontFamily: FONT.sans, fontSize: 15, color: TEXT.secondary, lineHeight: 1.5, margin: 0 }}>
             {isEvolution
               ? `We've picked up ${newSignalCount || 'new'} new taste signals from your recent saves. Your recommendations will keep getting sharper.`
               : 'A few quick questions could unlock even better matches. Takes about 2 minutes.'}
@@ -59,7 +59,7 @@ export default function TasteEvolutionCard({ type, newSignalCount, onDismiss, on
                 background: COLOR.coral,
                 color: 'white',
                 fontFamily: FONT.sans,
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 600,
               }}
             >

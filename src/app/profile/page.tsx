@@ -210,8 +210,8 @@ function ProfilePageContent() {
           <PerriandIcon name="profile" size={24} color="var(--t-honey)" />
         </div>
         <div>
-          <div className="text-[15px] font-semibold" style={{ color: TEXT.primary }}>{userName}</div>
-          <div className="text-[11px]" style={{ color: TEXT.secondary }}>{profile.overallArchetype}</div>
+          <div className="text-[17px] font-semibold" style={{ color: TEXT.primary }}>{userName}</div>
+          <div className="text-[13px]" style={{ color: TEXT.secondary }}>{profile.overallArchetype}</div>
         </div>
       </div>
       <TerrazzoMosaic profile={numericProfile} size="xs" />
@@ -244,8 +244,8 @@ function ProfilePageContent() {
                     <PerriandIcon name="profile" size={28} color={COLOR.ochre} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[15px] font-semibold" style={{ color: '#ffffff', fontFamily: FONT.sans }}>{userName}</div>
-                    <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: FONT.mono }}>{profile.overallArchetype}</div>
+                    <div className="text-[17px] font-semibold" style={{ color: '#ffffff', fontFamily: FONT.sans }}>{userName}</div>
+                    <div className="text-[13px]" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: FONT.mono }}>{profile.overallArchetype}</div>
                   </div>
                 </div>
                 <TerrazzoMosaic profile={numericProfile} size="xs" />
@@ -257,16 +257,16 @@ function ProfilePageContent() {
               {/* Quick stats */}
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: COLOR.darkTeal }}>{signalCount}</div>
-                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: COLOR.darkTeal }}>{signalCount}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 11, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Signals</div>
                 </div>
                 <div className="text-center">
-                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: COLOR.darkTeal }}>{profile.contradictions?.length || 0}</div>
-                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: COLOR.darkTeal }}>{profile.contradictions?.length || 0}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 11, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tensions</div>
                 </div>
                 <div className="text-center">
-                  <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: COLOR.darkTeal }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
-                  <div style={{ fontFamily: FONT.mono, fontSize: 9, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 20, fontWeight: 700, color: COLOR.darkTeal }}>{Object.values(profile.microTasteSignals || {}).flat().length || 0}</div>
+                  <div style={{ fontFamily: FONT.mono, fontSize: 11, color: COLOR.coral, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Terms</div>
                 </div>
               </div>
 
@@ -281,10 +281,10 @@ function ProfilePageContent() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="text-[11px] font-semibold" style={{ color: '#ffffff', fontFamily: FONT.sans }}>
+                  <span className="text-[13px] font-semibold" style={{ color: '#ffffff', fontFamily: FONT.sans }}>
                     Taste Dossier
                   </span>
-                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONT.mono }}>→</span>
+                  <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONT.mono }}>→</span>
                 </SafeMotionButton>
 
                 <SafeMotionButton
@@ -294,10 +294,10 @@ function ProfilePageContent() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="text-[11px] font-semibold" style={{ color: COLOR.darkTeal, fontFamily: FONT.sans }}>
+                  <span className="text-[13px] font-semibold" style={{ color: COLOR.darkTeal, fontFamily: FONT.sans }}>
                     Expand Mosaic
                   </span>
-                  <span className="text-[10px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
+                  <span className="text-[12px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
                 </SafeMotionButton>
 
                 <SafeMotionButton
@@ -307,10 +307,10 @@ function ProfilePageContent() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="text-[11px] font-semibold" style={{ color: COLOR.darkTeal, fontFamily: FONT.sans }}>
+                  <span className="text-[13px] font-semibold" style={{ color: COLOR.darkTeal, fontFamily: FONT.sans }}>
                     Replay Intro
                   </span>
-                  <span className="text-[10px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
+                  <span className="text-[12px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
                 </SafeMotionButton>
               </div>
             </div>
@@ -321,9 +321,9 @@ function ProfilePageContent() {
                 <div key={action} className="relative flex-shrink-0">
                   <button
                     onClick={() => handleSettingTap(action)}
-                    className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all whitespace-nowrap"
+                    className="text-[13px] px-3 py-1.5 rounded-lg cursor-pointer transition-all whitespace-nowrap"
                     style={{
-                      fontSize: 11,
+                      fontSize: 13,
                       color: expandedSection === action ? COLOR.darkTeal : COLOR.navy,
                       fontFamily: FONT.sans,
                       background: expandedSection === action ? 'rgba(238,113,109,0.06)' : 'transparent',
@@ -398,20 +398,20 @@ function ProfilePageContent() {
         >
           <div className="flex flex-col items-start gap-0.5">
             <span
-              className="text-[12px] font-semibold"
+              className="text-[14px] font-semibold"
               style={{ color: 'var(--t-cream)', fontFamily: FONT.sans }}
             >
               Your Taste Dossier
             </span>
             <span
-              className="text-[9px]"
+              className="text-[11px]"
               style={{ color: 'rgba(251,245,236,0.45)', fontFamily: FONT.mono }}
             >
               {signalCount > 0 ? `${signalCount} signals` : 'Your signals'} · {profile.contradictions?.length || 0} tensions
             </span>
           </div>
           <span
-            className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
+            className="text-[12px] px-2.5 py-1 rounded-full font-semibold"
             style={{
               background: 'rgba(251,245,236,0.15)',
               color: 'var(--t-cream)',
@@ -434,20 +434,20 @@ function ProfilePageContent() {
         >
           <div className="flex flex-col items-start gap-0.5">
             <span
-              className="text-[12px] font-semibold"
+              className="text-[14px] font-semibold"
               style={{ color: TEXT.primary, fontFamily: FONT.sans }}
             >
               Expand Your Mosaic
             </span>
             <span
-              className="text-[9px]"
+              className="text-[11px]"
               style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               Quick questions that sharpen your matches
             </span>
           </div>
           <span
-            className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
+            className="text-[12px] px-2.5 py-1 rounded-full font-semibold"
             style={{
               background: 'rgba(0,42,85,0.06)',
               color: TEXT.primary,
@@ -470,20 +470,20 @@ function ProfilePageContent() {
         >
           <div className="flex flex-col items-start gap-0.5">
             <span
-              className="text-[12px] font-semibold"
+              className="text-[14px] font-semibold"
               style={{ color: TEXT.primary, fontFamily: FONT.sans }}
             >
               Replay Intro
             </span>
             <span
-              className="text-[9px]"
+              className="text-[11px]"
               style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
               Rewatch your personalized flythrough
             </span>
           </div>
           <span
-            className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
+            className="text-[12px] px-2.5 py-1 rounded-full font-semibold"
             style={{
               background: 'rgba(0,42,85,0.06)',
               color: TEXT.primary,
