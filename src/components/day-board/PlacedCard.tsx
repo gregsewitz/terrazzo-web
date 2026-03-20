@@ -9,7 +9,8 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, getSourceStyle } from '@/types';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
-import { useTripCollaboration } from '@/context/TripCollaborationContext';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
 
 /**
@@ -27,7 +28,9 @@ function PlacedCard({
   CARD_PX: number;
 }) {
   const { openDetail } = usePlaceDetail();
-  const { reactions } = useTripCollaboration();
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const { reactions } = useTripCollaboration();
+  const reactions: Array<{ placeKey: string; reaction: string }> = []; // stub until collaboration is ready
   const { dragItemId, onDragStartFromSlot } = useTripDrag();
   const unplaceFromSlot = useTripStore(s => s.unplaceFromSlot);
   const setPlaceTime = useTripStore(s => s.setPlaceTime);

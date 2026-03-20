@@ -15,7 +15,8 @@ import SlotOverlay from '@/components/day-board/SlotOverlay';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
-import { useTripCollaboration } from '@/context/TripCollaborationContext';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
 
 // ─── Constants ───────────────────────────────────────────────
@@ -29,10 +30,10 @@ const SLOT_LABELS: Record<string, { label: string; time: string }> = {
   evening:   { label: 'Evening',   time: '9:30 PM' },
 };
 
-const CARD_H = 82;
+const CARD_H = 100;
 const CARD_GAP = 4;
 const CARD_SLOT_H = CARD_H + CARD_GAP; // card + gap between cards
-const SLOT_ROW_H = (2 * CARD_SLOT_H) + 4 + 22; // ~198px — 2 card slots + top padding + "View all" bar
+const SLOT_ROW_H = (2 * CARD_SLOT_H) + 4 + 22; // ~234px — 2 card slots + top padding + "View all" bar
 const TRANSPORT_ROW_H = 40;
 const HEADER_H = 36;
 const CONTEXT_BAR_H = 30;

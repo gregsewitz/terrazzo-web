@@ -9,9 +9,10 @@ import { PerriandIcon, type PerriandIconName } from '@/components/icons/Perriand
 import { PlacedCard } from '@/components/day-board';
 import QuickEntryCard from '@/components/chat/QuickEntryCard';
 import QuickEntryInput from '@/components/chat/QuickEntryInput';
-import CollaboratorGhostCard from '@/components/place/CollaboratorGhostCard';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import CollaboratorGhostCard from '@/components/place/CollaboratorGhostCard';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
-import { useTripCollaboration } from '@/context/TripCollaborationContext';
+// import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
 
 interface SlotOverlayProps {
@@ -29,7 +30,8 @@ interface SlotOverlayProps {
 function SlotOverlay({ dayNumber, slot, anchorRect, colWidth, onClose }: SlotOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const { openDetail: onTapDetail } = usePlaceDetail();
-  const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
   const { onRegisterSlotRef, dropTarget } = useTripDrag();
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
@@ -41,9 +43,10 @@ function SlotOverlay({ dayNumber, slot, anchorRect, colWidth, onClose }: SlotOve
   const [showQuickInput, setShowQuickInput] = React.useState(false);
   const [editingEntryKey, setEditingEntryKey] = React.useState<string | null>(null);
 
-  const slotSuggestions = suggestions?.filter(
-    s => s.targetDay === dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
-  ) || [];
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const slotSuggestions = suggestions?.filter(
+  //   s => s.targetDay === dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
+  // ) || [];
 
   const CARD_H = 50;
   const CARD_PX = 3;
@@ -232,8 +235,8 @@ function SlotOverlay({ dayNumber, slot, anchorRect, colWidth, onClose }: SlotOve
           );
         })}
 
-        {/* Collaborator suggestions */}
-        {slotSuggestions.length > 0 && (
+        {/* TODO: Re-enable when multiplayer collaboration is ready */}
+        {/* {slotSuggestions.length > 0 && (
           <div className={`px-${CARD_PX} pb-1 flex flex-col gap-1`}>
             {slotSuggestions.map(sg => (
               <CollaboratorGhostCard
@@ -245,7 +248,7 @@ function SlotOverlay({ dayNumber, slot, anchorRect, colWidth, onClose }: SlotOve
               />
             ))}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Footer — add entry */}

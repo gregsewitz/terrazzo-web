@@ -5,7 +5,8 @@ import { useTripStore } from '@/stores/tripStore';
 import { SLOT_ICONS, SOURCE_STYLES, HotelInfo, getSourceStyle } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
 import HotelInput from './HotelInput';
 import DayContextMenu from './DayContextMenu';
 import { TransportBanner, TransportInput, getTransportsAfterSlot, getTransportsBeforeSlots } from './TransportBanner';
@@ -16,12 +17,14 @@ import QuickEntryCard from '../chat/QuickEntryCard';
 import QuickEntryInput from '../chat/QuickEntryInput';
 import { PlacedCard, SlotContainer } from '../day-board';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
-import { useTripCollaboration } from '@/context/TripCollaborationContext';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
 
 function DayBoardView() {
   const { openDetail: onTapDetail } = usePlaceDetail();
-  const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
   const { dropTarget, onRegisterSlotRef } = useTripDrag();
   const trips = useTripStore(s => s.trips);
   const currentTripId = useTripStore(s => s.currentTripId);
@@ -421,9 +424,8 @@ function DayBoardView() {
                 const icon = SLOT_ICONS[slot.id] || 'pin';
                 const hasPlaces = slot.places.length > 0;
                 const hasGhosts = slot.ghostItems && slot.ghostItems.length > 0;
-                const slotSuggestions = suggestions?.filter(
-                  s => s.targetDay === day.dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
-                ) || [];
+                // TODO: Re-enable when multiplayer collaboration is ready
+                const slotSuggestions: never[] = [];
                 // Notes module removed — collaboration mode not yet implemented
 
                 const isDropActive = dropTarget?.dayNumber === day.dayNumber && dropTarget?.slotId === slot.id;
@@ -566,20 +568,7 @@ function DayBoardView() {
                       </div>
                     )}
 
-                    {/* Collaborator suggestions */}
-                    {slotSuggestions.length > 0 && (
-                      <div className={`px-${CARD_PX} pb-1 flex flex-col gap-1`}>
-                        {slotSuggestions.map(sg => (
-                          <CollaboratorGhostCard
-                            key={sg.id}
-                            suggestion={sg}
-                            isOwner={myRole === 'owner'}
-                            onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-                            onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {/* TODO: Re-enable when multiplayer collaboration is ready */}
 
                     {/* Empty slot placeholder — only when truly empty and no quick input */}
                     {!hasPlaces && !hasGhosts && !(slot.quickEntries?.length) && slotSuggestions.length === 0 && activeQuickInput !== `${day.dayNumber}-${slot.id}` && (

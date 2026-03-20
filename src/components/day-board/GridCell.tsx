@@ -9,11 +9,12 @@ import type { ImportedPlace, TimeSlot } from '@/types';
 import QuickEntryInput from '@/components/chat/QuickEntryInput';
 import GhostBadge from './GhostBadge';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
-import { useTripCollaboration } from '@/context/TripCollaborationContext';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import type { Suggestion } from '@/stores/collaborationStore';
+// import type { Suggestion } from '@/stores/collaborationStore';
 
 interface GridCellProps {
   dayNumber: number;
@@ -24,7 +25,7 @@ interface GridCellProps {
   onOpenOverlay: (dayNumber: number, slotId: string, rect: DOMRect) => void;
 }
 
-const CARD_H = 82;
+const CARD_H = 100;
 const CARD_GAP = 4;
 const CARD_PX = 3;
 const MAX_VISIBLE_CARDS = 2;
@@ -267,7 +268,8 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
 function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverlay }: GridCellProps) {
   const cellRef = useRef<HTMLDivElement>(null);
   const { openDetail: onTapDetail } = usePlaceDetail();
-  const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const { suggestions, myRole, onRespondSuggestion } = useTripCollaboration();
   const { dropTarget, onRegisterSlotRef } = useTripDrag();
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
@@ -297,13 +299,14 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     };
   }, [dayNumber, slot.id, onRegisterSlotRef]);
 
-  const slotSuggestions = suggestions?.filter(
-    s => s.targetDay === dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
-  ) || [];
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const slotSuggestions = suggestions?.filter(
+  //   s => s.targetDay === dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
+  // ) || [];
 
   // Collect all items in priority order for display
   const allItems = useMemo(() => {
-    const items: Array<{ type: 'place' | 'quickEntry' | 'ghost' | 'suggestion'; data: unknown; id: string }> = [];
+    const items: Array<{ type: 'place' | 'quickEntry' | 'ghost'; data: unknown; id: string }> = [];
     for (const p of slot.places) {
       items.push({ type: 'place', data: p, id: p.id });
     }
@@ -313,11 +316,12 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     for (const g of (slot.ghostItems || [])) {
       items.push({ type: 'ghost', data: g, id: g.id });
     }
-    for (const sg of slotSuggestions) {
-      items.push({ type: 'suggestion', data: sg, id: sg.id });
-    }
+    // TODO: Re-enable when multiplayer collaboration is ready
+    // for (const sg of slotSuggestions) {
+    //   items.push({ type: 'suggestion', data: sg, id: sg.id });
+    // }
     return items;
-  }, [slot.places, slot.quickEntries, slot.ghostItems, slotSuggestions]);
+  }, [slot.places, slot.quickEntries, slot.ghostItems]);
 
   const totalCount = allItems.length;
   const isOverflow = totalCount > MAX_VISIBLE_CARDS;
@@ -401,27 +405,26 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         ));
       }
 
-      case 'suggestion': {
-        const sg = item.data as Suggestion;
-        // Stable color from user ID
-        const COLLAB_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6'];
-        let hash = 0;
-        for (let i = 0; i < sg.userId.length; i++) hash = ((hash << 5) - hash + sg.userId.charCodeAt(i)) | 0;
-        const collabColor = COLLAB_COLORS[Math.abs(hash) % COLLAB_COLORS.length];
-        const userName = sg.user?.name || sg.user?.email?.split('@')[0] || 'Collaborator';
-
-        return cardSlot(item.id, (
-          <GridCard
-            variant="suggestion"
-            name={sg.placeName}
-            typeLabel={sg.placeType?.toUpperCase()}
-            description={sg.reason ? `${userName}: "${sg.reason}"` : `Suggested by ${userName}`}
-            collabColor={collabColor}
-            actionButton={myRole === 'owner' ? { label: 'Accept', onClick: () => onRespondSuggestion?.(sg.id, 'accepted') } : undefined}
-            onDismiss={myRole === 'owner' ? () => onRespondSuggestion?.(sg.id, 'rejected') : undefined}
-          />
-        ));
-      }
+      // TODO: Re-enable when multiplayer collaboration is ready
+      // case 'suggestion': {
+      //   const sg = item.data as Suggestion;
+      //   const COLLAB_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6'];
+      //   let hash = 0;
+      //   for (let i = 0; i < sg.userId.length; i++) hash = ((hash << 5) - hash + sg.userId.charCodeAt(i)) | 0;
+      //   const collabColor = COLLAB_COLORS[Math.abs(hash) % COLLAB_COLORS.length];
+      //   const userName = sg.user?.name || sg.user?.email?.split('@')[0] || 'Collaborator';
+      //   return cardSlot(item.id, (
+      //     <GridCard
+      //       variant="suggestion"
+      //       name={sg.placeName}
+      //       typeLabel={sg.placeType?.toUpperCase()}
+      //       description={sg.reason ? `${userName}: "${sg.reason}"` : `Suggested by ${userName}`}
+      //       collabColor={collabColor}
+      //       actionButton={myRole === 'owner' ? { label: 'Accept', onClick: () => onRespondSuggestion?.(sg.id, 'accepted') } : undefined}
+      //       onDismiss={myRole === 'owner' ? () => onRespondSuggestion?.(sg.id, 'rejected') : undefined}
+      //     />
+      //   ));
+      // }
 
       default:
         return null;

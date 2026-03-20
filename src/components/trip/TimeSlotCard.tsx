@@ -5,7 +5,8 @@ import { useTripStore } from '@/stores/tripStore';
 import { TimeSlot, ImportedPlace, SOURCE_STYLES, QuickEntry, getSourceStyle, getSourceLabel } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from '../place/GhostCard';
-import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
+// TODO: Re-enable when multiplayer collaboration is ready
+// import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
 import ReactionPills from '../place/ReactionPills';
 import QuickEntryCard from '../chat/QuickEntryCard';
 import QuickEntryInput from '../chat/QuickEntryInput';
@@ -13,7 +14,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import { hasGhostItems } from '@/utils/ghostFiltering';
 import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
-import { useTripCollaboration } from '@/context/TripCollaborationContext';
+// import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
 
 const SLOT_HOLD_DELAY = 250;
@@ -142,13 +143,15 @@ interface TimeSlotCardProps {
 
 function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
   const { openDetail: onTapDetail } = usePlaceDetail();
-  const { suggestions: allSuggestions, reactions, myRole, onRespondSuggestion, onAddReaction } = useTripCollaboration();
+  // TODO: Re-enable when multiplayer collaboration is ready
+  // const { suggestions: allSuggestions, reactions, myRole, onRespondSuggestion, onAddReaction } = useTripCollaboration();
+  const reactions: import('@/stores/collaborationStore').Reaction[] = [];
+  const myRole = 'owner' as const;
+  const onAddReaction: ((placeKey: string, reaction: 'love' | 'not_for_me') => void) | undefined = undefined;
   const { dropTarget, dragItemId, onDragStartFromSlot, onUnplace } = useTripDrag();
   const isDropTarget = dropTarget?.dayNumber === dayNumber && dropTarget?.slotId === slot.id;
-  // Filter collaboration data for this specific slot
-  const suggestions = allSuggestions.filter(
-    s => s.targetDay === dayNumber && s.targetSlotId === slot.id && s.status === 'pending'
-  );
+  // TODO: Re-enable when multiplayer collaboration is ready
+  const suggestions: never[] = [];
   const confirmGhost = useTripStore(s => s.confirmGhost);
   const dismissGhost = useTripStore(s => s.dismissGhost);
   const setPlaceTime = useTripStore(s => s.setPlaceTime);
@@ -282,16 +285,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
                 onTapDetail={() => onTapDetail(ghost)}
               />
             ))}
-            {/* Collaborator suggestions */}
-            {suggestions && suggestions.length > 0 && suggestions.map(sg => (
-              <CollaboratorGhostCard
-                key={sg.id}
-                suggestion={sg}
-                isOwner={myRole === 'owner'}
-                onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-                onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
-              />
-            ))}
+            {/* TODO: Re-enable when multiplayer collaboration is ready */}
 
             {/* Quick entries in ghost slots */}
             <QuickEntriesBlock
@@ -459,22 +453,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
                   return (
                     <div className="flex items-center gap-1.5 px-2.5 pb-1.5">
                       <ReactionPills reactions={placeReactions} compact />
-                      {myRole && myRole !== 'owner' && onAddReaction && (
-                        <div className="flex gap-1 ml-auto">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'love'); }}
-                            className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
-                            style={{ background: 'rgba(239,68,68,0.06)', border: 'none', cursor: 'pointer' }}
-                            aria-label="Love this place"
-                          ><PerriandIcon name="loveReaction" size={12} color="#dc2626" accent="#dc2626" /></button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); onAddReaction(placeKey, 'not_for_me'); }}
-                            className="px-1.5 py-0.5 rounded-full flex items-center justify-center"
-                            style={{ background: INK['05'], border: 'none', cursor: 'pointer' }}
-                            aria-label="Not for me"
-                          ><PerriandIcon name="unsure" size={12} color={INK['60']} accent={INK['60']} /></button>
-                        </div>
-                      )}
+                      {/* TODO: Re-enable when multiplayer collaboration is ready */}
                     </div>
                   );
                 })()}
@@ -493,20 +472,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
             confirmEntry={(id) => confirmQuickEntry(dayNumber, slot.id, id)}
           />
 
-          {/* Collaborator suggestions for this slot */}
-          {suggestions && suggestions.length > 0 && (
-            <div className="flex flex-col gap-1.5 mb-1">
-              {suggestions.map(sg => (
-                <CollaboratorGhostCard
-                  key={sg.id}
-                  suggestion={sg}
-                  isOwner={myRole === 'owner'}
-                  onAccept={() => onRespondSuggestion?.(sg.id, 'accepted')}
-                  onReject={() => onRespondSuggestion?.(sg.id, 'rejected')}
-                />
-              ))}
-            </div>
-          )}
+          {/* TODO: Re-enable when multiplayer collaboration is ready */}
 
           {/* Inline quick entry input (when active) */}
           {showQuickInput ? (
