@@ -520,8 +520,7 @@ function CollectionDetailContent() {
       </div>
       <button
         onClick={() => {
-          // Navigate to trips — in the future this would pre-populate a new trip
-          router.push('/trips');
+          router.push(`/trips/new/from-collection?id=${collectionId}`);
         }}
         className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover"
         style={{

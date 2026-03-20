@@ -515,6 +515,8 @@ export interface TripCreationData {
   groupSize?: number; // for friends/family
   status: TripStatus;
   dayAllocation?: Record<string, number>; // e.g. { "Tokyo": 6, "Kyoto": 4 } — days per destination
+  pool?: ImportedPlace[]; // pre-loaded places (e.g. from collection promotion)
+  sourceCollectionId?: string; // collection this trip was created from
 }
 
 export interface AISuggestion {

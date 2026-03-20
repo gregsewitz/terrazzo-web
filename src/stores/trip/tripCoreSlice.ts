@@ -319,6 +319,8 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
           return day;
         });
 
+    const initialPool = data.pool || [];
+
     const newTrip: Trip = {
       id: tempId,
       name: data.name,
@@ -332,7 +334,7 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
       groupSize: data.groupSize,
       status: data.status,
       days,
-      pool: [],
+      pool: initialPool,
     };
 
     set(state => ({
@@ -352,7 +354,7 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
           groupSize: data.groupSize,
           groupType: data.travelContext,
           days,
-          pool: [],
+          pool: initialPool,
           status: data.status || 'planning',
         }),
       });
