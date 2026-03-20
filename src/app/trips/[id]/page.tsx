@@ -94,7 +94,7 @@ function TripDetailContent() {
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
   const [showGraduateModal, setShowGraduateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map' | 'notes'>('board');
+  const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map'>('board');
   const [useGridLayout, setUseGridLayout] = useState(true); // Feature toggle: grid vs legacy board
 
   // Picks rail resizable width
@@ -413,9 +413,6 @@ function TripDetailContent() {
                   { key: 'overview' as const, label: 'Overview', icon: 'discover' as const },
                   { key: 'board' as const, label: 'Itinerary', icon: 'plan' as const },
                   { key: 'map' as const, label: 'Map', icon: 'location' as const },
-                  ...((trip.dreamBoard?.length || trip.scratchpad?.length) ? [
-                    { key: 'notes' as const, label: 'Notes', icon: 'star' as const },
-                  ] : []),
                 ]).map(tab => {
                   const isActive = desktopView === tab.key;
                   return (
@@ -591,14 +588,6 @@ function TripDetailContent() {
               <Suspense fallback={null}>
                 <TripMapView onTapDetail={openDetail} variant="desktop" />
               </Suspense>
-            </div>
-        ) : desktopView === 'notes' ? (
-            /* ── DREAM BOARD / NOTES VIEW (desktop) ── */
-            <div className="flex flex-1 min-h-0">
-              <div className="flex-1 overflow-y-auto" style={{ maxWidth: 680, margin: '0 auto' }}>
-                <DreamBoard />
-              </div>
-              <RightPanel />
             </div>
         ) : (
             /* ── ITINERARY BOARD VIEW ── */
