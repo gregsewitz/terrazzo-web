@@ -4,26 +4,27 @@ import PlacePhoto from '@/components/place/PlacePhoto';
 import PlaceLink from '@/components/place/PlaceLink';
 import { MOOD_BOARDS, type MoodBoard } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
-import { COLOR, FONT } from '@/constants/theme';
+import { COLOR, FONT, INK } from '@/constants/theme';
 import { SectionLabel } from './SectionLabel';
 
 export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
   const displayBoards = boards || MOOD_BOARDS;
   return (
     <SafeMotionDiv
-      className="mb-10 px-5"
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color={COLOR.coral}>Travel moods</SectionLabel>
-      <div className="flex flex-col gap-3 mt-3">
+      <SectionLabel color={COLOR.olive}>Travel Moods</SectionLabel>
+      <div className="flex flex-col gap-0">
         {displayBoards.map((board, idx) => (
           <SafeMotionDiv
             key={board.mood}
-            className="p-4 rounded-2xl"
-            style={{ background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)', border: '1px solid var(--t-coral)', borderLeft: `3px solid ${board.color}` }}
+            className="py-3"
+            style={{ borderBottom: `1px solid ${INK['04']}` }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: idx * 0.1 }}

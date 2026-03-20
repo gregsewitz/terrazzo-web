@@ -3,6 +3,7 @@ import { DeepMatchBreakdown } from '@/components/intelligence';
 import type { DeepMatch as IntelDeepMatch } from '@/components/intelligence';
 import { DEEP_MATCH, type DeepMatch } from '@/constants/discover';
 import type { TasteDomain } from '@/types';
+import { COLOR, INK } from '@/constants/theme';
 import { SectionLabel } from './SectionLabel';
 
 export function DeepMatchSection({ match }: { match?: DeepMatch }) {
@@ -23,21 +24,19 @@ export function DeepMatchSection({ match }: { match?: DeepMatch }) {
   };
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-10 rounded-2xl"
-      style={{ background: 'var(--t-dark-teal)' }}
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <div className="mb-3"><SectionLabel color="var(--t-light-yellow)">Deep match</SectionLabel></div>
-      <div className="rounded-xl overflow-hidden" style={{ background: '#ffffff' }}>
-        <DeepMatchBreakdown
-          match={intelMatch}
-          onPlaceTap={undefined}
-          variant="mobile"
-        />
-      </div>
+      <div className="mb-3"><SectionLabel color={COLOR.orange}>Deep match</SectionLabel></div>
+      <DeepMatchBreakdown
+        match={intelMatch}
+        onPlaceTap={undefined}
+        variant="mobile"
+      />
     </SafeMotionDiv>
   );
 }

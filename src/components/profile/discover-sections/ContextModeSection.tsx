@@ -5,7 +5,7 @@ import PlacePhoto from '@/components/place/PlacePhoto';
 import PlaceLink from '@/components/place/PlaceLink';
 import { SUMMER_RECS, type ContextRec } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
-import { COLOR, FONT } from '@/constants/theme';
+import { COLOR, FONT, INK } from '@/constants/theme';
 import { SectionLabel } from './SectionLabel';
 
 export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; contextLabel?: string }) {
@@ -13,34 +13,32 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
   const label = contextLabel || 'Summer';
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-10 rounded-2xl"
-      style={{ background: 'var(--t-dark-teal)' }}
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-light-yellow)">Context mode</SectionLabel>
+      <SectionLabel color={COLOR.warmGray}>Context mode</SectionLabel>
       <SafeMotionDiv
-        className="p-4 rounded-xl mt-3"
-        style={{ background: '#ffffff', border: 'none', borderTop: '3px solid var(--t-light-yellow)' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         viewport={{ once: true, margin: '-100px' }}
       >
-        <div className="flex items-center gap-2 mb-1">
-          <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
-          <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.ochre }}>
-            If you&apos;re traveling this {label.toLowerCase()}...
-          </span>
-        </div>
-        <p className="text-[11px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>
-          {displayRecs.length > 0
-            ? displayRecs.slice(0, 3).map(r => r.name).join(' · ')
-            : 'Curated for your moment'}
-        </p>
-        <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2 mb-1">
+        <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
+        <span className="text-[14px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.ochre }}>
+          If you&apos;re traveling this {label.toLowerCase()}...
+        </span>
+      </div>
+      <p className="text-[11px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>
+        {displayRecs.length > 0
+          ? displayRecs.slice(0, 3).map(r => r.name).join(' · ')
+          : 'Curated for your moment'}
+      </p>
+      <div className="flex flex-col gap-2.5">
           {displayRecs.map((rec, idx) => {
             const imageUrl = getPlaceImage(rec.name);
             return (
@@ -70,7 +68,7 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
               </PlaceLink>
             );
           })}
-        </div>
+      </div>
       </SafeMotionDiv>
     </SafeMotionDiv>
   );

@@ -5,24 +5,24 @@ import PlaceLink from '@/components/place/PlaceLink';
 import { WEEKLY_COLLECTION, type CollectionPlace } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { DIMENSION_COLORS } from '@/constants/profile';
-import { COLOR, FONT } from '@/constants/theme';
+import { COLOR, FONT, INK } from '@/constants/theme';
 import { SectionLabel } from './SectionLabel';
 
 export function WeeklyEditSection({ collection: propCollection }: { collection?: { title: string; subtitle: string; places: CollectionPlace[] } }) {
   const collection = propCollection || WEEKLY_COLLECTION;
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-10 rounded-2xl"
-      style={{ background: 'var(--t-dark-teal)' }}
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <div className="mb-1"><SectionLabel color="var(--t-light-yellow)">This week&apos;s edit</SectionLabel></div>
+      <div className="mb-1"><SectionLabel color={COLOR.darkTeal}>This week&apos;s edit</SectionLabel></div>
       <div className="mb-3">
-        <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: '#ffffff' }}>{collection.title}</h3>
-        <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: FONT.mono }}>{collection.subtitle}</p>
+        <h3 className="text-[18px] leading-snug mb-1" style={{ fontFamily: FONT.serif, color: COLOR.navy }}>{collection.title}</h3>
+        <p className="text-[11px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>{collection.subtitle}</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
         {collection.places.map((place, idx) => {

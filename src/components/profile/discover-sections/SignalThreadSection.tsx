@@ -15,17 +15,15 @@ export function SignalThreadSection({ thread }: { thread?: SignalThread }) {
 
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-10 rounded-2xl"
-      style={{ background: 'var(--t-dark-teal)' }}
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-light-yellow)">The thread</SectionLabel>
+      <SectionLabel color={COLOR.periwinkle}>The thread</SectionLabel>
       <SafeMotionDiv
-        className="mt-3 p-5 rounded-2xl"
-        style={{ background: '#ffffff', border: 'none' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}

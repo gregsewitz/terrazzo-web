@@ -4,7 +4,7 @@ import ScoreArc from '@/components/profile/ScoreArc';
 import PlaceLink from '@/components/place/PlaceLink';
 import { BECAUSE_YOU_CARDS, type BecauseYouCard } from '@/constants/discover';
 import { DIMENSION_COLORS } from '@/constants/profile';
-import { COLOR, FONT } from '@/constants/theme';
+import { COLOR, FONT, INK } from '@/constants/theme';
 import { SectionLabel } from './SectionLabel';
 
 export function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
@@ -12,15 +12,14 @@ export function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
   return (
     <SafeMotionDiv
 
-      className="mt-4 mb-10 px-5"
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <div className="mb-3">
-        <SectionLabel color={COLOR.coral}>Because you...</SectionLabel>
-      </div>
+      <SectionLabel color={COLOR.coral}>Because You</SectionLabel>
       <div
         className="flex gap-3 overflow-x-auto pb-2 -mr-5 pr-5"
         style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}

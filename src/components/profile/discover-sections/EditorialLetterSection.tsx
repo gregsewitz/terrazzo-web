@@ -1,43 +1,24 @@
 import { SafeMotionDiv, SafeMotionSpan, SafeMotionH2, SafeMotionP } from '@/components/animations/AnimatedElements';
 import { EDITORIAL_LETTER, type EditorialLetter } from '@/constants/discover';
-import { FONT } from '@/constants/theme';
+import { COLOR, FONT, INK } from '@/constants/theme';
+import { SectionLabel } from './SectionLabel';
 
 export function EditorialLetterSection({ letter }: { letter?: EditorialLetter }) {
   const l = letter || EDITORIAL_LETTER;
   return (
     <SafeMotionDiv
-
-      className="px-5 pt-5 pb-6 rounded-2xl"
-      style={{ background: 'var(--t-dark-teal)' }}
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
+      <SectionLabel color={COLOR.navy}>A note from Terrazzo</SectionLabel>
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-4">
-          <SafeMotionDiv
-            className="w-5 h-[1px]"
-            style={{ background: 'var(--t-light-yellow)' }}
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            viewport={{ once: true, margin: '-100px' }}
-          />
-          <SafeMotionSpan
-            className="text-[9px] uppercase tracking-[0.25em]"
-            style={{ color: 'var(--t-light-yellow)', fontFamily: FONT.mono }}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true, margin: '-100px' }}
-          >
-            A note from Terrazzo
-          </SafeMotionSpan>
-        </div>
         <SafeMotionH2
           className="text-[20px] leading-snug mb-4"
-          style={{ fontFamily: FONT.serif, color: '#ffffff' }}
+          style={{ fontFamily: FONT.serif, color: COLOR.navy }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
@@ -47,7 +28,7 @@ export function EditorialLetterSection({ letter }: { letter?: EditorialLetter })
         </SafeMotionH2>
         <SafeMotionP
           className="text-[13px] leading-relaxed"
-          style={{ color: 'rgba(255,255,255,0.8)', fontFamily: FONT.sans }}
+          style={{ color: COLOR.navy, fontFamily: FONT.sans }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
@@ -63,7 +44,7 @@ export function EditorialLetterSection({ letter }: { letter?: EditorialLetter })
         transition={{ duration: 0.5, delay: 0.5 }}
         viewport={{ once: true, margin: '-100px' }}
       >
-        <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(235,216,150,0.2)', color: 'var(--t-light-yellow)', fontFamily: FONT.mono }}>
+        <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ background: `${COLOR.ochre}12`, color: COLOR.ochre, fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
       </SafeMotionDiv>

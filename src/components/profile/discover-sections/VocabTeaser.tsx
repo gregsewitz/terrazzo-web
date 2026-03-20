@@ -1,6 +1,6 @@
 import { SafeMotionDiv, SafeMotionSpan } from '@/components/animations/AnimatedElements';
 import { TASTE_PROFILE, DIMENSION_COLORS } from '@/constants/profile';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { SectionLabel } from './SectionLabel';
 
 export function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
@@ -12,17 +12,15 @@ export function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
 
   return (
     <SafeMotionDiv
-      className="px-5 py-6 mb-10 rounded-2xl"
-      style={{ background: 'var(--t-dark-teal)' }}
+      className="px-5 py-6"
+      style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true, margin: '-100px' }}
     >
-      <SectionLabel color="var(--t-light-yellow)">Your taste vocabulary</SectionLabel>
+      <SectionLabel color={COLOR.olive}>Your taste vocabulary</SectionLabel>
       <SafeMotionDiv
-        className="p-4 rounded-xl mt-3"
-        style={{ background: '#ffffff', border: 'none' }}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}

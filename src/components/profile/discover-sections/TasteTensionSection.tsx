@@ -1,6 +1,8 @@
 import { TASTE_TENSION, type TasteTension } from '@/constants/discover';
 import { TasteTensionCard } from '@/components/intelligence';
 import type { TasteTension as IntelTasteTension } from '@/components/intelligence';
+import { INK, COLOR } from '@/constants/theme';
+import { SectionLabel } from './SectionLabel';
 
 export function TasteTensionSection({ tension }: { tension?: TasteTension }) {
   const t = tension || TASTE_TENSION;
@@ -12,7 +14,8 @@ export function TasteTensionSection({ tension }: { tension?: TasteTension }) {
     resolvedBy: t.resolvedBy,
   };
   return (
-    <div className="px-5 mb-10">
+    <div className="px-5 py-6" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+      <SectionLabel color={COLOR.ochre}>Taste Tension</SectionLabel>
       <TasteTensionCard
         tension={intelTension}
         onPlaceTap={undefined}

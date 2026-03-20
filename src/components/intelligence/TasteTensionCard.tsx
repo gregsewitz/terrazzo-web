@@ -49,33 +49,10 @@ export function TasteTensionCard({
   return (
     <SafeFadeIn direction="up" distance={16} duration={0.6}>
       <div
-        className={`rounded-2xl overflow-hidden ${className || ''}`}
-        style={{
-          background: 'linear-gradient(145deg, rgba(238,113,109,0.06) 0%, rgba(238,113,109,0.12) 100%)',
-          border: '1px solid var(--t-coral)',
-        }}
+        className={`overflow-hidden ${className || ''}`}
       >
         {/* Header */}
-        <div className={`${isDesktop ? 'px-5 pt-5 pb-3' : 'px-4 pt-4 pb-2.5'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
-                background: `${COLOR.coral}12`,
-              }}
-            >
-              <PerriandIcon name="sparkle" size={12} color={COLOR.coral} />
-            </div>
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest"
-              style={{ color: COLOR.coral, fontFamily: FONT.mono }}
-            >
-              Taste tension
-            </span>
-          </div>
+        <div className="pb-3">
           <h3
             className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} leading-snug italic`}
             style={{ fontFamily: FONT.serif, color: COLOR.darkTeal, margin: 0 }}
@@ -85,7 +62,7 @@ export function TasteTensionCard({
         </div>
 
         {/* Stated vs Revealed — the editorial vignette */}
-        <div className={`${isDesktop ? 'px-5 pb-4' : 'px-4 pb-3'}`}>
+        <div className="pb-3">
           {/* Stated preference */}
           <div className="flex items-start gap-2.5 mb-2">
             <div
@@ -162,7 +139,7 @@ export function TasteTensionCard({
         {/* Resolution — the place that bridges this tension */}
         {tension.resolvedBy && (
           <div
-            className={`${isDesktop ? 'px-5 py-4' : 'px-4 py-3'}`}
+            className="py-3"
             style={{
               borderTop: `1px solid ${INK['06']}`,
               background: `${COLOR.ochre}06`,

@@ -137,39 +137,16 @@ export function StretchPickAxis({
   return (
     <FadeInSection delay={0.1} direction="up" distance={16}>
       <div
-        className={`rounded-2xl overflow-hidden ${className || ''}`}
-        style={{
-          background: 'linear-gradient(155deg, rgba(238,113,109,0.06), rgba(238,113,109,0.12))',
-          border: '1px solid var(--t-coral)',
-        }}
+        className={`overflow-hidden ${className || ''}`}
       >
         {/* Header */}
-        <div className={`${isDesktop ? 'px-5 pt-5 pb-3' : 'px-4 pt-4 pb-2.5'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
-                background: `${COLOR.coral}12`,
-              }}
-            >
-              <PerriandIcon name="discover" size={12} color={COLOR.coral} />
-            </div>
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest"
-              style={{ color: COLOR.coral, fontFamily: FONT.mono }}
-            >
-              Stretch pick
-            </span>
-            <span
-              className="text-[11px] font-bold ml-auto"
-              style={{ color: COLOR.navy, fontFamily: FONT.mono }}
-            >
-              {getMatchTier(pick.score).label}
-            </span>
-          </div>
+        <div className="pb-3">
+          <span
+            className="text-[11px] font-bold"
+            style={{ color: COLOR.navy, fontFamily: FONT.mono }}
+          >
+            {getMatchTier(pick.score).label}
+          </span>
 
           {/* Place info */}
           <div
@@ -192,7 +169,7 @@ export function StretchPickAxis({
         </div>
 
         {/* Polarity axis bars */}
-        <div className={`${isDesktop ? 'px-5 pb-4' : 'px-4 pb-3'} flex flex-col gap-2.5`}>
+        <div className="pb-3 flex flex-col gap-2.5">
           <AxisBar
             domain={pick.strongAxis}
             score={pick.strongScore}
@@ -209,7 +186,7 @@ export function StretchPickAxis({
 
         {/* Editorial explanation */}
         <div
-          className={`${isDesktop ? 'px-5 py-4' : 'px-4 py-3'}`}
+          className="py-3"
           style={{
             borderTop: `1px solid ${INK['05']}`,
           }}
