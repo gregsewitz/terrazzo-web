@@ -74,26 +74,26 @@ function PlaceDetailContent({
   const containerPadding = isDesktop ? 'px-8 pb-8' : 'px-5 pb-24';
   const containerMarginTop = isDesktop ? 'mt-5' : 'mt-4';
   const nameFontSize = isDesktop ? 'text-[28px]' : 'text-[24px]';
-  const locationFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
-  const akaFontSize = isDesktop ? 'text-[11px]' : 'text-[10px]';
-  const descriptionFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
-  const whatToOrderTagFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
-  const tipsFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
+  const locationFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
+  const akaFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
+  const descriptionFontSize = isDesktop ? 'text-[15px]' : 'text-[14px]';
+  const whatToOrderTagFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
+  const tipsFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
   const siblingCardWidth = isDesktop ? 'min-w-[140px]' : 'min-w-[120px]';
-  const siblingNameFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
-  const siblingTypeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
-  const tasteNoteFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
-  const personalNoteFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
-  const yourNotesFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
-  const terrazzoParagraphFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
-  const matchScoreSubFontSize = isDesktop ? 'text-[11px]' : 'text-[10px]';
-  const rateButtonFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
-  const saveButtonFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
+  const siblingNameFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
+  const siblingTypeFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
+  const tasteNoteFontSize = isDesktop ? 'text-[15px]' : 'text-[14px]';
+  const personalNoteFontSize = isDesktop ? 'text-[15px]' : 'text-[14px]';
+  const yourNotesFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
+  const terrazzoParagraphFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
+  const matchScoreSubFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
+  const rateButtonFontSize = isDesktop ? 'text-[16px]' : 'text-[15px]';
+  const saveButtonFontSize = isDesktop ? 'text-[16px]' : 'text-[15px]';
 
   const ratingBadgeIconSize = isDesktop ? 14 : 13;
-  const ratingBadgeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
+  const ratingBadgeFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const collectionBadgeIconSize = isDesktop ? 12 : 11;
-  const collectionBadgeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
+  const collectionBadgeFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const closeButtonHoverClass = isDesktop ? 'btn-hover' : '';
   const saveButtonHoverClass = isDesktop ? 'transition-all btn-hover' : 'transition-all hover:opacity-90';
   const rateButtonHoverClass = isDesktop ? 'btn-hover' : 'transition-all hover:opacity-90';
@@ -204,13 +204,13 @@ function PlaceDetailContent({
             return (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 {/* Place type (merged with Google category) */}
-                <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
+                <span className="text-[12px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
                   {displayType}
                 </span>
 
                 {/* Google rating */}
                 {hydratedGoogle?.rating && (
-                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
+                  <span className="text-[12px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
                     <PerriandIcon name="star" size={10} color="var(--t-chrome-yellow)" />
                     {hydratedGoogle.rating}
                     {hydratedGoogle.reviewCount != null && hydratedGoogle.reviewCount > 0 && (
@@ -221,14 +221,14 @@ function PlaceDetailContent({
 
                 {/* Price level */}
                 {hydratedGoogle?.priceLevel && (
-                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg" style={chipStyle}>
+                  <span className="text-[12px] font-semibold px-2 py-1 rounded-lg" style={chipStyle}>
                     {'$'.repeat(hydratedGoogle.priceLevel)}
                   </span>
                 )}
 
                 {/* Source attribution */}
                 {sourceStyle && item.source?.name && (
-                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
+                  <span className="text-[12px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
                     <PerriandIcon name={sourceStyle.icon} size={10} color="white" />
                     via {item.source.name}
                   </span>
@@ -238,7 +238,7 @@ function PlaceDetailContent({
                 {existingRating && ratingReaction ? (
                   <button
                     onClick={onRate}
-                    className={`text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${ratingBadgeHoverClass}`}
+                    className={`text-[12px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${ratingBadgeHoverClass}`}
                     style={chipStyle}
                   >
                     <PerriandIcon name={ratingReaction.icon} size={ratingBadgeIconSize} color="white" />
@@ -247,7 +247,7 @@ function PlaceDetailContent({
                 ) : onRate && !isPreview ? (
                   <button
                     onClick={onRate}
-                    className={`text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${ratingBadgeHoverClass}`}
+                    className={`text-[12px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${ratingBadgeHoverClass}`}
                     style={chipStyle}
                   >
                     <PerriandIcon name="star" size={isDesktop ? 12 : 11} color="white" />
@@ -259,7 +259,7 @@ function PlaceDetailContent({
                 {!isPreview && onCollectionTap && (
                   <button
                     onClick={onCollectionTap}
-                    className={`text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${collectionBadgeHoverClass}`}
+                    className={`text-[12px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer border-none ${collectionBadgeHoverClass}`}
                     style={{
                       ...chipStyle,
                       background: isInCollections ? 'rgba(58,128,136,0.4)' : chipStyle.background,
@@ -307,10 +307,10 @@ function PlaceDetailContent({
               ? `https://www.google.com/maps/search/?api=1&query=${g.lat},${g.lng}`
               : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.name} ${item.location}`)}`;
           const tiles: React.ReactNode[] = [];
-          if (g.address) tiles.push(<div key="addr" className="flex items-start gap-2.5 p-3.5 min-w-0"><PerriandIcon name="pin" size={13} color={TEXT.secondary} /><span className="text-[11px] leading-snug" style={{ color: TEXT.primary }}>{g.address}</span></div>);
-          if (g.website) tiles.push(<div key="web" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="discover" size={13} color={TEXT.secondary} /><a href={g.website} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline truncate" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>{g.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></div>);
-          if (g.phone) tiles.push(<div key="phone" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="sparkle" size={13} color={TEXT.secondary} /><a href={`tel:${g.phone}`} className="text-[11px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>{g.phone}</a></div>);
-          tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={TEXT.secondary} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>Google Maps</a></div>);
+          if (g.address) tiles.push(<div key="addr" className="flex items-start gap-2.5 p-3.5 min-w-0"><PerriandIcon name="pin" size={13} color={TEXT.secondary} /><span className="text-[13px] leading-snug" style={{ color: TEXT.primary }}>{g.address}</span></div>);
+          if (g.website) tiles.push(<div key="web" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="discover" size={13} color={TEXT.secondary} /><a href={g.website} target="_blank" rel="noopener noreferrer" className="text-[13px] no-underline truncate" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>{g.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></div>);
+          if (g.phone) tiles.push(<div key="phone" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="sparkle" size={13} color={TEXT.secondary} /><a href={`tel:${g.phone}`} className="text-[13px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>{g.phone}</a></div>);
+          tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={TEXT.secondary} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[13px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>Google Maps</a></div>);
           return (
             <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.2}>
               <div className={`mb-5 rounded-2xl overflow-hidden ${containerMarginTop}`} style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length >= 2 ? 2 : 1}, 1fr)`, gap: 1, background: INK['06'], border: `1px solid ${INK['04']}` }}>
@@ -328,7 +328,7 @@ function PlaceDetailContent({
           <SafeFadeIn direction="up" distance={10} duration={0.4}>
             <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-2" style={{ background: `${COLOR.darkTeal}14` }}>
               <PerriandIcon name="alert" size={14} color={COLOR.darkTeal} />
-              <span className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-medium`} style={{ color: COLOR.darkTeal }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
+              <span className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-medium`} style={{ color: COLOR.darkTeal }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
             </div>
           </SafeFadeIn>
         )}
@@ -366,8 +366,8 @@ function PlaceDetailContent({
               </div>
               {existingRating.tags && existingRating.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {existingRating.tags.map(tag => (<span key={tag} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${ratingReaction.color}12`, color: ratingReaction.color }}>{tag}</span>))}
-                  {existingRating.returnIntent === 'absolutely' && <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: TEXT.primary }}>Would return <PerriandIcon name="check" size={11} color={TEXT.primary} /></span>}
+                  {existingRating.tags.map(tag => (<span key={tag} className="text-[12px] px-2 py-0.5 rounded-full" style={{ background: `${ratingReaction.color}12`, color: ratingReaction.color }}>{tag}</span>))}
+                  {existingRating.returnIntent === 'absolutely' && <span className="text-[12px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: TEXT.primary }}>Would return <PerriandIcon name="check" size={11} color={TEXT.primary} /></span>}
                 </div>
               )}
               {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: TEXT.primary }}>{"\u201C"}{existingRating.personalNote}{"\u201D"}</p>}
@@ -480,7 +480,7 @@ function PlaceDetailContent({
                 return (
                   <div className="flex items-center gap-2.5 mb-3">
                     <span
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-bold"
+                      className="px-2.5 py-1 rounded-lg text-[13px] font-bold"
                       style={{ background: tier.bg, color: tier.color, fontFamily: FONT.mono }}
                     >
                       {tier.label}
@@ -497,7 +497,7 @@ function PlaceDetailContent({
               {/* 2. Narrative explanation */}
               {resolvedItem.matchExplanation?.narrative && (
                 <p
-                  className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed mb-4`}
+                  className={`${isDesktop ? 'text-[15px]' : 'text-[14px]'} leading-relaxed mb-4`}
                   style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
                 >
                   {resolvedItem.matchExplanation.narrative}
@@ -639,7 +639,7 @@ function PlaceDetailContent({
         {onDelete && !isPreview && (
           <button
             onClick={onDelete}
-            className="w-full mt-3 py-2.5 rounded-xl cursor-pointer text-[12px]"
+            className="w-full mt-3 py-2.5 rounded-xl cursor-pointer text-[14px]"
             style={{
               background: 'none',
               border: 'none',

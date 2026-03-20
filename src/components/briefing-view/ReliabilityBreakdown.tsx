@@ -73,21 +73,21 @@ export function ReliabilityBreakdown({ reliability }: { reliability: Reliability
             <div key={cat.key}>
               <div className="flex items-center justify-between mb-1">
                 <span
-                  className="text-[11px] font-medium"
+                  className="text-[13px] font-medium"
                   style={{ color: TEXT.primary, fontFamily: FONT.sans }}
                 >
                   {cat.label}
                 </span>
                 <div className="flex items-center gap-1.5">
                   <span
-                    className="text-[10px] font-semibold"
+                    className="text-[12px] font-semibold"
                     style={{ color, fontFamily: FONT.mono }}
                   >
                     {scoreLabel(cat.score)}
                   </span>
                   {cat.failures > 0 && (
                     <span
-                      className="text-[9px] px-1.5 py-px rounded"
+                      className="text-[11px] px-1.5 py-px rounded"
                       style={{
                         color: TEXT.secondary,
                         background: INK['04'],
@@ -119,7 +119,7 @@ export function ReliabilityBreakdown({ reliability }: { reliability: Reliability
       </div>
       {reliability.totalReviews > 0 && (
         <div
-          className="text-[9px] mt-3"
+          className="text-[11px] mt-3"
           style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
         >
           Based on {reliability.totalReviews} reviews

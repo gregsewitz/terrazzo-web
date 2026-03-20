@@ -8,7 +8,7 @@ export function SectionLabel({ children, color = COLOR.coral, dotColor }: { chil
         background: `${color}14`,
         color,
         fontFamily: FONT.display,
-        fontSize: 11,
+        fontSize: 13,
         fontWeight: 700,
         letterSpacing: '1px',
         textTransform: 'uppercase' as const,

@@ -29,11 +29,11 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
       >
       <div className="flex items-center gap-2 mb-1">
         <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
-        <span className="text-[16px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}>
+        <span className="text-[18px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}>
           If you&apos;re traveling this {label.toLowerCase()}...
         </span>
       </div>
-      <p className="text-[13px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>
+      <p className="text-[15px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>
         {displayRecs.length > 0
           ? displayRecs.slice(0, 3).map(r => r.name).join(' · ')
           : 'Curated for your moment'}
@@ -59,10 +59,10 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-[14px] font-semibold" style={{ color: COLOR.periwinkle }}>{rec.name}</span>
-                      <span className="text-[12px]" style={{ color: COLOR.navy }}>{rec.location}</span>
+                      <span className="text-[16px] font-semibold" style={{ color: COLOR.periwinkle }}>{rec.name}</span>
+                      <span className="text-[14px]" style={{ color: COLOR.navy }}>{rec.location}</span>
                     </div>
-                    <p className="text-[12px] leading-snug" style={{ color: COLOR.navy }}>{rec.whyFits}</p>
+                    <p className="text-[14px] leading-snug" style={{ color: COLOR.navy }}>{rec.whyFits}</p>
                   </div>
                 </SafeMotionDiv>
               </PlaceLink>

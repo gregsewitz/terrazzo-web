@@ -61,13 +61,13 @@ export default function SustainabilityBadge({ sensitivity, score, compact = fals
           borderRadius: 12,
           background: config.bgColor,
           color: config.color,
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: 500,
           fontFamily: FONT.mono,
           letterSpacing: '0.02em',
         }}
       >
-        <span style={{ fontSize: 8 }}>{config.icon}</span>
+        <span style={{ fontSize: 10 }}>{config.icon}</span>
         {config.label}
       </span>
     );
@@ -111,12 +111,12 @@ export default function SustainabilityBadge({ sensitivity, score, compact = fals
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 10, color: config.color }}>{config.icon}</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: config.color }}>
+          <span style={{ fontSize: 12, color: config.color }}>{config.icon}</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: config.color }}>
             {config.label}
           </span>
         </div>
-        <span style={{ fontSize: 11, color: T.ink, opacity: 0.55 }}>
+        <span style={{ fontSize: 13, color: T.ink, opacity: 0.55 }}>
           {config.description}
         </span>
       </div>

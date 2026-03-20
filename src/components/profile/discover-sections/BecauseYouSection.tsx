@@ -39,14 +39,14 @@ export function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <PerriandIcon name="sparkle" size={12} color={domainColor} />
-                    <span className="text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${domainColor}18`, color: domainColor, fontFamily: FONT.mono }}>
+                    <span className="text-[13px] uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${domainColor}18`, color: domainColor, fontFamily: FONT.mono }}>
                       {card.signalDomain}
                     </span>
                   </div>
-                  <p className="text-[14px] leading-relaxed mb-1" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
+                  <p className="text-[16px] leading-relaxed mb-1" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
                     Because you love
                   </p>
-                  <p className="text-[18px] font-semibold mb-4 italic" style={{ color: COLOR.darkTeal, fontFamily: FONT.serif }}>
+                  <p className="text-[20px] font-semibold mb-4 italic" style={{ color: COLOR.darkTeal, fontFamily: FONT.serif }}>
                     &ldquo;{card.signal}&rdquo;
                   </p>
                 </div>
@@ -54,11 +54,11 @@ export function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                   <div className="flex items-center gap-2.5 mb-2">
                     <ScoreArc score={card.score} size={34} color="var(--t-coral)" />
                     <div>
-                      <div className="text-[16px] font-semibold" style={{ color: COLOR.darkTeal }}>{card.place}</div>
-                      <div className="text-[13px]" style={{ color: COLOR.navy }}>{card.location}</div>
+                      <div className="text-[18px] font-semibold" style={{ color: COLOR.darkTeal }}>{card.place}</div>
+                      <div className="text-[15px]" style={{ color: COLOR.navy }}>{card.location}</div>
                     </div>
                   </div>
-                  <p className="text-[13px] leading-relaxed" style={{ color: COLOR.navy }}>{card.why}</p>
+                  <p className="text-[15px] leading-relaxed" style={{ color: COLOR.navy }}>{card.why}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>

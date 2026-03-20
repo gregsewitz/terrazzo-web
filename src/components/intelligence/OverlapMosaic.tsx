@@ -238,7 +238,7 @@ export function OverlapMosaic({
             overlapIndices={overlapIndices}
           />
           <span
-            className="text-[9px] font-semibold uppercase tracking-wider"
+            className="text-[11px] font-semibold uppercase tracking-wider"
             style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             {userLabel}
@@ -266,7 +266,7 @@ export function OverlapMosaic({
             const tier = getMatchTier(matchScore);
             return (
               <span
-                className="text-[9px] font-bold mt-0.5"
+                className="text-[11px] font-bold mt-0.5"
                 style={{ color: tier.color, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: 0.2 }}
               >
                 {tier.shortLabel}
@@ -284,7 +284,7 @@ export function OverlapMosaic({
             isPlace
           />
           <span
-            className="text-[9px] font-semibold uppercase tracking-wider"
+            className="text-[11px] font-semibold uppercase tracking-wider"
             style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             {placeLabel}
@@ -296,7 +296,7 @@ export function OverlapMosaic({
       {overlapDomains.length > 0 && (
         <div className="flex items-center gap-1.5 mt-3 justify-center">
           <span
-            className="text-[9px] uppercase tracking-wider"
+            className="text-[11px] uppercase tracking-wider"
             style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             Strongest overlap:
@@ -304,7 +304,7 @@ export function OverlapMosaic({
           {overlapDomains.map(domain => (
             <span
               key={domain}
-              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md"
+              className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
               style={{
                 background: `${DOMAIN_COLORS[domain]}10`,
                 color: DOMAIN_COLORS[domain],

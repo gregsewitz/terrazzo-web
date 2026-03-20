@@ -17,7 +17,7 @@ export function EditorialLetterSection({ letter }: { letter?: EditorialLetter })
       <SectionLabel color={COLOR.navy}>A note from Terrazzo</SectionLabel>
       <div className="mb-4">
         <SafeMotionH2
-          className="text-[24px] leading-snug mb-4"
+          className="text-[28px] leading-snug mb-4"
           style={{ fontFamily: FONT.serif, color: COLOR.navy }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -27,7 +27,7 @@ export function EditorialLetterSection({ letter }: { letter?: EditorialLetter })
           {l.headline}
         </SafeMotionH2>
         <SafeMotionP
-          className="text-[15px] leading-relaxed"
+          className="text-[17px] leading-relaxed"
           style={{ color: COLOR.navy, fontFamily: FONT.sans }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -44,7 +44,7 @@ export function EditorialLetterSection({ letter }: { letter?: EditorialLetter })
         transition={{ duration: 0.5, delay: 0.5 }}
         viewport={{ once: true, margin: '-100px' }}
       >
-        <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ background: `${COLOR.navy}10`, color: COLOR.navy, fontFamily: FONT.mono }}>
+        <span className="text-[13px] px-2.5 py-1 rounded-full" style={{ background: `${COLOR.navy}10`, color: COLOR.navy, fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
       </SafeMotionDiv>

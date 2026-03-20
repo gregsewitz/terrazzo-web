@@ -30,11 +30,11 @@ export function SignalThreadSection({ thread }: { thread?: SignalThread }) {
         viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${COLOR.periwinkle}12`, color: COLOR.periwinkle, fontFamily: FONT.mono }}>
+          <span className="text-[14px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${COLOR.periwinkle}12`, color: COLOR.periwinkle, fontFamily: FONT.mono }}>
             {t.signal}
           </span>
         </div>
-        <p className="text-[15px] leading-relaxed mb-5" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
+        <p className="text-[17px] leading-relaxed mb-5" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           {t.thread}
         </p>
         {/* Vertical thread line connecting places */}
@@ -73,14 +73,14 @@ export function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                 <div className="flex-1 pb-4">
                   <div className="flex items-center gap-1.5 mb-1">
                     <PerriandIcon name={(TYPE_ICONS[place.type] || 'discover') as PerriandIconName} size={12} color={COLOR.darkTeal} />
-                    <span className="text-[11px] uppercase tracking-wider" style={{ color: COLOR.darkTeal, fontFamily: FONT.mono }}>{place.type}</span>
+                    <span className="text-[13px] uppercase tracking-wider" style={{ color: COLOR.darkTeal, fontFamily: FONT.mono }}>{place.type}</span>
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[15px] font-semibold" style={{ color: COLOR.periwinkle }}>{place.name}</span>
-                    <span className="text-[12px]" style={{ color: COLOR.navy }}>{place.location}</span>
-                    <span className="text-[12px] font-bold ml-auto" style={{ color: COLOR.periwinkle, fontFamily: FONT.mono }}>{Math.round(place.score)}</span>
+                    <span className="text-[17px] font-semibold" style={{ color: COLOR.periwinkle }}>{place.name}</span>
+                    <span className="text-[14px]" style={{ color: COLOR.navy }}>{place.location}</span>
+                    <span className="text-[14px] font-bold ml-auto" style={{ color: COLOR.periwinkle, fontFamily: FONT.mono }}>{Math.round(place.score)}</span>
                   </div>
-                  <p className="text-[13px] leading-relaxed" style={{ color: COLOR.navy }}>{place.connection}</p>
+                  <p className="text-[15px] leading-relaxed" style={{ color: COLOR.navy }}>{place.connection}</p>
                 </div>
               </SafeMotionDiv>
             </PlaceLink>

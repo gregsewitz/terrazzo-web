@@ -89,14 +89,14 @@ export function ComparativeCard({
           <div className="flex items-center gap-2">
             <PerriandIcon name="discover" size={12} color={COLOR.ochre} />
             <span
-              className="text-[10px] font-bold uppercase tracking-wider"
+              className="text-[12px] font-bold uppercase tracking-wider"
               style={{ color: COLOR.ochre, fontFamily: FONT.mono, letterSpacing: '1px' }}
             >
               Comparison
             </span>
           </div>
           <span
-            className="text-[10px] font-medium px-2 py-0.5 rounded-md"
+            className="text-[12px] font-medium px-2 py-0.5 rounded-md"
             style={{
               background: `${COLOR.ochre}0a`,
               color: COLOR.ochre,
@@ -112,21 +112,21 @@ export function ComparativeCard({
         {/* Place names header */}
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <p className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold truncate`} style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
+            <p className={`${isDesktop ? 'text-[15px]' : 'text-[14px]'} font-semibold truncate`} style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
               {placeAName}
             </p>
             {comparison.userFit.placeA != null && (
-              <span className="text-[10px]" style={{ color: getMatchTier(comparison.userFit.placeA).color, fontFamily: FONT.mono }}>
+              <span className="text-[12px]" style={{ color: getMatchTier(comparison.userFit.placeA).color, fontFamily: FONT.mono }}>
                 {getMatchTier(comparison.userFit.placeA).label}
               </span>
             )}
           </div>
           <div className="text-right">
-            <p className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold truncate`} style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
+            <p className={`${isDesktop ? 'text-[15px]' : 'text-[14px]'} font-semibold truncate`} style={{ color: TEXT.primary, fontFamily: FONT.serif }}>
               {placeBName}
             </p>
             {comparison.userFit.placeB != null && (
-              <span className="text-[10px]" style={{ color: getMatchTier(comparison.userFit.placeB).color, fontFamily: FONT.mono }}>
+              <span className="text-[12px]" style={{ color: getMatchTier(comparison.userFit.placeB).color, fontFamily: FONT.mono }}>
                 {getMatchTier(comparison.userFit.placeB).label}
               </span>
             )}
@@ -143,11 +143,11 @@ export function ComparativeCard({
                 <div className="flex items-center justify-between mb-0.5">
                   <div className="flex items-center gap-1">
                     <PerriandIcon name={DOMAIN_ICONS[domain as TasteDomain]} size={9} color={color} />
-                    <span className="text-[9px] font-bold uppercase" style={{ color, fontFamily: FONT.mono }}>
+                    <span className="text-[11px] font-bold uppercase" style={{ color, fontFamily: FONT.mono }}>
                       {formatDomain(domain)}
                     </span>
                   </div>
-                  <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                  <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                     {values.placeA} vs {values.placeB}
                   </span>
                 </div>
@@ -175,7 +175,7 @@ export function ComparativeCard({
         {/* Key differentiators */}
         {(comparison.differentiators.placeAStronger.length > 0 || comparison.differentiators.placeBStronger.length > 0) && (
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${INK['95']}06` }}>
-            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+            <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
               Key Differences
             </span>
             <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -183,7 +183,7 @@ export function ComparativeCard({
                 {comparison.differentiators.placeAStronger.slice(0, 3).map((d, i) => (
                   <div key={i} className="flex items-center gap-1 py-0.5">
                     <span
-                      className="text-[10px] px-1.5 py-0.5 rounded"
+                      className="text-[12px] px-1.5 py-0.5 rounded"
                       style={{
                         background: `${DOMAIN_COLORS[d.domain]}08`,
                         color: DOMAIN_COLORS[d.domain],
@@ -199,7 +199,7 @@ export function ComparativeCard({
                 {comparison.differentiators.placeBStronger.slice(0, 3).map((d, i) => (
                   <div key={i} className="flex items-center gap-1 py-0.5 justify-end">
                     <span
-                      className="text-[10px] px-1.5 py-0.5 rounded"
+                      className="text-[12px] px-1.5 py-0.5 rounded"
                       style={{
                         background: `${DOMAIN_COLORS[d.domain]}08`,
                         color: DOMAIN_COLORS[d.domain],

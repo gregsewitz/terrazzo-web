@@ -96,7 +96,7 @@ export function SignalResonanceStrip({
                   color={color}
                 />
                 <span
-                  className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-semibold`}
+                  className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold`}
                   style={{ color, fontFamily: FONT.sans, letterSpacing: '-0.01em' }}
                 >
                   {label}
@@ -123,7 +123,7 @@ export function SignalResonanceStrip({
                     <div className="p-3">
                       {/* Domain label */}
                       <div
-                        className="text-[9px] font-bold uppercase tracking-wider mb-1.5"
+                        className="text-[11px] font-bold uppercase tracking-wider mb-1.5"
                         style={{ color, fontFamily: FONT.mono }}
                       >
                         {cluster.domain}
@@ -133,7 +133,7 @@ export function SignalResonanceStrip({
                         {cluster.signals.map((sig, j) => (
                           <span
                             key={j}
-                            className="text-[10px] px-2 py-0.5 rounded-md"
+                            className="text-[12px] px-2 py-0.5 rounded-md"
                             style={{
                               background: `${color}08`,
                               color: TEXT.primary,
@@ -171,7 +171,7 @@ export function SignalResonanceStrip({
       {/* Narrative connection — shown below pills in full variant */}
       {variant === 'full' && narrative && (
         <p
-          className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed mt-2.5`}
+          className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} leading-relaxed mt-2.5`}
           style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
         >
           {narrative}
