@@ -79,10 +79,7 @@ export default function SustainabilityBadge({ sensitivity, score, compact = fals
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        padding: '12px 16px',
-        borderRadius: 10,
-        background: config.bgColor,
-        border: `1px solid ${config.color}22`,
+        padding: '4px 0',
       }}
     >
       {/* Mini gauge */}

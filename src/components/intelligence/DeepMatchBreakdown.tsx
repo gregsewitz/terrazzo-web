@@ -73,11 +73,7 @@ export function DeepMatchBreakdown({
   return (
     <FadeInSection delay={0.1} direction="up" distance={18}>
       <div
-        className={`rounded-2xl overflow-hidden ${className || ''}`}
-        style={{
-          background: '#ffffff',
-          border: `1px solid ${INK['06']}`,
-        }}
+        className={`overflow-hidden ${className || ''}`}
       >
         {/* Header — editorial headline */}
         <div className={`${isDesktop ? 'px-5 pt-5 pb-3' : 'px-4 pt-4 pb-2.5'}`}>
