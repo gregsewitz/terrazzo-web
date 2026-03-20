@@ -34,7 +34,7 @@ export function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
             return (
               <SafeMotionSpan
                 key={term}
-                className="text-[10px] px-2.5 py-1 rounded-full"
+                className="text-[12px] px-2.5 py-1 rounded-full"
                 style={{ background: isRejection ? 'rgba(200,100,100,0.08)' : `${color}12`, color: isRejection ? 'rgba(200,100,100,0.8)' : color, fontFamily: FONT.sans }}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -46,7 +46,7 @@ export function VocabTeaser({ profile }: { profile: typeof TASTE_PROFILE }) {
             );
           })}
           <SafeMotionSpan
-            className="text-[10px] px-2.5 py-1 rounded-full"
+            className="text-[12px] px-2.5 py-1 rounded-full"
             style={{ background: INK['04'], color: TEXT.secondary }}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
