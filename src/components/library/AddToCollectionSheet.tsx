@@ -52,14 +52,14 @@ export default function AddToCollectionSheet({
       subtitle={place.name}
       onClose={onClose}
     >
-      <div className="px-4 pb-4 flex flex-col flex-1 min-h-0 overflow-y-auto">
+      <div className="px-4 pb-4 flex flex-col flex-1 min-h-0">
         <CollectionPickerList
           collections={collections}
           isSelected={isSelected}
           onToggle={handleToggle}
           onCreate={handleCreate}
           autoToggleNew={false}
-          listClassName="flex flex-col gap-1.5 mb-4 flex-1 min-h-0"
+          listClassName="flex flex-col gap-1.5 mb-2 flex-1 min-h-0 overflow-y-auto"
         />
       </div>
     </BaseSheet>
