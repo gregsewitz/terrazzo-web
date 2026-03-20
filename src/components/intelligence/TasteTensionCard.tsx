@@ -54,7 +54,7 @@ export function TasteTensionCard({
         {/* Header */}
         <div className="pb-3">
           <h3
-            className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} leading-snug italic`}
+            className={`${isDesktop ? 'text-[20px]' : 'text-[18px]'} leading-snug italic`}
             style={{ fontFamily: FONT.serif, color: COLOR.darkTeal, margin: 0 }}
           >
             {tension.title}
@@ -87,7 +87,7 @@ export function TasteTensionCard({
               />
             </div>
             <p
-              className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
+              className={`${isDesktop ? 'text-[15px]' : 'text-[14px]'} leading-relaxed m-0`}
               style={{ color: COLOR.navy }}
             >
               <span className="font-semibold" style={{ color: COLOR.darkTeal }}>You say: </span>
@@ -119,7 +119,7 @@ export function TasteTensionCard({
               />
             </div>
             <p
-              className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
+              className={`${isDesktop ? 'text-[15px]' : 'text-[14px]'} leading-relaxed m-0`}
               style={{ color: COLOR.navy }}
             >
               <span className="font-semibold" style={{ color: COLOR.darkTeal }}>But you keep saving: </span>
@@ -129,7 +129,7 @@ export function TasteTensionCard({
 
           {/* Editorial explanation */}
           <p
-            className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed italic`}
+            className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} leading-relaxed italic`}
             style={{ color: COLOR.navy, margin: 0 }}
           >
             {tension.editorial}
@@ -156,20 +156,20 @@ export function TasteTensionCard({
             <div className="flex items-center gap-1.5 mb-1.5">
               <PerriandIcon name="terrazzo" size={11} color={COLOR.coral} />
               <span
-                className="text-[9px] font-bold uppercase tracking-widest"
+                className="text-[11px] font-bold uppercase tracking-widest"
                 style={{ color: COLOR.coral, fontFamily: FONT.mono }}
               >
                 Bridges this tension
               </span>
             </div>
-            <p className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} font-semibold m-0 mb-1`} style={{ color: COLOR.darkTeal }}>
+            <p className={`${isDesktop ? 'text-[16px]' : 'text-[15px]'} font-semibold m-0 mb-1`} style={{ color: COLOR.darkTeal }}>
               {tension.resolvedBy.name}
-              <span className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-normal ml-1.5`} style={{ color: COLOR.navy }}>
+              <span className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-normal ml-1.5`} style={{ color: COLOR.navy }}>
                 {tension.resolvedBy.location}
               </span>
             </p>
             <p
-              className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed m-0`}
+              className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} leading-relaxed m-0`}
               style={{ color: COLOR.navy }}
             >
               {tension.resolvedBy.how}

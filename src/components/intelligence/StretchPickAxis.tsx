@@ -65,7 +65,7 @@ function AxisBar({
       <div className="flex items-center gap-1.5" style={{ minWidth: isDesktop ? 90 : 75 }}>
         <PerriandIcon name={DOMAIN_ICONS[domain]} size={12} color={color} />
         <span
-          className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-semibold`}
+          className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} font-semibold`}
           style={{ color, fontFamily: FONT.sans }}
         >
           {formatDomain(domain)}
@@ -96,7 +96,7 @@ function AxisBar({
           />
         </div>
         <span
-          className="text-[10px] font-bold"
+          className="text-[12px] font-bold"
           style={{
             color: isStrong ? color : `${color}80`,
             fontFamily: FONT.mono,
@@ -110,7 +110,7 @@ function AxisBar({
 
       {/* Label */}
       <span
-        className={`${isDesktop ? 'text-[9px]' : 'text-[8px]'} font-semibold uppercase tracking-wider`}
+        className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} font-semibold uppercase tracking-wider`}
         style={{
           color: isStrong ? COLOR.darkTeal : COLOR.coral,
           fontFamily: FONT.mono,
@@ -142,7 +142,7 @@ export function StretchPickAxis({
         {/* Header */}
         <div className="pb-3">
           <span
-            className="text-[11px] font-bold"
+            className="text-[13px] font-bold"
             style={{ color: COLOR.navy, fontFamily: FONT.mono }}
           >
             {getMatchTier(pick.score).label}
@@ -154,13 +154,13 @@ export function StretchPickAxis({
             onClick={() => onPlaceTap && pick.googlePlaceId && onPlaceTap(pick.googlePlaceId)}
           >
             <h3
-              className={`${isDesktop ? 'text-[18px]' : 'text-[16px]'} italic leading-snug m-0`}
+              className={`${isDesktop ? 'text-[20px]' : 'text-[18px]'} italic leading-snug m-0`}
               style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}
             >
               {pick.name}
             </h3>
             <span
-              className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} mt-0.5 block`}
+              className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} mt-0.5 block`}
               style={{ color: COLOR.navy }}
             >
               {pick.location} · {pick.type}
@@ -192,7 +192,7 @@ export function StretchPickAxis({
           }}
         >
           <p
-            className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} leading-relaxed m-0 mb-2`}
+            className={`${isDesktop ? 'text-[14px]' : 'text-[13px]'} leading-relaxed m-0 mb-2`}
             style={{ color: COLOR.navy }}
           >
             {pick.why}
@@ -200,7 +200,7 @@ export function StretchPickAxis({
           <div className="flex items-center gap-1.5">
             <PerriandIcon name="sparkle" size={10} color={COLOR.coral} />
             <span
-              className={`${isDesktop ? 'text-[10px]' : 'text-[9px]'} italic`}
+              className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} italic`}
               style={{ color: COLOR.navy }}
             >
               Breaks your pattern: {pick.tension}

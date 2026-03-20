@@ -80,7 +80,7 @@ export function DeepMatchBreakdown({
         <div className="pb-3">
           {/* Score */}
           <span
-            className="text-[11px] font-bold"
+            className="text-[13px] font-bold"
             style={{ color: COLOR.ochre, fontFamily: FONT.mono }}
           >
             {getMatchTier(match.score).label}
@@ -92,13 +92,13 @@ export function DeepMatchBreakdown({
             onClick={() => onPlaceTap && match.googlePlaceId && onPlaceTap(match.googlePlaceId)}
           >
             <h3
-              className={`${isDesktop ? 'text-[20px]' : 'text-[18px]'} italic leading-snug m-0`}
+              className={`${isDesktop ? 'text-[22px]' : 'text-[20px]'} italic leading-snug m-0`}
               style={{ fontFamily: FONT.serif, color: COLOR.ochre }}
             >
               {match.name}
             </h3>
             <span
-              className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} mt-0.5 block`}
+              className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} mt-0.5 block`}
               style={{ color: COLOR.navy }}
             >
               {match.location}
@@ -107,7 +107,7 @@ export function DeepMatchBreakdown({
 
           {/* Editorial headline */}
           <p
-            className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed mt-2.5 mb-0 italic`}
+            className={`${isDesktop ? 'text-[15px]' : 'text-[12px]'} leading-relaxed mt-2.5 mb-0 italic`}
             style={{ color: COLOR.navy }}
           >
             {match.headline}
@@ -142,13 +142,13 @@ export function DeepMatchBreakdown({
                             color={color}
                           />
                           <span
-                            className="text-[11px] font-semibold"
+                            className="text-[13px] font-semibold"
                             style={{ color: COLOR.ochre, fontFamily: FONT.sans }}
                           >
                             {humanizeSignal(signal.signal)}
                           </span>
                           <span
-                            className="text-[9px] font-bold ml-auto"
+                            className="text-[11px] font-bold ml-auto"
                             style={{ color: COLOR.navy, fontFamily: FONT.mono }}
                           >
                             {signal.strength}
@@ -156,7 +156,7 @@ export function DeepMatchBreakdown({
                         </div>
                         {/* Explanation note */}
                         <p
-                          className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} leading-relaxed m-0`}
+                          className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed m-0`}
                           style={{ color: COLOR.navy }}
                         >
                           {signal.note}
@@ -185,7 +185,7 @@ export function DeepMatchBreakdown({
             <div className="flex items-center gap-2">
               <PerriandIcon name="sparkle" size={11} color={COLOR.coral} />
               <p
-                className={`${isDesktop ? 'text-[11px]' : 'text-[10px]'} m-0`}
+                className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} m-0`}
                 style={{ color: COLOR.navy, fontFamily: FONT.sans }}
               >
                 <span className="font-semibold" style={{ color: COLOR.coral }}>
