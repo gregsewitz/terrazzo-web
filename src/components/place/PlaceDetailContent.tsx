@@ -323,32 +323,36 @@ function PlaceDetailContent({
           );
         })()}
 
-        {/* Closed days warning */}
+        {/* ── Borderless sections with bar headers ── */}
+        {/* Shared divider style between sections */}
+
+        {/* Closed days warning — standalone alert, no bar header */}
         {item.enrichment?.closedDays && item.enrichment.closedDays.length > 0 && (
           <SafeFadeIn direction="up" distance={10} duration={0.4}>
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-5" style={{ background: 'rgba(232,104,48,0.12)', border: '1px solid rgba(232,104,48,0.25)' }}>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-2" style={{ background: 'rgba(232,104,48,0.08)' }}>
               <PerriandIcon name="alert" size={14} color="#a04018" />
               <span className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-medium`} style={{ color: '#a04018' }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
             </div>
           </SafeFadeIn>
         )}
 
-        {/* Description — Terrazzo-voice lead paragraph */}
+        {/* Description — flows naturally, no header */}
         {item.enrichment?.description && (
           <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.15}>
-            <p className={`${descriptionFontSize} leading-relaxed mb-5`} style={{ color: TEXT.primary }}>
+            <p className={`${descriptionFontSize} leading-relaxed py-4`} style={{ color: TEXT.primary, borderBottom: `1px solid ${INK['06']}` }}>
               {item.enrichment.description}
             </p>
           </SafeFadeIn>
         )}
 
-        {/* ── Personal & social context ── */}
-
-        {/* Personal note — verbatim user/friend commentary from import */}
+        {/* Personal note */}
         {resolvedItem.userContext && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
-            <div className="mb-5" style={{ background: 'rgba(138,106,42,0.08)', borderLeft: '3px solid #8a6a2a', padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
-              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>Personal note</div>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: 'rgba(138,106,42,0.08)', color: '#8a6a2a', fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#8a6a2a', flexShrink: 0 }} />
+                Personal Note
+              </div>
               <p className={`${personalNoteFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>{"\u201C"}{resolvedItem.userContext}{"\u201D"}</p>
             </div>
           </FadeInSection>
@@ -357,9 +361,11 @@ function PlaceDetailContent({
         {/* Your notes — tags + personal note from rating */}
         {existingRating && ratingReaction && (existingRating.tags?.length || existingRating.personalNote || existingRating.contextTags?.length) && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
-            <button type="button" className="mb-5 px-4 py-3 rounded-2xl cursor-pointer w-full text-left" style={{ background: `${ratingReaction.color}06`, border: `1px solid ${ratingReaction.color}15`, padding: '12px 16px' }} onClick={onEditRating || onRate}>
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1" style={{ color: ratingReaction.color, fontFamily: FONT.mono }}>
-                <PerriandIcon name="edit" size={11} color={ratingReaction.color} />Your notes
+            <button type="button" className="py-4 cursor-pointer w-full text-left bg-transparent border-0 px-0" style={{ borderBottom: `1px solid ${INK['06']}` }} onClick={onEditRating || onRate}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${ratingReaction.color}0a`, color: ratingReaction.color, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: ratingReaction.color, flexShrink: 0 }} />
+                <PerriandIcon name="edit" size={10} color={ratingReaction.color} />
+                Your Notes
               </div>
               {existingRating.tags && existingRating.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
@@ -372,21 +378,22 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* ── Taste intelligence ── */}
-
-        {/* Why You'll Love It — Terrazzo taste insight */}
+        {/* Why You'll Love It */}
         {item.terrazzoInsight && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="flex flex-col gap-3 mb-5">
-              <div className="p-4 rounded-2xl" style={{ background: 'rgba(58,128,136,0.08)', border: '1px solid rgba(58,128,136,0.16)' }}>
-                <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5" style={{ color: '#226848', fontFamily: FONT.mono }}>
-                  <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You{"'"}ll Love It
-                </h4>
-                <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)', fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--t-dark-teal)', flexShrink: 0 }} />
+                <PerriandIcon name="terrazzo" size={10} color="var(--t-dark-teal)" />
+                Why You{"'"}ll Love It
               </div>
+              <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
               {item.terrazzoInsight.caveat && (
-                <div className="p-4 rounded-2xl" style={{ background: 'rgba(160,108,40,0.08)', border: '1px solid rgba(160,108,40,0.16)' }}>
-                  <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: '#7a5518', fontFamily: FONT.mono }}>Heads Up</h4>
+                <div className="mt-4">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: 'rgba(160,108,40,0.08)', color: '#7a5518', fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#7a5518', flexShrink: 0 }} />
+                    Heads Up
+                  </div>
                   <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.caveat}</p>
                 </div>
               )}
@@ -397,8 +404,11 @@ function PlaceDetailContent({
         {/* What to order */}
         {item.whatToOrder && item.whatToOrder.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.primary, fontFamily: FONT.mono, letterSpacing: '1px' }}>What to order</div>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `rgba(0,42,85,0.05)`, color: TEXT.primary, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: TEXT.primary, flexShrink: 0 }} />
+                What to Order
+              </div>
               <StaggerContainer className="flex flex-wrap gap-1.5" staggerDelay={0.06}>
                 {item.whatToOrder.map((tag, i) => (
                   <StaggerItem key={i}>
@@ -413,22 +423,26 @@ function PlaceDetailContent({
         {/* Tips */}
         {item.tips && item.tips.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.primary, fontFamily: FONT.mono, letterSpacing: '1px' }}>Tips</div>
-              <div className="rounded-2xl px-4 py-3" style={{ background: 'var(--t-linen)' }}>
-                {item.tips.map((tip, i) => (<div key={i} className={`${tipsFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{tip}</div>))}
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `rgba(0,42,85,0.05)`, color: TEXT.primary, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: TEXT.primary, flexShrink: 0 }} />
+                Tips
+              </div>
+              <div className="flex flex-col gap-1">
+                {item.tips.map((tip, i) => (<div key={i} className={`${tipsFontSize} leading-relaxed py-1`} style={{ color: TEXT.primary, borderTop: i > 0 ? `1px solid ${INK['04']}` : 'none', paddingTop: i > 0 ? 6 : 0 }}>{tip}</div>))}
               </div>
             </div>
           </FadeInSection>
         )}
 
-        {/* ── Reference & related ── */}
-
         {/* Sibling places */}
         {siblingPlaces && siblingPlaces.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: TEXT.primary, fontFamily: FONT.mono, letterSpacing: '1px' }}>Also from this guide</div>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `rgba(0,42,85,0.05)`, color: TEXT.primary, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: TEXT.primary, flexShrink: 0 }} />
+                Also from This Guide
+              </div>
               <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {siblingPlaces.slice(0, 5).map(sibling => (
                   <div key={sibling.id} className={`${siblingCardWidth} rounded-2xl p-3 flex-shrink-0 card-hover`} style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -441,11 +455,14 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Google editorial summary — real description from Google Places API */}
+        {/* Google editorial summary */}
         {item.google?.editorialSummary && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
-            <div className="mb-5" style={{ background: sourceStyle ? `${sourceStyle.color}14` : 'rgba(199,82,51,0.08)', borderLeft: `3px solid ${sourceStyle?.color || '#c75233'}`, padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
-              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>Google Places</div>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: 'rgba(238,113,109,0.06)', color: '#c75233', fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#c75233', flexShrink: 0 }} />
+                Google Places
+              </div>
               <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.google.editorialSummary}</p>
             </div>
           </FadeInSection>
