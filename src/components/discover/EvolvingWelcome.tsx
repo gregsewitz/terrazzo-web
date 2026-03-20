@@ -62,21 +62,21 @@ function WelcomeCard({ card, index }: { card: BecauseYouCard; index: number }) {
       }}
     >
       <div>
-        <div className="text-[13px] font-semibold line-clamp-2" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
+        <div className="text-[15px] font-semibold line-clamp-2" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
           {card.place}
         </div>
-        <div className="text-[10px] mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+        <div className="text-[12px] mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
           {card.location}
         </div>
       </div>
 
       <div>
-        <div className="text-[11px] leading-relaxed mb-2" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+        <div className="text-[13px] leading-relaxed mb-2" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
           {card.why}
         </div>
         {card.score !== undefined && (
           <div
-            className="text-[9px] font-semibold px-2 py-1 rounded w-fit"
+            className="text-[11px] font-semibold px-2 py-1 rounded w-fit"
             style={{ background: tier.bg, color: tier.color, fontFamily: FONT.mono }}
           >
             {tier.shortLabel}
@@ -174,7 +174,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
       case 'first-light':
         return (
           <>
-            <p className="text-[16px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+            <p className="text-[18px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
               Welcome to your Terrazzo, {firstName}. We've been getting to know your taste — here's what {archetype.toLowerCase()} looks like in the wild.
             </p>
 
@@ -195,7 +195,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
                     <WelcomeCard key={card.place} card={card} index={idx} />
                   ))}
                 </div>
-                <p className="text-[10px] italic" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
+                <p className="text-[12px] italic" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
                   Save the ones that resonate. Skip the ones that don't — we'll learn from both.
                 </p>
               </>
@@ -206,7 +206,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
       case 'building':
         return (
           <>
-            <p className="text-[16px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+            <p className="text-[18px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
               {userSavedCount} place{userSavedCount !== 1 ? 's' : ''} in your library. Your taste is starting to take shape on the map.
             </p>
             <div className="space-y-2 mb-3">
@@ -216,10 +216,10 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
                   className="py-2 px-3 rounded-lg"
                   style={{ background: INK['04'], border: `1px solid ${INK['06']}` }}
                 >
-                  <div className="text-[13px] font-semibold" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
+                  <div className="text-[15px] font-semibold" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
                     {place.name}
                   </div>
-                  <div className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                  <div className="text-[12px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
                     {place.location}
                   </div>
                 </div>
@@ -228,7 +228,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
             <a
               href="/trips/new"
               className="block py-3 px-4 rounded-lg text-center font-semibold transition-opacity hover:opacity-80"
-              style={{ background: 'var(--t-navy)', color: 'white', fontFamily: FONT.sans, fontSize: 13 }}
+              style={{ background: 'var(--t-navy)', color: 'white', fontFamily: FONT.sans, fontSize: 15 }}
             >
               Ready to plan? Pick a destination
             </a>
@@ -244,7 +244,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
 
         return (
           <>
-            <p className="text-[16px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+            <p className="text-[18px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
               {activeTrip?.name} is coming together. A few more places we think belong on this trip:
             </p>
 
@@ -273,7 +273,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
                     </div>
                   ))}
                 </div>
-                <p className="text-[10px] italic" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
+                <p className="text-[12px] italic" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
                   You can also paste any link or article into the + bar to import places you've already found.
                 </p>
               </>
@@ -285,7 +285,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
       case 'curating':
         return (
           <>
-            <p className="text-[16px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+            <p className="text-[18px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
               {userSavedCount} place{userSavedCount !== 1 ? 's' : ''}, {tripCount} trip{tripCount !== 1 ? 's' : ''}. Terrazzo is learning — here's what's new for your taste this week.
             </p>
 
@@ -331,11 +331,11 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
         return (
           <>
             {upcomingTrip && weeksUntil ? (
-              <p className="text-[16px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+              <p className="text-[18px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
                 Welcome back. {upcomingTrip.name} is {weeksUntil} week{weeksUntil !== 1 ? 's' : ''} out. Here's one more for {upcomingTrip.location}.
               </p>
             ) : (
-              <p className="text-[16px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
+              <p className="text-[18px] mb-4" style={{ fontFamily: FONT.serif, color: TEXT.primary }}>
                 Welcome back. Since you were last here, we found new matches for your taste.
               </p>
             )}
@@ -406,7 +406,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
 
       {/* Show minimal state when collapsed */}
       {collapsed && (
-        <div style={{ fontFamily: FONT.serif, color: TEXT.primary, fontSize: 14, fontStyle: 'italic', lineHeight: 1.4 }}>
+        <div style={{ fontFamily: FONT.serif, color: TEXT.primary, fontSize: 16, fontStyle: 'italic', lineHeight: 1.4 }}>
           {welcomeState === 'first-light' && `Welcome to your Terrazzo, ${firstName}.`}
           {welcomeState === 'building' && `${userSavedCount} place${userSavedCount !== 1 ? 's' : ''} saved — your taste is taking shape.`}
           {welcomeState === 'planning' && `Planning ${trips[0]?.name || 'your trip'} — keep adding places.`}

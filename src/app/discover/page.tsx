@@ -134,7 +134,7 @@ function DiscoverPageContent() {
         <div key={`extra-page-${i}`}>
           <div className="flex items-center gap-4 my-10 px-4">
             <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+            <span style={{ fontFamily: FONT.mono, fontSize: 11, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
               More for you
             </span>
             <div className="flex-1 h-px" style={{ background: 'var(--t-linen)' }} />
@@ -156,10 +156,10 @@ function DiscoverPageContent() {
           {isLoadingMore ? (
             <>
               <div className="animate-spin w-5 h-5 rounded-full border-2" style={{ borderColor: 'var(--t-linen)', borderTopColor: 'var(--t-honey)' }} />
-              <span style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, letterSpacing: '0.05em' }}>Curating more…</span>
+              <span style={{ fontFamily: FONT.mono, fontSize: 12, color: TEXT.secondary, letterSpacing: '0.05em' }}>Curating more…</span>
             </>
           ) : (
-            <span className="animate-pulse" style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, letterSpacing: '0.05em' }}>Scroll for more</span>
+            <span className="animate-pulse" style={{ fontFamily: FONT.mono, fontSize: 12, color: TEXT.secondary, letterSpacing: '0.05em' }}>Scroll for more</span>
           )}
         </div>
       )}
