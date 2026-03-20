@@ -48,6 +48,11 @@ export default function EmailReservationsPage() {
     setTypeFilter,
     createTripForGroup,
     addToExistingTrip,
+    removeTripAssignment,
+    createdTrips,
+    perReservationTrips,
+    assignReservationToTrip,
+    removeReservationTrip,
     selectCollection,
     createCollectionInline,
     importSelected,
@@ -140,8 +145,13 @@ export default function EmailReservationsPage() {
                 onDeselectAll={deselectAll}
                 onCreateTrip={createTripForGroup}
                 onAddToExistingTrip={addToExistingTrip}
+                onRemoveTripAssignment={removeTripAssignment}
+                createdTrips={createdTrips}
                 isCreatingTrip={creatingTrip}
                 existingTrips={existingTrips}
+                perReservationTrips={perReservationTrips}
+                onAssignReservationToTrip={assignReservationToTrip}
+                onRemoveReservationTrip={removeReservationTrip}
               />
             )}
 

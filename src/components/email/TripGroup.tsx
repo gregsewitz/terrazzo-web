@@ -4,12 +4,165 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ReservationRow } from './ReservationRow';
-import type { TripGroupData } from '@/lib/email-reservations-helpers';
+import type { TripGroupData, StagedReservation } from '@/lib/email-reservations-helpers';
 import type { TripOption } from '@/hooks/useEmailReservations';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+/** Normalize a location string for fuzzy matching */
+const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+
+/** Extract individual location tokens (city names, regions, etc.) */
+const tokenize = (s: string) =>
+  normalize(s)
+    .split(/[\s,&·—–-]+/)
+    .filter(t => t.length > 2);
+
+type ScoredTrip = TripOption & { score: number; hasLocationMatch: boolean };
+
+/** Score trips against a single reservation's location + dates */
+function scoreTripForReservation(
+  trips: TripOption[],
+  reservation: StagedReservation,
+): ScoredTrip[] {
+  const resLocation = reservation.location || '';
+  const resTokens = tokenize(resLocation);
+  const resNorm = normalize(resLocation);
+
+  return trips
+    .map(trip => {
+      let score = 0;
+      let hasLocationMatch = false;
+      const tripNorm = normalize(trip.location || '');
+      const tripTokens = tokenize(trip.location || '');
+      const tripNameTokens = tokenize(trip.name || '');
+
+      // Full location substring match (strongest signal)
+      if (tripNorm && resNorm && (tripNorm.includes(resNorm) || resNorm.includes(tripNorm))) {
+        score += 10;
+        hasLocationMatch = true;
+      }
+
+      // Token overlap — check trip location AND trip name
+      const allTripTokens = [...tripTokens, ...tripNameTokens];
+      for (const rToken of resTokens) {
+        for (const tToken of allTripTokens) {
+          if (rToken === tToken) { score += 5; hasLocationMatch = true; }
+          else if (rToken.length > 3 && tToken.length > 3 && (rToken.includes(tToken) || tToken.includes(rToken))) {
+            score += 2;
+            hasLocationMatch = true;
+          }
+        }
+      }
+
+      // Date proximity bonus
+      if (trip.startDate) {
+        const tripStart = new Date(trip.startDate).getTime();
+        const tripEnd = trip.endDate ? new Date(trip.endDate).getTime() : tripStart + 7 * 86400000;
+        const resDate = reservation.reservationDate || reservation.checkInDate;
+        if (resDate) {
+          const rd = new Date(resDate).getTime();
+          if (rd >= tripStart && rd <= tripEnd) { score += 4; }
+          else {
+            const daysDiff = Math.abs(rd - tripStart) / 86400000;
+            if (daysDiff < 14) score += 2;
+            else if (daysDiff < 60) score += 1;
+          }
+        }
+      }
+
+      return { ...trip, score, hasLocationMatch };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+// ─── Inline Trip Picker ──────────────────────────────────────────────────
+
+interface InlineTripPickerProps {
+  trips: ScoredTrip[];
+  onPick: (trip: TripOption) => void;
+  onCancel: () => void;
+}
+
+function InlineTripPicker({ trips, onPick, onCancel }: InlineTripPickerProps) {
+  return (
+    <div
+      style={{
+        background: 'rgba(58,128,136,0.03)',
+        borderBottom: '1px solid var(--t-linen)',
+      }}
+    >
+      <div className="flex items-center justify-between px-3 pt-2 pb-1">
+        <span className="text-[9px] font-medium" style={{ color: TEXT.secondary }}>
+          Assign to trip
+        </span>
+        <button
+          onClick={onCancel}
+          className="text-[9px] bg-transparent border-none cursor-pointer"
+          style={{ color: TEXT.secondary }}
+        >
+          Cancel
+        </button>
+      </div>
+      <div className="max-h-[160px] overflow-y-auto px-1.5 pb-1.5" style={{ scrollbarWidth: 'thin' }}>
+        {trips.map((trip, idx) => {
+          const isRecommended = trip.score >= 5 && trip.hasLocationMatch;
+          const isFirstNonRecommended = !isRecommended && idx > 0 && trips[idx - 1].score >= 5 && trips[idx - 1].hasLocationMatch;
+          return (
+            <React.Fragment key={trip.id}>
+              {isFirstNonRecommended && (
+                <div className="mx-2 my-1" style={{ borderTop: `1px solid ${INK['08']}` }} />
+              )}
+              <button
+                onClick={() => onPick(trip)}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left border-none cursor-pointer transition-all"
+                style={{ background: isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(58,128,136,0.10)' : 'rgba(58,128,136,0.06)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent'; }}
+              >
+                <PerriandIcon name="trips" size={11} color={isRecommended ? 'var(--t-dark-teal)' : INK['40']} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-medium truncate" style={{ color: TEXT.primary }}>
+                      {trip.name}
+                    </span>
+                    {isRecommended && (
+                      <span
+                        className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{
+                          background: 'rgba(58,128,136,0.10)',
+                          color: 'var(--t-dark-teal)',
+                          fontFamily: FONT.mono,
+                          letterSpacing: '0.03em',
+                        }}
+                      >
+                        Suggested
+                      </span>
+                    )}
+                  </div>
+                  {trip.location && (
+                    <div className="text-[8px] truncate" style={{ color: isRecommended ? 'var(--t-dark-teal)' : TEXT.secondary, opacity: isRecommended ? 0.7 : 1 }}>
+                      {trip.location}
+                    </div>
+                  )}
+                </div>
+              </button>
+            </React.Fragment>
+          );
+        })}
+        {trips.length === 0 && (
+          <div className="px-3 py-2 text-[9px]" style={{ color: TEXT.secondary }}>
+            No trips available
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-type UnmatchedMode = 'idle' | 'pick' | 'create';
+type UnmatchedMode = 'idle' | 'pick-all' | 'create';
 
 interface TripGroupProps {
   group: TripGroupData;
@@ -19,8 +172,17 @@ interface TripGroupProps {
   onToggleTripLink: () => void;
   onCreateTrip?: (name: string, reservationIds: string[]) => Promise<string | null>;
   onAddToExistingTrip?: (tripId: string, tripName: string, reservationIds: string[]) => void;
+  onRemoveTripAssignment?: (reservationIds: string[]) => void;
   isCreatingTrip?: boolean;
   existingTrips?: TripOption[];
+  /** Whether this group was manually assigned to a trip (vs. auto-matched from email parse) */
+  isManuallyAssigned?: boolean;
+  /** Per-reservation trip assignments: reservationId → { tripId, tripName } */
+  perReservationTrips?: Map<string, { tripId: string; tripName: string }>;
+  /** Assign a single reservation to a trip */
+  onAssignReservationToTrip?: (reservationId: string, tripId: string, tripName: string) => void;
+  /** Remove a single reservation's trip assignment */
+  onRemoveReservationTrip?: (reservationId: string) => void;
 }
 
 export const TripGroup = React.memo(function TripGroup({
@@ -31,16 +193,24 @@ export const TripGroup = React.memo(function TripGroup({
   onToggleTripLink,
   onCreateTrip,
   onAddToExistingTrip,
+  onRemoveTripAssignment,
   isCreatingTrip,
   existingTrips = [],
+  isManuallyAssigned = false,
+  perReservationTrips = new Map(),
+  onAssignReservationToTrip,
+  onRemoveReservationTrip,
 }: TripGroupProps) {
   const isMatched = group.tripId !== null;
   const placeCount = group.reservations.length;
 
-  // Unmatched group interaction state
+  // Group-level interaction state (for "add all" and "create new trip")
   const [mode, setMode] = useState<UnmatchedMode>('idle');
   const [tripName, setTripName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Per-reservation trip picker — which reservation's picker is open
+  const [activePickerResId, setActivePickerResId] = useState<string | null>(null);
 
   // Auto-focus input when entering create mode
   useEffect(() => {
@@ -62,87 +232,123 @@ export const TripGroup = React.memo(function TripGroup({
     [group.reservations]
   );
 
+  // Check if every reservation in this group has a per-reservation trip assignment
+  const allAssigned = React.useMemo(
+    () => group.reservations.length > 0 && group.reservations.every(r => perReservationTrips.has(r.id)),
+    [group.reservations, perReservationTrips]
+  );
+  const someAssigned = React.useMemo(
+    () => group.reservations.some(r => perReservationTrips.has(r.id)),
+    [group.reservations, perReservationTrips]
+  );
+
   const handleCreateTrip = async () => {
     const name = tripName.trim() || suggestedName || 'New Trip';
     if (!onCreateTrip) return;
-    const tripId = await onCreateTrip(name, reservationIds);
+    // Only include unassigned reservations
+    const unassignedIds = reservationIds.filter(id => !perReservationTrips.has(id));
+    const tripId = await onCreateTrip(name, unassignedIds.length > 0 ? unassignedIds : reservationIds);
     if (tripId) {
       setMode('idle');
       setTripName('');
     }
   };
 
-  const handlePickTrip = (trip: TripOption) => {
+  const handlePickTripForAll = (trip: TripOption) => {
     if (!onAddToExistingTrip) return;
-    onAddToExistingTrip(trip.id, trip.name, reservationIds);
+    // Only include unassigned reservations
+    const unassignedIds = reservationIds.filter(id => !perReservationTrips.has(id));
+    onAddToExistingTrip(trip.id, trip.name, unassignedIds.length > 0 ? unassignedIds : reservationIds);
     setMode('idle');
   };
 
-  // ── Smart trip matching: score & sort trips by location relevance ──
+  const handlePickTripForReservation = (trip: TripOption) => {
+    if (!onAssignReservationToTrip || !activePickerResId) return;
+    onAssignReservationToTrip(activePickerResId, trip.id, trip.name);
+    setActivePickerResId(null);
+  };
 
-  /** Normalize a location string for fuzzy matching */
-  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  // ── Score trips for the group-level picker (uses all reservation locations) ──
 
-  /** Extract individual location tokens (city names, regions, etc.) */
-  const tokenize = (s: string) =>
-    normalize(s)
-      .split(/[\s,&·—–-]+/)
-      .filter(t => t.length > 2); // skip "uk", "us" etc. (too ambiguous short)
-
-  const availableTrips = React.useMemo(() => {
+  const groupScoredTrips = React.useMemo(() => {
     const filtered = existingTrips.filter(t =>
       !group.reservations.some(r => r.matchedTripId === t.id)
     );
 
-    // Collect all location tokens from the unmatched reservations
     const reservationLocations = group.reservations
       .map(r => r.location)
       .filter(Boolean) as string[];
     const reservationTokens = reservationLocations.flatMap(tokenize);
     const reservationNorms = reservationLocations.map(normalize);
 
-    if (reservationTokens.length === 0) return filtered.map(t => ({ ...t, score: 0 }));
+    if (reservationTokens.length === 0) return filtered.map(t => ({ ...t, score: 0, hasLocationMatch: false }));
 
-    // Score each trip based on location overlap
     return filtered
       .map(trip => {
         let score = 0;
+        let hasLocationMatch = false;
         const tripNorm = normalize(trip.location || '');
         const tripTokens = tokenize(trip.location || '');
+        const tripNameTokens = tokenize(trip.name || '');
 
-        // Full location substring match (strongest signal)
         for (const resNorm of reservationNorms) {
-          if (tripNorm.includes(resNorm) || resNorm.includes(tripNorm)) {
+          if (tripNorm && resNorm && (tripNorm.includes(resNorm) || resNorm.includes(tripNorm))) {
             score += 10;
+            hasLocationMatch = true;
           }
         }
 
-        // Token overlap (city/region name matching)
+        const allTripTokens = [...tripTokens, ...tripNameTokens];
         for (const rToken of reservationTokens) {
-          for (const tToken of tripTokens) {
-            if (rToken === tToken) score += 5;
-            else if (rToken.includes(tToken) || tToken.includes(rToken)) score += 2;
+          for (const tToken of allTripTokens) {
+            if (rToken === tToken) { score += 5; hasLocationMatch = true; }
+            else if (rToken.length > 3 && tToken.length > 3 && (rToken.includes(tToken) || tToken.includes(rToken))) {
+              score += 2;
+              hasLocationMatch = true;
+            }
           }
         }
 
-        // Date proximity bonus — if trip overlaps reservation dates, it's likely relevant
         if (trip.startDate) {
           const tripStart = new Date(trip.startDate).getTime();
+          const tripEnd = trip.endDate ? new Date(trip.endDate).getTime() : tripStart + 7 * 86400000;
           const resDates = group.reservations
             .map(r => r.reservationDate || r.checkInDate)
             .filter(Boolean)
             .map(d => new Date(d!).getTime());
           for (const rd of resDates) {
-            const daysDiff = Math.abs(rd - tripStart) / (1000 * 60 * 60 * 24);
-            if (daysDiff < 14) score += 3; // within 2 weeks
-            else if (daysDiff < 60) score += 1; // within 2 months
+            if (rd >= tripStart && rd <= tripEnd) { score += 4; }
+            else {
+              const daysDiff = Math.abs(rd - tripStart) / 86400000;
+              if (daysDiff < 14) score += 2;
+              else if (daysDiff < 60) score += 1;
+            }
           }
         }
 
-        return { ...trip, score };
+        return { ...trip, score, hasLocationMatch };
       })
       .sort((a, b) => b.score - a.score);
   }, [existingTrips, group.reservations]);
+
+  // ── Score trips for the active per-reservation picker ──
+
+  const perResScoredTrips = React.useMemo(() => {
+    if (!activePickerResId) return [];
+    const reservation = group.reservations.find(r => r.id === activePickerResId);
+    if (!reservation) return [];
+
+    const filtered = existingTrips.filter(t =>
+      !group.reservations.some(r => r.matchedTripId === t.id)
+    );
+    return scoreTripForReservation(filtered, reservation);
+  }, [activePickerResId, existingTrips, group.reservations]);
+
+  // Count how many unassigned reservations remain
+  const unassignedCount = React.useMemo(
+    () => group.reservations.filter(r => !perReservationTrips.has(r.id)).length,
+    [group.reservations, perReservationTrips]
+  );
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--t-linen)' }}>
@@ -178,17 +384,20 @@ export const TripGroup = React.memo(function TripGroup({
       {/* Trip link toggle (matched trips only) */}
       {isMatched && (
         <div
+          className="flex items-center gap-2.5 px-3 py-2.5 transition-all"
+          style={{
+            background: isLinked ? 'rgba(58,128,136,0.04)' : INK['04'],
+            borderBottom: '1px solid var(--t-linen)',
+          }}
+        >
+        <div
           onClick={onToggleTripLink}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleTripLink(); }
           }}
-          className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all"
-          style={{
-            background: isLinked ? 'rgba(58,128,136,0.04)' : INK['04'],
-            borderBottom: '1px solid var(--t-linen)',
-          }}
+          className="flex items-center gap-2.5 flex-1 cursor-pointer"
         >
           {/* Mini checkbox */}
           <div
@@ -218,43 +427,66 @@ export const TripGroup = React.memo(function TripGroup({
               <>Import places only — not linked to <strong>{group.tripName}</strong></>
             )}
           </span>
+          </div>
+          {isManuallyAssigned && onRemoveTripAssignment && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveTripAssignment(reservationIds);
+              }}
+              className="text-[9px] px-2 py-0.5 rounded border-none cursor-pointer flex-shrink-0"
+              style={{ background: INK['06'], color: TEXT.secondary }}
+            >
+              Change
+            </button>
+          )}
         </div>
       )}
 
-      {/* ── Unmatched group: trip assignment ── */}
+      {/* ── Unmatched group: bulk trip assignment bar ── */}
       {!isMatched && mode === 'idle' && (
         <div
-          className="flex items-center gap-2 px-3 py-2.5"
+          className="flex items-center gap-2 px-3 py-2"
           style={{ background: 'rgba(238,113,109,0.04)', borderBottom: '1px solid var(--t-linen)' }}
         >
           <PerriandIcon name="trips" size={12} color="var(--t-honey)" />
-          <span className="text-[10px]" style={{ color: TEXT.secondary }}>Add to a trip?</span>
+          <span className="text-[10px]" style={{ color: TEXT.secondary }}>
+            {someAssigned && !allAssigned
+              ? `${unassignedCount} unassigned — add remaining to a trip?`
+              : allAssigned
+                ? 'All places assigned to trips'
+                : 'Use the Trip button on each place, or add all:'}
+          </span>
           <div className="flex-1" />
-          {availableTrips.length > 0 && (
-            <button
-              onClick={() => setMode('pick')}
-              className="text-[10px] font-semibold px-2.5 py-1 rounded-md border-none cursor-pointer transition-all"
-              style={{ background: INK['06'], color: TEXT.primary }}
-            >
-              Existing trip
-            </button>
+          {!allAssigned && (
+            <>
+              {groupScoredTrips.length > 0 && (
+                <button
+                  onClick={() => setMode('pick-all')}
+                  className="text-[10px] font-semibold px-2.5 py-1 rounded-md border-none cursor-pointer transition-all"
+                  style={{ background: INK['06'], color: TEXT.primary }}
+                >
+                  Existing trip
+                </button>
+              )}
+              <button
+                onClick={() => setMode('create')}
+                className="text-[10px] font-semibold px-2.5 py-1 rounded-md border-none cursor-pointer transition-all"
+                style={{ background: 'var(--t-honey)', color: 'white' }}
+              >
+                New trip
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setMode('create')}
-            className="text-[10px] font-semibold px-2.5 py-1 rounded-md border-none cursor-pointer transition-all"
-            style={{ background: 'var(--t-honey)', color: 'white' }}
-          >
-            New trip
-          </button>
         </div>
       )}
 
-      {/* ── Pick an existing trip ── */}
-      {!isMatched && mode === 'pick' && (
+      {/* ── Pick an existing trip for all unassigned ── */}
+      {!isMatched && mode === 'pick-all' && (
         <div style={{ background: 'rgba(238,113,109,0.04)', borderBottom: '1px solid var(--t-linen)' }}>
           <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
             <span className="text-[10px] font-medium" style={{ color: TEXT.secondary }}>
-              Choose a trip
+              Add {unassignedCount > 0 ? `${unassignedCount} places` : 'all'} to:
             </span>
             <button
               onClick={() => setMode('idle')}
@@ -265,20 +497,18 @@ export const TripGroup = React.memo(function TripGroup({
             </button>
           </div>
           <div className="max-h-[180px] overflow-y-auto px-1.5 pb-2" style={{ scrollbarWidth: 'thin' }}>
-            {availableTrips.map((trip, idx) => {
-              const isRecommended = trip.score >= 5;
-              const isFirstNonRecommended = !isRecommended && idx > 0 && availableTrips[idx - 1].score >= 5;
+            {groupScoredTrips.map((trip, idx) => {
+              const isRecommended = trip.score >= 5 && trip.hasLocationMatch;
+              const isFirstNonRecommended = !isRecommended && idx > 0 && groupScoredTrips[idx - 1].score >= 5 && groupScoredTrips[idx - 1].hasLocationMatch;
               return (
                 <React.Fragment key={trip.id}>
                   {isFirstNonRecommended && (
                     <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${INK['08']}` }} />
                   )}
                   <button
-                    onClick={() => handlePickTrip(trip)}
+                    onClick={() => handlePickTripForAll(trip)}
                     className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left border-none cursor-pointer transition-all"
-                    style={{
-                      background: isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent',
-                    }}
+                    style={{ background: isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(58,128,136,0.10)' : 'rgba(58,128,136,0.06)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = isRecommended ? 'rgba(58,128,136,0.05)' : 'transparent'; }}
                   >
@@ -360,16 +590,38 @@ export const TripGroup = React.memo(function TripGroup({
         </div>
       )}
 
-      {/* Reservation rows */}
-      {group.reservations.map((r, idx) => (
-        <ReservationRow
-          key={r.id}
-          reservation={r}
-          isSelected={selectedIds.has(r.id)}
-          onToggle={() => onToggleSelect(r.id)}
-          isLast={idx === group.reservations.length - 1}
-        />
-      ))}
+      {/* Reservation rows — with per-reservation trip assignment for unmatched groups */}
+      {group.reservations.map((r, idx) => {
+        const assignment = perReservationTrips.get(r.id);
+        const isUnmatched = !isMatched;
+
+        return (
+          <React.Fragment key={r.id}>
+            <ReservationRow
+              reservation={r}
+              isSelected={selectedIds.has(r.id)}
+              onToggle={() => onToggleSelect(r.id)}
+              isLast={idx === group.reservations.length - 1 && activePickerResId !== r.id}
+              // Per-reservation trip assignment (only for unmatched groups)
+              assignedTripName={isUnmatched ? assignment?.tripName : undefined}
+              onTripPillClick={isUnmatched && onAssignReservationToTrip ? () => {
+                setActivePickerResId(prev => prev === r.id ? null : r.id);
+              } : undefined}
+              onRemoveTripAssignment={isUnmatched && assignment && onRemoveReservationTrip ? () => {
+                onRemoveReservationTrip(r.id);
+              } : undefined}
+            />
+            {/* Inline trip picker — appears below the active row */}
+            {activePickerResId === r.id && (
+              <InlineTripPicker
+                trips={perResScoredTrips}
+                onPick={handlePickTripForReservation}
+                onCancel={() => setActivePickerResId(null)}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 });

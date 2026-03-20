@@ -242,17 +242,58 @@ export async function POST(request: NextRequest) {
       try {
         const trip = await prisma.trip.findFirst({
           where: { id: tripId, userId: user.id },
-          select: { id: true, pool: true },
+          select: { id: true, pool: true, days: true },
         });
 
         if (trip) {
           const existingPool = (trip.pool as unknown[] || []) as Array<Record<string, unknown>>;
-          const newPool = [...existingPool, ...items];
 
-          await prisma.trip.update({
-            where: { id: tripId },
-            data: { pool: newPool as unknown as Prisma.InputJsonValue },
+          // Also check placed items in trip days for dedup
+          const days = (trip.days as unknown[] || []) as Array<{ places?: Array<Record<string, unknown>> }>;
+          const placedGoogleIds = new Set<string>();
+          const placedLibraryIds = new Set<string>();
+          const placedNames = new Set<string>();
+          for (const day of days) {
+            for (const p of (day.places || [])) {
+              if (p.googlePlaceId) placedGoogleIds.add(p.googlePlaceId as string);
+              if (p.libraryPlaceId) placedLibraryIds.add(p.libraryPlaceId as string);
+              if (p.name) placedNames.add((p.name as string).toLowerCase());
+            }
+          }
+
+          // Dedup: skip items already in pool or placed on a day
+          const poolGoogleIds = new Set(existingPool.map(p => p.googlePlaceId).filter(Boolean) as string[]);
+          const poolLibraryIds = new Set(existingPool.map(p => p.libraryPlaceId).filter(Boolean) as string[]);
+          const poolNames = new Set(existingPool.map(p => (p.name as string || '').toLowerCase()).filter(Boolean));
+
+          const dedupedItems = items.filter(item => {
+            // Check by googlePlaceId first (strongest match)
+            if (item.googlePlaceId) {
+              if (poolGoogleIds.has(item.googlePlaceId) || placedGoogleIds.has(item.googlePlaceId)) {
+                console.log(`[batch-confirm] Skipping "${item.name}" — already in trip (googlePlaceId match)`);
+                return false;
+              }
+            }
+            // Check by libraryPlaceId
+            if (poolLibraryIds.has(item.libraryPlaceId) || placedLibraryIds.has(item.libraryPlaceId)) {
+              console.log(`[batch-confirm] Skipping "${item.name}" — already in trip (libraryPlaceId match)`);
+              return false;
+            }
+            // Fallback: check by name
+            if (poolNames.has(item.name.toLowerCase()) || placedNames.has(item.name.toLowerCase())) {
+              console.log(`[batch-confirm] Skipping "${item.name}" — already in trip (name match)`);
+              return false;
+            }
+            return true;
           });
+
+          if (dedupedItems.length > 0) {
+            const newPool = [...existingPool, ...dedupedItems];
+            await prisma.trip.update({
+              where: { id: tripId },
+              data: { pool: newPool as unknown as Prisma.InputJsonValue },
+            });
+          }
         }
       } catch (err) {
         console.error(`[batch-confirm] Failed to add items to trip ${tripId}:`, err);

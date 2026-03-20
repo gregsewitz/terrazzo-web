@@ -94,9 +94,32 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ── Dedup: skip reservations that already exist from a prior scan ────
+    // Check by (userId, nylasMessageId, placeName) to avoid duplicate inbox entries
+    const existingReservations = await prisma.emailReservation.findMany({
+      where: {
+        userId: user.id,
+        nylasMessageId: { in: reservationsToCreate.map((r: any) => r.nylasMessageId).filter(Boolean) },
+      },
+      select: { nylasMessageId: true, placeName: true },
+    });
+
+    const existingKeys = new Set(
+      existingReservations.map((r: any) => `${r.nylasMessageId}::${r.placeName?.toLowerCase()}`)
+    );
+
+    const dedupedReservations = reservationsToCreate.filter((r: any) => {
+      const key = `${r.nylasMessageId}::${r.placeName?.toLowerCase()}`;
+      if (existingKeys.has(key)) {
+        console.log(`[email-parse] Skipping duplicate reservation: "${r.placeName}" from message ${r.nylasMessageId}`);
+        return false;
+      }
+      return true;
+    });
+
     // ── Batch create reservation records ──────────────────────────────────
     const created: string[] = [];
-    for (const data of reservationsToCreate) {
+    for (const data of dedupedReservations) {
       const record = await prisma.emailReservation.create({ data });
       created.push(record.id);
     }

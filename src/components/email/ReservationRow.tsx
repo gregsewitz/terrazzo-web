@@ -34,6 +34,12 @@ interface ReservationRowProps {
   reaction?: ReactionId;
   onReaction?: (reactionId: ReactionId) => void;
   isLast?: boolean;
+  /** Trip name if this reservation has been individually assigned */
+  assignedTripName?: string;
+  /** Open the trip picker for this reservation */
+  onTripPillClick?: () => void;
+  /** Remove this reservation's trip assignment */
+  onRemoveTripAssignment?: () => void;
 }
 
 export const ReservationRow = React.memo(function ReservationRow({
@@ -44,6 +50,9 @@ export const ReservationRow = React.memo(function ReservationRow({
   reaction,
   onReaction,
   isLast = false,
+  assignedTripName,
+  onTripPillClick,
+  onRemoveTripAssignment,
 }: ReservationRowProps) {
   const icon = TYPE_ICONS[r.placeType] || 'discover';
   const details = formatCompactDetails(r);
@@ -93,6 +102,48 @@ export const ReservationRow = React.memo(function ReservationRow({
             </div>
           )}
         </div>
+
+        {/* Trip assignment pill (unmatched reservations) */}
+        {onTripPillClick && (
+          assignedTripName ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 border-none cursor-default max-w-[140px]"
+              style={{ background: 'rgba(58,128,136,0.08)' }}
+            >
+              <PerriandIcon name="trips" size={9} color="var(--t-dark-teal)" />
+              <span
+                className="text-[9px] font-medium truncate"
+                style={{ color: 'var(--t-dark-teal)' }}
+              >
+                {assignedTripName}
+              </span>
+              {onRemoveTripAssignment && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); onRemoveTripAssignment(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onRemoveTripAssignment(); } }}
+                  className="cursor-pointer ml-0.5 flex-shrink-0"
+                  style={{ color: 'var(--t-dark-teal)', opacity: 0.5 }}
+                >
+                  ✕
+                </span>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onTripPillClick(); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 border-none cursor-pointer transition-all"
+              style={{ background: INK['06'], color: TEXT.secondary }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(58,128,136,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = INK['06']; }}
+            >
+              <PerriandIcon name="trips" size={9} color={INK['30']} />
+              <span className="text-[9px] font-medium">Trip</span>
+            </button>
+          )
+        )}
 
         {/* Confirmation number */}
         {r.confirmationNumber && (

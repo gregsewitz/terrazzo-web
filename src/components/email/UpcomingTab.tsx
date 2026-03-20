@@ -20,8 +20,14 @@ interface UpcomingTabProps {
   onDeselectAll: () => void;
   onCreateTrip?: (name: string, reservationIds: string[]) => Promise<string | null>;
   onAddToExistingTrip?: (tripId: string, tripName: string, reservationIds: string[]) => void;
+  onRemoveTripAssignment?: (reservationIds: string[]) => void;
+  createdTrips?: Array<{ tripId: string; tripName: string; reservationIds: string[] }>;
   isCreatingTrip?: boolean;
   existingTrips?: TripOption[];
+  /** Per-reservation trip assignments */
+  perReservationTrips?: Map<string, { tripId: string; tripName: string }>;
+  onAssignReservationToTrip?: (reservationId: string, tripId: string, tripName: string) => void;
+  onRemoveReservationTrip?: (reservationId: string) => void;
 }
 
 export const UpcomingTab = React.memo(function UpcomingTab({
@@ -36,8 +42,13 @@ export const UpcomingTab = React.memo(function UpcomingTab({
   onDeselectAll,
   onCreateTrip,
   onAddToExistingTrip,
+  onRemoveTripAssignment,
+  createdTrips = [],
   isCreatingTrip,
   existingTrips = [],
+  perReservationTrips = new Map(),
+  onAssignReservationToTrip,
+  onRemoveReservationTrip,
 }: UpcomingTabProps) {
   if (totalCount === 0) {
     return (
@@ -89,8 +100,13 @@ export const UpcomingTab = React.memo(function UpcomingTab({
             onToggleTripLink={() => group.tripId && onToggleTripLink(group.tripId)}
             onCreateTrip={onCreateTrip}
             onAddToExistingTrip={onAddToExistingTrip}
+            onRemoveTripAssignment={onRemoveTripAssignment}
+            isManuallyAssigned={!!createdTrips.find(ct => group.reservations.some(r => ct.reservationIds.includes(r.id)))}
             isCreatingTrip={isCreatingTrip}
             existingTrips={existingTrips}
+            perReservationTrips={perReservationTrips}
+            onAssignReservationToTrip={onAssignReservationToTrip}
+            onRemoveReservationTrip={onRemoveReservationTrip}
           />
         ))}
       </div>

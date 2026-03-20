@@ -37,6 +37,7 @@ export interface TripOption {
   name: string;
   location: string;
   startDate: string | null;
+  endDate: string | null;
 }
 
 /** Minimal collection info for the picker */
@@ -77,6 +78,9 @@ export function useEmailReservations() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [creatingCollection, setCreatingCollection] = useState(false);
 
+  // Per-reservation trip assignments (reservationId → { tripId, tripName })
+  const [perReservationTrips, setPerReservationTrips] = useState<Map<string, { tripId: string; tripName: string }>>(new Map());
+
   // ── Fetch ──────────────────────────────────────────────────────────────
 
   const fetchReservations = useCallback(async () => {
@@ -101,6 +105,7 @@ export function useEmailReservations() {
         name: t.name,
         location: t.location,
         startDate: t.startDate,
+        endDate: t.endDate,
       })));
       setCollections((collectionsData.collections || []).map(c => ({
         id: c.id,
@@ -347,6 +352,41 @@ export function useEmailReservations() {
     });
   }, []);
 
+  /** Remove a manual trip assignment so the user can pick a different trip */
+  const removeTripAssignment = useCallback((groupReservationIds: string[]) => {
+    setCreatedTrips(prev => prev.filter(ct =>
+      !groupReservationIds.some(id => ct.reservationIds.includes(id))
+    ));
+  }, []);
+
+  /** Assign a single reservation to a trip */
+  const assignReservationToTrip = useCallback((
+    reservationId: string,
+    tripId: string,
+    tripName: string,
+  ) => {
+    setPerReservationTrips(prev => {
+      const next = new Map(prev);
+      next.set(reservationId, { tripId, tripName });
+      return next;
+    });
+    // Also enable the trip link for this trip so batch-confirm includes it
+    setTripLinkEnabled(prev => {
+      const next = new Map(prev);
+      if (!next.has(tripId)) next.set(tripId, true);
+      return next;
+    });
+  }, []);
+
+  /** Remove a single reservation's trip assignment */
+  const removeReservationTrip = useCallback((reservationId: string) => {
+    setPerReservationTrips(prev => {
+      const next = new Map(prev);
+      next.delete(reservationId);
+      return next;
+    });
+  }, []);
+
   // ── Batch actions ──────────────────────────────────────────────────────
 
   const importSelected = useCallback(async () => {
@@ -365,6 +405,13 @@ export function useEmailReservations() {
             dayNumber: r.suggestedDayNumber ?? undefined,
             slotId: r.suggestedSlotId ?? undefined,
           };
+          continue;
+        }
+
+        // Check per-reservation trip assignments
+        const perResTrip = perReservationTrips.get(r.id);
+        if (perResTrip && tripLinkEnabled.get(perResTrip.tripId) !== false) {
+          tripLinksPayload[r.id] = { tripId: perResTrip.tripId };
           continue;
         }
 
@@ -421,6 +468,7 @@ export function useEmailReservations() {
       setSelectedIds(new Set());
       setRatings(new Map());
       setCreatedTrips([]);
+      setPerReservationTrips(new Map());
       setSelectedCollectionId(null);
       await fetchReservations();
 
@@ -439,7 +487,7 @@ export function useEmailReservations() {
     } finally {
       setImporting(false);
     }
-  }, [selectedIds, reservations, tripLinkEnabled, ratings, visibleIds, fetchReservations, createdTrips]);
+  }, [selectedIds, reservations, tripLinkEnabled, ratings, visibleIds, fetchReservations, createdTrips, perReservationTrips]);
 
   const dismissSelected = useCallback(async () => {
     setImporting(true);
@@ -504,6 +552,11 @@ export function useEmailReservations() {
     setTypeFilter,
     createTripForGroup,
     addToExistingTrip,
+    removeTripAssignment,
+    createdTrips,
+    perReservationTrips,
+    assignReservationToTrip,
+    removeReservationTrip,
     selectCollection,
     createCollectionInline,
     importSelected,
