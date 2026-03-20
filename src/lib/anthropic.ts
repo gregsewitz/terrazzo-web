@@ -153,8 +153,24 @@ COMPLETENESS (CRITICAL — READ CAREFULLY):
 - DO NOT STOP EARLY. If the text has 80 places, extract 80 places. If a blog says "10 hotels", extract all 10. Completeness matters more than brevity.
 - BEFORE RETURNING: Count how many places you found. Then re-scan the text from the MIDDLE and END to check for any you missed. Blog posts and roundups often have equally important entries near the bottom.
 
-PERSONAL CONTEXT — PRESERVE THE VOICE:
-Capture the user's exact words in userContext. Personal notes are the SOUL of the recommendation.
+PERSONAL CONTEXT — PRESERVE THE VOICE (CRITICAL):
+Any commentary, opinions, notes, or annotations that come from the person who wrote this text MUST go into the "userContext" field — verbatim, in their exact words. This is the SOUL of the recommendation.
+
+For pasted lists and notes, the personal voice is often RIGHT NEXT TO the place name:
+- "CRATE (if weather is nice, which it won't be)" → name: "CRATE", userContext: "if weather is nice, which it won't be"
+- "Bull & Last — Best Sunday roast ever" → name: "Bull & Last", userContext: "Best Sunday roast ever"
+- "Clutch Cafe — Menswear to DIE for" → name: "Clutch Cafe", userContext: "Menswear to DIE for"
+- "La Huella (the one place you cannot miss)" → name: "La Huella", userContext: "the one place you cannot miss"
+- "Hotel & Co — perfect for a long weekend with the girls" → name: "Hotel & Co", userContext: "perfect for a long weekend with the girls"
+- "Maison Plume 😍😍😍" → name: "Maison Plume", userContext: "😍😍😍"
+
+Look for parenthetical asides, em-dashes followed by opinions, exclamation marks, emojis, ALL-CAPS emphasis, personal pronouns ("my favorite", "we loved"), superlatives ("best ever", "to DIE for"), and conditional notes ("if weather is nice", "only on weekdays").
+
+The "description" field is for FACTUAL descriptions. The "userContext" field is for PERSONAL VOICE. They are different:
+- description: "Modern British pub in Highgate" (factual)
+- userContext: "Best Sunday roast ever" (personal)
+
+When the input is a user's personal list (not an article), almost every annotation is userContext. Do NOT discard these notes.
 
 TYPE CLASSIFICATION:
 hotel | restaurant | bar | cafe | shop | museum | activity | neighborhood
