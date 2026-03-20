@@ -17,10 +17,15 @@ import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContex
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { PlaceCard, CreateCollectionModal, AddToTripSheet } from '@/components/saved';
+import { useAddBarStore } from '@/stores/addBarStore';
+import { useFirstActionPrompt } from '@/hooks/useFirstActionPrompts';
+import FirstActionCard from '@/components/ui/FirstActionCard';
+import { useMilestoneToast } from '@/hooks/useMilestoneToast';
+import { useMilestoneToastUI } from '@/components/ui/MilestoneToast';
 
 export default function SavedPage() {
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -65,9 +70,22 @@ function SavedPageContent() {
   const createCollectionAsync = useSavedStore(s => s.createCollectionAsync);
   const createSmartCollection = useSavedStore(s => s.createSmartCollection);
   const trips = useTripStore(s => s.trips);
+  const openAddBar = useAddBarStore(s => s.open);
   const [addToTripItem, setAddToTripItem] = useState<ImportedPlace | null>(null);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [collectionsExpanded, setCollectionsExpanded] = useState(false);
+
+  // ─── First-action prompts ───
+  const { isVisible: showCollectIntro, dismiss: dismissCollectIntro } = useFirstActionPrompt('collect_intro');
+
+  // ─── Milestone toasts ───
+  const [showToast, ToastContainer] = useMilestoneToastUI();
+  const userSavedCount = myPlaces.filter(p => p.source?.type !== 'terrazzo').length;
+  useMilestoneToast([
+    { key: 'first_save', condition: userSavedCount >= 1, message: 'Saved. Your library is growing.' },
+    { key: 'five_saves', condition: userSavedCount >= 5, message: 'Five places saved. Terrazzo is starting to see patterns.' },
+    { key: 'ten_saves', condition: userSavedCount >= 10, message: 'Ten places. Your taste map is getting rich.' },
+  ], showToast);
 
   // ─── Collection count per place ───
   const collectionCountMap = useMemo(() => {
@@ -238,6 +256,17 @@ function SavedPageContent() {
             </div>
           </div>
 
+          {/* ═══ First-action prompt ═══ */}
+          {myPlaces.length > 0 && (
+            <FirstActionCard
+              isVisible={showCollectIntro}
+              onDismiss={dismissCollectIntro}
+              icon="sparkle"
+              message="These are places we think you'd love. Save ones that resonate — or add your own from Google Maps, articles, or email."
+              hint="Tap any place to see why it matches your taste."
+            />
+          )}
+
           {/* ═══ Collections section ═══ */}
           {sortedCollections.length > 0 && (
             <div className="mb-10">
@@ -386,14 +415,43 @@ function SavedPageContent() {
                   </motion.div>
                 ))}
               </motion.div>
-            ) : (
+            ) : searchQuery || typeFilter !== 'all' || cityFilter !== 'all' ? (
               <div className="text-center py-16">
                 <PerriandIcon name="discover" size={36} color={TEXT.secondary} />
-                <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>
-                  {searchQuery || typeFilter !== 'all' || cityFilter !== 'all'
-                    ? 'No places match your filters'
-                    : 'No saved places yet'}
+                <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>No places match your current filters</p>
+                <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div className="text-center py-16 px-6">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(58,128,136,0.06)' }}>
+                    <PerriandIcon name="saved" size={32} color="var(--t-dark-teal)" />
+                  </div>
+                </div>
+                <h3 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: TEXT.primary, margin: '0 0 8px' }}>
+                  Your place library
+                </h3>
+                <p className="text-[13px] leading-relaxed max-w-xs mx-auto" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+                  This is where taste meets territory. Import from Google Maps, paste an article link, or explore your Discover feed to start building.
                 </p>
+                <div className="flex flex-col gap-2 mt-6 max-w-[240px] mx-auto">
+                  <button
+                    onClick={() => openAddBar()}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-none cursor-pointer transition-all hover:opacity-90"
+                    style={{ background: 'var(--t-navy)', color: 'white', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600 }}
+                  >
+                    <PerriandIcon name="add" size={14} color="white" />
+                    Add your first place
+                  </button>
+                  <button
+                    onClick={() => router.push('/discover')}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl cursor-pointer transition-all hover:opacity-90"
+                    style={{ background: 'transparent', border: '1px solid var(--t-linen)', color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 13, fontWeight: 500 }}
+                  >
+                    <PerriandIcon name="discover" size={14} color={TEXT.secondary} />
+                    Browse Discover feed
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -458,6 +516,7 @@ function SavedPageContent() {
             }}
           />
         )}
+        <ToastContainer />
       </PageTransition>
     );
   }
@@ -490,6 +549,17 @@ function SavedPageContent() {
 
         {/* ═══ Search ═══ */}
         <div className="mb-3"><PlaceSearchBar /></div>
+
+        {/* ═══ First-action prompt ═══ */}
+        {myPlaces.length > 0 && (
+          <FirstActionCard
+            isVisible={showCollectIntro}
+            onDismiss={dismissCollectIntro}
+            icon="sparkle"
+            message="These are places we think you'd love. Save ones that resonate — or add your own from Google Maps, articles, or email."
+            hint="Tap any place to see why it matches your taste."
+          />
+        )}
 
         {/* ═══ Collections section ═══ */}
         {sortedCollections.length > 0 && (
@@ -671,11 +741,43 @@ function SavedPageContent() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? (
             <div className="text-center py-16">
               <PerriandIcon name="discover" size={36} color={TEXT.secondary} />
-              <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'No places match your filters' : 'No saved places yet'}</p>
-              <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>{searchQuery || typeFilter !== 'all' || sourceFilter !== 'all' || cityFilter !== 'all' ? 'Try adjusting your search or filters' : 'Import places to get started'}</p>
+              <p className="text-[13px] mt-3" style={{ color: TEXT.secondary }}>No places match your current filters</p>
+              <p className="text-[11px] mt-1" style={{ color: TEXT.secondary }}>Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            <div className="text-center py-16 px-6">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(58,128,136,0.06)' }}>
+                  <PerriandIcon name="saved" size={32} color="var(--t-dark-teal)" />
+                </div>
+              </div>
+              <h3 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: TEXT.primary, margin: '0 0 8px' }}>
+                Your place library
+              </h3>
+              <p className="text-[13px] leading-relaxed max-w-xs mx-auto" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+                This is where taste meets territory. Import from Google Maps, paste an article link, or explore your Discover feed to start building.
+              </p>
+              <div className="flex flex-col gap-2 mt-6 max-w-[240px] mx-auto">
+                <button
+                  onClick={() => openAddBar()}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-none cursor-pointer transition-all hover:opacity-90"
+                  style={{ background: 'var(--t-navy)', color: 'white', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600 }}
+                >
+                  <PerriandIcon name="add" size={14} color="white" />
+                  Add your first place
+                </button>
+                <button
+                  onClick={() => router.push('/discover')}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl cursor-pointer transition-all hover:opacity-90"
+                  style={{ background: 'transparent', border: '1px solid var(--t-linen)', color: TEXT.secondary, fontFamily: FONT.sans, fontSize: 13, fontWeight: 500 }}
+                >
+                  <PerriandIcon name="discover" size={14} color={TEXT.secondary} />
+                  Browse Discover feed
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -691,6 +793,7 @@ function SavedPageContent() {
       {addToTripItem && trips.length > 0 && (
         <AddToTripSheet place={addToTripItem} trips={trips} onClose={() => setAddToTripItem(null)} onAdd={(tripId) => { setAddToTripItem(null); }} />
       )}
+      <ToastContainer />
       <TabBar />
     </div>
   );

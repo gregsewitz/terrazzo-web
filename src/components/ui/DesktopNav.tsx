@@ -18,6 +18,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [avatarHovered, setAvatarHovered] = useState(false);
 
+  const isDiscover = pathname.startsWith('/discover');
   const isCollect = pathname.startsWith('/saved');
   const isPlan = pathname.startsWith('/trips');
 
@@ -32,16 +33,27 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
     >
       {/* Left: Terrazzo wordmark */}
       <button
-        aria-label="Go to trips"
-        onClick={() => router.push('/trips')}
+        aria-label="Go to discover"
+        onClick={() => router.push('/discover')}
         className="flex items-center bg-transparent border-none cursor-pointer"
         style={{ padding: 0 }}
       >
         <Logo variant="wordmark" font="pixellance" theme="light" style={{ height: 22, width: 'auto' }} />
       </button>
 
-      {/* Center: Collect · + Place · Plan */}
+      {/* Center: Discover · Collect · + Place · Plan */}
       <div className="flex items-center gap-1">
+        {/* Discover */}
+        <NavLink
+          label="Discover"
+          icon="discover"
+          isActive={isDiscover}
+          isHovered={hoveredNav === 'discover'}
+          onMouseEnter={() => setHoveredNav('discover')}
+          onMouseLeave={() => setHoveredNav(null)}
+          onClick={() => router.push('/discover')}
+        />
+
         {/* Collect */}
         <NavLink
           label="Collect"

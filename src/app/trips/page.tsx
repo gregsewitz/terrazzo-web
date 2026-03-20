@@ -13,12 +13,23 @@ import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useMilestoneToast } from '@/hooks/useMilestoneToast';
+import { useMilestoneToastUI } from '@/components/ui/MilestoneToast';
 
 export default function TripsPage() {
   const trips = useTripStore(s => s.trips);
   const dbHydrated = useOnboardingStore(s => s.dbHydrated);
   const router = useRouter();
   const isDesktop = useIsDesktop();
+
+  // ─── Milestone toasts ───
+  const [showToast, ToastContainer] = useMilestoneToastUI();
+  const totalPlacedCount = trips.reduce((sum, t) => sum + t.days.reduce((ds, d) => ds + d.slots.filter(s => s.places.length > 0).length, 0), 0);
+  const firstFullDay = trips.some(t => t.days.some(d => d.slots.filter(s => s.places.length > 0).length >= 3));
+  useMilestoneToast([
+    { key: 'first_trip_place', condition: totalPlacedCount >= 1, message: 'First place added to a trip. Good instinct.' },
+    { key: 'first_full_day', condition: firstFullDay, message: 'A full day planned. That\'s a strong start.' },
+  ], showToast);
 
   // Wait for DB hydration before rendering
   if (!dbHydrated) {
@@ -62,6 +73,23 @@ export default function TripsPage() {
               <span className="text-sm">+</span> New Trip
             </motion.button>
           </div>
+
+          {/* Empty state */}
+          {trips.length === 0 && (
+            <div className="text-center py-16 px-6 mb-8">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(238,113,109,0.06)' }}>
+                  <PerriandIcon name="plan" size={32} color={COLOR.coral} />
+                </div>
+              </div>
+              <h3 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: TEXT.primary, margin: '0 0 8px' }}>
+                No trips yet
+              </h3>
+              <p className="text-[13px] leading-relaxed max-w-xs mx-auto" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+                Every great trip starts with a place that calls to you. Create a trip, or save places first and plan later.
+              </p>
+            </div>
+          )}
 
           {/* Trip cards grid */}
           <div
@@ -197,6 +225,7 @@ export default function TripsPage() {
             </SafeFadeIn>
           </div>
         </div>
+        <ToastContainer />
       </PageTransition>
     );
   }
@@ -229,6 +258,23 @@ export default function TripsPage() {
         <p className="text-xs mb-6" style={{ color: TEXT.primary }}>
           Plan and curate your bespoke travel itinerary
         </p>
+
+        {/* Empty state */}
+        {trips.length === 0 && (
+          <div className="text-center py-16 px-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(238,113,109,0.06)' }}>
+                <PerriandIcon name="plan" size={32} color={COLOR.coral} />
+              </div>
+            </div>
+            <h3 style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 20, color: TEXT.primary, margin: '0 0 8px' }}>
+              No trips yet
+            </h3>
+            <p className="text-[13px] leading-relaxed max-w-xs mx-auto" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+              Every great trip starts with a place that calls to you. Create a trip, or save places first and plan later.
+            </p>
+          </div>
+        )}
 
         <div
           className="flex flex-col gap-3"
@@ -268,6 +314,7 @@ export default function TripsPage() {
 
         </div>
       </div>
+      <ToastContainer />
       <TabBar />
     </div>
   );

@@ -42,7 +42,7 @@ export default function RevealPage() {
       });
     }
 
-    router.push('/trips');
+    router.push('/onboarding/bridge');
   };
 
   if (!generatedProfile) {

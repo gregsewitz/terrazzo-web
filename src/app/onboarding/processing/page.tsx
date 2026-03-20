@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { PROCESSING_STEPS } from '@/constants/onboarding';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { pregenerateDiscoverFeed } from '@/lib/pregenerate-discover';
 import type { GeneratedTasteProfile } from '@/types';
 
 export default function ProcessingPage() {
@@ -47,6 +48,12 @@ export default function ProcessingPage() {
 
       const profile: GeneratedTasteProfile = await res.json();
       setGeneratedProfile(profile);
+
+      // Fire and forget discover pre-generation — don't block the processing animation
+      const lifeContext = useOnboardingStore.getState().lifeContext;
+      if (profile) {
+        pregenerateDiscoverFeed(profile, lifeContext).catch(() => {});
+      }
 
       // Wait for animation to finish before navigating
       // Steps take ~17.85s total (ramped timing), give a small buffer so the last check

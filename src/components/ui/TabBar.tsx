@@ -16,8 +16,10 @@ export default function TabBar() {
   // Hide on desktop — DesktopNav handles navigation
   if (isDesktop) return null;
 
+  const isDiscover = pathname.startsWith('/discover');
   const isCollect = pathname.startsWith('/saved');
   const isPlan = pathname.startsWith('/trips');
+  const isProfile = pathname === '/profile';
 
   return (
     <nav
@@ -31,6 +33,36 @@ export default function TabBar() {
         paddingTop: 8,
       }}
     >
+      {/* Discover */}
+      <motion.button
+        onClick={() => router.push('/discover')}
+        className="relative flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
+        style={{ opacity: isDiscover ? 1 : 0.4, flex: 1, padding: 0 }}
+        whileTap={{ scale: 0.92 }}
+      >
+        <div style={{ color: isDiscover ? 'var(--t-signal-red)' : 'var(--t-ink)' }}>
+          <PerriandIcon name={'discover' as PerriandIconName} size={20} />
+        </div>
+        <span
+          className="text-[9px] uppercase tracking-wider"
+          style={{
+            fontFamily: FONT.mono,
+            fontWeight: isDiscover ? 700 : 400,
+            color: 'var(--t-ink)',
+          }}
+        >
+          Discover
+        </span>
+        {isDiscover && (
+          <motion.div
+            layoutId="tabIndicator"
+            className="absolute -bottom-1 left-1/2 w-1 h-1 rounded-full"
+            style={{ background: 'var(--t-signal-red)', transform: 'translateX(-50%)' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          />
+        )}
+      </motion.button>
+
       {/* Collect */}
       <motion.button
         onClick={() => router.push('/saved')}
@@ -114,6 +146,36 @@ export default function TabBar() {
           Plan
         </span>
         {isPlan && (
+          <motion.div
+            layoutId="tabIndicator"
+            className="absolute -bottom-1 left-1/2 w-1 h-1 rounded-full"
+            style={{ background: 'var(--t-signal-red)', transform: 'translateX(-50%)' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          />
+        )}
+      </motion.button>
+
+      {/* Profile */}
+      <motion.button
+        onClick={() => router.push('/profile')}
+        className="relative flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer transition-opacity"
+        style={{ opacity: isProfile ? 1 : 0.4, flex: 1, padding: 0 }}
+        whileTap={{ scale: 0.92 }}
+      >
+        <div style={{ color: isProfile ? 'var(--t-signal-red)' : 'var(--t-ink)' }}>
+          <PerriandIcon name={'profile' as PerriandIconName} size={20} />
+        </div>
+        <span
+          className="text-[9px] uppercase tracking-wider"
+          style={{
+            fontFamily: FONT.mono,
+            fontWeight: isProfile ? 700 : 400,
+            color: 'var(--t-ink)',
+          }}
+        >
+          Profile
+        </span>
+        {isProfile && (
           <motion.div
             layoutId="tabIndicator"
             className="absolute -bottom-1 left-1/2 w-1 h-1 rounded-full"
