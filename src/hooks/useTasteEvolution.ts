@@ -61,7 +61,8 @@ export function useTasteEvolution(): TasteEvolutionResult {
     const currentSavedCount = myPlaces.filter(p => !(p.source?.type === 'terrazzo' && p.source?.name === 'Terrazzo Picks')).length;
     const currentSignalCount = allSignals?.length || 0;
 
-    // Initialize on first run
+    // Initialize on first run — set baseline to current counts so we don't
+    // immediately trigger with the user's entire history as a "delta"
     if (!state.lastChecked) {
       setEvolutionState({
         lastSignalCount: currentSignalCount,
@@ -71,12 +72,27 @@ export function useTasteEvolution(): TasteEvolutionResult {
       return;
     }
 
-    const savedDelta = currentSavedCount - state.lastSavedCount;
-    const signalDelta = currentSignalCount - state.lastSignalCount;
+    // Also re-baseline if the stored baseline is wildly out of sync
+    // (e.g., localStorage was partially cleared, or the user had a huge
+    // onboarding synthesis that inflated allSignals after the baseline was set)
+    if (state.lastSignalCount === 0 && currentSignalCount > 50) {
+      setEvolutionState({
+        lastSignalCount: currentSignalCount,
+        lastSavedCount: currentSavedCount,
+        lastChecked: new Date().toISOString(),
+      });
+      return;
+    }
 
-    // Evolution notice: show when 5+ new saves or 10+ new signals
+    const savedDelta = Math.max(0, currentSavedCount - state.lastSavedCount);
+    const signalDelta = Math.max(0, currentSignalCount - state.lastSignalCount);
+
+    // Evolution notice: show when 5+ new saves or 10+ new signals since last check
     if (savedDelta >= 5 || signalDelta >= 10) {
-      setNewSignalCount(Math.max(savedDelta, signalDelta));
+      // Show the saved delta preferentially (more intuitive to users)
+      // and cap the display to a reasonable number
+      const displayCount = savedDelta >= 5 ? savedDelta : signalDelta;
+      setNewSignalCount(displayCount);
       setShowEvolutionNotice(true);
     }
 

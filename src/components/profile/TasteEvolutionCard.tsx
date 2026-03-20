@@ -48,7 +48,7 @@ export default function TasteEvolutionCard({ type, newSignalCount, onDismiss, on
           </h4>
           <p style={{ fontFamily: FONT.sans, fontSize: 13, color: TEXT.secondary, lineHeight: 1.5, margin: 0 }}>
             {isEvolution
-              ? `We've picked up ${newSignalCount || 'new'} signals from your recent activity. Your recommendations will keep getting sharper.`
+              ? `We've picked up ${newSignalCount || 'new'} new taste signals from your recent saves. Your recommendations will keep getting sharper.`
               : 'A few quick questions could unlock even better matches. Takes about 2 minutes.'}
           </p>
           {type === 'expand' && onExpand && (

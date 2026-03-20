@@ -26,12 +26,19 @@ function getWelcomeState(args: {
   hasActivePlan: boolean;
   totalPlacedCount: number;
   isReturnVisit: boolean;
+  sessionCount: number;
 }): WelcomeState {
-  const { userSavedCount, tripCount, hasActivePlan, totalPlacedCount, isReturnVisit } = args;
+  const { userSavedCount, tripCount, hasActivePlan, totalPlacedCount, isReturnVisit, sessionCount } = args;
 
+  // Power users (lots of saves + multiple sessions) → always returning
+  if (sessionCount >= 3 && userSavedCount >= 20) return 'returning';
+  // Return visit with meaningful activity → returning
   if (isReturnVisit && (hasActivePlan || userSavedCount >= 10)) return 'returning';
+  // Established library → curating
   if (userSavedCount >= 10 || (tripCount >= 2 && totalPlacedCount >= 5)) return 'curating';
+  // Active trip planning → planning
   if (hasActivePlan && userSavedCount < 10) return 'planning';
+  // Some saves → building
   if (userSavedCount >= 1) return 'building';
   return 'first-light';
 }
@@ -139,12 +146,12 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
     }, 0);
   }, [trips]);
 
-  // Check for return visit
-  const isReturnVisit = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    const count = parseInt(sessionStorage.getItem('terrazzo_session_count') || '0', 10);
-    return count > 1;
+  // Check for return visit using persistent session count (from useAlphaFeedback)
+  const sessionCount = useMemo(() => {
+    if (typeof window === 'undefined') return 0;
+    return parseInt(localStorage.getItem('terrazzo_total_sessions') || '0', 10);
   }, []);
+  const isReturnVisit = sessionCount > 1;
 
   const welcomeState = getWelcomeState({
     userSavedCount,
@@ -152,6 +159,7 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
     hasActivePlan,
     totalPlacedCount,
     isReturnVisit,
+    sessionCount,
   });
 
   const firstName = lifeContext?.firstName || 'there';
@@ -398,12 +406,12 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
 
       {/* Show minimal state when collapsed */}
       {collapsed && (
-        <div className="text-[13px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
-          {welcomeState === 'first-light' && `Welcome, ${firstName}`}
-          {welcomeState === 'building' && `${userSavedCount} saved place${userSavedCount !== 1 ? 's' : ''}`}
-          {welcomeState === 'planning' && `Planning ${trips[0]?.name}`}
-          {welcomeState === 'curating' && `${userSavedCount} places, ${tripCount} trips`}
-          {welcomeState === 'returning' && 'Welcome back'}
+        <div style={{ fontFamily: FONT.serif, color: TEXT.primary, fontSize: 14, fontStyle: 'italic', lineHeight: 1.4 }}>
+          {welcomeState === 'first-light' && `Welcome to your Terrazzo, ${firstName}.`}
+          {welcomeState === 'building' && `${userSavedCount} place${userSavedCount !== 1 ? 's' : ''} saved — your taste is taking shape.`}
+          {welcomeState === 'planning' && `Planning ${trips[0]?.name || 'your trip'} — keep adding places.`}
+          {welcomeState === 'curating' && `${userSavedCount} places, ${tripCount} trips — here's what's new.`}
+          {welcomeState === 'returning' && `Welcome back — new matches since your last visit.`}
         </div>
       )}
     </motion.div>

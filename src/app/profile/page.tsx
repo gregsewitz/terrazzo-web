@@ -304,12 +304,12 @@ function ProfilePageContent() {
               </div>
 
               {/* Settings gear */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                 {SETTINGS_LINKS.map(({ label, action }) => (
-                  <div key={action} className="relative">
+                  <div key={action} className="relative flex-shrink-0">
                     <button
                       onClick={() => handleSettingTap(action)}
-                      className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all"
+                      className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all whitespace-nowrap"
                       style={{
                         fontSize: 11,
                         color: expandedSection === action ? COLOR.darkTeal : COLOR.navy,
