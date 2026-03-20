@@ -349,7 +349,7 @@ function PlaceDetailContent({
         {resolvedItem.userContext && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.ochre}14`, color: COLOR.ochre, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.ochre}14`, color: COLOR.ochre, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.ochre, flexShrink: 0 }} />
                 Personal Note
               </div>
@@ -362,7 +362,7 @@ function PlaceDetailContent({
         {existingRating && ratingReaction && (existingRating.tags?.length || existingRating.personalNote || existingRating.contextTags?.length) && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <button type="button" className="py-4 cursor-pointer w-full text-left bg-transparent border-0 px-0" style={{ borderBottom: `1px solid ${INK['06']}` }} onClick={onEditRating || onRate}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${ratingReaction.color}0a`, color: ratingReaction.color, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${ratingReaction.color}0a`, color: ratingReaction.color, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: ratingReaction.color, flexShrink: 0 }} />
                 <PerriandIcon name="edit" size={10} color={ratingReaction.color} />
                 Your Notes
@@ -382,7 +382,7 @@ function PlaceDetailContent({
         {item.terrazzoInsight && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.mint}18`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.mint}18`, color: COLOR.darkTeal, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.darkTeal, flexShrink: 0 }} />
                 <PerriandIcon name="terrazzo" size={10} color={COLOR.darkTeal} />
                 Why You{"'"}ll Love It
@@ -390,7 +390,7 @@ function PlaceDetailContent({
               <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
               {item.terrazzoInsight.caveat && (
                 <div className="mt-4">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.coral}14`, color: COLOR.coral, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.coral}14`, color: COLOR.coral, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                     <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.coral, flexShrink: 0 }} />
                     Heads Up
                   </div>
@@ -405,7 +405,7 @@ function PlaceDetailContent({
         {item.whatToOrder && item.whatToOrder.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.navy}0c`, color: COLOR.navy, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.navy}0c`, color: COLOR.navy, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.navy, flexShrink: 0 }} />
                 What to Order
               </div>
@@ -424,7 +424,7 @@ function PlaceDetailContent({
         {item.tips && item.tips.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.olive}14`, color: COLOR.olive, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.olive}14`, color: COLOR.olive, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.olive, flexShrink: 0 }} />
                 Tips
               </div>
@@ -439,7 +439,7 @@ function PlaceDetailContent({
         {siblingPlaces && siblingPlaces.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.peach}20`, color: COLOR.charcoal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.peach}20`, color: COLOR.charcoal, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.peach, flexShrink: 0 }} />
                 Also from This Guide
               </div>
@@ -459,7 +459,7 @@ function PlaceDetailContent({
         {item.google?.editorialSummary && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.periwinkle}14`, color: COLOR.periwinkle, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.periwinkle}14`, color: COLOR.periwinkle, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.periwinkle, flexShrink: 0 }} />
                 Google Places
               </div>
@@ -472,7 +472,7 @@ function PlaceDetailContent({
         {!isPrivateListing ? (
           <FadeInSection delay={0.15} direction="up" distance={18}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.coral}14`, color: COLOR.coral, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.coral}14`, color: COLOR.coral, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.coral, flexShrink: 0 }} />
                 Taste Match
               </div>
@@ -585,7 +585,7 @@ function PlaceDetailContent({
         ) : (
           <FadeInSection delay={0.15} direction="up" distance={18}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.warmGray}14`, color: COLOR.warmGray, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.warmGray}14`, color: COLOR.warmGray, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.warmGray, flexShrink: 0 }} />
                 Private Listing
               </div>
@@ -600,7 +600,7 @@ function PlaceDetailContent({
         {!isPrivateListing && intelData?.reliability && Object.keys((intelData.reliability as Record<string, unknown>)?.categories || {}).length > 0 && (
           <FadeInSection delay={0.12} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.navy}0c`, color: COLOR.navy, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.navy}0c`, color: COLOR.navy, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.navy, flexShrink: 0 }} />
                 Reliability by Category
               </div>
@@ -613,7 +613,7 @@ function PlaceDetailContent({
         {!isPrivateListing && hydratedMatchScore >= 93 && resolvedItem.matchExplanation?.topClusters && (
           <FadeInSection delay={0.14} direction="up" distance={18}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.ochre}14`, color: COLOR.ochre, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.ochre}14`, color: COLOR.ochre, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.ochre, flexShrink: 0 }} />
                 Deep Match
               </div>
@@ -641,7 +641,7 @@ function PlaceDetailContent({
         {item.sustainabilityScore !== undefined && item.sustainabilityScore > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.olive}14`, color: COLOR.olive, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.olive}14`, color: COLOR.olive, fontFamily: FONT.display, fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.olive, flexShrink: 0 }} />
                 Sustainability
               </div>
