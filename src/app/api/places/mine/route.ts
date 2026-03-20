@@ -35,7 +35,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
 
   // Resolve current display labels for any stored matchExplanation data.
   // Labels may be stale if clusters were relabeled after match computation.
-  const resolvedPlaces = places.map(p => {
+  const resolvedPlaces = places.map((p: typeof places[number]) => {
     if (!p.matchExplanation) return p;
     return { ...p, matchExplanation: resolveExplanationLabels(p.matchExplanation as any) };
   });
