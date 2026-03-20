@@ -13,7 +13,6 @@ export interface SettingsPanelProps {
   emailLoading: boolean;
   scanState: string;
   scanResult: { scanId?: string; emailsFound?: number; emailsParsed?: number; reservationsFound?: number };
-  hasGoogleMapsImport: boolean;
   // History state
   importHistory: Array<{ id: string; type: string; date: string; title: string; subtitle: string; count: number; status?: string; scanId?: string }>;
   historyLoading: boolean;
@@ -40,7 +39,6 @@ export function SettingsPanel({
   emailLoading,
   scanState,
   scanResult,
-  hasGoogleMapsImport,
   importHistory,
   historyLoading,
   isAuthenticated,
@@ -56,7 +54,6 @@ export function SettingsPanel({
   onNavigate,
 }: SettingsPanelProps) {
   const router = useRouter();
-
   if (variant === 'desktop') {
     return (
       <div className="mb-6 rounded-2xl px-6 py-4" style={{ background: 'white', border: '1px solid var(--t-linen)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
@@ -105,38 +102,22 @@ export function SettingsPanel({
                 <button onClick={onDisconnect} className="text-[9px] px-2 py-0.5 rounded-full border-none cursor-pointer" style={{ background: 'rgba(238,113,109,0.08)', color: 'var(--t-coral)' }}>Disconnect</button>
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <PerriandIcon name="pin" size={12} color="var(--t-ink)" />
-                <span style={{ color: TEXT.primary }}>Google Maps</span>
-              </div>
-              {hasGoogleMapsImport ? (
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(146,206,214,0.08)', color: 'var(--t-teal)' }}>Imported</span>
-              ) : (
-                <Link href="/onboarding" className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--t-peach)', color: 'var(--t-navy)', textDecoration: 'none' }}>Import</Link>
-              )}
-            </div>
-          </div>
-        )}
-        {expandedSection === 'history' && (
-          <div style={{ fontSize: 12 }}>
-            <h4 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>Import History</h4>
-            {historyLoading ? (
-              <span className="text-[10px]" style={{ color: TEXT.secondary }}>Loading history…</span>
-            ) : importHistory.length === 0 ? (
-              <span className="text-[10px]" style={{ color: TEXT.secondary }}>No import history yet. Connect Gmail or import from a URL to get started.</span>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {importHistory.slice(0, 10).map((item) => (
-                  <button key={item.id} type="button" className="flex items-center justify-between py-1 cursor-pointer w-full text-left" style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <PerriandIcon name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'} size={10} color={INK['50']} />
-                      <span className="text-[11px] truncate" style={{ color: TEXT.primary }}>{item.title}</span>
-                    </div>
-                    <span className="text-[10px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                  </button>
-                ))}
-                <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left" style={{ color: TEXT.accent }}>View email reservations →</button>
+            {/* Import History — inline */}
+            {importHistory.length > 0 && (
+              <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                <h4 className="text-[10px] uppercase tracking-[0.15em] mb-2" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>Import History</h4>
+                <div className="flex flex-col gap-1.5">
+                  {importHistory.slice(0, 10).map((item) => (
+                    <button key={item.id} type="button" className="flex items-center justify-between py-1 cursor-pointer w-full text-left" style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => item.scanId ? router.push('/email/inbox') : undefined}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <PerriandIcon name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'} size={10} color={INK['50']} />
+                        <span className="text-[11px] truncate" style={{ color: TEXT.primary }}>{item.title}</span>
+                      </div>
+                      <span className="text-[10px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </button>
+                  ))}
+                  <button onClick={() => router.push('/email/inbox')} className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left" style={{ color: TEXT.accent }}>View email reservations →</button>
+                </div>
               </div>
             )}
           </div>
@@ -151,37 +132,37 @@ export function SettingsPanel({
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>About</h4>
             <span className="text-[11px]" style={{ color: TEXT.secondary }}>Terrazzo v0.1 — Your taste-driven travel companion.</span>
+            <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+              <button
+                onClick={onRedoOnboarding}
+                className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
+                style={{ fontSize: 11, color: 'var(--t-coral)', fontFamily: FONT.sans }}
+              >
+                <PerriandIcon name="discover" size={10} color="var(--t-coral)" />
+                Redo Onboarding
+              </button>
+              <button
+                onClick={onResynthesis}
+                disabled={isResynthesizing}
+                className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
+                style={{ fontSize: 11, color: isResynthesizing ? INK['30'] : 'var(--t-teal)', fontFamily: FONT.sans, opacity: isResynthesizing ? 0.6 : 1 }}
+              >
+                <PerriandIcon name="sparkle" size={10} color={isResynthesizing ? INK['30'] : 'var(--t-teal)'} />
+                {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
+                {resynthesisResult === 'success' && <span style={{ color: 'var(--t-teal)', marginLeft: 4 }}>✓</span>}
+                {resynthesisResult === 'error' && <span style={{ color: '#c44', marginLeft: 4 }}>Failed</span>}
+              </button>
+              {isAuthenticated ? (
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-[10px]" style={{ color: TEXT.secondary }}>{userEmail}</span>
+                  <button onClick={onSignOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(238,113,109,0.08)', color: 'var(--t-coral)', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
+                </div>
+              ) : (
+                <Link href="/login" className="ml-auto text-[11px] font-semibold" style={{ color: 'var(--t-teal)', textDecoration: 'none' }}>Sign in →</Link>
+              )}
+            </div>
           </div>
         )}
-        <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
-          <button
-            onClick={onRedoOnboarding}
-            className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
-            style={{ fontSize: 11, color: 'var(--t-coral)', fontFamily: FONT.sans }}
-          >
-            <PerriandIcon name="discover" size={10} color="var(--t-coral)" />
-            Redo Onboarding
-          </button>
-          <button
-            onClick={onResynthesis}
-            disabled={isResynthesizing}
-            className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
-            style={{ fontSize: 11, color: isResynthesizing ? INK['30'] : 'var(--t-teal)', fontFamily: FONT.sans, opacity: isResynthesizing ? 0.6 : 1 }}
-          >
-            <PerriandIcon name="sparkle" size={10} color={isResynthesizing ? INK['30'] : 'var(--t-teal)'} />
-            {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
-            {resynthesisResult === 'success' && <span style={{ color: 'var(--t-teal)', marginLeft: 4 }}>✓</span>}
-            {resynthesisResult === 'error' && <span style={{ color: '#c44', marginLeft: 4 }}>Failed</span>}
-          </button>
-          {isAuthenticated ? (
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-[10px]" style={{ color: TEXT.secondary }}>{userEmail}</span>
-              <button onClick={onSignOut} className="text-[10px] font-medium px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(238,113,109,0.08)', color: 'var(--t-coral)', border: 'none', fontFamily: FONT.sans }}>Sign out</button>
-            </div>
-          ) : (
-            <Link href="/login" className="ml-auto text-[11px] font-semibold" style={{ color: 'var(--t-teal)', textDecoration: 'none' }}>Sign in →</Link>
-          )}
-        </div>
       </div>
     );
   }
@@ -280,73 +261,45 @@ export function SettingsPanel({
                   </button>
                 </div>
               )}
-              {/* Google Maps row — static */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <PerriandIcon name="pin" size={12} color="var(--t-ink)" />
-                  <span className="text-[11px]" style={{ color: TEXT.primary }}>Google Maps</span>
-                </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)' }}>
-                  Via import
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <div
-            onClick={() => onNavigate('history')}
-            className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all"
-            style={{ background: expandedSection === 'history' ? 'rgba(238,113,109,0.06)' : INK['03'] }}
-          >
-            <span className="text-[12px]" style={{ color: TEXT.primary }}>Import History</span>
-            <span style={{ color: TEXT.secondary, transform: expandedSection === 'history' ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
-          </div>
-          {expandedSection === 'history' && (
-            <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
-              {historyLoading ? (
-                <span className="text-[10px]" style={{ color: TEXT.secondary }}>Loading history…</span>
-              ) : importHistory.length === 0 ? (
-                <span className="text-[10px]" style={{ color: TEXT.secondary }}>
-                  No import history yet. Connect Gmail or import from a URL to get started.
-                </span>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {importHistory.slice(0, 15).map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between py-1.5 cursor-pointer"
-                      onClick={() => item.scanId ? router.push('/email/inbox') : undefined}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <PerriandIcon
-                          name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'}
-                          size={10}
-                          color={INK['50']}
-                        />
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-medium block truncate" style={{ color: TEXT.primary }}>
-                            {item.title}
-                          </span>
-                          <span className="text-[9px] block" style={{ color: TEXT.secondary }}>
-                            {item.subtitle}
-                          </span>
+              {/* Import History — inline */}
+              {importHistory.length > 0 && (
+                <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                  <h4 className="text-[9px] uppercase tracking-[0.15em] mb-2" style={{ color: INK['50'], fontFamily: FONT.mono, fontWeight: 700 }}>Import History</h4>
+                  <div className="flex flex-col gap-2">
+                    {importHistory.slice(0, 10).map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between py-1.5 cursor-pointer"
+                        onClick={() => item.scanId ? router.push('/email/inbox') : undefined}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <PerriandIcon
+                            name={item.type === 'email-scan' ? 'email' : item.type === 'url-import' ? 'article' : 'manual'}
+                            size={10}
+                            color={INK['50']}
+                          />
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-medium block truncate" style={{ color: TEXT.primary }}>
+                              {item.title}
+                            </span>
+                            <span className="text-[9px] block" style={{ color: TEXT.secondary }}>
+                              {item.subtitle}
+                            </span>
+                          </div>
                         </div>
+                        <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>
+                          {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
                       </div>
-                      <span className="text-[9px] flex-shrink-0 ml-2" style={{ color: TEXT.secondary }}>
-                        {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                  ))}
-                  {/* Link to staging inbox */}
-                  <button
-                    onClick={() => router.push('/email/inbox')}
-                    className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left"
-                    style={{ color: TEXT.accent }}
-                  >
-                    View email reservations →
-                  </button>
+                    ))}
+                    <button
+                      onClick={() => router.push('/email/inbox')}
+                      className="text-[10px] font-medium mt-1 bg-transparent border-none cursor-pointer text-left"
+                      style={{ color: TEXT.accent }}
+                    >
+                      View email reservations →
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -379,99 +332,75 @@ export function SettingsPanel({
             <span style={{ color: TEXT.secondary, transform: expandedSection === 'about' ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>→</span>
           </div>
           {expandedSection === 'about' && (
-            <div className="px-3 py-3 mt-1 rounded-xl text-[11px]" style={{ background: 'rgba(107,139,154,0.05)', color: TEXT.secondary }}>
-              Terrazzo v0.1 — Your taste-driven travel companion. Built with Forme Libere design principles.
+            <div className="px-3 py-3 mt-1 rounded-xl" style={{ background: 'rgba(107,139,154,0.05)' }}>
+              <span className="text-[11px]" style={{ color: TEXT.secondary }}>
+                Terrazzo v0.1 — Your taste-driven travel companion. Built with Forme Libere design principles.
+              </span>
+
+              <div className="flex flex-col gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                <button
+                  onClick={onRedoOnboarding}
+                  className="w-full flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all"
+                  style={{ background: 'rgba(232,115,58,0.06)', border: 'none' }}
+                >
+                  <div className="flex items-center gap-2">
+                    <PerriandIcon name="discover" size={12} color="var(--t-coral)" />
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--t-coral)' }}>Redo Onboarding</span>
+                  </div>
+                  <span style={{ color: '#c45020', fontSize: 11 }}>→</span>
+                </button>
+
+                <button
+                  onClick={onResynthesis}
+                  disabled={isResynthesizing}
+                  className="w-full flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all"
+                  style={{ background: isResynthesizing ? 'rgba(58,128,136,0.03)' : 'rgba(58,128,136,0.06)', border: 'none', opacity: isResynthesizing ? 0.7 : 1 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <PerriandIcon name="sparkle" size={12} color="var(--t-teal)" />
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--t-teal)' }}>
+                      {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
+                    </span>
+                    {resynthesisResult === 'success' && <span style={{ color: 'var(--t-teal)', fontSize: 11 }}>✓</span>}
+                    {resynthesisResult === 'error' && <span style={{ color: '#c44', fontSize: 11 }}>Failed</span>}
+                  </div>
+                  {!isResynthesizing && !resynthesisResult && (
+                    <span style={{ color: 'var(--t-dark-teal)', fontSize: 11 }}>→</span>
+                  )}
+                </button>
+              </div>
+
+              <div className="mt-3 pt-3 rounded-lg" style={{ borderTop: '1px solid var(--t-linen)' }}>
+                {isAuthenticated ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>Signed in as</span>
+                      <span className="text-[11px] ml-1 font-medium" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>{userEmail}</span>
+                    </div>
+                    <button
+                      onClick={onSignOut}
+                      className="text-[10px] font-medium px-2.5 py-1 rounded-full cursor-pointer"
+                      style={{ background: 'rgba(238,113,109,0.08)', color: 'var(--t-coral)', border: 'none', fontFamily: FONT.sans }}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>Sign in to save your places and trips</span>
+                    <Link
+                      href="/login"
+                      className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                      style={{ background: 'var(--t-teal)', color: 'white', textDecoration: 'none', fontFamily: FONT.sans }}
+                    >
+                      Sign in
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Redo Onboarding */}
-      <button
-        onClick={onRedoOnboarding}
-        className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-2"
-        style={{
-          background: 'rgba(232,115,58,0.06)',
-          border: '1px dashed rgba(232,115,58,0.2)',
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <PerriandIcon name="discover" size={12} color="var(--t-coral)" />
-          <span className="text-[12px] font-medium" style={{ color: 'var(--t-coral)' }}>
-            Redo Onboarding
-          </span>
-        </div>
-        <span style={{ color: '#c45020', fontSize: 12 }}>→</span>
-      </button>
-
-      {/* Refresh Taste Profile */}
-      <button
-        onClick={onResynthesis}
-        disabled={isResynthesizing}
-        className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mt-2"
-        style={{
-          background: isResynthesizing ? 'rgba(58,128,136,0.03)' : 'rgba(58,128,136,0.06)',
-          border: '1px dashed rgba(58,128,136,0.2)',
-          opacity: isResynthesizing ? 0.7 : 1,
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <PerriandIcon name="sparkle" size={12} color="var(--t-teal)" />
-          <span className="text-[12px] font-medium" style={{ color: 'var(--t-teal)' }}>
-            {isResynthesizing ? 'Re-synthesizing…' : 'Refresh Taste Profile'}
-          </span>
-          {resynthesisResult === 'success' && <span style={{ color: 'var(--t-teal)', fontSize: 12 }}>✓ Updated</span>}
-          {resynthesisResult === 'error' && <span style={{ color: '#c44', fontSize: 12 }}>Failed</span>}
-        </div>
-        {!isResynthesizing && !resynthesisResult && (
-          <span style={{ color: 'var(--t-dark-teal)', fontSize: 12 }}>→</span>
-        )}
-      </button>
-
-      {/* Account / Sign In-Out */}
-      <div className="mt-4 p-3 rounded-xl" style={{ background: INK['03'] }}>
-        {isAuthenticated ? (
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
-                Signed in as
-              </span>
-              <span className="text-[12px] ml-1 font-medium" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
-                {userEmail}
-              </span>
-            </div>
-            <button
-              onClick={onSignOut}
-              className="text-[11px] font-medium px-3 py-1.5 rounded-full cursor-pointer"
-              style={{
-                background: 'rgba(238,113,109,0.08)',
-                color: 'var(--t-coral)',
-                border: 'none',
-                fontFamily: FONT.sans,
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
-              Sign in to save your places and trips
-            </span>
-            <Link
-              href="/login"
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-full"
-              style={{
-                background: 'var(--t-teal)',
-                color: 'white',
-                textDecoration: 'none',
-                fontFamily: FONT.sans,
-              }}
-            >
-              Sign in
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );

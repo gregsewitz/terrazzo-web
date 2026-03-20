@@ -29,7 +29,6 @@ import { SettingsPanel } from '@/components/profile/SettingsPanel';
 
 const SETTINGS_LINKS = [
   { label: 'Connected Accounts', action: 'accounts' },
-  { label: 'Import History', action: 'history' },
   { label: 'Notification Preferences', action: 'notifications' },
   { label: 'About Terrazzo', action: 'about' },
 ];
@@ -82,7 +81,7 @@ function ProfilePageContent() {
     scanId?: string;
   }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const hasGoogleMapsImport = importHistory.some(h => h.title.toLowerCase().includes('google maps') || h.title.toLowerCase().includes('google-maps'));
+
 
   const { isAuthenticated, user, signOut } = useAuth();
   const resetForRedo = useOnboardingStore(s => s.resetForRedo);
@@ -123,8 +122,8 @@ function ProfilePageContent() {
     setExpandedSection(next);
     // Fetch email status when accounts panel opens
     if (next === 'accounts' && !emailStatus) fetchEmailStatus();
-    // Fetch import history when accounts or history panel opens (needed for Google Maps status)
-    if ((next === 'accounts' || next === 'history') && importHistory.length === 0) fetchImportHistory();
+    // Fetch import history when accounts panel opens (history is shown inline)
+    if (next === 'accounts' && importHistory.length === 0) fetchImportHistory();
   };
 
   const fetchEmailStatus = async () => {
@@ -347,7 +346,7 @@ function ProfilePageContent() {
               emailLoading={emailLoading}
               scanState={scanState}
               scanResult={scanResult}
-              hasGoogleMapsImport={hasGoogleMapsImport}
+
               importHistory={importHistory}
               historyLoading={historyLoading}
               isAuthenticated={isAuthenticated}
@@ -519,7 +518,6 @@ function ProfilePageContent() {
         emailLoading={emailLoading}
         scanState={scanState}
         scanResult={scanResult}
-        hasGoogleMapsImport={hasGoogleMapsImport}
         importHistory={importHistory}
         historyLoading={historyLoading}
         isAuthenticated={isAuthenticated}
