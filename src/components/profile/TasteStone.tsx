@@ -82,7 +82,7 @@ export default function TasteStone({ data, size = 280 }: TasteStoneProps) {
 
         {/* Soft shadow for depth */}
         <filter id="tasteStone-shadow" x="-10%" y="-10%" width="120%" height="130%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#002a55" floodOpacity="0.12" />
+          <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#1A2D4A" floodOpacity="0.12" />
         </filter>
       </defs>
 

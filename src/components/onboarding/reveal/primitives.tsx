@@ -7,7 +7,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { FONT, INK } from '@/constants/theme';
+import { FONT, INK, COLOR } from '@/constants/theme';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 
 // ─── Animation constants ─────────────────────────────────────────────────────
@@ -19,15 +19,15 @@ export const SPRING_BOUNCY = { type: 'spring' as const, stiffness: 300, damping:
 // ─── Brand Palette ───────────────────────────────────────────────────────────
 
 export const BRAND = {
-  coral: '#ee716d',
-  ochre: '#e0a501',
-  darkTeal: '#3a8088',
-  olive: '#6B7C4E',
-  periwinkle: '#3869a4',
-  peach: '#e7a8a1',
-  navy: '#002a55',
-  cream: '#FBF5EC',
-  blush: '#f1e7e5',
+  coral: COLOR.coral,
+  ochre: COLOR.ochre,
+  darkTeal: COLOR.darkTeal,
+  olive: COLOR.olive,
+  periwinkle: COLOR.periwinkle,
+  peach: COLOR.peach,
+  navy: COLOR.navy,
+  cream: COLOR.cream,
+  blush: COLOR.blush,
 };
 
 // ─── Decorative elements ─────────────────────────────────────────────────────

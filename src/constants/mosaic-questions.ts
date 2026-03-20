@@ -6,6 +6,8 @@
  * that prioritizes under-sampled axes and avoids back-to-back type repeats.
  */
 
+import { COLOR } from '@/constants/theme';
+
 // ─── Types ───
 
 export type MosaicQuestionType = 'ab' | 'scene' | 'slider' | 'rank' | 'micro';
@@ -570,17 +572,17 @@ export const MOSAIC_QUESTIONS: MosaicQuestion[] = [
 // ─── Section metadata for UI ───
 
 export const MOSAIC_SECTIONS: Record<string, { label: string; emoji: string; color: string }> = {
-  Design:       { label: 'Design & Space',      emoji: '◼', color: '#d63020' },
-  Service:      { label: 'Service & Ritual',     emoji: '◻', color: '#a06c28' },
+  Design:       { label: 'Design & Space',      emoji: '◼', color: COLOR.signalRed },
+  Service:      { label: 'Service & Ritual',     emoji: '◻', color: COLOR.amber },
   Geography:    { label: 'Location & Geography',    emoji: '◆', color: '#2a7a56' },
-  Character:    { label: 'Character',            emoji: '◇', color: '#6844a0' },
-  Mood:         { label: 'Mood & Energy',        emoji: '●', color: '#eeb420' },
-  Scenario:     { label: 'Scenarios',            emoji: '○', color: '#4a6e7a' },
-  Identity:     { label: 'Identity',             emoji: '▲', color: '#002a55' },
-  Restaurant:   { label: 'Restaurants',          emoji: '▽', color: '#e87080' },
-  Bar:          { label: 'Bars & Drink',         emoji: '■', color: '#ee716d' },
+  Character:    { label: 'Character',            emoji: '◇', color: COLOR.violet },
+  Mood:         { label: 'Mood & Energy',        emoji: '●', color: COLOR.lightYellow },
+  Scenario:     { label: 'Scenarios',            emoji: '○', color: COLOR.ghost },
+  Identity:     { label: 'Identity',             emoji: '▲', color: COLOR.navy },
+  Restaurant:   { label: 'Restaurants',          emoji: '▽', color: COLOR.rose },
+  Bar:          { label: 'Bars & Drink',         emoji: '■', color: COLOR.coral },
   Activity:     { label: 'Activities',           emoji: '□', color: '#5a9a6a' },
   Shopping:     { label: 'Shopping',             emoji: '▼', color: '#9a7a5a' },
   Neighborhood: { label: 'Neighborhoods',        emoji: '△', color: '#4a7a9a' },
-  CrossDomain:  { label: 'Cross-Domain',         emoji: '◈', color: '#6b8b9a' },
+  CrossDomain:  { label: 'Cross-Domain',         emoji: '◈', color: COLOR.ghost },
 };

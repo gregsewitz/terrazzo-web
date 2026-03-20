@@ -1,5 +1,5 @@
 import { ImportedPlace } from '@/types';
-import { INK } from '@/constants/theme';
+import { INK, COLOR } from '@/constants/theme';
 
 /**
  * Generate a self-contained HTML page with a Google Map showing all places as markers.
@@ -15,14 +15,14 @@ export function generateShareableMapHTML(
 
   // Type color mapping
   const typeColors: Record<string, string> = {
-    restaurant: '#e87080',
-    hotel: '#ee716d',
-    bar: '#6844a0',
-    museum: '#2a7a56',
-    cafe: '#eeb420',
-    activity: '#e86830',
-    neighborhood: '#5a7a9a',
-    shop: '#a06c28',
+    restaurant: COLOR.rose,
+    hotel: COLOR.coral,
+    bar: COLOR.violet,
+    museum: COLOR.darkTeal,
+    cafe: COLOR.ochre,
+    activity: COLOR.orange,
+    neighborhood: COLOR.ghost,
+    shop: COLOR.amber,
   };
 
   const placesJSON = JSON.stringify(
@@ -34,7 +34,7 @@ export function generateShareableMapHTML(
       address: p.google?.address || p.location || '',
       rating: p.google?.rating,
       category: p.google?.category || p.type,
-      color: typeColors[p.type] || '#e86830',
+      color: typeColors[p.type] || COLOR.orange,
       mapsUrl: p.google?.placeId
         ? `https://www.google.com/maps/place/?q=place_id:${p.google.placeId}`
         : `https://www.google.com/maps/search/?api=1&query=${p.google?.lat},${p.google?.lng}`,
@@ -59,7 +59,7 @@ export function generateShareableMapHTML(
     }
     .header h1 {
       font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 18px; color: #002a55; font-weight: 400; font-style: italic;
+      font-size: 18px; color: ${COLOR.navy}; font-weight: 400; font-style: italic;
     }
     .header .count {
       font-size: 11px; color: rgba(0,42,85,0.7);
@@ -70,13 +70,13 @@ export function generateShareableMapHTML(
       padding: 4px 0;
     }
     .info-window h3 {
-      font-size: 14px; font-weight: 600; color: #002a55; margin-bottom: 4px;
+      font-size: 14px; font-weight: 600; color: ${COLOR.navy}; margin-bottom: 4px;
       font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
     }
     .info-window .meta { font-size: 11px; color: rgba(0,42,85,0.7); margin-bottom: 6px; }
-    .info-window .rating { color: #ee716d; font-weight: 600; }
+    .info-window .rating { color: ${COLOR.coral}; font-weight: 600; }
     .info-window a {
-      font-size: 11px; color: #ee716d; text-decoration: none; font-weight: 500;
+      font-size: 11px; color: ${COLOR.coral}; text-decoration: none; font-weight: 500;
     }
     .info-window a:hover { text-decoration: underline; }
   </style>

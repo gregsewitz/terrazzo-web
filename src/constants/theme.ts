@@ -12,21 +12,31 @@ export const FONT = {
 // CSS variables are the canonical source; these are for inline styles.
 
 export const COLOR = {
-  coral: '#ee716d',
-  navy: '#002a55',
-  teal: '#92ced6',
-  ochre: '#e0a501',
-  olive: '#6B7C4E',
-  peach: '#e7a8a1',
+  // ── Brand palette (from Brand Identity Guide) ──
+  coral: '#E86F5A',
+  navy: '#1A2D4A',
+  mintTeal: '#5EC4B2',
+  peach: '#F4BFA0',
+  ochre: '#E8B84B',
   cream: '#FBF5EC',
+  olive: '#6B7C4E',
   charcoal: '#2D2D2D',
   warmGray: '#A89888',
-  darkTeal: '#3a8088',
+  // ── Extended / utility colors ──
+  teal: '#5EC4B2',     // alias for mintTeal
+  darkTeal: '#3a8088', // darker teal for text-on-light
   periwinkle: '#3869a4',
   blush: '#f1e7e5',
   lightYellow: '#ebd896',
   darkBrown: '#413800',
   signalRed: '#d63020',
+  // ── Icon accent colors (Perriand system) ──
+  rose: '#e87080',     // Royère Pink — restaurant, lunch, food
+  violet: '#6844a0',   // Panton Violet — bar, character, evening
+  orange: '#e86830',   // Panton Orange — activity, afternoon, summer
+  ghost: '#6b8b9a',    // Ghost gray — neighborhood, transport, calendar
+  amber: '#a06c28',    // Amber — shop, service, currency
+  indigo: '#6366f1',   // Indigo — invite, swap
 } as const;
 
 // ─── Text color hierarchy ───

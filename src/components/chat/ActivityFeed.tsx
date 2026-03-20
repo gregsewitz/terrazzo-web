@@ -4,18 +4,18 @@ import { useState } from 'react';
 import type { Activity } from '@/stores/collaborationStore';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import type { PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 
 // ─── Activity type → PerriandIcon + color mapping ───
 const ACTIVITY_CONFIG: Record<string, { icon: PerriandIconName; color: string; accent: string; bg: string }> = {
-  collaborator_invited: { icon: 'invite',        color: '#6366f1', accent: '#6366f1', bg: 'rgba(99,102,241,0.06)' },
-  collaborator_joined:  { icon: 'wave',          color: '#3a8088', accent: '#3a8088', bg: 'rgba(58,128,136,0.06)' },
-  suggestion_added:     { icon: 'lightbulb',     color: '#ee716d', accent: '#eeb420', bg: 'rgba(238,113,109,0.06)' },
-  suggestion_accepted:  { icon: 'acceptCircle',  color: '#3a8088', accent: '#3a8088', bg: 'rgba(58,128,136,0.06)' },
-  suggestion_rejected:  { icon: 'rejectCircle',  color: '#d63020', accent: '#d63020', bg: 'rgba(214,48,32,0.06)' },
-  reaction_added:       { icon: 'loveReaction',  color: '#e87080', accent: '#e87080', bg: 'rgba(232,112,128,0.06)' },
+  collaborator_invited: { icon: 'invite',        color: COLOR.indigo, accent: COLOR.indigo, bg: `${COLOR.indigo}0f` },
+  collaborator_joined:  { icon: 'wave',          color: COLOR.darkTeal, accent: COLOR.darkTeal, bg: `${COLOR.darkTeal}0f` },
+  suggestion_added:     { icon: 'lightbulb',     color: COLOR.coral, accent: COLOR.ochre, bg: `${COLOR.coral}0f` },
+  suggestion_accepted:  { icon: 'acceptCircle',  color: COLOR.darkTeal, accent: COLOR.darkTeal, bg: `${COLOR.darkTeal}0f` },
+  suggestion_rejected:  { icon: 'rejectCircle',  color: COLOR.signalRed, accent: COLOR.signalRed, bg: `${COLOR.signalRed}0f` },
+  reaction_added:       { icon: 'loveReaction',  color: COLOR.rose, accent: COLOR.rose, bg: `${COLOR.rose}0f` },
   note_added:           { icon: 'chatBubble',    color: '#8b5cf6', accent: '#8b5cf6', bg: 'rgba(139,92,246,0.06)' },
-  place_moved:          { icon: 'swap',          color: '#6366f1', accent: '#6366f1', bg: 'rgba(99,102,241,0.06)' },
+  place_moved:          { icon: 'swap',          color: COLOR.indigo, accent: COLOR.indigo, bg: `${COLOR.indigo}0f` },
 };
 
 const FALLBACK_CONFIG = { icon: 'sparkle' as PerriandIconName, color: TEXT.secondary, accent: TEXT.secondary, bg: INK['05'] };

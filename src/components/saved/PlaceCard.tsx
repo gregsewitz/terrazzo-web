@@ -4,7 +4,7 @@ import { memo, useRef, useCallback } from 'react';
 import { ImportedPlace, REACTIONS, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/placeTypes';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { getDisplayLocation } from '@/lib/place-display';
 import { smartTruncate } from '@/lib/smart-truncate';
 import { getMatchTier } from '@/lib/match-tier';
@@ -145,7 +145,7 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
         <div className="flex items-center gap-1.5 flex-wrap mt-auto">
           {ratingReaction && (() => {
             // Use coral for 'myPlace' so it's visually distinct from the teal bookmark
-            const rxColor = place.rating?.reaction === 'myPlace' ? '#ee716d' : ratingReaction.color;
+            const rxColor = place.rating?.reaction === 'myPlace' ? COLOR.coral : ratingReaction.color;
             return (
               <span
                 className="px-1.5 py-0.5 rounded flex items-center gap-1"

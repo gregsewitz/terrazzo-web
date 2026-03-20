@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { FONT, TEXT, INK } from '@/constants/theme';
+import { FONT, TEXT, INK, COLOR } from '@/constants/theme';
 import { SOURCE_STYLES, ImportedPlace, getSourceStyle, getSourceLabel } from '@/types';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
@@ -125,7 +125,7 @@ export function MobileDetailCard({
               className="flex items-center justify-center rounded-lg flex-shrink-0"
               style={{
                 fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: '#ee716d', background: 'rgba(238,113,109,0.08)',
+                color: COLOR.coral, background: `${COLOR.coral}14`,
                 padding: '4px 8px',
               }}
             >
@@ -261,7 +261,7 @@ export function MobileGhostCard({
               className="flex items-center justify-center rounded-lg flex-shrink-0"
               style={{
                 fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: '#ee716d', background: 'rgba(238,113,109,0.08)',
+                color: COLOR.coral, background: `${COLOR.coral}14`,
                 padding: '4px 8px',
               }}
             >
@@ -288,7 +288,7 @@ export function MobileGhostCard({
             onClick={(e) => { e.stopPropagation(); onAdd(ghost); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl cursor-pointer"
             style={{
-              background: 'var(--t-verde, #3a7d44)', border: 'none',
+              background: COLOR.olive, border: 'none',
               color: 'white', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
             }}
           >
@@ -395,7 +395,7 @@ export function SidebarPlaceCard({
       </div>
       {place.matchScore && (
         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0" style={{
-          fontFamily: FONT.mono, color: '#ee716d', background: 'rgba(238,113,109,0.08)',
+          fontFamily: FONT.mono, color: COLOR.coral, background: `${COLOR.coral}14`,
         }}>
           {Math.round(place.matchScore)}%
         </span>
@@ -453,7 +453,7 @@ export function DesktopDetailCard({
             </div>
           </div>
           {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#ee716d', background: 'rgba(238,113,109,0.08)' }}>
+            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: COLOR.coral, background: `${COLOR.coral}14` }}>
               {Math.round(place.matchScore)}%
             </span>
           )}
@@ -576,7 +576,7 @@ export function DesktopGhostCard({
             </div>
           </div>
           {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: '#ee716d', background: 'rgba(238,113,109,0.08)' }}>
+            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: COLOR.coral, background: `${COLOR.coral}14` }}>
               {Math.round(place.matchScore)}%
             </span>
           )}
@@ -604,7 +604,7 @@ export function DesktopGhostCard({
             onClick={(e) => { e.stopPropagation(); onAdd(ghost); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl cursor-pointer"
             style={{
-              background: 'var(--t-verde, #3a7d44)', border: 'none',
+              background: COLOR.olive, border: 'none',
               color: 'white', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600,
             }}
           >

@@ -20,15 +20,15 @@ export const TYPE_ICONS: Record<PlaceType, PerriandIconName> = {
 // Each type gets a unique brand color for icon tints, badges, and gradients.
 
 export const TYPE_BRAND_COLORS: Record<PlaceType, string> = {
-  restaurant: COLOR.coral,       // #ee716d
-  hotel:      COLOR.navy,        // #002a55
-  rental:     COLOR.navy,        // #002a55
-  bar:        COLOR.darkTeal,    // #3a8088
-  cafe:       COLOR.ochre,       // #e0a501
-  museum:     COLOR.periwinkle,  // #3869a4
-  activity:   COLOR.olive,       // #6B7C4E
-  neighborhood: COLOR.teal,      // #92ced6
-  shop:       COLOR.peach,       // #e7a8a1
+  restaurant: COLOR.coral,
+  hotel:      COLOR.navy,
+  rental:     COLOR.navy,
+  bar:        COLOR.darkTeal,
+  cafe:       COLOR.ochre,
+  museum:     COLOR.periwinkle,
+  activity:   COLOR.olive,
+  neighborhood: COLOR.teal,
+  shop:       COLOR.peach,
 };
 
 // ─── Thumbnail gradients (2-stop, for cards) ───

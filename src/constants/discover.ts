@@ -2,6 +2,8 @@
 // Discover Feed — Editorial content for the Terrazzo discovery experience
 // ═══════════════════════════════════════════════════════════════════
 
+import { COLOR } from '@/constants/theme';
+
 export interface BecauseYouCard {
   signal: string;
   signalDomain: string;
@@ -305,7 +307,7 @@ export const MOOD_BOARDS: MoodBoard[] = [
   {
     mood: "When you want to eat your way through a city",
     description: "Walkable neighborhoods with your kind of places on every corner.",
-    color: "#ee716d",
+    color: COLOR.coral,
     places: [
       { name: "11th Arrondissement", location: "Paris, France", vibe: "Natural wine, no-choice menus", score: 91, googlePlaceId: "ChIJxSr71vZt5kcR8BqUaMOCCwU" },
       { name: "Södermalm", location: "Stockholm, Sweden", vibe: "Third-wave coffee, open sandwiches", score: 88, googlePlaceId: "ChIJc6euFuV3X0YRQmY6ng8b2Ho" },

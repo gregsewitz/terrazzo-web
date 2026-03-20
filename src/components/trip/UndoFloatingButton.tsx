@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { FONT } from '@/constants/theme';
+import { FONT, COLOR } from '@/constants/theme';
 
 /**
  * Floating undo button for the Day Planner.
@@ -76,7 +76,7 @@ export default function UndoFloatingButton() {
       {showTooltip && label && (
         <div
           style={{
-            background: 'var(--t-ink, #002a55)',
+            background: `var(--t-ink, ${COLOR.navy})`,
             color: 'var(--t-cream, #faf8f5)',
             padding: '5px 10px',
             borderRadius: 8,
@@ -114,7 +114,7 @@ export default function UndoFloatingButton() {
           height: 48,
           borderRadius: '50%',
           border: 'none',
-          background: 'var(--t-ink, #002a55)',
+          background: `var(--t-ink, ${COLOR.navy})`,
           color: 'var(--t-cream, #faf8f5)',
           cursor: 'pointer',
           display: 'flex',

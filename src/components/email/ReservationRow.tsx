@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { formatCompactDetails, type StagedReservation } from '@/lib/email-reservations-helpers';
 import type { PerriandIconName, ReactionId } from '@/types';
 
@@ -18,10 +18,10 @@ const TYPE_ICONS: Record<string, PerriandIconName> = {
 };
 
 const REACTIONS: { id: ReactionId; icon: PerriandIconName; label: string; color: string }[] = [
-  { id: 'myPlace', icon: 'myPlace', label: 'Obsessed', color: '#3a8088' },
-  { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: '#ee716d' },
-  { id: 'mixed', icon: 'mixed', label: 'Mixed', color: '#eeb420' },
-  { id: 'notMe', icon: 'notMe', label: 'Not me', color: '#d63020' },
+  { id: 'myPlace', icon: 'myPlace', label: 'Obsessed', color: COLOR.darkTeal },
+  { id: 'enjoyed', icon: 'enjoyed', label: 'Enjoyed', color: COLOR.coral },
+  { id: 'mixed', icon: 'mixed', label: 'Mixed', color: COLOR.ochre },
+  { id: 'notMe', icon: 'notMe', label: 'Not me', color: COLOR.signalRed },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────

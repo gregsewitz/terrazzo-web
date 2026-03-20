@@ -22,6 +22,7 @@
 'use client';
 
 import React from 'react';
+import { COLOR } from '@/constants/theme';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export type PerriandIconName =
 interface PerriandIconProps {
   name: PerriandIconName;
   size?: number;
-  /** Stroke color — defaults to Ink (#002a55) */
+  /** Stroke color — defaults to Navy */
   color?: string;
   /** Accent dot color — overrides the default per-icon accent */
   accent?: string;
@@ -69,61 +70,61 @@ interface PerriandIconProps {
 
 const ACCENT: Partial<Record<PerriandIconName, string>> = {
   // Place types
-  restaurant: '#e87080', // Royère Pink
-  bar:        '#6844a0', // Panton Violet
-  hotel:      '#ee716d', // Honey
-  cafe:       '#eeb420', // Chrome Yellow
-  museum:     '#3a8088', // Verde
-  activity:   '#e86830', // Panton Orange
-  neighborhood: '#6b8b9a', // Ghost
-  shop:       '#a06c28', // Amber
+  restaurant: COLOR.rose, // Royère Pink
+  bar:        COLOR.violet, // Panton Violet
+  hotel:      COLOR.coral, // Honey
+  cafe:       COLOR.ochre, // Chrome Yellow
+  museum:     COLOR.darkTeal, // Verde
+  activity:   COLOR.orange, // Panton Orange
+  neighborhood: COLOR.ghost, // Ghost
+  shop:       COLOR.amber, // Amber
   // Time slots
-  breakfast:  '#ee716d',
-  morning:    '#eeb420',
-  lunch:      '#e87080',
-  afternoon:  '#e86830',
-  dinner:     '#002a55',
-  evening:    '#6844a0',
+  breakfast:  COLOR.coral,
+  morning:    COLOR.ochre,
+  lunch:      COLOR.rose,
+  afternoon:  COLOR.orange,
+  dinner:     COLOR.navy,
+  evening:    COLOR.violet,
   // Taste domains
-  design:     '#d63020',
-  character:  '#6844a0',
-  food:       '#e87080',
-  location:   '#3a8088',
-  service:    '#a06c28',
-  wellness:   '#eeb420',
+  design:     COLOR.signalRed,
+  character:  COLOR.violet,
+  food:       COLOR.rose,
+  location:   COLOR.darkTeal,
+  service:    COLOR.amber,
+  wellness:   COLOR.ochre,
   // Reactions (use reaction color as accent)
-  myPlace:    '#3a8088',
-  enjoyed:    '#ee716d',
-  mixed:      '#eeb420',
-  notMe:      '#d63020',
+  myPlace:    COLOR.darkTeal,
+  enjoyed:    COLOR.coral,
+  mixed:      COLOR.ochre,
+  notMe:      COLOR.signalRed,
   // Sources
-  friend:     '#3a8088',
-  terrazzo:   '#d63020',
+  friend:     COLOR.darkTeal,
+  terrazzo:   COLOR.signalRed,
   // Navigation
-  plan:       '#d63020',
+  plan:       COLOR.signalRed,
   // Misc
-  star:       '#eeb420',
-  pin:        '#3a8088',
-  sparkle:    '#eeb420',
-  summer:     '#e86830',
-  lightning:  '#e86830',
+  star:       COLOR.ochre,
+  pin:        COLOR.darkTeal,
+  sparkle:    COLOR.ochre,
+  summer:     COLOR.orange,
+  lightning:  COLOR.orange,
   // Transport
-  transport:    '#6b8b9a',
+  transport:    COLOR.ghost,
   // Collaboration / Activity
-  invite:       '#6366f1',
-  wave:         '#3a8088',
-  lightbulb:    '#eeb420',
-  acceptCircle: '#3a8088',
-  rejectCircle: '#d63020',
-  chatBubble:   '#ee716d',
-  loveReaction: '#e87080',
-  unsure:       '#6b8b9a',
-  swap:         '#6366f1',
-  alert:        '#e86830',
-  currency:     '#a06c28',
-  calendar:     '#6b8b9a',
-  person:       '#6844a0',
-  quote:        '#ee716d',
+  invite:       COLOR.indigo,
+  wave:         COLOR.darkTeal,
+  lightbulb:    COLOR.ochre,
+  acceptCircle: COLOR.darkTeal,
+  rejectCircle: COLOR.signalRed,
+  chatBubble:   COLOR.coral,
+  loveReaction: COLOR.rose,
+  unsure:       COLOR.ghost,
+  swap:         COLOR.indigo,
+  alert:        COLOR.orange,
+  currency:     COLOR.amber,
+  calendar:     COLOR.ghost,
+  person:       COLOR.violet,
+  quote:        COLOR.coral,
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────
@@ -367,7 +368,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M16,6 C16,6 24,14 24,19 C24,24 20,26 16,26 C12,26 8,24 8,19 C8,14 16,6 16,6Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
       <circle cx="16" cy="18" r="2.5" stroke={s} strokeWidth="1.5" fill="none" />
-      <circle cx="16" cy="18" r="1" fill={a || '#e86830'} />
+      <circle cx="16" cy="18" r="1" fill={a || COLOR.orange} />
     </>
   ),
 
@@ -377,7 +378,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
       <line x1="11" y1="11" x2="21" y2="11" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
       <line x1="11" y1="15" x2="21" y2="15" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
       <line x1="11" y1="19" x2="17" y2="19" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
-      <circle cx="20" cy="8" r="1" fill={a || '#ee716d'} />
+      <circle cx="20" cy="8" r="1" fill={a || COLOR.coral} />
     </>
   ),
 
@@ -385,7 +386,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M20,7 L25,12 L13,24 L8,24 L8,19 Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <line x1="17" y1="10" x2="22" y2="15" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".4" />
-      <circle cx="10" cy="22" r="1" fill={a || '#002a55'} />
+      <circle cx="10" cy="22" r="1" fill={a || COLOR.navy} />
     </>
   ),
 
@@ -402,7 +403,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <rect x="6" y="8" width="20" height="16" rx="2" stroke={s} strokeWidth="1.5" fill="none" />
       <line x1="6" y1="14" x2="26" y2="14" stroke={s} strokeWidth="1.5" />
-      <circle cx="12" cy="20" r="1" fill={a || '#002a55'} />
+      <circle cx="12" cy="20" r="1" fill={a || COLOR.navy} />
     </>
   ),
 
@@ -410,7 +411,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M16,6 L26,26 L6,26 Z" stroke={s} strokeWidth="1.5" fill="none" strokeLinejoin="round" />
       <line x1="16" y1="14" x2="16" y2="20" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="16" cy="11" r="1" fill={a || '#d63020'} />
+      <circle cx="16" cy="11" r="1" fill={a || COLOR.signalRed} />
     </>
   ),
 
@@ -437,7 +438,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
   edit: (s, a) => (
     <>
       <path d="M20,7 L25,12 L13,24 L8,24 L8,19 Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <circle cx="10" cy="22" r="1" fill={a || '#002a55'} />
+      <circle cx="10" cy="22" r="1" fill={a || COLOR.navy} />
     </>
   ),
 
@@ -492,7 +493,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
   bookmark: (s, a) => (
     <>
       <path d="M10,6 L10,26 L16,21 L22,26 L22,6 Z" stroke={s} strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-      <circle cx="16" cy="12" r="1.2" fill={a || 'var(--t-verde, #3a8088)'} />
+      <circle cx="16" cy="12" r="1.2" fill={a || COLOR.darkTeal} />
     </>
   ),
 
@@ -675,7 +676,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
 export function PerriandIcon({
   name,
   size = 20,
-  color = '#002a55',
+  color = COLOR.navy,
   accent,
   opacity = 1,
   className,

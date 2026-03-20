@@ -1,5 +1,7 @@
 'use client';
 
+import { COLOR } from '@/constants/theme';
+
 export default function Error({
   error,
   reset,
@@ -9,7 +11,7 @@ export default function Error({
 }) {
   return (
     <div style={{ padding: '2rem', fontFamily: 'monospace', maxWidth: 600, margin: '0 auto' }}>
-      <h2 style={{ color: '#d63020' }}>Something went wrong</h2>
+      <h2 style={{ color: COLOR.signalRed }}>Something went wrong</h2>
       <pre style={{
         background: '#f5f0e6',
         padding: '1rem',
@@ -27,7 +29,7 @@ export default function Error({
         style={{
           marginTop: '1rem',
           padding: '0.5rem 1rem',
-          background: '#002a55',
+          background: COLOR.navy,
           color: '#f8f3ea',
           border: 'none',
           borderRadius: '6px',

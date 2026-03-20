@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { ScratchpadEntry, ScratchpadEntryType } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 
 // ─── Entry type config ───
 const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIconName; placeholder: string }[] = [
@@ -16,8 +16,8 @@ const ENTRY_TYPES: { type: ScratchpadEntryType; label: string; icon: PerriandIco
 // ─── Accent color options ───
 const ACCENT_COLORS = [
   { value: undefined, label: 'None', bg: INK['06'] },
-  { value: 'verde', label: 'Green', bg: 'rgba(58,128,136,0.12)' },
-  { value: 'honey', label: 'Gold', bg: 'rgba(238,113,109,0.12)' },
+  { value: 'verde', label: 'Green', bg: `${COLOR.darkTeal}1f` },
+  { value: 'honey', label: 'Gold', bg: `${COLOR.coral}1f` },
   { value: 'blue', label: 'Blue', bg: 'rgba(58,140,180,0.12)' },
   { value: 'rose', label: 'Rose', bg: 'rgba(180,80,80,0.12)' },
 ];
@@ -321,7 +321,7 @@ function ScratchpadCard({
       <div className="flex items-center justify-between px-2.5 pt-2 pb-0.5">
         <div className="flex items-center gap-1.5">
           {entry.pinned && (
-            <PerriandIcon name="pin" size={10} color="var(--t-honey, #ee716d)" />
+            <PerriandIcon name="pin" size={10} color={`var(--t-honey, ${COLOR.coral})`} />
           )}
           <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {entry.type === 'link' ? '🔗' : entry.type === 'checklist' ? '☑' : '✎'} {timeAgo}

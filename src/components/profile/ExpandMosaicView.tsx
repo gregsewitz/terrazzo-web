@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { MOSAIC_QUESTIONS, MOSAIC_SECTIONS, type MosaicQuestion } from '@/constants/mosaic-questions';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
 // ─── Selection Engine ───
@@ -218,7 +218,7 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
               <div key={d.domain} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 80, fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{d.label}</div>
                 <div style={{ flex: 1, height: 4, borderRadius: 2, background: INK['06'] }}>
-                  <div style={{ width: `${d.pct}%`, height: '100%', borderRadius: 2, background: d.pct > 50 ? '#3a8088' : d.pct > 20 ? '#ee716d' : INK['20'], transition: 'width 0.4s ease' }} />
+                  <div style={{ width: `${d.pct}%`, height: '100%', borderRadius: 2, background: d.pct > 50 ? COLOR.darkTeal : d.pct > 20 ? COLOR.coral : INK['20'], transition: 'width 0.4s ease' }} />
                 </div>
                 <div style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, width: 36, textAlign: 'right' }}>{d.answered}/{d.total}</div>
               </div>
@@ -276,8 +276,8 @@ export default function ExpandMosaicView({ onClose }: ExpandMosaicViewProps) {
               <span
                 key={s}
                 style={{
-                  fontFamily: FONT.mono, fontSize: 9, color: '#3a8088',
-                  background: 'rgba(58,128,136,0.08)', padding: '3px 8px', borderRadius: 12,
+                  fontFamily: FONT.mono, fontSize: 9, color: COLOR.darkTeal,
+                  background: `${COLOR.darkTeal}14`, padding: '3px 8px', borderRadius: 12,
                 }}
               >
                 +{s}

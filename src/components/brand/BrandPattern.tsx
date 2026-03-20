@@ -1,21 +1,22 @@
 'use client';
 
 import React from 'react';
+import { COLOR } from '@/constants/theme';
 
 /**
  * Brand color map — maps semantic color names to CSS variable values.
  * Uses the new brand palette tokens defined in globals.css.
  */
 const BRAND_COLORS: Record<string, string> = {
-  navy: 'var(--t-navy, #002a55)',
-  cream: 'var(--t-cream, #FBF5EC)',
-  coral: 'var(--t-coral, #ee716d)',
-  teal: 'var(--t-teal, #92ced6)',
-  ochre: 'var(--t-ochre, #e0a501)',
-  olive: 'var(--t-olive, #6B7C4E)',
-  charcoal: 'var(--t-charcoal, #2D2D2D)',
-  'warm-gray': 'var(--t-warm-gray, #A89888)',
-  peach: 'var(--t-peach, #e7a8a1)',
+  navy: `var(--t-navy, ${COLOR.navy})`,
+  cream: `var(--t-cream, ${COLOR.cream})`,
+  coral: `var(--t-coral, ${COLOR.coral})`,
+  teal: `var(--t-teal, ${COLOR.teal})`,
+  ochre: `var(--t-ochre, ${COLOR.ochre})`,
+  olive: `var(--t-olive, ${COLOR.olive})`,
+  charcoal: `var(--t-charcoal, ${COLOR.charcoal})`,
+  'warm-gray': `var(--t-warm-gray, ${COLOR.warmGray})`,
+  peach: `var(--t-peach, ${COLOR.peach})`,
 };
 
 /**

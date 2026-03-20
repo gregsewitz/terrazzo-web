@@ -2,7 +2,7 @@
 
 import { memo, useState, useCallback } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import type { QuickEntry, QUICK_ENTRY_CATEGORY_ICONS } from '@/types';
 import { QUICK_ENTRY_CATEGORY_ICONS as CATEGORY_ICONS } from '@/types';
 import { formatTime12h } from '../place/PlaceTimeEditor';
@@ -22,11 +22,11 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
 
   // Category accent colors — subtle, muted
   const categoryColors: Record<string, string> = {
-    activity: '#3a8088',    // dark-teal
+    activity: COLOR.darkTeal,
     transport: '#5a7a9a',   // steel blue
-    dining: '#ee716d',      // honey
-    logistics: '#6b8b9a',   // ghost
-    other: '#6b8b9a',
+    dining: COLOR.coral,
+    logistics: COLOR.ghost,
+    other: COLOR.ghost,
   };
   const accentColor = categoryColors[entry.category] || categoryColors.other;
 

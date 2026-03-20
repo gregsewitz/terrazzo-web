@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FONT } from '@/constants/theme';
+import { FONT, COLOR } from '@/constants/theme';
 
 /**
  * Small pill badge shown in the corner of a grid cell when ghost suggestions
@@ -19,11 +19,11 @@ function GhostBadge({ count, onClick }: { count: number; onClick: () => void }) 
         right: 4,
         zIndex: 5,
         background: 'var(--t-cream)',
-        border: '1px dashed rgba(238,113,109,0.5)',
+        border: `1px dashed ${COLOR.coral}80`,
         fontFamily: FONT.mono,
         fontSize: 8,
         fontWeight: 600,
-        color: 'var(--t-coral, #ee716d)',
+        color: `var(--t-coral, ${COLOR.coral})`,
         whiteSpace: 'nowrap',
         lineHeight: 1,
       }}

@@ -799,7 +799,7 @@ const TRAVEL_STATS = {
 };
 
 const CONTINENTS = [
-  { name: 'Europe', visits: 22, pct: 58, color: '#ee716d' },
+  { name: 'Europe', visits: 22, pct: 58, color: COLOR.coral },
   { name: 'Asia', visits: 9, pct: 24, color: '#e86830' },
   { name: 'North America', visits: 5, pct: 13, color: '#4a6741' },
   { name: 'Africa', visits: 2, pct: 5, color: '#6844a0' },
@@ -929,7 +929,7 @@ export function TravelStatsSection() {
 // ═══════════════════════════════════════════
 
 const TRIPS: Array<{ title: string; dates: string; places: number; upcoming: boolean; color: string; icon: import('@/types').PerriandIconName }> = [
-  { title: 'Paris in Spring', dates: 'Apr 12\u201316, 2026', places: 7, upcoming: true, color: '#ee716d', icon: 'hotel' },
+  { title: 'Paris in Spring', dates: 'Apr 12\u201316, 2026', places: 7, upcoming: true, color: COLOR.coral, icon: 'hotel' },
   { title: 'Kyoto Autumn', dates: 'Nov 3\u201310, 2025', places: 12, upcoming: false, color: '#e86830', icon: 'morning' },
   { title: 'Amalfi Coast', dates: 'Jun 18\u201325, 2025', places: 9, upcoming: false, color: '#4a6741', icon: 'summer' },
   { title: 'Marrakech Weekend', dates: 'Mar 7\u20139, 2025', places: 5, upcoming: false, color: '#6844a0', icon: 'activity' },
@@ -1061,7 +1061,7 @@ const EVOLUTION_PHASES = [
     label: 'The Aesthetic Pilgrim',
     description: 'Now you travel to expand your sense of what\u2019s possible. Design, food, culture \u2014 everything is taste.',
     shifts: { design: 92, character: 88, food: 90, service: 85 },
-    color: '#ee716d',
+    color: COLOR.coral,
   },
 ];
 
@@ -1191,7 +1191,7 @@ const BUCKET_LIST: Array<{
   { destination: 'Fogo Island, Canada', reason: 'Architecture at the edge of the world', progress: 40, color: '#4a6b8b', icon: 'design', status: 'Dreaming' },
   { destination: 'Naoshima, Japan', reason: 'Art islands that blur gallery and landscape', progress: 65, color: '#6844a0', icon: 'museum', status: 'Researching' },
   { destination: 'Pantelleria, Italy', reason: 'Volcanic gardens and dammusi architecture', progress: 30, color: '#4a6741', icon: 'activity', status: 'Dreaming' },
-  { destination: 'Bhutan', reason: 'Gross National Happiness — a country built on intention', progress: 20, color: '#ee716d', icon: 'wellness', status: 'Someday' },
+  { destination: 'Bhutan', reason: 'Gross National Happiness — a country built on intention', progress: 20, color: COLOR.coral, icon: 'wellness', status: 'Someday' },
   { destination: 'Cape Town, South Africa', reason: 'Where wine, design, and landscape collide', progress: 55, color: '#8b4a4a', icon: 'bar', status: 'Researching' },
 ];
 

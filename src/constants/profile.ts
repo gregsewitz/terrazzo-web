@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { T, PerriandIconName } from '@/types';
+import { COLOR } from '@/constants/theme';
 
 export interface TasteProfile {
   overallArchetype: string;
@@ -149,27 +150,27 @@ export function formatDomain(key: string): string {
 
 // Domain colors — each domain gets a unique brand color
 export const DIMENSION_COLORS: Record<string, string> = {
-  "Design": "#ee716d",       // Coral
-  "Atmosphere": "#e0a501",    // Ochre
-  "Character": "#6B7C4E",     // Olive
-  "Service": "#002a55",       // Navy
-  "FoodDrink": "#3a8088",     // Dark Teal
-  "Geography": "#92ced6",     // Teal
-  "Wellness": "#3869a4",      // Periwinkle
-  "Sustainability": "#413800", // Dark Brown
-  "Rejection": "#002a55",     // Navy
+  "Design": COLOR.coral,
+  "Atmosphere": COLOR.ochre,
+  "Character": COLOR.olive,
+  "Service": COLOR.navy,
+  "FoodDrink": COLOR.darkTeal,
+  "Geography": COLOR.teal,
+  "Wellness": COLOR.periwinkle,
+  "Sustainability": COLOR.darkBrown,
+  "Rejection": COLOR.navy,
 };
 
 // Taste radar axis colors — each domain gets a distinct brand color
 export const AXIS_COLORS: Record<string, string> = {
-  Design: "#ee716d",         // Coral
-  Atmosphere: "#e0a501",      // Ochre
-  Character: "#6B7C4E",       // Olive
-  Service: "#002a55",          // Navy
-  FoodDrink: "#3a8088",       // Dark Teal
-  Geography: "#92ced6",        // Teal
-  Wellness: "#3869a4",         // Periwinkle
-  Sustainability: "#413800",    // Dark Brown
+  Design: COLOR.coral,
+  Atmosphere: COLOR.ochre,
+  Character: COLOR.olive,
+  Service: COLOR.navy,
+  FoodDrink: COLOR.darkTeal,
+  Geography: COLOR.teal,
+  Wellness: COLOR.periwinkle,
+  Sustainability: COLOR.darkBrown,
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
@@ -182,4 +183,4 @@ export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
 };
 
 // Context shift card colors — brand palette rotation
-export const CONTEXT_COLORS = ["#002a55", "#92ced6", "#ee716d", "#6B7C4E", "#e0a501", "#e7a8a1"];
+export const CONTEXT_COLORS = [COLOR.navy, COLOR.teal, COLOR.coral, COLOR.olive, COLOR.ochre, COLOR.peach];

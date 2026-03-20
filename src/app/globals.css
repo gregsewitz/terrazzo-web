@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── Terrazzo Brand Palette ─── */
+  /* ─── Terrazzo Brand Palette (from Brand Identity Guide) ─── */
   /* Primary */
-  --t-coral: #ee716d;
-  --t-navy: #002a55;
+  --t-coral: #E86F5A;
+  --t-navy: #1A2D4A;
   /* Secondary */
-  --t-teal: #92ced6;
-  --t-ochre: #e0a501;
+  --t-teal: #5EC4B2;      /* Mint Teal */
+  --t-ochre: #E8B84B;     /* Ochre Gold */
   --t-olive: #6B7C4E;
   /* Supporting */
-  --t-peach: #e7a8a1;
+  --t-peach: #F4BFA0;
   --t-cream: #FBF5EC;
   --t-charcoal: #2D2D2D;
   --t-warm-gray: #A89888;
@@ -38,12 +38,12 @@
   --t-linen: var(--t-cream);
 
   /* ─── Domain Colors ─── */
-  --domain-design: #ee716d;     /* Coral */
+  --domain-design: #E86F5A;     /* Coral */
   --domain-character: #6B7C4E;  /* Olive */
-  --domain-service: #e0a501;    /* Ochre */
-  --domain-food: #e7a8a1;       /* Peach */
-  --domain-location: #92ced6;   /* Teal */
-  --domain-wellness: #002a55;   /* Navy */
+  --domain-service: #E8B84B;    /* Ochre Gold */
+  --domain-food: #F4BFA0;       /* Peach */
+  --domain-location: #5EC4B2;   /* Mint Teal */
+  --domain-wellness: #1A2D4A;   /* Navy */
 
   /* ─── Semantic Text Colors ─── */
   /* Change these 5 values to restyle ALL text across the app */

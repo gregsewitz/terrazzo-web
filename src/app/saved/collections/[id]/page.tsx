@@ -12,7 +12,7 @@ import ShareSheet from '@/components/trip/ShareSheet';
 import DesktopNav from '@/components/ui/DesktopNav';
 import FilterSortBar from '@/components/ui/FilterSortBar';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import AddPlacesToCollectionSheet from '@/components/library/AddPlacesToCollectionSheet';
 import BrandLoader from '@/components/ui/BrandLoader';
@@ -203,8 +203,8 @@ function CollectionDetailContent() {
               onClick={() => setMapOpen(true)}
               className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
               style={{
-                background: 'rgba(238,113,109,0.08)',
-                color: '#8a6a2a',
+                background: `${COLOR.coral}14`,
+                color: COLOR.amber,
                 border: 'none',
                 fontFamily: FONT.mono,
               }}
@@ -959,7 +959,7 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
 
         <div className="flex items-center gap-1.5 flex-wrap">
           {reaction && (() => {
-            const rxColor = place.rating?.reaction === 'myPlace' ? '#ee716d' : reaction.color;
+            const rxColor = place.rating?.reaction === 'myPlace' ? COLOR.coral : reaction.color;
             return (
               <span
                 className="px-1.5 py-0.5 rounded flex items-center gap-1"

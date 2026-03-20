@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { DreamBoardEntry } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import {
   extractDomain,
   parseMarkdownBlocks,
@@ -322,7 +322,7 @@ export function DreamBoardCard({
       className="group/entry relative"
       style={{
         borderLeft: entry.pinned
-          ? '2px solid var(--t-coral, #ee716d)'
+          ? `2px solid var(--t-coral, ${COLOR.coral})`
           : '2px solid transparent',
         paddingLeft: compact ? 10 : 14,
         paddingTop: 6,
@@ -335,7 +335,7 @@ export function DreamBoardCard({
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-1.5">
           {entry.pinned && (
-            <PerriandIcon name="pin" size={9} color="var(--t-coral, #ee716d)" />
+            <PerriandIcon name="pin" size={9} color={`var(--t-coral, ${COLOR.coral})`} />
           )}
           <span className="text-[9px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
             {timeAgo}
@@ -352,7 +352,7 @@ export function DreamBoardCard({
             style={{ background: 'transparent' }}
             title={entry.pinned ? 'Unpin' : 'Pin'}
           >
-            <PerriandIcon name="pin" size={10} color={entry.pinned ? 'var(--t-coral, #ee716d)' : INK['30']} />
+            <PerriandIcon name="pin" size={10} color={entry.pinned ? `var(--t-coral, ${COLOR.coral})` : INK['30']} />
           </button>
           {(entry.type === 'text' || entry.type === 'link') && (
             <button

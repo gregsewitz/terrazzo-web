@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { Logo } from '@/components/brand';
-import { FONT, TEXT, INK } from '@/constants/theme';
+import { FONT, TEXT, INK, COLOR } from '@/constants/theme';
 import { useAddBarStore } from '@/stores/addBarStore';
 
 interface DesktopNavProps {
@@ -26,7 +26,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
       className="flex items-center justify-between px-6"
       style={{
         height: 56,
-        background: '#ee716d',
+        background: COLOR.coral,
         boxShadow: 'none',
       }}
     >
@@ -157,7 +157,7 @@ function NavLink({
       <PerriandIcon
         name={icon}
         size={16}
-        color={isActive ? '#ee716d' : 'rgba(255,255,255,0.85)'}
+        color={isActive ? COLOR.coral : 'rgba(255,255,255,0.85)'}
         opacity={1}
       />
       <span

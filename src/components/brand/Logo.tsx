@@ -2,17 +2,18 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { COLOR } from '@/constants/theme';
 
 /**
  * Brand color map for inline SVG fills (icon variant only).
  */
 const BRAND_COLORS: Record<string, string> = {
-  navy: 'var(--t-navy, #002a55)',
-  cream: 'var(--t-cream, #FBF5EC)',
-  coral: 'var(--t-coral, #ee716d)',
-  teal: 'var(--t-teal, #92ced6)',
-  ochre: 'var(--t-ochre, #e0a501)',
-  olive: 'var(--t-olive, #6B7C4E)',
+  navy: `var(--t-navy, ${COLOR.navy})`,
+  cream: `var(--t-cream, ${COLOR.cream})`,
+  coral: `var(--t-coral, ${COLOR.coral})`,
+  teal: `var(--t-teal, ${COLOR.teal})`,
+  ochre: `var(--t-ochre, ${COLOR.ochre})`,
+  olive: `var(--t-olive, ${COLOR.olive})`,
 };
 
 /**
@@ -21,8 +22,7 @@ const BRAND_COLORS: Record<string, string> = {
  */
 const DARK_BACKGROUNDS = new Set([
   'navy', 'charcoal', 'coral', 'olive',
-  '#002a55', '#002a55', '#2D2D2D', '#2d2d2d',
-  '#ee716d', '#ee716d', '#6B7C4E', '#6b7c4e',
+  COLOR.navy, COLOR.charcoal, COLOR.coral, COLOR.olive,
 ]);
 
 /**

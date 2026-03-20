@@ -1,5 +1,7 @@
 'use client';
 
+import { COLOR } from '@/constants/theme';
+
 export default function SavedError({
   error,
   reset,
@@ -9,7 +11,7 @@ export default function SavedError({
 }) {
   return (
     <div style={{ padding: '2rem', maxWidth: 480, margin: '4rem auto', textAlign: 'center' }}>
-      <h2 style={{ fontSize: '1.25rem', color: '#002a55', marginBottom: '0.5rem' }}>
+      <h2 style={{ fontSize: '1.25rem', color: COLOR.navy, marginBottom: '0.5rem' }}>
         Couldn&apos;t load your saved places
       </h2>
       <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
@@ -19,7 +21,7 @@ export default function SavedError({
         onClick={reset}
         style={{
           padding: '0.5rem 1.25rem',
-          background: '#002a55',
+          background: COLOR.navy,
           color: '#f8f3ea',
           border: 'none',
           borderRadius: '8px',

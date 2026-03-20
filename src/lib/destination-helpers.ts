@@ -3,6 +3,8 @@
  * and assigning brand-palette colors to destinations.
  */
 
+import { COLOR } from '@/constants/theme';
+
 // ─── Brand destination palette ───
 // Single source of truth for destination colors across the app.
 // 7 brand colors that cycle for multi-city trips.
@@ -10,13 +12,13 @@
 export type DestColor = { bg: string; accent: string; text: string };
 
 const DEST_PALETTE: DestColor[] = [
-  { bg: 'rgba(238,113,109,0.08)', accent: '#ee716d', text: '#c44a46' }, // Coral
-  { bg: 'rgba(58,128,136,0.08)',  accent: '#3a8088', text: '#2a6068' }, // Dark Teal
-  { bg: 'rgba(224,165,1,0.08)',   accent: '#e0a501', text: '#b08401' }, // Ochre
-  { bg: 'rgba(107,124,78,0.08)',  accent: '#6B7C4E', text: '#4a5a30' }, // Olive
-  { bg: 'rgba(56,105,164,0.08)',  accent: '#3869a4', text: '#2a4f7a' }, // Periwinkle
-  { bg: 'rgba(231,168,161,0.08)', accent: '#e7a8a1', text: '#c08078' }, // Peach
-  { bg: 'rgba(146,206,214,0.08)', accent: '#92ced6', text: '#5a9aa4' }, // Teal
+  { bg: `${COLOR.coral}14`, accent: COLOR.coral, text: '#b85a4a' }, // Coral
+  { bg: `${COLOR.darkTeal}14`, accent: COLOR.darkTeal, text: '#2a6068' }, // Dark Teal
+  { bg: `${COLOR.ochre}14`, accent: COLOR.ochre, text: '#b8943c' }, // Ochre
+  { bg: `${COLOR.olive}14`, accent: COLOR.olive, text: '#4a5a30' }, // Olive
+  { bg: `${COLOR.periwinkle}14`, accent: COLOR.periwinkle, text: '#2a4f7a' }, // Periwinkle
+  { bg: `${COLOR.peach}14`, accent: COLOR.peach, text: '#c09880' }, // Peach
+  { bg: `${COLOR.teal}14`, accent: COLOR.teal, text: '#5a9aa4' }, // Teal
 ];
 
 /** Get a destination color by index (cycles through brand palette). */

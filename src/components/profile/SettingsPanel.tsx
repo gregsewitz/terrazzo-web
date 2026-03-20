@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 
 export interface SettingsPanelProps {
   expandedSection: string | null;
@@ -240,7 +240,7 @@ export function SettingsPanel({
                       onClick={onScanNow}
                       disabled={scanState === 'scanning' || scanState === 'parsing'}
                       className="text-[10px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer"
-                      style={{ background: '#3a8088', color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}
+                      style={{ background: COLOR.darkTeal, color: 'white', opacity: scanState === 'scanning' || scanState === 'parsing' ? 0.7 : 1 }}
                     >
                       {scanState === 'scanning' ? 'Scanning…' : scanState === 'parsing' ? `Parsing${scanResult?.emailsParsed ? ` ${scanResult.emailsParsed}/${scanResult.emailsFound}` : '…'}` : scanState === 'done' ? '✓ Done' : scanState === 'failed' ? 'Retry Scan' : 'Scan Inbox'}
                     </button>
