@@ -36,7 +36,7 @@ export function generateShareableMapHTML(
       category: p.google?.category || p.type,
       color: typeColors[p.type] || COLOR.coral,
       mapsUrl: p.google?.placeId
-        ? `https://www.google.com/maps/place/?q=place_id:${p.google.placeId}`
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${p.google.placeId}`
         : `https://www.google.com/maps/search/?api=1&query=${p.google?.lat},${p.google?.lng}`,
     }))
   );

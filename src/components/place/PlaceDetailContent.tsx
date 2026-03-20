@@ -305,7 +305,7 @@ function PlaceDetailContent({
         {hydratedGoogle && (hydratedGoogle.address || hydratedGoogle.website || hydratedGoogle.phone || hydratedGoogle.placeId || hydratedGoogle.lat) && (() => {
           const g = hydratedGoogle as Record<string, unknown> & { placeId?: string; lat?: number; lng?: number; address?: string; website?: string; phone?: string };
           const mapsUrl = g.placeId
-            ? `https://www.google.com/maps/place/?q=place_id:${g.placeId}`
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name)}&query_place_id=${g.placeId}`
             : g.lat && g.lng
               ? `https://www.google.com/maps/search/?api=1&query=${g.lat},${g.lng}`
               : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.name} ${item.location}`)}`;
