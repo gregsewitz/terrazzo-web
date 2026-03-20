@@ -468,45 +468,51 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Match score — taste match section */}
+        {/* Taste Match — combined section: score, mosaic, signal resonance */}
         {!isPrivateListing ? (
           <FadeInSection delay={0.15} direction="up" distance={18}>
-            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}`, cursor: onViewBriefing ? 'pointer' : 'default' }}
-              onClick={onViewBriefing}
-              role={onViewBriefing ? 'button' : undefined}
-              tabIndex={onViewBriefing ? 0 : undefined}
-              onKeyDown={onViewBriefing ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewBriefing(); } } : undefined}
-            >
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.coral}14`, color: COLOR.coral, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.coral, flexShrink: 0 }} />
                 Taste Match
               </div>
-              <div className="flex items-center gap-4">
-                {(() => {
-                  const tier = getMatchTier(hydratedMatchScore);
-                  return (
-                    <div
-                      className="flex items-center justify-center px-3 py-2 rounded-xl flex-shrink-0"
-                      style={{ background: tier.bg, minWidth: 56 }}
-                    >
-                      <span style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+
+              {/* Score + tier + top signals row */}
+              <div className="flex items-start gap-4 mb-4">
+                <div className="flex flex-col items-center flex-shrink-0" style={{ minWidth: 48 }}>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 22, fontWeight: 700, color: COLOR.navy, lineHeight: 1 }}>
+                    {hydratedMatchScore}
+                  </span>
+                  {(() => {
+                    const tier = getMatchTier(hydratedMatchScore);
+                    return (
+                      <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>
                         {tier.shortLabel}
                       </span>
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
+                </div>
                 <div className="flex-1 min-w-0">
                   {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 ? (
-                    <SignalResonanceStrip
-                      clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
-                        label: c.label,
-                        domain: c.domain as TasteDomain,
-                        score: c.score,
-                        signals: c.signals,
-                      }))}
-                      variant="compact"
-                      layout={isDesktop ? 'desktop' : 'mobile'}
-                    />
+                    <div className="flex flex-col gap-1.5">
+                      {resolvedItem.matchExplanation.topClusters.slice(0, 3).map((c, i) => {
+                        const color = DOMAIN_COLORS[c.domain as TasteDomain];
+                        const label = c.label.includes(':') ? c.label.split(':')[1] : c.label;
+                        const cleaned = label.replace(/-/g, ' ').replace(/\b(format|style|emphasis|preference|level)\b/gi, '').trim().replace(/\s+/g, ' ');
+                        const titleCased = cleaned.replace(/\b\w/g, ch => ch.toUpperCase());
+                        return (
+                          <div key={i} className="flex items-center gap-2">
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                            <span className="text-[12px]" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
+                              {titleCased}
+                            </span>
+                            <span className="text-[9px] font-medium" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                              {formatDomain(c.domain as TasteDomain)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   ) : hydratedBreakdown ? (() => {
                     const topDomains = TASTE_DOMAINS
                       .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
@@ -514,16 +520,17 @@ function PlaceDetailContent({
                       .sort((a, b) => b.score - a.score)
                       .slice(0, 3);
                     return topDomains.length > 0 ? (
-                      <div className="flex items-center gap-1 flex-wrap">
+                      <div className="flex flex-col gap-1.5">
                         {topDomains.map(({ domain, score }) => (
-                          <span
-                            key={domain}
-                            className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
-                            style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
-                          >
-                            <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
-                            {formatDomain(domain)} {Math.round(score * 100)}
-                          </span>
+                          <div key={domain} className="flex items-center gap-2">
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: DOMAIN_COLORS[domain], flexShrink: 0 }} />
+                            <span className="text-[12px]" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
+                              {formatDomain(domain)}
+                            </span>
+                            <span className="text-[9px] font-medium" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                              {Math.round(score * 100)}
+                            </span>
+                          </div>
                         ))}
                       </div>
                     ) : null;
@@ -533,9 +540,46 @@ function PlaceDetailContent({
                       ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
                       : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Researching this place…</span></div>
                   )}
-                  {onViewBriefing && effectiveGooglePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: COLOR.ochre, fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing</button>)}
                 </div>
               </div>
+
+              {/* Taste mosaic / overlap */}
+              <div className="mb-4" style={{ borderTop: `1px solid ${INK['04']}`, paddingTop: 12 }}>
+                {userTasteProfile ? (
+                  <OverlapMosaic
+                    userProfile={userTasteProfile}
+                    placeProfile={hydratedBreakdown}
+                    matchScore={hydratedMatchScore}
+                    size="md"
+                    userLabel="Your taste"
+                    placeLabel={item.name.length > 16 ? item.name.slice(0, 14) + '...' : item.name}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
+                    <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Signal resonance — expanded clusters */}
+              {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 && (
+                <div style={{ borderTop: `1px solid ${INK['04']}`, paddingTop: 12 }}>
+                  <SignalResonanceStrip
+                    clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
+                      label: c.label,
+                      domain: c.domain as TasteDomain,
+                      score: c.score,
+                      signals: c.signals,
+                    }))}
+                    narrative={resolvedItem.matchExplanation.narrative}
+                    variant="full"
+                    layout={isDesktop ? 'desktop' : 'mobile'}
+                  />
+                </div>
+              )}
+
+              {onViewBriefing && effectiveGooglePlaceId && (<button className={`${matchScoreSubFontSize} mt-3 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: COLOR.ochre, fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing</button>)}
             </div>
           </FadeInSection>
         ) : (
@@ -561,56 +605,6 @@ function PlaceDetailContent({
                 Reliability by Category
               </div>
               <ReliabilityBreakdown reliability={intelData.reliability as Parameters<typeof ReliabilityBreakdown>[0]['reliability']} />
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Taste Mosaic — overlap mosaic when user profile available, otherwise standard */}
-        {!isPrivateListing && (
-          <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.teal}14`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.darkTeal, flexShrink: 0 }} />
-                {userTasteProfile ? 'Taste Overlap' : 'Taste Mosaic'}
-              </div>
-              {userTasteProfile ? (
-                <OverlapMosaic
-                  userProfile={userTasteProfile}
-                  placeProfile={hydratedBreakdown}
-                  matchScore={hydratedMatchScore}
-                  size="md"
-                  userLabel="Your taste"
-                  placeLabel={item.name.length > 16 ? item.name.slice(0, 14) + '...' : item.name}
-                />
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <TerrazzoMosaic profile={hydratedBreakdown} size="md" />
-                  <MosaicLegend profile={hydratedBreakdown} style={{ gridTemplateColumns: 'repeat(2, auto)', gap: '6px 14px' }} />
-                </div>
-              )}
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Full signal resonance — expanded cluster view with signals */}
-        {!isPrivateListing && resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 && (
-          <FadeInSection delay={0.12} direction="up" distance={16}>
-            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.mint}18`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.darkTeal, flexShrink: 0 }} />
-                Signal Resonance
-              </div>
-              <SignalResonanceStrip
-                clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
-                  label: c.label,
-                  domain: c.domain as TasteDomain,
-                  score: c.score,
-                  signals: c.signals,
-                }))}
-                narrative={resolvedItem.matchExplanation.narrative}
-                variant="full"
-                layout={isDesktop ? 'desktop' : 'mobile'}
-              />
             </div>
           </FadeInSection>
         )}

@@ -64,13 +64,7 @@ export function ReliabilityBreakdown({ reliability }: { reliability: Reliability
   if (!reliability || categories.length === 0) return null;
 
   return (
-    <div className="mt-4">
-      <div
-        className="text-[10px] font-semibold uppercase tracking-wider mb-3"
-        style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-      >
-        Reliability by category
-      </div>
+    <div>
       <div className="space-y-2.5">
         {categories.map(cat => {
           const pct = Math.round(cat.score * 100);
