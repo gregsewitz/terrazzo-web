@@ -15,8 +15,10 @@
  * component. Keep it in API routes and server-side lib only.
  */
 
-import fs from 'fs';
-import path from 'path';
+// Node.js fs/path are loaded dynamically to avoid Turbopack bundling them
+// into Edge Runtime (instrumentation.ts imports this module).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const _require = typeof require !== 'undefined' ? require : null;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +60,13 @@ let _cache: SignalClusterMap | null = null;
  */
 export function getSignalClusterMap(): SignalClusterMap {
   if (_cache) return _cache;
+
+  if (!_require) {
+    throw new Error('getSignalClusterMap() is server-only and cannot run in Edge Runtime');
+  }
+  // Dynamic require avoids Turbopack statically bundling fs/path into edge chunks
+  const fs = _require('fs') as typeof import('fs');
+  const path = _require('path') as typeof import('path');
 
   const filePath = path.join(process.cwd(), 'public', 'data', 'signal-clusters.json');
   const raw = fs.readFileSync(filePath, 'utf-8');
