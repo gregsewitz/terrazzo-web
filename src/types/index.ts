@@ -265,7 +265,7 @@ export interface ImportedPlace {
   matchScore: number;
   matchBreakdown: TasteProfile;
   matchExplanation?: {
-    topClusters: Array<{ label: string; domain: string; score: number; signals: string[] }>;
+    topClusters: Array<{ clusterId?: number; label: string; domain: string; score: number; signals: string[] }>;
     narrative: string;
   };
   /** @deprecated Use enrichment?.description instead. Will be removed once fully migrated. */

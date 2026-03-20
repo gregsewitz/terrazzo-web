@@ -5,6 +5,7 @@ import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
 import { normalizeSingleVectorScore } from '@/lib/taste-match-vectors';
 import { computeTasteScore } from '@/lib/taste-score';
+import { resolveExplanationLabels } from '@/lib/resolve-explanation-labels';
 import type { User, Prisma } from '@prisma/client';
 
 /**
@@ -219,7 +220,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         ? await normalizeSingleVectorScore(savedPlace.matchScore, user.id)
         : null),
     matchBreakdown: savedPlace?.matchBreakdown || computedMatchBreakdown || null,
-    matchExplanation: savedPlace?.matchExplanation || null,
+    matchExplanation: resolveExplanationLabels(savedPlace?.matchExplanation as any) || null,
     tasteNote: savedPlace?.tasteNote || null,
     // Intelligence state
     intelligenceId: intelligenceId || null,

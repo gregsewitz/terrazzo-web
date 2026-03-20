@@ -62,6 +62,7 @@ export interface ClusterContribution {
 export interface MatchExplanation {
   /** Top 5 clusters driving the match */
   topClusters: Array<{
+    clusterId: number;
     label: string;
     domain: string;
     score: number; // 0-100 contribution strength
@@ -359,6 +360,7 @@ function buildExplanation(
   editorialDescription?: string,
 ): MatchExplanation {
   const clusters = topClusters.map((c) => ({
+    clusterId: c.clusterId,
     label: c.label,
     domain: c.domain,
     score: Math.round(c.contribution * 1000), // Scale for readability
