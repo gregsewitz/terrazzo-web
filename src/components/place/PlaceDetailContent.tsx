@@ -468,39 +468,35 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
-        {/* Match score — show taste match for enrichable places, fallback for rentals/private listings */}
+        {/* Match score — taste match section */}
         {!isPrivateListing ? (
           <FadeInSection delay={0.15} direction="up" distance={18}>
-            <div
-              className="flex items-center gap-4 p-4 rounded-2xl mb-5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(238,113,109,0.10), rgba(238,113,109,0.04))',
-                border: '1px solid rgba(238,113,109,0.18)',
-                cursor: onViewBriefing ? 'pointer' : 'default',
-              }}
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}`, cursor: onViewBriefing ? 'pointer' : 'default' }}
               onClick={onViewBriefing}
               role={onViewBriefing ? 'button' : undefined}
               tabIndex={onViewBriefing ? 0 : undefined}
               onKeyDown={onViewBriefing ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewBriefing(); } } : undefined}
             >
-              {(() => {
-                const tier = getMatchTier(hydratedMatchScore);
-                return (
-                  <div
-                    className="flex items-center justify-center px-3 py-2 rounded-xl"
-                    style={{ background: tier.bg, minWidth: 56 }}
-                  >
-                    <span style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-                      {tier.shortLabel}
-                    </span>
-                  </div>
-                );
-              })()}
-              <div className="flex-1 min-w-0">
-                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: TEXT.primary }}>Taste match</div>
-                {/* Signal resonance clusters — replaces basic domain chips */}
-                {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 ? (
-                  <div className="mt-1.5">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.coral}14`, color: COLOR.coral, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.coral, flexShrink: 0 }} />
+                Taste Match
+              </div>
+              <div className="flex items-center gap-4">
+                {(() => {
+                  const tier = getMatchTier(hydratedMatchScore);
+                  return (
+                    <div
+                      className="flex items-center justify-center px-3 py-2 rounded-xl flex-shrink-0"
+                      style={{ background: tier.bg, minWidth: 56 }}
+                    >
+                      <span style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                        {tier.shortLabel}
+                      </span>
+                    </div>
+                  );
+                })()}
+                <div className="flex-1 min-w-0">
+                  {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 ? (
                     <SignalResonanceStrip
                       clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
                         label: c.label,
@@ -511,58 +507,47 @@ function PlaceDetailContent({
                       variant="compact"
                       layout={isDesktop ? 'desktop' : 'mobile'}
                     />
-                  </div>
-                ) : hydratedBreakdown ? (() => {
-                  const topDomains = TASTE_DOMAINS
-                    .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
-                    .filter(d => d.score > 0.15)
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, 3);
-                  return topDomains.length > 0 ? (
-                    <div className="flex items-center gap-1 mt-1 flex-wrap">
-                      {topDomains.map(({ domain, score }) => (
-                        <span
-                          key={domain}
-                          className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
-                          style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
-                        >
-                          <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
-                          {formatDomain(domain)} {Math.round(score * 100)}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null;
-                })() : null}
-                {isEnriching && (
-                  intelData?.latestRun
-                    ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
-                    : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Researching this place…</span></div>
-                )}
-                {onViewBriefing && effectiveGooglePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: '#7a5a20', fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing</button>)}
+                  ) : hydratedBreakdown ? (() => {
+                    const topDomains = TASTE_DOMAINS
+                      .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
+                      .filter(d => d.score > 0.15)
+                      .sort((a, b) => b.score - a.score)
+                      .slice(0, 3);
+                    return topDomains.length > 0 ? (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {topDomains.map(({ domain, score }) => (
+                          <span
+                            key={domain}
+                            className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
+                            style={{ background: `${DOMAIN_COLORS[domain]}12`, color: DOMAIN_COLORS[domain], fontFamily: FONT.mono }}
+                          >
+                            <PerriandIcon name={DOMAIN_ICONS[domain]} size={9} color={DOMAIN_COLORS[domain]} />
+                            {formatDomain(domain)} {Math.round(score * 100)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null;
+                  })() : null}
+                  {isEnriching && (
+                    intelData?.latestRun
+                      ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
+                      : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Researching this place…</span></div>
+                  )}
+                  {onViewBriefing && effectiveGooglePlaceId && (<button className={`${matchScoreSubFontSize} mt-1.5 block border-none bg-transparent p-0 cursor-pointer`} style={{ color: COLOR.ochre, fontFamily: FONT.mono }} onClick={(e) => { e.stopPropagation(); onViewBriefing(); }}>View full briefing</button>)}
+                </div>
               </div>
             </div>
           </FadeInSection>
         ) : (
           <FadeInSection delay={0.15} direction="up" distance={18}>
-            <div
-              className="flex items-center gap-3.5 p-4 rounded-2xl mb-5"
-              style={{
-                background: INK['03'],
-                border: `1px solid ${INK['06']}`,
-              }}
-            >
-              <div
-                className="flex items-center justify-center flex-shrink-0"
-                style={{ width: 44, height: 44, borderRadius: 12, background: INK['06'] }}
-              >
-                <PerriandIcon name="pin" size={20} color={TEXT.secondary} />
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.warmGray}14`, color: COLOR.warmGray, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.warmGray, flexShrink: 0 }} />
+                Private Listing
               </div>
-              <div className="flex-1 min-w-0">
-                <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: TEXT.primary }}>Private listing</div>
-                <div className={`${matchScoreSubFontSize} mt-0.5`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                  Taste matching isn{"'"}t available for private rentals and listings
-                </div>
-              </div>
+              <p className={`${matchScoreSubFontSize} leading-relaxed`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                Taste matching isn{"'"}t available for private rentals and listings
+              </p>
             </div>
           </FadeInSection>
         )}
@@ -570,7 +555,11 @@ function PlaceDetailContent({
         {/* Reliability breakdown — category-level trust scores */}
         {!isPrivateListing && intelData?.reliability && Object.keys((intelData.reliability as Record<string, unknown>)?.categories || {}).length > 0 && (
           <FadeInSection delay={0.12} direction="up" distance={16}>
-            <div className="mb-5">
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.navy}0c`, color: COLOR.navy, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.navy, flexShrink: 0 }} />
+                Reliability by Category
+              </div>
               <ReliabilityBreakdown reliability={intelData.reliability as Parameters<typeof ReliabilityBreakdown>[0]['reliability']} />
             </div>
           </FadeInSection>
@@ -579,10 +568,11 @@ function PlaceDetailContent({
         {/* Taste Mosaic — overlap mosaic when user profile available, otherwise standard */}
         {!isPrivateListing && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.teal}14`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.darkTeal, flexShrink: 0 }} />
                 {userTasteProfile ? 'Taste Overlap' : 'Taste Mosaic'}
-              </h3>
+              </div>
               {userTasteProfile ? (
                 <OverlapMosaic
                   userProfile={userTasteProfile}
@@ -605,8 +595,11 @@ function PlaceDetailContent({
         {/* Full signal resonance — expanded cluster view with signals */}
         {!isPrivateListing && resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 && (
           <FadeInSection delay={0.12} direction="up" distance={16}>
-            <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>Signal Resonance</h3>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.mint}18`, color: COLOR.darkTeal, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.darkTeal, flexShrink: 0 }} />
+                Signal Resonance
+              </div>
               <SignalResonanceStrip
                 clusters={resolvedItem.matchExplanation.topClusters.map(c => ({
                   label: c.label,
@@ -625,7 +618,11 @@ function PlaceDetailContent({
         {/* Deep match breakdown — for 93%+ matches with signal data */}
         {!isPrivateListing && hydratedMatchScore >= 93 && resolvedItem.matchExplanation?.topClusters && (
           <FadeInSection delay={0.14} direction="up" distance={18}>
-            <div className="mb-5">
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.ochre}14`, color: COLOR.ochre, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.ochre, flexShrink: 0 }} />
+                Deep Match
+              </div>
               <DeepMatchBreakdown
                 match={{
                   name: item.name,
@@ -649,8 +646,11 @@ function PlaceDetailContent({
         {/* Sustainability alignment */}
         {item.sustainabilityScore !== undefined && item.sustainabilityScore > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="mb-5">
-              <h3 className="text-[10px] uppercase tracking-wider mb-3 font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>Sustainability</h3>
+            <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.olive}14`, color: COLOR.olive, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.olive, flexShrink: 0 }} />
+                Sustainability
+              </div>
               <SustainabilityBadge
                 sensitivity={
                   item.sustainabilityScore >= 0.75 ? 'LEADING'
