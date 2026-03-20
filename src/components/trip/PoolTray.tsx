@@ -8,6 +8,8 @@ import { ImportedPlace, PlaceType, SOURCE_STYLES, PerriandIconName, getSourceSty
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import FilterSortBar from '../ui/FilterSortBar';
+import type { SortDirection } from '../ui/FilterSortBar';
+import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 interface PoolTrayProps {
@@ -51,6 +53,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   const { isExpanded, setExpanded, filterType, setFilterType, slotContext } = usePoolStore();
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'source'>('match');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Library places geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -76,26 +79,18 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
 
   // Smart sorting: if slot context exists, boost items matching suggested types
   const sortedItems = useMemo(() => {
-    const items = [...typeFiltered];
-    // Primary sort based on user selection
-    const primarySort = (a: ImportedPlace, b: ImportedPlace) => {
-      switch (sortBy) {
-        case 'name': return a.name.localeCompare(b.name);
-        case 'source': return (a.source?.type || '').localeCompare(b.source?.type || '');
-        default: return b.matchScore - a.matchScore;
-      }
-    };
+    const sorted = sortPlaces(typeFiltered, sortBy, sortDirection);
     if (slotContext && slotContext.suggestedTypes.length > 0) {
       const suggestedSet = new Set(slotContext.suggestedTypes);
-      return items.sort((a, b) => {
+      return sorted.sort((a, b) => {
         const aMatch = suggestedSet.has(a.type) ? 1 : 0;
         const bMatch = suggestedSet.has(b.type) ? 1 : 0;
-        if (bMatch !== aMatch) return bMatch - aMatch;
-        return primarySort(a, b);
+        // Only re-sort when one matches and the other doesn't
+        return bMatch - aMatch;
       });
     }
-    return items.sort(primarySort);
-  }, [typeFiltered, slotContext, sortBy]);
+    return sorted;
+  }, [typeFiltered, slotContext, sortBy, sortDirection]);
 
   // Count items by type (for chip badges)
   const typeCounts = useMemo(() => {
@@ -368,13 +363,15 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               },
             ]}
             sortOptions={[
-              { value: 'match', label: 'Match %' },
+              { value: 'match', label: 'Match Tier' },
               { value: 'name', label: 'A–Z' },
               { value: 'source', label: 'Source' },
             ]}
             sortValue={sortBy}
-            onSortChange={(v) => setSortBy(v as 'match' | 'name' | 'source')}
-            onResetAll={() => { setFilterType('all'); setSourceFilter('all'); setSortBy('match'); }}
+            onSortChange={(v) => { setSortBy(v as 'match' | 'name' | 'source'); setSortDirection(defaultDirectionFor(v)); }}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+            onResetAll={() => { setFilterType('all'); setSourceFilter('all'); setSortBy('match'); setSortDirection('desc'); }}
           />
         </div>
 

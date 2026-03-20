@@ -4,6 +4,7 @@ import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, getSourceStyle } from '@/types';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 interface ImportSuccessStepProps {
   savedPlaces: ImportedPlace[];
@@ -144,11 +145,11 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                   style={{
                     background: `linear-gradient(135deg, ${sourceStyle?.color || TEXT.accent}30, ${sourceStyle?.color || TEXT.accent}15)`,
-                    color: sourceStyle?.color || TEXT.secondary,
+                    color: getMatchTier(place.matchScore).color,
                     fontFamily: FONT.mono,
                   }}
                 >
-                  {Math.round(place.matchScore)}%
+                  {getMatchTier(place.matchScore).shortLabel}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[12px] font-semibold" style={{ color: TEXT.primary }}>

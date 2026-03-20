@@ -7,6 +7,7 @@ import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { DOMAIN_COLORS, DOMAIN_ICONS } from '@/types';
 import type { TasteDomain } from '@/types';
 import { formatDomain } from '@/constants/profile';
+import { getMatchTier } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -115,8 +116,8 @@ export function ComparativeCard({
               {placeAName}
             </p>
             {comparison.userFit.placeA != null && (
-              <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                {comparison.userFit.placeA}% match
+              <span className="text-[10px]" style={{ color: getMatchTier(comparison.userFit.placeA).color, fontFamily: FONT.mono }}>
+                {getMatchTier(comparison.userFit.placeA).label}
               </span>
             )}
           </div>
@@ -125,8 +126,8 @@ export function ComparativeCard({
               {placeBName}
             </p>
             {comparison.userFit.placeB != null && (
-              <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                {comparison.userFit.placeB}% match
+              <span className="text-[10px]" style={{ color: getMatchTier(comparison.userFit.placeB).color, fontFamily: FONT.mono }}>
+                {getMatchTier(comparison.userFit.placeB).label}
               </span>
             )}
           </div>

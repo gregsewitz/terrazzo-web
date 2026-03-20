@@ -11,6 +11,9 @@ import GoogleMapView from '@/components/maps/GoogleMapView';
 import ShareSheet from '@/components/trip/ShareSheet';
 import DesktopNav from '@/components/ui/DesktopNav';
 import FilterSortBar from '@/components/ui/FilterSortBar';
+import type { SortDirection } from '@/components/ui/FilterSortBar';
+import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { TYPE_COLORS_VIBRANT, THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
@@ -60,6 +63,7 @@ function CollectionDetailContent() {
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [collectionSearch, setCollectionSearch] = useState('');
   const [detailSortBy, setDetailSortBy] = useState<'recent' | 'match' | 'name' | 'type' | 'source'>('recent');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const collection = collections.find(s => s.id === collectionId);
 
@@ -126,15 +130,13 @@ function CollectionDetailContent() {
         p.type.includes(q)
       );
     }
-    switch (detailSortBy) {
-      case 'match': items.sort((a, b) => b.matchScore - a.matchScore); break;
-      case 'name': items.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'type': items.sort((a, b) => a.type.localeCompare(b.type)); break;
-      case 'source': items.sort((a, b) => (a.source?.type || '').localeCompare(b.source?.type || '')); break;
-      // 'recent' keeps original order (insertion order from placeIds = newest first)
+    if (detailSortBy !== 'recent') {
+      return sortPlaces(items, detailSortBy, sortDirection);
     }
-    return items;
-  }, [allPlacesInCollection, typeFilter, sourceFilter, cityFilter, collectionSearch, detailSortBy]);
+    // 'recent' keeps original order (insertion order from placeIds = newest first)
+    // but flip if direction is ascending
+    return sortDirection === 'asc' ? [...items].reverse() : items;
+  }, [allPlacesInCollection, typeFilter, sourceFilter, cityFilter, collectionSearch, detailSortBy, sortDirection]);
 
   if (!dbHydrated) {
     return <BrandLoader message="Loading collection…" />;
@@ -480,19 +482,22 @@ function CollectionDetailContent() {
         ]}
         sortOptions={[
           { value: 'recent', label: 'Most recent' },
-          { value: 'match', label: 'Match %' },
+          { value: 'match', label: 'Match Tier' },
           { value: 'name', label: 'A–Z' },
           { value: 'type', label: 'Type' },
           { value: 'source', label: 'Source' },
         ]}
         sortValue={detailSortBy}
-        onSortChange={(v) => setDetailSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source')}
+        onSortChange={(v) => { setDetailSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source'); setSortDirection(defaultDirectionFor(v)); }}
+        sortDirection={sortDirection}
+        onSortDirectionChange={setSortDirection}
         onResetAll={() => {
           setTypeFilter('all');
           setSourceFilter('all');
           setCityFilter('all');
           setCollectionSearch('');
           setDetailSortBy('recent');
+          setSortDirection('desc');
         }}
         compact
       />
@@ -938,15 +943,20 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
           </div>
         </div>
 
-        {/* Match score — colored by place type */}
-        <div className="flex-shrink-0 text-right">
-          <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, lineHeight: 1, color: typeColor }}>
-            {Math.round(place.matchScore)}%
-          </div>
-          <div style={{ fontFamily: FONT.mono, fontSize: 7, textTransform: 'uppercase' as const, letterSpacing: 0.3, color: TEXT.secondary }}>
-            match
-          </div>
-        </div>
+        {/* Match tier — colored by tier */}
+        {shouldShowTierBadge(place.matchScore) && (() => {
+          const tier = getMatchTier(place.matchScore);
+          return (
+            <div className="flex-shrink-0 text-right">
+              <div
+                className="px-2 py-1 rounded-lg text-[11px] font-bold"
+                style={{ fontFamily: FONT.mono, color: tier.color, background: tier.bg }}
+              >
+                {tier.shortLabel}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Secondary tier: narrative + metadata ── */}

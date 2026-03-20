@@ -9,6 +9,8 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from '../ui/FilterSortBar';
+import type { SortDirection } from '../ui/FilterSortBar';
+import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
 
@@ -55,6 +57,7 @@ function PicksStrip({
 }: PicksStripProps) {
   const { filter: activeFilter, setFilter: setActiveFilter, toggle: toggleFilter } = useTypeFilter();
   const [sortBy, setSortBy] = useState<SortOption>('match');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expanded, setExpanded] = useState(false);
@@ -100,15 +103,8 @@ function PicksStrip({
   });
 
   const stripPlaces = useMemo(() => {
-    const sorted = [...filteredPicks];
-    switch (sortBy) {
-      case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
-      case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'source': sorted.sort((a, b) => (a.source?.type || '').localeCompare(b.source?.type || '')); break;
-      case 'recent': sorted.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || '')); break;
-    }
-    return sorted;
-  }, [filteredPicks, sortBy]);
+    return sortPlaces(filteredPicks, sortBy, sortDirection);
+  }, [filteredPicks, sortBy, sortDirection]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -249,14 +245,16 @@ function PicksStrip({
               },
             ]}
             sortOptions={[
-              { value: 'match', label: 'Match %' },
+              { value: 'match', label: 'Match Tier' },
               { value: 'recent', label: 'Most recent' },
               { value: 'name', label: 'A–Z' },
               { value: 'source', label: 'Source' },
             ]}
             sortValue={sortBy}
-            onSortChange={(v) => setSortBy(v as SortOption)}
-            onResetAll={() => { setActiveFilter('all'); setSortBy('match'); setSourceFilter('all'); setSearchQuery(''); }}
+            onSortChange={(v) => { setSortBy(v as SortOption); setSortDirection(defaultDirectionFor(v)); }}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+            onResetAll={() => { setActiveFilter('all'); setSortBy('match'); setSortDirection('desc'); setSourceFilter('all'); setSearchQuery(''); }}
           />
         </div>
 

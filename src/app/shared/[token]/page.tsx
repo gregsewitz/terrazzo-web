@@ -9,6 +9,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/placeTypes';
 import { trackInteraction } from '@/lib/interaction-tracker';
 import { getDisplayLocation } from '@/lib/place-display';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 // ─── Types for shared data ───
 
@@ -508,11 +509,14 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
               {priceStr}
             </span>
           )}
-          {place.matchScore && (
-            <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: '#8a6a2a' }}>
-              {Math.round(place.matchScore)}%
-            </span>
-          )}
+          {shouldShowTierBadge(place.matchScore) && (() => {
+            const tier = getMatchTier(place.matchScore);
+            return (
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: tier.color }}>
+                {tier.shortLabel}
+              </span>
+            );
+          })()}
         </div>
 
         {truncSub && (

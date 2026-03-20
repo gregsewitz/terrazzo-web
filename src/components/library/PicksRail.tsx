@@ -9,6 +9,8 @@ import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
 import FilterSortBar from '../ui/FilterSortBar';
+import type { SortDirection } from '../ui/FilterSortBar';
+import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
 import { getDestColor } from '@/lib/destination-helpers';
@@ -43,6 +45,7 @@ function PicksRailInner({
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'recent'>('match');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -100,18 +103,18 @@ function PicksRailInner({
 
   const sortedPicks = useMemo(() => {
     const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
-    return [...sharedFilteredPicks].sort((a, b) => {
-      if (hasDestFilter) {
-        // Score-based: higher destination relevance sorts first
+    const sorted = sortPlaces(sharedFilteredPicks, sortBy, sortDirection);
+    if (hasDestFilter) {
+      // Secondary pass: boost items matching destination relevance
+      return sorted.sort((a, b) => {
         const aScore = destinationScore(a);
         const bScore = destinationScore(b);
         if (Math.abs(aScore - bScore) > 0.1) return bScore - aScore;
-      }
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'recent') return (b.savedAt || '').localeCompare(a.savedAt || '');
-      return b.matchScore - a.matchScore;
-    });
-  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy]);
+        return 0; // preserve primary sort order
+      });
+    }
+    return sorted;
+  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy, sortDirection]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -203,13 +206,15 @@ function PicksRailInner({
             onChange: (v) => setSourceFilter(v as SourceFilter),
           }]}
           sortOptions={[
-            { value: 'match', label: 'Match %' },
+            { value: 'match', label: 'Match Tier' },
             { value: 'recent', label: 'Most recent' },
             { value: 'name', label: 'A–Z' },
           ]}
           sortValue={sortBy}
-          onSortChange={(v) => setSortBy(v as 'match' | 'name' | 'recent')}
-          onResetAll={() => { toggleFilter('all'); setSortBy('match'); setSourceFilter('all'); setSearchQuery(''); }}
+          onSortChange={(v) => { setSortBy(v as 'match' | 'name' | 'recent'); setSortDirection(defaultDirectionFor(v)); }}
+          sortDirection={sortDirection}
+          onSortDirectionChange={setSortDirection}
+          onResetAll={() => { toggleFilter('all'); setSortBy('match'); setSortDirection('desc'); setSourceFilter('all'); setSearchQuery(''); }}
         />
       </div>
 

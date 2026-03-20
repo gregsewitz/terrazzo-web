@@ -14,6 +14,7 @@ import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { getDisplayLocation } from '@/lib/place-display';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 
@@ -120,18 +121,21 @@ export function MobileDetailCard({
               {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <><span style={{ color: INK['20'] }}>·</span><span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{dl}</span></> : null; })()}
             </div>
           </div>
-          {place.matchScore && (
-            <div
-              className="flex items-center justify-center rounded-lg flex-shrink-0"
-              style={{
-                fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: COLOR.coral, background: `${COLOR.coral}14`,
-                padding: '4px 8px',
-              }}
-            >
-              {Math.round(place.matchScore)}%
-            </div>
-          )}
+          {shouldShowTierBadge(place.matchScore) && (() => {
+            const tier = getMatchTier(place.matchScore);
+            return (
+              <div
+                className="flex items-center justify-center rounded-lg flex-shrink-0"
+                style={{
+                  fontFamily: FONT.mono, fontSize: 11, fontWeight: 700,
+                  color: tier.color, background: tier.bg,
+                  padding: '4px 8px',
+                }}
+              >
+                {tier.shortLabel}
+              </div>
+            );
+          })()}
           {/* Chevron hint */}
           <div className="flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={INK['30']} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -256,18 +260,21 @@ export function MobileGhostCard({
               {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <><span style={{ color: INK['20'] }}>·</span><span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary }}>{dl}</span></> : null; })()}
             </div>
           </div>
-          {place.matchScore && (
-            <div
-              className="flex items-center justify-center rounded-lg flex-shrink-0"
-              style={{
-                fontFamily: FONT.mono, fontSize: 13, fontWeight: 700,
-                color: COLOR.coral, background: `${COLOR.coral}14`,
-                padding: '4px 8px',
-              }}
-            >
-              {Math.round(place.matchScore)}%
-            </div>
-          )}
+          {shouldShowTierBadge(place.matchScore) && (() => {
+            const tier = getMatchTier(place.matchScore);
+            return (
+              <div
+                className="flex items-center justify-center rounded-lg flex-shrink-0"
+                style={{
+                  fontFamily: FONT.mono, fontSize: 11, fontWeight: 700,
+                  color: tier.color, background: tier.bg,
+                  padding: '4px 8px',
+                }}
+              >
+                {tier.shortLabel}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Taste note */}
@@ -393,13 +400,16 @@ export function SidebarPlaceCard({
           </span>
         </div>
       </div>
-      {place.matchScore && (
-        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0" style={{
-          fontFamily: FONT.mono, color: COLOR.coral, background: `${COLOR.coral}14`,
-        }}>
-          {Math.round(place.matchScore)}%
-        </span>
-      )}
+      {shouldShowTierBadge(place.matchScore) && (() => {
+        const tier = getMatchTier(place.matchScore);
+        return (
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0" style={{
+            fontFamily: FONT.mono, color: tier.color, background: tier.bg,
+          }}>
+            {tier.shortLabel}
+          </span>
+        );
+      })()}
     </div>
   );
 }
@@ -452,11 +462,14 @@ export function DesktopDetailCard({
               {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{dl}</span> : null; })()}
             </div>
           </div>
-          {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: COLOR.coral, background: `${COLOR.coral}14` }}>
-              {Math.round(place.matchScore)}%
-            </span>
-          )}
+          {shouldShowTierBadge(place.matchScore) && (() => {
+            const tier = getMatchTier(place.matchScore);
+            return (
+              <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, color: tier.color, background: tier.bg }}>
+                {tier.shortLabel}
+              </span>
+            );
+          })()}
         </div>
 
         {(place.terrazzoInsight?.why || place.tasteNote) && (
@@ -575,11 +588,14 @@ export function DesktopGhostCard({
               {(() => { const dl = getDisplayLocation(place.location, place.name, place.google?.address); return dl ? <><span style={{ color: INK['20'] }}>·</span><span style={{ fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary }}>{dl}</span></> : null; })()}
             </div>
           </div>
-          {place.matchScore && (
-            <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, color: COLOR.coral, background: `${COLOR.coral}14` }}>
-              {Math.round(place.matchScore)}%
-            </span>
-          )}
+          {shouldShowTierBadge(place.matchScore) && (() => {
+            const tier = getMatchTier(place.matchScore);
+            return (
+              <span className="px-2 py-1 rounded-lg" style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, color: tier.color, background: tier.bg }}>
+                {tier.shortLabel}
+              </span>
+            );
+          })()}
         </div>
 
         {/* Taste note */}

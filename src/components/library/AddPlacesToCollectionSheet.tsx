@@ -13,7 +13,7 @@ import { getDisplayLocation } from '@/lib/place-display';
 type PlaceSortKey = 'match' | 'az' | 'type';
 
 const PLACE_SORT_OPTIONS: { id: PlaceSortKey; label: string }[] = [
-  { id: 'match', label: 'Match' },
+  { id: 'match', label: 'Match Tier' },
   { id: 'az', label: 'A–Z' },
   { id: 'type', label: 'Type' },
 ];

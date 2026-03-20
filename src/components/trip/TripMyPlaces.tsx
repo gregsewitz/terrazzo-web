@@ -10,6 +10,7 @@ import FilterSortBar from '../ui/FilterSortBar';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { getDisplayLocation } from '@/lib/place-display';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 interface TripMyPlacesProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -189,15 +190,20 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
             </div>
           </div>
         </div>
-        {/* Match score */}
-        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-          <span
-            className="px-2 py-0.5 rounded-md"
-            style={{ fontFamily: FONT.mono, fontSize: 12, fontWeight: 700, background: 'rgba(238,113,109,0.1)', color: '#8a6a2a' }}
-          >
-            {Math.round(place.matchScore)}%
-          </span>
-        </div>
+        {/* Match tier */}
+        {shouldShowTierBadge(place.matchScore) && (() => {
+          const tier = getMatchTier(place.matchScore);
+          return (
+            <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+              <span
+                className="px-2 py-0.5 rounded-md"
+                style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, background: tier.bg, color: tier.color }}
+              >
+                {tier.shortLabel}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Body — briefing section */}

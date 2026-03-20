@@ -6,6 +6,7 @@ import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar } from '@/components/animations/AnimatedElements';
+import { getMatchTier } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ export function DeepMatchBreakdown({
             className="text-[11px] font-bold"
             style={{ color: COLOR.ochre, fontFamily: FONT.mono }}
           >
-            {match.score}%
+            {getMatchTier(match.score).label}
           </span>
 
           {/* Place name — tappable */}

@@ -18,6 +18,8 @@ export interface SortOption {
   label: string;
 }
 
+export type SortDirection = 'asc' | 'desc';
+
 export interface FilterSortBarProps {
   /** Filter dimensions — each group becomes a section in the filter panel */
   filterGroups?: {
@@ -32,6 +34,9 @@ export interface FilterSortBarProps {
   sortOptions?: SortOption[];
   sortValue?: string;
   onSortChange?: (value: string) => void;
+  /** Sort direction — ascending or descending */
+  sortDirection?: SortDirection;
+  onSortDirectionChange?: (dir: SortDirection) => void;
   defaultSortValue?: string; // value that means "default sort" (default: first option)
   /** Optional: reset all callback */
   onResetAll?: () => void;
@@ -73,6 +78,8 @@ export default function FilterSortBar({
   sortOptions,
   sortValue,
   onSortChange,
+  sortDirection = 'desc',
+  onSortDirectionChange,
   defaultSortValue,
   onResetAll,
   compact,
@@ -131,6 +138,12 @@ export default function FilterSortBar({
           >
             <SortIcon color={isSortActive || openPanel === 'sort' ? 'white' : TEXT.secondary} />
             {isSortActive ? activeSortLabel : 'Sort'}
+            {isSortActive && (
+              <DirectionArrow
+                direction={sortDirection}
+                color="white"
+              />
+            )}
             <Chevron open={openPanel === 'sort'} />
           </button>
         )}
@@ -211,7 +224,7 @@ export default function FilterSortBar({
       {/* Expanded sort panel */}
       {openPanel === 'sort' && hasSort && (
         <div
-          className="flex flex-wrap gap-1.5 mt-2 pb-2"
+          className="flex flex-wrap items-center gap-1.5 mt-2 pb-2"
           style={{ borderBottom: '1px solid var(--t-linen)' }}
         >
           {sortOptions!.map(opt => {
@@ -220,8 +233,12 @@ export default function FilterSortBar({
               <button
                 key={opt.value}
                 onClick={() => {
-                  onSortChange!(opt.value);
-                  setOpenPanel(null);
+                  if (isActive && onSortDirectionChange) {
+                    // Toggle direction if clicking the already-active sort
+                    onSortDirectionChange(sortDirection === 'desc' ? 'asc' : 'desc');
+                  } else {
+                    onSortChange!(opt.value);
+                  }
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-all"
                 style={{
@@ -232,6 +249,9 @@ export default function FilterSortBar({
                 }}
               >
                 {opt.label}
+                {isActive && (
+                  <DirectionArrow direction={sortDirection} color="white" />
+                )}
               </button>
             );
           })}
@@ -261,6 +281,18 @@ function SortIcon({ color }: { color: string }) {
       stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
     >
       <path d="M3 6h18M3 12h12M3 18h6" />
+    </svg>
+  );
+}
+
+function DirectionArrow({ direction, color }: { direction: SortDirection; color: string }) {
+  return (
+    <svg
+      width="10" height="10" viewBox="0 0 24 24" fill="none"
+      stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transform: direction === 'asc' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}
+    >
+      <path d="M12 5v14M5 12l7 7 7-7" />
     </svg>
   );
 }

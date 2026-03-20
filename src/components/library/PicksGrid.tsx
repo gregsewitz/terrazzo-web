@@ -8,6 +8,9 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import FilterSortBar from '../ui/FilterSortBar';
+import type { SortDirection } from '../ui/FilterSortBar';
+import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS } from '@/constants/picksFilters';
 import { SignalResonanceStrip } from '@/components/intelligence';
@@ -22,6 +25,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
   const { filter: activeFilter, toggle: toggleFilter } = useTypeFilter();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'match' | 'name'>('match');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -56,8 +60,8 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
         p.name.toLowerCase().includes(q) || p.location.toLowerCase().includes(q)
       );
     }
-    return result.sort((a, b) => sortBy === 'name' ? a.name.localeCompare(b.name) : b.matchScore - a.matchScore);
-  }, [allPicks, activeFilter, searchQuery, sortBy]);
+    return sortPlaces(result, sortBy, sortDirection);
+  }, [allPicks, activeFilter, searchQuery, sortBy, sortDirection]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -135,12 +139,14 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
             onChange: (v) => toggleFilter(v as FilterType),
           }]}
           sortOptions={[
-            { value: 'match', label: 'Match %' },
+            { value: 'match', label: 'Match Tier' },
             { value: 'name', label: 'A–Z' },
           ]}
           sortValue={sortBy}
-          onSortChange={(v) => setSortBy(v as 'match' | 'name')}
-          onResetAll={() => { toggleFilter('all'); setSortBy('match'); }}
+          onSortChange={(v) => { setSortBy(v as 'match' | 'name'); setSortDirection(defaultDirectionFor(v)); }}
+          sortDirection={sortDirection}
+          onSortDirectionChange={setSortDirection}
+          onResetAll={() => { toggleFilter('all'); setSortBy('match'); setSortDirection('desc'); }}
         />
       </div>
 
@@ -206,16 +212,17 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
 
                   {/* Bottom row: match score + source */}
                   <div className="flex items-center justify-between mt-2">
-                    <span
-                      className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                      style={{
-                        background: 'rgba(58,128,136,0.1)',
-                        color: 'var(--t-dark-teal)',
-                        fontFamily: FONT.mono,
-                      }}
-                    >
-                      {Math.round(place.matchScore)}%
-                    </span>
+                    {shouldShowTierBadge(place.matchScore) && (() => {
+                      const tier = getMatchTier(place.matchScore);
+                      return (
+                        <span
+                          className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                          style={{ background: tier.bg, color: tier.color, fontFamily: FONT.mono }}
+                        >
+                          {tier.shortLabel}
+                        </span>
+                      );
+                    })()}
                     <span
                       className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded"
                       style={{ background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}

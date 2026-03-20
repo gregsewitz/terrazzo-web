@@ -13,6 +13,7 @@ import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import { ImportedPlace, TravelContext, TripStatus, GeoDestination, PlaceType } from '@/types';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { TYPE_COLORS_VIBRANT } from '@/constants/placeTypes';
 
 // ─── Companion options ───────────────────────────────────────────────────────
@@ -68,14 +69,17 @@ function PlacePill({
           </div>
         )}
       </div>
-      {place.matchScore > 0 && (
-        <span
-          className="text-[10px] font-bold flex-shrink-0"
-          style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}
-        >
-          {Math.round(place.matchScore)}%
-        </span>
-      )}
+      {shouldShowTierBadge(place.matchScore) && (() => {
+        const tier = getMatchTier(place.matchScore);
+        return (
+          <span
+            className="text-[10px] font-bold flex-shrink-0"
+            style={{ color: tier.color, fontFamily: FONT.mono }}
+          >
+            {tier.shortLabel}
+          </span>
+        );
+      })()}
       {onRemove && (
         <button
           onClick={onRemove}

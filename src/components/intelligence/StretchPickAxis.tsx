@@ -7,6 +7,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection } from '@/components/animations/AnimatedElements';
 import { formatDomain } from '@/constants/profile';
+import { getMatchTier } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -166,7 +167,7 @@ export function StretchPickAxis({
               className="text-[11px] font-bold ml-auto"
               style={{ color: COLOR.navy, fontFamily: FONT.mono }}
             >
-              {pick.score}% match
+              {getMatchTier(pick.score).label}
             </span>
           </div>
 

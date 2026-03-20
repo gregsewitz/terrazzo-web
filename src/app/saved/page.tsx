@@ -16,6 +16,8 @@ import PlaceSearchBar from '@/components/place/PlaceSearchBar';
 import { PlaceDetailProvider, usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import FilterSortBar from '@/components/ui/FilterSortBar';
+import type { SortDirection } from '@/components/ui/FilterSortBar';
+import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { TYPE_CHIPS_WITH_ALL } from '@/constants/placeTypes';
 import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import BrandLoader from '@/components/ui/BrandLoader';
@@ -110,6 +112,7 @@ function SavedPageContent() {
 
   // ─── Library filtering ───
   const [sortBy, setSortBy] = useState<'recent' | 'match' | 'name' | 'type' | 'source'>('recent');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
 
   // Parse city from second segment, neighborhood from first
@@ -181,20 +184,8 @@ function SavedPageContent() {
       places = places.filter(p => (p.source?.type || 'manual') === sourceFilter);
     }
     // Sort
-    const sorted = [...places];
-    switch (sortBy) {
-      case 'recent': sorted.sort((a, b) => {
-        const dateA = a.savedAt || '';
-        const dateB = b.savedAt || '';
-        return dateB.localeCompare(dateA); // newest first
-      }); break;
-      case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
-      case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'type': sorted.sort((a, b) => a.type.localeCompare(b.type)); break;
-      case 'source': sorted.sort((a, b) => (a.source?.type || '').localeCompare(b.source?.type || '')); break;
-    }
-    return sorted;
-  }, [myPlaces, searchQuery, typeFilter, cityFilter, sourceFilter, sortBy, parseLocation]);
+    return sortPlaces(places, sortBy, sortDirection);
+  }, [myPlaces, searchQuery, typeFilter, cityFilter, sourceFilter, sortBy, sortDirection, parseLocation]);
 
 
   // ─── Uncollected places (not in any collection) ───
@@ -380,18 +371,21 @@ function SavedPageContent() {
                 ]}
                 sortOptions={[
                   { value: 'recent', label: 'Most recent' },
-                  { value: 'match', label: 'Match %' },
+                  { value: 'match', label: 'Match Tier' },
                   { value: 'name', label: 'A–Z' },
                   { value: 'type', label: 'Type' },
                   { value: 'source', label: 'Source' },
                 ]}
                 sortValue={sortBy}
-                onSortChange={(v) => setSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source')}
+                onSortChange={(v) => { setSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source'); setSortDirection(defaultDirectionFor(v)); }}
+                sortDirection={sortDirection}
+                onSortDirectionChange={setSortDirection}
                 onResetAll={() => {
                   setTypeFilter('all');
                   setSourceFilter('all');
                   setCityFilter('all');
                   setSortBy('recent');
+                  setSortDirection('desc');
                 }}
               />
             </div>
@@ -716,18 +710,21 @@ function SavedPageContent() {
               ]}
               sortOptions={[
                 { value: 'recent', label: 'Most recent' },
-                { value: 'match', label: 'Match %' },
+                { value: 'match', label: 'Match Tier' },
                 { value: 'name', label: 'A–Z' },
                 { value: 'type', label: 'Type' },
                 { value: 'source', label: 'Source' },
               ]}
               sortValue={sortBy}
-              onSortChange={(v) => setSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source')}
+              onSortChange={(v) => { setSortBy(v as 'recent' | 'match' | 'name' | 'type' | 'source'); setSortDirection(defaultDirectionFor(v)); }}
+              sortDirection={sortDirection}
+              onSortDirectionChange={setSortDirection}
               onResetAll={() => {
                 setTypeFilter('all');
                 setSourceFilter('all');
                 setCityFilter('all');
                 setSortBy('recent');
+                setSortDirection('desc');
               }}
               compact
             />
