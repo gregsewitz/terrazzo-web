@@ -326,12 +326,12 @@ function PlaceDetailContent({
         {/* ── Borderless sections with bar headers ── */}
         {/* Shared divider style between sections */}
 
-        {/* Closed days warning — standalone alert, uses Coral */}
+        {/* Closed days warning — standalone alert, uses Dark Teal */}
         {item.enrichment?.closedDays && item.enrichment.closedDays.length > 0 && (
           <SafeFadeIn direction="up" distance={10} duration={0.4}>
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-2" style={{ background: `${COLOR.coral}14` }}>
-              <PerriandIcon name="alert" size={14} color={COLOR.coral} />
-              <span className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-medium`} style={{ color: COLOR.coral }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-2" style={{ background: `${COLOR.darkTeal}14` }}>
+              <PerriandIcon name="alert" size={14} color={COLOR.darkTeal} />
+              <span className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-medium`} style={{ color: COLOR.darkTeal }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
             </div>
           </SafeFadeIn>
         )}
@@ -459,8 +459,8 @@ function PlaceDetailContent({
         {item.google?.editorialSummary && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.warmGray}14`, color: COLOR.warmGray, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.warmGray, flexShrink: 0 }} />
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 w-fit" style={{ background: `${COLOR.periwinkle}14`, color: COLOR.periwinkle, fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase' as const }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.periwinkle, flexShrink: 0 }} />
                 Google Places
               </div>
               <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.google.editorialSummary}</p>
