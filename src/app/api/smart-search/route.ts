@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     let collectionContext = '';
     if (places && Array.isArray(places)) {
       const summary = places.map((p: any) =>
-        `${p.name} (${p.type}, ${p.location}${p.friendAttribution ? `, from ${p.friendAttribution.name}` : ''}${p.matchScore ? `, ${p.matchScore}% match` : ''}${p.ghostSource ? `, source: ${p.ghostSource}` : ''})`
+        `${p.name} (${p.type}, ${p.location}${p.friendAttribution ? `, from ${p.friendAttribution.name}` : ''}${p.matchScore ? `, taste: ${p.matchScore >= 78 ? 'strong match' : p.matchScore >= 65 ? 'good match' : p.matchScore >= 50 ? 'worth a look' : 'mixed fit'}` : ''}${p.ghostSource ? `, source: ${p.ghostSource}` : ''})`
       ).join('\n');
       collectionContext = `\n\nThe user's current collection:\n${summary}`;
     }

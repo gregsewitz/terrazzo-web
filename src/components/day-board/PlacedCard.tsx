@@ -7,6 +7,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
@@ -87,11 +88,14 @@ function PlacedCard({
         <span className="flex-shrink-0" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, color: TEXT.secondary, textTransform: 'uppercase' }}>
           {place.type}
         </span>
-        {place.matchScore >= 70 && (
-          <span className="flex-shrink-0 px-1 rounded" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, fontWeight: 700, background: 'rgba(58,128,136,0.1)', color: 'var(--t-dark-teal)' }}>
-            {Math.round(place.matchScore)}%
-          </span>
-        )}
+        {shouldShowTierBadge(place.matchScore) && (() => {
+          const tier = getMatchTier(place.matchScore);
+          return (
+            <span className="flex-shrink-0 px-1 rounded" style={{ fontFamily: FONT.mono, fontSize: isDesktop ? 9 : 8, fontWeight: 700, background: tier.bg, color: tier.color }}>
+              {tier.shortLabel}
+            </span>
+          );
+        })()}
         {/* Remove button — returns place to pick pool */}
         <button
           onPointerDown={(e) => e.stopPropagation()}

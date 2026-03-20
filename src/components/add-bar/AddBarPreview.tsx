@@ -7,6 +7,7 @@ import { TYPE_COLORS } from './AddBarShared';
 import SortPills from '@/components/ui/SortPills';
 import type { ImportedPlace, Collection, PerriandIconName } from '@/types';
 import type { AddBarState } from '@/stores/addBarStore';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 // ─── Sort logic for imported places ─────────────────────────────────────────────
 
@@ -248,7 +249,7 @@ export default function AddBarPreview({
                           whiteSpace: 'nowrap',
                         }}>
                           {item.location || item.type}
-                          {item.matchScore > 0 && ` · ${item.matchScore}%`}
+                          {shouldShowTierBadge(item.matchScore) && ` · ${getMatchTier(item.matchScore).shortLabel}`}
                         </p>
                         {item.enrichment?.description && (
                           <p style={{

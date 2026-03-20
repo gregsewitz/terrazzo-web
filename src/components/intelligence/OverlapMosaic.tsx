@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { TasteDomain, TasteProfile, DOMAIN_COLORS, CORE_TASTE_DOMAINS } from '@/types';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { formatDomain } from '@/constants/profile';
+import { getMatchTier } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -261,14 +262,17 @@ export function OverlapMosaic({
               />
             ))}
           </div>
-          {matchScore !== undefined && (
-            <span
-              className="text-[10px] font-bold mt-0.5"
-              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-            >
-              {overlapPercent}%
-            </span>
-          )}
+          {matchScore !== undefined && (() => {
+            const tier = getMatchTier(matchScore);
+            return (
+              <span
+                className="text-[9px] font-bold mt-0.5"
+                style={{ color: tier.color, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: 0.2 }}
+              >
+                {tier.shortLabel}
+              </span>
+            );
+          })()}
         </div>
 
         {/* Place mosaic */}

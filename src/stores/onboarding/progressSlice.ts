@@ -158,7 +158,7 @@ export const createProgressSlice: StateCreator<OnboardingState, [], [], Onboardi
   finishOnboarding: async (depth) => {
     set({ isComplete: true, onboardingDepth: depth });
     const state = get();
-    saveProgressToDB({
+    const payload = {
       tasteProfile: state.generatedProfile,
       lifeContext: state.lifeContext,
       allSignals: state.allSignals,
@@ -175,8 +175,27 @@ export const createProgressSlice: StateCreator<OnboardingState, [], [], Onboardi
       skippedPhaseIds: state.skippedPhaseIds,
       act1GapResult: state.act1GapResult,
       act2GapResult: state.act2GapResult,
-    });
-    await flushSaves();
+    };
+
+    // Primary path: queue-based save with retry
+    saveProgressToDB(payload);
+    const flushed = await flushSaves();
+
+    // Fallback: if the queued save failed (e.g. auth timing), try a direct call.
+    // This is the most critical save in the app — losing signals here means the
+    // user's entire onboarding data is gone.
+    if (!flushed) {
+      console.warn('[onboarding] Queued save failed — attempting direct save as fallback');
+      try {
+        await apiFetch('/api/profile/save', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        console.log('[onboarding] Direct fallback save succeeded');
+      } catch (err) {
+        console.error('[onboarding] CRITICAL: Both queued and direct saves failed. Onboarding data may be lost.', err);
+      }
+    }
 
     apiFetch('/api/onboarding/compute-vectors', { method: 'POST' })
       .then((res) => console.log('[onboarding] Vectors computed:', res))

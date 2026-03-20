@@ -8,6 +8,7 @@ import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconN
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import FilterSortBar from '../ui/FilterSortBar';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -463,7 +464,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                       fontFamily: FONT.mono,
                     }}
                   >
-                    {item.matchScore}%
+                    {getMatchTier(item.matchScore).shortLabel}
                   </span>
                 </div>
               </div>

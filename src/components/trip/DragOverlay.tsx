@@ -5,6 +5,7 @@ import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS } from '@/constants/placeTypes';
+import { getMatchTier } from '@/lib/match-tier';
 
 interface DragOverlayProps {
   item: ImportedPlace;
@@ -97,7 +98,7 @@ export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayPro
             fontFamily: FONT.mono,
           }}
         >
-          {item.matchScore}%
+          {getMatchTier(item.matchScore).shortLabel}
         </span>
       </div>
 

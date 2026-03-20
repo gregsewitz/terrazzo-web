@@ -4,6 +4,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PlacePhoto from '@/components/place/PlacePhoto';
 import type { ImportedPlace } from '@/types';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 // ─── Type badge color ───────────────────────────────────────────────────────
 
@@ -133,7 +134,7 @@ export function PlaceRow({
         }}>
           {place.type}
           {place.location ? ` \u00B7 ${place.location}` : ''}
-          {(matchScore ?? place.matchScore) ? ` \u00B7 ${matchScore ?? place.matchScore}%` : ''}
+          {shouldShowTierBadge(matchScore ?? place.matchScore) ? ` \u00B7 ${getMatchTier(matchScore ?? place.matchScore).shortLabel}` : ''}
         </p>
         {collections && collections.length > 0 && (
           <p style={{

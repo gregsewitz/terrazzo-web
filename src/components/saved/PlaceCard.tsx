@@ -7,6 +7,7 @@ import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/plac
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { getDisplayLocation } from '@/lib/place-display';
 import { smartTruncate } from '@/lib/smart-truncate';
+import { getMatchTier } from '@/lib/match-tier';
 
 interface PlaceCardProps {
   place: ImportedPlace;
@@ -90,15 +91,20 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
           </div>
         </div>
 
-        {/* Match score — colored by place type */}
-        <div className="flex-shrink-0 text-right">
-          <div style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, lineHeight: 1, color: typeColor }}>
-            {Math.round(place.matchScore)}%
-          </div>
-          <div style={{ fontFamily: FONT.mono, fontSize: 7, textTransform: 'uppercase' as const, letterSpacing: 0.3, color: TEXT.secondary }}>
-            match
-          </div>
-        </div>
+        {/* Match tier — qualitative label */}
+        {(() => {
+          const tier = getMatchTier(place.matchScore);
+          return (
+            <div
+              className="flex-shrink-0 px-2 py-1 rounded-lg"
+              style={{ background: tier.bg }}
+            >
+              <div style={{ fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, lineHeight: 1.3, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                {tier.shortLabel}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Secondary tier: narrative + metadata ── */}

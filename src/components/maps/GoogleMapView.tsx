@@ -7,6 +7,7 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS, TYPE_COLORS_VIBRANT } from '@/constants/placeTypes';
 import type { PlaceType } from '@/types';
 import { getDisplayLocation } from '@/lib/place-display';
+import { getMatchTier } from '@/lib/match-tier';
 
 // ── Hook: track Google Maps zoom level reactively ──
 function useZoomLevel(defaultZoom = 13) {
@@ -200,14 +201,18 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
                   {(() => { const dl = getDisplayLocation(marker.location, marker.name); return dl ? ` · ${dl}` : ''; })()}
                 </div>
               </div>
-              {marker.matchScore && (
-                <span style={{
-                  fontSize: 9, fontWeight: 700, color: '#ee716d',
-                  fontFamily: FONT.mono,
-                  background: 'rgba(238,113,109,0.1)',
-                  padding: '2px 5px', borderRadius: 4,
-                }}>{marker.matchScore}%</span>
-              )}
+              {marker.matchScore && (() => {
+                const tier = getMatchTier(marker.matchScore);
+                return (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, color: tier.color,
+                    fontFamily: FONT.mono,
+                    background: tier.bg,
+                    padding: '2px 5px', borderRadius: 4,
+                    textTransform: 'uppercase', letterSpacing: '0.03em',
+                  }}>{tier.shortLabel}</span>
+                );
+              })()}
             </div>
             {marker.description && (
               <div style={{

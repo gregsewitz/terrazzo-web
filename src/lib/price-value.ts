@@ -81,12 +81,12 @@ export function computeValueAssessment(
     // High match, high price — "worth the splurge"
     sentiment = 'positive';
     label = 'Worth every penny';
-    explanation = `Your ${matchScore}% taste match makes ${PRICE_LABELS[priceLevel]} pricing feel right`;
+    explanation = `A strong taste match makes ${PRICE_LABELS[priceLevel]} pricing feel right`;
   } else if (matchScore >= 70 && priceLevel <= 2) {
     // High match, low/moderate price — "exceptional value"
     sentiment = 'positive';
     label = 'Exceptional value';
-    explanation = `Strong ${matchScore}% match at ${PRICE_LABELS[priceLevel]} — a standout find`;
+    explanation = `Strong match at ${PRICE_LABELS[priceLevel]} — a standout find`;
   } else if (matchScore >= 55 && priceLevel <= 1) {
     // Decent match, inexpensive — "solid pick"
     sentiment = 'positive';
@@ -96,17 +96,17 @@ export function computeValueAssessment(
     // Low match, expensive — "think twice"
     sentiment = 'cautious';
     label = 'Consider carefully';
-    explanation = `${PRICE_LABELS[priceLevel]} pricing with a ${matchScore}% match — make sure it's what you want`;
+    explanation = `${PRICE_LABELS[priceLevel]} pricing with a mixed taste fit — make sure it's what you want`;
   } else if (matchScore >= 60) {
     // Moderate match, moderate price — neutral
     sentiment = 'neutral';
     label = 'Fair value';
-    explanation = `Solid ${matchScore}% match at ${PRICE_LABELS[priceLevel]}`;
+    explanation = `Good match at ${PRICE_LABELS[priceLevel]}`;
   } else {
     // Low match, any price — neutral
     sentiment = 'neutral';
     label = `${PRICE_LABELS[priceLevel] || 'Priced'}`;
-    explanation = `${matchScore}% match`;
+    explanation = `Mixed taste fit`;
   }
 
   return {

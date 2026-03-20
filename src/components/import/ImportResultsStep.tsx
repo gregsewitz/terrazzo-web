@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ImportedPlace, PerriandIconName } from '@/types';
+import { getMatchTier } from '@/lib/match-tier';
 
 // Category config for grouping imported results
 const CATEGORY_CONFIG: Record<string, { icon: PerriandIconName; label: string }> = {
@@ -156,14 +157,17 @@ export const ImportResultsStep = React.memo(function ImportResultsStep({
                           </div>
                         )}
                       </div>
-                      {item.matchScore > 0 && (
-                        <span
-                          className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex-shrink-0"
-                          style={{ background: 'rgba(238,113,109,0.1)', color: '#8a6a2a', fontFamily: FONT.mono }}
-                        >
-                          {item.matchScore}%
-                        </span>
-                      )}
+                      {item.matchScore > 0 && (() => {
+                        const tier = getMatchTier(item.matchScore);
+                        return (
+                          <span
+                            className="text-[9px] font-semibold px-2 py-0.5 rounded-md flex-shrink-0"
+                            style={{ background: tier.bg, color: tier.color, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: '0.03em' }}
+                          >
+                            {tier.shortLabel}
+                          </span>
+                        );
+                      })()}
                     </div>
                   );
                 })}

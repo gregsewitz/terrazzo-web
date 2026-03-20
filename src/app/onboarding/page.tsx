@@ -59,8 +59,8 @@ export default function OnboardingIntro() {
     }, 400);
   };
 
-  const handleDevSkip = () => {
-    finishOnboarding('act_1_only');
+  const handleDevSkip = async () => {
+    await finishOnboarding('act_1_only');
     router.push('/trips');
   };
 

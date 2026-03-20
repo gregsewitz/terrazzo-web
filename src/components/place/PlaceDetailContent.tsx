@@ -12,7 +12,8 @@ import { FONT, INK, TEXT } from '@/constants/theme';
 import PlacePhoto from '@/components/place/PlacePhoto';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
-import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar, AnimatedNumber, AnimatedScoreArc } from '@/components/animations/AnimatedElements';
+import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar } from '@/components/animations/AnimatedElements';
+import { getMatchTier } from '@/lib/match-tier';
 import { SignalResonanceStrip, OverlapMosaic, DeepMatchBreakdown } from '@/components/intelligence';
 import type { ResonanceCluster, DeepMatch, DeepMatchSignal } from '@/components/intelligence';
 import { getDisplayLocation } from '@/lib/place-display';
@@ -450,7 +451,19 @@ function PlaceDetailContent({
               tabIndex={onViewBriefing ? 0 : undefined}
               onKeyDown={onViewBriefing ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewBriefing(); } } : undefined}
             >
-              <AnimatedScoreArc score={hydratedMatchScore} size={56} color="#8a6a2a" />
+              {(() => {
+                const tier = getMatchTier(hydratedMatchScore);
+                return (
+                  <div
+                    className="flex items-center justify-center px-3 py-2 rounded-xl"
+                    style={{ background: tier.bg, minWidth: 56 }}
+                  >
+                    <span style={{ fontFamily: FONT.mono, fontSize: 11, fontWeight: 700, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                      {tier.shortLabel}
+                    </span>
+                  </div>
+                );
+              })()}
               <div className="flex-1 min-w-0">
                 <div className={`${matchScoreLabelFontSize} font-semibold`} style={{ color: TEXT.primary }}>Taste match</div>
                 {/* Signal resonance clusters — replaces basic domain chips */}

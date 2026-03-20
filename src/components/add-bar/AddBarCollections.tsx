@@ -8,6 +8,7 @@ import { SectionHeader } from './AddBarShared';
 import CollectionPickerList from '@/components/ui/CollectionPickerList';
 import type { ImportedPlace, Collection } from '@/types';
 import type { AddBarState } from '@/stores/addBarStore';
+import { getMatchTier } from '@/lib/match-tier';
 
 type TripContext = NonNullable<AddBarState['tripContext']>;
 
@@ -55,11 +56,14 @@ export default function AddBarCollections({
           <p style={{ fontFamily: FONT.mono, fontSize: 10, color: TEXT.secondary, margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {previewPlace.type}{previewPlace.location ? ` \u00B7 ${previewPlace.location}` : ''}
           </p>
-          {previewPlace.matchScore ? (
-            <p style={{ fontFamily: FONT.mono, fontSize: 10, color: 'var(--t-dark-teal)', margin: '3px 0 0' }}>
-              {previewPlace.matchScore}% taste match
-            </p>
-          ) : null}
+          {previewPlace.matchScore ? (() => {
+            const tier = getMatchTier(previewPlace.matchScore);
+            return (
+              <p style={{ fontFamily: FONT.mono, fontSize: 10, color: tier.color, margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                {tier.label}
+              </p>
+            );
+          })() : null}
           {previewPlace.enrichment?.description && (
             <p style={{
               fontFamily: FONT.sans,

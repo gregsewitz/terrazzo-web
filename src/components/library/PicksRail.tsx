@@ -13,6 +13,7 @@ import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } fro
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
 import { getDestColor } from '@/lib/destination-helpers';
 import { getDisplayLocation } from '@/lib/place-display';
+import { isStrongMatch } from '@/lib/match-tier';
 
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant', hotel: 'Hotel', bar: 'Bar', cafe: 'Café',
@@ -300,7 +301,7 @@ function PicksRailInner({
               >
                 <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
                 {/* Match score pip */}
-                {place.matchScore >= 80 && (
+                {isStrongMatch(place.matchScore) && (
                   <div
                     className="absolute flex items-center justify-center"
                     style={{

@@ -13,9 +13,9 @@ export default function RevealPage() {
   const createTrip = useTripStore((s) => s.createTrip);
   const hasCreatedTrips = useRef(false);
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!onboardingDepth) {
-      finishOnboarding('full_flow');
+      await finishOnboarding('full_flow');
     }
 
     // Auto-seed a "dreaming" trip from dream destinations conversation

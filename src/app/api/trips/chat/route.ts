@@ -59,7 +59,7 @@ Day ${tripContext.currentDay.dayNumber}/${tripContext.totalDays} in ${tripContex
 
 TODAY'S ITINERARY:
 ${(tripContext.currentDay.slots || []).map((slot: { label: string; place?: { name: string; type?: string; matchScore?: number } }) =>
-  `- ${slot.label}: ${slot.place ? `${slot.place.name}${slot.place.matchScore ? ` (${slot.place.matchScore}% match)` : ''}` : '(empty)'}`
+  `- ${slot.label}: ${slot.place ? `${slot.place.name}${slot.place.matchScore ? ` (taste: ${slot.place.matchScore >= 78 ? 'strong match' : slot.place.matchScore >= 65 ? 'good match' : slot.place.matchScore >= 50 ? 'worth a look' : 'mixed fit'})` : ''}` : '(empty)'}`
 ).join('\n')}
 ${tripContext.currentDay.hotel ? `- Hotel: ${tripContext.currentDay.hotel}` : ''}`
       : `TRIP: ${tripContext?.name || 'Untitled'} — ${tripContext?.destinations?.join(', ') || 'Unknown destination'}`;

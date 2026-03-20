@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { SOURCE_STYLES, GhostSourceType } from '@/types';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import type { ImportedPlace, TimeSlot } from '@/types';
 import QuickEntryInput from '@/components/chat/QuickEntryInput';
 import GhostBadge from './GhostBadge';
@@ -169,14 +170,17 @@ function GridCard({
           </span>
         )}
 
-        {matchScore != null && matchScore >= 70 && (
-          <span
-            className="flex-shrink-0 px-1 rounded"
-            style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: 'rgba(58,128,136,0.1)', color: COLOR.darkTeal }}
-          >
-            {Math.round(matchScore)}%
-          </span>
-        )}
+        {shouldShowTierBadge(matchScore) && (() => {
+          const tier = getMatchTier(matchScore);
+          return (
+            <span
+              className="flex-shrink-0 px-1 rounded"
+              style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: tier.bg, color: tier.color }}
+            >
+              {tier.shortLabel}
+            </span>
+          );
+        })()}
 
         {sourceBadge && (
           <span

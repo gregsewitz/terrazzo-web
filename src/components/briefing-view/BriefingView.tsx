@@ -16,8 +16,8 @@ import {
   StaggerItem,
   AnimatedBar,
   AnimatedNumber,
-  AnimatedScoreArc,
 } from '@/components/animations/AnimatedElements';
+import { getMatchTier } from '@/lib/match-tier';
 import {
   DOMAIN_COLORS,
   DOMAIN_ICONS,
@@ -210,14 +210,17 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                     <div className="flex items-center justify-center p-3 rounded-2xl" style={{ background: INK['03'] }}>
                       <TerrazzoMosaic profile={numericProfile} size="xs" />
                     </div>
-                    {matchScore != null && (
-                      <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.08), rgba(238,113,109,0.03))' }}>
-                        <div className="text-[20px] font-bold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
-                          <AnimatedNumber value={matchScore} suffix="%" />
+                    {matchScore != null && (() => {
+                      const tier = getMatchTier(matchScore);
+                      return (
+                        <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: tier.bg }}>
+                          <div className="text-[14px] font-bold" style={{ color: tier.color, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                            {tier.label}
+                          </div>
+                          <div className="text-[9px] mt-0.5" style={{ color: TEXT.secondary }}>Taste match</div>
                         </div>
-                        <div className="text-[9px] mt-0.5" style={{ color: TEXT.primary }}>Match</div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     {place.google?.rating && (
                       <div className="flex-1 p-3 rounded-2xl text-center" style={{ background: INK['03'] }}>
                         <div className="text-[20px] font-bold" style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
@@ -355,17 +358,19 @@ export default function BriefingView({ googlePlaceId, placeName, matchScore, pla
                 <SafeFadeIn direction="up" distance={14} duration={0.5}>
                   <div className="flex gap-3 mb-6 flex-wrap md:flex-nowrap">
                     {/* Score arc */}
-                    {matchScore != null && (
-                      <div className="flex items-center gap-3 p-4 rounded-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(238,113,109,0.08), rgba(238,113,109,0.03))', border: '1px solid rgba(238,113,109,0.12)' }}>
-                        <AnimatedScoreArc score={matchScore} size={52} color="#8a6a2a" />
-                        <div>
-                          <div className="text-[18px] font-bold" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>
-                            <AnimatedNumber value={matchScore} suffix="%" />
+                    {matchScore != null && (() => {
+                      const tier = getMatchTier(matchScore);
+                      return (
+                        <div className="flex items-center gap-3 p-4 rounded-2xl flex-shrink-0" style={{ background: tier.bg, border: `1px solid ${tier.color}18` }}>
+                          <div>
+                            <div className="text-[15px] font-bold" style={{ color: tier.color, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                              {tier.label}
+                            </div>
+                            <div className="text-[9px] mt-0.5" style={{ color: TEXT.secondary }}>Taste match</div>
                           </div>
-                          <div className="text-[9px]" style={{ color: TEXT.secondary }}>Taste Match</div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     {/* Mosaic */}
                     <div className="flex items-center justify-center p-3 rounded-2xl" style={{ background: INK['03'] }}>
                       <TerrazzoMosaic profile={numericProfile} size="xs" />
