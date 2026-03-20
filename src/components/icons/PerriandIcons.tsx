@@ -70,27 +70,27 @@ interface PerriandIconProps {
 
 const ACCENT: Partial<Record<PerriandIconName, string>> = {
   // Place types
-  restaurant: COLOR.rose, // Royère Pink
-  bar:        COLOR.violet, // Panton Violet
-  hotel:      COLOR.coral, // Honey
-  cafe:       COLOR.ochre, // Chrome Yellow
-  museum:     COLOR.darkTeal, // Verde
-  activity:   COLOR.orange, // Panton Orange
-  neighborhood: COLOR.ghost, // Ghost
-  shop:       COLOR.amber, // Amber
+  restaurant: COLOR.coral,
+  bar:        COLOR.periwinkle,
+  hotel:      COLOR.coral,
+  cafe:       COLOR.ochre,
+  museum:     COLOR.darkTeal,
+  activity:   COLOR.coral,
+  neighborhood: COLOR.warmGray,
+  shop:       COLOR.ochre,
   // Time slots
   breakfast:  COLOR.coral,
   morning:    COLOR.ochre,
-  lunch:      COLOR.rose,
-  afternoon:  COLOR.orange,
+  lunch:      COLOR.coral,
+  afternoon:  COLOR.ochre,
   dinner:     COLOR.navy,
-  evening:    COLOR.violet,
+  evening:    COLOR.periwinkle,
   // Taste domains
   design:     COLOR.signalRed,
-  character:  COLOR.violet,
-  food:       COLOR.rose,
+  character:  COLOR.periwinkle,
+  food:       COLOR.coral,
   location:   COLOR.darkTeal,
-  service:    COLOR.amber,
+  service:    COLOR.ochre,
   wellness:   COLOR.ochre,
   // Reactions (use reaction color as accent)
   myPlace:    COLOR.darkTeal,
@@ -106,24 +106,24 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   star:       COLOR.ochre,
   pin:        COLOR.darkTeal,
   sparkle:    COLOR.ochre,
-  summer:     COLOR.orange,
-  lightning:  COLOR.orange,
+  summer:     COLOR.coral,
+  lightning:  COLOR.coral,
   // Transport
-  transport:    COLOR.ghost,
+  transport:    COLOR.warmGray,
   // Collaboration / Activity
-  invite:       COLOR.indigo,
+  invite:       COLOR.periwinkle,
   wave:         COLOR.darkTeal,
   lightbulb:    COLOR.ochre,
   acceptCircle: COLOR.darkTeal,
   rejectCircle: COLOR.signalRed,
   chatBubble:   COLOR.coral,
-  loveReaction: COLOR.rose,
-  unsure:       COLOR.ghost,
-  swap:         COLOR.indigo,
-  alert:        COLOR.orange,
-  currency:     COLOR.amber,
-  calendar:     COLOR.ghost,
-  person:       COLOR.violet,
+  loveReaction: COLOR.coral,
+  unsure:       COLOR.warmGray,
+  swap:         COLOR.periwinkle,
+  alert:        COLOR.coral,
+  currency:     COLOR.ochre,
+  calendar:     COLOR.warmGray,
+  person:       COLOR.periwinkle,
   quote:        COLOR.coral,
 };
 
@@ -368,7 +368,7 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
     <>
       <path d="M16,6 C16,6 24,14 24,19 C24,24 20,26 16,26 C12,26 8,24 8,19 C8,14 16,6 16,6Z" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
       <circle cx="16" cy="18" r="2.5" stroke={s} strokeWidth="1.5" fill="none" />
-      <circle cx="16" cy="18" r="1" fill={a || COLOR.orange} />
+      <circle cx="16" cy="18" r="1" fill={a || COLOR.coral} />
     </>
   ),
 

@@ -23,10 +23,10 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
   // Category accent colors — subtle, muted
   const categoryColors: Record<string, string> = {
     activity: COLOR.darkTeal,
-    transport: '#5a7a9a',   // steel blue
+    transport: COLOR.warmGray,
     dining: COLOR.coral,
-    logistics: COLOR.ghost,
-    other: COLOR.ghost,
+    logistics: COLOR.warmGray,
+    other: COLOR.warmGray,
   };
   const accentColor = categoryColors[entry.category] || categoryColors.other;
 

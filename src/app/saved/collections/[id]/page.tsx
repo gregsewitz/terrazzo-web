@@ -204,7 +204,7 @@ function CollectionDetailContent() {
               className="text-[10px] px-2.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1"
               style={{
                 background: `${COLOR.coral}14`,
-                color: COLOR.amber,
+                color: COLOR.coral,
                 border: 'none',
                 fontFamily: FONT.mono,
               }}

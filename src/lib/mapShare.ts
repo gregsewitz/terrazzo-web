@@ -15,14 +15,14 @@ export function generateShareableMapHTML(
 
   // Type color mapping
   const typeColors: Record<string, string> = {
-    restaurant: COLOR.rose,
-    hotel: COLOR.coral,
-    bar: COLOR.violet,
+    restaurant: COLOR.coral,
+    hotel: COLOR.navy,
+    bar: COLOR.periwinkle,
     museum: COLOR.darkTeal,
     cafe: COLOR.ochre,
-    activity: COLOR.orange,
-    neighborhood: COLOR.ghost,
-    shop: COLOR.amber,
+    activity: COLOR.olive,
+    neighborhood: COLOR.warmGray,
+    shop: COLOR.peach,
   };
 
   const placesJSON = JSON.stringify(
@@ -34,7 +34,7 @@ export function generateShareableMapHTML(
       address: p.google?.address || p.location || '',
       rating: p.google?.rating,
       category: p.google?.category || p.type,
-      color: typeColors[p.type] || COLOR.orange,
+      color: typeColors[p.type] || COLOR.coral,
       mapsUrl: p.google?.placeId
         ? `https://www.google.com/maps/place/?q=place_id:${p.google.placeId}`
         : `https://www.google.com/maps/search/?api=1&query=${p.google?.lat},${p.google?.lng}`,

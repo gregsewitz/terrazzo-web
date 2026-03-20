@@ -30,13 +30,6 @@ export const COLOR = {
   lightYellow: '#ebd896',
   darkBrown: '#413800',
   signalRed: '#d63020',
-  // ── Icon accent colors (Perriand system) ──
-  rose: '#e87080',     // Royère Pink — restaurant, lunch, food
-  violet: '#6844a0',   // Panton Violet — bar, character, evening
-  orange: '#e86830',   // Panton Orange — activity, afternoon, summer
-  ghost: '#6b8b9a',    // Ghost gray — neighborhood, transport, calendar
-  amber: '#a06c28',    // Amber — shop, service, currency
-  indigo: '#6366f1',   // Indigo — invite, swap
 } as const;
 
 // ─── Text color hierarchy ───
