@@ -18,6 +18,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/profile/TerrazzoMosaic';
 import PlaceLink from '@/components/place/PlaceLink';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
+import { getMatchTier } from '@/lib/match-tier';
 import type { TasteProfile as NumericProfile, GeneratedTasteProfile } from '@/types';
 import {
   FadeInSection,
@@ -26,7 +27,6 @@ import {
   AnimatedBar,
   AnimatedSpectrum,
   AnimatedNumber,
-  AnimatedScoreArc,
 } from '@/components/animations/AnimatedElements';
 
 
@@ -91,11 +91,11 @@ export function IdentitySection({ profile, signalCount, numericProfile }: { prof
         </FadeInSection>
       </div>
 
-      {/* Mosaic — scale in */}
+      {/* Sensibility Map — scale in */}
       <FadeInSection delay={0.6} direction="none">
         <div className="flex flex-col items-center px-5 pt-4 pb-8 gap-4">
           <div style={{ fontFamily: FONT.mono, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'var(--t-peach)', opacity: 0.7 }}>
-            Your Terrazzo Mosaic
+            Your Sensibility Map
           </div>
           {isMobileSafari() ? (
             <div className="flex items-center gap-6">
@@ -603,7 +603,19 @@ export function MatchesSection({ profile }: { profile: ProfileShape }) {
             <div className="rounded-2xl overflow-hidden" style={{ background: 'white', boxShadow: '0 4px 12px rgba(0,42,85,0.12)' }}>
               <div className="p-4 border-b" style={{ borderColor: 'rgba(0,42,85,0.06)' }}>
                 <div className="flex items-start gap-4">
-                  <AnimatedScoreArc score={prop.score} color="var(--t-teal)" size={52} delay={i * 0.15} />
+                  {(() => {
+                    const tier = getMatchTier(prop.score);
+                    return (
+                      <div
+                        className="w-[52px] h-[52px] rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: tier.bg, border: `1.5px solid ${tier.color}` }}
+                      >
+                        <span className="text-[11px] font-bold text-center leading-tight px-1" style={{ color: tier.color, fontFamily: FONT.mono }}>
+                          {tier.shortLabel}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 mb-0.5">
                       <span className="text-[17px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{prop.name}</span>

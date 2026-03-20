@@ -17,7 +17,6 @@ import {
   DimensionsSection,
   VocabularySection,
   MatchesSection,
-  TasteRadarSection,
   TravelStatsSection,
   TravelTimelineSection,
   TasteEvolutionSection,
@@ -54,7 +53,6 @@ export default function ProfileDeepDive() {
       <div className="rounded-2xl overflow-hidden mx-3"><DimensionsSection profile={profile} /></div>
       <div className="rounded-2xl overflow-hidden mx-3"><VocabularySection profile={profile} /></div>
       <div className="rounded-2xl overflow-hidden mx-3"><MatchesSection profile={profile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><TasteRadarSection profile={profile} /></div>
       <div className="rounded-2xl overflow-hidden mx-3"><TravelStatsSection /></div>
       <div className="rounded-2xl overflow-hidden mx-3"><TravelTimelineSection /></div>
       <div className="rounded-2xl overflow-hidden mx-3"><TasteEvolutionSection profile={profile} /></div>
