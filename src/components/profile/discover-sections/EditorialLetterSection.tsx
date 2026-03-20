@@ -44,7 +44,7 @@ export function EditorialLetterSection({ letter }: { letter?: EditorialLetter })
         transition={{ duration: 0.5, delay: 0.5 }}
         viewport={{ once: true, margin: '-100px' }}
       >
-        <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ background: `${COLOR.ochre}12`, color: COLOR.ochre, fontFamily: FONT.mono }}>
+        <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ background: `${COLOR.navy}10`, color: COLOR.navy, fontFamily: FONT.mono }}>
           Sparked by: {l.signalHighlight}
         </span>
       </SafeMotionDiv>

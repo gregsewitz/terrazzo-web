@@ -29,7 +29,7 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
       >
       <div className="flex items-center gap-2 mb-1">
         <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
-        <span className="text-[16px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.ochre }}>
+        <span className="text-[16px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}>
           If you&apos;re traveling this {label.toLowerCase()}...
         </span>
       </div>
@@ -55,11 +55,11 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
                       <PlacePhoto src={imageUrl} alt={rec.name} fill sizes="36px" />
                     </div>
                   ) : (
-                    <ScoreArc score={rec.score} size={36} color={COLOR.ochre} />
+                    <ScoreArc score={rec.score} size={36} color={COLOR.periwinkle} />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-[14px] font-semibold" style={{ color: COLOR.ochre }}>{rec.name}</span>
+                      <span className="text-[14px] font-semibold" style={{ color: COLOR.periwinkle }}>{rec.name}</span>
                       <span className="text-[12px]" style={{ color: COLOR.navy }}>{rec.location}</span>
                     </div>
                     <p className="text-[12px] leading-snug" style={{ color: COLOR.navy }}>{rec.whyFits}</p>

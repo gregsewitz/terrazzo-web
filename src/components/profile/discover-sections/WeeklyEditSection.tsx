@@ -46,14 +46,14 @@ export function WeeklyEditSection({ collection: propCollection }: { collection?:
                 <div className="p-4 flex flex-col">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <div className="text-[16px] font-semibold" style={{ color: COLOR.ochre }}>{place.name}</div>
+                      <div className="text-[16px] font-semibold" style={{ color: COLOR.darkTeal }}>{place.name}</div>
                       <div className="text-[13px]" style={{ color: COLOR.navy }}>{place.location}</div>
                     </div>
-                    <ScoreArc score={place.score} size={38} color={COLOR.ochre} />
+                    <ScoreArc score={place.score} size={38} color={COLOR.darkTeal} />
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2.5">
                     {(Array.isArray(place.signals) ? place.signals : []).map(s => (
-                      <span key={s} className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: `${COLOR.ochre}12`, color: COLOR.ochre, fontFamily: FONT.sans }}>{s}</span>
+                      <span key={s} className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: `${COLOR.darkTeal}12`, color: COLOR.darkTeal, fontFamily: FONT.sans }}>{s}</span>
                     ))}
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: COLOR.navy }}>{place.note}</p>

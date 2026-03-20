@@ -30,7 +30,7 @@ export function SignalThreadSection({ thread }: { thread?: SignalThread }) {
         viewport={{ once: true, margin: '-100px' }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${COLOR.ochre}12`, color: COLOR.ochre, fontFamily: FONT.mono }}>
+          <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${COLOR.periwinkle}12`, color: COLOR.periwinkle, fontFamily: FONT.mono }}>
             {t.signal}
           </span>
         </div>
@@ -76,9 +76,9 @@ export function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                     <span className="text-[11px] uppercase tracking-wider" style={{ color: COLOR.darkTeal, fontFamily: FONT.mono }}>{place.type}</span>
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[15px] font-semibold" style={{ color: COLOR.ochre }}>{place.name}</span>
+                    <span className="text-[15px] font-semibold" style={{ color: COLOR.periwinkle }}>{place.name}</span>
                     <span className="text-[12px]" style={{ color: COLOR.navy }}>{place.location}</span>
-                    <span className="text-[12px] font-bold ml-auto" style={{ color: COLOR.ochre, fontFamily: FONT.mono }}>{Math.round(place.score)}</span>
+                    <span className="text-[12px] font-bold ml-auto" style={{ color: COLOR.periwinkle, fontFamily: FONT.mono }}>{Math.round(place.score)}</span>
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: COLOR.navy }}>{place.connection}</p>
                 </div>

@@ -15,7 +15,7 @@ export function TasteTensionSection({ tension }: { tension?: TasteTension }) {
   };
   return (
     <div className="px-5 py-6" style={{ borderBottom: `1px solid ${INK['06']}` }}>
-      <SectionLabel color={COLOR.ochre}>Taste Tension</SectionLabel>
+      <SectionLabel color={COLOR.coral}>Taste Tension</SectionLabel>
       <TasteTensionCard
         tension={intelTension}
         onPlaceTap={undefined}

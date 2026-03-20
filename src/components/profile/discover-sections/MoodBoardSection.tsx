@@ -30,7 +30,7 @@ export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
             transition={{ duration: 0.5, delay: idx * 0.1 }}
             viewport={{ once: true, margin: '-100px' }}
           >
-            <h4 className="text-[16px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}>{board.mood}</h4>
+            <h4 className="text-[16px] font-semibold mb-1" style={{ fontFamily: FONT.serif, color: COLOR.olive }}>{board.mood}</h4>
             <p className="text-[13px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>{board.description}</p>
             <div className="flex flex-col gap-2">
               {board.places.map((p, pIdx) => {
@@ -53,7 +53,7 @@ export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-[14px] font-semibold" style={{ color: COLOR.darkTeal }}>{p.name}</span>
+                          <span className="text-[14px] font-semibold" style={{ color: COLOR.olive }}>{p.name}</span>
                           <span className="text-[12px]" style={{ color: COLOR.navy }}>{p.location}</span>
                         </div>
                         <p className="text-[12px] italic" style={{ color: COLOR.navy }}>{p.vibe}</p>
