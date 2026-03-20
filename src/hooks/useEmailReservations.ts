@@ -370,6 +370,13 @@ export function useEmailReservations() {
       next.set(reservationId, { tripId, tripName });
       return next;
     });
+    // Auto-select the reservation for import
+    setSelectedIds(prev => {
+      if (prev.has(reservationId)) return prev;
+      const next = new Set(prev);
+      next.add(reservationId);
+      return next;
+    });
     // Also enable the trip link for this trip so batch-confirm includes it
     setTripLinkEnabled(prev => {
       const next = new Map(prev);
@@ -432,8 +439,14 @@ export function useEmailReservations() {
         }
       }
 
+      const filteredIds = Array.from(selectedIds).filter(id => visibleIds.has(id));
+      if (filteredIds.length === 0) {
+        setError('No places selected to import');
+        return;
+      }
+
       const payload: BatchConfirmPayload = {
-        reservationIds: Array.from(selectedIds).filter(id => visibleIds.has(id)),
+        reservationIds: filteredIds,
         tripLinks: tripLinksPayload,
         ratings: ratingsPayload,
       };
@@ -482,12 +495,12 @@ export function useEmailReservations() {
 
       return result;
     } catch (err) {
+      console.error('[import] Import failed:', err);
       setError(err instanceof Error ? err.message : 'Import failed');
-      throw err;
     } finally {
       setImporting(false);
     }
-  }, [selectedIds, reservations, tripLinkEnabled, ratings, visibleIds, fetchReservations, createdTrips, perReservationTrips]);
+  }, [selectedIds, reservations, tripLinkEnabled, ratings, visibleIds, fetchReservations, createdTrips, perReservationTrips, selectedCollectionId]);
 
   const dismissSelected = useCallback(async () => {
     setImporting(true);
