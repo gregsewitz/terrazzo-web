@@ -69,62 +69,62 @@ interface PerriandIconProps {
 // ─── Default accent colors per icon ──────────────────────────────────────────
 
 const ACCENT: Partial<Record<PerriandIconName, string>> = {
-  // Place types
+  // Place types — each type gets a unique brand color
   restaurant: COLOR.coral,
   bar:        COLOR.periwinkle,
-  hotel:      COLOR.coral,
+  hotel:      COLOR.navy,
   cafe:       COLOR.ochre,
   museum:     COLOR.darkTeal,
-  activity:   COLOR.coral,
+  activity:   COLOR.olive,
   neighborhood: COLOR.warmGray,
-  shop:       COLOR.ochre,
+  shop:       COLOR.peach,
   // Time slots
-  breakfast:  COLOR.coral,
+  breakfast:  COLOR.peach,
   morning:    COLOR.ochre,
   lunch:      COLOR.coral,
-  afternoon:  COLOR.ochre,
+  afternoon:  COLOR.olive,
   dinner:     COLOR.navy,
   evening:    COLOR.periwinkle,
-  // Taste domains
-  design:     COLOR.signalRed,
+  // Taste domains — each domain gets a unique brand color
+  design:     COLOR.coral,
   character:  COLOR.periwinkle,
-  food:       COLOR.coral,
+  food:       COLOR.peach,
   location:   COLOR.darkTeal,
-  service:    COLOR.ochre,
-  wellness:   COLOR.ochre,
-  // Reactions (use reaction color as accent)
+  service:    COLOR.navy,
+  wellness:   COLOR.olive,
+  // Reactions
   myPlace:    COLOR.darkTeal,
   enjoyed:    COLOR.coral,
   mixed:      COLOR.ochre,
   notMe:      COLOR.signalRed,
   // Sources
-  friend:     COLOR.darkTeal,
-  terrazzo:   COLOR.signalRed,
+  friend:     COLOR.mintTeal,
+  terrazzo:   COLOR.coral,
   // Navigation
-  plan:       COLOR.signalRed,
+  plan:       COLOR.coral,
   // Misc
   star:       COLOR.ochre,
   pin:        COLOR.darkTeal,
   sparkle:    COLOR.ochre,
-  summer:     COLOR.coral,
+  summer:     COLOR.ochre,
   lightning:  COLOR.coral,
   // Transport
-  transport:    COLOR.warmGray,
+  transport:  COLOR.warmGray,
   // Collaboration / Activity
-  invite:       COLOR.periwinkle,
-  wave:         COLOR.darkTeal,
-  lightbulb:    COLOR.ochre,
+  invite:     COLOR.periwinkle,
+  wave:       COLOR.mintTeal,
+  lightbulb:  COLOR.ochre,
   acceptCircle: COLOR.darkTeal,
   rejectCircle: COLOR.signalRed,
-  chatBubble:   COLOR.coral,
+  chatBubble: COLOR.peach,
   loveReaction: COLOR.coral,
-  unsure:       COLOR.warmGray,
-  swap:         COLOR.periwinkle,
-  alert:        COLOR.coral,
-  currency:     COLOR.ochre,
-  calendar:     COLOR.warmGray,
-  person:       COLOR.periwinkle,
-  quote:        COLOR.coral,
+  unsure:     COLOR.warmGray,
+  swap:       COLOR.periwinkle,
+  alert:      COLOR.coral,
+  currency:   COLOR.ochre,
+  calendar:   COLOR.warmGray,
+  person:     COLOR.navy,
+  quote:      COLOR.peach,
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────

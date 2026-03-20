@@ -152,25 +152,25 @@ export function formatDomain(key: string): string {
 export const DIMENSION_COLORS: Record<string, string> = {
   "Design": COLOR.coral,
   "Atmosphere": COLOR.ochre,
-  "Character": COLOR.olive,
+  "Character": COLOR.periwinkle,
   "Service": COLOR.navy,
-  "FoodDrink": COLOR.darkTeal,
-  "Geography": COLOR.teal,
-  "Wellness": COLOR.periwinkle,
-  "Sustainability": COLOR.darkBrown,
-  "Rejection": COLOR.navy,
+  "FoodDrink": COLOR.peach,
+  "Geography": COLOR.mintTeal,
+  "Wellness": COLOR.olive,
+  "Sustainability": COLOR.darkTeal,
+  "Rejection": COLOR.warmGray,
 };
 
 // Taste radar axis colors — each domain gets a distinct brand color
 export const AXIS_COLORS: Record<string, string> = {
   Design: COLOR.coral,
   Atmosphere: COLOR.ochre,
-  Character: COLOR.olive,
+  Character: COLOR.periwinkle,
   Service: COLOR.navy,
-  FoodDrink: COLOR.darkTeal,
-  Geography: COLOR.teal,
-  Wellness: COLOR.periwinkle,
-  Sustainability: COLOR.darkBrown,
+  FoodDrink: COLOR.peach,
+  Geography: COLOR.mintTeal,
+  Wellness: COLOR.olive,
+  Sustainability: COLOR.darkTeal,
 };
 
 export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
@@ -183,4 +183,4 @@ export const CONTEXT_ICONS: Record<string, PerriandIconName> = {
 };
 
 // Context shift card colors — brand palette rotation
-export const CONTEXT_COLORS = [COLOR.navy, COLOR.teal, COLOR.coral, COLOR.olive, COLOR.ochre, COLOR.peach];
+export const CONTEXT_COLORS = [COLOR.navy, COLOR.mintTeal, COLOR.coral, COLOR.olive, COLOR.ochre, COLOR.peach];

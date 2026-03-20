@@ -12,7 +12,8 @@ export const FONT = {
 // CSS variables are the canonical source; these are for inline styles.
 
 export const COLOR = {
-  // ── Brand palette (from Brand Identity Guide) ──
+  // ── Brand palette ──
+  // 11 core brand colors (9 from Brand Identity Guide + dark teal, periwinkle)
   coral: '#E86F5A',
   navy: '#1A2D4A',
   mintTeal: '#5EC4B2',
@@ -22,10 +23,10 @@ export const COLOR = {
   olive: '#6B7C4E',
   charcoal: '#2D2D2D',
   warmGray: '#A89888',
-  // ── Extended / utility colors ──
-  teal: '#5EC4B2',     // alias for mintTeal
-  darkTeal: '#3a8088', // darker teal for text-on-light
+  darkTeal: '#3a8088',
   periwinkle: '#3869a4',
+  // ── Utility colors ──
+  teal: '#5EC4B2',     // alias for mintTeal
   blush: '#f1e7e5',
   lightYellow: '#ebd896',
   darkBrown: '#413800',
