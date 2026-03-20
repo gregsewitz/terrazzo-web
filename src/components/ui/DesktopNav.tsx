@@ -21,6 +21,7 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
   const isDiscover = pathname.startsWith('/discover');
   const isCollect = pathname.startsWith('/saved');
   const isPlan = pathname.startsWith('/trips');
+  const isProfile = pathname === '/profile';
 
   return (
     <nav
@@ -113,6 +114,17 @@ export default function DesktopNav({ userInitials = 'G' }: DesktopNavProps) {
           onMouseEnter={() => setHoveredNav('plan')}
           onMouseLeave={() => setHoveredNav(null)}
           onClick={() => router.push('/trips')}
+        />
+
+        {/* Profile */}
+        <NavLink
+          label="Profile"
+          icon="profile"
+          isActive={isProfile}
+          isHovered={hoveredNav === 'profile'}
+          onMouseEnter={() => setHoveredNav('profile')}
+          onMouseLeave={() => setHoveredNav(null)}
+          onClick={() => router.push('/profile')}
         />
       </div>
 
