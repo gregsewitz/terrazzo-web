@@ -4,7 +4,6 @@ import React, { memo } from 'react';
 import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain } from '@/types';
 import { getPlaceImage } from '@/constants/placeImages';
 import { PHOTO_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
-import { formatDomain } from '@/constants/profile';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { TerrazzoMosaic, MosaicLegend } from '@/components/profile/TerrazzoMosaic';
 import PipelineProgress from '@/components/place/PipelineProgress';
@@ -87,8 +86,6 @@ function PlaceDetailContent({
   const personalNoteFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
   const yourNotesFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const terrazzoParagraphFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
-  const matchScoreFontSize = isDesktop ? 'text-[15px]' : 'text-[14px]';
-  const matchScoreLabelFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
   const matchScoreSubFontSize = isDesktop ? 'text-[11px]' : 'text-[10px]';
   const rateButtonFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
   const saveButtonFontSize = isDesktop ? 'text-[14px]' : 'text-[13px]';
@@ -188,20 +185,27 @@ function PlaceDetailContent({
               color: 'white',
               fontFamily: FONT.mono,
             } as const;
-            // Normalize the Google category: strip underscores, title-case, and check redundancy
+            // Merge Terrazzo type + Google category into a single label.
+            // Use the Google category when it's more specific; fall back to Terrazzo type.
             const rawCategory = hydratedGoogle?.category || '';
             const normalizedCategory = rawCategory.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
             const placeType = item.type.charAt(0).toUpperCase() + item.type.slice(1);
-            // Show category chip only when it adds info beyond item.type
-            const showCategory = normalizedCategory &&
-              normalizedCategory.toLowerCase() !== item.type.toLowerCase() &&
-              !normalizedCategory.toLowerCase().includes(item.type.toLowerCase()) &&
-              !item.type.toLowerCase().includes(normalizedCategory.toLowerCase().replace(/\s+/g, ''));
+            const GENERIC_CATEGORIES = new Set([
+              'establishment', 'point of interest', 'store', 'food', 'place',
+              'local business', 'business', 'health', 'general contractor',
+            ]);
+            const categoryIsGeneric = !normalizedCategory ||
+              GENERIC_CATEGORIES.has(normalizedCategory.toLowerCase()) ||
+              normalizedCategory.toLowerCase() === item.type.toLowerCase() ||
+              normalizedCategory.toLowerCase().includes(item.type.toLowerCase()) ||
+              item.type.toLowerCase().includes(normalizedCategory.toLowerCase().replace(/\s+/g, ''));
+            // Show Google category when it adds specificity; otherwise show Terrazzo type
+            const displayType = categoryIsGeneric ? placeType : normalizedCategory;
             return (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                {/* Place type */}
+                {/* Place type (merged with Google category) */}
                 <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
-                  {placeType}
+                  {displayType}
                 </span>
 
                 {/* Google rating */}
@@ -227,13 +231,6 @@ function PlaceDetailContent({
                   <span className="text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1" style={chipStyle}>
                     <PerriandIcon name={sourceStyle.icon} size={10} color="white" />
                     via {item.source.name}
-                  </span>
-                )}
-
-                {/* Google category — only if it genuinely differs from item.type */}
-                {showCategory && (
-                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg" style={chipStyle}>
-                    {normalizedCategory}
                   </span>
                 )}
 
@@ -477,73 +474,37 @@ function PlaceDetailContent({
                 Taste Match
               </div>
 
-              {/* Score + tier + top signals row */}
-              <div className="flex items-start gap-4 mb-4">
-                <div className="flex flex-col items-center flex-shrink-0" style={{ minWidth: 48 }}>
-                  <span style={{ fontFamily: FONT.mono, fontSize: 22, fontWeight: 700, color: COLOR.navy, lineHeight: 1 }}>
-                    {hydratedMatchScore}
-                  </span>
-                  {(() => {
-                    const tier = getMatchTier(hydratedMatchScore);
-                    return (
-                      <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, color: tier.color, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>
-                        {tier.shortLabel}
-                      </span>
-                    );
-                  })()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 ? (
-                    <div className="flex flex-col gap-1.5">
-                      {resolvedItem.matchExplanation.topClusters.slice(0, 3).map((c, i) => {
-                        const color = DOMAIN_COLORS[c.domain as TasteDomain];
-                        const label = c.label.includes(':') ? c.label.split(':')[1] : c.label;
-                        const cleaned = label.replace(/-/g, ' ').replace(/\b(format|style|emphasis|preference|level)\b/gi, '').trim().replace(/\s+/g, ' ');
-                        const titleCased = cleaned.replace(/\b\w/g, ch => ch.toUpperCase());
-                        return (
-                          <div key={i} className="flex items-center gap-2">
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                            <span className="text-[12px]" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
-                              {titleCased}
-                            </span>
-                            <span className="text-[9px] font-medium" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                              {formatDomain(c.domain as TasteDomain)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : hydratedBreakdown ? (() => {
-                    const topDomains = TASTE_DOMAINS
-                      .map(d => ({ domain: d, score: hydratedBreakdown[d] ?? 0 }))
-                      .filter(d => d.score > 0.15)
-                      .sort((a, b) => b.score - a.score)
-                      .slice(0, 3);
-                    return topDomains.length > 0 ? (
-                      <div className="flex flex-col gap-1.5">
-                        {topDomains.map(({ domain, score }) => (
-                          <div key={domain} className="flex items-center gap-2">
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: DOMAIN_COLORS[domain], flexShrink: 0 }} />
-                            <span className="text-[12px]" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
-                              {formatDomain(domain)}
-                            </span>
-                            <span className="text-[9px] font-medium" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                              {Math.round(score * 100)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null;
-                  })() : null}
-                  {isEnriching && (
-                    intelData?.latestRun
-                      ? <div className="mt-1.5"><PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact /></div>
-                      : <div className="mt-1.5"><span className={`${matchScoreSubFontSize}`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Researching this place…</span></div>
-                  )}
-                </div>
-              </div>
+              {/* 1. Match tier badge */}
+              {(() => {
+                const tier = getMatchTier(hydratedMatchScore);
+                return (
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <span
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-bold"
+                      style={{ background: tier.bg, color: tier.color, fontFamily: FONT.mono }}
+                    >
+                      {tier.label}
+                    </span>
+                    {isEnriching && (
+                      intelData?.latestRun
+                        ? <PipelineProgress currentStage={intelData.latestRun.currentStage} stagesCompleted={intelData.latestRun.stagesCompleted} startedAt={intelData.latestRun.startedAt} compact />
+                        : <span className={`${matchScoreSubFontSize}`} style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>Researching this place…</span>
+                    )}
+                  </div>
+                );
+              })()}
 
-              {/* Taste mosaic / overlap */}
+              {/* 2. Narrative explanation */}
+              {resolvedItem.matchExplanation?.narrative && (
+                <p
+                  className={`${isDesktop ? 'text-[13px]' : 'text-[12px]'} leading-relaxed mb-4`}
+                  style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
+                >
+                  {resolvedItem.matchExplanation.narrative}
+                </p>
+              )}
+
+              {/* 3. Taste mosaic / overlap */}
               <div className="mb-4" style={{ borderTop: `1px solid ${INK['04']}`, paddingTop: 12 }}>
                 {userTasteProfile ? (
                   <OverlapMosaic
@@ -562,7 +523,7 @@ function PlaceDetailContent({
                 )}
               </div>
 
-              {/* Signal resonance — expanded clusters */}
+              {/* 4. Signal resonance — expanded clusters */}
               {resolvedItem.matchExplanation?.topClusters && resolvedItem.matchExplanation.topClusters.length > 0 && (
                 <div style={{ borderTop: `1px solid ${INK['04']}`, paddingTop: 12 }}>
                   <SignalResonanceStrip
@@ -572,7 +533,6 @@ function PlaceDetailContent({
                       score: c.score,
                       signals: c.signals,
                     }))}
-                    narrative={resolvedItem.matchExplanation.narrative}
                     variant="full"
                     layout={isDesktop ? 'desktop' : 'mobile'}
                   />

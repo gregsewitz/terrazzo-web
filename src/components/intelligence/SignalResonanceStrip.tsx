@@ -63,6 +63,10 @@ export function SignalResonanceStrip({
   const shown = variant === 'compact' ? clusters.slice(0, 3) : clusters.slice(0, 5);
   const isDesktop = layout === 'desktop';
 
+  // Normalize scores to 0-100 relative to the strongest cluster
+  const maxScore = Math.max(...shown.map(c => c.score), 1);
+  const normalizedScores = shown.map(c => Math.round((c.score / maxScore) * 100));
+
   if (shown.length === 0) return null;
 
   return (
@@ -97,14 +101,6 @@ export function SignalResonanceStrip({
                 >
                   {label}
                 </span>
-                {variant === 'full' && cluster.score >= 80 && (
-                  <span
-                    className="text-[9px] font-bold ml-0.5"
-                    style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-                  >
-                    {cluster.score}
-                  </span>
-                )}
               </button>
 
               {/* Expanded detail — only in full variant */}
@@ -149,25 +145,19 @@ export function SignalResonanceStrip({
                         ))}
                       </div>
                       {/* Strength bar */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center">
                         <div
                           className="flex-1 h-1 rounded-full overflow-hidden"
                           style={{ background: `${color}12` }}
                         >
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${cluster.score}%` }}
+                            animate={{ width: `${normalizedScores[i]}%` }}
                             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
                             className="h-full rounded-full"
                             style={{ background: color }}
                           />
                         </div>
-                        <span
-                          className="text-[10px] font-bold"
-                          style={{ color: color, fontFamily: FONT.mono }}
-                        >
-                          {cluster.score}
-                        </span>
                       </div>
                     </div>
                   </motion.div>
