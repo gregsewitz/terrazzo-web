@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { TasteDomain, TasteProfile, DOMAIN_COLORS } from '@/types';
+import { TasteDomain, TasteProfile, DOMAIN_COLORS, CORE_TASTE_DOMAINS } from '@/types';
 import { FONT, INK, TEXT } from '@/constants/theme';
+import { formatDomain } from '@/constants/profile';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,158 +28,183 @@ interface MosaicLegendProps {
 
 // ─── Size presets ──────────────────────────────────────────────────────────────
 
-const SIZE_CONFIG: Record<MosaicSize, { grid: number; tile: number; gap: number; radius: number }> = {
-  lg: { grid: 8, tile: 20, gap: 2, radius: 16 },
-  md: { grid: 6, tile: 16, gap: 2, radius: 12 },
-  sm: { grid: 5, tile: 12, gap: 1, radius: 8 },
-  xs: { grid: 4, tile: 7, gap: 1, radius: 6 },
+const SIZE_CONFIG: Record<MosaicSize, { svgSize: number; maxR: number; showLabels: boolean }> = {
+  lg: { svgSize: 200, maxR: 72, showLabels: true },
+  md: { svgSize: 140, maxR: 50, showLabels: true },
+  sm: { svgSize: 80, maxR: 30, showLabels: false },
+  xs: { svgSize: 44, maxR: 16, showLabels: false },
 };
 
-// ─── Seeded PRNG (deterministic per-profile) ──────────────────────────────────
+// ─── Shared domains ────────────────────────────────────────────────────────────
 
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
+const DOMAINS = CORE_TASTE_DOMAINS;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+function polarToCart(cx: number, cy: number, angle: number, r: number): [number, number] {
+  return [cx + r * Math.cos(angle - Math.PI / 2), cy + r * Math.sin(angle - Math.PI / 2)];
 }
 
-/** Simple numeric hash from profile values for stable rendering */
-function profileSeed(profile: TasteProfile): number {
-  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
-  let hash = 7;
-  DOMAINS.forEach(d => {
-    hash = hash * 31 + Math.round((profile[d] ?? 0) * 1000);
-  });
-  return Math.abs(hash) || 42;
-}
-
-// ─── Tile generation ───────────────────────────────────────────────────────────
-
-interface Tile {
-  color: string;
-  domain: string;
-  opacity: number;
-}
-
-function generateClusteredGrid(
+function makeSmoothPath(
+  cx: number,
+  cy: number,
+  maxR: number,
   profile: TasteProfile,
-  gridSize: number,
-  seed: number,
-): Tile[] {
-  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
-  const totalCells = gridSize * gridSize;
-  const totalScore = DOMAINS.reduce((sum, d) => sum + (profile[d] ?? 0), 0) || 1;
-
-  // Sort domains by score descending — largest regions first
-  const sorted = DOMAINS
-    .map(d => ({ domain: d, color: DOMAIN_COLORS[d], score: profile[d] ?? 0 }))
-    .sort((a, b) => b.score - a.score);
-
-  // Allocate tile counts proportionally
-  let allocated = 0;
-  const allocations = sorted.map((d, i) => {
-    let count: number;
-    if (i === sorted.length - 1) {
-      count = totalCells - allocated;
-    } else {
-      count = Math.round((d.score / totalScore) * totalCells);
-    }
-    count = Math.max(1, Math.min(count, totalCells - allocated));
-    allocated += count;
-    return { ...d, count };
+  angleStep: number,
+): string {
+  const points = DOMAINS.map((d, i) => {
+    const value = Math.max(profile[d] ?? 0, 0.08);
+    return polarToCart(cx, cy, i * angleStep, value * maxR);
   });
 
-  // Build snake-order indices (boustrophedon) for contiguous clustering
-  const snakeOrder: number[] = [];
-  for (let row = 0; row < gridSize; row++) {
-    if (row % 2 === 0) {
-      for (let col = 0; col < gridSize; col++) snakeOrder.push(row * gridSize + col);
-    } else {
-      for (let col = gridSize - 1; col >= 0; col--) snakeOrder.push(row * gridSize + col);
-    }
+  const n = points.length;
+  let path = `M ${points[0][0]},${points[0][1]}`;
+
+  for (let i = 0; i < n; i++) {
+    const p0 = points[(i - 1 + n) % n];
+    const p1 = points[i];
+    const p2 = points[(i + 1) % n];
+    const p3 = points[(i + 2) % n];
+
+    const tension = 0.3;
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
+
+    path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`;
   }
 
-  // Fill grid in snake order
-  const grid: (Tile | null)[] = new Array(totalCells).fill(null);
-  const rand = seededRandom(seed);
-  let idx = 0;
-
-  allocations.forEach(alloc => {
-    for (let i = 0; i < alloc.count && idx < totalCells; i++, idx++) {
-      grid[snakeOrder[idx]] = {
-        color: alloc.color,
-        domain: alloc.domain,
-        opacity: 0.83 + rand() * 0.17,
-      };
-    }
-  });
-
-  // Fill any remaining cells (shouldn't happen, but safety)
-  return grid.map(cell => cell ?? { color: '#ddd5c5', domain: '', opacity: 1 });
+  return path + ' Z';
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export function TerrazzoMosaic({ profile, size = 'md', className, style }: TerrazzoMosaicProps) {
   const config = SIZE_CONFIG[size];
-  const seed = profileSeed(profile);
+  const { svgSize, maxR, showLabels } = config;
+  const cx = svgSize / 2;
+  const cy = svgSize / 2;
+  const n = DOMAINS.length;
+  const angleStep = (2 * Math.PI) / n;
+  const labelR = maxR + (size === 'lg' ? 18 : 14);
 
-  const tiles = useMemo(
-    () => generateClusteredGrid(profile, config.grid, seed),
-    [profile, config.grid, seed],
-  );
+  // Guide rings
+  const rings = showLabels ? [0.5, 1.0] : [1.0];
 
-  const totalPx = config.grid * config.tile + (config.grid - 1) * config.gap;
+  // Per-domain gradient segments for the fill
+  const segments = useMemo(() => {
+    return DOMAINS.map((d, i) => {
+      const value = Math.max(profile[d] ?? 0, 0.08);
+      const color = DOMAIN_COLORS[d];
+      const [x, y] = polarToCart(cx, cy, i * angleStep, value * maxR);
+      return { domain: d, color, x, y, value };
+    });
+  }, [profile, cx, cy, maxR, angleStep]);
 
   return (
-    <div
-      className={className}
-      style={{
-        display: 'inline-block',
-        borderRadius: config.radius,
-        overflow: 'hidden',
-        background: '#ddd5c5', // grout / travertine
-        boxShadow: `inset 0 0 0 1px ${INK['04']}`,
-        width: totalPx,
-        height: totalPx,
-        flexShrink: 0,
-        ...style,
-      }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${config.grid}, ${config.tile}px)`,
-          gap: config.gap,
-        }}
+    <div className={className} style={{ display: 'inline-flex', flexShrink: 0, ...style }}>
+      <svg
+        width={svgSize}
+        height={svgSize}
+        viewBox={`0 0 ${svgSize} ${svgSize}`}
+        style={{ overflow: 'visible' }}
       >
-        {tiles.map((tile, i) => (
-          <div
-            key={i}
-            title={tile.domain || undefined}
-            style={{
-              width: config.tile,
-              height: config.tile,
-              borderRadius: 2,
-              background: tile.color,
-              opacity: tile.opacity,
-              transition: 'transform 0.2s ease, filter 0.2s ease',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.06)';
-              (e.currentTarget as HTMLDivElement).style.filter = 'brightness(1.08)';
-              (e.currentTarget as HTMLDivElement).style.zIndex = '1';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLDivElement).style.transform = '';
-              (e.currentTarget as HTMLDivElement).style.filter = '';
-              (e.currentTarget as HTMLDivElement).style.zIndex = '';
-            }}
+        {/* Background rings */}
+        {rings.map(r => (
+          <circle
+            key={r}
+            cx={cx}
+            cy={cy}
+            r={maxR * r}
+            fill="none"
+            stroke={INK['04']}
+            strokeWidth={0.75}
           />
         ))}
-      </div>
+
+        {/* Axis lines + domain dots/labels */}
+        {DOMAINS.map((d, i) => {
+          const angle = i * angleStep;
+          const [lx, ly] = polarToCart(cx, cy, angle, maxR);
+          const [tx, ty] = polarToCart(cx, cy, angle, labelR);
+          const color = DOMAIN_COLORS[d];
+          return (
+            <g key={d}>
+              <line x1={cx} y1={cy} x2={lx} y2={ly} stroke={INK['04']} strokeWidth={0.5} />
+              <circle cx={lx} cy={ly} r={showLabels ? 2 : 1.5} fill={color} opacity={0.7} />
+              {showLabels && (
+                <text
+                  x={tx}
+                  y={ty}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={color}
+                  fontSize={size === 'lg' ? 8 : 7}
+                  fontFamily="'Space Mono', monospace"
+                  fontWeight={600}
+                  opacity={0.8}
+                >
+                  {formatDomain(d).slice(0, 4).toUpperCase()}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Profile shape — gradient-like using per-segment colors */}
+        <defs>
+          {/* Radial gradient from center for each segment */}
+          {segments.map((seg, i) => {
+            const nextSeg = segments[(i + 1) % segments.length];
+            return (
+              <linearGradient
+                key={seg.domain}
+                id={`petal-grad-${seg.domain}`}
+                x1={cx}
+                y1={cy}
+                x2={seg.x}
+                y2={seg.y}
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0%" stopColor={seg.color} stopOpacity={0.08} />
+                <stop offset="100%" stopColor={seg.color} stopOpacity={0.35} />
+              </linearGradient>
+            );
+          })}
+        </defs>
+
+        {/* Main shape fill — averaged color approach */}
+        <path
+          d={makeSmoothPath(cx, cy, maxR, profile, angleStep)}
+          fill={`${DOMAIN_COLORS[DOMAINS[0]]}18`}
+          stroke="none"
+        />
+
+        {/* Per-domain wedge fills for color variation */}
+        {segments.map((seg, i) => {
+          const nextSeg = segments[(i + 1) % segments.length];
+          const wedgePath = `M ${cx},${cy} L ${seg.x},${seg.y} L ${nextSeg.x},${nextSeg.y} Z`;
+          return (
+            <path
+              key={seg.domain}
+              d={wedgePath}
+              fill={seg.color}
+              opacity={0.15 + seg.value * 0.15}
+              style={{ mixBlendMode: 'multiply' }}
+            />
+          );
+        })}
+
+        {/* Profile shape outline */}
+        <path
+          d={makeSmoothPath(cx, cy, maxR, profile, angleStep)}
+          fill="none"
+          stroke={DOMAIN_COLORS[DOMAINS[0]]}
+          strokeWidth={1.5}
+          opacity={0.4}
+        />
+      </svg>
     </div>
   );
 }
@@ -186,8 +212,6 @@ export function TerrazzoMosaic({ profile, size = 'md', className, style }: Terra
 // ─── Legend ─────────────────────────────────────────────────────────────────────
 
 export function MosaicLegend({ profile, className, style, dark = false }: MosaicLegendProps) {
-  const DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
-
   const sorted = DOMAINS
     .map(d => ({ domain: d, color: DOMAIN_COLORS[d], score: profile[d] ?? 0 }))
     .sort((a, b) => b.score - a.score);

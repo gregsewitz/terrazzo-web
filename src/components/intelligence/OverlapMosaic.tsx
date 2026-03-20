@@ -4,7 +4,6 @@ import React, { useMemo } from 'react';
 import { TasteDomain, TasteProfile, DOMAIN_COLORS, CORE_TASTE_DOMAINS } from '@/types';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { formatDomain } from '@/constants/profile';
-import { getMatchTier } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -15,173 +14,90 @@ interface OverlapMosaicProps {
   placeProfile: TasteProfile;
   /** Overall match score 0-100 */
   matchScore?: number;
-  /** Grid size — 6x6 (default) or 8x8 */
+  /** Chart size — md (default) or lg */
   size?: 'md' | 'lg';
-  /** Label under user mosaic */
+  /** Label for user shape */
   userLabel?: string;
-  /** Label under place mosaic */
+  /** Label for place shape */
   placeLabel?: string;
   className?: string;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
-const SIZE_CONFIG: Record<'md' | 'lg', { grid: number; tile: number; gap: number; radius: number }> = {
-  md: { grid: 6, tile: 14, gap: 2, radius: 10 },
-  lg: { grid: 8, tile: 16, gap: 2, radius: 14 },
-};
-
-// Shared domain order for consistent comparison
 const DOMAINS = CORE_TASTE_DOMAINS;
 
-// ─── Tile generation (shared with TerrazzoMosaic) ───────────────────────────────
+const SIZE_CONFIG: Record<'md' | 'lg', { svgSize: number; maxR: number; labelR: number }> = {
+  md: { svgSize: 200, maxR: 72, labelR: 88 },
+  lg: { svgSize: 260, maxR: 96, labelR: 114 },
+};
 
-interface Tile {
-  color: string;
-  domain: TasteDomain;
-  opacity: number;
-  /** Index in the grid for overlap comparison */
-  index: number;
+// User fill and stroke
+const USER_FILL = 'rgba(196,121,107,0.14)';
+const USER_STROKE = 'rgba(196,121,107,0.55)';
+
+// Place fill and stroke
+const PLACE_FILL = 'rgba(107,138,90,0.14)';
+const PLACE_STROKE = 'rgba(107,138,90,0.55)';
+
+// Overlap intersection tint
+const OVERLAP_FILL = 'rgba(180,155,80,0.16)';
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+
+function polarToCart(cx: number, cy: number, angle: number, r: number): [number, number] {
+  return [cx + r * Math.cos(angle - Math.PI / 2), cy + r * Math.sin(angle - Math.PI / 2)];
 }
 
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
+function makePolygonPoints(
+  cx: number,
+  cy: number,
+  maxR: number,
+  profile: TasteProfile,
+  angleStep: number,
+): string {
+  return DOMAINS.map((d, i) => {
+    const value = Math.max(profile[d] ?? 0, 0.08); // min radius so shape is always visible
+    const [x, y] = polarToCart(cx, cy, i * angleStep, value * maxR);
+    return `${x},${y}`;
+  }).join(' ');
 }
 
-function profileSeed(profile: TasteProfile): number {
-  let hash = 7;
-  DOMAINS.forEach(d => {
-    hash = hash * 31 + Math.round((profile[d] ?? 0) * 1000);
+function makeSmoothPath(
+  cx: number,
+  cy: number,
+  maxR: number,
+  profile: TasteProfile,
+  angleStep: number,
+): string {
+  const points = DOMAINS.map((d, i) => {
+    const value = Math.max(profile[d] ?? 0, 0.08);
+    return polarToCart(cx, cy, i * angleStep, value * maxR);
   });
-  return Math.abs(hash) || 42;
-}
 
-function generateGrid(profile: TasteProfile, gridSize: number, seed: number): Tile[] {
-  const totalCells = gridSize * gridSize;
-  const totalScore = DOMAINS.reduce((sum, d) => sum + (profile[d] ?? 0), 0) || 1;
+  // Catmull-Rom to cubic bezier for smooth curves
+  const n = points.length;
+  let path = `M ${points[0][0]},${points[0][1]}`;
 
-  const sorted = DOMAINS
-    .map(d => ({ domain: d, color: DOMAIN_COLORS[d], score: profile[d] ?? 0 }))
-    .sort((a, b) => b.score - a.score);
+  for (let i = 0; i < n; i++) {
+    const p0 = points[(i - 1 + n) % n];
+    const p1 = points[i];
+    const p2 = points[(i + 1) % n];
+    const p3 = points[(i + 2) % n];
 
-  let allocated = 0;
-  const allocations = sorted.map((d, i) => {
-    let count: number;
-    if (i === sorted.length - 1) {
-      count = totalCells - allocated;
-    } else {
-      count = Math.round((d.score / totalScore) * totalCells);
-    }
-    count = Math.max(1, Math.min(count, totalCells - allocated));
-    allocated += count;
-    return { ...d, count };
-  });
+    const tension = 0.3;
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
 
-  // Snake order for clustering
-  const snakeOrder: number[] = [];
-  for (let row = 0; row < gridSize; row++) {
-    if (row % 2 === 0) {
-      for (let col = 0; col < gridSize; col++) snakeOrder.push(row * gridSize + col);
-    } else {
-      for (let col = gridSize - 1; col >= 0; col--) snakeOrder.push(row * gridSize + col);
-    }
+    path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`;
   }
 
-  const grid: (Tile | null)[] = new Array(totalCells).fill(null);
-  const rand = seededRandom(seed);
-  let idx = 0;
-
-  allocations.forEach(alloc => {
-    for (let i = 0; i < alloc.count && idx < totalCells; i++, idx++) {
-      const cellIndex = snakeOrder[idx];
-      grid[cellIndex] = {
-        color: alloc.color,
-        domain: alloc.domain as TasteDomain,
-        opacity: 0.85 + rand() * 0.15,
-        index: cellIndex,
-      };
-    }
-  });
-
-  return grid.map((cell, i) => cell ?? { color: '#ddd5c5', domain: 'Design' as TasteDomain, opacity: 0.6, index: i });
+  return path + ' Z';
 }
 
-// ─── Overlap computation ────────────────────────────────────────────────────────
-
-/** Find tiles where user and place share the same domain assignment */
-function computeOverlap(userTiles: Tile[], placeTiles: Tile[]): Set<number> {
-  const overlap = new Set<number>();
-  for (let i = 0; i < userTiles.length; i++) {
-    if (userTiles[i].domain === placeTiles[i].domain) {
-      overlap.add(i);
-    }
-  }
-  return overlap;
-}
-
-// ─── Sub-components ─────────────────────────────────────────────────────────────
-
-function MosaicGrid({
-  tiles,
-  config,
-  overlapIndices,
-  isPlace,
-}: {
-  tiles: Tile[];
-  config: typeof SIZE_CONFIG.md;
-  overlapIndices: Set<number>;
-  isPlace?: boolean;
-}) {
-  const totalPx = config.grid * config.tile + (config.grid - 1) * config.gap;
-
-  return (
-    <div
-      style={{
-        display: 'inline-block',
-        borderRadius: config.radius,
-        overflow: 'hidden',
-        background: '#ddd5c5',
-        boxShadow: `inset 0 0 0 1px ${INK['04']}`,
-        width: totalPx,
-        height: totalPx,
-        flexShrink: 0,
-      }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${config.grid}, ${config.tile}px)`,
-          gap: config.gap,
-        }}
-      >
-        {tiles.map((tile, i) => {
-          const isOverlap = overlapIndices.has(i);
-          return (
-            <div
-              key={i}
-              style={{
-                width: config.tile,
-                height: config.tile,
-                borderRadius: 2,
-                background: tile.color,
-                opacity: isOverlap ? tile.opacity : tile.opacity * 0.35,
-                transition: 'opacity 0.4s ease, transform 0.2s ease',
-                // Subtle glow on overlap tiles
-                boxShadow: isOverlap ? `0 0 0 0.5px ${tile.color}40` : 'none',
-              }}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Component ─────────────────────────────────────────────────────────────
+// ─── Component ──────────────────────────────────────────────────────────────────
 
 export function OverlapMosaic({
   userProfile,
@@ -193,118 +109,137 @@ export function OverlapMosaic({
   className,
 }: OverlapMosaicProps) {
   const config = SIZE_CONFIG[size];
+  const { svgSize, maxR, labelR } = config;
+  const cx = svgSize / 2;
+  const cy = svgSize / 2;
+  const n = DOMAINS.length;
+  const angleStep = (2 * Math.PI) / n;
 
-  const userSeed = profileSeed(userProfile);
-  const placeSeed = profileSeed(placeProfile);
-
-  const userTiles = useMemo(
-    () => generateGrid(userProfile, config.grid, userSeed),
-    [userProfile, config.grid, userSeed],
-  );
-
-  const placeTiles = useMemo(
-    () => generateGrid(placeProfile, config.grid, placeSeed),
-    [placeProfile, config.grid, placeSeed],
-  );
-
-  const overlapIndices = useMemo(
-    () => computeOverlap(userTiles, placeTiles),
-    [userTiles, placeTiles],
-  );
-
-  // Compute which domains overlap most strongly
-  const overlapDomains = useMemo(() => {
-    const counts: Partial<Record<TasteDomain, number>> = {};
-    overlapIndices.forEach(i => {
-      const d = userTiles[i].domain;
-      counts[d] = (counts[d] || 0) + 1;
+  // Build overlap polygon (min of both profiles per domain)
+  const overlapProfile = useMemo<TasteProfile>(() => {
+    const p: Partial<TasteProfile> = {};
+    DOMAINS.forEach(d => {
+      (p as Record<string, number>)[d] = Math.min(userProfile[d] ?? 0, placeProfile[d] ?? 0);
     });
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => (b as number) - (a as number))
-      .slice(0, 3)
-      .map(([domain]) => domain as TasteDomain);
-  }, [overlapIndices, userTiles]);
+    return p as TasteProfile;
+  }, [userProfile, placeProfile]);
 
-  const overlapPercent = Math.round((overlapIndices.size / userTiles.length) * 100);
+  // Identify strongest overlap domains
+  const topOverlapDomains = useMemo(() => {
+    return DOMAINS
+      .map(d => ({ domain: d, overlap: Math.min(userProfile[d] ?? 0, placeProfile[d] ?? 0) }))
+      .sort((a, b) => b.overlap - a.overlap)
+      .slice(0, 3)
+      .filter(d => d.overlap > 0.1);
+  }, [userProfile, placeProfile]);
+
+  // Ring guides
+  const rings = [0.25, 0.5, 0.75, 1.0];
 
   return (
     <div className={className}>
-      <div className="flex items-center gap-3">
-        {/* User mosaic */}
-        <div className="flex flex-col items-center gap-1.5">
-          <MosaicGrid
-            tiles={userTiles}
-            config={config}
-            overlapIndices={overlapIndices}
-          />
-          <span
-            className="text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-          >
-            {userLabel}
-          </span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <svg
+          width={svgSize}
+          height={svgSize}
+          viewBox={`0 0 ${svgSize} ${svgSize}`}
+          style={{ overflow: 'visible' }}
+        >
+          {/* Background rings */}
+          {rings.map(r => (
+            <circle
+              key={r}
+              cx={cx}
+              cy={cy}
+              r={maxR * r}
+              fill="none"
+              stroke={INK['04']}
+              strokeWidth={0.75}
+            />
+          ))}
 
-        {/* Connection indicator */}
-        <div className="flex flex-col items-center gap-1 px-1">
-          {/* Overlap dots showing shared domains */}
-          <div className="flex flex-col items-center gap-1">
-            {overlapDomains.map(domain => (
-              <div
-                key={domain}
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: DOMAIN_COLORS[domain],
-                  opacity: 0.8,
-                }}
-              />
-            ))}
-          </div>
-          {matchScore !== undefined && (() => {
-            const tier = getMatchTier(matchScore);
+          {/* Axis lines + domain labels */}
+          {DOMAINS.map((d, i) => {
+            const angle = i * angleStep;
+            const [lx, ly] = polarToCart(cx, cy, angle, maxR);
+            const [tx, ty] = polarToCart(cx, cy, angle, labelR);
+            const color = DOMAIN_COLORS[d];
             return (
-              <span
-                className="text-[11px] font-bold mt-0.5"
-                style={{ color: tier.color, fontFamily: FONT.mono, textTransform: 'uppercase', letterSpacing: 0.2 }}
-              >
-                {tier.shortLabel}
-              </span>
+              <g key={d}>
+                <line x1={cx} y1={cy} x2={lx} y2={ly} stroke={INK['04']} strokeWidth={0.75} />
+                {/* Domain dot */}
+                <circle cx={lx} cy={ly} r={2.5} fill={color} opacity={0.7} />
+                {/* Domain label */}
+                <text
+                  x={tx}
+                  y={ty}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={color}
+                  fontSize={8}
+                  fontFamily="'Space Mono', monospace"
+                  fontWeight={600}
+                  opacity={0.8}
+                >
+                  {formatDomain(d).slice(0, 4).toUpperCase()}
+                </text>
+              </g>
             );
-          })()}
-        </div>
+          })}
 
-        {/* Place mosaic */}
-        <div className="flex flex-col items-center gap-1.5">
-          <MosaicGrid
-            tiles={placeTiles}
-            config={config}
-            overlapIndices={overlapIndices}
-            isPlace
+          {/* User shape */}
+          <path
+            d={makeSmoothPath(cx, cy, maxR, userProfile, angleStep)}
+            fill={USER_FILL}
+            stroke={USER_STROKE}
+            strokeWidth={1.5}
           />
-          <span
-            className="text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-          >
-            {placeLabel}
-          </span>
+
+          {/* Place shape */}
+          <path
+            d={makeSmoothPath(cx, cy, maxR, placeProfile, angleStep)}
+            fill={PLACE_FILL}
+            stroke={PLACE_STROKE}
+            strokeWidth={1.5}
+          />
+
+          {/* Overlap zone — min of both */}
+          <path
+            d={makeSmoothPath(cx, cy, maxR, overlapProfile, angleStep)}
+            fill={OVERLAP_FILL}
+            stroke="none"
+          />
+        </svg>
+      </div>
+
+      {/* Legend row */}
+      <div
+        className="flex items-center justify-center gap-4 mt-2"
+        style={{ fontFamily: FONT.mono, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.8 }}
+      >
+        <div className="flex items-center gap-1.5">
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: USER_STROKE, opacity: 0.6 }} />
+          <span style={{ color: TEXT.secondary }}>{userLabel}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: PLACE_STROKE, opacity: 0.6 }} />
+          <span style={{ color: TEXT.secondary }}>{placeLabel}</span>
         </div>
       </div>
 
-      {/* Shared domains legend */}
-      {overlapDomains.length > 0 && (
-        <div className="flex items-center gap-1.5 mt-3 justify-center">
+      {/* Strongest overlap domains */}
+      {topOverlapDomains.length > 0 && (
+        <div className="flex items-center gap-1.5 mt-2.5 justify-center">
           <span
-            className="text-[11px] uppercase tracking-wider"
+            className="text-[9px] uppercase tracking-wider"
             style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
           >
             Strongest overlap:
           </span>
-          {overlapDomains.map(domain => (
+          {topOverlapDomains.map(({ domain }) => (
             <span
               key={domain}
-              className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md"
               style={{
                 background: `${DOMAIN_COLORS[domain]}10`,
                 color: DOMAIN_COLORS[domain],

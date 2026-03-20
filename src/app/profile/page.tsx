@@ -32,7 +32,6 @@ const SETTINGS_LINKS = [
   { label: 'Import History', action: 'history' },
   { label: 'Notification Preferences', action: 'notifications' },
   { label: 'About Terrazzo', action: 'about' },
-  { label: 'Replay Intro', action: 'replay-bridge' },
 ];
 
 export default function ProfilePage() {
@@ -301,28 +300,41 @@ function ProfilePageContent() {
                   </span>
                   <span className="text-[10px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
                 </SafeMotionButton>
-              </div>
 
-              {/* Settings gear */}
-              <div className="flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                {SETTINGS_LINKS.map(({ label, action }) => (
-                  <div key={action} className="relative flex-shrink-0">
-                    <button
-                      onClick={() => handleSettingTap(action)}
-                      className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all whitespace-nowrap"
-                      style={{
-                        fontSize: 11,
-                        color: expandedSection === action ? COLOR.darkTeal : COLOR.navy,
-                        fontFamily: FONT.sans,
-                        background: expandedSection === action ? 'rgba(238,113,109,0.06)' : 'transparent',
-                        border: 'none',
-                      }}
-                    >
-                      {label}
-                    </button>
-                  </div>
-                ))}
+                <SafeMotionButton
+                  onClick={() => router.push('/onboarding/bridge')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+                  style={{ background: 'transparent', border: '1px solid rgba(0,42,85,0.15)' }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span className="text-[11px] font-semibold" style={{ color: COLOR.darkTeal, fontFamily: FONT.sans }}>
+                    Replay Intro
+                  </span>
+                  <span className="text-[10px]" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>→</span>
+                </SafeMotionButton>
               </div>
+            </div>
+
+            {/* Settings row */}
+            <div className="flex items-center gap-3 px-8 py-3 overflow-x-auto" style={{ borderTop: '1px solid rgba(0,42,85,0.06)', scrollbarWidth: 'none' }}>
+              {SETTINGS_LINKS.map(({ label, action }) => (
+                <div key={action} className="relative flex-shrink-0">
+                  <button
+                    onClick={() => handleSettingTap(action)}
+                    className="text-[11px] px-3 py-1.5 rounded-lg cursor-pointer transition-all whitespace-nowrap"
+                    style={{
+                      fontSize: 11,
+                      color: expandedSection === action ? COLOR.darkTeal : COLOR.navy,
+                      fontFamily: FONT.sans,
+                      background: expandedSection === action ? 'rgba(238,113,109,0.06)' : 'transparent',
+                      border: 'none',
+                    }}
+                  >
+                    {label}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -444,6 +456,42 @@ function ProfilePageContent() {
             }}
           >
             Play →
+          </span>
+        </SafeMotionButton>
+
+        <SafeMotionButton
+          onClick={() => router.push('/onboarding/bridge')}
+          className="w-full flex items-center justify-between p-3.5 rounded-xl cursor-pointer border-none transition-all hover:opacity-90"
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(0,42,85,0.12)',
+          }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="flex flex-col items-start gap-0.5">
+            <span
+              className="text-[12px] font-semibold"
+              style={{ color: TEXT.primary, fontFamily: FONT.sans }}
+            >
+              Replay Intro
+            </span>
+            <span
+              className="text-[9px]"
+              style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
+            >
+              Rewatch your personalized flythrough
+            </span>
+          </div>
+          <span
+            className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
+            style={{
+              background: 'rgba(0,42,85,0.06)',
+              color: TEXT.primary,
+              fontFamily: FONT.mono,
+            }}
+          >
+            Watch →
           </span>
         </SafeMotionButton>
       </div>
