@@ -446,8 +446,35 @@ export const createCoreSlice: StateCreator<TripState, [], [], TripCoreState> = (
     if (tripId) {
       debouncedTripSave(tripId, () => {
         const t = get().trips.find(tr => tr.id === tripId);
-        return t ? { days: t.days, status: t.status, startDate: isFlexible ? undefined : startDate, endDate: isFlexible ? undefined : endDate, flexibleDates: isFlexible || undefined } : {};
+        if (!t) return {};
+        return {
+          days: t.days,
+          pool: t.pool,           // preserve pool items accumulated while dreaming
+          dreamBoard: t.dreamBoard, // preserve dream board notes for reference
+          status: t.status,
+          startDate: isFlexible ? undefined : startDate,
+          endDate: isFlexible ? undefined : endDate,
+          flexibleDates: isFlexible || undefined,
+        };
       });
+
+      // Log activity so collaborators see the graduation event
+      fetch(`/api/trips/${tripId}/activity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'trip_graduated',
+          summary: 'Trip promoted from dreaming to planning',
+          data: {
+            previousStatus: 'dreaming',
+            newStatus: 'planning',
+            flexibleDates: isFlexible,
+            numDays: isFlexible ? (opts?.numDays || 5) : undefined,
+            startDate: isFlexible ? undefined : startDate,
+            endDate: isFlexible ? undefined : endDate,
+          },
+        }),
+      }).catch(() => {}); // fire-and-forget
     }
   },
 

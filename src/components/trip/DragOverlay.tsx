@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
+import { ImportedPlace, SOURCE_STYLES, getSourceStyle } from '@/types';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { TYPE_ICONS } from '@/constants/placeTypes';
@@ -15,7 +15,7 @@ interface DragOverlayProps {
 }
 
 export default function DragOverlay({ item, x, y, isOverTarget }: DragOverlayProps) {
-  const sourceStyle = SOURCE_STYLES[item.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
+  const sourceStyle = getSourceStyle(item);
   const typeIcon = TYPE_ICONS[item.type] || 'pin';
 
   // Entrance animation — mount with scale-up

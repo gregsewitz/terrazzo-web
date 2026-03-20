@@ -22,8 +22,6 @@ interface SharedPlace {
   whatToOrder: string[] | null;
   tips: string[] | null;
   googleData: Record<string, unknown> | null;
-  ghostSource: string | null;
-  friendAttribution: Record<string, unknown> | null;
   rating: { reaction?: string; personalNote?: string } | null;
   terrazzoInsight: { why?: string; caveat?: string } | null;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { ImportedPlace, getSourceStyle } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
@@ -23,17 +23,15 @@ function GhostCardInner({
   onTapDetail,
 }: GhostCardProps) {
   const isDesktop = useIsDesktop();
-  const sourceType = item.ghostSource || 'manual';
-  const sourceStyle = SOURCE_STYLES[sourceType as GhostSourceType];
+  const sourceType = item.source?.type || 'manual';
+  const sourceStyle = getSourceStyle(item);
 
   // Get source-specific note text
   const getSourceNote = (): string | undefined => {
     switch (sourceType) {
-      case 'friend':
-        return item.friendAttribution?.note;
       case 'terrazzo':
         return item.terrazzoReasoning?.rationale;
-      case 'maps':
+      case 'google-maps':
         return item.savedAt;
       default:
         return undefined;
@@ -41,17 +39,15 @@ function GhostCardInner({
   };
 
   // Get source label
-  const getSourceLabel = (): string => {
+  const getLabel = (): string => {
     switch (sourceType) {
-      case 'friend':
-        return `${item.friendAttribution?.name || 'Friend'} recommends`;
       case 'terrazzo':
         return 'Terrazzo suggestion';
-      case 'maps':
+      case 'google-maps':
         return 'Google Maps';
       case 'email':
         return 'via Email';
-      case 'article':
+      case 'url':
         return item.source?.name || 'Article';
       default:
         return sourceStyle.label;
@@ -135,14 +131,14 @@ function GhostCardInner({
             style={{ background: sourceStyle.bg, color: sourceStyle.color, fontSize: 9 }}
           >
             <PerriandIcon name={sourceStyle.icon} size={9} color={sourceStyle.color} />
-            {getSourceLabel()}
+            {getLabel()}
           </span>
           {note && (
             <span
               className="italic truncate"
               style={{ color: TEXT.secondary, fontSize: 10 }}
             >
-              {sourceType === 'friend' ? `"${note}"` : note}
+              {note}
             </span>
           )}
         </div>
@@ -200,14 +196,14 @@ function GhostCardInner({
           }}
         >
           <PerriandIcon name={sourceStyle.icon} size={12} color={sourceStyle.color} />
-          {getSourceLabel()}
+          {getLabel()}
         </div>
         {note && (
           <div
             className="text-[10px] ml-0.5 italic mt-1"
             style={{ color: TEXT.primary }}
           >
-            {sourceType === 'friend' ? `"${note}"` : note}
+            {note}
           </div>
         )}
       </div>

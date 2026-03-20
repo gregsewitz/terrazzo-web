@@ -3,7 +3,7 @@
 import React from 'react';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { ImportedPlace, GhostSourceType, SOURCE_STYLES } from '@/types';
+import { ImportedPlace, getSourceStyle } from '@/types';
 
 interface ImportSuccessStepProps {
   savedPlaces: ImportedPlace[];
@@ -133,7 +133,7 @@ export const ImportSuccessStep = React.memo(function ImportSuccessStep({
           </div>
 
           {topMatches.map(place => {
-            const sourceStyle = place.ghostSource ? SOURCE_STYLES[place.ghostSource as GhostSourceType] : null;
+            const sourceStyle = getSourceStyle(place);
             return (
               <div
                 key={place.id}

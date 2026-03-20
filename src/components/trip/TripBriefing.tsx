@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import {
-  Trip, GhostSourceType,
+  Trip,
   SOURCE_STYLES,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -278,7 +278,7 @@ function TripBriefingInner({ trip, onTapDay }: TripBriefingProps) {
             {Object.entries(data.sourceMap)
               .sort((a, b) => b[1] - a[1])
               .map(([key, count]) => {
-                const style = SOURCE_STYLES[key as GhostSourceType] || SOURCE_STYLES.manual;
+                const style = SOURCE_STYLES[key] || SOURCE_STYLES.manual;
                 return (
                   <div key={key} style={{
                     display: 'flex', alignItems: 'center', gap: 6,

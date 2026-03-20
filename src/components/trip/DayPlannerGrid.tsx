@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo } from '@/types';
+import { SLOT_ICONS, SOURCE_STYLES, HotelInfo } from '@/types';
 import type { TimeSlot, TransportEvent, TripDay } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';

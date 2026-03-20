@@ -11,7 +11,7 @@ interface MapViewProps {
   destination?: string;
   destinationCoords?: { lat: number; lng: number }; // geocoded from Places API
   placedItems: Array<{ name: string; type: string; location?: string }>;
-  ghostItems: Array<{ name: string; ghostSource?: string; location?: string }>;
+  ghostItems: Array<{ name: string; source?: { type?: string; name?: string }; location?: string }>;
 }
 
 export default function MapView({
@@ -34,7 +34,7 @@ export default function MapView({
       id: `ghost-${idx}`,
       name: item.name,
       location: item.location || destination,
-      color: SOURCE_STYLES[(item.ghostSource || 'terrazzo') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.terrazzo.color,
+      color: SOURCE_STYLES[(item.source?.type || 'terrazzo') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.terrazzo.color,
       isDashed: true,
     }));
     return [...placed, ...ghosts];

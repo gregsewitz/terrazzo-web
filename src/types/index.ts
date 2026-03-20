@@ -61,15 +61,39 @@ export const REACTIONS = [
 export { getDestColor, generateDestColor } from '@/lib/destination-helpers';
 export type { DestColor } from '@/lib/destination-helpers';
 
-// Ghost card source types — each source gets its own visual treatment
-export const SOURCE_STYLES: Record<GhostSourceType, { color: string; bg: string; icon: PerriandIconName; label: string }> = {
-  email: { color: COLOR.darkTeal, bg: 'rgba(58,128,136,0.12)', icon: 'email', label: 'Email' },
-  friend: { color: COLOR.darkTeal, bg: 'rgba(58,128,136,0.12)', icon: 'friend', label: 'Friend' },
-  terrazzo: { color: COLOR.coral, bg: 'rgba(238,113,109,0.12)', icon: 'terrazzo', label: 'Terrazzo pick' },
-  maps: { color: COLOR.coral, bg: 'rgba(238,113,109,0.10)', icon: 'maps', label: 'Google Maps' },
-  article: { color: COLOR.ochre, bg: 'rgba(224,165,1,0.12)', icon: 'article', label: 'Article' },
-  manual: { color: COLOR.navy, bg: INK['06'], icon: 'manual', label: 'Added' },
+// Source visual styles — keyed by source.type
+export interface SourceStyle { color: string; bg: string; icon: PerriandIconName; label: string }
+
+export const SOURCE_STYLES: Record<string, SourceStyle> = {
+  url:           { color: COLOR.ochre,    bg: 'rgba(224,165,1,0.12)',   icon: 'article',   label: 'Article' },
+  'google-maps': { color: COLOR.coral,    bg: 'rgba(238,113,109,0.10)', icon: 'maps',     label: 'Google Maps' },
+  email:         { color: COLOR.darkTeal, bg: 'rgba(58,128,136,0.12)', icon: 'email',    label: 'Email' },
+  text:          { color: COLOR.navy,     bg: INK['06'],                icon: 'manual',    label: 'Added' },
+  file:          { color: COLOR.navy,     bg: INK['06'],                icon: 'manual',    label: 'File Upload' },
+  terrazzo:      { color: COLOR.coral,    bg: 'rgba(238,113,109,0.12)', icon: 'terrazzo',  label: 'Terrazzo pick' },
+  manual:        { color: COLOR.navy,     bg: INK['06'],                icon: 'manual',    label: 'Added' },
 };
+
+/** Default style when source type is unknown */
+const DEFAULT_SOURCE_STYLE: SourceStyle = SOURCE_STYLES.manual;
+
+/**
+ * Get visual style for a place's source from source.type.
+ */
+export function getSourceStyle(place: { source?: { type?: string; name?: string } }): SourceStyle {
+  const key = place.source?.type || 'manual';
+  return SOURCE_STYLES[key] || DEFAULT_SOURCE_STYLE;
+}
+
+/**
+ * Get the display label for a place's source. Prefers source.name (user-editable),
+ * falls back to the style's default label.
+ */
+export function getSourceLabel(place: { source?: { type?: string; name?: string } }): string {
+  if (place.source?.name) return place.source.name;
+  const style = getSourceStyle(place);
+  return style.label;
+}
 
 /**
  * Taste Taxonomy v2
@@ -190,9 +214,7 @@ export interface CompetitiveContextData {
 
 export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'rental' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
 
-export type ImportSourceType = 'url' | 'text' | 'google-maps' | 'email' | 'friend-list';
-
-export type GhostSourceType = 'email' | 'friend' | 'terrazzo' | 'maps' | 'article' | 'manual';
+export type ImportSourceType = 'url' | 'text' | 'google-maps' | 'email' | 'file' | 'terrazzo' | 'manual';
 
 export type PlaceStatus = 'available' | 'placed' | 'rejected';
 
@@ -243,12 +265,6 @@ export interface TerrazzoInsight {
   caveat?: string;
 }
 
-// Friend attribution for friend-recommended places
-export interface FriendAttribution {
-  name: string;
-  note?: string; // "Go early, before 8am"
-  avatarUrl?: string;
-}
 
 // Terrazzo reasoning for suggested places
 export interface TerrazzoReasoning {
@@ -276,9 +292,7 @@ export interface ImportedPlace {
   status: PlaceStatus;
   placedIn?: { day: number; slot: string };
   // Enhanced slot grid fields
-  ghostSource?: GhostSourceType;
   ghostStatus?: GhostStatus;
-  friendAttribution?: FriendAttribution;
   terrazzoReasoning?: TerrazzoReasoning;
   savedAt?: string; // ISO timestamp of when place was saved to library
   rating?: PlaceRating; // user's personal rating

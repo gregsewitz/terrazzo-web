@@ -44,8 +44,6 @@ declare module '@prisma/client' {
     type: string;
     location: string | null;
     source: any;
-    ghostSource: string | null;
-    friendAttribution: any;
     userContext: string | null;
     timing: string | null;
     travelWith: string | null;

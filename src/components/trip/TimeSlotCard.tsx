@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useEffect, useState, memo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { TimeSlot, ImportedPlace, GhostSourceType, SOURCE_STYLES, QuickEntry } from '@/types';
+import { TimeSlot, ImportedPlace, SOURCE_STYLES, QuickEntry, getSourceStyle, getSourceLabel } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import GhostCard from '../place/GhostCard';
 import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
@@ -339,11 +339,11 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
         <div className="flex-1 min-w-0 py-1.5 pr-3 pl-2.5">
           {/* Confirmed places — draggable card style with source + insight */}
           {slot.places.map((p) => {
-            const srcStyle = SOURCE_STYLES[(p.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-            const isReservation = p.ghostSource === 'email';
+            const srcStyle = getSourceStyle(p);
+            const isReservation = p.source?.type === 'email';
             const isDragging = dragItemId === p.id;
             const isHolding = holdingPlaceId === p.id;
-            const subtitle = p.friendAttribution?.note
+            const subtitle = p.userContext
               || p.terrazzoReasoning?.rationale
               || p.enrichment?.description
               || '';
@@ -398,7 +398,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
                         className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
                         style={{ background: srcStyle.bg, color: srcStyle.color }}
                       >
-                        <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {p.ghostSource === 'friend' ? p.friendAttribution?.name : srcStyle.label}
+                        <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {getSourceLabel(p)}
                       </span>
                       {p.addedByName && (
                         <span

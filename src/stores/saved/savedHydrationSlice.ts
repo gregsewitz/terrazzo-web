@@ -1,4 +1,4 @@
-import type { ImportedPlace, PlaceRating, PlaceEnrichment, GhostSourceType, Collection } from '@/types';
+import type { ImportedPlace, PlaceRating, PlaceEnrichment, Collection } from '@/types';
 import { StateCreator } from 'zustand';
 import { deriveCities, dbWrite } from './savedHelpers';
 import { isPerriandIconName } from '@/components/icons/PerriandIcons';
@@ -28,15 +28,13 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       location: dp.location || '',
       source: dp.source
         ? (dp.source as unknown as ImportedPlace['source'])
-        : { type: 'email' as const, name: dp.ghostSource || 'manual' },
+        : { type: 'manual' as const, name: '' },
       matchScore: dp.matchScore ? normalizeMatchScoreForDisplay(dp.matchScore) : 0,
       matchBreakdown: (dp.matchBreakdown as ImportedPlace['matchBreakdown']) || { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0 },
       matchExplanation: dp.matchExplanation as ImportedPlace['matchExplanation'],
       tasteNote: dp.tasteNote || dp.intelligence?.description || '',
       status: 'available' as const,
-      ghostSource: (dp.ghostSource || 'manual') as GhostSourceType,
       rating: dp.rating as PlaceRating | undefined,
-      friendAttribution: dp.friendAttribution as ImportedPlace['friendAttribution'],
       terrazzoInsight: dp.terrazzoInsight as ImportedPlace['terrazzoInsight'],
       enrichment: (() => {
         const base = (dp.enrichment ?? {}) as Partial<PlaceEnrichment>;

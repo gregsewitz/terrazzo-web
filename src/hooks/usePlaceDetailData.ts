@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ImportedPlace, REACTIONS, SOURCE_STYLES, GhostSourceType, GooglePlaceData } from '@/types';
+import { ImportedPlace, REACTIONS, getSourceStyle as getSourceStyleFn, GooglePlaceData } from '@/types';
 import { apiFetch } from '@/lib/api-client';
 import { useSavedStore } from '@/stores/savedStore';
 import { useBriefing } from '@/hooks/useBriefing';
@@ -16,7 +16,7 @@ export function usePlaceDetailData(item: ImportedPlace) {
   // Basic derived values
   const existingRating = item.rating;
   const ratingReaction = existingRating ? REACTIONS.find(r => r.id === existingRating.reaction) : null;
-  const sourceStyle = item.ghostSource ? SOURCE_STYLES[item.ghostSource as GhostSourceType] : null;
+  const sourceStyle = getSourceStyleFn(item);
 
   // Derive user's numeric taste profile for overlap mosaic
   const userTasteProfile = useMemo(() => {

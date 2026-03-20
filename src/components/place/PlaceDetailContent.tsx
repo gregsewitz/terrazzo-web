@@ -84,7 +84,7 @@ function PlaceDetailContent({
   const siblingNameFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const siblingTypeFontSize = isDesktop ? 'text-[10px]' : 'text-[9px]';
   const tasteNoteFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
-  const friendAttributionFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
+  const personalNoteFontSize = isDesktop ? 'text-[13px]' : 'text-[12px]';
   const yourNotesFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const terrazzoParagraphFontSize = isDesktop ? 'text-[12px]' : 'text-[11px]';
   const matchScoreFontSize = isDesktop ? 'text-[15px]' : 'text-[14px]';
@@ -161,14 +161,114 @@ function PlaceDetailContent({
         >
           {isDesktop ? 'x' : '<'}
         </button>
-        {/* Overlaid name on photo for immersive feel */}
-        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4" style={{ pointerEvents: 'none' }}>
+        {/* Overlaid name + action badges + metadata on photo */}
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4" style={{ pointerEvents: 'auto' }}>
           <h2
             className={`${isDesktop ? 'text-[28px]' : 'text-[26px]'} italic leading-tight`}
             style={{ fontFamily: FONT.serif, color: 'white', margin: 0, textShadow: '0 1px 8px rgba(0,0,0,0.3)' }}
           >
             {item.name}
           </h2>
+
+          {/* Metadata chips — overlaid on photo */}
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            <span className={`${locationFontSize}`} style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+              {hydratedLocation} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+            </span>
+            {item.alsoKnownAs && (
+              <span className={`${akaFontSize}`} style={{ color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                aka {"\u201C"}{item.alsoKnownAs}{"\u201D"}
+              </span>
+            )}
+            {sourceStyle && item.source?.name && (
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
+                style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+              >
+                <PerriandIcon name={sourceStyle.icon} size={10} color="white" />
+                via {item.source.name}
+              </span>
+            )}
+            {hydratedGoogle?.rating && (
+              <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white' }}>
+                <PerriandIcon name="star" size={11} color="var(--t-chrome-yellow)" />
+                {hydratedGoogle.rating}
+                {hydratedGoogle.reviewCount && (
+                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
+                )}
+              </span>
+            )}
+            {hydratedGoogle?.priceLevel && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white' }}>
+                {'$'.repeat(hydratedGoogle.priceLevel)}
+              </span>
+            )}
+          </div>
+
+          {/* Action badges — overlaid on photo */}
+          <div className="flex items-center gap-1.5 mt-2">
+            {existingRating && ratingReaction ? (
+              <button
+                onClick={onRate}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${ratingBadgeHoverClass}`}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                }}
+              >
+                <PerriandIcon name={ratingReaction.icon} size={ratingBadgeIconSize} color="white" />
+                <span className={`${ratingBadgeFontSize} font-semibold`} style={{ color: 'white', fontFamily: FONT.mono }}>
+                  {ratingReaction.label}
+                </span>
+              </button>
+            ) : onRate && !isPreview ? (
+              <button
+                onClick={onRate}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${ratingBadgeHoverClass}`}
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                }}
+              >
+                <PerriandIcon name="star" size={isDesktop ? 13 : 12} color="white" />
+                <span className={`${ratingBadgeFontSize} font-medium`} style={{ color: 'white', fontFamily: FONT.mono }}>
+                  Rate
+                </span>
+              </button>
+            ) : null}
+            {!isPreview && onCollectionTap && (
+              <button
+                onClick={onCollectionTap}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${collectionBadgeHoverClass}`}
+                style={{
+                  background: isInCollections ? 'rgba(58,128,136,0.35)' : 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: isInCollections ? '1px solid rgba(58,128,136,0.4)' : '1px solid rgba(255,255,255,0.2)',
+                }}
+              >
+                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color="white" />
+                <span className={`${collectionBadgeFontSize} font-semibold`} style={{
+                  color: 'white',
+                  fontFamily: FONT.mono,
+                }}>
+                  {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
+                </span>
+              </button>
+            )}
+            {hydratedGoogle?.category && hydratedGoogle.category.toLowerCase() !== item.type.toLowerCase() && (
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: 'white' }}
+              >
+                {hydratedGoogle.category.replace(/\b\w/g, c => c.toUpperCase())}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -192,112 +292,7 @@ function PlaceDetailContent({
           </SafeFadeIn>
         )}
 
-        {/* Action badges row — rating + collection */}
-        <SafeFadeIn direction="up" distance={10} duration={0.5} delay={0.05}>
-          <div className={`flex items-center gap-1.5 ${containerMarginTop}`}>
-            {existingRating && ratingReaction ? (
-              <button
-                onClick={onRate}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${ratingBadgeHoverClass}`}
-                style={{
-                  background: `${ratingReaction.color}10`,
-                  border: `1.5px solid ${ratingReaction.color}25`,
-                }}
-              >
-                <PerriandIcon name={ratingReaction.icon} size={ratingBadgeIconSize} color={ratingReaction.color} />
-                <span className={`${ratingBadgeFontSize} font-semibold`} style={{ color: ratingReaction.color, fontFamily: FONT.mono }}>
-                  {ratingReaction.label}
-                </span>
-              </button>
-            ) : onRate && !isPreview ? (
-              <button
-                onClick={onRate}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${ratingBadgeHoverClass}`}
-                style={{
-                  background: INK['04'],
-                  border: `1.5px solid ${INK['08']}`,
-                }}
-              >
-                <PerriandIcon name="star" size={isDesktop ? 13 : 12} color={TEXT.primary} />
-                <span className={`${ratingBadgeFontSize} font-medium`} style={{ color: TEXT.primary, fontFamily: FONT.mono }}>
-                  Rate
-                </span>
-              </button>
-            ) : null}
-            {!isPreview && onCollectionTap && (
-              <button
-                onClick={onCollectionTap}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer border-none ${collectionBadgeHoverClass}`}
-                style={{
-                  background: isInCollections ? 'rgba(58,128,136,0.08)' : INK['03'],
-                  border: isInCollections ? '1.5px solid rgba(58,128,136,0.2)' : `1.5px solid ${INK['08']}`,
-                }}
-              >
-                <PerriandIcon name="bookmark" size={collectionBadgeIconSize} color={isInCollections ? 'var(--t-dark-teal)' : TEXT.secondary} />
-                <span className={`${collectionBadgeFontSize} font-semibold`} style={{
-                  color: isInCollections ? 'var(--t-dark-teal)' : TEXT.secondary,
-                  fontFamily: FONT.mono,
-                }}>
-                  {isInCollections ? `${memberCollections.length} list${memberCollections.length > 1 ? 's' : ''}` : 'Save'}
-                </span>
-              </button>
-            )}
-          </div>
-        </SafeFadeIn>
-
-        {/* Location + metadata chips */}
-        <SafeFadeIn direction="up" distance={10} duration={0.5} delay={0.1}>
-          <div className="flex items-center gap-1.5 mt-2.5 mb-4 flex-wrap">
-            <span className={`${locationFontSize}`} style={{ color: TEXT.secondary }}>
-              {hydratedLocation} · {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-            </span>
-            {item.alsoKnownAs && (
-              <span className={`${akaFontSize}`} style={{ color: TEXT.secondary }}>
-                aka {"\u201C"}{item.alsoKnownAs}{"\u201D"}
-              </span>
-            )}
-            {sourceStyle && (
-              <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1"
-                style={{ background: sourceStyle.bg, color: sourceStyle.color }}
-              >
-                <PerriandIcon name={sourceStyle.icon} size={10} color={sourceStyle.color} />
-                via {item.source?.name || sourceStyle.label}
-              </span>
-            )}
-            {hydratedGoogle?.category && hydratedGoogle.category.toLowerCase() !== item.type.toLowerCase() && (
-              <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                style={{ background: 'rgba(238,113,109,0.15)', color: '#7a5e24' }}
-              >
-                {hydratedGoogle.category.replace(/\b\w/g, c => c.toUpperCase())}
-              </span>
-            )}
-            {hydratedGoogle?.rating && (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: TEXT.primary }}>
-                <PerriandIcon name="star" size={11} color="var(--t-chrome-yellow)" />
-                {hydratedGoogle.rating}
-                {hydratedGoogle.reviewCount && (
-                  <span style={{ color: TEXT.secondary }}>({hydratedGoogle.reviewCount.toLocaleString()})</span>
-                )}
-              </span>
-            )}
-            {hydratedGoogle?.priceLevel && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: INK['04'], color: TEXT.primary }}>
-                {'$'.repeat(hydratedGoogle.priceLevel)}
-              </span>
-            )}
-          </div>
-        </SafeFadeIn>
-
-        {/* Description */}
-        {item.enrichment?.description && (
-          <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.15}>
-            <p className={`${descriptionFontSize} leading-relaxed mb-5`} style={{ color: TEXT.primary }}>
-              {item.enrichment.description}
-            </p>
-          </SafeFadeIn>
-        )}
+        {/* ── Practical info ── */}
 
         {/* Place details — tile grid */}
         {hydratedGoogle && (hydratedGoogle.address || hydratedGoogle.website || hydratedGoogle.phone || hydratedGoogle.placeId || hydratedGoogle.lat) && (() => {
@@ -314,14 +309,14 @@ function PlaceDetailContent({
           tiles.push(<div key="maps" className="flex items-center gap-2.5 p-3.5 min-w-0"><PerriandIcon name="maps" size={13} color={TEXT.secondary} /><a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] no-underline" style={{ color: TEXT.accent }} onClick={(e) => e.stopPropagation()}>Google Maps</a></div>);
           return (
             <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.2}>
-              <div className="mb-5 rounded-2xl overflow-hidden" style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length >= 2 ? 2 : 1}, 1fr)`, gap: 1, background: INK['06'], border: `1px solid ${INK['04']}` }}>
+              <div className={`mb-5 rounded-2xl overflow-hidden ${containerMarginTop}`} style={{ display: 'grid', gridTemplateColumns: `repeat(${tiles.length >= 2 ? 2 : 1}, 1fr)`, gap: 1, background: INK['06'], border: `1px solid ${INK['04']}` }}>
                 {tiles.map((tile, i) => (<div key={i} style={{ background: '#fffdf8' }}>{tile}</div>))}
               </div>
             </SafeFadeIn>
           );
         })()}
 
-        {/* Enrichment warnings */}
+        {/* Closed days warning */}
         {item.enrichment?.closedDays && item.enrichment.closedDays.length > 0 && (
           <SafeFadeIn direction="up" distance={10} duration={0.4}>
             <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-5" style={{ background: 'rgba(232,104,48,0.12)', border: '1px solid rgba(232,104,48,0.25)' }}>
@@ -329,6 +324,67 @@ function PlaceDetailContent({
               <span className={`${isDesktop ? 'text-[12px]' : 'text-[11px]'} font-medium`} style={{ color: '#a04018' }}>Closed {item.enrichment.closedDays.join(', ')}s</span>
             </div>
           </SafeFadeIn>
+        )}
+
+        {/* Description — Terrazzo-voice lead paragraph */}
+        {item.enrichment?.description && (
+          <SafeFadeIn direction="up" distance={12} duration={0.5} delay={0.15}>
+            <p className={`${descriptionFontSize} leading-relaxed mb-5`} style={{ color: TEXT.primary }}>
+              {item.enrichment.description}
+            </p>
+          </SafeFadeIn>
+        )}
+
+        {/* ── Personal & social context ── */}
+
+        {/* Personal note — verbatim user/friend commentary from import */}
+        {resolvedItem.userContext && (
+          <FadeInSection delay={0.05} direction="up" distance={14}>
+            <div className="mb-5" style={{ background: 'rgba(138,106,42,0.08)', borderLeft: '3px solid #8a6a2a', padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
+              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#8a6a2a', fontFamily: FONT.mono }}>Personal note</div>
+              <p className={`${personalNoteFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>{"\u201C"}{resolvedItem.userContext}{"\u201D"}</p>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Your notes — tags + personal note from rating */}
+        {existingRating && ratingReaction && (existingRating.tags?.length || existingRating.personalNote || existingRating.contextTags?.length) && (
+          <FadeInSection delay={0.05} direction="up" distance={14}>
+            <button type="button" className="mb-5 px-4 py-3 rounded-2xl cursor-pointer w-full text-left" style={{ background: `${ratingReaction.color}06`, border: `1px solid ${ratingReaction.color}15`, padding: '12px 16px' }} onClick={onEditRating || onRate}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1" style={{ color: ratingReaction.color, fontFamily: FONT.mono }}>
+                <PerriandIcon name="edit" size={11} color={ratingReaction.color} />Your notes
+              </div>
+              {existingRating.tags && existingRating.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {existingRating.tags.map(tag => (<span key={tag} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${ratingReaction.color}12`, color: ratingReaction.color }}>{tag}</span>))}
+                  {existingRating.returnIntent === 'absolutely' && <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: TEXT.primary }}>Would return <PerriandIcon name="check" size={11} color={TEXT.primary} /></span>}
+                </div>
+              )}
+              {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: TEXT.primary }}>{"\u201C"}{existingRating.personalNote}{"\u201D"}</p>}
+            </button>
+          </FadeInSection>
+        )}
+
+        {/* ── Taste intelligence ── */}
+
+        {/* Why You'll Love It — Terrazzo taste insight */}
+        {item.terrazzoInsight && (
+          <FadeInSection delay={0.1} direction="up" distance={16}>
+            <div className="flex flex-col gap-3 mb-5">
+              <div className="p-4 rounded-2xl" style={{ background: 'rgba(58,128,136,0.08)', border: '1px solid rgba(58,128,136,0.16)' }}>
+                <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5" style={{ color: '#226848', fontFamily: FONT.mono }}>
+                  <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You{"'"}ll Love It
+                </h4>
+                <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
+              </div>
+              {item.terrazzoInsight.caveat && (
+                <div className="p-4 rounded-2xl" style={{ background: 'rgba(160,108,40,0.08)', border: '1px solid rgba(160,108,40,0.16)' }}>
+                  <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: '#7a5518', fontFamily: FONT.mono }}>Heads Up</h4>
+                  <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.caveat}</p>
+                </div>
+              )}
+            </div>
+          </FadeInSection>
         )}
 
         {/* What to order */}
@@ -359,6 +415,8 @@ function PlaceDetailContent({
           </FadeInSection>
         )}
 
+        {/* ── Reference & related ── */}
+
         {/* Sibling places */}
         {siblingPlaces && siblingPlaces.length > 0 && (
           <FadeInSection delay={0.1} direction="up" distance={16}>
@@ -380,58 +438,8 @@ function PlaceDetailContent({
         {item.google?.editorialSummary && (
           <FadeInSection delay={0.05} direction="up" distance={14}>
             <div className="mb-5" style={{ background: sourceStyle ? `${sourceStyle.color}14` : 'rgba(199,82,51,0.08)', borderLeft: `3px solid ${sourceStyle?.color || '#c75233'}`, padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
-              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>{item.source?.name ? `From ${item.source.name}` : 'From Google Places'}</div>
+              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: sourceStyle?.color || '#a8422a', fontFamily: FONT.mono }}>Google Places</div>
               <p className={`${tasteNoteFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.google.editorialSummary}</p>
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Friend attribution */}
-        {item.friendAttribution && (
-          <FadeInSection delay={0.05} direction="up" distance={14}>
-            <div className="mb-5" style={{ background: 'rgba(58,128,136,0.08)', borderLeft: '3px solid var(--t-dark-teal)', padding: '14px 16px', borderRadius: '0 16px 16px 0' }}>
-              <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}>
-                <PerriandIcon name="friend" size={12} color="var(--t-dark-teal)" />{item.friendAttribution.name}
-              </div>
-              {item.friendAttribution.note && <p className={`${friendAttributionFontSize} italic leading-relaxed`} style={{ color: TEXT.primary }}>{"\u201C"}{item.friendAttribution.note}{"\u201D"}</p>}
-            </div>
-          </FadeInSection>
-        )}
-
-        {/* Your notes */}
-        {existingRating && ratingReaction && (existingRating.tags?.length || existingRating.personalNote || existingRating.contextTags?.length) && (
-          <FadeInSection delay={0.05} direction="up" distance={14}>
-            <button type="button" className="mb-5 px-4 py-3 rounded-2xl cursor-pointer w-full text-left" style={{ background: `${ratingReaction.color}06`, border: `1px solid ${ratingReaction.color}15`, padding: '12px 16px' }} onClick={onEditRating || onRate}>
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1" style={{ color: ratingReaction.color, fontFamily: FONT.mono }}>
-                <PerriandIcon name="edit" size={11} color={ratingReaction.color} />Your notes
-              </div>
-              {existingRating.tags && existingRating.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {existingRating.tags.map(tag => (<span key={tag} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${ratingReaction.color}12`, color: ratingReaction.color }}>{tag}</span>))}
-                  {existingRating.returnIntent === 'absolutely' && <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: INK['04'], color: TEXT.primary }}>Would return <PerriandIcon name="check" size={11} color={TEXT.primary} /></span>}
-                </div>
-              )}
-              {existingRating.personalNote && <p className={`${yourNotesFontSize} italic mt-1.5`} style={{ color: TEXT.primary }}>{"\u201C"}{existingRating.personalNote}{"\u201D"}</p>}
-            </button>
-          </FadeInSection>
-        )}
-
-        {/* Terrazzo Insights — polished card layout */}
-        {item.terrazzoInsight && (
-          <FadeInSection delay={0.1} direction="up" distance={16}>
-            <div className="flex flex-col gap-3 mb-5">
-              <div className="p-4 rounded-2xl" style={{ background: 'rgba(58,128,136,0.08)', border: '1px solid rgba(58,128,136,0.16)' }}>
-                <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5" style={{ color: '#226848', fontFamily: FONT.mono }}>
-                  <PerriandIcon name="terrazzo" size={12} color="#226848" />Why You{"'"}ll Love It
-                </h4>
-                <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.why}</p>
-              </div>
-              {item.terrazzoInsight.caveat && (
-                <div className="p-4 rounded-2xl" style={{ background: 'rgba(160,108,40,0.08)', border: '1px solid rgba(160,108,40,0.16)' }}>
-                  <h4 className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: '#7a5518', fontFamily: FONT.mono }}>Heads Up</h4>
-                  <p className={`${terrazzoParagraphFontSize} leading-relaxed`} style={{ color: TEXT.primary }}>{item.terrazzoInsight.caveat}</p>
-                </div>
-              )}
             </div>
           </FadeInSection>
         )}

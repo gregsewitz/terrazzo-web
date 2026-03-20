@@ -29,8 +29,6 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
   // ── Provenance fields: write-once, never overwritten by re-imports ──
   const provenanceData = {
     source: toNull(place.source),
-    ghostSource: toNull(place.ghostSource),
-    friendAttribution: toNull(place.friendAttribution),
     importBatchId: toNull(place.importBatchId),
   };
 

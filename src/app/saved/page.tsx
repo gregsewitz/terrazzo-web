@@ -116,7 +116,7 @@ function SavedPageContent() {
         if (!neighborhoods[city]) neighborhoods[city] = new Set();
         if (neighborhood) neighborhoods[city].add(neighborhood);
       }
-      const src = p.ghostSource || 'manual';
+      const src = p.source?.type || 'manual';
       sourceCount[src] = (sourceCount[src] || 0) + 1;
     });
     // Sort by count descending, then alphabetically
@@ -160,7 +160,7 @@ function SavedPageContent() {
       });
     }
     if (sourceFilter !== 'all') {
-      places = places.filter(p => (p.ghostSource || 'manual') === sourceFilter);
+      places = places.filter(p => (p.source?.type || 'manual') === sourceFilter);
     }
     // Sort
     const sorted = [...places];
@@ -173,7 +173,7 @@ function SavedPageContent() {
       case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'type': sorted.sort((a, b) => a.type.localeCompare(b.type)); break;
-      case 'source': sorted.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
+      case 'source': sorted.sort((a, b) => (a.source?.type || '').localeCompare(b.source?.type || '')); break;
     }
     return sorted;
   }, [myPlaces, searchQuery, typeFilter, cityFilter, sourceFilter, sortBy, parseLocation]);

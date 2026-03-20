@@ -1,4 +1,4 @@
-import type { ImportedPlace, PlaceRating, PlaceType, GhostSourceType, GooglePlaceData, Collection } from '@/types';
+import type { ImportedPlace, PlaceRating, PlaceType, GooglePlaceData, Collection } from '@/types';
 
 // ═══════════════════════════════════════════
 // DB types (shapes returned by API routes)
@@ -11,8 +11,6 @@ export interface DBSavedPlace {
   type: string;
   location?: string | null;
   source?: Record<string, unknown> | null;
-  ghostSource?: string | null;
-  friendAttribution?: Record<string, unknown> | null;
   userContext?: string | null;
   timing?: string | null;
   travelWith?: string | null;
@@ -71,7 +69,6 @@ export interface HistoryItem {
   location: string;
   detectedFrom: 'OpenTable' | 'Resy' | 'Hotels.com';
   detectedDate: string;
-  ghostSource: GhostSourceType;
   rating?: PlaceRating;
   google?: GooglePlaceData;
 }

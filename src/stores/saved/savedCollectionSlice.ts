@@ -300,8 +300,6 @@ export const createCollectionSlice: StateCreator<SavedState, [], [], SavedCollec
               const [key, val] = tag.split(':').map(s => s.trim().toLowerCase());
               if (key === 'location') return p.location.toLowerCase().includes(val);
               if (key === 'type') return p.type === val;
-              if (key === 'source' && val === 'friend') return !!p.friendAttribution;
-              if (key === 'person') return p.friendAttribution?.name.toLowerCase().includes(val);
               if (key === 'reaction' && val === 'saved') return true; // all library places are now "saved"
               return false;
             });

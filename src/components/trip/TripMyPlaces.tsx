@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, SLOT_ICONS, PerriandIconName } from '@/types';
+import { ImportedPlace, PlaceType, SOURCE_STYLES, SLOT_ICONS, PerriandIconName, getSourceStyle } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
@@ -145,8 +145,8 @@ export default React.memo(TripMyPlaces);
 // Rich place card component
 function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
   const { place } = item;
-  const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
-  const isReservation = place.ghostSource === 'email';
+  const srcStyle = getSourceStyle(place);
+  const isReservation = place.source?.type === 'email';
   const destColor = generateDestColor(item.destination || '');
   const typeIcon = TYPE_ICONS[place.type] || 'pin';
 
@@ -271,26 +271,6 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
           </div>
         )}
 
-        {/* Friend note */}
-        {place.friendAttribution && (
-          <div className="mb-2 px-2.5 py-2 rounded-lg" style={{ background: 'rgba(58,128,136,0.03)', border: '1px solid rgba(58,128,136,0.08)' }}>
-            <div className="flex items-start gap-1.5">
-              <div style={{ flexShrink: 0, marginTop: 1 }}>
-                <PerriandIcon name="friend" size={11} color="var(--t-dark-teal)" />
-              </div>
-              <div>
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: 'var(--t-dark-teal)' }}>
-                  {place.friendAttribution.name}
-                </span>
-                {place.friendAttribution.note && (
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary, fontStyle: 'italic', marginLeft: 6 }}>
-                    "{place.friendAttribution.note}"
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* What to order */}
         {place.whatToOrder && place.whatToOrder.length > 0 && (
@@ -331,8 +311,8 @@ function PlaceCard({ item, onTap }: { item: PlacedItem; onTap: () => void }) {
           </div>
         )}
 
-        {/* Taste note fallback — if no insight or friend note */}
-        {!place.terrazzoInsight?.why && !place.friendAttribution?.note && place.enrichment?.description && (
+        {/* Taste note fallback — if no insight */}
+        {!place.terrazzoInsight?.why && !place.userContext && place.enrichment?.description && (
           <div className="mb-1">
             <span style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.4 }}>
               {place.enrichment?.description}

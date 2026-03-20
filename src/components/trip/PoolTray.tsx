@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { usePoolStore, FilterType, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType, GhostSourceType, SOURCE_STYLES, PerriandIconName } from '@/types';
+import { ImportedPlace, PlaceType, SOURCE_STYLES, PerriandIconName, getSourceStyle, getSourceLabel } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import FilterSortBar from '../ui/FilterSortBar';
@@ -18,13 +18,13 @@ interface PoolTrayProps {
   dragItemId?: string | null;
 }
 
-type SourceFilterType = GhostSourceType | 'all';
+type SourceFilterType = 'all' | 'friends' | 'google-maps' | 'url' | 'email' | 'manual' | 'text' | 'terrazzo' | 'file';
 
 const SOURCE_FILTER_TABS: { value: SourceFilterType; label: string; icon?: PerriandIconName }[] = [
   { value: 'all', label: 'All' },
-  { value: 'friend', label: 'Friends', icon: 'friend' },
-  { value: 'maps', label: 'Maps', icon: 'maps' },
-  { value: 'article', label: 'Articles', icon: 'article' },
+  { value: 'friends', label: 'Friends', icon: 'friend' },
+  { value: 'google-maps', label: 'Maps', icon: 'maps' },
+  { value: 'url', label: 'Articles', icon: 'article' },
   { value: 'email', label: 'Email', icon: 'email' },
   { value: 'manual', label: 'Added', icon: 'manual' },
 ];
@@ -65,7 +65,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   // Apply source filter
   const sourceFiltered = useMemo(() => {
     if (sourceFilter === 'all') return starredPlaces;
-    return starredPlaces.filter(item => (item.ghostSource || 'manual') === sourceFilter);
+    return starredPlaces.filter(item => (item.source?.type || 'manual') === sourceFilter);
   }, [starredPlaces, sourceFilter]);
 
   // Apply type filter
@@ -81,7 +81,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
     const primarySort = (a: ImportedPlace, b: ImportedPlace) => {
       switch (sortBy) {
         case 'name': return a.name.localeCompare(b.name);
-        case 'source': return (a.ghostSource || '').localeCompare(b.ghostSource || '');
+        case 'source': return (a.source?.type || '').localeCompare(b.source?.type || '');
         default: return b.matchScore - a.matchScore;
       }
     };
@@ -109,7 +109,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   const sourceCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     starredPlaces.forEach(item => {
-      const src = item.ghostSource || 'manual';
+      const src = item.source?.type || 'manual';
       counts[src] = (counts[src] || 0) + 1;
     });
     return counts;
@@ -381,10 +381,8 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
         {/* Items List */}
         <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'thin' }}>
           {sortedItems.map(item => {
-            const sourceStyle = SOURCE_STYLES[item.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
-            const note = item.ghostSource === 'friend' ? item.friendAttribution?.note
-              : item.ghostSource === 'maps' ? item.savedAt
-              : undefined;
+            const sourceStyle = getSourceStyle(item);
+            const note = item.source?.type === 'google-maps' ? item.savedAt : undefined;
             const isDragging = dragItemId === item.id;
             const isSuggestedType = slotContext?.suggestedTypes.includes(item.type);
             const typeChip = TYPE_FILTER_CHIPS.find(c => c.value === item.type);
@@ -442,14 +440,11 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                   </div>
                   <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: TEXT.secondary }}>
                     <PerriandIcon name={sourceStyle.icon} size={12} color={TEXT.secondary} />
-                    {item.ghostSource === 'friend'
-                      ? item.friendAttribution?.name
-                      : item.ghostSource === 'maps' ? 'Google Maps'
-                      : item.source?.name || sourceStyle.label}
+                    {item.source?.name || sourceStyle.label}
                   </div>
                   {note && (
                     <div className="text-[11px] italic" style={{ color: TEXT.secondary }}>
-                      {item.ghostSource === 'friend' ? `"${note}"` : note}
+                      {note}
                     </div>
                   )}
                 </div>

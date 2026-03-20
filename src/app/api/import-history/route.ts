@@ -55,27 +55,40 @@ export async function GET(request: NextRequest) {
 
     // ── URL/article imports (grouped by importBatchId) ───────────────────
     const urlImports = await prisma.savedPlace.groupBy({
-      by: ['importBatchId', 'ghostSource'],
+      by: ['importBatchId'],
       where: {
         userId: user.id,
         importBatchId: { not: null },
-        ghostSource: { in: ['article', 'url', 'google-maps'] },
+        source: { path: ['type'], string_contains: 'url' },
       },
       _count: { id: true },
       _min: { createdAt: true },
     });
 
-    for (const group of urlImports) {
+    // Also include google-maps imports with batch IDs
+    const mapsImports = await prisma.savedPlace.groupBy({
+      by: ['importBatchId'],
+      where: {
+        userId: user.id,
+        importBatchId: { not: null },
+        source: { path: ['type'], string_contains: 'google-maps' },
+      },
+      _count: { id: true },
+      _min: { createdAt: true },
+    });
+
+    for (const group of [...urlImports, ...mapsImports]) {
       if (!group.importBatchId) continue;
 
       // Fetch one place from the batch to get the source name
       const sample = await prisma.savedPlace.findFirst({
         where: { importBatchId: group.importBatchId, userId: user.id },
-        select: { importSources: true, createdAt: true },
+        select: { importSources: true, source: true, createdAt: true },
       });
 
       const sources = (sample?.importSources as Array<{ name?: string; url?: string }>) || [];
-      const sourceName = sources[0]?.name || group.ghostSource || 'Import';
+      const sampleSource = sample?.source as { name?: string; type?: string } | null;
+      const sourceName = sources[0]?.name || sampleSource?.name || 'Import';
 
       timeline.push({
         id: `import-${group.importBatchId}`,
@@ -91,7 +104,7 @@ export async function GET(request: NextRequest) {
     const manualPlaces = await prisma.savedPlace.findMany({
       where: {
         userId: user.id,
-        ghostSource: 'manual',
+        source: { path: ['type'], equals: 'manual' },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,

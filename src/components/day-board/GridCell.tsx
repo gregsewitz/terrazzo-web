@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
-import { SOURCE_STYLES, GhostSourceType } from '@/types';
+import { getSourceStyle } from '@/types';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import type { ImportedPlace, TimeSlot } from '@/types';
 import QuickEntryInput from '@/components/chat/QuickEntryInput';
@@ -227,11 +227,11 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
     isDragging: !!dragItemId,
   });
 
-  const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+  const srcStyle = getSourceStyle(place);
 
   // Build description from the richest available data
-  const description = place.friendAttribution?.note
-    ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
+  const description = place.userContext
+    ? `"${place.userContext}"`
     : place.enrichment?.description
       || place.google?.editorialSummary
       || place.whatToOrder?.[0] && `Order: ${place.whatToOrder[0]}`
@@ -378,9 +378,9 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
 
       case 'ghost': {
         const ghost = item.data as ImportedPlace;
-        const gSrc = SOURCE_STYLES[(ghost.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-        const gNote = ghost.friendAttribution?.note
-          ? `"${ghost.friendAttribution.note}"`
+        const gSrc = getSourceStyle(ghost);
+        const gNote = ghost.userContext
+          ? `"${ghost.userContext}"`
           : ghost.enrichment?.description
             || ghost.google?.editorialSummary
             || ghost.tips?.[0]

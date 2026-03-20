@@ -5,9 +5,10 @@ import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { getUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { detectInputType } from '@/lib/detect-input';
+import { getPlatformLabel } from '@/lib/detect-input';
 import {
   fetchAndClean,
-  enrichWithGooglePlaces,
+  enrichExtractedPlaces,
   deduplicatePlaces,
 } from '@/lib/import-pipeline';
 
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
   const rl = rateLimit(clientIp, { maxRequests: 5, windowMs: 60000 });
   if (!rl.success) return rateLimitResponse();
 
-  const { content } = await request.json();
+  const { content, platform } = await request.json();
 
   if (!content?.trim()) {
     return new Response(JSON.stringify({ error: 'Content is required' }), {
@@ -132,8 +133,13 @@ export async function POST(request: NextRequest) {
         });
 
         // ── 3. Enrich with Google Places (8 concurrent) ───────────────────
+        // Derive a human-readable source name from the platform hint
+        const platformSourceName = platform
+          ? getPlatformLabel(platform)
+          : undefined;
+
         send({ type: 'progress', stage: 'enriching', label: 'Looking up each place…', percent: 40 });
-        const enrichedPlaces = await enrichWithGooglePlaces(limited, detectedType, inferredRegion, (done, total) => {
+        const enrichedPlaces = await enrichExtractedPlaces(limited, detectedType, inferredRegion, (done, total) => {
           const enrichPercent = 40 + Math.round((done / total) * 50);
           send({
             type: 'progress',
@@ -141,7 +147,7 @@ export async function POST(request: NextRequest) {
             label: `Looking up ${done} of ${total}…`,
             percent: enrichPercent,
           });
-        });
+        }, platformSourceName);
 
         send({ type: 'progress', stage: 'finalizing', label: 'Finishing up…', percent: 95 });
 

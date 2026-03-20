@@ -182,7 +182,6 @@ export async function POST(request: NextRequest) {
             lng: mp.lng,
             address: mp.address,
           },
-          ghostSource: 'maps' as const,
         }));
 
         const placeNames = mapsPlaces.map(p => p.name);
@@ -267,7 +266,6 @@ export async function POST(request: NextRequest) {
                     lat: googleResult.location?.latitude,
                     lng: googleResult.location?.longitude,
                   },
-                  ghostSource: 'maps' as const,
                 };
               }
             } catch {

@@ -30,7 +30,6 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
 
   // Narrative: prefer match explanation, then personal note / insight / taste note
   const narrative = place.matchExplanation?.narrative
-    || place.friendAttribution?.note
     || place.rating?.personalNote
     || place.terrazzoInsight?.why
     || place.enrichment?.description
@@ -109,6 +108,23 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
 
       {/* ── Secondary tier: narrative + metadata ── */}
       <div className="px-3 pt-2 pb-2.5 flex flex-col flex-1">
+        {/* Personal context from import — verbatim user/friend commentary */}
+        {place.userContext && (
+          <p
+            style={{
+              fontFamily: FONT.sans,
+              fontSize: 11,
+              fontStyle: 'italic',
+              lineHeight: 1.45,
+              color: '#8a6a2a',
+              margin: 0,
+              marginBottom: 6,
+            }}
+          >
+            &ldquo;{place.userContext}&rdquo;
+          </p>
+        )}
+
         {/* Narrative — smart-truncated at sentence boundaries */}
         {smartNarrative && (
           <p
@@ -139,14 +155,6 @@ function PlaceCard({ place, onTap, onToggleCollections, onLongPress, collectionC
               </span>
             );
           })()}
-          {place.friendAttribution && (
-            <span
-              className="px-1.5 py-0.5 rounded flex items-center gap-1"
-              style={{ fontSize: 9, fontWeight: 600, background: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}
-            >
-              <PerriandIcon name="friend" size={10} color="var(--t-dark-teal)" /> {place.friendAttribution.name}
-            </span>
-          )}
           {google?.rating && (
             <span
               className="px-1.5 py-0.5 rounded flex items-center gap-1"

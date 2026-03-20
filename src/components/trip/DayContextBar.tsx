@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, memo, useCallback } from 'react';
-import { Trip, TripDay, SOURCE_STYLES, HotelInfo, TransportEvent } from '@/types';
+import { Trip, TripDay, SOURCE_STYLES, HotelInfo, TransportEvent, getSourceStyle } from '@/types';
 import GoogleMapView from '@/components/maps/GoogleMapView';
 import type { MapMarker } from '@/components/maps/GoogleMapView';
 import { TransportBanner, TransportInput, getTransportsBeforeSlots } from './TransportBanner';
@@ -70,7 +70,7 @@ const DayContextBar = memo(({
       type: g.type,
       matchScore: g.matchScore,
       tasteNote: g.tasteNote,
-      color: SOURCE_STYLES[(g.ghostSource || 'terrazzo') as keyof typeof SOURCE_STYLES]?.color || SOURCE_STYLES.terrazzo.color,
+      color: getSourceStyle(g).color,
       isDashed: true,
     })),
   ];

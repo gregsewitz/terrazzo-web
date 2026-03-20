@@ -83,14 +83,7 @@ export default function CreateCollectionModal({ onClose, onCreate, onCreateSmart
         );
         if (!matchesLocation) return false;
       }
-      if (result.filters.friends) {
-        if (!place.friendAttribution) return false;
-        const matchesFriend = result.filters.friends.some(f =>
-          place.friendAttribution!.name.toLowerCase().includes(f.toLowerCase())
-        );
-        if (!matchesFriend) return false;
-      }
-      if (result.filters.sources && !result.filters.sources.includes(place.ghostSource || '')) return false;
+      if (result.filters.sources && !result.filters.sources.includes(place.source?.type || 'manual')) return false;
       if (result.filters.minMatchScore && (place.matchScore || 0) < result.filters.minMatchScore) return false;
       if (result.filters.reactions) {
         if (!place.rating) return false;
@@ -144,8 +137,8 @@ export default function CreateCollectionModal({ onClose, onCreate, onCreateSmart
     try {
       const placeSummaries = myPlaces.map(p => ({
         name: p.name, type: p.type, location: p.location,
-        ghostSource: p.ghostSource, matchScore: p.matchScore,
-        friendAttribution: p.friendAttribution, rating: p.rating,
+        source: p.source, matchScore: p.matchScore,
+        rating: p.rating,
       }));
 
       const res = await fetch('/api/smart-search', {

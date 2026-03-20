@@ -203,9 +203,7 @@ model SavedPlace {
   location            String?
 
   // Import metadata (provenance — write-once, never overwritten by re-imports)
-  source              Json?    // { type, name, url } — ImportSource (primary/first source)
-  ghostSource         String?  // friend | maps | article | email | ai | manual | instagram
-  friendAttribution   Json?    // { name, platform, date }
+  source              Json?    // { type: ImportSourceType, name: string, url?: string }
   userContext          String?  // user's personal note about the place
   timing              String?
   travelWith          String?  // e.g. "bestie", "daughter", "friends"

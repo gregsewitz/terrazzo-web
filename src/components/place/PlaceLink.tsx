@@ -88,13 +88,12 @@ export default function PlaceLink({
             name,
             type: type || 'activity',
             location,
-            source: { type: 'url', name: 'Discover' },
+            source: { type: 'terrazzo', name: '' },
             matchScore: matchScore || 0,
             matchBreakdown: (matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
             tasteNote: '',
             google: googlePlaceId ? { placeId: googlePlaceId } : undefined,
             status: 'available',
-            ghostSource: 'terrazzo',
           };
           openHandler(previewPlace);
           return;

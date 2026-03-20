@@ -6,7 +6,7 @@ import { useDragGesture } from '@/hooks/useDragGesture';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { ImportedPlace, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { ImportedPlace, getSourceStyle } from '@/types';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
 import { useTripCollaboration } from '@/context/TripCollaborationContext';
@@ -43,9 +43,9 @@ function PlacedCard({
     isDragging: !!dragItemId,
   });
 
-  const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-  const context = place.friendAttribution?.note
-    ? `"${place.friendAttribution.note}" — ${place.friendAttribution.name || 'Friend'}`
+  const srcStyle = getSourceStyle(place);
+  const context = place.userContext
+    ? `"${place.userContext}"`
     : place.whatToOrder?.[0]
       ? `Order: ${place.whatToOrder[0]}`
       : place.tips?.[0] || place.terrazzoReasoning?.rationale || place.enrichment?.description || '';

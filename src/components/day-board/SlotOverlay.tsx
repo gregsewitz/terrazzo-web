@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { FONT, INK, TEXT } from '@/constants/theme';
-import { SLOT_ICONS, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { SLOT_ICONS, getSourceStyle } from '@/types';
 import type { ImportedPlace, TimeSlot } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { PlacedCard } from '@/components/day-board';
@@ -172,9 +172,9 @@ function SlotOverlay({ dayNumber, slot, anchorRect, colWidth, onClose }: SlotOve
 
         {/* Ghost items */}
         {slot.ghostItems && slot.ghostItems.length > 0 && slot.ghostItems.map(ghost => {
-          const gSrc = SOURCE_STYLES[(ghost.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-          const gNote = ghost.friendAttribution?.note
-            ? `"${ghost.friendAttribution.note}"`
+          const gSrc = getSourceStyle(ghost);
+          const gNote = ghost.userContext
+            ? `"${ghost.userContext}"`
             : ghost.terrazzoReasoning?.rationale || ghost.savedAt || '';
 
           return (

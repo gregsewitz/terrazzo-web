@@ -471,7 +471,6 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
                 ...candidate,
                 id: `ghost-starred-${candidate.id}`,
                 ghostStatus: 'proposed',
-                ghostSource: candidate.rating?.reaction === 'myPlace' ? 'manual' : (candidate.ghostSource || 'manual'),
                 terrazzoReasoning: {
                   rationale: candidate.rating?.reaction === 'myPlace'
                     ? `You starred ${candidate.name}`

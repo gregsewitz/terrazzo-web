@@ -154,7 +154,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
         return {
           ...place,
           id: `ghost-claude-${place.id}`,
-          ghostSource: 'terrazzo' as const,
+          source: { type: 'terrazzo' as const, name: '' },
           ghostStatus: 'proposed' as const,
           terrazzoReasoning: { rationale: s.rationale, confidence: s.confidence },
         };

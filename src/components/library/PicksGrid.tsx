@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { useSavedStore } from '@/stores/savedStore';
-import { ImportedPlace, PlaceType, SOURCE_STYLES, GhostSourceType } from '@/types';
+import { ImportedPlace, PlaceType, getSourceStyle } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
@@ -163,7 +163,7 @@ function PicksGridInner({ onTapDetail }: PicksGridProps) {
             {filteredPicks.map(place => {
               const typeIcon = TYPE_ICONS[place.type] || 'location';
               const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
-              const srcStyle = SOURCE_STYLES[(place.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
+              const srcStyle = getSourceStyle(place);
 
               return (
                 <div

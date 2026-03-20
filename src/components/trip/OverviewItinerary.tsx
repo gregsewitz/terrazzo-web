@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trip, GhostSourceType, SOURCE_STYLES, SLOT_ICONS } from '@/types';
+import { Trip, SOURCE_STYLES, SLOT_ICONS, getSourceStyle, getSourceLabel } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
@@ -79,9 +79,9 @@ function OverviewItineraryInner({ trip, onTapDay }: OverviewItineraryProps) {
                   </div>
                 ) : (
                   allPlaced.map(({ place, slot }, idx) => {
-                    const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
-                    const isReservation = place.ghostSource === 'email';
-                    const subtitle = place.friendAttribution?.note || place.terrazzoReasoning?.rationale || place.enrichment?.description || '';
+                    const srcStyle = getSourceStyle(place);
+                    const isReservation = place.source?.type === 'email';
+                    const subtitle = place.userContext || place.terrazzoReasoning?.rationale || place.enrichment?.description || '';
                     const truncSub = subtitle.length > 65 ? subtitle.slice(0, 62) + '…' : subtitle;
 
                     return (

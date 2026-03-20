@@ -103,12 +103,11 @@ export async function PATCH(
           location: reservation.location || '',
           googlePlaceId: googlePlaceId || null,
           googleData: (googleData as import('@prisma/client').Prisma.InputJsonValue) || undefined,
-          source: {
+          source: JSON.stringify({
             type: 'email',
             name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
             url: undefined,
-          },
-          ghostSource: 'email',
+          }),
           intentStatus: 'booked',
           timing: reservation.reservationDate
             ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {

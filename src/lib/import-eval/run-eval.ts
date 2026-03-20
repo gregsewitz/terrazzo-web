@@ -31,7 +31,7 @@ if (dotenvResult.parsed) {
 }
 
 import { extractPlaces, ExtractionResult } from '../anthropic';
-import { fetchAndClean, enrichWithGooglePlaces } from '../import-pipeline';
+import { fetchAndClean, enrichExtractedPlaces } from '../import-pipeline';
 import { TEST_CASES, TestCase, ExpectedPlace, ExpectedEnrichment } from './test-cases';
 import { saveEntry, getLastEntry, computeDiffs, formatDiffLine, HistoryEntry } from './eval-history';
 
@@ -332,7 +332,7 @@ async function runTestCase(tc: TestCase, skipEnrich: boolean): Promise<TestResul
   if (!skipEnrich && tc.expectedEnrichment && tc.expectedEnrichment.length > 0) {
     console.log(`    Enriching ${results.length} places with Google Places...`);
     try {
-      const enriched = await enrichWithGooglePlaces(
+      const enriched = await enrichExtractedPlaces(
         extraction.places,
         tc.sourceUrl ? 'url' : 'text',
         extraction.region,

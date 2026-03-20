@@ -7,7 +7,7 @@ import GoogleMapView from '@/components/maps/GoogleMapView';
 import type { MapMarker } from '@/components/maps/GoogleMapView';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, TEXT, INK } from '@/constants/theme';
-import { SOURCE_STYLES, GhostSourceType, ImportedPlace } from '@/types';
+import { SOURCE_STYLES, ImportedPlace, getSourceStyle } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { useTripSuggestions } from '@/hooks/useTripSuggestions';
 import { trackInteraction } from '@/lib/interaction-tracker';
@@ -157,7 +157,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
         return {
           place: {
             ...place,
-            ghostSource: 'terrazzo' as GhostSourceType,
+            source: { type: 'terrazzo' as const, name: '' },
             terrazzoReasoning: { rationale: s.rationale, confidence: s.confidence },
           },
           dayNumber: selectedDay,
@@ -190,7 +190,7 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
 
     // Ghost suggestion markers — dashed, cream
     const ghostMkrs: MapMarker[] = showGhosts ? ghostCandidates.map(g => {
-      const srcStyle = SOURCE_STYLES[(g.place.ghostSource || 'terrazzo') as GhostSourceType];
+      const srcStyle = getSourceStyle(g.place);
       return {
         id: g.place.id,
         name: g.place.name,

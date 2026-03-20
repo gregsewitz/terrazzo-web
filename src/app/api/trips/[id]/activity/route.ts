@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTripAccess } from '@/lib/trip-access';
 import { CACHE_PRIVATE_REVALIDATE, withCache } from '@/lib/cache-policy';
+import { getUser } from '@/lib/supabase-server';
 
 /**
  * GET /api/trips/[id]/activity — Poll for recent activity.
@@ -39,4 +40,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }, {
     headers: withCache({}, CACHE_PRIVATE_REVALIDATE),
   });
+}
+
+/**
+ * POST /api/trips/[id]/activity — Create an activity entry.
+ * Body: { type, summary, data? }
+ */
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: tripId } = await params;
+  const user = await getUser(req);
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await req.json();
+  const { type, summary, data } = body;
+
+  if (!type || !summary) {
+    return Response.json({ error: 'type and summary required' }, { status: 400 });
+  }
+
+  const activity = await prisma.tripActivity.create({
+    data: {
+      tripId,
+      userId: user.id,
+      type,
+      summary,
+      data: data || undefined,
+    },
+  });
+
+  return Response.json({ activity }, { status: 201 });
 }

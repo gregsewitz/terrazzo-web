@@ -63,8 +63,8 @@ async function streamFromEndpoint(
 // ─── Public API ─────────────────────────────────────────────────────────────
 
 /** Stream import from /api/import (text + URL imports). */
-export function streamImport(input: string, callbacks: ImportCallbacks): Promise<void> {
-  return streamFromEndpoint('/api/import', { content: input }, callbacks, 'Import failed');
+export function streamImport(input: string, callbacks: ImportCallbacks, platform?: string): Promise<void> {
+  return streamFromEndpoint('/api/import', { content: input, platform }, callbacks, 'Import failed');
 }
 
 /** Stream import from /api/import/maps-list (Google Maps saved list imports). */

@@ -10,7 +10,7 @@ const client = new Anthropic({
 
 const SYSTEM_PROMPT = `You are the Terrazzo travel app's collection curator.
 The user has a collection of saved places (hotels, restaurants, bars, cafes, museums, activities, neighborhoods, shops).
-Each place has: name, type, location (city), source (how it was saved), matchScore (0-100), friendAttribution (who recommended it), and a rating reaction (myPlace, enjoyed, mixed, notMe).
+Each place has: name, type, location (city), source (how it was saved), matchScore (0-100), and a rating reaction (myPlace, enjoyed, mixed, notMe).
 
 Given a natural language query, extract structured filters to search the collection. Return a JSON object with:
 
@@ -20,13 +20,12 @@ Given a natural language query, extract structured filters to search the collect
   "filters": {
     "types": ["restaurant", "hotel", "bar", "cafe", "museum", "activity"] | null,
     "locations": ["Tokyo", "Paris"] | null,
-    "friends": ["Lizzie", "Marco"] | null,
-    "sources": ["friend", "maps", "article", "email", "ai", "manual", "instagram"] | null,
+    "sources": ["maps", "article", "email", "ai", "manual", "instagram"] | null,
     "minMatchScore": 80 | null,
     "reactions": ["myPlace", "enjoyed"] | null,
     "keywords": ["sushi", "cocktails"] | null
   },
-  "filterTags": ["type: restaurant", "location: Tokyo", "person: Lizzie"],
+  "filterTags": ["type: restaurant", "location: Tokyo"],
   "reasoning": "A warm, friendly one-liner about what Terrazzo picked and why — like a friend explaining their curation"
 }
 
@@ -36,7 +35,7 @@ Rules:
 - For vague queries, be generous with interpretation but explain your reasoning in the reasoning field
 - The emoji should be the single most representative emoji for the collection
 - The name should be concise (2-5 words) and descriptive
-- The reasoning should sound like a knowledgeable friend, NOT like a search engine. Write it conversationally — e.g. "Pulled together your top-rated spots that Lizzie recommended" not "Query specifically targets friend-attributed places with positive reactions"
+- The reasoning should sound like a knowledgeable friend, NOT like a search engine. Write it conversationally — e.g. "Pulled together your favorite restaurants and bars in Tokyo" not "Query specifically targets restaurant and bar types with high match scores"
 - Return ONLY the JSON object, no markdown formatting or extra text`;
 
 export async function POST(req: NextRequest) {
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
     let collectionContext = '';
     if (places && Array.isArray(places)) {
       const summary = places.map((p: any) =>
-        `${p.name} (${p.type}, ${p.location}${p.friendAttribution ? `, from ${p.friendAttribution.name}` : ''}${p.matchScore ? `, taste: ${p.matchScore >= 78 ? 'strong match' : p.matchScore >= 65 ? 'good match' : p.matchScore >= 50 ? 'worth a look' : 'mixed fit'}` : ''}${p.ghostSource ? `, source: ${p.ghostSource}` : ''})`
+        `${p.name} (${p.type}, ${p.location}${p.matchScore ? `, taste: ${p.matchScore >= 78 ? 'strong match' : p.matchScore >= 65 ? 'good match' : p.matchScore >= 50 ? 'worth a look' : 'mixed fit'}` : ''}${p.source?.name ? `, source: ${p.source.name}` : ''})`
       ).join('\n');
       collectionContext = `\n\nThe user's current collection:\n${summary}`;
     }

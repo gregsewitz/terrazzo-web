@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { FONT, TEXT, INK } from '@/constants/theme';
-import { SOURCE_STYLES, GhostSourceType, ImportedPlace } from '@/types';
+import { SOURCE_STYLES, ImportedPlace, getSourceStyle, getSourceLabel } from '@/types';
 import { TYPE_ICONS } from '@/constants/placeTypes';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -203,7 +203,7 @@ export function MobileGhostCard({
   const { place } = ghost;
   const typeIcon = TYPE_ICONS[place.type] || 'pin';
   const destColor = getDestColor(ghost.destination || '');
-  const srcStyle = SOURCE_STYLES[(place.ghostSource || 'terrazzo') as GhostSourceType] || SOURCE_STYLES.terrazzo;
+  const srcStyle = getSourceStyle(place);
 
   return (
     <div
@@ -419,7 +419,7 @@ export function DesktopDetailCard({
   const { place } = item;
   const typeIcon = TYPE_ICONS[place.type] || 'pin';
   const destColor = getDestColor(item.destination || '');
-  const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
+  const srcStyle = getSourceStyle(place);
 
   return (
     <div
@@ -525,7 +525,7 @@ export function DesktopGhostCard({
   const { place } = ghost;
   const typeIcon = TYPE_ICONS[place.type] || 'pin';
   const destColor = getDestColor(ghost.destination || '');
-  const srcStyle = SOURCE_STYLES[(place.ghostSource || 'terrazzo') as GhostSourceType] || SOURCE_STYLES.terrazzo;
+  const srcStyle = getSourceStyle(place);
 
   return (
     <div

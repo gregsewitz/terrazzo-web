@@ -328,7 +328,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       picks = picks.filter(p => p.type === typeFilter);
     }
     if (sourceFilter !== 'all') {
-      picks = picks.filter(p => p.ghostSource === sourceFilter);
+      picks = picks.filter(p => (p.source?.type || 'manual') === sourceFilter);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();

@@ -20,24 +20,12 @@ export function useBriefingData(trip: Trip) {
     // Source breakdown
     const sourceMap: Record<string, number> = {};
     allPlaces.forEach(p => {
-      const src = p.ghostSource || 'manual';
+      const src = p.source?.type || 'manual';
       sourceMap[src] = (sourceMap[src] || 0) + 1;
     });
 
-    // Friends
-    const friendMap = new Map<string, { name: string; count: number; places: string[]; note?: string }>();
-    allPlaces.forEach(p => {
-      if (p.friendAttribution?.name) {
-        const f = friendMap.get(p.friendAttribution.name) || {
-          name: p.friendAttribution.name, count: 0, places: [],
-        };
-        f.count += 1;
-        f.places.push(p.name);
-        if (p.friendAttribution.note) f.note = p.friendAttribution.note;
-        friendMap.set(p.friendAttribution.name, f);
-      }
-    });
-    const friends = Array.from(friendMap.values()).sort((a, b) => b.count - a.count);
+    // Friends — empty since friendAttribution is removed
+    const friends: Array<{ name: string; count: number; places: string[]; note?: string }> = [];
 
     // Featured places — ones with the best editorial content (insights, tips, what to order)
     const featured = [...allPlaces]

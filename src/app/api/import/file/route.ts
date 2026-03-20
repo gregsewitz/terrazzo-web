@@ -5,7 +5,7 @@ import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { getUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import {
-  enrichWithGooglePlaces,
+  enrichExtractedPlaces,
   deduplicatePlaces,
   stripHtml,
 } from '@/lib/import-pipeline';
@@ -268,7 +268,7 @@ If the PDF does not contain any identifiable places, respond with: NO_PLACES_FOU
 
         // ── Enrich with Google Places ───────────────────────────────────────
         send({ type: 'progress', stage: 'enriching', label: 'Looking up each place…', percent: 40 });
-        const enrichedPlaces = await enrichWithGooglePlaces(limited, 'file', inferredRegion, (done, total) => {
+        const enrichedPlaces = await enrichExtractedPlaces(limited, 'file', inferredRegion, (done, total) => {
           const enrichPercent = 40 + Math.round((done / total) * 50);
           send({
             type: 'progress',

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
-import { SLOT_ICONS, SOURCE_STYLES, GhostSourceType, HotelInfo } from '@/types';
+import { SLOT_ICONS, SOURCE_STYLES, HotelInfo, getSourceStyle } from '@/types';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import CollaboratorGhostCard from '../place/CollaboratorGhostCard';
@@ -471,9 +471,9 @@ function DayBoardView() {
 
                     {/* Ghost items — same two-row height, dashed border */}
                     {hasGhosts && !hasPlaces && slot.ghostItems!.map(ghost => {
-                      const gSrc = SOURCE_STYLES[(ghost.ghostSource as GhostSourceType) || 'manual'] || SOURCE_STYLES.manual;
-                      const gNote = ghost.friendAttribution?.note
-                        ? `"${ghost.friendAttribution.note}"`
+                      const gSrc = getSourceStyle(ghost);
+                      const gNote = ghost.userContext
+                        ? `"${ghost.userContext}"`
                         : ghost.terrazzoReasoning?.rationale || ghost.savedAt || '';
 
                       return (

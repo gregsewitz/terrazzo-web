@@ -42,10 +42,12 @@ interface AddBarPreviewProps {
   collections: Collection[];
   tripContext: TripContext | null;
   isEnriching?: boolean;
+  /** Pre-detected source label (e.g. "Condé Nast Traveler") — can be edited by user */
+  detectedSource?: string;
   onToggleSelect: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
-  onSaveSelected: (collectionIds: string[]) => void;
+  onSaveSelected: (collectionIds: string[], sourceOverride?: string) => void;
   onCreateCollection?: (name: string, emoji?: string) => Promise<string>;
 }
 
@@ -57,6 +59,7 @@ export default function AddBarPreview({
   collections,
   tripContext,
   isEnriching = false,
+  detectedSource,
   onToggleSelect,
   onSelectAll,
   onDeselectAll,
@@ -69,6 +72,7 @@ export default function AddBarPreview({
   const [sortBy, setSortBy] = useState<PreviewSortKey>('default');
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
+  const [sourceLabel, setSourceLabel] = useState(detectedSource || '');
 
   // Group results by type, sorted by count (largest group first)
   const groupedResults = useMemo(() => {
@@ -119,6 +123,30 @@ export default function AddBarPreview({
         <p className="mt-0.5" style={{ fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary, margin: '2px 0 0' }}>
           Tap to deselect any you don&rsquo;t want
         </p>
+      </div>
+
+      {/* ── Source attribution ── */}
+      <div className="flex items-center gap-2 mt-2 mb-1">
+        <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, color: TEXT.secondary, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+          Source
+        </span>
+        <input
+          type="text"
+          value={sourceLabel}
+          onChange={(e) => setSourceLabel(e.target.value)}
+          placeholder={detectedSource || 'A friend, an article, yourself…'}
+          style={{
+            flex: 1,
+            border: 'none',
+            borderBottom: `1px solid var(--t-linen)`,
+            background: 'transparent',
+            fontFamily: FONT.sans,
+            fontSize: 12,
+            color: TEXT.primary,
+            padding: '4px 0',
+            outline: 'none',
+          }}
+        />
       </div>
 
       {/* ── Bulk select controls ── */}
@@ -251,18 +279,18 @@ export default function AddBarPreview({
                           {item.location || item.type}
                           {shouldShowTierBadge(item.matchScore) && ` · ${getMatchTier(item.matchScore).shortLabel}`}
                         </p>
-                        {item.enrichment?.description && (
+                        {item.userContext && (
                           <p style={{
                             fontFamily: FONT.sans,
                             fontSize: 11,
                             fontStyle: 'italic',
-                            color: TEXT.secondary,
+                            color: '#8a6a2a',
                             margin: '2px 0 0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
                           }}>
-                            &ldquo;{item.enrichment?.description}&rdquo;
+                            &ldquo;{item.userContext}&rdquo;
                           </p>
                         )}
                       </div>
@@ -425,7 +453,7 @@ export default function AddBarPreview({
 
       {/* ── Save CTA ── */}
       <button
-        onClick={() => onSaveSelected(collectionIds)}
+        onClick={() => onSaveSelected(collectionIds, sourceLabel || undefined)}
         disabled={selectedCount === 0}
         className="w-full mt-3 py-3.5 rounded-2xl border-none cursor-pointer transition-all flex items-center justify-center gap-2"
         style={{

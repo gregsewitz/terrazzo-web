@@ -72,13 +72,12 @@ function toImportedPlace(resolved: ResolvedPlace): ImportedPlace {
     name: resolved.name,
     type: (resolved.type || 'activity') as PlaceType,
     location: resolved.location || '',
-    source: { type: 'url', name: 'Discover' },
+    source: { type: 'terrazzo', name: 'Discover' },
     matchScore: resolved.matchScore || 0,
     matchBreakdown: (resolved.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
     matchExplanation: resolved.matchExplanation || undefined,
     google,
     status: 'available',
-    ghostSource: 'terrazzo',
   };
 }
 

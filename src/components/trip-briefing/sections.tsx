@@ -2,8 +2,8 @@
 
 import React from 'react';
 import {
-  Trip, ImportedPlace, GhostSourceType,
-  SOURCE_STYLES,
+  Trip, ImportedPlace,
+  getSourceStyle, getSourceLabel,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, TEXT, COLOR, SECTION } from '@/constants/theme';
@@ -48,7 +48,7 @@ export function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () =>
   const typeLabel = TYPE_LABELS[place.type] || place.type;
   const typeIcon = TYPE_ICONS[place.type as keyof typeof TYPE_ICONS] || 'pin';
   const brandColor = TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || COLOR.navy;
-  const srcStyle = SOURCE_STYLES[place.ghostSource as GhostSourceType] || SOURCE_STYLES.manual;
+  const srcStyle = getSourceStyle(place);
 
   return (
     <div
@@ -91,7 +91,7 @@ export function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () =>
           }}>
             {typeLabel}
           </span>
-          {place.ghostSource && place.ghostSource !== 'manual' && (
+          {place.source?.type && place.source.type !== 'manual' && place.source.type !== 'text' && (
             <span style={{
               fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
               padding: '4px 10px', borderRadius: 20,
@@ -178,40 +178,6 @@ export function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () =>
           </div>
         )}
 
-        {/* Friend attribution */}
-        {place.friendAttribution && (
-          <div style={{
-            marginTop: 12, paddingTop: 12,
-            borderTop: '1px solid var(--t-linen)',
-            display: 'flex', alignItems: 'flex-start', gap: 10,
-          }}>
-            <div style={{
-              width: 26, height: 26, borderRadius: '50%',
-              background: 'rgba(58,128,136,0.10)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-              color: COLOR.darkTeal, flexShrink: 0,
-            }}>
-              {place.friendAttribution.name.charAt(0)}
-            </div>
-            <div>
-              <span style={{
-                fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
-                color: TEXT.primary,
-              }}>
-                {place.friendAttribution.name}
-              </span>
-              {place.friendAttribution.note && (
-                <div style={{
-                  fontFamily: FONT.sans, fontSize: 12, fontStyle: 'italic',
-                  color: TEXT.secondary, marginTop: 2, lineHeight: 1.5,
-                }}>
-                  &ldquo;{place.friendAttribution.note}&rdquo;
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Caveat */}
         {place.terrazzoInsight?.caveat && (
@@ -266,12 +232,12 @@ export function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: 
         </span>
       </div>
       {/* Source indicator */}
-      {place.ghostSource && place.ghostSource !== 'manual' && (
+      {place.source?.type && place.source.type !== 'manual' && place.source.type !== 'text' && (
         <span style={{
           fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: SECTION.editorial.label,
           textTransform: 'uppercase', letterSpacing: '0.04em',
         }}>
-          {SOURCE_STYLES[place.ghostSource]?.label}
+          {getSourceLabel(place)}
         </span>
       )}
     </div>

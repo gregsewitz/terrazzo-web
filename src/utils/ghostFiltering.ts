@@ -13,13 +13,14 @@ export function filterGhostsByDestination(
   });
 }
 
-/** Filter items by ghost source type */
-export function filterByGhostSource<T extends { ghostSource?: string }>(
+/** Filter items by source type */
+export function filterBySourceType<T extends { source?: { type: string } }>(
   items: T[],
   sourceFilter: string
 ): T[] {
-  return items.filter(item => (item.ghostSource || 'manual') === sourceFilter);
+  return items.filter(item => (item.source?.type || 'manual') === sourceFilter);
 }
+
 
 /** Check if a slot has any ghost items */
 export function hasGhostItems(slot: TimeSlot): boolean {

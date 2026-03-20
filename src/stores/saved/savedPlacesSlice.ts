@@ -98,8 +98,6 @@ export const createPlacesSlice: StateCreator<SavedState, [], [], SavedPlacesStat
             location: place.location,
             googlePlaceId: place.google?.placeId,
             source: place.source,
-            ghostSource: place.ghostSource,
-            friendAttribution: place.friendAttribution,
             matchScore: place.matchScore,
             matchBreakdown: place.matchBreakdown,
             tasteNote: place.tasteNote,

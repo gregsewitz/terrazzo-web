@@ -52,6 +52,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   // Local UI state
   const [saving, setSaving] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [detectedSource, setDetectedSource] = useState<string | undefined>(undefined);
 
   // File upload ref
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -180,6 +181,12 @@ const UniversalAddBar = memo(function UniversalAddBar() {
 
     setMode('importing');
     const platformLabel = getPlatformLabel(platform);
+    // Set source hint: known platforms get auto-labeled, text lists start empty for user to fill
+    setDetectedSource(
+      inputType === 'google-maps-list' || inputType === 'google-maps-place' ? 'Google Maps'
+        : platform && platform !== 'generic' ? platformLabel
+        : undefined
+    );
     setImportProgress(0,
       inputType === 'google-maps-list' ? 'Opening your saved list…'
         : inputType === 'google-maps-place' ? 'Looking up this place…'
@@ -202,7 +209,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
             setImportError(err || 'Could not resolve this Google Maps place');
             setMode('error');
           },
-        });
+        }, 'google-maps');
       } else if (inputType === 'google-maps-list') {
         // Google Maps saved lists → dedicated fast endpoint with lazy enrichment
         setIsEnriching(true);
@@ -287,7 +294,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
             setImportError(err || 'Could not extract places from this link');
             setMode('error');
           },
-        });
+        }, platform);
       }
     } catch {
       setImportError('Something went wrong — please try again');
@@ -331,7 +338,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
   }, [previewPlace, selectedCollectionIds, tripContext, addPlace, addPlaceToCollection, placeFromSaved, addToPool, setPreviewPlace, setMode, setQuery]);
 
   // ─── Save selected import results ────────────────────────────────────
-  const handleSaveSelected = useCallback((collectionIds: string[]) => {
+  const handleSaveSelected = useCallback((collectionIds: string[], sourceOverride?: string) => {
     const selected = importResults.filter(p => importSelectedIds.has(p.id));
 
     // If enrichment is still running, record which client IDs were saved
@@ -340,12 +347,20 @@ const UniversalAddBar = memo(function UniversalAddBar() {
       selected.forEach(p => savedDuringEnrichRef.current.set(p.id, p.name));
     }
 
-    selected.forEach(place => addPlace(place));
+    // Apply source override if the user edited the source label
+    const placesToSave = sourceOverride
+      ? selected.map(p => ({
+          ...p,
+          source: { ...p.source, name: sourceOverride },
+        }))
+      : selected;
+
+    placesToSave.forEach(place => addPlace(place));
     collectionIds.forEach(slId => {
-      selected.forEach(place => addPlaceToCollection(slId, place.id));
+      placesToSave.forEach(place => addPlaceToCollection(slId, place.id));
     });
     if (tripContext) {
-      addToPool(selected.map(p => ({ ...p, status: 'available' as const })));
+      addToPool(placesToSave.map(p => ({ ...p, status: 'available' as const })));
     }
     setImportResults([]);
     setMode('search');
@@ -703,6 +718,7 @@ const UniversalAddBar = memo(function UniversalAddBar() {
                 collections={collections}
                 tripContext={tripContext}
                 isEnriching={isEnriching}
+                detectedSource={detectedSource}
                 onToggleSelect={toggleImportSelected}
                 onSelectAll={selectAllImports}
                 onDeselectAll={deselectAllImports}

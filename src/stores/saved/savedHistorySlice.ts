@@ -36,12 +36,11 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
       name: histItem.name,
       type: histItem.type,
       location: histItem.location,
-      source: { type: 'email', name: `Promoted from ${histItem.detectedFrom}` },
+      source: { type: 'manual', name: `Promoted from ${histItem.detectedFrom}` },
       matchScore: 0,
       matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
       tasteNote: '',
       status: 'available',
-      ghostSource: 'manual',
     };
 
     set({
@@ -58,7 +57,7 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
             name: newPlace.name,
             type: newPlace.type,
             location: newPlace.location,
-            ghostSource: 'manual',
+            source: newPlace.source,
             matchScore: 0,
             matchBreakdown: newPlace.matchBreakdown,
           }),
@@ -100,7 +99,6 @@ export const createHistorySlice: StateCreator<SavedState, [], [], SavedHistorySt
       location: place.location,
       detectedFrom: (place.source?.name as HistoryItem['detectedFrom']) || 'OpenTable',
       detectedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      ghostSource: place.ghostSource || 'manual',
     };
 
     // Also strip the place from any collections (local cleanup so state

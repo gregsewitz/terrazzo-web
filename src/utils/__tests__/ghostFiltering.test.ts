@@ -1,25 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import {
   filterGhostsByDestination,
-  filterByGhostSource,
+  filterBySourceType,
   hasGhostItems,
 } from '../ghostFiltering';
 import type { TimeSlot, ImportedPlace } from '@/types';
 
 // ─── Test Fixtures ──────────────────────────────────────────────────────────
 
-function makeGhost(name: string, location: string, ghostSource?: string): ImportedPlace {
+function makeGhost(name: string, location: string, sourceType?: string): ImportedPlace {
   return {
     id: name.toLowerCase().replace(/\s/g, '-'),
     name,
     type: 'restaurant',
     location,
-    source: { type: 'text', name: 'Test' },
+    source: { type: (sourceType || 'manual') as any, name: 'Test' },
     matchScore: 70,
     matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
     tasteNote: '',
     status: 'available',
-    ghostSource: (ghostSource || 'manual') as ImportedPlace['ghostSource'],
   };
 }
 
@@ -79,29 +78,29 @@ describe('filterGhostsByDestination', () => {
   });
 });
 
-// ─── filterByGhostSource ────────────────────────────────────────────────────
+// ─── filterBySourceType ────────────────────────────────────────────────────
 
-describe('filterByGhostSource', () => {
+describe('filterBySourceType', () => {
   const items = [
-    makeGhost('A', 'Tokyo', 'maps'),
-    makeGhost('B', 'Tokyo', 'article'),
+    makeGhost('A', 'Tokyo', 'google-maps'),
+    makeGhost('B', 'Tokyo', 'url'),
     makeGhost('C', 'Tokyo', 'manual'),
     makeGhost('D', 'Tokyo'), // defaults to manual
   ];
 
   it('filters by source type', () => {
-    const maps = filterByGhostSource(items, 'maps');
+    const maps = filterBySourceType(items, 'google-maps');
     expect(maps).toHaveLength(1);
     expect(maps[0].name).toBe('A');
   });
 
-  it('treats missing ghostSource as manual', () => {
-    const manual = filterByGhostSource(items, 'manual');
+  it('treats missing source.type as manual', () => {
+    const manual = filterBySourceType(items, 'manual');
     expect(manual).toHaveLength(2); // C and D
   });
 
   it('returns empty for non-matching source', () => {
-    const result = filterByGhostSource(items, 'email');
+    const result = filterBySourceType(items, 'email');
     expect(result).toHaveLength(0);
   });
 });

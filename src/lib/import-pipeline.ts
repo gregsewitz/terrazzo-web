@@ -169,15 +169,19 @@ export interface EnrichmentProgress {
   (done: number, total: number): void;
 }
 
-export async function enrichWithGooglePlaces(
+export async function enrichExtractedPlaces(
   extracted: ExtractedPlace[],
   inputType: string,
   inferredRegion: string | null,
   onProgress?: EnrichmentProgress,
+  sourceOverride?: string,
 ): Promise<ImportedPlace[]> {
   const batchId = `import-${Date.now()}`;
-  const sourceType = (inputType === 'google-maps-list' || inputType === 'google-maps-place' || inputType === 'google-maps') ? 'google-maps' : inputType === 'url' ? 'url' : inputType === 'file' ? 'url' : 'text';
-  const sourceName = (inputType === 'google-maps-list' || inputType === 'google-maps-place' || inputType === 'google-maps') ? 'Google Maps' : inputType === 'url' ? 'Article' : inputType === 'file' ? 'File Upload' : 'Pasted List';
+  const sourceType = (inputType === 'google-maps-list' || inputType === 'google-maps-place' || inputType === 'google-maps') ? 'google-maps' : inputType === 'url' ? 'url' : inputType === 'file' ? 'file' : 'text';
+  // Smart defaults: URLs → "Article", Maps lists → "Google Maps"
+  // Pasted text, file uploads & single place lookups → empty (user can optionally set a source)
+  const defaultSourceName = (inputType === 'google-maps-list') ? 'Google Maps' : inputType === 'url' ? 'Article' : '';
+  const sourceName = sourceOverride || defaultSourceName;
 
   let done = 0;
   const total = extracted.length;
@@ -296,7 +300,6 @@ export async function enrichWithGooglePlaces(
           matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
           tasteNote: place.description || '',
           status: 'available',
-          ghostSource: (sourceType === 'google-maps' ? 'maps' : 'article') as ImportedPlace['ghostSource'],
           userContext: place.userContext || undefined,
           travelWith: place.travelWith || undefined,
           timing: place.timing || undefined,
@@ -342,7 +345,6 @@ export async function enrichWithGooglePlaces(
           matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
           tasteNote: place.description || '',
           status: 'available' as const,
-          ghostSource: (sourceType === 'google-maps' ? 'maps' : 'article') as ImportedPlace['ghostSource'],
         } as ImportedPlace;
       }
     },

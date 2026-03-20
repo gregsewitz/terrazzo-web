@@ -93,7 +93,7 @@ function CollectionDetailContent() {
   const sourceOptions = useMemo(() => {
     const srcCount: Record<string, number> = {};
     allPlacesInCollection.forEach(p => {
-      const src = p.ghostSource || 'manual';
+      const src = p.source?.type || 'manual';
       srcCount[src] = (srcCount[src] || 0) + 1;
     });
     return Object.entries(srcCount)
@@ -108,7 +108,7 @@ function CollectionDetailContent() {
       items = items.filter(p => p.type === typeFilter);
     }
     if (sourceFilter !== 'all') {
-      items = items.filter(p => (p.ghostSource || 'manual') === sourceFilter);
+      items = items.filter(p => (p.source?.type || 'manual') === sourceFilter);
     }
     if (cityFilter !== 'all') {
       items = items.filter(p => {
@@ -130,7 +130,7 @@ function CollectionDetailContent() {
       case 'match': items.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': items.sort((a, b) => a.name.localeCompare(b.name)); break;
       case 'type': items.sort((a, b) => a.type.localeCompare(b.type)); break;
-      case 'source': items.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
+      case 'source': items.sort((a, b) => (a.source?.type || '').localeCompare(b.source?.type || '')); break;
       // 'recent' keeps original order (insertion order from placeIds = newest first)
     }
     return items;
@@ -901,7 +901,6 @@ function CollectionPlaceCard({ place, onTap, onRemove }: {
   const displayLocation = getDisplayLocation(place.location, place.name, place.google?.address);
 
   const narrative = place.matchExplanation?.narrative
-    || place.friendAttribution?.note
     || place.rating?.personalNote
     || place.terrazzoInsight?.why
     || place.tasteNote

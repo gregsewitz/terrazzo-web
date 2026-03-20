@@ -104,7 +104,7 @@ function PicksStrip({
     switch (sortBy) {
       case 'match': sorted.sort((a, b) => b.matchScore - a.matchScore); break;
       case 'name': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'source': sorted.sort((a, b) => (a.ghostSource || '').localeCompare(b.ghostSource || '')); break;
+      case 'source': sorted.sort((a, b) => (a.source?.type || '').localeCompare(b.source?.type || '')); break;
       case 'recent': sorted.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || '')); break;
     }
     return sorted;

@@ -44,8 +44,6 @@ export const placeSchema = z.object({
   location: z.string().nullable().optional(),
   googlePlaceId: z.string().optional(),
   source: z.record(z.string(), z.unknown()).nullable().optional(),
-  ghostSource: z.string().optional(),
-  friendAttribution: z.record(z.string(), z.unknown()).nullable().optional(),
   matchScore: z.number().nullable().optional(),
   matchBreakdown: z.record(z.string(), z.number()).nullable().optional(),
   tasteNote: z.string().nullable().optional(),

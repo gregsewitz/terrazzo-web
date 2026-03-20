@@ -118,11 +118,10 @@ export async function POST(request: NextRequest) {
               location: reservation.location || '',
               googlePlaceId,
               googleData: (googleData as Prisma.InputJsonValue) || undefined,
-              source: {
+              source: JSON.stringify({
                 type: 'email',
                 name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
-              },
-              ghostSource: 'email',
+              }),
               intentStatus: 'booked',
               timing: reservation.reservationDate
                 ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
@@ -165,11 +164,10 @@ export async function POST(request: NextRequest) {
                 type: reservation.placeType,
                 location: reservation.location || '',
                 googlePlaceId: null,
-                source: {
+                source: JSON.stringify({
                   type: 'email',
                   name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
-                },
-                ghostSource: 'email',
+                }),
                 intentStatus: 'booked',
                 timing: reservation.reservationDate
                   ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
