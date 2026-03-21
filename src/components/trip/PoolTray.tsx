@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { usePoolStore, FilterType, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
+import type { ClusterFilter } from '@/stores/poolStore';
 import { useSavedStore } from '@/stores/savedStore';
 import { ImportedPlace, PlaceType, SOURCE_STYLES, PerriandIconName, getSourceStyle, getSourceLabel } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -11,6 +12,8 @@ import FilterSortBar from '../ui/FilterSortBar';
 import type { SortDirection } from '../ui/FilterSortBar';
 import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
+import { useProximity } from '@/hooks/useProximity';
+import type { ProximityLabel, GeoCluster } from '@/hooks/useProximity';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -45,15 +48,133 @@ const TYPE_FILTER_CHIPS: { value: FilterType; label: string; icon: PerriandIconN
 
 const HOLD_DELAY = 180; // ms before drag activates
 
+// ─── Proximity tier styling ───
+const PROXIMITY_TIER_COLORS: Record<string, { bg: string; color: string; icon: PerriandIconName }> = {
+  'same-neighborhood': { bg: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)', icon: 'location' },
+  'walkable': { bg: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)', icon: 'location' },
+  'short-ride': { bg: 'rgba(203,178,121,0.1)', color: 'var(--t-ochre, #B8953F)', icon: 'location' },
+  'across-town': { bg: INK['04'], color: INK['50'], icon: 'location' },
+  'worth-detour': { bg: 'rgba(232,115,90,0.08)', color: 'var(--t-coral)', icon: 'star' },
+  'none': { bg: 'transparent', color: 'transparent', icon: 'location' },
+};
+
+// ─── PoolItemCard sub-component ───
+interface PoolItemCardProps {
+  item: ImportedPlace;
+  proximityLabel?: ProximityLabel;
+  slotContext: import('@/stores/poolStore').SlotContext | null;
+  dragItemId?: string | null;
+  onPointerDown: (item: ImportedPlace, e: React.PointerEvent) => void;
+  onPointerUp: () => void;
+  onTap: (item: ImportedPlace) => void;
+}
+
+function PoolItemCard({ item, proximityLabel, slotContext, dragItemId, onPointerDown, onPointerUp, onTap }: PoolItemCardProps) {
+  const sourceStyle = getSourceStyle(item);
+  const isDragging = dragItemId === item.id;
+  const isSuggestedType = slotContext?.suggestedTypes.includes(item.type);
+  const typeChip = TYPE_FILTER_CHIPS.find(c => c.value === item.type);
+  const tierStyle = proximityLabel?.tier ? PROXIMITY_TIER_COLORS[proximityLabel.tier] : null;
+
+  return (
+    <div
+      className="flex items-start rounded-lg mb-2.5 cursor-pointer transition-all select-none"
+      style={{
+        background: isSuggestedType ? 'rgba(58,128,136,0.03)' : 'var(--t-cream)',
+        border: isSuggestedType ? '1.5px solid rgba(58,128,136,0.15)' : '1.5px solid var(--t-linen)',
+        borderLeft: '3px solid var(--t-dark-teal)',
+        opacity: isDragging ? 0.35 : 1,
+        transform: isDragging ? 'scale(0.97)' : 'none',
+        transition: 'opacity 0.2s, transform 0.2s',
+      }}
+      onPointerDown={(e) => onPointerDown(item, e)}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onClick={() => onTap(item)}
+    >
+      {/* Drag grip */}
+      <div
+        className="flex flex-col items-center justify-center px-1.5 self-stretch"
+        style={{
+          color: TEXT.secondary,
+          fontSize: '10px',
+          letterSpacing: '2px',
+          touchAction: 'none',
+          userSelect: 'none',
+        }}
+      >
+        ⋮⋮
+      </div>
+
+      <div className="flex-1 min-w-0 py-3 pr-3">
+        <div className="flex items-center gap-1.5 mb-1">
+          <div className="text-[13px] font-medium truncate" style={{ color: TEXT.primary }}>
+            {item.name}
+          </div>
+          {typeChip && (
+            <span
+              className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1"
+              style={{
+                background: isSuggestedType ? 'rgba(58,128,136,0.1)' : INK['05'],
+                color: isSuggestedType ? 'var(--t-dark-teal)' : INK['95'],
+                fontFamily: FONT.mono,
+                fontWeight: 600,
+              }}
+            >
+              <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-dark-teal)' : INK['95']} />
+              {item.type}
+            </span>
+          )}
+        </div>
+        <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: TEXT.secondary }}>
+          <PerriandIcon name={sourceStyle.icon} size={12} color={TEXT.secondary} />
+          {item.source?.name || sourceStyle.label}
+        </div>
+        {/* Proximity label */}
+        {proximityLabel && proximityLabel.tier !== 'none' && tierStyle && (
+          <div
+            className="text-[10px] mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
+            style={{
+              background: tierStyle.bg,
+              color: tierStyle.color,
+              fontFamily: FONT.mono,
+              fontWeight: 500,
+            }}
+          >
+            <PerriandIcon name={tierStyle.icon} size={9} color={tierStyle.color} />
+            {proximityLabel.text}
+          </div>
+        )}
+      </div>
+
+      {/* Match score */}
+      <div className="flex items-center gap-2 flex-shrink-0 pr-3 pt-3">
+        <span
+          className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+          style={{
+            background: 'rgba(58,128,136,0.08)',
+            color: 'var(--t-dark-teal)',
+            fontFamily: FONT.mono,
+          }}
+        >
+          {getMatchTier(item.matchScore).shortLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragItemId }: PoolTrayProps) {
   const tripDestinations = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
     return trip?.destinations || [trip?.location?.split(',')[0]?.trim()].filter(Boolean);
   });
-  const { isExpanded, setExpanded, filterType, setFilterType, slotContext } = usePoolStore();
+  const currentDay = useTripStore(s => s.currentDay);
+  const { isExpanded, setExpanded, filterType, setFilterType, slotContext, clusterFilter, toggleClusterFilter } = usePoolStore();
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'source'>('match');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [elsewhereExpanded, setElsewhereExpanded] = useState(false);
 
   // Library places geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -91,6 +212,15 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
     }
     return sorted;
   }, [typeFiltered, slotContext, sortBy, sortDirection]);
+
+  // ─── Proximity Intelligence ───
+  const proximity = useProximity(sortedItems, currentDay);
+
+  // Apply cluster filter if active
+  const proximityFiltered = useMemo(() => {
+    if (!clusterFilter) return sortedItems;
+    return sortedItems.filter(item => clusterFilter.placeIds.has(item.id));
+  }, [sortedItems, clusterFilter]);
 
   // Count items by type (for chip badges)
   const typeCounts = useMemo(() => {
@@ -343,6 +473,22 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
           {' '}· hold &amp; drag to assign
         </div>
 
+        {/* Missing coordinates nudge */}
+        {proximity.missingCoordsNudge && (
+          <div
+            className="mx-4 mb-2 px-3 py-2 rounded-lg text-[10px]"
+            style={{
+              background: 'rgba(203,178,121,0.08)',
+              border: '1px solid rgba(203,178,121,0.2)',
+              color: 'var(--t-ochre, #B8953F)',
+              fontFamily: FONT.mono,
+            }}
+          >
+            <PerriandIcon name="location" size={10} color="var(--t-ochre, #B8953F)" />{' '}
+            {proximity.missingCoordsNudge.message}
+          </div>
+        )}
+
         {/* Filter & Sort */}
         <div className="px-4 pb-2" style={{ borderBottom: '1px solid var(--t-linen)' }}>
           <FilterSortBar
@@ -375,93 +521,119 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
           />
         </div>
 
-        {/* Items List */}
-        <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'thin' }}>
-          {sortedItems.map(item => {
-            const sourceStyle = getSourceStyle(item);
-            const note = item.source?.type === 'google-maps' ? item.savedAt : undefined;
-            const isDragging = dragItemId === item.id;
-            const isSuggestedType = slotContext?.suggestedTypes.includes(item.type);
-            const typeChip = TYPE_FILTER_CHIPS.find(c => c.value === item.type);
-
-            return (
-              <div
-                key={item.id}
-                className="flex items-start rounded-lg mb-2.5 cursor-pointer transition-all select-none"
-                style={{
-                  background: isSuggestedType ? 'rgba(58,128,136,0.03)' : 'var(--t-cream)',
-                  border: isSuggestedType ? '1.5px solid rgba(58,128,136,0.15)' : '1.5px solid var(--t-linen)',
-                  borderLeft: '3px solid var(--t-dark-teal)',
-                  opacity: isDragging ? 0.35 : 1,
-                  transform: isDragging ? 'scale(0.97)' : 'none',
-                  transition: 'opacity 0.2s, transform 0.2s',
-                }}
-                onPointerDown={(e) => handlePointerDown(item, e)}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onClick={() => handleTap(item)}
-              >
-                {/* Drag grip */}
-                <div
-                  className="flex flex-col items-center justify-center px-1.5 self-stretch"
+        {/* Geographic Cluster Chips */}
+        {proximity.clusters.length > 0 && (
+          <div className="px-4 py-2 flex gap-1.5 flex-wrap" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+            {proximity.clusters.map((cluster) => {
+              const isActive = clusterFilter?.label === cluster.label;
+              return (
+                <button
+                  key={cluster.label}
+                  onClick={() => toggleClusterFilter(
+                    isActive ? null : { label: cluster.label, placeIds: new Set(cluster.placeIds) }
+                  )}
+                  className="text-[10px] px-2.5 py-1 rounded-full cursor-pointer transition-all flex items-center gap-1"
                   style={{
-                    color: TEXT.secondary,
-                    fontSize: '10px',
-                    letterSpacing: '2px',
-                    touchAction: 'none',
-                    userSelect: 'none',
+                    background: isActive ? 'var(--t-dark-teal)' : 'rgba(58,128,136,0.06)',
+                    color: isActive ? 'white' : 'var(--t-dark-teal)',
+                    border: isActive ? '1px solid var(--t-dark-teal)' : '1px solid rgba(58,128,136,0.15)',
+                    fontFamily: FONT.mono,
+                    fontWeight: 600,
                   }}
                 >
-                  ⋮⋮
-                </div>
+                  <PerriandIcon name="location" size={10} color={isActive ? 'white' : 'var(--t-dark-teal)'} />
+                  {cluster.label}
+                  <span style={{ opacity: 0.7 }}>{cluster.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-                <div className="flex-1 min-w-0 py-3 pr-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <div className="text-[13px] font-medium truncate" style={{ color: TEXT.primary }}>
-                      {item.name}
-                    </div>
-                    {typeChip && (
-                      <span
-                        className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1"
-                        style={{
-                          background: isSuggestedType ? 'rgba(58,128,136,0.1)' : INK['05'],
-                          color: isSuggestedType ? 'var(--t-dark-teal)' : INK['95'],
-                          fontFamily: FONT.mono,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <PerriandIcon name={typeChip.icon} size={11} color={isSuggestedType ? 'var(--t-dark-teal)' : INK['95']} />
-                        {item.type}
-                      </span>
-                    )}
+        {/* Items List */}
+        <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'thin' }}>
+          {/* Slot-selected mode: show route-coherence-sorted items */}
+          {proximity.mode === 'slot-selected' && proximity.slotScored ? (
+            proximity.slotScored.map(item => {
+              const label = item.routeCoherence.label;
+              return (
+                <PoolItemCard
+                  key={item.id}
+                  item={item}
+                  proximityLabel={label}
+                  slotContext={slotContext}
+                  dragItemId={dragItemId}
+                  onPointerDown={handlePointerDown}
+                  onPointerUp={handlePointerUp}
+                  onTap={handleTap}
+                />
+              );
+            })
+          ) : proximity.mode === 'day-scoped' && proximity.segmented ? (
+            <>
+              {/* "Fits your day" section */}
+              {proximity.segmented.fitsYourDay.length > 0 && (
+                <>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}>
+                    <PerriandIcon name="location" size={10} color="var(--t-dark-teal)" />
+                    Fits your day
+                    <span style={{ opacity: 0.6 }}>({proximity.segmented.fitsYourDay.length})</span>
                   </div>
-                  <div className="text-[11px] mb-1 flex items-center gap-1" style={{ color: TEXT.secondary }}>
-                    <PerriandIcon name={sourceStyle.icon} size={12} color={TEXT.secondary} />
-                    {item.source?.name || sourceStyle.label}
-                  </div>
-                  {note && (
-                    <div className="text-[11px] italic" style={{ color: TEXT.secondary }}>
-                      {note}
-                    </div>
-                  )}
-                </div>
-
-                {/* Match score */}
-                <div className="flex items-center gap-2 flex-shrink-0 pr-3 pt-3">
-                  <span
-                    className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: 'rgba(58,128,136,0.08)',
-                      color: 'var(--t-dark-teal)',
-                      fontFamily: FONT.mono,
-                    }}
+                  {proximity.segmented.fitsYourDay.map(item => (
+                    <PoolItemCard
+                      key={item.id}
+                      item={item}
+                      proximityLabel={item.proximityLabel}
+                      slotContext={slotContext}
+                      dragItemId={dragItemId}
+                      onPointerDown={handlePointerDown}
+                      onPointerUp={handlePointerUp}
+                      onTap={handleTap}
+                    />
+                  ))}
+                </>
+              )}
+              {/* "Elsewhere" section */}
+              {proximity.segmented.elsewhere.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setElsewhereExpanded(!elsewhereExpanded)}
+                    className="w-full text-left text-[10px] font-semibold uppercase tracking-wider mt-4 mb-2 flex items-center gap-1.5 bg-transparent border-none cursor-pointer"
+                    style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                   >
-                    {getMatchTier(item.matchScore).shortLabel}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+                    Elsewhere{proximity.activeDestination ? ` in ${proximity.activeDestination}` : ''}
+                    <span style={{ opacity: 0.6 }}>({proximity.segmented.elsewhere.length})</span>
+                    <span style={{ fontSize: 8 }}>{elsewhereExpanded ? '\u25BC' : '\u25B6'}</span>
+                  </button>
+                  {elsewhereExpanded && proximity.segmented.elsewhere.map(item => (
+                    <PoolItemCard
+                      key={item.id}
+                      item={item}
+                      proximityLabel={item.proximityLabel}
+                      slotContext={slotContext}
+                      dragItemId={dragItemId}
+                      onPointerDown={handlePointerDown}
+                      onPointerUp={handlePointerUp}
+                      onTap={handleTap}
+                    />
+                  ))}
+                </>
+              )}
+            </>
+          ) : (
+            /* Default / cold-start: show all items without segmentation */
+            proximityFiltered.map(item => (
+              <PoolItemCard
+                key={item.id}
+                item={item}
+                slotContext={slotContext}
+                dragItemId={dragItemId}
+                onPointerDown={handlePointerDown}
+                onPointerUp={handlePointerUp}
+                onTap={handleTap}
+              />
+            ))
+          )}
 
           {sortedItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10 text-center" style={{ color: TEXT.secondary }}>

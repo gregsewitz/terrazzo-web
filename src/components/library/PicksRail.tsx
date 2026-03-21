@@ -2,12 +2,15 @@
 
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useTripStore } from '@/stores/tripStore';
+import { usePoolStore } from '@/stores/poolStore';
 import { ImportedPlace } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { useTypeFilter, type FilterType } from '@/hooks/useTypeFilter';
 import { usePicksFilter } from '@/hooks/usePicksFilter';
 import { useDragGesture } from '@/hooks/useDragGesture';
+import { useProximity } from '@/hooks/useProximity';
+import type { ProximityLabel, GeoCluster } from '@/hooks/useProximity';
 import FilterSortBar from '../ui/FilterSortBar';
 import type { SortDirection } from '../ui/FilterSortBar';
 import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
@@ -20,6 +23,16 @@ import { isStrongMatch } from '@/lib/match-tier';
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant', hotel: 'Hotel', bar: 'Bar', cafe: 'Café',
   museum: 'Museum', activity: 'Activity', neighborhood: 'Neighborhood', shop: 'Shop',
+};
+
+// ─── Proximity tier styling (matches PoolTray) ───
+const PROXIMITY_TIER_COLORS: Record<string, { bg: string; color: string }> = {
+  'same-neighborhood': { bg: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)' },
+  'walkable': { bg: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)' },
+  'short-ride': { bg: 'rgba(203,178,121,0.1)', color: 'var(--t-ochre, #B8953F)' },
+  'across-town': { bg: INK['04'], color: INK['50'] },
+  'worth-detour': { bg: 'rgba(232,115,90,0.08)', color: 'var(--t-coral)' },
+  'none': { bg: 'transparent', color: 'transparent' },
 };
 
 interface PicksRailProps {
@@ -48,6 +61,7 @@ function PicksRailInner({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [elsewhereExpanded, setElsewhereExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Read currentDay from store (no more day selector — syncs with DayBoardView)
@@ -55,6 +69,9 @@ function PicksRailInner({
   const selectedDay = currentDay;
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
+
+  // Pool store — slot context + cluster filter
+  const { slotContext, clusterFilter, toggleClusterFilter } = usePoolStore();
 
   // ─── Shared filtering logic ───
   const {
@@ -116,11 +133,134 @@ function PicksRailInner({
     return sorted;
   }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy, sortDirection]);
 
+  // ─── Proximity Intelligence ───
+  const proximity = useProximity(sortedPicks, selectedDay);
+
+  // Apply cluster filter if active
+  const proximityFiltered = useMemo(() => {
+    if (!clusterFilter) return sortedPicks;
+    return sortedPicks.filter(item => clusterFilter.placeIds.has(item.id));
+  }, [sortedPicks, clusterFilter]);
+
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     allUnplacedPicks.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
     return counts;
   }, [allUnplacedPicks]);
+
+  // ─── Render a single item row (shared across all proximity modes) ───
+  const renderItem = useCallback((
+    place: ImportedPlace,
+    index: number,
+    proximityLabel?: ProximityLabel | null,
+    tierStyle?: { bg: string; color: string } | null,
+  ) => {
+    const typeIcon = TYPE_ICONS[place.type] || 'location';
+    const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
+    const typeLabel = TYPE_LABELS[place.type] || place.type;
+    const brandColor = getDestColor(index);
+    const tasteNote = place.enrichment?.description;
+    const location = getDisplayLocation(place.location, place.name, place.google?.address);
+    const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
+    const dScore = hasDestFilter ? destinationScore(place) : 1;
+    const isBeingDragged = dragItemId === place.id;
+    const isReturning = returningPlaceId === place.id;
+    const isHld = holdingId === place.id;
+    const isPlaced = placedIds.has(place.id);
+
+    return (
+      <div
+        key={place.id}
+        onPointerDown={(e) => handlePointerDown(place, e)}
+        onMouseEnter={() => setHoveredId(place.id)}
+        onMouseLeave={() => setHoveredId(null)}
+        className="flex items-start gap-2 transition-all flex-shrink-0 text-left w-full"
+        style={{
+          padding: '8px 8px',
+          borderRadius: 10,
+          background: isHld ? `${typeColor}18` : brandColor.bg,
+          border: isHld ? `1.5px solid ${typeColor}50` : `1px solid ${brandColor.accent}20`,
+          transform: isHld ? 'scale(1.02)' : 'translateX(0)',
+          opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.35 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
+          cursor: 'grab',
+          touchAction: 'none',
+          userSelect: 'none',
+        }}
+      >
+        {/* Type icon */}
+        <div
+          className="relative flex items-center justify-center flex-shrink-0"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
+            marginTop: 1,
+          }}
+        >
+          <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
+          {isStrongMatch(place.matchScore) && (
+            <div
+              className="absolute flex items-center justify-center"
+              style={{
+                top: -4, right: -4,
+                width: 16, height: 16, borderRadius: '50%',
+                background: 'var(--t-dark-teal)', color: 'white',
+                fontFamily: FONT.mono, fontSize: 7, fontWeight: 800,
+              }}
+            >
+              {Math.round(place.matchScore)}
+            </div>
+          )}
+        </div>
+
+        {/* Text content */}
+        <div className="flex flex-col min-w-0 flex-1" style={{ gap: 1 }}>
+          <span
+            style={{
+              fontFamily: FONT.serif, fontSize: 11, fontWeight: 600, fontStyle: 'italic',
+              color: TEXT.primary, lineHeight: 1.25,
+              display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
+            }}
+          >
+            {place.name}
+          </span>
+          <span
+            style={{
+              fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, lineHeight: 1.3,
+              display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
+            }}
+          >
+            {typeLabel}{location ? ` · ${location}` : ''}{isPlaced ? ' · ✓ placed' : ''}
+          </span>
+          {/* Proximity label pill */}
+          {proximityLabel && proximityLabel.tier !== 'none' && tierStyle && (
+            <span
+              className="inline-flex items-center gap-0.5 mt-0.5"
+              style={{
+                fontFamily: FONT.mono, fontSize: 8, fontWeight: 500,
+                background: tierStyle.bg, color: tierStyle.color,
+                padding: '1px 5px', borderRadius: 4, alignSelf: 'flex-start',
+              }}
+            >
+              <PerriandIcon name="location" size={7} color={tierStyle.color} />
+              {proximityLabel.text}
+            </span>
+          )}
+          {tasteNote && (
+            <span
+              style={{
+                fontFamily: FONT.sans, fontSize: 9, color: TEXT.secondary, lineHeight: 1.3, marginTop: 1,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
+              }}
+            >
+              {tasteNote}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }, [activeDestination, selectedDay, tripDestinations, destinationScore, dragItemId, returningPlaceId, holdingId, placedIds, handlePointerDown]);
 
   return (
     <div
@@ -254,136 +394,97 @@ function PicksRailInner({
         </div>
       </div>
 
+      {/* Geographic Cluster Chips */}
+      {proximity.clusters.length > 0 && (
+        <div className="px-3 py-1.5 flex-shrink-0 flex gap-1 flex-wrap" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+          {proximity.clusters.map((cluster) => {
+            const isActive = clusterFilter?.label === cluster.label;
+            return (
+              <button
+                key={cluster.label}
+                onClick={() => toggleClusterFilter(
+                  isActive ? null : { label: cluster.label, placeIds: new Set(cluster.placeIds) }
+                )}
+                className="flex items-center gap-1 transition-all"
+                style={{
+                  background: isActive ? 'var(--t-dark-teal)' : 'rgba(58,128,136,0.06)',
+                  color: isActive ? 'white' : 'var(--t-dark-teal)',
+                  border: isActive ? '1px solid var(--t-dark-teal)' : '1px solid rgba(58,128,136,0.15)',
+                  borderRadius: 99,
+                  padding: '2px 8px',
+                  fontFamily: FONT.mono,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <PerriandIcon name="location" size={9} color={isActive ? 'white' : 'var(--t-dark-teal)'} />
+                {cluster.label}
+                <span style={{ opacity: 0.7 }}>{cluster.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Scrollable picks list */}
       <div
         className="flex-1 overflow-y-auto flex flex-col gap-1 py-2 px-2"
         style={{ scrollbarWidth: 'thin' }}
       >
-        {sortedPicks.map((place, index) => {
-          const typeIcon = TYPE_ICONS[place.type] || 'location';
-          const typeColor = TYPE_COLORS_MUTED[place.type] || '#c0ab8e';
-          const typeLabel = TYPE_LABELS[place.type] || place.type;
-          const brandColor = getDestColor(index);
-          const isHovered = hoveredId === place.id;
-          const tasteNote = place.enrichment?.description;
-          const location = getDisplayLocation(place.location, place.name, place.google?.address);
-          const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
-          // Score-based dimming: 1.0 = full opacity, 0.5 = slightly dimmed, 0 = heavily dimmed
-          const dScore = hasDestFilter ? destinationScore(place) : 1;
-          const isBeingDragged = dragItemId === place.id;
-          const isReturning = returningPlaceId === place.id;
-          const isHolding = holdingId === place.id;
-          const isPlaced = placedIds.has(place.id);
-
-          return (
-            <div
-              key={place.id}
-              onPointerDown={(e) => handlePointerDown(place, e)}
-              onMouseEnter={() => setHoveredId(place.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              className="flex items-start gap-2 transition-all flex-shrink-0 text-left w-full"
-              style={{
-                padding: '8px 8px',
-                borderRadius: 10,
-                background: isHolding ? `${typeColor}18` : isHovered ? `${typeColor}12` : brandColor.bg,
-                border: isHolding ? `1.5px solid ${typeColor}50` : isHovered ? `1px solid ${typeColor}30` : `1px solid ${brandColor.accent}20`,
-                transform: isHolding ? 'scale(1.02)' : isHovered ? 'translateX(2px)' : 'translateX(0)',
-                opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.35 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
-                cursor: 'grab',
-                touchAction: 'none',
-                userSelect: 'none',
-              }}
-            >
-              {/* Type icon */}
-              <div
-                className="relative flex items-center justify-center flex-shrink-0"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
-                  background: THUMB_GRADIENTS[place.type] || THUMB_GRADIENTS.restaurant,
-                  marginTop: 1,
-                }}
-              >
-                <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
-                {/* Match score pip */}
-                {isStrongMatch(place.matchScore) && (
-                  <div
-                    className="absolute flex items-center justify-center"
-                    style={{
-                      top: -4,
-                      right: -4,
-                      width: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                      background: 'var(--t-dark-teal)',
-                      color: 'white',
-                      fontFamily: FONT.mono,
-                      fontSize: 7,
-                      fontWeight: 800,
-                    }}
-                  >
-                    {Math.round(place.matchScore)}
-                  </div>
-                )}
-              </div>
-
-              {/* Text content */}
-              <div className="flex flex-col min-w-0 flex-1" style={{ gap: 1 }}>
-                {/* Name */}
-                <span
+        {/* Slot-selected mode: route-coherence items */}
+        {proximity.mode === 'slot-selected' && proximity.slotScored ? (
+          proximity.slotScored.map((place, index) => {
+            const label = place.routeCoherence.label;
+            const tierStyle = label.tier !== 'none' ? PROXIMITY_TIER_COLORS[label.tier] : null;
+            return renderItem(place, index, label, tierStyle);
+          })
+        ) : proximity.mode === 'day-scoped' && proximity.segmented ? (
+          <>
+            {/* "Fits your day" section */}
+            {proximity.segmented.fitsYourDay.length > 0 && (
+              <>
+                <div
+                  className="flex items-center gap-1 px-1 mb-1"
+                  style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, color: 'var(--t-dark-teal)', textTransform: 'uppercase', letterSpacing: 1.2 }}
+                >
+                  <PerriandIcon name="location" size={9} color="var(--t-dark-teal)" />
+                  Fits your day
+                  <span style={{ opacity: 0.6, fontWeight: 500 }}>({proximity.segmented.fitsYourDay.length})</span>
+                </div>
+                {proximity.segmented.fitsYourDay.map((place, index) => {
+                  const tierStyle = place.proximityLabel.tier !== 'none' ? PROXIMITY_TIER_COLORS[place.proximityLabel.tier] : null;
+                  return renderItem(place, index, place.proximityLabel, tierStyle);
+                })}
+              </>
+            )}
+            {/* "Elsewhere" section */}
+            {proximity.segmented.elsewhere.length > 0 && (
+              <>
+                <button
+                  onClick={() => setElsewhereExpanded(!elsewhereExpanded)}
+                  className="flex items-center gap-1 px-1 mt-3 mb-1 w-full text-left"
                   style={{
-                    fontFamily: FONT.serif,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    fontStyle: 'italic',
-                    color: TEXT.primary,
-                    lineHeight: 1.25,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical' as const,
-                    overflow: 'hidden',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, color: TEXT.secondary,
+                    textTransform: 'uppercase', letterSpacing: 1.2,
                   }}
                 >
-                  {place.name}
-                </span>
-                {/* Type · Location */}
-                <span
-                  style={{
-                    fontFamily: FONT.mono,
-                    fontSize: 9,
-                    color: TEXT.secondary,
-                    lineHeight: 1.3,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical' as const,
-                    overflow: 'hidden',
-                  }}
-                >
-                    {typeLabel}{location ? ` · ${location}` : ''}{isPlaced ? ' · ✓ placed' : ''}
-                </span>
-                {/* Taste note preview */}
-                {tasteNote && (
-                  <span
-                    style={{
-                      fontFamily: FONT.sans,
-                      fontSize: 9,
-                      color: TEXT.secondary,
-                      lineHeight: 1.3,
-                      marginTop: 1,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical' as const,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {tasteNote}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                  Elsewhere{proximity.activeDestination ? ` in ${proximity.activeDestination}` : ''}
+                  <span style={{ opacity: 0.6, fontWeight: 500 }}>({proximity.segmented.elsewhere.length})</span>
+                  <span style={{ fontSize: 7 }}>{elsewhereExpanded ? '\u25BC' : '\u25B6'}</span>
+                </button>
+                {elsewhereExpanded && proximity.segmented.elsewhere.map((place, index) => {
+                  const tierStyle = place.proximityLabel.tier !== 'none' ? PROXIMITY_TIER_COLORS[place.proximityLabel.tier] : null;
+                  return renderItem(place, index + (proximity.segmented?.fitsYourDay.length ?? 0), place.proximityLabel, tierStyle);
+                })}
+              </>
+            )}
+          </>
+        ) : (
+          /* Default / cold-start: flat list with cluster filtering */
+          proximityFiltered.map((place, index) => renderItem(place, index))
+        )}
 
         {sortedPicks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 px-3">

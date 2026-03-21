@@ -563,7 +563,7 @@ export interface DaySuggestionContext {
     id: string;
     label: string;
     time: string;
-    confirmedPlaces: Array<{ name: string; type: string; location: string }>;
+    confirmedPlaces: Array<{ name: string; type: string; location: string; lat?: number; lng?: number }>;
   }>;
   tasteProfile: TasteProfile;
   topAxes: string[];
@@ -575,6 +575,8 @@ export interface DaySuggestionContext {
     matchScore: number;
     topAxes: string[];
     tasteNote?: string;
+    lat?: number;
+    lng?: number;
   }>;
 }
 

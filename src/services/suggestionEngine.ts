@@ -11,6 +11,7 @@ import type { DaySuggestionContext, SuggestionItem, DayWeather } from '@/types';
 import type { TasteProfile } from '@/types';
 import { TERRAZZO_VOICE } from '@/types';
 import { getTopAxes } from '@/lib/taste-match-v3';
+import { distMi } from '@/lib/geo';
 
 // ─── Prompt templates ─────────────────────────────────────────────────────────
 
@@ -25,7 +26,8 @@ RULES:
 - Max 1-2 suggestions per empty slot. Leave a slot empty if no candidate is a strong fit.
 - Include exactly ONE stretch pick: a place whose top axes DON'T overlap the user's top 2 axes. Mark it with isStretchPick: true. Stretch picks are meant to delight — frame them as pleasant surprises, not compromises.
 - Consider the day's "shape": don't suggest 3 museums if one exists. Vary the experience.
-- Consider adjacency: prefer places geographically close to what's before/after in the itinerary.
+- Consider adjacency: prefer places geographically close to what's before/after in the itinerary. When PROXIMITY data is provided, strongly prefer candidates labeled "walkable" or "same neighborhood" over "across town" for the same slot, unless the candidate is a clear taste-profile standout (match score 90+).
+- Geographic coherence matters: a great suggestion in the wrong part of town adds friction. Use the distance data to build a geographically tight day when possible.
 - If TRAVEL PARTY is provided, factor it in: family trips should favor kid-friendly spots; solo trips can lean into intimate bars or long museum visits; partner trips can skew romantic or adventurous; friend groups might want lively, shareable experiences.
 - If WEATHER is provided, factor it in: rainy or cold days should favor indoor venues (museums, restaurants, cafes); hot sunny days are great for outdoor neighborhoods, markets, or rooftop bars. Mention weather naturally in rationale when relevant — e.g. "Perfect rainy-morning museum visit" or "The terrace really shines on a day like this."
 - Reference the user's taste profile axes in your rationale — e.g. "Your Design eye will love..." or "This stretches your Wellness side, but the garden alone is worth the walk."
@@ -146,6 +148,57 @@ function formatWeather(ctx: DaySuggestionContext): string {
   return `WEATHER: ${w.description}, ${w.tempLowF}–${w.tempHighF}°F, ${w.precipIn > 0 ? `${w.precipIn}in rain expected` : 'dry'}`;
 }
 
+// ─── Geographic proximity formatting ──────────────────────────────────────────
+
+function formatProximity(ctx: DaySuggestionContext): string {
+  // Extract placed items with coordinates
+  const placedCoords: Array<{ name: string; lat: number; lng: number; slotLabel: string }> = [];
+  for (const slot of ctx.slots) {
+    for (const p of slot.confirmedPlaces) {
+      const pc = p as typeof p & { lat?: number; lng?: number };
+      if (pc.lat && pc.lng) {
+        placedCoords.push({ name: p.name, lat: pc.lat, lng: pc.lng, slotLabel: slot.label });
+      }
+    }
+  }
+
+  if (placedCoords.length === 0) return '';
+
+  // Compute distance from each candidate to nearest placed item
+  const candidatesWithCoords = ctx.candidates.filter(c => {
+    const cc = c as typeof c & { lat?: number; lng?: number };
+    return cc.lat && cc.lng;
+  });
+
+  if (candidatesWithCoords.length === 0) return '';
+
+  const lines: string[] = [];
+  for (const candidate of candidatesWithCoords) {
+    const cc = candidate as typeof candidate & { lat: number; lng: number };
+    let nearestDist = Infinity;
+    let nearestName = '';
+    for (const placed of placedCoords) {
+      const d = distMi(cc.lat, cc.lng, placed.lat, placed.lng);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestName = placed.name;
+      }
+    }
+
+    let label: string;
+    if (nearestDist < 0.25) label = 'same neighborhood';
+    else if (nearestDist <= 1.0) label = `${Math.round(nearestDist / (3 / 60))} min walk`;
+    else if (nearestDist <= 3.0) label = 'short ride';
+    else label = 'across town';
+
+    lines.push(`  "${candidate.name}": ${nearestDist.toFixed(1)}mi from ${nearestName} (${label})`);
+  }
+
+  return lines.length > 0
+    ? `PROXIMITY (distance from each candidate to nearest placed item on this day):\n${lines.join('\n')}`
+    : '';
+}
+
 // ─── Build the full user message ──────────────────────────────────────────────
 
 export function buildSuggestionPrompt(ctx: DaySuggestionContext): string {
@@ -168,6 +221,8 @@ export function buildSuggestionPrompt(ctx: DaySuggestionContext): string {
     `CURRENT ITINERARY:\n${formatItinerary(ctx)}`,
     '',
     formatAdjacency(ctx),
+    '',
+    formatProximity(ctx),
     '',
     formatCandidates(ctx),
     '',
@@ -211,9 +266,9 @@ export function parseSuggestionResponse(raw: string): SuggestionItem[] {
 export function buildDayContext(params: {
   tripId: string;
   tripName: string;
-  day: { dayNumber: number; date?: string; dayOfWeek?: string; destination?: string; slots: Array<{ id: string; label: string; time: string; places: Array<{ id: string; name: string; type: string; location: string }> }> };
+  day: { dayNumber: number; date?: string; dayOfWeek?: string; destination?: string; slots: Array<{ id: string; label: string; time: string; places: Array<{ id: string; name: string; type: string; location: string; lat?: number; lng?: number }> }> };
   tasteProfile: TasteProfile;
-  candidates: Array<{ id: string; name: string; type: string; location: string; matchScore: number; matchBreakdown?: Record<string, number>; tasteNote?: string }>;
+  candidates: Array<{ id: string; name: string; type: string; location: string; matchScore: number; matchBreakdown?: Record<string, number>; tasteNote?: string; lat?: number; lng?: number }>;
   travelParty?: { context: string; groupSize?: number };
   weather?: DayWeather;
 }): DaySuggestionContext {
@@ -237,6 +292,7 @@ export function buildDayContext(params: {
         name: p.name,
         type: p.type,
         location: p.location,
+        ...(p.lat != null && p.lng != null ? { lat: p.lat, lng: p.lng } : {}),
       })),
     })),
     tasteProfile,
@@ -257,6 +313,7 @@ export function buildDayContext(params: {
         matchScore: c.matchScore,
         topAxes: cTopAxes,
         tasteNote: c.tasteNote,
+        ...(c.lat != null && c.lng != null ? { lat: c.lat, lng: c.lng } : {}),
       };
     }),
   };

@@ -16,6 +16,8 @@ import PlaceTimeEditor from '../place/PlaceTimeEditor';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
 // import { useTripCollaboration } from '@/context/TripCollaborationContext';
 import { useTripDrag } from '@/context/TripDragContext';
+import { usePoolStore, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
+import type { SlotContext } from '@/stores/poolStore';
 
 const SLOT_HOLD_DELAY = 250;
 const SLOT_DRAG_THRESHOLD = 6;
@@ -245,9 +247,49 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
     };
   }, [updateRect]);
 
+  const selectSlot = usePoolStore(s => s.selectSlot);
+  const currentSlotContext = usePoolStore(s => s.slotContext);
+  const isSlotSelected = currentSlotContext?.slotId === slot.id && currentSlotContext?.dayNumber === dayNumber;
+
   const handleEmptyClick = () => {
-    // On empty slot tap, show the quick entry input instead of opening pool
-    setShowQuickInput(true);
+    // Primary action: select the slot to browse proximity-aware pool
+    // Build adjacent places context by scanning neighboring slots
+    const trip = useTripStore.getState().trips.find(t => t.id === useTripStore.getState().currentTripId);
+    const day = trip?.days.find(d => d.dayNumber === dayNumber);
+    const slotOrder = ['breakfast', 'morning', 'lunch', 'afternoon', 'dinner', 'evening'];
+    const slotIdx = slotOrder.indexOf(slot.id);
+
+    let before: SlotContext['adjacentPlaces']['before'];
+    let after: SlotContext['adjacentPlaces']['after'];
+
+    if (day) {
+      // Scan backward for previous placed item
+      for (let i = slotIdx - 1; i >= 0; i--) {
+        const s = day.slots.find(sl => sl.id === slotOrder[i]);
+        if (s && s.places.length > 0) {
+          const p = s.places[s.places.length - 1];
+          before = { name: p.name, type: p.type, location: p.location || '' };
+          break;
+        }
+      }
+      // Scan forward for next placed item
+      for (let i = slotIdx + 1; i < slotOrder.length; i++) {
+        const s = day.slots.find(sl => sl.id === slotOrder[i]);
+        if (s && s.places.length > 0) {
+          const p = s.places[0];
+          after = { name: p.name, type: p.type, location: p.location || '' };
+          break;
+        }
+      }
+    }
+
+    selectSlot({
+      slotId: slot.id,
+      slotLabel: slot.label,
+      dayNumber,
+      adjacentPlaces: { before, after },
+      suggestedTypes: SLOT_TYPE_AFFINITY[slot.id] || [],
+    });
   };
 
   const handleQuickEntrySubmit = useCallback((entry: Omit<QuickEntry, 'id' | 'createdAt'>) => {
@@ -492,7 +534,7 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
     );
   }
 
-  // ─── Empty slot: rail + add button (tap to type) ───
+  // ─── Empty slot: rail + slot selection (primary) / quick entry (secondary) ───
   if (showQuickInput) {
     return (
       <div
@@ -522,26 +564,57 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
       onClick={handleEmptyClick}
       style={{
         borderBottom: '1px solid var(--t-linen)',
-        background: isDropTarget ? 'rgba(58,128,136,0.06)' : 'transparent',
+        borderLeft: isSlotSelected ? '3px solid var(--t-dark-teal)' : isDropTarget ? '3px solid var(--t-dark-teal)' : '3px solid transparent',
+        background: isSlotSelected
+          ? 'rgba(58,128,136,0.04)'
+          : isDropTarget
+            ? 'rgba(58,128,136,0.06)'
+            : 'transparent',
         transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
     >
-      <RailLabel accent={false} label={slot.label} />
+      <RailLabel accent={isSlotSelected} label={slot.label} />
       <div
-        className="flex-1 min-w-0 flex items-center pl-2.5"
+        className="flex-1 min-w-0 flex items-center justify-between pl-2.5 pr-3"
         style={{ minHeight: 44 }}
       >
         <span
           className="text-[11px]"
           style={{
-            color: isDropTarget ? 'var(--t-dark-teal)' : INK['70'],
-            fontWeight: isDropTarget ? 600 : 400,
+            color: isSlotSelected
+              ? 'var(--t-dark-teal)'
+              : isDropTarget
+                ? 'var(--t-dark-teal)'
+                : INK['70'],
+            fontWeight: isSlotSelected || isDropTarget ? 600 : 400,
             fontFamily: FONT.sans,
             transition: 'color 0.15s',
           }}
         >
-          {isDropTarget ? 'Drop here ↓' : '+ add'}
+          {isDropTarget
+            ? 'Drop here \u2193'
+            : isSlotSelected
+              ? 'Browsing places\u2026'
+              : '+ add'}
         </span>
+        {/* Secondary: "+ Add entry" appears when slot is selected */}
+        {isSlotSelected && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowQuickInput(true); }}
+            className="text-[10px] cursor-pointer rounded-md flex items-center gap-1"
+            style={{
+              color: TEXT.secondary,
+              fontFamily: FONT.sans,
+              fontWeight: 500,
+              background: INK['04'],
+              border: `1px solid ${INK['10']}`,
+              padding: '3px 8px',
+              transition: 'all 0.15s',
+            }}
+          >
+            <span style={{ fontSize: 11, lineHeight: 1 }}>+</span> Add entry
+          </button>
+        )}
       </div>
     </div>
   );

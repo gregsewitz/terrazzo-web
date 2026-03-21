@@ -45,6 +45,8 @@ const suggestSchema = z.object({
         name: z.string(),
         type: z.string(),
         location: z.string(),
+        lat: z.number().optional(),
+        lng: z.number().optional(),
       })),
     })),
   }),
@@ -56,6 +58,8 @@ const suggestSchema = z.object({
     matchScore: z.number(),
     matchBreakdown: z.record(z.string(), z.number()).optional(),
     tasteNote: z.string().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
   })),
 });
 
