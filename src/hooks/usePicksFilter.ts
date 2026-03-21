@@ -4,8 +4,8 @@ import { useSavedStore } from '@/stores/savedStore';
 import type { ImportedPlace, GeoDestination } from '@/types';
 
 // Canonical implementation is in @/lib/geo — import for local use + re-export for backward compatibility
-import { distKm } from '@/lib/geo';
-export { distKm };
+import { distMi } from '@/lib/geo';
+export { distMi };
 
 import {
   validCoords,
@@ -108,7 +108,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       const coords = validCoords(lat, lng);
       if (!coords) return null;
       const core = coreRadiusForDestination(geo);
-      return { lat: coords[0], lng: coords[1], coreKm: core, outerKm: core * TAPER_RATIO, weight };
+      return { lat: coords[0], lng: coords[1], coreMi: core, outerMi: core * TAPER_RATIO, weight };
     };
 
     if (selectedDay === null) {
@@ -123,7 +123,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       trip.geoDestinations?.forEach(g => {
         if (g.lat && g.lng) {
           const hotel = hotelByDest.get(g.name.toLowerCase());
-          if (hotel && distKm(g.lat, g.lng, hotel.lat, hotel.lng) > 200) return;
+          if (hotel && distMi(g.lat, g.lng, hotel.lat, hotel.lng) > 124) return;
           const a = makeAnchor(g.lat, g.lng, g);
           if (a) anchors.push(a);
         }
@@ -131,7 +131,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       trip.days.forEach(day => {
         if (day.hotelInfo?.lat && day.hotelInfo?.lng) {
           const h = { lat: day.hotelInfo.lat, lng: day.hotelInfo.lng };
-          if (!anchors.some(a => distKm(a.lat, a.lng, h.lat, h.lng) < 10)) {
+          if (!anchors.some(a => distMi(a.lat, a.lng, h.lat, h.lng) < 6)) {
             const dayGeo: GeoDestination | null = day.destination
               ? (trip.geoDestinations?.find(g => g.name.toLowerCase() === day.destination!.toLowerCase()) ?? { name: day.destination })
               : null;
@@ -159,8 +159,8 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
           if (daysWithHotel.length > 0) {
             const hLat = daysWithHotel[0].hotelInfo!.lat!;
             const hLng = daysWithHotel[0].hotelInfo!.lng!;
-            const drift = distKm(geo.lat, geo.lng, hLat, hLng);
-            if (drift > 200) {
+            const drift = distMi(geo.lat, geo.lng, hLat, hLng);
+            if (drift > 124) {
               geoTrusted = false;
             }
           }

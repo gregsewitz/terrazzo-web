@@ -18,9 +18,9 @@ import type { Trip, GeoDestination } from '@/types';
 
 export interface DailyWeather {
   date: string;
-  tempHighC: number;
-  tempLowC: number;
-  precipMm: number;
+  tempHighF: number;
+  tempLowF: number;
+  precipIn: number;
   weatherCode: number;
   description: string;
 }
@@ -31,9 +31,9 @@ export interface DestinationWeather {
   lng: number;
   days: DailyWeather[];
   isHistorical: boolean; // true = based on last year's data
-  avgHighC: number;
-  avgLowC: number;
-  avgPrecipMm: number;
+  avgHighF: number;
+  avgLowF: number;
+  avgPrecipIn: number;
   dominantCondition: string;
 }
 
@@ -111,6 +111,8 @@ async function fetchWeatherRange(
     start_date: startDate,
     end_date: endDate,
     timezone: 'auto',
+    temperature_unit: 'fahrenheit',
+    precipitation_unit: 'inch',
   });
 
   const res = await fetch(`${baseUrl}?${params}`, {
@@ -125,9 +127,9 @@ async function fetchWeatherRange(
 
   return d.time.map((date, i) => ({
     date,
-    tempHighC: Math.round(d.temperature_2m_max[i]),
-    tempLowC: Math.round(d.temperature_2m_min[i]),
-    precipMm: Math.round(d.precipitation_sum[i] * 10) / 10,
+    tempHighF: Math.round(d.temperature_2m_max[i]),
+    tempLowF: Math.round(d.temperature_2m_min[i]),
+    precipIn: Math.round(d.precipitation_sum[i] * 100) / 100,
     weatherCode: d.weathercode[i],
     description: WMO_CODES[d.weathercode[i]] || 'Unknown',
   }));
@@ -287,9 +289,9 @@ export function useTripWeather(trip: Trip | null | undefined) {
           );
 
           if (days.length > 0 && !cancelled) {
-            const avgHighC = Math.round(days.reduce((s, d) => s + d.tempHighC, 0) / days.length);
-            const avgLowC = Math.round(days.reduce((s, d) => s + d.tempLowC, 0) / days.length);
-            const avgPrecipMm = Math.round(days.reduce((s, d) => s + d.precipMm, 0) / days.length * 10) / 10;
+            const avgHighF = Math.round(days.reduce((s, d) => s + d.tempHighF, 0) / days.length);
+            const avgLowF = Math.round(days.reduce((s, d) => s + d.tempLowF, 0) / days.length);
+            const avgPrecipIn = Math.round(days.reduce((s, d) => s + d.precipIn, 0) / days.length * 100) / 100;
 
             allResults.push({
               destination: range.destName,
@@ -297,9 +299,9 @@ export function useTripWeather(trip: Trip | null | undefined) {
               lng: range.lng,
               days,
               isHistorical,
-              avgHighC,
-              avgLowC,
-              avgPrecipMm,
+              avgHighF,
+              avgLowF,
+              avgPrecipIn,
               dominantCondition: getDominantCondition(days.map(d => d.weatherCode)),
             });
           }

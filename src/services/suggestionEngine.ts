@@ -143,8 +143,7 @@ function formatTravelParty(ctx: DaySuggestionContext): string {
 function formatWeather(ctx: DaySuggestionContext): string {
   if (!ctx.weather) return '';
   const w = ctx.weather;
-  const tempF = (c: number) => Math.round(c * 9 / 5 + 32);
-  return `WEATHER: ${w.description}, ${w.tempLowC}–${w.tempHighC}°C (${tempF(w.tempLowC)}–${tempF(w.tempHighC)}°F), ${w.precipMm > 0 ? `${w.precipMm}mm rain expected` : 'dry'}`;
+  return `WEATHER: ${w.description}, ${w.tempLowF}–${w.tempHighF}°F, ${w.precipIn > 0 ? `${w.precipIn}in rain expected` : 'dry'}`;
 }
 
 // ─── Build the full user message ──────────────────────────────────────────────

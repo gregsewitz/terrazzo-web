@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { GeoDestination } from '@/types';
-import { distKm } from '@/lib/geo';
+import { distMi } from '@/lib/geo';
 
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -43,7 +43,7 @@ async function geocodeName(name: string): Promise<{ lat: number; lng: number; pl
  * When a trip has `destinations` but `geoDestinations` is missing or has
  * entries without lat/lng, this hook geocodes them using Google Geocoding
  * API and falls back to hotel coordinates from the trip's days when Google
- * is unavailable. A 200 km sanity check rejects wildly wrong geocodes.
+ * is unavailable. A 124 mi sanity check rejects wildly wrong geocodes.
  *
  * Runs once per trip load — a ref tracks which trip ID was last repaired.
  */
@@ -101,12 +101,12 @@ export function useGeoDestinationRepair() {
         }
 
         // Belt-and-suspenders: if we have hotel coords, reject geocoded
-        // results that are wildly off (>200km) and use hotel coords instead.
+        // results that are wildly off (>124mi) and use hotel coords instead.
         const hotel = hotelByDest.get(destName.toLowerCase());
         if (hotel) {
-          const drift = distKm(hotel.lat, hotel.lng, coords.lat, coords.lng);
-          if (drift > 200) {
-            console.warn(`[GeoRepair] Geocoded "${destName}" to (${coords.lat}, ${coords.lng}) but hotel is ${drift.toFixed(0)}km away — using hotel coords instead`);
+          const drift = distMi(hotel.lat, hotel.lng, coords.lat, coords.lng);
+          if (drift > 124) {
+            console.warn(`[GeoRepair] Geocoded "${destName}" to (${coords.lat}, ${coords.lng}) but hotel is ${drift.toFixed(0)}mi away — using hotel coords instead`);
             coords.lat = hotel.lat;
             coords.lng = hotel.lng;
             delete coords.placeId;

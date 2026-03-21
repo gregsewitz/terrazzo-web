@@ -385,8 +385,6 @@ export function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
         display: 'flex', flexDirection: 'column', gap: 24,
       }}>
         {weather.map(dest => {
-          const tempF = (c: number) => Math.round(c * 9 / 5 + 32);
-
           return (
             <div key={dest.destination}>
               {/* Destination label */}
@@ -409,13 +407,7 @@ export function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                   fontFamily: FONT.serif, fontSize: 28, fontStyle: 'italic',
                   color: TEXT.primary, lineHeight: 1,
                 }}>
-                  {dest.avgLowC}–{dest.avgHighC}°C
-                </div>
-                <div style={{
-                  fontFamily: FONT.sans, fontSize: 12,
-                  color: TEXT.secondary,
-                }}>
-                  ({tempF(dest.avgLowC)}–{tempF(dest.avgHighC)}°F)
+                  {dest.avgLowF}–{dest.avgHighF}°F
                 </div>
                 <div style={{
                   fontFamily: FONT.sans, fontSize: 12, fontWeight: 500,
@@ -424,7 +416,7 @@ export function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                   background: 'var(--t-cream)',
                 }}>
                   {dest.dominantCondition}
-                  {dest.avgPrecipMm > 1 ? ` · ~${dest.avgPrecipMm}mm rain/day` : ''}
+                  {dest.avgPrecipIn > 0.04 ? ` · ~${dest.avgPrecipIn}in rain/day` : ''}
                 </div>
               </div>
 
@@ -470,21 +462,21 @@ export function WeatherSection({ weather }: { weather: DestinationWeather[] }) {
                         fontFamily: FONT.sans, fontSize: 11, fontWeight: 500,
                         color: TEXT.primary,
                       }}>
-                        {day.tempHighC}°
+                        {day.tempHighF}°
                       </span>
                       <span style={{
                         fontFamily: FONT.sans, fontSize: 10,
                         color: TEXT.secondary,
                       }}>
-                        {day.tempLowC}°
+                        {day.tempLowF}°
                       </span>
-                      {day.precipMm > 1 && (
+                      {day.precipIn > 0.04 && (
                         <span style={{
                           fontFamily: FONT.sans, fontSize: 9,
                           color: COLOR.darkTeal,
                           marginTop: -2,
                         }}>
-                          {day.precipMm}mm
+                          {day.precipIn}in
                         </span>
                       )}
                     </div>

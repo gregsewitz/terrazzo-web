@@ -3,11 +3,13 @@
  *
  * Shared across hooks that need distance calculations
  * (usePicksFilter, useGeoDestinationRepair, etc.)
+ *
+ * All distances are in US imperial miles.
  */
 
-/** Haversine distance between two lat/lng points, in kilometers. */
-export function distKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth radius in km
+/** Haversine distance between two lat/lng points, in miles. */
+export function distMi(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3959; // Earth radius in miles
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
   const a =

@@ -807,7 +807,7 @@ const TRAVEL_STATS = {
   totalNights: 187,
   longestTrip: 12,
   placesRated: 94,
-  kmTraveled: 48200,
+  milesTraveled: 29950,
 };
 
 const CONTINENTS = [
@@ -908,7 +908,7 @@ export function TravelStatsSection() {
           {[
             { v: TRAVEL_STATS.longestTrip, l: 'Longest trip', s: ' days', icon: 'trips' as const },
             { v: TRAVEL_STATS.continents, l: 'Continents', s: '', icon: 'discover' as const },
-            { v: Math.round(TRAVEL_STATS.kmTraveled / 1000), l: 'Distance', s: 'k km', icon: 'transport' as const },
+            { v: Math.round(TRAVEL_STATS.milesTraveled / 1000), l: 'Distance', s: 'k mi', icon: 'transport' as const },
           ].map(({ v, l, s, icon }) => (
             <div key={l} className="flex-1 text-center p-3 rounded-2xl" style={{ background: 'rgba(251,245,236,0.9)', boxShadow: '0 1px 3px rgba(0,42,85,0.08)' }}>
               <div className="flex justify-center mb-2">

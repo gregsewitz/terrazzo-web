@@ -13,7 +13,7 @@
  * Extracted from usePicksFilter.ts for testability and reuse.
  */
 
-import { distKm } from '@/lib/geo';
+import { distMi } from '@/lib/geo';
 import type { ImportedPlace, GeoDestination } from '@/types';
 
 // ─── Coordinate validation ───────────────────────────────────────────────────
@@ -139,8 +139,8 @@ function stripVagueQualifiers(s: string): string {
 
 // ─── Adaptive radius ─────────────────────────────────────────────────────────
 
-export const URBAN_CORE_KM = 18;
-export const REGIONAL_CORE_KM = 55;
+export const URBAN_CORE_MI = 11;
+export const REGIONAL_CORE_MI = 34;
 export const TAPER_RATIO = 1.6;
 
 const KNOWN_REGIONS = /\b(cotswolds|tuscany|provence|burgundy|champagne|alsace|dordogne|algarve|cinque terre|amalfi|capri|lake district|peak district|loire|costa brava|dalmatian|patagonia|basque country|black forest|bavari|normand|sicily|sardinia|crete|peloponnese|hokkaido|okinawa|bali|rajasthan|tulum|yucatan|napa|hamptons|cape cod|finger lakes|big sur|outer banks|ozarks|blue ridge|new forest|yorkshire dales|scottish highlands|wye valley|hunter valley|barossa|yarra valley|alentejo|douro|istria|puglia|apulia|umbria|piedmont|piemonte|lofoten|kruger|sabi sand|limpopo|masai mara|maasai mara|serengeti|southern utah|catskills|berkshires|sonoma|cape winelands|stellenbosch|franschhoek|kerala|backwaters|queenstown|milford sound|fiordland|napa valley)\b/i;
@@ -148,35 +148,35 @@ const KNOWN_REGIONS = /\b(cotswolds|tuscany|provence|burgundy|champagne|alsace|d
 const REGION_HINTS = /\b(coast|valley|region|island|islands|lake|lakes|countryside|hills|highlands|mountains|riviera|peninsula|province|county|shire|prefecture|district|national park|safari|reserve|game reserve)\b/i;
 
 const RADIUS_OVERRIDES: Array<[RegExp, number]> = [
-  // Compact regions
-  [/\bcinque terre\b/i, 20],
-  [/\bamalfi\b/i, 30],
-  [/\bcapri\b/i, 15],
-  // Expanded urban
-  [/\breykjavik\b/i, 40],
-  [/\blos angeles\b/i, 28],
-  [/\bcopenhagen\b/i, 25],
-  [/\bberlin\b/i, 25],
-  [/\blondon\b/i, 38],
-  [/\bdubai\b/i, 60],
-  [/\bphuket\b/i, 50],
-  // Oversized regions
-  [/\bkruger|sabi sand|limpopo\b/i, 150],
-  [/\bscottish highlands|highlands of scotland\b/i, 120],
-  [/\bsouthern utah\b/i, 130],
-  [/\blofoten\b/i, 90],
-  [/\bmasai mara|maasai mara\b/i, 80],
-  [/\bserengeti\b/i, 100],
-  [/\brajasthan\b/i, 200],
-  [/\bgreek islands\b/i, 200],
-  [/\bmaldives\b/i, 300],
-  [/\bmaui\b/i, 50],
-  [/\bhawaii\b/i, 160],
-  [/\bsicily\b/i, 130],
-  [/\bprovence\b/i, 80],
-  [/\btuscany\b/i, 75],
-  [/\bpatagonia\b/i, 200],
-  [/\bhokkaido\b/i, 130],
+  // Compact regions (miles)
+  [/\bcinque terre\b/i, 12],
+  [/\bamalfi\b/i, 19],
+  [/\bcapri\b/i, 9],
+  // Expanded urban (miles)
+  [/\breykjavik\b/i, 25],
+  [/\blos angeles\b/i, 17],
+  [/\bcopenhagen\b/i, 16],
+  [/\bberlin\b/i, 16],
+  [/\blondon\b/i, 24],
+  [/\bdubai\b/i, 37],
+  [/\bphuket\b/i, 31],
+  // Oversized regions (miles)
+  [/\bkruger|sabi sand|limpopo\b/i, 93],
+  [/\bscottish highlands|highlands of scotland\b/i, 75],
+  [/\bsouthern utah\b/i, 81],
+  [/\blofoten\b/i, 56],
+  [/\bmasai mara|maasai mara\b/i, 50],
+  [/\bserengeti\b/i, 62],
+  [/\brajasthan\b/i, 124],
+  [/\bgreek islands\b/i, 124],
+  [/\bmaldives\b/i, 186],
+  [/\bmaui\b/i, 31],
+  [/\bhawaii\b/i, 99],
+  [/\bsicily\b/i, 81],
+  [/\bprovence\b/i, 50],
+  [/\btuscany\b/i, 47],
+  [/\bpatagonia\b/i, 124],
+  [/\bhokkaido\b/i, 81],
 ];
 
 function isRegionalDestination(geo: GeoDestination): boolean {
@@ -194,12 +194,12 @@ function isRegionalDestination(geo: GeoDestination): boolean {
 }
 
 export function coreRadiusForDestination(geo: GeoDestination | null): number {
-  if (!geo) return URBAN_CORE_KM;
+  if (!geo) return URBAN_CORE_MI;
   const name = geo.name || '';
   for (const [pattern, radius] of RADIUS_OVERRIDES) {
     if (pattern.test(name)) return radius;
   }
-  return isRegionalDestination(geo) ? REGIONAL_CORE_KM : URBAN_CORE_KM;
+  return isRegionalDestination(geo) ? REGIONAL_CORE_MI : URBAN_CORE_MI;
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -207,8 +207,8 @@ export function coreRadiusForDestination(geo: GeoDestination | null): number {
 export interface GeoAnchor {
   lat: number;
   lng: number;
-  coreKm: number;
-  outerKm: number;
+  coreMi: number;
+  outerMi: number;
   weight: number;
 }
 
@@ -304,12 +304,12 @@ export function geoScore(pLat: number, pLng: number, anchors: GeoAnchor[]): numb
   if (anchors.length === 0) return 0;
   let best = 0;
   for (const anchor of anchors) {
-    const d = distKm(anchor.lat, anchor.lng, pLat, pLng);
+    const d = distMi(anchor.lat, anchor.lng, pLat, pLng);
     let score: number;
-    if (d <= anchor.coreKm) {
+    if (d <= anchor.coreMi) {
       score = 1.0;
-    } else if (d <= anchor.outerKm) {
-      const t = (d - anchor.coreKm) / (anchor.outerKm - anchor.coreKm);
+    } else if (d <= anchor.outerMi) {
+      const t = (d - anchor.coreMi) / (anchor.outerMi - anchor.coreMi);
       score = 1.0 - t * 0.7;
     } else {
       score = 0;

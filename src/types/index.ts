@@ -198,7 +198,7 @@ export type NeighborhoodRole = 'anchor' | 'destination' | 'discovery' | 'outpost
 
 export interface CompetitiveAlternative {
   name: string;
-  distance_km: number;
+  distance_mi: number;
   why: string;
 }
 
@@ -543,9 +543,9 @@ export interface SuggestionResponse {
 }
 
 export interface DayWeather {
-  tempHighC: number;
-  tempLowC: number;
-  precipMm: number;
+  tempHighF: number;
+  tempLowF: number;
+  precipIn: number;
   weatherCode: number;
   description: string;
 }

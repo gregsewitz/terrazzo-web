@@ -89,6 +89,8 @@ export async function fetchDayWeather(
       start_date: queryDate,
       end_date: queryDate,
       timezone: 'auto',
+      temperature_unit: 'fahrenheit',
+      precipitation_unit: 'inch',
     });
 
     const res = await fetch(`${apiUrl}?${params}`, {
@@ -104,9 +106,9 @@ export async function fetchDayWeather(
 
     const weatherCode = daily.weathercode[0];
     return {
-      tempHighC: Math.round(daily.temperature_2m_max[0]),
-      tempLowC: Math.round(daily.temperature_2m_min[0]),
-      precipMm: Math.round(daily.precipitation_sum[0] * 10) / 10,
+      tempHighF: Math.round(daily.temperature_2m_max[0]),
+      tempLowF: Math.round(daily.temperature_2m_min[0]),
+      precipIn: Math.round(daily.precipitation_sum[0] * 100) / 100,
       weatherCode,
       description: WMO_CODES[weatherCode] || 'Unknown',
     };
