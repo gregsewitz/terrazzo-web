@@ -74,13 +74,39 @@ export async function PATCH(
       return NextResponse.json({ id: updated.id, status: updated.status });
     }
 
-    // ── CONFIRM → create SavedPlace ──────────────────────────────────────
+    // ── CONFIRM → create SavedPlace (skip for transport types) ─────────────
     if (action === 'confirm') {
+      const TRANSPORT_TYPES = new Set(['flight', 'rental']);
+      const isTransport = TRANSPORT_TYPES.has(reservation.placeType);
+
+      // Transport reservations (flights, rental cars) are trip logistics,
+      // not taste-matchable places. They get confirmed but don't create
+      // SavedPlace entries, trigger enrichment, or receive taste fields.
+      if (isTransport) {
+        await prisma.emailReservation.update({
+          where: { id },
+          data: {
+            status: 'confirmed',
+            reviewedAt: new Date(),
+          },
+        });
+
+        return NextResponse.json({
+          id: reservation.id,
+          status: 'confirmed',
+          savedPlaceId: null,
+          matchedTripId: reservation.matchedTripId,
+          matchedTripName: reservation.matchedTripName,
+          suggestedDayNumber: reservation.suggestedDayNumber,
+          suggestedSlotId: reservation.suggestedSlotId,
+        });
+      }
+
       // Resolve Google Place data if we don't have it yet
       let googleData: Record<string, unknown> | null = null;
       let googlePlaceId = reservation.googlePlaceId;
 
-      if (!googlePlaceId && reservation.placeType !== 'flight') {
+      if (!googlePlaceId) {
         try {
           const placeResult = await searchPlace(
             `${reservation.placeName} ${reservation.location || ''}`
@@ -141,7 +167,6 @@ export async function PATCH(
 
       // Fire-and-forget enrichment
       if (googlePlaceId) {
-        // Derive placeType from Google result if available, else from reservation
         const emailPlaceType = googleData
           ? mapGoogleTypeToPlaceType((googleData as any).primaryType)
           : reservation.placeType || undefined;
@@ -149,8 +174,9 @@ export async function PATCH(
           .catch(err => console.error('[email-confirm] enrichment error:', err));
       }
 
-      // Fire-and-forget: generate initial taste fields (matchScore, tasteNote, etc.)
-      // These will be refined by the enrichment-complete webhook when signals are available.
+      // Fire-and-forget: generate terrazzoInsight (taste note).
+      // matchScore is NOT written here — it comes from vector cosine similarity
+      // via the enrichment-complete webhook or periodic rescore.
       completeTasteFields(
         [{ savedPlaceId: savedPlace.id, name: reservation.placeName, type: reservation.placeType, location: reservation.location || undefined }],
         user.id,

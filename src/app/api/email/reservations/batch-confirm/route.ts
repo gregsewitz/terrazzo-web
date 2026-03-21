@@ -75,13 +75,19 @@ export async function POST(request: NextRequest) {
     }>> = {};
 
     // Process each reservation
+    // Transport types are trip logistics, not taste-matchable places.
+    // They get added to trip itineraries but NOT to the library (SavedPlace).
+    const TRANSPORT_TYPES = new Set(['flight', 'rental']);
+
     const results = await Promise.allSettled(
       reservations.map(async (reservation: any) => {
-        // 1. Resolve googlePlaceId if missing (best-effort)
+        const isTransport = TRANSPORT_TYPES.has(reservation.placeType);
+
+        // 1. Resolve googlePlaceId if missing (skip for transport)
         let googlePlaceId = reservation.googlePlaceId;
         let googleData: Record<string, unknown> | null = null;
 
-        if (!googlePlaceId) {
+        if (!googlePlaceId && !isTransport) {
           const placeResult = await resolveGooglePlace(
             reservation.placeName, reservation.location, reservation.placeType, 'batch-confirm',
           );
@@ -98,75 +104,32 @@ export async function POST(request: NextRequest) {
           ratedAt: new Date().toISOString(),
         } : undefined;
 
-        // 3. Create or reuse SavedPlace
+        // 3. Create or reuse SavedPlace (skip for transport — flights/rentals
+        //    are trip logistics, not library places to be taste-matched)
         //    - With googlePlaceId: dedup via unique constraint (userId, googlePlaceId)
         //    - Without googlePlaceId: dedup by (userId, name, location) to avoid
         //      creating duplicates from multiple emails about the same rental
-        let savedPlace: { id: string };
+        let savedPlace: { id: string } | null = null;
 
-        const sourceEntry = {
-          type: 'email',
-          name: `${reservation.provider || 'Email'}: ${reservation.emailSubject}`,
-          importedAt: new Date().toISOString(),
-        };
+        if (!isTransport) {
+          const sourceEntry = {
+            type: 'email',
+            name: `${reservation.provider || 'Email'}: ${reservation.emailSubject}`,
+            importedAt: new Date().toISOString(),
+          };
 
-        if (googlePlaceId) {
-          savedPlace = await prisma.savedPlace.upsert({
-            where: {
-              userId_googlePlaceId: { userId: user.id, googlePlaceId },
-            },
-            create: {
-              userId: user.id,
-              name: reservation.placeName,
-              type: reservation.placeType,
-              location: reservation.location || '',
-              googlePlaceId,
-              googleData: (googleData as Prisma.InputJsonValue) || undefined,
-              source: JSON.stringify({
-                type: 'email',
-                name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
-              }),
-              intentStatus: 'booked',
-              timing: reservation.reservationDate
-                ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })
-                : undefined,
-              importSources: [{ ...sourceEntry, bookingDetails: buildUserContext(reservation) || undefined }],
-              ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
-            },
-            update: {
-              // Re-import: update enrichment data, preserve user edits
-              deletedAt: null,
-              ...(googleData ? { googleData: googleData as Prisma.InputJsonValue } : {}),
-            },
-          });
-        } else {
-          // No googlePlaceId — check for existing by name+location to avoid duplicates
-          const existing = await prisma.savedPlace.findFirst({
-            where: {
-              userId: user.id,
-              name: { equals: reservation.placeName, mode: 'insensitive' },
-              location: reservation.location || '',
-              googlePlaceId: null,
-              deletedAt: null,
-            },
-            select: { id: true },
-          });
-
-          if (existing) {
-            savedPlace = existing;
-            console.log(`[batch-confirm] Reusing existing SavedPlace for "${reservation.placeName}" (no googlePlaceId)`);
-          } else {
-            savedPlace = await prisma.savedPlace.create({
-              data: {
+          if (googlePlaceId) {
+            savedPlace = await prisma.savedPlace.upsert({
+              where: {
+                userId_googlePlaceId: { userId: user.id, googlePlaceId },
+              },
+              create: {
                 userId: user.id,
                 name: reservation.placeName,
                 type: reservation.placeType,
                 location: reservation.location || '',
-                googlePlaceId: null,
+                googlePlaceId,
+                googleData: (googleData as Prisma.InputJsonValue) || undefined,
                 source: JSON.stringify({
                   type: 'email',
                   name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
@@ -182,12 +145,62 @@ export async function POST(request: NextRequest) {
                 importSources: [{ ...sourceEntry, bookingDetails: buildUserContext(reservation) || undefined }],
                 ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
               },
+              update: {
+                // Re-import: update enrichment data, preserve user edits
+                deletedAt: null,
+                ...(googleData ? { googleData: googleData as Prisma.InputJsonValue } : {}),
+              },
             });
-          }
-        }
+          } else {
+            // No googlePlaceId — check for existing by name+location to avoid duplicates
+            const existing = await prisma.savedPlace.findFirst({
+              where: {
+                userId: user.id,
+                name: { equals: reservation.placeName, mode: 'insensitive' },
+                location: reservation.location || '',
+                googlePlaceId: null,
+                deletedAt: null,
+              },
+              select: { id: true },
+            });
 
-        savedPlaceIds.push(savedPlace.id);
-        reservationToSavedPlace[reservation.id] = savedPlace.id;
+            if (existing) {
+              savedPlace = existing;
+              console.log(`[batch-confirm] Reusing existing SavedPlace for "${reservation.placeName}" (no googlePlaceId)`);
+            } else {
+              savedPlace = await prisma.savedPlace.create({
+                data: {
+                  userId: user.id,
+                  name: reservation.placeName,
+                  type: reservation.placeType,
+                  location: reservation.location || '',
+                  googlePlaceId: null,
+                  source: JSON.stringify({
+                    type: 'email',
+                    name: reservation.provider || reservation.emailFromName || reservation.emailFrom,
+                  }),
+                  intentStatus: 'booked',
+                  timing: reservation.reservationDate
+                    ? new Date(reservation.reservationDate).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : undefined,
+                  importSources: [{ ...sourceEntry, bookingDetails: buildUserContext(reservation) || undefined }],
+                  ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
+                },
+              });
+            }
+          }
+
+          if (savedPlace) {
+            savedPlaceIds.push(savedPlace.id);
+            reservationToSavedPlace[reservation.id] = savedPlace.id;
+          }
+        } else {
+          console.log(`[batch-confirm] Skipping SavedPlace for transport "${reservation.placeName}" (${reservation.placeType})`);
+        }
 
         // 4. Update EmailReservation status
         await prisma.emailReservation.update({
@@ -195,39 +208,42 @@ export async function POST(request: NextRequest) {
           data: {
             status: 'confirmed',
             reviewedAt: new Date(),
-            savedPlaceId: savedPlace.id,
+            ...(savedPlace ? { savedPlaceId: savedPlace.id } : {}),
             googlePlaceId: googlePlaceId || reservation.googlePlaceId,
           },
         });
 
-        // 5. Fire-and-forget enrichment
-        if (googlePlaceId) {
+        // 5. Fire-and-forget enrichment (skip for transport)
+        if (googlePlaceId && !isTransport) {
           ensureEnrichment(googlePlaceId, reservation.placeName, user.id, 'email_batch_import', reservation.placeType || undefined)
             .then(() => { enrichmentTriggered++; })
             .catch(err => console.error(`[batch-confirm] enrichment error for ${reservation.placeName}:`, err));
         }
 
-        // 6. Collect trip pool items
-        const tripLink = tripLinks[reservation.id];
-        if (tripLink?.tripId) {
-          if (!tripPoolItems[tripLink.tripId]) tripPoolItems[tripLink.tripId] = [];
-          tripPoolItems[tripLink.tripId].push({
-            id: `email-${reservation.id}-${Date.now()}`,
-            name: reservation.placeName,
-            type: reservation.placeType,
-            location: reservation.location || '',
-            googlePlaceId: googlePlaceId || undefined,
-            libraryPlaceId: savedPlace.id,
-            source: { type: 'email', name: reservation.provider || 'Email' },
-            status: 'available' as const,
-            dayNumber: tripLink.dayNumber,
-            slotId: tripLink.slotId,
-            reservationDate: reservation.reservationDate?.toISOString() || reservation.checkInDate?.toISOString() || undefined,
-            reservationTime: reservation.reservationTime || reservation.departureTime || undefined,
-          });
+        // 6. Collect trip items (skip transport — flights are not draggable pool
+        //    entries; they resolve directly to their day/time in the transport cell)
+        if (!isTransport) {
+          const tripLink = tripLinks[reservation.id];
+          if (tripLink?.tripId) {
+            if (!tripPoolItems[tripLink.tripId]) tripPoolItems[tripLink.tripId] = [];
+            tripPoolItems[tripLink.tripId].push({
+              id: `email-${reservation.id}-${Date.now()}`,
+              name: reservation.placeName,
+              type: reservation.placeType,
+              location: reservation.location || '',
+              googlePlaceId: googlePlaceId || undefined,
+              libraryPlaceId: savedPlace!.id,
+              source: { type: 'email', name: reservation.provider || 'Email' },
+              status: 'available' as const,
+              dayNumber: tripLink.dayNumber,
+              slotId: tripLink.slotId,
+              reservationDate: reservation.reservationDate?.toISOString() || reservation.checkInDate?.toISOString() || undefined,
+              reservationTime: reservation.reservationTime || reservation.departureTime || undefined,
+            });
+          }
         }
 
-        return savedPlace.id;
+        return savedPlace?.id || `transport-${reservation.id}`;
       })
     );
 
