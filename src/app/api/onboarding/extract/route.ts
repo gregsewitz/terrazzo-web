@@ -4,6 +4,8 @@ import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, onboardingAnalyzeSchema } from '@/lib/api-validation';
 import { TASTE_ONTOLOGY_SYSTEM_PROMPT, ONBOARDING_PHASES } from '@/constants/onboarding';
 import { CLAUDE_SONNET } from '@/lib/models';
+import { getUser } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Background signal extraction endpoint — runs AFTER /api/onboarding/respond
@@ -14,14 +16,77 @@ import { CLAUDE_SONNET } from '@/lib/models';
  *
  * The client fires this as fire-and-forget (or awaits it in the background)
  * so the user never waits for it.
+ *
+ * Signals are persisted to the TasteNode relational table server-side,
+ * which is the canonical store for all taste signals. The response still
+ * returns signals to the client for in-session Zustand state.
  */
 
 const anthropic = new Anthropic();
+
+/**
+ * Persist extracted signals to the TasteNode table.
+ * Non-blocking: errors are logged but don't fail the extraction response.
+ */
+async function persistExtractedSignals(
+  userId: string,
+  phaseId: string,
+  signals: Array<{ tag: string; cat: string; confidence: number }>,
+): Promise<{ persisted: number; errors: number }> {
+  if (!signals.length) return { persisted: 0, errors: 0 };
+
+  const now = new Date();
+  let errorCount = 0;
+
+  const validSignals = signals.filter((s) => {
+    if (!s.tag || typeof s.tag !== 'string' || !s.cat || typeof s.cat !== 'string') {
+      errorCount++;
+      return false;
+    }
+    if (typeof s.confidence !== 'number' || s.confidence < 0 || s.confidence > 1) {
+      errorCount++;
+      return false;
+    }
+    return true;
+  });
+
+  if (validSignals.length === 0) {
+    console.warn(`[extract/persist] No valid signals to persist for phase "${phaseId}"`);
+    return { persisted: 0, errors: errorCount };
+  }
+
+  try {
+    const createData = validSignals.map((sig) => ({
+      userId,
+      domain: sig.cat,
+      signal: sig.tag,
+      confidence: sig.confidence,
+      source: 'onboarding',
+      category: sig.cat,
+      isActive: true,
+      extractedAt: now,
+      sourcePhaseId: phaseId,
+      sourceModality: 'VOICE',
+      updatedAt: now,
+    }));
+
+    const result = await prisma.tasteNode.createMany({ data: createData });
+    console.log(`[extract/persist] Persisted ${result.count} TasteNodes for phase "${phaseId}" (user: ${userId})`);
+    return { persisted: result.count, errors: errorCount };
+  } catch (err) {
+    console.error(`[extract/persist] Failed to persist TasteNodes for phase "${phaseId}":`, err instanceof Error ? err.message : err);
+    return { persisted: 0, errors: errorCount + validSignals.length };
+  }
+}
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const rl = rateLimit(ip + ':extract', { maxRequests: 20, windowMs: 60000 });
   if (!rl.success) return rateLimitResponse();
+
+  // Auth is optional — persist TasteNodes only if we have a user.
+  // Extract still works without auth for resilience during onboarding.
+  const user = await getUser(req).catch(() => null);
 
   try {
     const validation = await validateBody(req, onboardingAnalyzeSchema);
@@ -133,6 +198,17 @@ Return valid JSON:
     if (!result.sustainabilitySignals) result.sustainabilitySignals = [];
     if (!result.emotionalDriverHint) result.emotionalDriverHint = null;
     if (!result.mentionedPlaces) result.mentionedPlaces = [];
+
+    // ── Persist signals to TasteNode table (non-blocking) ──
+    // This is the canonical write path — signals are persisted as they're
+    // extracted, with full provenance (phaseId, modality, extractedAt).
+    if (user?.id && result.signals?.length) {
+      persistExtractedSignals(user.id, phaseId, result.signals).catch((err) => {
+        console.error('[onboarding/extract] TasteNode persistence failed (non-blocking):', err);
+      });
+    } else if (!user?.id && result.signals?.length) {
+      console.warn(`[onboarding/extract] No authenticated user — ${result.signals.length} signals extracted but not persisted to TasteNode`);
+    }
 
     return NextResponse.json(result);
   } catch (error) {

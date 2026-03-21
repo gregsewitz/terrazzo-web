@@ -15,6 +15,8 @@ export const POST = apiHandler(async (req: NextRequest) => {
     data: {
       ...(body.tasteProfile !== undefined && { tasteProfile: body.tasteProfile }),
       ...(body.lifeContext !== undefined && { lifeContext: body.lifeContext }),
+      // allSignals still written for backward compat during transition.
+      // TasteNode (written by /api/onboarding/extract) is now the canonical store.
       ...(body.allSignals !== undefined && { allSignals: body.allSignals }),
       ...(body.allMessages !== undefined && { allMessages: body.allMessages }),
       ...(body.allContradictions !== undefined && { allContradictions: body.allContradictions }),

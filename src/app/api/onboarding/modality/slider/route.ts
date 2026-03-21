@@ -1,4 +1,6 @@
 /**
+ * @deprecated Not called by any frontend component. See /api/onboarding/modality/route.ts.
+ *
  * POST /api/onboarding/modality/slider
  *
  * Slider signal extraction: continuous 0–1 values per domain.

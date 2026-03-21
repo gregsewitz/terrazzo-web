@@ -20,7 +20,7 @@ model User {
   // Taste profile (from onboarding)
   tasteProfile         Json?        // GeneratedProfile
   lifeContext          Json?        // { primaryCompanions, firstName, etc. }
-  allSignals           Json?        // Signal[]
+  allSignals           Json?        // @deprecated — TasteNode table is now the canonical signal store. This column is kept for backward compat during transition and will be removed in a future migration.
   allMessages          Json?        // ConversationMessage[] — onboarding conversation history
   allContradictions    Json?        // Contradiction[]
   seedTrips            Json?        // SeedTripInput[]

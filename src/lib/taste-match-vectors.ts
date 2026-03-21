@@ -13,7 +13,10 @@
  *   - computeVectorMatch(): Pure vector math, no DB calls
  *   - computeVectorMatchFromDb(): Fetches vectors then calls computeVectorMatch
  *   - computeMatchExplanation(): Top-cluster decomposition for "Why this matches"
- *   - normalizeVectorScoresForDisplay(): Percentile-based score curving
+ *   - rescoreAllSavedPlacesV3(): Batch rescore all saved places for a user
+ *
+ * Raw cosine×100 scores are stored directly. Tier classification is
+ * derived at read time via getMatchTier() in match-tier.ts.
  */
 
 import { prisma } from '@/lib/prisma';
@@ -27,11 +30,8 @@ import {
   vectorToSqlV3,
 } from '@/lib/taste-intelligence';
 import { getSignalClusterMap } from '@/lib/taste-intelligence/signal-clusters-loader';
-import {
-  SCORE_DISPLAY_CEILING,
-  SCORE_DISPLAY_FLOOR,
-  SCORE_SPREAD_FACTOR,
-} from '@/lib/constants';
+// Display score constants removed — raw scores are now used directly.
+// Tier classification is handled by getMatchTier() in match-tier.ts.
 import type { TasteDomain } from '@/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -438,131 +438,16 @@ function buildExplanation(
 
 // ─── Per-user score normalization ───────────────────────────────────────────
 
-/**
- * Curve raw vector cosine scores into user-friendly display range.
- *
- * Uses z-score normalization to preserve relative differences even when
- * the raw score range is narrow (e.g., all cosines between 0.60–0.85).
- *
- * Algorithm:
- *   1. Compute mean and stddev of raw scores
- *   2. Convert each score to z-score (stddevs from mean)
- *   3. Map z-scores to display range via sigmoid-like curve
- *   4. Center the display range around the median (~65 display score)
- *
- * This replaces the previous min-max approach which compressed scores
- * when all raw cosines clustered in a narrow band.
- */
-export function normalizeVectorScoresForDisplay<T extends { overallScore: number }>(
-  scores: T[],
-  ceiling = SCORE_DISPLAY_CEILING,
-  floor = SCORE_DISPLAY_FLOOR,
-): T[] {
-  if (scores.length === 0) return scores;
-  if (scores.length === 1) {
-    return [{ ...scores[0], overallScore: Math.round((ceiling + floor) / 2 + 10) }];
-  }
-
-  const rawScores = scores.map((s) => s.overallScore);
-  const n = rawScores.length;
-
-  // Compute mean and stddev
-  const mean = rawScores.reduce((a, b) => a + b, 0) / n;
-  const variance = rawScores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / n;
-  const stddev = Math.sqrt(variance);
-
-  // Edge case: all scores identical
-  if (stddev < 0.1) {
-    return scores.map((s) => ({ ...s, overallScore: Math.round((ceiling + floor) / 2 + 10) }));
-  }
-
-  const SPREAD_FACTOR = SCORE_SPREAD_FACTOR;
-  const displayRange = ceiling - floor;
-  // Median display score — where an average property lands
-  const medianDisplay = floor + displayRange * 0.50; // ~65.5 for default floor=35, ceil=96
-
-  return scores.map((s) => {
-    // Z-score: how many stddevs above/below mean
-    const z = (s.overallScore - mean) / stddev;
-
-    // Sigmoid-like mapping: z=0 → median, z=+2 → near ceiling, z=-2 → near floor
-    // tanh gives us a nice smooth curve in [-1, 1]
-    // Spread factor 0.55 (was 0.8) gives wider differentiation:
-    //   z=+2  → tanh(1.1)=0.80  → display ~89
-    //   z=+1  → tanh(0.55)=0.50 → display ~81
-    //   z=0   → tanh(0)=0       → display ~66
-    //   z=-1  → tanh(-0.55)=-0.50 → display ~50
-    //   z=-2  → tanh(-1.1)=-0.80  → display ~41
-    const curved = Math.tanh(z * SPREAD_FACTOR);
-
-    const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
-    return { ...s, overallScore: Math.max(floor, Math.min(ceiling, displayScore)) };
-  });
-}
-
-// ─── Single-score normalization ──────────────────────────────────────────────
-
-/**
- * Normalize a single raw vector cosine score into the same 35-93 display range
- * used by the discover feed's batch normalization.
- *
- * Since we don't have a batch to compute z-scores against, we fetch the
- * population mean and stddev of this user's cosine similarities against all
- * enriched properties. These are the same statistics the batch normalizer
- * would see if it scored every property.
- *
- * Falls back to a fixed mapping if population stats can't be computed.
- */
-export async function normalizeSingleVectorScore(
-  rawScore: number,
-  userId: string,
-  ceiling = SCORE_DISPLAY_CEILING,
-  floor = SCORE_DISPLAY_FLOOR,
-): Promise<number> {
-  try {
-    // Fetch user vector and compute population stats in one query
-    const stats = await prisma.$queryRawUnsafe<Array<{
-      mean: number | null;
-      stddev: number | null;
-      cnt: number;
-    }>>(
-      `WITH uv AS (
-        SELECT "tasteVectorV3" as vec FROM "User" WHERE id = $1
-      )
-      SELECT
-        AVG((1 - (pi."embeddingV3" <=> uv.vec)) * 100)::float as mean,
-        STDDEV((1 - (pi."embeddingV3" <=> uv.vec)) * 100)::float as stddev,
-        COUNT(*)::int as cnt
-      FROM "PlaceIntelligence" pi, uv
-      WHERE pi.status = 'complete'
-        AND pi."embeddingV3" IS NOT NULL`,
-      userId,
-    );
-
-    const { mean, stddev, cnt } = stats[0] || {};
-
-    if (!mean || !stddev || stddev < 0.1 || !cnt || cnt < 5) {
-      // Not enough data for meaningful normalization — use fixed midpoint
-      return Math.round((ceiling + floor) / 2 + 10);
-    }
-
-    // Same tanh curve as normalizeVectorScoresForDisplay
-    const SPREAD_FACTOR = SCORE_SPREAD_FACTOR;
-    const displayRange = ceiling - floor;
-    const medianDisplay = floor + displayRange * 0.50;
-    const z = (rawScore - mean) / stddev;
-    const curved = Math.tanh(z * SPREAD_FACTOR);
-    const displayScore = Math.round(medianDisplay + curved * (displayRange * 0.50));
-    return Math.max(floor, Math.min(ceiling, displayScore));
-  } catch (err) {
-    console.error('[normalizeSingleVectorScore] Error computing population stats:', err);
-    // Fallback: fixed midpoint
-    return Math.round((ceiling + floor) / 2 + 10);
-  }
-}
-
-// ─── Client-safe score normalization (re-exported from normalize-score.ts) ───
-export { normalizeMatchScoreForDisplay } from './normalize-score';
+// ─── Score normalization removed ─────────────────────────────────────────────
+//
+// The tanh sigmoid normalizer (normalizeVectorScoresForDisplay) and the
+// single-score DB normalizer (normalizeSingleVectorScore) have been removed.
+// Raw cosine×100 scores are now stored and used directly. Tier classification
+// is handled by getMatchTier() in match-tier.ts, which applies population
+// z-score thresholds without distorting the underlying distribution.
+//
+// For backwards compatibility, normalizeMatchScoreForDisplay is still
+// available from normalize-score.ts as a deprecated identity function.
 
 // ─── Batch rescore for a user ────────────────────────────────────────────────
 
@@ -630,24 +515,17 @@ export async function rescoreAllSavedPlacesV3(userId: string): Promise<RescoreRe
     }
   }
 
-  // 4. Normalize scores across the full set
-  const normalized = normalizeVectorScoresForDisplay(
-    rawMatches.map((m) => ({ spId: m.spId, result: m.result, overallScore: m.result.overallScore })),
-  );
-
-  // 5. Write to DB in batches
+  // 4. Write raw scores to DB (no normalization — tier classification
+  //    is derived at read time via getMatchTier in match-tier.ts)
   let scored = 0;
-  for (const match of normalized) {
-    const raw = rawMatches.find((m) => m.spId === match.spId);
-    if (!raw) continue;
-
+  for (const match of rawMatches) {
     try {
       await prisma.savedPlace.update({
         where: { id: match.spId },
         data: {
-          matchScore: match.overallScore,
-          matchBreakdown: breakdownToNormalized(raw.result.breakdown),
-          matchExplanation: raw.result.explanation as unknown as Prisma.InputJsonValue,
+          matchScore: match.result.overallScore,
+          matchBreakdown: breakdownToNormalized(match.result.breakdown),
+          matchExplanation: match.result.explanation as unknown as Prisma.InputJsonValue,
         },
       });
       scored++;

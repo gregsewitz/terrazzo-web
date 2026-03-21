@@ -1,4 +1,6 @@
 /**
+ * @deprecated Not called by any frontend component. See /api/onboarding/modality/route.ts.
+ *
  * POST /api/onboarding/modality/card
  *
  * Card-choice signal extraction: binary A/B choice between two options.

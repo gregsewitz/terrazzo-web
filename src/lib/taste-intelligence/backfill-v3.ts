@@ -8,7 +8,7 @@
  * by pushing vectors apart where rejection preferences exist.
  *
  * Reuses IDF computation from v2.1 backfill.
- * Does NOT touch user graph (TasteNode, ContradictionNode) — only vectors.
+ * Reads signals from TasteNode (canonical store) to compute vectors.
  */
 
 import { prisma } from '@/lib/prisma';
@@ -68,7 +68,6 @@ export async function backfillUserV3(userId: string): Promise<{ vectorComputed: 
     where: { id: userId },
     select: {
       id: true,
-      allSignals: true,
       tasteProfile: true,
     },
   });
@@ -78,7 +77,16 @@ export async function backfillUserV3(userId: string): Promise<{ vectorComputed: 
     return { vectorComputed: false, anchorsBlended: 0 };
   }
 
-  const signals = (user.allSignals as unknown as TasteSignal[]) || [];
+  // Read signals from TasteNode (canonical store) instead of User.allSignals JSON
+  const tasteNodes = await prisma.tasteNode.findMany({
+    where: { userId, isActive: true },
+    select: { signal: true, domain: true, confidence: true },
+  });
+  const signals: TasteSignal[] = tasteNodes.map((tn: { signal: string; domain: string; confidence: number }) => ({
+    tag: tn.signal,
+    cat: tn.domain,
+    confidence: tn.confidence,
+  }));
 
   // Step 1: Compute base taste vector from signals
   let vector = computeUserTasteVectorV3({

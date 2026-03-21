@@ -214,7 +214,7 @@ async function main() {
     // Dynamic import to get the rescore function (uses server-side deps)
     // We can't use the full rescoreAllSavedPlacesV3 because it imports from
     // Next.js modules. Instead, do a minimal inline rescore.
-    const { computeVectorMatch, normalizeVectorScoresForDisplay, breakdownToNormalized } = await import('../src/lib/taste-match-vectors.js');
+    const { computeVectorMatch, breakdownToNormalized } = await import('../src/lib/taste-match-vectors.js');
     const { getSignalClusterMap } = await import('../src/lib/taste-intelligence/signal-clusters-loader.js');
 
     // Warm up the cluster map
@@ -266,14 +266,9 @@ async function main() {
         }
       }
 
-      // Normalize scores
-      const normalized = normalizeVectorScoresForDisplay(rawMatches);
-
-      // Write back
+      // Write raw scores back (no normalization — tiers derived at read time)
       let userRescored = 0;
-      for (const match of normalized) {
-        const raw = rawMatches.find(m => m.spId === match.spId);
-        if (!raw) continue;
+      for (const match of rawMatches) {
         try {
           await prisma.$executeRawUnsafe(
             `UPDATE "SavedPlace"
@@ -282,8 +277,8 @@ async function main() {
                  "matchExplanation" = $3::jsonb
              WHERE id = $4`,
             match.overallScore,
-            JSON.stringify(breakdownToNormalized(raw.result.breakdown)),
-            JSON.stringify(raw.result.explanation),
+            JSON.stringify(breakdownToNormalized(match.result.breakdown)),
+            JSON.stringify(match.result.explanation),
             match.spId,
           );
           userRescored++;

@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { backfillAllUsersV3, backfillAllPropertyEmbeddingsV3 } from '@/lib/taste-intelligence';
+import { refreshPopulationStats } from '@/lib/match-tier-server';
 
 export const maxDuration = 300; // 5 min — may need to process many users/properties
 
@@ -32,6 +33,11 @@ export async function GET(req: NextRequest) {
 
     console.log(`[cron/vector-refresh] Properties: ${propResults.computed} computed, ${propResults.skipped} skipped out of ${propResults.total}`);
 
+    // Phase 3: Refresh population statistics for match tier z-score boundaries
+    const popStats = await refreshPopulationStats();
+
+    console.log(`[cron/vector-refresh] Population stats: mean=${popStats.mean.toFixed(1)}, stddev=${popStats.stddev.toFixed(1)} (${popStats.pairs} pairs)`);
+
     return NextResponse.json({
       success: true,
       users: {
@@ -42,6 +48,11 @@ export async function GET(req: NextRequest) {
         total: propResults.total,
         computed: propResults.computed,
         skipped: propResults.skipped,
+      },
+      populationStats: {
+        mean: popStats.mean,
+        stddev: popStats.stddev,
+        pairs: popStats.pairs,
       },
       timestamp: new Date().toISOString(),
     });

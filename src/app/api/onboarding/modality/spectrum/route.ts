@@ -1,4 +1,6 @@
 /**
+ * @deprecated Not called by any frontend component. See /api/onboarding/modality/route.ts.
+ *
  * POST /api/onboarding/modality/spectrum
  *
  * Spectrum signal extraction: bipolar axis positions.

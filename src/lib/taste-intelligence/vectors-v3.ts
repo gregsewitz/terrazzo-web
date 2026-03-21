@@ -119,9 +119,9 @@ function getClusterState(): ClusterState {
   const clusterCentroids: Record<string, number[]> | null = cm.clusterCentroids ?? null;
 
   // Neighbor bleed map: cluster → [{cluster, similarity, tier}]
-  // v3.5: Reduced bleed scales to prevent vector saturation.
-  // Previous values (0.30/0.10) caused vectors with 300+ signals to become near-uniform
-  // across all 400 dims, destroying discriminative power. Reduced to preserve sparsity.
+  // Bleed scales are read from signal-clusters.json (source of truth).
+  // v3.5 reduced from 0.30/0.10 → 0.15/0.03 to prevent vector saturation;
+  // the JSON has been updated accordingly. Fallbacks are a safety net only.
   const intraBleedScale: number = cm.intra_bleed_scale ?? 0.15;
   const crossBleedScale: number = cm.cross_bleed_scale ?? 0.03;
   // Backward compat: if signal-clusters.json is still v3.2 with flat weight/no tier
@@ -349,7 +349,7 @@ function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number
   // get dampened to prevent vector saturation for users with 300+ signals.
   // This ensures the vector retains discriminative structure even as signal
   // count grows — direct preferences stay strong, inferred adjacencies stay weak.
-  const BLEED_ONLY_DAMPEN = BLEED_ONLY_DAMPEN_CONST; // bleed-only clusters retain 30% of their value
+  const BLEED_ONLY_DAMPEN = BLEED_ONLY_DAMPEN_CONST; // bleed-only clusters retain 8% of their value (was 30%)
   for (let i = 0; i < SIGNAL_DIMS_V3; i++) {
     if (!directHits.has(i) && features[i] !== 0) {
       features[i] *= BLEED_ONLY_DAMPEN;
@@ -661,9 +661,28 @@ export function analyzeDomainCoverage(vector: number[]): CoverageAnalysis {
     ? totalActivated / VECTOR_DIM_V3
     : 0;
 
-  // Domains below 30% coverage are considered gap domains
+  // Per-domain gap-fill thresholds.
+  //
+  // Larger domains (Service: 84 clusters) need a lower coverage bar — you
+  // don't need opinions on 25% of 84 sub-topics to have meaningful taste.
+  // Smaller domains need a higher bar relative to their size.
+  //
+  // Formula: threshold = 0.20 + 0.15 × (1 - domainSize/maxDomainSize)
+  //   Large  (84 clusters): 0.20 + 0.15×0.00 = 0.20  → need 17 clusters
+  //   Medium (48 clusters): 0.20 + 0.15×0.43 = 0.26  → need 13 clusters
+  //
+  // Wellness (28) and Sustainability (14) are supplementary domains, not
+  // core taste pillars. Users shouldn't be prompted to flesh these out —
+  // having *any* signal there is enough. We exempt them from gap-fill.
+  const SUPPLEMENTARY_DOMAINS = new Set(['Wellness', 'Sustainability']);
+  const maxDomainSize = Math.max(...domains.map(d => d.totalClusters), 1);
   const gapDomains = domains
-    .filter((d) => d.coverage < 0.30)
+    .filter((d) => {
+      if (SUPPLEMENTARY_DOMAINS.has(d.domain)) return false;
+      const sizeRatio = 1 - d.totalClusters / maxDomainSize;
+      const threshold = 0.20 + 0.15 * sizeRatio;
+      return d.coverage < threshold;
+    })
     .map((d) => d.domain);
 
   return {

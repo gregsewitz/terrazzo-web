@@ -24,7 +24,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
       name: fullUser.name,
       tasteProfile: fullUser.tasteProfile,
       lifeContext: fullUser.lifeContext,
-      allSignals: fullUser.allSignals,
+      // allSignals removed — signals are now served from TasteNode via /api/signals/mine
       allMessages: (fullUser as Record<string, unknown>).allMessages ?? null,
       allContradictions: fullUser.allContradictions,
       sustainabilitySignals: fullUser.sustainabilitySignals ?? [],

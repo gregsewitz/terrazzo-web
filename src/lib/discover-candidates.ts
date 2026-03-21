@@ -11,7 +11,8 @@ import type { MatchOptions } from '@/lib/taste-match-v3';
 import {
   findSimilarPropertiesV3,
 } from '@/lib/taste-intelligence';
-import { normalizeVectorScoresForDisplay, computeVectorMatch } from '@/lib/taste-match-vectors';
+import { computeVectorMatch } from '@/lib/taste-match-vectors';
+import { ensurePopulationStats } from '@/lib/match-tier-server';
 import type {
   TasteDomain,
   TasteProfile,
@@ -220,6 +221,9 @@ export async function scoreWithVectors(
   userContradictions: TasteContradiction[],
   scoringContext?: ScoringContext,
 ): Promise<{ results: ScoredCandidate[]; vectorEnabled: boolean }> {
+  // Ensure population stats are fresh for tier classification
+  await ensurePopulationStats();
+
   // Check if this user has a V3 taste vector (400-dim semantic clusters)
   const vectorResult = await prisma.$queryRaw<{ tasteVectorV3: string | null }[]>`
     SELECT "tasteVectorV3"::text FROM "User" WHERE id = ${userId} LIMIT 1
@@ -271,8 +275,9 @@ export async function scoreWithVectors(
     };
   });
 
-  // Curve raw scores into user-friendly display range
-  const scored = normalizeVectorScoresForDisplay(rawScored);
+  // Sort by raw score — tier classification is derived at render time
+  // via getMatchTier() in match-tier.ts (no normalization needed)
+  const scored = rawScored;
   scored.sort((a, b) => b.overallScore - a.overallScore);
 
   console.log(

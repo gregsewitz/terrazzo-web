@@ -55,22 +55,24 @@ async function resynthesizeProfile(getState: () => OnboardingState) {
     let { allSignals, allMessages, allContradictions, certainties } = state;
 
     // If the local store is empty (e.g. localStorage cleared, different browser),
-    // fetch signals from the server-side DB before synthesizing
+    // fetch signals from TasteNode (canonical store) before synthesizing
     if (!allSignals.length) {
-      console.log('[profile] Local store empty — fetching signals from DB for re-synthesis');
+      console.log('[profile] Local store empty — fetching signals from TasteNode for re-synthesis');
       try {
-        const profile = await apiFetch<{
-          user: {
-            allSignals?: TasteSignal[];
-            allMessages?: ConversationMessage[];
-            allContradictions?: TasteContradiction[];
-          };
-        }>('/api/profile/mine');
-        if (profile?.user?.allSignals?.length) {
-          allSignals = profile.user.allSignals;
-          allMessages = (profile.user.allMessages as ConversationMessage[]) || [];
-          allContradictions = (profile.user.allContradictions as TasteContradiction[]) || [];
-          // Rebuild certainties from DB signals
+        const [signalsData, profile] = await Promise.all([
+          apiFetch<{ signals: TasteSignal[] }>('/api/signals/mine'),
+          apiFetch<{
+            user: {
+              allMessages?: ConversationMessage[];
+              allContradictions?: TasteContradiction[];
+            };
+          }>('/api/profile/mine'),
+        ]);
+        if (signalsData?.signals?.length) {
+          allSignals = signalsData.signals;
+          allMessages = (profile?.user?.allMessages as ConversationMessage[]) || [];
+          allContradictions = (profile?.user?.allContradictions as TasteContradiction[]) || [];
+          // Rebuild certainties from signals
           const rebuilt: Record<string, number> = {};
           for (const s of allSignals) {
             const domain = s.cat;
@@ -79,12 +81,12 @@ async function resynthesizeProfile(getState: () => OnboardingState) {
             }
           }
           if (Object.keys(rebuilt).length > 0) certainties = rebuilt;
-          console.log(`[profile] Loaded ${allSignals.length} signals from DB`);
+          console.log(`[profile] Loaded ${allSignals.length} signals from TasteNode`);
         } else {
-          console.warn('[profile] No signals in DB either — re-synthesis will produce a sparse profile');
+          console.warn('[profile] No signals in TasteNode either — re-synthesis will produce a sparse profile');
         }
       } catch (err) {
-        console.warn('[profile] Failed to fetch signals from DB:', err);
+        console.warn('[profile] Failed to fetch signals from TasteNode:', err);
       }
     }
 
@@ -122,6 +124,9 @@ const INITIAL_CERTAINTIES: Record<TasteDomain, number> = {
 
 export const INITIAL_PROFILE_STATE = {
   certainties: { ...INITIAL_CERTAINTIES },
+  /** @deprecated In-session accumulator only. TasteNode is the canonical store.
+   *  Signals are written to TasteNode by /api/onboarding/extract server-side.
+   *  This array is hydrated from /api/signals/mine on page load. */
   allSignals: [] as TasteSignal[],
   allMessages: [] as ConversationMessage[],
   allContradictions: [] as TasteContradiction[],
@@ -133,6 +138,7 @@ export const INITIAL_PROFILE_STATE = {
 export interface OnboardingProfileState {
   // Taste profiling
   certainties: Record<string, number>;
+  /** @deprecated In-session accumulator only. TasteNode is the canonical store. */
   allSignals: TasteSignal[];
   allMessages: ConversationMessage[];
   allContradictions: TasteContradiction[];

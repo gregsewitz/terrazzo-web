@@ -1,4 +1,11 @@
 /**
+ * @deprecated The modality API routes that call this module are dead code —
+ * no frontend component invokes them. Signal extraction and TasteNode
+ * persistence now happen in /api/onboarding/extract. The extraction helpers
+ * (extractCardSignals, etc.) may still be useful if modality routes are
+ * revived, but persistSignals() is superseded by persistExtractedSignals()
+ * in the extract route.
+ *
  * Shared signal extraction logic for all onboarding modalities.
  *
  * Each modality maps user gestures to taste signals with appropriate confidence levels:

@@ -4,7 +4,7 @@ import { authHandler } from '@/lib/api-auth-handler';
 import { searchPlace, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { computeTasteScore } from '@/lib/taste-score';
-import { normalizeSingleVectorScore } from '@/lib/taste-match-vectors';
+// normalizeSingleVectorScore removed — raw scores used directly
 import { prisma } from '@/lib/prisma';
 import { CLAUDE_SONNET } from '@/lib/models';
 import type { User, Prisma } from '@prisma/client';
@@ -182,9 +182,7 @@ Rules:
           (intel.antiSignals as any[]) || [],
         );
         if (score) {
-          matchScore = score.source === 'vector'
-            ? await normalizeSingleVectorScore(score.overallScore, user.id)
-            : score.overallScore;
+          matchScore = score.overallScore;
           matchBreakdown = score.breakdown;
         }
       }
@@ -193,9 +191,9 @@ Rules:
     }
   }
 
-  // Normalize existing saved score
+  // Use existing saved score as-is (raw cosine×100)
   if (savedPlace?.matchScore && !matchBreakdown) {
-    matchScore = await normalizeSingleVectorScore(savedPlace.matchScore, user.id);
+    matchScore = savedPlace.matchScore;
   }
 
   // ─── Step 5: Build response ─────────────────────────────────────────────

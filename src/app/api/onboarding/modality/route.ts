@@ -1,4 +1,9 @@
 /**
+ * @deprecated This route is not called by any frontend component. Modality phases
+ * (cards, visual, slider, swipe, spectrum) use client-side addSignals() which
+ * accumulates in Zustand, and signals are persisted to TasteNode by /api/onboarding/extract.
+ * This route and its sub-routes (card, slider, swipe, spectrum) can be safely removed.
+ *
  * POST /api/onboarding/modality
  *
  * Unified modality-specific signal processing for non-voice onboarding interactions.

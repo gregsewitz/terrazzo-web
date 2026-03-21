@@ -53,7 +53,10 @@ async function loadUserData() {
     // Load profile data from DB — DB is the source of truth for all taste data.
     // localStorage is only used for in-progress onboarding session state (phase progress,
     // messages accumulated during the current session before they're saved to DB).
-    const profile = await apiFetch<{ user: Record<string, unknown> }>('/api/profile/mine');
+    const [profile, signalsData] = await Promise.all([
+      apiFetch<{ user: Record<string, unknown> }>('/api/profile/mine'),
+      apiFetch<{ signals: Array<{ tag: string; cat: string; confidence: number }> }>('/api/signals/mine').catch(() => ({ signals: [] })),
+    ]);
     if (profile.user) {
       const onboarding = useOnboardingStore.getState();
       const updates: Record<string, unknown> = {};
@@ -75,7 +78,8 @@ async function loadUserData() {
 
       // DB wins for all persisted taste data
       if (profile.user.lifeContext) updates.lifeContext = profile.user.lifeContext;
-      if (profile.user.allSignals) updates.allSignals = profile.user.allSignals;
+      // Hydrate signals from TasteNode table (canonical store) via /api/signals/mine
+      if (signalsData.signals?.length) updates.allSignals = signalsData.signals;
       if (profile.user.allContradictions) updates.allContradictions = profile.user.allContradictions;
       if (profile.user.seedTrips) updates.seedTrips = profile.user.seedTrips;
       if (profile.user.trustedSources) updates.trustedSources = profile.user.trustedSources;

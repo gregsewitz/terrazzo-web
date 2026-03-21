@@ -66,7 +66,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         currentPhaseProgress: state.currentPhaseProgress,
         onboardingDepth: state.onboardingDepth,
         certainties: state.certainties,
-        allSignals: state.allSignals,
+        allSignals: state.allSignals, // @deprecated — in-session only; TasteNode is canonical store
         allMessages: state.allMessages,
         allContradictions: state.allContradictions,
         sustainabilitySignals: state.sustainabilitySignals,

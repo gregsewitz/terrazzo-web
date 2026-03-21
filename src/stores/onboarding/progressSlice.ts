@@ -161,7 +161,7 @@ export const createProgressSlice: StateCreator<OnboardingState, [], [], Onboardi
     const payload = {
       tasteProfile: state.generatedProfile,
       lifeContext: state.lifeContext,
-      allSignals: state.allSignals,
+      allSignals: state.allSignals, // @deprecated — kept for backward compat; TasteNode is canonical
       allMessages: state.allMessages,
       allContradictions: state.allContradictions,
       sustainabilitySignals: state.sustainabilitySignals,

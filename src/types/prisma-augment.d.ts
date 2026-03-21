@@ -17,6 +17,7 @@ declare module '@prisma/client' {
     authProvider: string;
     tasteProfile: any;
     lifeContext: any;
+    /** @deprecated TasteNode table is now the canonical signal store. Use /api/signals/mine or prisma.tasteNode instead. */
     allSignals: any;
     allContradictions: any;
     seedTrips: any;

@@ -1,4 +1,6 @@
 /**
+ * @deprecated Not called by any frontend component. See /api/onboarding/modality/route.ts.
+ *
  * POST /api/onboarding/modality/swipe
  *
  * Swipe signal extraction: right (like) → confidence 0.8, left (pass) → confidence 0.2.
