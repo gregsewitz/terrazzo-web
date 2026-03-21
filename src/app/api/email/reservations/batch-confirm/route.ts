@@ -29,10 +29,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { reservationIds, tripLinks = {}, ratings = {} } = body as {
+    const { reservationIds, tripLinks = {}, ratings = {}, collectionLinks = {} } = body as {
       reservationIds: string[];
       tripLinks: Record<string, { tripId: string; dayNumber?: number; slotId?: string }>;
       ratings: Record<string, ReactionId>;
+      collectionLinks: Record<string, string>; // reservationId → collectionId
     };
 
     if (!reservationIds?.length) {
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const savedPlaceIds: string[] = [];
+    const reservationToSavedPlace: Record<string, string> = {}; // reservationId → savedPlaceId
     const errors: Array<{ id: string; error: string }> = [];
     let enrichmentTriggered = 0;
 
@@ -68,6 +70,8 @@ export async function POST(request: NextRequest) {
       status: 'available';
       dayNumber?: number;
       slotId?: string;
+      reservationDate?: string; // ISO date for day matching
+      reservationTime?: string; // "HH:mm" for slot matching
     }>> = {};
 
     // Process each reservation
@@ -130,8 +134,7 @@ export async function POST(request: NextRequest) {
                     year: 'numeric',
                   })
                 : undefined,
-              importSources: [sourceEntry],
-              userContext: buildUserContext(reservation),
+              importSources: [{ ...sourceEntry, bookingDetails: buildUserContext(reservation) || undefined }],
               ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
             },
             update: {
@@ -176,8 +179,7 @@ export async function POST(request: NextRequest) {
                       year: 'numeric',
                     })
                   : undefined,
-                importSources: [sourceEntry],
-                userContext: buildUserContext(reservation),
+                importSources: [{ ...sourceEntry, bookingDetails: buildUserContext(reservation) || undefined }],
                 ...(ratingData ? { rating: ratingData as unknown as Prisma.InputJsonValue } : {}),
               },
             });
@@ -185,6 +187,7 @@ export async function POST(request: NextRequest) {
         }
 
         savedPlaceIds.push(savedPlace.id);
+        reservationToSavedPlace[reservation.id] = savedPlace.id;
 
         // 4. Update EmailReservation status
         await prisma.emailReservation.update({
@@ -219,6 +222,8 @@ export async function POST(request: NextRequest) {
             status: 'available' as const,
             dayNumber: tripLink.dayNumber,
             slotId: tripLink.slotId,
+            reservationDate: reservation.reservationDate?.toISOString() || reservation.checkInDate?.toISOString() || undefined,
+            reservationTime: reservation.reservationTime || reservation.departureTime || undefined,
           });
         }
 
@@ -237,7 +242,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 7. Add items to trip pools (batch per trip)
+    // 7. Add items to trip — place into day grid when possible, otherwise pool
     for (const [tripId, items] of Object.entries(tripPoolItems)) {
       try {
         const trip = await prisma.trip.findFirst({
@@ -247,39 +252,49 @@ export async function POST(request: NextRequest) {
 
         if (trip) {
           const existingPool = (trip.pool as unknown[] || []) as Array<Record<string, unknown>>;
+          const days = (trip.days as unknown[] || []) as Array<{
+            dayNumber: number;
+            date?: string;
+            slots: Array<{
+              id: string;
+              label: string;
+              time: string;
+              places: Array<Record<string, unknown>>;
+              quickEntries?: unknown[];
+              ghostItems?: unknown[];
+            }>;
+          }>;
 
-          // Also check placed items in trip days for dedup
-          const days = (trip.days as unknown[] || []) as Array<{ places?: Array<Record<string, unknown>> }>;
+          // Build dedup sets from placed items across all day slots
           const placedGoogleIds = new Set<string>();
           const placedLibraryIds = new Set<string>();
           const placedNames = new Set<string>();
           for (const day of days) {
-            for (const p of (day.places || [])) {
-              if (p.googlePlaceId) placedGoogleIds.add(p.googlePlaceId as string);
-              if (p.libraryPlaceId) placedLibraryIds.add(p.libraryPlaceId as string);
-              if (p.name) placedNames.add((p.name as string).toLowerCase());
+            for (const slot of (day.slots || [])) {
+              for (const p of (slot.places || [])) {
+                if (p.googlePlaceId) placedGoogleIds.add(p.googlePlaceId as string);
+                if (p.libraryPlaceId) placedLibraryIds.add(p.libraryPlaceId as string);
+                if (p.name) placedNames.add((p.name as string).toLowerCase());
+              }
             }
           }
 
-          // Dedup: skip items already in pool or placed on a day
+          // Dedup sets from pool
           const poolGoogleIds = new Set(existingPool.map(p => p.googlePlaceId).filter(Boolean) as string[]);
           const poolLibraryIds = new Set(existingPool.map(p => p.libraryPlaceId).filter(Boolean) as string[]);
           const poolNames = new Set(existingPool.map(p => (p.name as string || '').toLowerCase()).filter(Boolean));
 
           const dedupedItems = items.filter(item => {
-            // Check by googlePlaceId first (strongest match)
             if (item.googlePlaceId) {
               if (poolGoogleIds.has(item.googlePlaceId) || placedGoogleIds.has(item.googlePlaceId)) {
                 console.log(`[batch-confirm] Skipping "${item.name}" — already in trip (googlePlaceId match)`);
                 return false;
               }
             }
-            // Check by libraryPlaceId
             if (poolLibraryIds.has(item.libraryPlaceId) || placedLibraryIds.has(item.libraryPlaceId)) {
               console.log(`[batch-confirm] Skipping "${item.name}" — already in trip (libraryPlaceId match)`);
               return false;
             }
-            // Fallback: check by name
             if (poolNames.has(item.name.toLowerCase()) || placedNames.has(item.name.toLowerCase())) {
               console.log(`[batch-confirm] Skipping "${item.name}" — already in trip (name match)`);
               return false;
@@ -288,11 +303,79 @@ export async function POST(request: NextRequest) {
           });
 
           if (dedupedItems.length > 0) {
-            const newPool = [...existingPool, ...dedupedItems];
-            await prisma.trip.update({
-              where: { id: tripId },
-              data: { pool: newPool as unknown as Prisma.InputJsonValue },
-            });
+            // Build a date→dayIndex map for matching reservation dates to trip days
+            const dateToDayIdx = new Map<string, number>();
+            for (let i = 0; i < days.length; i++) {
+              if (days[i].date) {
+                // Normalize to YYYY-MM-DD
+                const dateStr = days[i].date!.split('T')[0];
+                dateToDayIdx.set(dateStr, i);
+              }
+            }
+
+            const poolItems: Array<Record<string, unknown>> = [];
+            let daysModified = false;
+
+            for (const item of dedupedItems) {
+              let placed = false;
+
+              // Try to place into the correct day/slot if we have a reservation date
+              if (item.reservationDate && dateToDayIdx.size > 0) {
+                const itemDate = item.reservationDate.split('T')[0];
+                const dayIdx = dateToDayIdx.get(itemDate);
+
+                if (dayIdx !== undefined && days[dayIdx].slots?.length > 0) {
+                  // Determine the best slot based on reservation time + place type
+                  const slotId = inferSlotId(item.reservationTime || null, item.type);
+                  const slotIdx = days[dayIdx].slots.findIndex(s => s.id === slotId);
+                  const targetSlot = slotIdx >= 0 ? slotIdx : 0;
+
+                  // Build an ImportedPlace-compatible object
+                  const placeEntry = {
+                    id: item.id,
+                    name: item.name,
+                    type: item.type,
+                    location: item.location,
+                    googlePlaceId: item.googlePlaceId || undefined,
+                    libraryPlaceId: item.libraryPlaceId,
+                    source: item.source,
+                    matchScore: 0,
+                    matchBreakdown: {},
+                    status: 'available',
+                    intentStatus: 'booked',
+                    placedIn: { day: days[dayIdx].dayNumber, slot: days[dayIdx].slots[targetSlot].id },
+                    ...(item.reservationTime ? { specificTime: item.reservationTime, specificTimeLabel: 'Reservation' } : {}),
+                  };
+
+                  days[dayIdx].slots[targetSlot].places.push(placeEntry as unknown as Record<string, unknown>);
+                  daysModified = true;
+                  placed = true;
+                  console.log(`[batch-confirm] Placed "${item.name}" into day ${days[dayIdx].dayNumber}, slot ${days[dayIdx].slots[targetSlot].id}`);
+                }
+              }
+
+              // If not placed into a day, add to pool
+              if (!placed) {
+                const { reservationDate: _rd, reservationTime: _rt, ...poolItem } = item;
+                poolItems.push(poolItem);
+              }
+            }
+
+            // Build the update data
+            const updateData: Record<string, unknown> = {};
+            if (poolItems.length > 0) {
+              updateData.pool = [...existingPool, ...poolItems] as unknown as Prisma.InputJsonValue;
+            }
+            if (daysModified) {
+              updateData.days = days as unknown as Prisma.InputJsonValue;
+            }
+
+            if (Object.keys(updateData).length > 0) {
+              await prisma.trip.update({
+                where: { id: tripId },
+                data: updateData,
+              });
+            }
           }
         }
       } catch (err) {
@@ -301,7 +384,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 8. Fire-and-forget: generate taste fields for all newly created places
+    // 8. Add places to collections (per-reservation collection links)
+    if (Object.keys(collectionLinks).length > 0) {
+      // Group savedPlaceIds by collectionId
+      const collectionPlaceGroups: Record<string, string[]> = {};
+      for (const [resId, colId] of Object.entries(collectionLinks)) {
+        const spId = reservationToSavedPlace[resId];
+        if (!spId) continue;
+        if (!collectionPlaceGroups[colId]) collectionPlaceGroups[colId] = [];
+        collectionPlaceGroups[colId].push(spId);
+      }
+
+      // Batch-update each collection
+      for (const [collectionId, placeIdsToAdd] of Object.entries(collectionPlaceGroups)) {
+        try {
+          const collection = await prisma.shortlist.findFirst({
+            where: { id: collectionId, userId: user.id },
+            select: { id: true, placeIds: true },
+          });
+          if (collection) {
+            const existing = Array.isArray(collection.placeIds) ? collection.placeIds as string[] : [];
+            const merged = [...new Set([...existing, ...placeIdsToAdd])];
+            await prisma.shortlist.update({
+              where: { id: collectionId },
+              data: { placeIds: merged },
+            });
+          }
+        } catch (err) {
+          console.error(`[batch-confirm] Failed to add places to collection ${collectionId}:`, err);
+        }
+      }
+    }
+
+    // 9. Fire-and-forget: generate taste fields for all newly created places
     if (savedPlaceIds.length > 0) {
       const newlyCreated = await prisma.savedPlace.findMany({
         where: { id: { in: savedPlaceIds } },
@@ -331,6 +446,33 @@ export async function POST(request: NextRequest) {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Infer the best time slot for a reservation based on its time and place type.
+ * Slots: breakfast | morning | lunch | afternoon | dinner | evening
+ */
+function inferSlotId(time: string | null, placeType: string): string {
+  // If we have a specific time, use it directly
+  if (time) {
+    const [h] = time.split(':').map(Number);
+    if (h < 10) return 'breakfast';
+    if (h < 12) return 'morning';
+    if (h < 14) return 'lunch';
+    if (h < 17) return 'afternoon';
+    if (h < 21) return 'dinner';
+    return 'evening';
+  }
+
+  // Fall back to place type heuristics
+  const t = placeType.toLowerCase();
+  if (t === 'hotel' || t === 'accommodation' || t === 'rental') return 'afternoon'; // check-in
+  if (t === 'flight') return 'morning'; // default for flights
+  if (t === 'restaurant') return 'dinner'; // most restaurant bookings are dinner
+  if (t === 'bar') return 'evening';
+  if (t === 'cafe' || t === 'coffee') return 'morning';
+  if (t === 'activity' || t === 'tour' || t === 'experience') return 'morning';
+  return 'afternoon'; // generic fallback
+}
 
 function buildUserContext(reservation: {
   placeType: string;

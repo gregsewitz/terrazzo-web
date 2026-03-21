@@ -5,7 +5,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { ReservationRow } from './ReservationRow';
 import type { TripGroupData, StagedReservation } from '@/lib/email-reservations-helpers';
-import type { TripOption } from '@/hooks/useEmailReservations';
+import type { TripOption, CollectionOption } from '@/hooks/useEmailReservations';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -160,6 +160,65 @@ function InlineTripPicker({ trips, onPick, onCancel }: InlineTripPickerProps) {
   );
 }
 
+// ─── Inline Collection Picker ────────────────────────────────────────────
+
+interface InlineCollectionPickerProps {
+  collections: CollectionOption[];
+  onPick: (col: CollectionOption) => void;
+  onCancel: () => void;
+}
+
+function InlineCollectionPicker({ collections, onPick, onCancel }: InlineCollectionPickerProps) {
+  return (
+    <div
+      style={{
+        background: 'rgba(238,113,109,0.03)',
+        borderBottom: '1px solid var(--t-linen)',
+      }}
+    >
+      <div className="flex items-center justify-between px-3 pt-2 pb-1">
+        <span className="text-[9px] font-medium" style={{ color: TEXT.secondary }}>
+          Add to collection
+        </span>
+        <button
+          onClick={onCancel}
+          className="text-[9px] bg-transparent border-none cursor-pointer"
+          style={{ color: TEXT.secondary }}
+        >
+          Cancel
+        </button>
+      </div>
+      <div className="max-h-[160px] overflow-y-auto px-1.5 pb-1.5" style={{ scrollbarWidth: 'thin' }}>
+        {collections.map((col) => (
+          <button
+            key={col.id}
+            onClick={() => onPick(col)}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left border-none cursor-pointer transition-all"
+            style={{ background: 'transparent' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(238,113,109,0.06)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+          >
+            <PerriandIcon name="discover" size={11} color={INK['40']} />
+            <div className="flex-1 min-w-0">
+              <span className="text-[10px] font-medium truncate block" style={{ color: TEXT.primary }}>
+                {col.name}
+              </span>
+              <span className="text-[8px]" style={{ color: TEXT.secondary }}>
+                {col.placeCount} place{col.placeCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </button>
+        ))}
+        {collections.length === 0 && (
+          <div className="px-3 py-2 text-[9px]" style={{ color: TEXT.secondary }}>
+            No collections yet
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 type UnmatchedMode = 'idle' | 'pick-all' | 'create';
@@ -183,6 +242,14 @@ interface TripGroupProps {
   onAssignReservationToTrip?: (reservationId: string, tripId: string, tripName: string) => void;
   /** Remove a single reservation's trip assignment */
   onRemoveReservationTrip?: (reservationId: string) => void;
+  /** Available collections for per-reservation assignment */
+  collections?: CollectionOption[];
+  /** Per-reservation collection assignments */
+  perReservationCollections?: Map<string, { collectionId: string; collectionName: string }>;
+  /** Assign a single reservation to a collection */
+  onAssignReservationToCollection?: (reservationId: string, collectionId: string, collectionName: string) => void;
+  /** Remove a single reservation's collection assignment */
+  onRemoveReservationCollection?: (reservationId: string) => void;
 }
 
 export const TripGroup = React.memo(function TripGroup({
@@ -200,6 +267,10 @@ export const TripGroup = React.memo(function TripGroup({
   perReservationTrips = new Map(),
   onAssignReservationToTrip,
   onRemoveReservationTrip,
+  collections = [],
+  perReservationCollections = new Map(),
+  onAssignReservationToCollection,
+  onRemoveReservationCollection,
 }: TripGroupProps) {
   const isMatched = group.tripId !== null;
   const placeCount = group.reservations.length;
@@ -209,8 +280,9 @@ export const TripGroup = React.memo(function TripGroup({
   const [tripName, setTripName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Per-reservation trip picker — which reservation's picker is open
+  // Per-reservation pickers — which reservation's picker is open and which type
   const [activePickerResId, setActivePickerResId] = useState<string | null>(null);
+  const [activePickerType, setActivePickerType] = useState<'trip' | 'collection'>('trip');
 
   // Auto-focus input when entering create mode
   useEffect(() => {
@@ -265,6 +337,12 @@ export const TripGroup = React.memo(function TripGroup({
   const handlePickTripForReservation = (trip: TripOption) => {
     if (!onAssignReservationToTrip || !activePickerResId) return;
     onAssignReservationToTrip(activePickerResId, trip.id, trip.name);
+    setActivePickerResId(null);
+  };
+
+  const handlePickCollectionForReservation = (col: CollectionOption) => {
+    if (!onAssignReservationToCollection || !activePickerResId) return;
+    onAssignReservationToCollection(activePickerResId, col.id, col.name);
     setActivePickerResId(null);
   };
 
@@ -590,10 +668,11 @@ export const TripGroup = React.memo(function TripGroup({
         </div>
       )}
 
-      {/* Reservation rows — with per-reservation trip assignment for unmatched groups */}
+      {/* Reservation rows — with per-reservation trip + collection assignment */}
       {group.reservations.map((r, idx) => {
-        const assignment = perReservationTrips.get(r.id);
-        const isUnmatched = !isMatched;
+        const tripAssignment = perReservationTrips.get(r.id);
+        const colAssignment = perReservationCollections.get(r.id);
+        const isPickerOpen = activePickerResId === r.id;
 
         return (
           <React.Fragment key={r.id}>
@@ -601,21 +680,46 @@ export const TripGroup = React.memo(function TripGroup({
               reservation={r}
               isSelected={selectedIds.has(r.id)}
               onToggle={() => onToggleSelect(r.id)}
-              isLast={idx === group.reservations.length - 1 && activePickerResId !== r.id}
-              // Per-reservation trip assignment (only for unmatched groups)
-              assignedTripName={isUnmatched ? assignment?.tripName : undefined}
-              onTripPillClick={isUnmatched && onAssignReservationToTrip ? () => {
-                setActivePickerResId(prev => prev === r.id ? null : r.id);
+              isLast={idx === group.reservations.length - 1 && !isPickerOpen}
+              // Per-reservation trip assignment (unmatched groups only)
+              assignedTripName={!isMatched ? tripAssignment?.tripName : undefined}
+              onTripPillClick={!isMatched && onAssignReservationToTrip ? () => {
+                if (activePickerResId === r.id && activePickerType === 'trip') {
+                  setActivePickerResId(null);
+                } else {
+                  setActivePickerResId(r.id);
+                  setActivePickerType('trip');
+                }
               } : undefined}
-              onRemoveTripAssignment={isUnmatched && assignment && onRemoveReservationTrip ? () => {
+              onRemoveTripAssignment={!isMatched && tripAssignment && onRemoveReservationTrip ? () => {
                 onRemoveReservationTrip(r.id);
               } : undefined}
+              // Per-reservation collection assignment (all groups)
+              assignedCollectionName={colAssignment?.collectionName}
+              onCollectionPillClick={onAssignReservationToCollection ? () => {
+                if (activePickerResId === r.id && activePickerType === 'collection') {
+                  setActivePickerResId(null);
+                } else {
+                  setActivePickerResId(r.id);
+                  setActivePickerType('collection');
+                }
+              } : undefined}
+              onRemoveCollectionAssignment={colAssignment && onRemoveReservationCollection ? () => {
+                onRemoveReservationCollection(r.id);
+              } : undefined}
             />
-            {/* Inline trip picker — appears below the active row */}
-            {activePickerResId === r.id && (
+            {/* Inline picker — appears below the active row */}
+            {isPickerOpen && activePickerType === 'trip' && (
               <InlineTripPicker
                 trips={perResScoredTrips}
                 onPick={handlePickTripForReservation}
+                onCancel={() => setActivePickerResId(null)}
+              />
+            )}
+            {isPickerOpen && activePickerType === 'collection' && (
+              <InlineCollectionPicker
+                collections={collections}
+                onPick={handlePickCollectionForReservation}
                 onCancel={() => setActivePickerResId(null)}
               />
             )}

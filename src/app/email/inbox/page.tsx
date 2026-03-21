@@ -35,8 +35,9 @@ export default function EmailReservationsPage() {
     creatingTrip,
     existingTrips,
     collections,
-    selectedCollectionId,
-    creatingCollection,
+    perReservationCollections,
+    assignReservationToCollection,
+    removeReservationCollection,
     error,
     selectedCount,
     switchTab,
@@ -53,8 +54,6 @@ export default function EmailReservationsPage() {
     perReservationTrips,
     assignReservationToTrip,
     removeReservationTrip,
-    selectCollection,
-    createCollectionInline,
     importSelected,
     dismissSelected,
   } = useEmailReservations();
@@ -152,6 +151,10 @@ export default function EmailReservationsPage() {
                 perReservationTrips={perReservationTrips}
                 onAssignReservationToTrip={assignReservationToTrip}
                 onRemoveReservationTrip={removeReservationTrip}
+                collections={collections}
+                perReservationCollections={perReservationCollections}
+                onAssignReservationToCollection={assignReservationToCollection}
+                onRemoveReservationCollection={removeReservationCollection}
               />
             )}
 
@@ -183,11 +186,6 @@ export default function EmailReservationsPage() {
           importing={importing}
           onImport={importSelected}
           onDismiss={dismissSelected}
-          collections={collections}
-          selectedCollectionId={selectedCollectionId}
-          onSelectCollection={selectCollection}
-          onCreateCollection={createCollectionInline}
-          creatingCollection={creatingCollection}
         />
       )}
     </div>

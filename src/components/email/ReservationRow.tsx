@@ -40,6 +40,12 @@ interface ReservationRowProps {
   onTripPillClick?: () => void;
   /** Remove this reservation's trip assignment */
   onRemoveTripAssignment?: () => void;
+  /** Collection name if this reservation has been individually assigned */
+  assignedCollectionName?: string;
+  /** Open the collection picker for this reservation */
+  onCollectionPillClick?: () => void;
+  /** Remove this reservation's collection assignment */
+  onRemoveCollectionAssignment?: () => void;
 }
 
 export const ReservationRow = React.memo(function ReservationRow({
@@ -53,6 +59,9 @@ export const ReservationRow = React.memo(function ReservationRow({
   assignedTripName,
   onTripPillClick,
   onRemoveTripAssignment,
+  assignedCollectionName,
+  onCollectionPillClick,
+  onRemoveCollectionAssignment,
 }: ReservationRowProps) {
   const icon = TYPE_ICONS[r.placeType] || 'discover';
   const details = formatCompactDetails(r);
@@ -141,6 +150,48 @@ export const ReservationRow = React.memo(function ReservationRow({
             >
               <PerriandIcon name="trips" size={9} color={INK['30']} />
               <span className="text-[9px] font-medium">Trip</span>
+            </button>
+          )
+        )}
+
+        {/* Collection assignment pill */}
+        {onCollectionPillClick && (
+          assignedCollectionName ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 border-none cursor-default max-w-[120px]"
+              style={{ background: 'rgba(238,113,109,0.08)' }}
+            >
+              <PerriandIcon name="discover" size={9} color="var(--t-coral)" />
+              <span
+                className="text-[9px] font-medium truncate"
+                style={{ color: 'var(--t-coral)' }}
+              >
+                {assignedCollectionName}
+              </span>
+              {onRemoveCollectionAssignment && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); onRemoveCollectionAssignment(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onRemoveCollectionAssignment(); } }}
+                  className="cursor-pointer ml-0.5 flex-shrink-0"
+                  style={{ color: 'var(--t-coral)', opacity: 0.5 }}
+                >
+                  ✕
+                </span>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onCollectionPillClick(); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 border-none cursor-pointer transition-all"
+              style={{ background: INK['06'], color: TEXT.secondary }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(238,113,109,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = INK['06']; }}
+            >
+              <PerriandIcon name="discover" size={9} color={INK['30']} />
+              <span className="text-[9px] font-medium">Collection</span>
             </button>
           )
         )}

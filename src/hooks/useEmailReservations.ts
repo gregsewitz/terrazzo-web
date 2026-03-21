@@ -22,6 +22,7 @@ interface BatchConfirmPayload {
   reservationIds: string[];
   tripLinks: Record<string, { tripId: string; dayNumber?: number; slotId?: string }>;
   ratings: Record<string, ReactionId>;
+  collectionLinks: Record<string, string>; // reservationId → collectionId
 }
 
 interface BatchConfirmResponse {
@@ -80,6 +81,8 @@ export function useEmailReservations() {
 
   // Per-reservation trip assignments (reservationId → { tripId, tripName })
   const [perReservationTrips, setPerReservationTrips] = useState<Map<string, { tripId: string; tripName: string }>>(new Map());
+  // Per-reservation collection assignments (reservationId → { collectionId, collectionName })
+  const [perReservationCollections, setPerReservationCollections] = useState<Map<string, { collectionId: string; collectionName: string }>>(new Map());
 
   // ── Fetch ──────────────────────────────────────────────────────────────
 
@@ -394,6 +397,35 @@ export function useEmailReservations() {
     });
   }, []);
 
+  /** Assign a single reservation to a collection */
+  const assignReservationToCollection = useCallback((
+    reservationId: string,
+    collectionId: string,
+    collectionName: string,
+  ) => {
+    setPerReservationCollections(prev => {
+      const next = new Map(prev);
+      next.set(reservationId, { collectionId, collectionName });
+      return next;
+    });
+    // Auto-select the reservation for import
+    setSelectedIds(prev => {
+      if (prev.has(reservationId)) return prev;
+      const next = new Set(prev);
+      next.add(reservationId);
+      return next;
+    });
+  }, []);
+
+  /** Remove a single reservation's collection assignment */
+  const removeReservationCollection = useCallback((reservationId: string) => {
+    setPerReservationCollections(prev => {
+      const next = new Map(prev);
+      next.delete(reservationId);
+      return next;
+    });
+  }, []);
+
   // ── Batch actions ──────────────────────────────────────────────────────
 
   const importSelected = useCallback(async () => {
@@ -439,6 +471,14 @@ export function useEmailReservations() {
         }
       }
 
+      // Build collection links payload (per-reservation)
+      const collectionLinksPayload: Record<string, string> = {};
+      for (const [resId, { collectionId }] of perReservationCollections) {
+        if (selectedIds.has(resId)) {
+          collectionLinksPayload[resId] = collectionId;
+        }
+      }
+
       const filteredIds = Array.from(selectedIds).filter(id => visibleIds.has(id));
       if (filteredIds.length === 0) {
         setError('No places selected to import');
@@ -449,6 +489,7 @@ export function useEmailReservations() {
         reservationIds: filteredIds,
         tripLinks: tripLinksPayload,
         ratings: ratingsPayload,
+        collectionLinks: collectionLinksPayload,
       };
 
       const result = await apiFetch<BatchConfirmResponse>(
@@ -456,32 +497,12 @@ export function useEmailReservations() {
         { method: 'POST', body: JSON.stringify(payload) }
       );
 
-      // Add saved places to selected collection (if any)
-      if (selectedCollectionId && result.savedPlaceIds?.length) {
-        try {
-          // Fetch current placeIds for the collection, then append
-          const colData = await apiFetch<{ collections: Array<{ id: string; placeIds: string[] | unknown }> }>(
-            '/api/collections'
-          );
-          const col = (colData.collections || []).find(c => c.id === selectedCollectionId);
-          const existingPlaceIds = Array.isArray(col?.placeIds) ? col.placeIds as string[] : [];
-          const mergedIds = [...new Set([...existingPlaceIds, ...result.savedPlaceIds])];
-
-          await apiFetch(`/api/collections/${selectedCollectionId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ placeIds: mergedIds }),
-          });
-        } catch (err) {
-          console.error('[import] Failed to add places to collection:', err);
-          // Don't fail the import — collection linking is best-effort
-        }
-      }
-
       // Clear selections and refresh
       setSelectedIds(new Set());
       setRatings(new Map());
       setCreatedTrips([]);
       setPerReservationTrips(new Map());
+      setPerReservationCollections(new Map());
       setSelectedCollectionId(null);
       await fetchReservations();
 
@@ -500,7 +521,7 @@ export function useEmailReservations() {
     } finally {
       setImporting(false);
     }
-  }, [selectedIds, reservations, tripLinkEnabled, ratings, visibleIds, fetchReservations, createdTrips, perReservationTrips, selectedCollectionId]);
+  }, [selectedIds, reservations, tripLinkEnabled, ratings, visibleIds, fetchReservations, createdTrips, perReservationTrips, perReservationCollections]);
 
   const dismissSelected = useCallback(async () => {
     setImporting(true);
@@ -570,6 +591,9 @@ export function useEmailReservations() {
     perReservationTrips,
     assignReservationToTrip,
     removeReservationTrip,
+    perReservationCollections,
+    assignReservationToCollection,
+    removeReservationCollection,
     selectCollection,
     createCollectionInline,
     importSelected,

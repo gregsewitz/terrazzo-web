@@ -4,7 +4,7 @@ import React from 'react';
 import { INK, TEXT } from '@/constants/theme';
 import { TripGroup } from './TripGroup';
 import type { TripGroupData } from '@/lib/email-reservations-helpers';
-import type { TripOption } from '@/hooks/useEmailReservations';
+import type { TripOption, CollectionOption } from '@/hooks/useEmailReservations';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -28,6 +28,11 @@ interface UpcomingTabProps {
   perReservationTrips?: Map<string, { tripId: string; tripName: string }>;
   onAssignReservationToTrip?: (reservationId: string, tripId: string, tripName: string) => void;
   onRemoveReservationTrip?: (reservationId: string) => void;
+  /** Per-reservation collection assignments */
+  collections?: CollectionOption[];
+  perReservationCollections?: Map<string, { collectionId: string; collectionName: string }>;
+  onAssignReservationToCollection?: (reservationId: string, collectionId: string, collectionName: string) => void;
+  onRemoveReservationCollection?: (reservationId: string) => void;
 }
 
 export const UpcomingTab = React.memo(function UpcomingTab({
@@ -49,6 +54,10 @@ export const UpcomingTab = React.memo(function UpcomingTab({
   perReservationTrips = new Map(),
   onAssignReservationToTrip,
   onRemoveReservationTrip,
+  collections = [],
+  perReservationCollections = new Map(),
+  onAssignReservationToCollection,
+  onRemoveReservationCollection,
 }: UpcomingTabProps) {
   if (totalCount === 0) {
     return (
@@ -107,6 +116,10 @@ export const UpcomingTab = React.memo(function UpcomingTab({
             perReservationTrips={perReservationTrips}
             onAssignReservationToTrip={onAssignReservationToTrip}
             onRemoveReservationTrip={onRemoveReservationTrip}
+            collections={collections}
+            perReservationCollections={perReservationCollections}
+            onAssignReservationToCollection={onAssignReservationToCollection}
+            onRemoveReservationCollection={onRemoveReservationCollection}
           />
         ))}
       </div>
