@@ -488,9 +488,8 @@ function buildUserContext(reservation: {
 }): string {
   const parts: string[] = [];
 
-  if (reservation.confirmationNumber) {
-    parts.push(`Confirmation: ${reservation.confirmationNumber}`);
-  }
+  // Note: confirmation numbers are stored in importSources.bookingDetails
+  // for reference but excluded from userContext (which shows on place cards).
   if (reservation.partySize) {
     parts.push(`Party of ${reservation.partySize}`);
   }
