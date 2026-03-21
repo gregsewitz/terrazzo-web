@@ -27,6 +27,7 @@ export interface DBSavedPlace {
   tips?: string[] | null;
   alsoKnownAs?: string | null;
   googleData?: Record<string, unknown> | null;
+  importSources?: unknown[] | null;
   placeIntelligenceId?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;

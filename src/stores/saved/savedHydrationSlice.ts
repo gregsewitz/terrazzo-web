@@ -51,6 +51,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
       intentStatus: dp.intentStatus as ImportedPlace['intentStatus'],
       savedAt: dp.createdAt || undefined,
       importBatchId: dp.importBatchId || undefined,
+      existingImportSources: (dp.importSources || []) as ImportedPlace['existingImportSources'],
       whatToOrder: (dp.intelligence?.whatToOrder || dp.whatToOrder || undefined) as string[] | undefined,
       tips: (dp.intelligence?.tips || dp.tips || undefined) as string[] | undefined,
       alsoKnownAs: dp.intelligence?.alsoKnownAs || dp.alsoKnownAs || undefined,
