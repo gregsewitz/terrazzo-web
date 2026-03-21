@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { authHandler } from '@/lib/api-auth-handler';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { searchPlace, getPlaceById, getPhotoUrl, mapGoogleTypeToPlaceType, priceLevelToString } from '@/lib/places';
-import { normalizeSingleVectorScore } from '@/lib/taste-match-vectors';
+// normalizeSingleVectorScore removed — raw scores used directly
 import { computeTasteScore } from '@/lib/taste-score';
 import { resolveExplanationLabels } from '@/lib/resolve-explanation-labels';
 import type { User, Prisma } from '@prisma/client';
@@ -77,6 +77,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     googleData: true,
     googlePlaceId: true,
     placeIntelligenceId: true,
+    importSources: true,
     deletedAt: true,
   } as const;
 
@@ -177,9 +178,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
         const score = await computeTasteScore(user.id, googlePlaceId, signals, antiSignals);
 
         if (score) {
-          computedMatchScore = score.source === 'vector'
-            ? await normalizeSingleVectorScore(score.overallScore, user.id)
-            : score.overallScore;
+          computedMatchScore = score.overallScore;
           computedMatchBreakdown = score.breakdown;
         }
       } catch (err) {
@@ -215,13 +214,11 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     // Library state
     savedPlaceId: savedPlace?.deletedAt ? null : savedPlace?.id || null,
     isInLibrary: savedPlace ? savedPlace.deletedAt === null : false,
-    matchScore: computedMatchScore
-      || (savedPlace?.matchScore
-        ? await normalizeSingleVectorScore(savedPlace.matchScore, user.id)
-        : null),
+    matchScore: computedMatchScore || savedPlace?.matchScore || null,
     matchBreakdown: savedPlace?.matchBreakdown || computedMatchBreakdown || null,
     matchExplanation: resolveExplanationLabels(savedPlace?.matchExplanation as any) || null,
     tasteNote: savedPlace?.tasteNote || null,
+    importSources: (savedPlace?.importSources as unknown[] || []),
     // Intelligence state
     intelligenceId: intelligenceId || null,
     intelligenceStatus: intelligenceStatus || 'unknown',

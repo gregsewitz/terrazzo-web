@@ -234,6 +234,8 @@ export interface ImportSourceEntry {
   name: string;
   url?: string;
   importedAt: string; // ISO timestamp
+  /** Reservation details from email import (e.g. "Party of 3 · Time: 19:00 · 2 nights") */
+  bookingDetails?: string;
 }
 
 export interface GooglePlaceData {

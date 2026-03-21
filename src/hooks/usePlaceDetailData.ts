@@ -98,6 +98,7 @@ export function usePlaceDetailData(item: ImportedPlace) {
       intelligenceStatus: string;
       savedPlaceId: string | null;
       isInLibrary: boolean;
+      importSources?: Array<Record<string, unknown>>;
     }>('/api/places/resolve', {
       method: 'POST',
       body: JSON.stringify({
@@ -132,6 +133,7 @@ export function usePlaceDetailData(item: ImportedPlace) {
           matchBreakdown: (data.matchBreakdown || prev.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
           matchExplanation: data.matchExplanation || prev.matchExplanation,
           tasteNote: data.tasteNote || prev.tasteNote || '',
+          existingImportSources: (data.importSources || prev.existingImportSources || []) as ImportedPlace['existingImportSources'],
           google,
           location: data.location || prev.location,
           type: (data.type || prev.type) as ImportedPlace['type'],

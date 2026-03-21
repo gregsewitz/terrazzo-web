@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { ImportedPlace, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain } from '@/types';
+import { ImportedPlace, ImportSourceEntry, DOMAIN_COLORS, DOMAIN_ICONS, TasteDomain } from '@/types';
 import { getPlaceImage } from '@/constants/placeImages';
 import { PHOTO_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
@@ -374,6 +374,73 @@ function PlaceDetailContent({
             </button>
           </FadeInSection>
         )}
+
+        {/* Your Visits — reservation history from email imports */}
+        {(() => {
+          const visits = (resolvedItem.existingImportSources || [])
+            .filter((s: ImportSourceEntry) => s.type === 'email' && s.importedAt) as ImportSourceEntry[];
+          if (visits.length === 0) return null;
+
+          // Sort most recent first
+          const sorted = [...visits].sort((a, b) =>
+            new Date(b.importedAt).getTime() - new Date(a.importedAt).getTime()
+          );
+
+          // Determine if visits are upcoming or past
+          const now = new Date();
+
+          return (
+            <FadeInSection delay={0.05} direction="up" distance={14}>
+              <div className="py-4" style={{ borderBottom: `1px solid ${INK['06']}` }}>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2 -mx-1" style={{ background: `${COLOR.periwinkle}14`, color: COLOR.periwinkle, fontFamily: FONT.display, fontSize: 10, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLOR.periwinkle, flexShrink: 0 }} />
+                  <PerriandIcon name="calendar" size={10} color={COLOR.periwinkle} />
+                  Your Visits
+                </div>
+                <div className="flex flex-col gap-2">
+                  {sorted.map((visit, i) => {
+                    const visitDate = new Date(visit.importedAt);
+                    const isPast = visitDate < now;
+                    const dateStr = visitDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: visitDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+                    });
+                    // Extract provider from the "Provider: Subject" name format
+                    const provider = visit.name?.split(':')[0]?.trim() || 'Email';
+
+                    return (
+                      <div key={i} className="flex items-start gap-3 py-1.5" style={{ borderTop: i > 0 ? `1px solid ${INK['04']}` : 'none' }}>
+                        <div className="flex-shrink-0 mt-0.5">
+                          <PerriandIcon
+                            name={isPast ? 'check' : 'calendar'}
+                            size={12}
+                            color={isPast ? COLOR.olive : COLOR.periwinkle}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-[13px] font-medium" style={{ color: TEXT.primary, fontFamily: FONT.sans }}>
+                              {dateStr}
+                            </span>
+                            <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                              via {provider}
+                            </span>
+                          </div>
+                          {visit.bookingDetails && (
+                            <p className="text-[12px] mt-0.5" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
+                              {visit.bookingDetails}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </FadeInSection>
+          );
+        })()}
 
         {/* Why You'll Love It */}
         {item.terrazzoInsight && (

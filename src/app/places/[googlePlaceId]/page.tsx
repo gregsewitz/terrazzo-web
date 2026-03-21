@@ -43,6 +43,7 @@ interface ResolvedPlace {
   } | null;
   intelligenceId: string | null;
   intelligenceStatus: string;
+  importSources?: Array<Record<string, unknown>>;
 }
 
 /**
@@ -76,6 +77,7 @@ function toImportedPlace(resolved: ResolvedPlace): ImportedPlace {
     matchScore: resolved.matchScore || 0,
     matchBreakdown: (resolved.matchBreakdown || {}) as ImportedPlace['matchBreakdown'],
     matchExplanation: resolved.matchExplanation || undefined,
+    existingImportSources: (resolved.importSources || []) as unknown as ImportedPlace['existingImportSources'],
     google,
     status: 'available',
   };
