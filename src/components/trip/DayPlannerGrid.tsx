@@ -284,6 +284,7 @@ function DayPlannerGrid() {
 
       {/* ── DAY COLUMNS ── */}
       {trip.days.map((day) => {
+        const isFirstDay = day.dayNumber === trip.days[0]?.dayNumber;
         const destColor = generateDestColor(day.destination || '');
         const shortDay = isFlexible ? '' : (day.dayOfWeek?.slice(0, 3) || '');
         const dateNum = isFlexible ? day.dayNumber : (day.date?.replace(/\D/g, ' ').trim().split(' ').pop() || day.dayNumber);
@@ -297,6 +298,7 @@ function DayPlannerGrid() {
           <div
             key={day.dayNumber}
             className="day-grid-col"
+            {...(isFirstDay ? { 'data-tour': 'day-columns' } : {})}
             style={{
               width: colWidth,
               minWidth: MIN_COL_W,
@@ -362,6 +364,7 @@ function DayPlannerGrid() {
             {/* ── Column header: day title ── */}
             <div
               className="px-2.5 flex items-center justify-between cursor-pointer gap-2"
+              {...(isFirstDay ? { 'data-tour': 'day-header' } : {})}
               onClick={() => setCurrentDay(day.dayNumber)}
               style={{
                 height: HEADER_H,
@@ -408,6 +411,7 @@ function DayPlannerGrid() {
             {/* ── Column header: context bar (hotel, transport, directions) ── */}
             <div
               className="flex items-center justify-between px-2.5"
+              {...(isFirstDay ? { 'data-tour': 'hotel-button' } : {})}
               style={{
                 height: CONTEXT_BAR_H,
                 background: destColor.bg,
@@ -569,16 +573,23 @@ function DayPlannerGrid() {
               const slot = day.slots.find(s => s.id === slotId);
               if (!slot) return <div key={`s-${day.dayNumber}-${slotId}`} style={{ height: row.height }} />;
 
+              // Tag the first slot of the first day for the guided tour
+              const isFirstSlot = isFirstDay && slotId === SLOT_ORDER[0];
+
               return (
-                <GridCell
+                <div
                   key={`s-${day.dayNumber}-${slotId}`}
-                  dayNumber={day.dayNumber}
-                  slot={slot}
-                  rowHeight={row.height}
-                  colWidth={colWidth}
-                  isDesktop={isDesktop}
-                  onOpenOverlay={handleOpenOverlay}
-                />
+                  {...(isFirstSlot ? { 'data-tour': 'grid-cell' } : {})}
+                >
+                  <GridCell
+                    dayNumber={day.dayNumber}
+                    slot={slot}
+                    rowHeight={row.height}
+                    colWidth={colWidth}
+                    isDesktop={isDesktop}
+                    onOpenOverlay={handleOpenOverlay}
+                  />
+                </div>
               );
             })}
           </div>

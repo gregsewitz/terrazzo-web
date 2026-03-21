@@ -189,6 +189,7 @@ function PicksStrip({
   return (
     <div
       ref={containerRef}
+      data-tour="picks-rail"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}

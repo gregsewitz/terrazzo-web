@@ -43,6 +43,7 @@ const ChatSidebar = lazy(() => import('@/components/chat/ChatSidebar'));
 const ShareSheet = lazy(() => import('@/components/trip/ShareSheet'));
 const TripBriefing = lazy(() => import('@/components/trip/TripBriefing'));
 const TripMapView = lazy(() => import('@/components/trip/TripMapView'));
+const TripPlannerTour = lazy(() => import('@/components/trip/TripPlannerTour'));
 
 // ─── Auto-scroll config for drag near edges ───
 const AUTO_SCROLL_ZONE = 60;   // px from edge where auto-scroll activates
@@ -99,6 +100,7 @@ function TripDetailContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map'>('board');
   const [useGridLayout, setUseGridLayout] = useState(true); // Feature toggle: grid vs legacy board
+  const [showTour, setShowTour] = useState(false); // Force-show tour (retake)
 
   // Picks rail resizable width
   const RAIL_MIN = 220;
@@ -409,6 +411,7 @@ function TripDetailContent() {
             {/* View mode toggle */}
             {trip.status !== 'dreaming' && (
               <div
+                data-tour="view-toggle"
                 className="flex rounded-full overflow-hidden"
                 style={{ border: '1px solid var(--t-navy)', background: INK['04'] }}
               >
@@ -458,6 +461,25 @@ function TripDetailContent() {
               >
                 <PerriandIcon name="plan" size={10} color={useGridLayout ? 'var(--t-dark-teal)' : TEXT.secondary} />
                 {useGridLayout ? 'Grid' : 'Legacy'}
+              </button>
+            )}
+            {/* Retake tour */}
+            {desktopView === 'board' && trip.status !== 'dreaming' && (
+              <button
+                onClick={() => setShowTour(true)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full cursor-pointer"
+                style={{
+                  border: '1px solid var(--t-linen)',
+                  background: INK['04'],
+                  fontFamily: FONT.mono,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: TEXT.secondary,
+                }}
+                title="Take a guided tour of the trip planner"
+              >
+                <PerriandIcon name="discover" size={10} color={TEXT.secondary} />
+                Tour
               </button>
             )}
             {/* Refresh ghosts (dev only) */}
@@ -515,6 +537,7 @@ function TripDetailContent() {
               Share
             </button>
             <button
+              data-tour="ask-terrazzo"
               onClick={() => setChatOpen(true)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer btn-hover"
               style={{
@@ -615,6 +638,16 @@ function TripDetailContent() {
               {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
               <RightPanel />
             </div>
+        )}
+
+        {/* Guided tooltip tour — auto-triggers on first visit to planning view */}
+        {trip.status !== 'dreaming' && desktopView === 'board' && (
+          <Suspense fallback={null}>
+            <TripPlannerTour
+              forceShow={showTour}
+              onComplete={() => setShowTour(false)}
+            />
+          </Suspense>
         )}
 
         {/* Drag overlay — rendered on both desktop and mobile */}
@@ -921,6 +954,16 @@ function TripDetailContent() {
       </div>
 
       {/* (BrowseAllOverlay removed — PicksStrip now expands inline) */}
+
+      {/* Guided tooltip tour — auto-triggers on first visit (mobile) */}
+      {trip.status !== 'dreaming' && viewMode === 'planner' && (
+        <Suspense fallback={null}>
+          <TripPlannerTour
+            forceShow={showTour}
+            onComplete={() => setShowTour(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Drag Overlay rendered in shared section above */}
 

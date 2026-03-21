@@ -125,6 +125,7 @@ function PicksRailInner({
   return (
     <div
       ref={containerRef}
+      data-tour="picks-rail"
       className="flex h-full relative"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

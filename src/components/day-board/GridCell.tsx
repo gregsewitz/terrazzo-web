@@ -349,8 +349,8 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
   }, [totalCount, quickInputOpen, handleOpenOverlay]);
 
   /** Fixed-height wrapper to keep all cards uniform */
-  const cardSlot = (key: string, children: React.ReactNode) => (
-    <div key={key} style={{ height: CARD_H + CARD_GAP, minHeight: CARD_H + CARD_GAP, maxHeight: CARD_H + CARD_GAP, flexShrink: 0 }}>
+  const cardSlot = (key: string, children: React.ReactNode, extraProps?: Record<string, string>) => (
+    <div key={key} {...extraProps} style={{ height: CARD_H + CARD_GAP, minHeight: CARD_H + CARD_GAP, maxHeight: CARD_H + CARD_GAP, flexShrink: 0 }}>
       {children}
     </div>
   );
@@ -403,7 +403,7 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
             onDismiss={() => dismissGhost(dayNumber, slot.id, ghost.id)}
             onClick={() => onTapDetail(ghost)}
           />
-        ));
+        ), { 'data-tour': 'ghost-card' });
       }
 
       // TODO: Re-enable when multiplayer collaboration is ready

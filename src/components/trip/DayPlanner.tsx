@@ -236,6 +236,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
             )}
             {onChat && (
               <button
+                data-tour="ask-terrazzo"
                 onClick={onChat}
                 className="w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center"
                 style={{ background: 'var(--t-ink)', color: 'var(--t-cream)' }}
@@ -299,6 +300,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
 
         {/* View Toggle */}
         <div
+          data-tour="view-toggle"
           className="flex gap-1 mt-2.5 p-0.5 rounded-lg"
           style={{ background: 'var(--t-linen)' }}
         >
@@ -326,14 +328,16 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
       {viewMode === 'planner' && <>
 
       {/* Calendar-style day selector strip */}
-      <DaySelector
-        trip={trip}
-        currentDay={currentDay}
-        setCurrentDay={setCurrentDay}
-        getDestColor={getDestColor}
-        onOpenDayMenu={() => setShowDayContextMenu(true)}
-        onDayLongPress={(dayNum) => { setCurrentDay(dayNum); setShowDayContextMenu(true); }}
-      />
+      <div data-tour="day-header">
+        <DaySelector
+          trip={trip}
+          currentDay={currentDay}
+          setCurrentDay={setCurrentDay}
+          getDestColor={getDestColor}
+          onOpenDayMenu={() => setShowDayContextMenu(true)}
+          onDayLongPress={(dayNum) => { setCurrentDay(dayNum); setShowDayContextMenu(true); }}
+        />
+      </div>
 
       {/* Day context menu — triggered by "..." button or long-press on DaySelector */}
       {showDayContextMenu && (
@@ -357,6 +361,7 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
       )}
 
       {/* Active day context bar — hotel + map toggle */}
+      <div data-tour="hotel-button">
       <DayContextBar
         day={day}
         trip={trip}
@@ -371,23 +376,25 @@ export default function DayPlanner({ viewMode, onSetViewMode, onBack, onShare, o
         editingTransportId={editingTransportId}
         setEditingTransportId={setEditingTransportId}
       />
+      </div>
 
 
       {/* Compact time slots with inter-slot transport banners — swipeable */}
       <div
         ref={swipeRef}
+        data-tour="day-columns"
         className="flex flex-col"
         onTouchStart={handleSwipeStart}
         onTouchMove={handleSwipeMove}
         onTouchEnd={handleSwipeEnd}
       >
-        {day.slots.map((slot) => {
+        {day.slots.map((slot, slotIdx) => {
           // Transport banners that should appear AFTER this slot
           // Always show existing transports, even while adding a new one
           const transportsAfter = getTransportsAfterSlot(day.transport, slot.id);
 
           return (
-            <div key={slot.id}>
+            <div key={slot.id} {...(slotIdx === 0 ? { 'data-tour': 'grid-cell' } : {})}>
               <TimeSlotCard
                 slot={slot}
                 dayNumber={day.dayNumber}
