@@ -2,12 +2,18 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import type { QuickEntry, ImportedPlace } from '@/types';
 
+// Stagger delay between resolution attempts to avoid hammering the API
+const STAGGER_MS = 800;
+
 /**
  * Hook that watches for new quick entries and silently attempts to resolve
  * them into real place cards via the resolve-quick-entry API.
  *
  * Runs as a background process — entries appear instantly, resolution
  * happens async and swaps in when ready.
+ *
+ * Returns `resolveAll()` — a one-shot function that re-attempts resolution
+ * for all existing confirmed quick entries in the current trip.
  */
 export function useQuickEntryResolver() {
   const trips = useTripStore(s => s.trips);
@@ -93,7 +99,6 @@ export function useQuickEntryResolver() {
   useEffect(() => {
     if (!trip) return;
 
-    // Get destination info for location bias
     const destination = trip.destinations?.[0];
     const geo = trip.geoDestinations?.[0];
     const lat = geo?.lat;
@@ -102,7 +107,6 @@ export function useQuickEntryResolver() {
     for (const day of trip.days) {
       for (const slot of day.slots) {
         for (const entry of (slot.quickEntries || [])) {
-          // Only attempt resolution for confirmed entries we haven't tried yet
           if (entry.status === 'confirmed' && !attemptedRef.current.has(entry.id)) {
             attemptResolve(day.dayNumber, slot.id, entry, destination, lat, lng);
           }
@@ -115,4 +119,58 @@ export function useQuickEntryResolver() {
   useEffect(() => {
     attemptedRef.current.clear();
   }, [currentTripId]);
+
+  /**
+   * One-shot: re-attempt resolution for ALL existing confirmed quick entries
+   * in the current trip. Clears the "already attempted" set and staggers
+   * requests so we don't slam the API.
+   */
+  const resolveAll = useCallback(async () => {
+    if (!trip) {
+      console.warn('[resolveAll] No current trip');
+      return;
+    }
+
+    const destination = trip.destinations?.[0];
+    const geo = trip.geoDestinations?.[0];
+    const lat = geo?.lat;
+    const lng = geo?.lng;
+
+    // Collect all confirmed quick entries
+    const entries: Array<{ dayNumber: number; slotId: string; entry: QuickEntry }> = [];
+    for (const day of trip.days) {
+      for (const slot of day.slots) {
+        for (const entry of (slot.quickEntries || [])) {
+          if (entry.status === 'confirmed' || entry.status === 'tentative') {
+            entries.push({ dayNumber: day.dayNumber, slotId: slot.id, entry });
+          }
+        }
+      }
+    }
+
+    if (entries.length === 0) {
+      console.log('[resolveAll] No quick entries to resolve');
+      return;
+    }
+
+    console.log(`[resolveAll] Attempting resolution for ${entries.length} quick entries…`);
+
+    // Clear the attempted set so all entries are eligible
+    attemptedRef.current.clear();
+
+    // Stagger requests to avoid hammering the API
+    for (let i = 0; i < entries.length; i++) {
+      const { dayNumber, slotId, entry } = entries[i];
+      // Force status to confirmed so tentative entries also get resolved
+      if (entry.status === 'tentative') {
+        updateQuickEntry(dayNumber, slotId, entry.id, { status: 'confirmed' });
+      }
+      attemptResolve(dayNumber, slotId, { ...entry, status: 'confirmed' }, destination, lat, lng);
+      if (i < entries.length - 1) {
+        await new Promise(r => setTimeout(r, STAGGER_MS));
+      }
+    }
+  }, [trip, attemptResolve, updateQuickEntry]);
+
+  return { resolveAll };
 }

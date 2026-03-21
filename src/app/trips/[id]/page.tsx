@@ -93,7 +93,12 @@ function TripDetailContent() {
   // Auto-repair missing geoDestination coordinates (geocode destination names)
   useGeoDestinationRepair();
   // Silently resolve free-text quick entries into real place cards
-  useQuickEntryResolver();
+  const { resolveAll: resolveAllQuickEntries } = useQuickEntryResolver();
+  // Expose on window for one-shot console usage: window.resolveAllQuickEntries()
+  useEffect(() => {
+    (window as any).resolveAllQuickEntries = resolveAllQuickEntries;
+    return () => { delete (window as any).resolveAllQuickEntries; };
+  }, [resolveAllQuickEntries]);
   const ghostsInjectedRef = useRef(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
   const [showGraduateModal, setShowGraduateModal] = useState(false);
