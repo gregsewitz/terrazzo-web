@@ -222,7 +222,7 @@ model SavedPlace {
   alsoKnownAs         String?  // e.g. "El Sótano"
 
   // Taste matching
-  matchScore          Int?
+  matchScore          Float?
   matchBreakdown      Json?    // { Design, Character, Service, Food, Location, Wellness }
   matchExplanation    Json?    // { topClusters: [{label, domain, score, signals}], narrative: string }
   tasteNote           String?
@@ -377,7 +377,7 @@ model Place {
   location       String?
   googleData     Json?    // GooglePlaceData
   source         Json     // ImportSource
-  matchScore     Int?
+  matchScore     Float?
   matchBreakdown Json?    // TasteProfile
   tasteNote      String?
   enrichment     Json?    // PlaceEnrichment
