@@ -174,17 +174,31 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   const [sourceFilter, setSourceFilter] = useState<SourceFilterType>('all');
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'source'>('match');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [elsewhereExpanded, setElsewhereExpanded] = useState(false);
+  const [elsewhereExpanded, setElsewhereExpanded] = useState(true);
 
   // Library places geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
+  const activeDay = useTripStore(s => {
+    const trip = s.trips.find(t => t.id === s.currentTripId);
+    return trip?.days.find(d => d.dayNumber === s.currentDay) ?? null;
+  });
   const starredPlaces = useMemo(() => {
     if (!tripDestinations || tripDestinations.length === 0) return [];
     const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
+
+    // Exclude the active day's hotel from the pool — it's already shown in the day header
+    const hotelName = activeDay?.hotelInfo?.name?.toLowerCase();
+    const hotelPlaceId = activeDay?.hotelInfo?.placeId;
+
     return myPlaces.filter(place => {
-      return destLower.some(dest => place.location.toLowerCase().includes(dest));
+      // Geo-filter to trip destinations
+      if (!destLower.some(dest => place.location.toLowerCase().includes(dest))) return false;
+      // Exclude hotel for the active day
+      if (hotelPlaceId && place.google?.placeId === hotelPlaceId) return false;
+      if (hotelName && place.name.toLowerCase() === hotelName) return false;
+      return true;
     });
-  }, [myPlaces, tripDestinations]);
+  }, [myPlaces, tripDestinations, activeDay?.hotelInfo?.name, activeDay?.hotelInfo?.placeId]);
 
   // Apply source filter
   const sourceFiltered = useMemo(() => {
@@ -221,6 +235,12 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
     if (!clusterFilter) return sortedItems;
     return sortedItems.filter(item => clusterFilter.placeIds.has(item.id));
   }, [sortedItems, clusterFilter]);
+
+  // Helper: apply cluster filter to any item list
+  const applyClusterFilter = useCallback(<T extends { id: string }>(items: T[]): T[] => {
+    if (!clusterFilter) return items;
+    return items.filter(item => clusterFilter.placeIds.has(item.id));
+  }, [clusterFilter]);
 
   // Count items by type (for chip badges)
   const typeCounts = useMemo(() => {
@@ -554,7 +574,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
         <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'thin' }}>
           {/* Slot-selected mode: show route-coherence-sorted items */}
           {proximity.mode === 'slot-selected' && proximity.slotScored ? (
-            proximity.slotScored.map(item => {
+            applyClusterFilter(proximity.slotScored).map(item => {
               const label = item.routeCoherence.label;
               return (
                 <PoolItemCard
@@ -569,17 +589,20 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 />
               );
             })
-          ) : proximity.mode === 'day-scoped' && proximity.segmented ? (
+          ) : proximity.mode === 'day-scoped' && proximity.segmented ? (() => {
+            const filteredFits = applyClusterFilter(proximity.segmented.fitsYourDay);
+            const filteredElsewhere = applyClusterFilter(proximity.segmented.elsewhere);
+            return (
             <>
               {/* "Fits your day" section */}
-              {proximity.segmented.fitsYourDay.length > 0 && (
+              {filteredFits.length > 0 && (
                 <>
                   <div className="text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.mono }}>
                     <PerriandIcon name="location" size={10} color="var(--t-dark-teal)" />
                     Fits your day
-                    <span style={{ opacity: 0.6 }}>({proximity.segmented.fitsYourDay.length})</span>
+                    <span style={{ opacity: 0.6 }}>({filteredFits.length})</span>
                   </div>
-                  {proximity.segmented.fitsYourDay.map(item => (
+                  {filteredFits.map(item => (
                     <PoolItemCard
                       key={item.id}
                       item={item}
@@ -594,7 +617,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 </>
               )}
               {/* "Elsewhere" section */}
-              {proximity.segmented.elsewhere.length > 0 && (
+              {filteredElsewhere.length > 0 && (
                 <>
                   <button
                     onClick={() => setElsewhereExpanded(!elsewhereExpanded)}
@@ -602,10 +625,10 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                     style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
                   >
                     Elsewhere{proximity.activeDestination ? ` in ${proximity.activeDestination}` : ''}
-                    <span style={{ opacity: 0.6 }}>({proximity.segmented.elsewhere.length})</span>
+                    <span style={{ opacity: 0.6 }}>({filteredElsewhere.length})</span>
                     <span style={{ fontSize: 8 }}>{elsewhereExpanded ? '\u25BC' : '\u25B6'}</span>
                   </button>
-                  {elsewhereExpanded && proximity.segmented.elsewhere.map(item => (
+                  {elsewhereExpanded && filteredElsewhere.map(item => (
                     <PoolItemCard
                       key={item.id}
                       item={item}
@@ -620,7 +643,8 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                 </>
               )}
             </>
-          ) : (
+            );
+          })() : (
             /* Default / cold-start: show all items without segmentation */
             proximityFiltered.map(item => (
               <PoolItemCard

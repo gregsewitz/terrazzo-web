@@ -216,8 +216,8 @@ function DayPlannerGrid() {
           borderRight: '2px solid var(--t-linen)',
         }}
       >
-        {/* Header spacer (matches day title + context bar) */}
-        <div style={{ height: HEADER_H + CONTEXT_BAR_H, borderBottom: '1px solid var(--t-linen)' }} />
+        {/* Header spacer (matches day title + context bar) — sticky so it stays pinned at the top-left corner */}
+        <div style={{ height: HEADER_H + CONTEXT_BAR_H, borderBottom: '1px solid var(--t-linen)', position: 'sticky', top: 0, zIndex: 30, background: 'white' }} />
 
         {/* Row labels */}
         {rows.map((row, i) => {
@@ -360,6 +360,9 @@ function DayPlannerGrid() {
                 </div>
               )}
             </div>
+
+            {/* ── Column headers (sticky at top during vertical scroll) ── */}
+            <div style={{ position: 'sticky', top: 0, zIndex: 20 }}>
 
             {/* ── Column header: day title ── */}
             <div
@@ -522,6 +525,8 @@ function DayPlannerGrid() {
                 />
               </div>
             )}
+
+            </div>{/* ── end sticky header wrapper ── */}
 
             {/* ── Grid rows ── */}
             {rows.map((row) => {

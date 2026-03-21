@@ -383,16 +383,14 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     });
   }, [dayNumber, slot.id, slot.label, selectSlot]);
 
-  // Click on empty cell: primary action = select slot for proximity browsing
-  // Click on populated cell: opens overlay
+  // Clicking any cell selects the slot for proximity-aware pool browsing.
+  // The SlotOverlay only opens via the explicit "View all" button on overflow cells.
   const handleCellClick = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('[data-grid-card]') || (e.target as HTMLElement).closest('button')) return;
-    if (totalCount === 0 && !quickInputOpen) {
+    if (!quickInputOpen) {
       handleSelectSlot();
-    } else if (totalCount > 0) {
-      handleOpenOverlay();
     }
-  }, [totalCount, quickInputOpen, handleOpenOverlay, handleSelectSlot]);
+  }, [quickInputOpen, handleSelectSlot]);
 
   /** Fixed-height wrapper to keep all cards uniform */
   const cardSlot = (key: string, children: React.ReactNode, extraProps?: Record<string, string>) => (

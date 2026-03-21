@@ -21,8 +21,13 @@ const WALK_MPM = 3 / 60; // 0.05 mi/min
 /** Debounce quiet period before re-sorting pool items (ms) */
 export const SORT_DEBOUNCE_MS = 300;
 
-/** Default cluster radius when not enough placed items to compute adaptive radius */
-const DEFAULT_CLUSTER_RADIUS_MI = 0.5;
+/** Default segmentation radius when fewer than 3 placed items exist.
+ *  2.0mi covers a reasonable urban transit zone — with only 1–2 anchors the user
+ *  wants to see what's reachable, not just what's in the same block. */
+const DEFAULT_CLUSTER_RADIUS_MI = 2.0;
+
+/** Tighter radius for cold-start geographic clustering (no anchors at all) */
+const COLD_START_CLUSTER_RADIUS_MI = 0.5;
 
 /** Larger radius when only hotel is the anchor (no placed items yet) — covers a typical city transit zone */
 const HOTEL_ONLY_RADIUS_MI = 2.0;
@@ -533,7 +538,7 @@ export function computeColdStartClusters(
   // Simple approach: pick seed points greedily, cluster around them
   const used = new Set<string>();
   const clusters: GeoCluster[] = [];
-  const radius = DEFAULT_CLUSTER_RADIUS_MI;
+  const radius = COLD_START_CLUSTER_RADIUS_MI;
 
   // Sort by density (items with most neighbors first) to find good seeds
   const neighborCounts = poolItems.map(item => {
