@@ -29,6 +29,8 @@ export interface TripPlacementState {
   removeQuickEntry: (dayNumber: number, slotId: string, entryId: string) => void;
   confirmQuickEntry: (dayNumber: number, slotId: string, entryId: string) => void;
   updateQuickEntry: (dayNumber: number, slotId: string, entryId: string, updates: Partial<QuickEntry>) => void;
+  /** Atomically swap a quick entry for a resolved ImportedPlace */
+  resolveQuickEntry: (dayNumber: number, slotId: string, entryId: string, resolvedPlace: ImportedPlace) => void;
 }
 
 // ═══════════════════════════════════════════
@@ -596,6 +598,37 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
               }
             : s
         ),
+      }))
+    );
+    const tripId = get().currentTripId;
+    if (tripId) debouncedTripSave(tripId, () => {
+      const t = get().trips.find(tr => tr.id === tripId);
+      return t ? { days: t.days } : {};
+    });
+  },
+
+  resolveQuickEntry: (dayNumber, slotId, entryId, resolvedPlace) => {
+    get().pushSnapshot('Resolve entry');
+    set(state =>
+      updateCurrentTrip(state, trip => ({
+        ...trip,
+        days: mapDaySlots(trip.days, dayNumber, s => {
+          if (s.id !== slotId) return s;
+          const entry = (s.quickEntries || []).find(e => e.id === entryId);
+          if (!entry) return s;
+          // Carry over time from the quick entry onto the resolved place
+          const place: ImportedPlace = {
+            ...resolvedPlace,
+            specificTime: entry.specificTime || resolvedPlace.specificTime,
+            specificTimeLabel: entry.specificTimeLabel || resolvedPlace.specificTimeLabel,
+            status: 'placed',
+          };
+          return {
+            ...s,
+            quickEntries: (s.quickEntries || []).filter(e => e.id !== entryId),
+            places: [...s.places, place],
+          };
+        }),
       }))
     );
     const tripId = get().currentTripId;

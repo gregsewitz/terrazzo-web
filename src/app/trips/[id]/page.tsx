@@ -36,6 +36,7 @@ import GraduateModal from '@/components/profile/GraduateModal';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import EditableTripName from '@/components/trip/EditableTripName';
 import { useGeoDestinationRepair } from '@/hooks/useGeoDestinationRepair';
+import { useQuickEntryResolver } from '@/hooks/useQuickEntryResolver';
 
 // Lazy-loaded components for conditionally rendered views
 const ChatSidebar = lazy(() => import('@/components/chat/ChatSidebar'));
@@ -90,6 +91,8 @@ function TripDetailContent() {
 
   // Auto-repair missing geoDestination coordinates (geocode destination names)
   useGeoDestinationRepair();
+  // Silently resolve free-text quick entries into real place cards
+  useQuickEntryResolver();
   const ghostsInjectedRef = useRef(false);
   const [viewMode, setViewMode] = useState<TripViewMode>('planner');
   const [showGraduateModal, setShowGraduateModal] = useState(false);

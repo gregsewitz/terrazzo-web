@@ -365,6 +365,7 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
       case 'quickEntry': {
         const qe = item.data as import('@/types').QuickEntry;
         const isTentative = qe.status === 'tentative';
+        const isResolving = qe.status === 'resolving';
         const timeDesc = qe.specificTime
           ? `${qe.specificTimeLabel ? `${qe.specificTimeLabel} at ` : ''}${qe.specificTime}`
           : '';
@@ -372,10 +373,10 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
           <GridCard
             variant="quickEntry"
             name={qe.label}
-            typeLabel={qe.category?.toUpperCase()}
-            description={timeDesc || (isTentative ? 'Tentative entry' : undefined)}
+            typeLabel={isResolving ? 'RESOLVING…' : qe.category?.toUpperCase()}
+            description={timeDesc || (isTentative ? 'Tentative entry' : isResolving ? 'Finding place…' : undefined)}
             actionButton={isTentative && confirmQuickEntry ? { label: 'Confirm', onClick: () => confirmQuickEntry(dayNumber, slot.id, qe.id) } : undefined}
-            onDismiss={() => removeQuickEntry(dayNumber, slot.id, qe.id)}
+            onDismiss={isResolving ? undefined : () => removeQuickEntry(dayNumber, slot.id, qe.id)}
           />
         ));
       }

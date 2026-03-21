@@ -18,6 +18,7 @@ interface QuickEntryCardProps {
 
 function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardProps) {
   const isTentative = entry.status === 'tentative';
+  const isResolving = entry.status === 'resolving';
   const iconName = CATEGORY_ICONS[entry.category] || 'pin';
 
   // Category accent colors — subtle, muted
@@ -32,18 +33,20 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
 
   return (
     <div
-      className="mb-1.5 rounded-lg overflow-hidden select-none group/qe"
+      className={`mb-1.5 rounded-lg overflow-hidden select-none group/qe${isResolving ? ' ghost-shimmer' : ''}`}
       onClick={() => {
-        if (onTap) onTap();
+        if (onTap && !isResolving) onTap();
       }}
       style={{
-        background: isTentative ? 'var(--t-cream)' : 'white',
-        border: isTentative
-          ? '1.5px dashed rgba(0,42,85,0.18)'
-          : `1px solid ${accentColor}22`,
+        background: isResolving ? 'rgba(58,128,136,0.04)' : isTentative ? 'var(--t-cream)' : 'white',
+        border: isResolving
+          ? '1px solid rgba(58,128,136,0.15)'
+          : isTentative
+            ? '1.5px dashed rgba(0,42,85,0.18)'
+            : `1px solid ${accentColor}22`,
         opacity: isTentative ? 0.85 : 1,
-        cursor: 'pointer',
-        transition: 'opacity 0.15s, border-color 0.15s',
+        cursor: isResolving ? 'default' : 'pointer',
+        transition: 'opacity 0.15s, border-color 0.15s, background 0.3s',
       }}
     >
       <div className="flex items-center gap-2 px-2.5 py-2">
@@ -93,6 +96,18 @@ function QuickEntryCard({ entry, onRemove, onConfirm, onTap }: QuickEntryCardPro
                 }}
               >
                 MAYBE
+              </span>
+            )}
+            {isResolving && (
+              <span
+                className="text-[8px] font-semibold px-1 py-px rounded flex-shrink-0"
+                style={{
+                  background: 'rgba(58,128,136,0.10)',
+                  color: COLOR.darkTeal,
+                  letterSpacing: 0.3,
+                }}
+              >
+                RESOLVING…
               </span>
             )}
           </div>

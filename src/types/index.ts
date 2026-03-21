@@ -72,6 +72,7 @@ export const SOURCE_STYLES: Record<string, SourceStyle> = {
   file:          { color: COLOR.navy,     bg: INK['06'],                icon: 'manual',    label: 'File Upload' },
   terrazzo:      { color: COLOR.coral,    bg: 'rgba(238,113,109,0.12)', icon: 'terrazzo',  label: 'Terrazzo pick' },
   manual:        { color: COLOR.navy,     bg: INK['06'],                icon: 'manual',    label: 'Added' },
+  quick_entry:   { color: COLOR.darkTeal, bg: 'rgba(58,128,136,0.10)', icon: 'pin',       label: 'Quick Entry' },
 };
 
 /** Default style when source type is unknown */
@@ -214,7 +215,7 @@ export interface CompetitiveContextData {
 
 export type PlaceType = 'restaurant' | 'museum' | 'activity' | 'hotel' | 'rental' | 'neighborhood' | 'bar' | 'cafe' | 'shop';
 
-export type ImportSourceType = 'url' | 'text' | 'google-maps' | 'email' | 'file' | 'terrazzo' | 'manual';
+export type ImportSourceType = 'url' | 'text' | 'google-maps' | 'email' | 'file' | 'terrazzo' | 'manual' | 'quick_entry';
 
 export type PlaceStatus = 'available' | 'placed' | 'rejected';
 
@@ -328,14 +329,14 @@ export interface ImportedPlace {
 // ─── Quick Entry (free-text slot items) ───
 
 export type QuickEntryCategory = 'activity' | 'transport' | 'dining' | 'logistics' | 'other';
-export type QuickEntryStatus = 'confirmed' | 'tentative';
+export type QuickEntryStatus = 'confirmed' | 'tentative' | 'resolving';
 
 export interface QuickEntry {
   id: string;
   text: string;                   // Original user input (preserved for re-parsing)
   label: string;                  // AI-cleaned display name (question mark stripped)
   category: QuickEntryCategory;   // Derived from text content
-  status: QuickEntryStatus;       // 'tentative' if input ended with "?"
+  status: QuickEntryStatus;       // 'tentative' if input ended with "?", 'resolving' during place resolution
   specificTime?: string;          // Extracted time in 24h "HH:mm" format
   specificTimeLabel?: string;     // "Departure", "Pickup", "Reservation", etc.
   notes?: string;                 // Any extra context
