@@ -99,6 +99,11 @@ export default function OnboardingIntro() {
                 I&apos;m going to learn how you see the world when you travel — the details you notice,
                 the places that stuck with you, the things that drive you crazy.
               </p>
+              <p className="text-[14px] leading-relaxed text-[var(--t-navy)]/60">
+                This is longer than a typical quiz — and that&apos;s the point. We&apos;re not asking you
+                to pick &ldquo;beach or mountains.&rdquo; We actually want to understand your specific
+                tastes, memories, and travel dreams. Stick with it to the end — it&apos;s worth it.
+              </p>
               <p className="text-[15px] leading-relaxed text-[var(--t-navy)]/50">
                 Takes about 12 minutes across three acts. You can talk or type — whatever feels natural.
               </p>
