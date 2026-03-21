@@ -89,7 +89,7 @@ export async function backfillUserV3(userId: string): Promise<{ vectorComputed: 
   }));
 
   // Step 1: Compute base taste vector from signals
-  let vector = computeUserTasteVectorV3({
+  let vector = await computeUserTasteVectorV3({
     radarData: profile.radarData,
     microTasteSignals: profile.microTasteSignals || {},
     allSignals: signals.length > 0 ? signals : undefined,
@@ -199,7 +199,7 @@ export async function backfillPropertyEmbeddingV3(placeIntelligenceId: string): 
 
   if (signals.length === 0) return false;
 
-  const embedding = computePropertyEmbeddingV3({ signals, antiSignals });
+  const embedding = await computePropertyEmbeddingV3({ signals, antiSignals });
   const vecSql = vectorToSqlV3(embedding);
 
   await prisma.$executeRawUnsafe(

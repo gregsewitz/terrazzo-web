@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         microTasteSignals[cat].push(sig.tag);
       }
 
-      const vector = computeUserTasteVectorV3({
+      const vector = await computeUserTasteVectorV3({
         radarData,
         microTasteSignals,
         allSignals: signals.map((s) => ({ tag: s.tag, cat: s.cat, confidence: s.confidence })),

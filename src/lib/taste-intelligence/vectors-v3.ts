@@ -297,26 +297,183 @@ export async function lookupSignalClusterAsync(signal: string): Promise<number |
   }
 }
 
+// ─── Semantic embedding cache ────────────────────────────────────────────────
+// Caches signal → cluster mappings discovered via OpenAI embedding so we don't
+// re-embed the same novel signal across multiple vector computations.
+const _semanticClusterCache = new Map<string, number>();
+
+/**
+ * Batch-embed novel signals and find their nearest cluster centroids.
+ * Uses a single OpenAI API call for all signals, then cosine-matches each
+ * against the 400 cluster centroids.
+ *
+ * Returns a Map from normalized signal text → cluster index.
+ */
+async function batchEmbedSignalsToClusters(
+  signals: string[],
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (signals.length === 0) return result;
+
+  const { clusterCentroids } = getClusterState();
+  if (!clusterCentroids) return result;
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return result;
+
+  // Deduplicate and normalize
+  const uniqueSignals = [...new Set(signals.map(s => s.toLowerCase().trim()))];
+
+  // Check cache first, collect uncached
+  const uncached: string[] = [];
+  for (const sig of uniqueSignals) {
+    const cached = _semanticClusterCache.get(sig);
+    if (cached !== undefined) {
+      result.set(sig, cached);
+    } else {
+      uncached.push(sig);
+    }
+  }
+
+  if (uncached.length === 0) return result;
+
+  try {
+    // Batch embed all uncached signals in one API call
+    // OpenAI supports up to 2048 inputs per call
+    const inputs = uncached.map(s => s.replace(/-/g, ' ').replace(/_/g, ' '));
+    const res = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: inputs,
+      }),
+    });
+
+    if (!res.ok) {
+      console.warn(`[vectors-v3] OpenAI embedding batch failed: ${res.status}`);
+      return result;
+    }
+
+    const json = await res.json();
+    const embeddings: Array<{ embedding: number[] }> = json.data;
+
+    // Pre-parse centroids into arrays for efficient repeated comparison
+    const centroidEntries = Object.entries(clusterCentroids).map(([cidStr, centroid]) => ({
+      cid: parseInt(cidStr, 10),
+      centroid,
+      norm: Math.sqrt(centroid.reduce((s, v) => s + v * v, 0)),
+    }));
+
+    for (let i = 0; i < uncached.length; i++) {
+      const embedding = embeddings[i].embedding;
+      const embNorm = Math.sqrt(embedding.reduce((s, v) => s + v * v, 0));
+
+      let bestCluster = 0;
+      let bestSim = -Infinity;
+
+      for (const { cid, centroid, norm: centNorm } of centroidEntries) {
+        let dot = 0;
+        for (let j = 0; j < embedding.length && j < centroid.length; j++) {
+          dot += embedding[j] * centroid[j];
+        }
+        const sim = dot / (embNorm * centNorm + 1e-10);
+        if (sim > bestSim) {
+          bestSim = sim;
+          bestCluster = cid;
+        }
+      }
+
+      result.set(uncached[i], bestCluster);
+      _semanticClusterCache.set(uncached[i], bestCluster);
+    }
+  } catch (err) {
+    console.warn('[vectors-v3] Batch embedding failed, falling back to word-overlap:', err);
+  }
+
+  return result;
+}
+
 // ─── Signal features (cluster lookup + similarity-scaled two-tier neighbor bleed) ─
 // Confidence can be negative (anti-signals). Negative values create negative cluster
 // activations that push vectors apart in cosine similarity.
+//
+// v3.7: Now async — signals not in the direct signalToCluster mapping are batch-embedded
+// via OpenAI and routed to their nearest cluster centroid semantically. This fixes the
+// vocabulary mismatch between user onboarding signals (e.g. "mountain-views") and
+// property enrichment signals (e.g. "floor-to-ceiling-mountain-views") that previously
+// caused semantically identical concepts to land in different clusters.
 
-function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): number[] {
-  const { neighborMap } = getClusterState();
+async function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): Promise<number[]> {
+  const { neighborMap, signalToCluster } = getClusterState();
   const features = new Array(SIGNAL_DIMS_V3).fill(0);
   // Track which clusters have DIRECT signal hits (not just bleed)
   const directHits = new Set<number>();
 
+  // Partition signals into mapped (direct lookup) and unmapped (need embedding)
+  const mapped: Array<{ text: string; confidence: number; bucket: number }> = [];
+  const unmappedSignals: string[] = [];
+  const unmappedEntries: Array<{ text: string; confidence: number }> = [];
+
   for (const { text, confidence } of signals) {
-    const bucket = lookupSignalCluster(text);
+    const normalized = text.toLowerCase().trim();
+    const directMatch = signalToCluster[normalized];
+    if (directMatch !== undefined) {
+      mapped.push({ text, confidence, bucket: directMatch });
+    } else {
+      unmappedSignals.push(normalized);
+      unmappedEntries.push({ text, confidence });
+    }
+  }
+
+  // Batch-embed all unmapped signals in one API call
+  const semanticMappings = unmappedSignals.length > 0
+    ? await batchEmbedSignalsToClusters(unmappedSignals)
+    : new Map<string, number>();
+
+  // Process mapped signals (direct lookup)
+  for (const { text, confidence, bucket } of mapped) {
     const idf = getIdfWeight(text);
     const weightedConfidence = confidence * idf;
-
-    // Primary cluster gets full weight (can be negative for anti-signals)
     features[bucket] += weightedConfidence;
     directHits.add(bucket);
 
-    // Neighbor bleed: spread energy (positive or negative) to nearest clusters
+    const neighbors = neighborMap.get(bucket);
+    if (neighbors) {
+      for (const { idx, weight } of neighbors) {
+        features[idx] += weightedConfidence * weight;
+      }
+    }
+  }
+
+  // Process unmapped signals (semantically routed)
+  for (const { text, confidence } of unmappedEntries) {
+    const normalized = text.toLowerCase().trim();
+    const bucket = semanticMappings.get(normalized);
+    if (bucket === undefined) {
+      // Embedding failed for this signal — fall back to word-overlap
+      const fallbackBucket = lookupSignalCluster(text);
+      const idf = getIdfWeight(text);
+      const weightedConfidence = confidence * idf;
+      features[fallbackBucket] += weightedConfidence;
+      directHits.add(fallbackBucket);
+      const neighbors = neighborMap.get(fallbackBucket);
+      if (neighbors) {
+        for (const { idx, weight } of neighbors) {
+          features[idx] += weightedConfidence * weight;
+        }
+      }
+      continue;
+    }
+
+    const idf = getIdfWeight(text);
+    const weightedConfidence = confidence * idf;
+    features[bucket] += weightedConfidence;
+    directHits.add(bucket);
+
     const neighbors = neighborMap.get(bucket);
     if (neighbors) {
       for (const { idx, weight } of neighbors) {
@@ -388,7 +545,10 @@ export interface UserVectorInputV3 {
   allSignals?: Array<{ tag: string; cat: string; confidence: number }>;
 }
 
-export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
+export async function computeUserTasteVectorV3(input: UserVectorInputV3): Promise<number[]> {
+  // v3.7: Now async — unmapped signals are batch-embedded via OpenAI for
+  // semantic cluster routing. See buildSignalFeaturesV3 for details.
+  //
   // v3.6: All signals use uniform confidence (1.0) for microTasteSignals.
   // Domain weighting has been removed from scoring — radarData is only used
   // for front-end display (radar charts, domain coverage, editorial framing).
@@ -420,7 +580,7 @@ export function computeUserTasteVectorV3(input: UserVectorInputV3): number[] {
     }
   }
 
-  const signalDims = buildSignalFeaturesV3(signalInputs);
+  const signalDims = await buildSignalFeaturesV3(signalInputs);
   return l2Normalize(meanCenter(signalDims));
 }
 
@@ -431,7 +591,7 @@ export interface PropertyEmbeddingInputV3 {
   antiSignals?: Array<{ dimension: string; confidence: number; signal: string }>;
 }
 
-export function computePropertyEmbeddingV3(input: PropertyEmbeddingInputV3): number[] {
+export async function computePropertyEmbeddingV3(input: PropertyEmbeddingInputV3): Promise<number[]> {
   const { signals, antiSignals } = input;
 
   const signalInputs: Array<{ text: string; confidence: number }> = signals.map((s) => ({
@@ -449,7 +609,7 @@ export function computePropertyEmbeddingV3(input: PropertyEmbeddingInputV3): num
     }
   }
 
-  const signalDims = buildSignalFeaturesV3(signalInputs);
+  const signalDims = await buildSignalFeaturesV3(signalInputs);
   return l2Normalize(meanCenter(signalDims));
 }
 
