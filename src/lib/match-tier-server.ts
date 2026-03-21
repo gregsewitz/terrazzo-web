@@ -41,7 +41,7 @@ export async function refreshPopulationStats(): Promise<{ mean: number; stddev: 
 
   const { mean, stddev, pairs } = result[0] || {};
 
-  if (mean != null && stddev != null && stddev > 0.1 && pairs > 10) {
+  if (mean != null && stddev != null && stddev > 0.001 && pairs > 10) {
     setPopulationStats(mean, stddev);
     return { mean, stddev, pairs };
   }

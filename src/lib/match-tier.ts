@@ -118,7 +118,7 @@ export function rawToZ(
   mean = getPopulationMean(),
   stddev = getPopulationStddev(),
 ): number {
-  if (stddev < 0.1) return 0;
+  if (stddev < 0.001) return 0; // Guard against division by near-zero
   return (rawScore - mean) / stddev;
 }
 

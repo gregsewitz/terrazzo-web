@@ -268,10 +268,13 @@ export async function scoreWithVectors(
       };
     }
 
-    // Property has no V3 embedding — use signal score as fallback
+    // Property has no V3 embedding — rank below all vector-scored candidates.
+    // Signal scores are on an incompatible 0-100 scale and must not mix
+    // with raw cosine values in the ranking.
     return {
       ...signalScored,
-      blendedScore: signalScored.overallScore,
+      blendedScore: -Infinity,
+      overallScore: -Infinity,
     };
   });
 

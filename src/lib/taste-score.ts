@@ -1,12 +1,15 @@
 /**
  * Shared taste score computation utility.
  *
- * Centralizes the vector-first / signal-fallback scoring strategy that was
- * duplicated between intelligence/enrichment-complete and places/resolve routes.
+ * Vector-only scoring: matchScore comes exclusively from cosine similarity
+ * between the user's 400-dim taste vector and the property's embedding.
+ * Returns null when vectors are unavailable (no fallback to signal-based scoring,
+ * which operates on a completely different scale and would corrupt the z-score
+ * tier system).
  */
 
 import { prisma } from '@/lib/prisma';
-import { computeMatchFromSignals, DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
+import { DEFAULT_USER_PROFILE } from '@/lib/taste-match-v3';
 import { computeVectorMatchFromDb, breakdownToNormalized } from '@/lib/taste-match-vectors';
 import type { TasteProfile, TasteDomain, GeneratedTasteProfile, BriefingSignal, BriefingAntiSignal } from '@/types';
 import { ALL_TASTE_DOMAINS } from '@/types';
@@ -42,29 +45,30 @@ export interface TasteScoreResult {
   overallScore: number;
   breakdown: Record<string, number>;
   explanation?: MatchExplanation;
-  source: 'vector' | 'signal';
+  source: 'vector';
 }
 
 /**
  * Compute a taste match score for a user/place pair.
  *
- * Strategy: try vector-first (embedding cosine similarity), fall back to
- * signal-based scoring if the user has no V3 taste vector.
+ * Vector-only: returns raw cosine similarity when both user and property
+ * vectors exist. Returns null otherwise — callers should not write a
+ * matchScore when this returns null (the score will be filled in later
+ * when the property is enriched and rescored).
  *
  * @param userId - The user to score against
  * @param googlePlaceId - The Google Place ID to score
- * @param signals - Place intelligence signals array
- * @param antiSignals - Place intelligence anti-signals array
- * @param userProfile - Optional pre-built TasteProfile (avoids DB lookup)
+ * @param _signals - @deprecated Unused, kept for call-site compat
+ * @param _antiSignals - @deprecated Unused, kept for call-site compat
+ * @param _userProfile - @deprecated Unused, kept for call-site compat
  */
 export async function computeTasteScore(
   userId: string,
   googlePlaceId: string,
-  signals: BriefingSignal[],
-  antiSignals: BriefingAntiSignal[],
-  userProfile?: TasteProfile,
+  _signals?: BriefingSignal[],
+  _antiSignals?: BriefingAntiSignal[],
+  _userProfile?: TasteProfile,
 ): Promise<TasteScoreResult | null> {
-  // Try vector-first scoring
   const vectorMatch = await computeVectorMatchFromDb(userId, googlePlaceId);
 
   if (vectorMatch) {
@@ -76,26 +80,8 @@ export async function computeTasteScore(
     };
   }
 
-  // Fallback: signal-based scoring
-  let profile = userProfile;
-
-  if (!profile) {
-    // Fetch user's taste profile from DB
-    const userRecord = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { tasteProfile: true },
-    });
-    const generated = userRecord?.tasteProfile as unknown as GeneratedTasteProfile | null;
-    profile = generated ? buildTasteProfileFromGenerated(generated) : DEFAULT_USER_PROFILE;
-  }
-
-  if (signals.length === 0) return null;
-
-  const match = computeMatchFromSignals(signals, antiSignals, profile);
-
-  return {
-    overallScore: match.overallScore,
-    breakdown: match.breakdown,
-    source: 'signal',
-  };
+  // No vectors available — return null instead of falling back to
+  // signal-based scoring (which operates on a 0-100 scale incompatible
+  // with the raw cosine z-score tier system).
+  return null;
 }
