@@ -9,6 +9,7 @@ import { THUMB_GRADIENTS, TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/plac
 import BaseSheet from '@/components/ui/BaseSheet';
 import SortPills from '@/components/ui/SortPills';
 import { getDisplayLocation } from '@/lib/place-display';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 type PlaceSortKey = 'match' | 'az' | 'type';
 
@@ -176,20 +177,23 @@ export default function AddPlacesToCollectionSheet({
                     </div>
                   </div>
 
-                  {/* Match score */}
-                  {place.matchScore > 0 && (
-                    <span
-                      className="text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0"
-                      style={{
-                        background: 'var(--t-ink)',
-                        color: 'var(--t-chrome-yellow)',
-                        fontFamily: FONT.mono,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {Math.round(place.matchScore)}
-                    </span>
-                  )}
+                  {/* Match tier badge */}
+                  {shouldShowTierBadge(place.matchScore) && (() => {
+                    const tier = getMatchTier(place.matchScore);
+                    return (
+                      <span
+                        className="text-[8px] px-1.5 py-0.5 rounded-md flex-shrink-0"
+                        style={{
+                          background: tier.bg,
+                          color: tier.color,
+                          fontFamily: FONT.mono,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {tier.shortLabel}
+                      </span>
+                    );
+                  })()}
 
                   {/* Add button */}
                   <button

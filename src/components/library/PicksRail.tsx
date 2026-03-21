@@ -201,16 +201,15 @@ function PicksRailInner({
           <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
           {isStrongMatch(place.matchScore) && (
             <div
-              className="absolute flex items-center justify-center"
+              className="absolute"
               style={{
-                top: -4, right: -4,
-                width: 16, height: 16, borderRadius: '50%',
-                background: 'var(--t-dark-teal)', color: 'white',
-                fontFamily: FONT.mono, fontSize: 7, fontWeight: 800,
+                top: -3, right: -3,
+                width: 10, height: 10, borderRadius: '50%',
+                background: 'var(--t-dark-teal)',
+                border: '1.5px solid white',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
               }}
-            >
-              {Math.round(place.matchScore)}
-            </div>
+            />
           )}
         </div>
 

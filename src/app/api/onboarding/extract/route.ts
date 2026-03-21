@@ -199,18 +199,24 @@ Return valid JSON:
     if (!result.emotionalDriverHint) result.emotionalDriverHint = null;
     if (!result.mentionedPlaces) result.mentionedPlaces = [];
 
-    // ── Persist signals to TasteNode table (non-blocking) ──
+    // ── Persist signals to TasteNode table ──
     // This is the canonical write path — signals are persisted as they're
     // extracted, with full provenance (phaseId, modality, extractedAt).
+    // We await persistence so the client knows TasteNodes are committed
+    // before triggering compute-vectors (which reads from TasteNode).
+    let persistence: { persisted: number; errors: number } | null = null;
     if (user?.id && result.signals?.length) {
-      persistExtractedSignals(user.id, phaseId, result.signals).catch((err) => {
-        console.error('[onboarding/extract] TasteNode persistence failed (non-blocking):', err);
-      });
+      try {
+        persistence = await persistExtractedSignals(user.id, phaseId, result.signals);
+      } catch (err) {
+        console.error('[onboarding/extract] TasteNode persistence failed:', err);
+        persistence = { persisted: 0, errors: result.signals.length };
+      }
     } else if (!user?.id && result.signals?.length) {
       console.warn(`[onboarding/extract] No authenticated user — ${result.signals.length} signals extracted but not persisted to TasteNode`);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, ...(persistence && { persistence }) });
   } catch (error) {
     console.error('[onboarding/extract] Error:', error instanceof Error ? error.message : error);
     return NextResponse.json({

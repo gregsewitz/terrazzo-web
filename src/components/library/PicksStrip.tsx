@@ -13,6 +13,7 @@ import type { SortDirection } from '../ui/FilterSortBar';
 import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { TYPE_ICONS, TYPE_COLORS_MUTED, TYPE_BRAND_COLORS, THUMB_GRADIENTS } from '@/constants/placeTypes';
 import { TYPE_CHIPS, SOURCE_FILTERS, type SourceFilter } from '@/constants/picksFilters';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 
 type SortOption = 'match' | 'name' | 'source' | 'recent';
 
@@ -406,23 +407,25 @@ function PicksStrip({
                     }}
                   >
                     <PerriandIcon name={typeIcon} size={22} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
-                    {/* Match score pip */}
-                    <div
-                      className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
-                      style={{
-                        width: 20,
-                        height: 20,
-                        background: 'white',
-                        border: '1px solid var(--t-linen)',
-                        fontSize: 8,
-                        fontWeight: 700,
-                        color: 'var(--t-dark-teal)',
-                        fontFamily: FONT.mono,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-                      }}
-                    >
-                      {Math.round(place.matchScore)}
-                    </div>
+                    {/* Match tier pip */}
+                    {shouldShowTierBadge(place.matchScore) && (
+                      <div
+                        className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          background: getMatchTier(place.matchScore).bg,
+                          border: `1.5px solid ${getMatchTier(place.matchScore).color}`,
+                          fontSize: 7,
+                          fontWeight: 700,
+                          color: getMatchTier(place.matchScore).color,
+                          fontFamily: FONT.mono,
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        {getMatchTier(place.matchScore).shortLabel.charAt(0)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Name */}
@@ -537,23 +540,25 @@ function PicksStrip({
                       }}
                     >
                       <PerriandIcon name={typeIcon} size={18} color={TYPE_BRAND_COLORS[place.type as keyof typeof TYPE_BRAND_COLORS] || typeColor} />
-                      {/* Match score pip */}
-                      <div
-                        className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
-                        style={{
-                          width: 18,
-                          height: 18,
-                          background: 'white',
-                          border: '1px solid var(--t-linen)',
-                          fontSize: 8,
-                          fontWeight: 700,
-                          color: 'var(--t-dark-teal)',
-                          fontFamily: FONT.mono,
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-                        }}
-                      >
-                        {Math.round(place.matchScore)}
-                      </div>
+                      {/* Match tier pip */}
+                      {shouldShowTierBadge(place.matchScore) && (
+                        <div
+                          className="absolute -top-1 -right-1 flex items-center justify-center rounded-full"
+                          style={{
+                            width: 18,
+                            height: 18,
+                            background: getMatchTier(place.matchScore).bg,
+                            border: `1.5px solid ${getMatchTier(place.matchScore).color}`,
+                            fontSize: 7,
+                            fontWeight: 700,
+                            color: getMatchTier(place.matchScore).color,
+                            fontFamily: FONT.mono,
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                          }}
+                        >
+                          {getMatchTier(place.matchScore).shortLabel.charAt(0)}
+                        </div>
+                      )}
                     </div>
 
                     {/* Name */}
