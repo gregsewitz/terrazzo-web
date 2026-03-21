@@ -24,6 +24,9 @@ export const SORT_DEBOUNCE_MS = 300;
 /** Default cluster radius when not enough placed items to compute adaptive radius */
 const DEFAULT_CLUSTER_RADIUS_MI = 0.5;
 
+/** Larger radius when only hotel is the anchor (no placed items yet) — covers a typical city transit zone */
+const HOTEL_ONLY_RADIUS_MI = 2.0;
+
 /** Minimum pool items in a cluster to show a chip */
 const MIN_CLUSTER_SIZE = 3;
 
@@ -702,6 +705,7 @@ export function segmentPool(
 
   // All anchors including hotel
   const allAnchors = [...anchors];
+  const hotelOnly = anchors.length === 0 && !!hotelCoords;
   if (hotelCoords && !anchors.some(a => a.id === '__hotel__')) {
     allAnchors.push({
       id: '__hotel__',
@@ -712,6 +716,11 @@ export function segmentPool(
       slotIndex: -1,
     });
   }
+
+  // When only a hotel anchor exists (no placed items), use a generous radius
+  // so that nearby-ish items still appear in "Fits your day" instead of everything
+  // landing in "Elsewhere" due to the tiny default 0.5mi adaptive radius.
+  const effectiveRadius = hotelOnly ? HOTEL_ONLY_RADIUS_MI : radiusMi;
 
   for (const item of poolItems) {
     const coords = getCoords(item);
@@ -745,7 +754,7 @@ export function segmentPool(
 
     const label = dayProximityLabel(nearestDist, nearestAnchor.name, item.matchScore);
 
-    if (nearestDist <= radiusMi * 1.5) {
+    if (nearestDist <= effectiveRadius * 1.5) {
       // Within extended radius — fits the day
       fitsYourDay.push({ ...item, proximityLabel: label });
     } else {

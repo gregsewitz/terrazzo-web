@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
+import { apiFetch } from '@/lib/api-client';
 import type { QuickEntry, ImportedPlace } from '@/types';
 
 // Stagger delay between resolution attempts to avoid hammering the API
@@ -45,9 +46,8 @@ export function useQuickEntryResolver() {
     updateQuickEntry(dayNumber, slotId, entry.id, { status: 'resolving' });
 
     try {
-      const res = await fetch('/api/places/resolve-quick-entry', {
+      const data = await apiFetch<any>('/api/places/resolve-quick-entry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: entry.text,
           label: entry.label,
@@ -57,14 +57,6 @@ export function useQuickEntryResolver() {
           lng,
         }),
       });
-
-      if (!res.ok) {
-        // Revert to confirmed on failure
-        updateQuickEntry(dayNumber, slotId, entry.id, { status: 'confirmed' });
-        return;
-      }
-
-      const data = await res.json();
 
       if (data.resolved && data.place) {
         // Build ImportedPlace from the resolved data

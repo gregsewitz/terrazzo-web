@@ -2,6 +2,8 @@
 
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTripStore } from '@/stores/tripStore';
+import { usePoolStore, SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
+import type { SlotContext } from '@/stores/poolStore';
 import { FONT, INK, TEXT, COLOR } from '@/constants/theme';
 import { getSourceStyle } from '@/types';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
@@ -281,6 +283,11 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
 
   const isDropActive = dropTarget?.dayNumber === dayNumber && dropTarget?.slotId === slot.id;
 
+  // ─── Slot selection for proximity-aware pool browsing ───
+  const selectSlot = usePoolStore(s => s.selectSlot);
+  const currentSlotContext = usePoolStore(s => s.slotContext);
+  const isSlotSelected = currentSlotContext?.slotId === slot.id && currentSlotContext?.dayNumber === dayNumber;
+
   // Register slot rect for drag hit-testing
   useEffect(() => {
     const el = cellRef.current;
@@ -338,15 +345,54 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
     }
   }, [dayNumber, slot.id, onOpenOverlay]);
 
-  // Click on empty cell to add entry; click on populated cell opens overlay
+  // Build slot context for proximity-aware pool browsing
+  const handleSelectSlot = useCallback(() => {
+    const trip = useTripStore.getState().trips.find(t => t.id === useTripStore.getState().currentTripId);
+    const day = trip?.days.find(d => d.dayNumber === dayNumber);
+    const slotOrder = ['breakfast', 'morning', 'lunch', 'afternoon', 'dinner', 'evening'];
+    const slotIdx = slotOrder.indexOf(slot.id);
+
+    let before: SlotContext['adjacentPlaces']['before'];
+    let after: SlotContext['adjacentPlaces']['after'];
+
+    if (day) {
+      for (let i = slotIdx - 1; i >= 0; i--) {
+        const s = day.slots.find(sl => sl.id === slotOrder[i]);
+        if (s && s.places.length > 0) {
+          const p = s.places[s.places.length - 1];
+          before = { name: p.name, type: p.type, location: p.location || '' };
+          break;
+        }
+      }
+      for (let i = slotIdx + 1; i < slotOrder.length; i++) {
+        const s = day.slots.find(sl => sl.id === slotOrder[i]);
+        if (s && s.places.length > 0) {
+          const p = s.places[0];
+          after = { name: p.name, type: p.type, location: p.location || '' };
+          break;
+        }
+      }
+    }
+
+    selectSlot({
+      slotId: slot.id,
+      slotLabel: slot.label,
+      dayNumber,
+      adjacentPlaces: { before, after },
+      suggestedTypes: SLOT_TYPE_AFFINITY[slot.id] || [],
+    });
+  }, [dayNumber, slot.id, slot.label, selectSlot]);
+
+  // Click on empty cell: primary action = select slot for proximity browsing
+  // Click on populated cell: opens overlay
   const handleCellClick = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('[data-grid-card]') || (e.target as HTMLElement).closest('button')) return;
     if (totalCount === 0 && !quickInputOpen) {
-      setQuickInputOpen(true);
+      handleSelectSlot();
     } else if (totalCount > 0) {
       handleOpenOverlay();
     }
-  }, [totalCount, quickInputOpen, handleOpenOverlay]);
+  }, [totalCount, quickInputOpen, handleOpenOverlay, handleSelectSlot]);
 
   /** Fixed-height wrapper to keep all cards uniform */
   const cardSlot = (key: string, children: React.ReactNode, extraProps?: Record<string, string>) => (
@@ -442,8 +488,16 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
         overflow: 'hidden',
         borderRight: `1px solid ${INK['06']}`,
         borderBottom: `1px solid ${INK['06']}`,
-        background: isDropActive ? 'rgba(58,128,136,0.06)' : 'white',
-        borderLeft: isDropActive ? `3px solid ${COLOR.darkTeal}` : '3px solid transparent',
+        background: isSlotSelected
+          ? 'rgba(58,128,136,0.04)'
+          : isDropActive
+            ? 'rgba(58,128,136,0.06)'
+            : 'white',
+        borderLeft: isSlotSelected
+          ? `3px solid ${COLOR.darkTeal}`
+          : isDropActive
+            ? `3px solid ${COLOR.darkTeal}`
+            : '3px solid transparent',
         transition: 'all 150ms ease',
         display: 'flex',
         flexDirection: 'column',
@@ -464,6 +518,26 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
               }}
               onCancel={() => setQuickInputOpen(false)}
             />
+          </div>
+        )}
+
+        {/* Selected slot state — shows "Browsing places" + secondary add entry */}
+        {isSlotSelected && totalCount === 0 && !quickInputOpen && (
+          <div className={`mx-${CARD_PX} rounded flex flex-col items-center justify-center gap-2`} style={{ height: CARD_H, border: `1.5px dashed ${COLOR.darkTeal}`, background: 'rgba(58,128,136,0.03)' }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: isDesktop ? 11 : 10, fontWeight: 600, color: COLOR.darkTeal }}>
+              Browsing places…
+            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); setQuickInputOpen(true); }}
+              className="rounded-md flex items-center gap-1"
+              style={{
+                fontFamily: FONT.sans, fontSize: 10, fontWeight: 500,
+                color: TEXT.secondary, background: INK['04'], border: `1px solid ${INK['10']}`,
+                padding: '3px 8px', cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 11, lineHeight: 1 }}>+</span> Add entry
+            </button>
           </div>
         )}
       </div>
