@@ -28,12 +28,12 @@
  */
 
 // ── Population statistics ───────────────────────────────────────────────────
-// Hardcoded fallback values (measured Mar 2026, real onboarded users only).
+// Hardcoded fallback values (updated Mar 21 2026 after raw-cosine rescore).
 // On the server, these are overridden by live stats from the DB via
 // refreshPopulationStats() / setPopulationStats().
 
-const DEFAULT_POPULATION_MEAN = 56.6;
-const DEFAULT_POPULATION_STDDEV = 10.5;
+const DEFAULT_POPULATION_MEAN = 3.25;
+const DEFAULT_POPULATION_STDDEV = 4.99;
 
 let _liveMean: number | null = null;
 let _liveStddev: number | null = null;
