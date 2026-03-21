@@ -14,8 +14,8 @@ import { setPopulationStats, populationStatsStale } from './match-tier';
 /**
  * Refresh population stats from the database.
  *
- * Computes mean and stddev of cosine×100 across all real onboarded users
- * and all enriched properties. Test users (email LIKE 'test-%') are excluded.
+ * Computes mean and stddev of raw cosine similarity across all real onboarded
+ * users and all enriched properties. Test users (email LIKE 'test-%') are excluded.
  *
  * Call this:
  *   - From the vector-refresh cron (weekly, after recomputing vectors)
@@ -28,8 +28,8 @@ export async function refreshPopulationStats(): Promise<{ mean: number; stddev: 
     pairs: number;
   }>>`
     SELECT
-      AVG((1 - (u."tasteVectorV3" <=> pi."embeddingV3")) * 100)::float as mean,
-      STDDEV((1 - (u."tasteVectorV3" <=> pi."embeddingV3")) * 100)::float as stddev,
+      AVG(1 - (u."tasteVectorV3" <=> pi."embeddingV3"))::float as mean,
+      STDDEV(1 - (u."tasteVectorV3" <=> pi."embeddingV3"))::float as stddev,
       COUNT(*)::int as pairs
     FROM "User" u
     CROSS JOIN "PlaceIntelligence" pi

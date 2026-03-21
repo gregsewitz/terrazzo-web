@@ -68,7 +68,7 @@ export const USER_SIGNAL_WEIGHT = 0.6;
 
 // ── Display score normalization (REMOVED) ───────────────────────────────────
 // SCORE_DISPLAY_CEILING, SCORE_DISPLAY_FLOOR, and SCORE_SPREAD_FACTOR have
-// been removed. Raw cosine×100 scores are now used directly. Tier classification
+// been removed. Raw cosine similarity scores are now used directly. Tier classification
 // is handled by getMatchTier() in match-tier.ts using population z-scores.
 // See match-tier.ts for POPULATION_MEAN and POPULATION_STDDEV constants.
 

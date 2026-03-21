@@ -24,8 +24,8 @@ interface PlaceInput {
 }
 
 interface CompletionOptions {
-  /** If true, only writes tasteNote + terrazzoInsight (skip matchScore/matchBreakdown).
-   *  Use this when signal-based scores are preferred (e.g. enrichment-complete webhook). */
+  /** @deprecated — scores are never written by taste completion anymore.
+   *  matchScore comes exclusively from vector cosine similarity. */
   skipScores?: boolean;
 }
 
@@ -93,15 +93,11 @@ export async function completeTasteFields(
         data.terrazzoInsight = taste.terrazzoInsight;
       }
 
-      // Optionally write score fields
-      if (!options.skipScores) {
-        if (typeof taste.matchScore === 'number') {
-          data.matchScore = taste.matchScore;
-        }
-        if (taste.matchBreakdown) {
-          data.matchBreakdown = taste.matchBreakdown;
-        }
-      }
+      // Score fields are NEVER written by Claude-generated completion.
+      // matchScore comes exclusively from vector cosine similarity
+      // (computed by computeVectorMatch / rescoreAllSavedPlacesV3).
+      // Claude-hallucinated scores are on a completely different scale
+      // and would corrupt the z-score tier system.
 
       if (Object.keys(data).length > 0) {
         await prisma.savedPlace.update({

@@ -2,7 +2,7 @@
  * Match tier system.
  *
  * Replaces percentage-based match scores with qualitative tiers.
- * Tier boundaries are defined directly on raw cosine×100 scores
+ * Tier boundaries are defined on raw cosine similarity scores
  * (the unmodified output of computeVectorMatch), using population
  * z-scores to set thresholds that adapt as the place corpus grows.
  *
@@ -18,8 +18,8 @@
  * live stats haven't been loaded (client-side imports, cold starts).
  *
  * To refresh manually:
- *   SELECT AVG((1-(u."tasteVectorV3" <=> pi."embeddingV3"))*100),
- *          STDDEV((1-(u."tasteVectorV3" <=> pi."embeddingV3"))*100)
+ *   SELECT AVG(1-(u."tasteVectorV3" <=> pi."embeddingV3")),
+ *          STDDEV(1-(u."tasteVectorV3" <=> pi."embeddingV3"))
  *   FROM "User" u, "PlaceIntelligence" pi
  *   WHERE u."tasteVectorV3" IS NOT NULL
  *     AND u.email NOT LIKE 'test-%'
@@ -28,12 +28,12 @@
  */
 
 // ── Population statistics ───────────────────────────────────────────────────
-// Hardcoded fallback values (updated Mar 21 2026 after raw-cosine rescore).
+// Hardcoded fallback values (raw cosine scale, updated Mar 21 2026).
 // On the server, these are overridden by live stats from the DB via
 // refreshPopulationStats() / setPopulationStats().
 
-const DEFAULT_POPULATION_MEAN = 3.25;
-const DEFAULT_POPULATION_STDDEV = 4.99;
+const DEFAULT_POPULATION_MEAN = 0.0325;
+const DEFAULT_POPULATION_STDDEV = 0.0499;
 
 let _liveMean: number | null = null;
 let _liveStddev: number | null = null;
@@ -123,7 +123,7 @@ export function rawToZ(
 }
 
 /**
- * Convert a raw cosine×100 match score into a qualitative tier.
+ * Convert a raw cosine similarity score into a qualitative tier.
  *
  * Accepts the raw score directly — no normalization needed.
  * Internally computes the z-score against population stats

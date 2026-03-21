@@ -15,8 +15,8 @@
  *   - computeMatchExplanation(): Top-cluster decomposition for "Why this matches"
  *   - rescoreAllSavedPlacesV3(): Batch rescore all saved places for a user
  *
- * Raw cosine×100 scores are stored directly. Tier classification is
- * derived at read time via getMatchTier() in match-tier.ts.
+ * Raw cosine similarity scores are stored directly (no ×100 multiplier).
+ * Tier classification is derived at read time via getMatchTier() in match-tier.ts.
  */
 
 import { prisma } from '@/lib/prisma';
@@ -140,12 +140,11 @@ export function computeVectorMatch(
   // Cosine similarity (dot product of L2-normalized vectors) → [-1, 1]
   const rawCosine = cosineSimilarityV3(userVector, propertyVector);
 
-  // Map from cosine range to 0-100
-  // Cosine of 1.0 = perfect match → 100
-  // Cosine of 0.0 = orthogonal → ~35 (still "some" overlap possible)
-  // Cosine of -1.0 = opposite → 0
-  // In practice, taste vectors rarely go below 0.0 (IDF + L2 norm keeps them positive-ish)
-  const rawScore = Math.max(0, Math.min(100, Math.round(rawCosine * 100)));
+  // Raw cosine similarity — no scaling or clamping.
+  // Negative values are meaningful (vector opposition) and flow through
+  // to the z-score tier system which handles classification.
+  // Typical range for taste vectors: roughly -0.05 to +0.70
+  const rawScore = rawCosine;
 
   // Derive per-domain breakdown from cluster contributions
   const breakdown = deriveDomainBreakdown(userVector, propertyVector);
@@ -467,9 +466,8 @@ export interface RescoreResult {
  * Flow:
  *   1. Fetch user's V3 vector
  *   2. Fetch all SavedPlaces with enriched PlaceIntelligence (embeddingV3 present)
- *   3. Compute raw vector matches for each
- *   4. Normalize scores across the full set
- *   5. Write matchScore + matchBreakdown + matchExplanation to DB
+ *   3. Compute raw cosine similarity for each
+ *   4. Write matchScore + matchBreakdown + matchExplanation to DB
  */
 export async function rescoreAllSavedPlacesV3(userId: string): Promise<RescoreResult> {
   // 1. Fetch user vector

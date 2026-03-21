@@ -44,7 +44,7 @@ export interface ScoredCandidate extends CandidateProperty {
     contradiction: TasteContradiction;
     coversBothSides: boolean;
   } | null;
-  /** Vector cosine similarity score (0-100), present when vectors are available */
+  /** Raw vector cosine similarity score, present when vectors are available */
   vectorScore?: number;
   /** Blended score combining signal-based and vector-based matching */
   blendedScore?: number;
@@ -243,7 +243,7 @@ export async function scoreWithVectors(
   // Get vector-based rankings from pgvector V3 (top 200 nearest via HNSW)
   const vectorMatches = await findSimilarPropertiesV3(userVector, 200);
 
-  // Build a lookup: googlePlaceId → vectorScore (0-100)
+  // Build a lookup: googlePlaceId → vectorScore (raw cosine similarity)
   const vectorScoreMap = new Map<string, number>();
   for (const match of vectorMatches) {
     vectorScoreMap.set(match.googlePlaceId, match.score);

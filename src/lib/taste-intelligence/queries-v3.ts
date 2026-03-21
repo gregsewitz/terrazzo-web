@@ -62,7 +62,7 @@ export async function findSimilarPropertiesV3(
       googlePlaceId: r.googlePlaceId,
       propertyName: r.propertyName,
       similarity: 1 - r.distance,
-      score: Math.round((1 - r.distance) * 100),
+      score: 1 - r.distance, // Raw cosine similarity, no ×100
     }))
     .filter((r) => r.score >= minScore);
 }
@@ -136,7 +136,7 @@ export async function findSimilarPropertiesToPropertyV3(
     googlePlaceId: r.googlePlaceId,
     propertyName: r.propertyName,
     similarity: 1 - r.distance,
-    score: Math.round((1 - r.distance) * 100),
+    score: 1 - r.distance, // Raw cosine similarity, no ×100
   }));
 }
 
@@ -239,15 +239,15 @@ export async function findDomainExemplars(
     ...params,
   );
 
-  // Return top N with score
+  // Return top N with raw cosine score
   return results.slice(0, limit).map((r) => {
-    const similarity = Math.round((1 - r.distance) * 100) / 100;
+    const similarity = 1 - r.distance;
     return {
       id: r.id,
       googlePlaceId: r.googlePlaceId,
       propertyName: r.propertyName,
       similarity,
-      score: Math.round(similarity * 100),
+      score: similarity, // Raw cosine, no ×100
       placeType: r.placeType,
       locationHint: r.locationHint,
     };

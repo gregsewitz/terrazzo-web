@@ -2,7 +2,7 @@
  * Score utilities — client-safe, no DB dependencies.
  *
  * Previously this module contained a tanh sigmoid that mapped raw
- * cosine×100 scores into a "human-readable" 35-96 display range.
+ * cosine scores into a "human-readable" 35-96 display range.
  * That transform has been removed now that the UI shows match tiers
  * instead of percentages. All tier logic lives in match-tier.ts.
  *
