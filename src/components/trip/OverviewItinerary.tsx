@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trip, SOURCE_STYLES, SLOT_ICONS, getSourceStyle, getSourceLabel } from '@/types';
+import { Trip, SLOT_ICONS, getSourceStyle } from '@/types';
 import { PerriandIcon, type PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { generateDestColor } from '@/lib/destination-helpers';
@@ -97,10 +97,6 @@ function OverviewItineraryInner({ trip, onTapDay }: OverviewItineraryProps) {
                             <PerriandIcon name={SLOT_ICONS[slot.id] as PerriandIconName || 'pin'} size={12} color={dColor.accent} />
                             <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: TEXT.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {place.name}
-                            </span>
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ fontSize: 9, fontWeight: 600, background: srcStyle.bg, color: srcStyle.color, fontFamily: FONT.mono }}>
-                              <PerriandIcon name={srcStyle.icon} size={10} color={srcStyle.color} />
-                              {place.source?.name || srcStyle.label}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
