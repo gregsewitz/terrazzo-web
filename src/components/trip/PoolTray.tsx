@@ -181,13 +181,16 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
 
   // Library places geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
+  // Use the slot context's day when a slot is selected on a different day column
+  // (e.g., user is on Day 1 London but taps a slot on Day 3 Cotswolds in grid view)
+  const effectiveDayNumber = slotContext?.dayNumber ?? currentDay;
   const activeDay = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
-    return trip?.days.find(d => d.dayNumber === s.currentDay) ?? null;
+    return trip?.days.find(d => d.dayNumber === effectiveDayNumber) ?? null;
   });
   const prevDay = useTripStore(s => {
     const trip = s.trips.find(t => t.id === s.currentTripId);
-    return trip?.days.find(d => d.dayNumber === s.currentDay - 1) ?? null;
+    return trip?.days.find(d => d.dayNumber === effectiveDayNumber - 1) ?? null;
   });
 
   // Resolve per-slot destinations for split days (e.g., London morning → Cotswolds evening)
@@ -287,7 +290,11 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   }, [searchFiltered, slotContext, slotEffectiveDest, sortBy, sortDirection]);
 
   // ─── Proximity Intelligence ───
-  const proximity = useProximity(sortedItems, currentDay);
+  // When a slot is selected on a different day (e.g., tapping a Cotswolds slot
+  // while viewing Day 1 London in grid view), use the slot's day for proximity
+  // so clusters and labels reflect the correct geographic context.
+  const proximityDay = slotContext?.dayNumber ?? currentDay;
+  const proximity = useProximity(sortedItems, proximityDay);
 
   // Apply cluster filter if active
   const proximityFiltered = useMemo(() => {
