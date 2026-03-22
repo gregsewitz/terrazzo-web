@@ -4,7 +4,7 @@
  * Nightly cron job: find SavedPlace records that fell through the cracks
  * and ensure they have PlaceIntelligence records + enrichment triggered.
  *
- * Five passes:
+ * Six passes:
  *   1. Link orphans: SavedPlace has googlePlaceId + existing PI record, but
  *      placeIntelligenceId is null (just needs linking).
  *   2. Create + enrich: SavedPlace has googlePlaceId but no PI record exists
@@ -16,6 +16,10 @@
  *   5. Re-enrich empty: Re-trigger PI records marked 'complete' but with no
  *      signals, description, or embedding — these completed without producing
  *      useful data.
+ *   6. Re-enrich under-enriched: Re-trigger PI records marked 'complete' but
+ *      with suspiciously few signals (below MIN_ENRICHMENT_SIGNAL_COUNT).
+ *      These likely had a partial pipeline failure that still produced some
+ *      data. Only retries once (checks lastError to avoid re-triggering).
  *
  * Configured in vercel.json as a Vercel Cron running nightly at 3am UTC.
  * Protected by CRON_SECRET.
@@ -25,7 +29,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import { resolveGooglePlaceWithRetry, resolveGooglePlaceType } from '@/lib/places';
-import { resolveBackoffDays, enrichmentBackoffHours } from '@/lib/constants';
+import { resolveBackoffDays, enrichmentBackoffHours, MIN_ENRICHMENT_SIGNAL_COUNT } from '@/lib/constants';
 
 export const maxDuration = 300; // 5 min — may need to resolve many places via Google
 
@@ -42,6 +46,7 @@ export async function GET(req: NextRequest) {
     resolved: 0,
     retried: 0,
     reEnriched: 0,
+    reEnrichedUnder: 0,
     resolveFailed: 0,
     retrySkippedBackoff: 0,
   };
@@ -287,6 +292,47 @@ export async function GET(req: NextRequest) {
         stats.reEnriched++;
       } catch (err) {
         console.error(`[orphan-sweep] re-enrich failed for ${pi.propertyName}:`, err);
+      }
+    }
+
+    // ── Pass 6: Re-enrich "complete but under-enriched" PI records ──────
+    // These finished the pipeline but produced suspiciously few signals,
+    // likely due to a partial pipeline failure (e.g., review scraping
+    // failed, some domain analyses timed out, etc.). Reset and re-trigger.
+    // Only retry once — skip records already flagged by a previous sweep.
+    const underEnriched = await prisma.$queryRaw<
+      { id: string; googlePlaceId: string; propertyName: string; placeType: string | null; signalCount: number }[]
+    >`
+      SELECT id, "googlePlaceId", "propertyName", "placeType", "signalCount"
+      FROM "PlaceIntelligence"
+      WHERE status = 'complete'
+        AND "signalCount" IS NOT NULL
+        AND "signalCount" > 0
+        AND "signalCount" < ${MIN_ENRICHMENT_SIGNAL_COUNT}
+        AND ("lastError" IS NULL OR "lastError" NOT LIKE '%under-enriched%')
+      LIMIT 50
+    `;
+
+    for (const pi of underEnriched) {
+      try {
+        await prisma.placeIntelligence.update({
+          where: { id: pi.id },
+          data: {
+            status: 'failed',
+            lastError: `Complete but under-enriched (${pi.signalCount} signals < ${MIN_ENRICHMENT_SIGNAL_COUNT}) — reset by orphan-sweep`,
+          },
+        });
+        await ensureEnrichment(
+          pi.googlePlaceId,
+          pi.propertyName,
+          'system_cron',
+          'orphan_sweep_under_enriched',
+          pi.placeType || undefined,
+        );
+        stats.reEnrichedUnder++;
+        console.log(`[orphan-sweep] Re-enriching under-enriched: ${pi.propertyName} (${pi.signalCount} signals)`);
+      } catch (err) {
+        console.error(`[orphan-sweep] re-enrich (under) failed for ${pi.propertyName}:`, err);
       }
     }
 

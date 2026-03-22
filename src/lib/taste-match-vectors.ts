@@ -30,9 +30,63 @@ import {
   vectorToSqlV3,
 } from '@/lib/taste-intelligence';
 import { getSignalClusterMap } from '@/lib/taste-intelligence/signal-clusters-loader';
+import { ASYMMETRIC_SIMILARITY_EXPONENT } from '@/lib/constants';
 // Display score constants removed — raw scores are now used directly.
 // Tier classification is handled by getMatchTier() in match-tier.ts.
 import type { TasteDomain } from '@/types';
+
+// ─── Asymmetric cosine similarity ────────────────────────────────────────────
+
+/**
+ * Soft asymmetric cosine similarity: dimensions where the user has low
+ * activation are down-weighted rather than hard-excluded.
+ *
+ * Each dimension is weighted by: w(i) = |user[i]|^exponent
+ * This creates a smooth gradient:
+ *   - Strong user activation (|u|=0.08): w ≈ 0.08^0.5 = 0.28 (full contribution)
+ *   - Moderate activation (|u|=0.02):    w ≈ 0.02^0.5 = 0.14 (partial contribution)
+ *   - Near-zero activation (|u|=0.001):  w ≈ 0.001^0.5 = 0.03 (minimal contribution)
+ *
+ * This prevents hotel domains the user has no opinion on from diluting the
+ * match score, while preserving weak-but-real preferences that a hard cutoff
+ * would destroy. For users with rich vectors, this converges toward standard
+ * cosine since most dimensions have meaningful activation.
+ *
+ * The exponent controls the asymmetry strength:
+ *   - 0.0 = standard cosine (all dims weighted equally)
+ *   - 0.5 = moderate asymmetry (square root weighting) — recommended
+ *   - 1.0 = strong asymmetry (linear weighting by |user[i]|)
+ *
+ * Both vectors must be L2-normalized. The weighted dot product is
+ * re-normalized by the weighted norms to produce a proper cosine in
+ * the weighted space.
+ */
+function asymmetricCosineSimilarity(
+  userVec: number[],
+  propVec: number[],
+  exponent: number,
+): number {
+  if (exponent <= 0) {
+    // Standard cosine (dot product of L2-normalized vectors)
+    let dot = 0;
+    for (let i = 0; i < userVec.length; i++) {
+      dot += userVec[i] * propVec[i];
+    }
+    return dot;
+  }
+
+  let dot = 0;
+  let normU = 0;
+  let normP = 0;
+  for (let i = 0; i < userVec.length; i++) {
+    const w = Math.pow(Math.abs(userVec[i]), exponent);
+    dot += w * userVec[i] * propVec[i];
+    normU += w * userVec[i] * userVec[i];
+    normP += w * propVec[i] * propVec[i];
+  }
+  const denom = Math.sqrt(normU) * Math.sqrt(normP);
+  return denom > 0 ? dot / denom : 0;
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -137,8 +191,15 @@ export function computeVectorMatch(
   propertyVector: number[],
   editorialDescription?: string,
 ): VectorMatchResult {
-  // Cosine similarity (dot product of L2-normalized vectors) → [-1, 1]
-  const rawCosine = cosineSimilarityV3(userVector, propertyVector);
+  // Soft asymmetric cosine: dimensions weighted by |user[i]|^exponent.
+  // Low-activation dimensions (where user has no opinion) contribute less,
+  // preventing hotel domains like Wellness/Setting from diluting scores.
+  // Exponent=0 falls back to standard cosine.
+  const rawCosine = asymmetricCosineSimilarity(
+    userVector,
+    propertyVector,
+    ASYMMETRIC_SIMILARITY_EXPONENT,
+  );
 
   // Raw cosine similarity — no scaling or clamping.
   // Negative values are meaningful (vector opposition) and flow through

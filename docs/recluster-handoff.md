@@ -2,60 +2,84 @@
 
 ## What This Is
 
-When the property catalog grows (new places finish enrichment), the v3 semantic clustering pipeline needs to be re-run to incorporate new signals. This document is a complete, copy-pasteable runbook — it covers every step from corpus extraction through quality verification, with the specific fixes and optimizations learned from the v3.1 → v3.2 migration.
+When the property catalog grows (new places finish enrichment), the v3 semantic clustering pipeline needs to be re-run to incorporate new signals. This document is a complete, copy-pasteable runbook — it covers every step from corpus extraction through quality verification. It includes lessons learned from v3.1 → v3.2 migration, the v3.6 full singleton mapping + lowercase key fix + BLEED_ONLY_DAMPEN tuning, and architectural notes on the hotel scoring gap. Feed this entire document to Claude when running the next re-cluster.
 
-## Current State (as of March 5, 2026)
+## Current State (as of March 22, 2026)
 
-- **736 enriched properties** in the DB
-- **v3.4 clustering**: 400 clusters, **400-dim signal-only vectors** (domain dims removed)
-- **Neighbor bleed (v3.3+)**: Two-tier similarity-scaled bleed (replaces flat 0.25 decay)
-  - **Intra-domain**: up to 3 neighbors per cluster, weight = similarity × 0.30
-  - **Cross-domain**: up to 2 neighbors per cluster, weight = similarity × 0.10 (similarity > 0.5 threshold)
-- **signal-clusters.json**: Generated from 7,628 signals (freq ≥ 2)
+- **1,189 enriched properties** in the DB
+- **v3.6 clustering**: 400 clusters, **400-dim signal-only vectors** (domain dims removed in v3.4)
+- **Neighbor bleed**: Two-tier similarity-scaled bleed (v3.3+), with bleed scales read from signal-clusters.json:
+  - **Intra-domain**: up to 3 neighbors per cluster, weight = similarity × 0.30 (threshold > 0.3)
+  - **Cross-domain**: up to 2 neighbors per cluster, weight = similarity × 0.10 (threshold > 0.5)
+  - **BLEED_ONLY_DAMPEN = 0.25** (in `constants.ts`): clusters that only receive energy via bleed (no direct signal) are attenuated by this factor. Raised from 0.08 to improve hotel scoring.
+  - **Runtime fallback**: `vectors-v3.ts` falls back to intra=0.15, cross=0.03 if the JSON lacks bleed scale fields
+- **signal-clusters.json**: Generated from **162,398 signals** (11,833 corpus + 150,565 singletons mapped to nearest centroids). All keys are lowercased at load time in `getClusterState()`.
+- **signal-clusters.json locations** (must be kept in sync):
+  - `/signal-clusters.json` (root — gitignored, used by clustering scripts)
+  - `/src/lib/taste-intelligence/signal-clusters.json` (bundled with code)
+  - `/public/data/signal-clusters.json` (runtime loader reads from here)
 - **DB columns**: `PlaceIntelligence.embeddingV3 vector(400)` and `User.tasteVectorV3 vector(400)` — all populated
-- **DB staging tables**: `v3_signal_cluster_map` (7,627 rows), `v3_cluster_domain` (400 rows), `v3_cluster_neighbors` (~1,200 intra + cross-domain rows, with `tier` column)
-- **Signal cache**: `v3_signal_cache` (113,907 rows — pre-computed cluster assignments for every property signal, including the ~106K that don't appear in the canonical corpus)
-- **IDF weights**: `_idf_weights` (112,050 rows)
-- **PL/pgSQL functions**: `compute_property_embedding_v3`, `compute_user_vector_v3`, `lookup_signal_cluster_v3`, `compute_signal_match_v3` — all current and using cache. Functions read pre-computed `weight` from `v3_cluster_neighbors` (no logic change needed when bleed weights change).
-- **v3.3 → v3.4 change**: Dropped 8 domain dims. Domain info is implicitly encoded in signal clusters via domain assignments. Removing domain dims improved std_dev from 3.79 to 4.07 with identical top-20 rankings. User domain preference weighting preserved via signal confidence boosting (radarData → domainWeight multiplier).
+- **DB staging tables**: `v3_signal_cluster_map`, `v3_cluster_domain` (400 rows), `v3_cluster_neighbors` (~1,200 intra + cross-domain rows, with `tier` column). Note: staging tables may be stale — v3.6 backfill runs via TypeScript (`vector-refresh` cron), not PL/pgSQL.
+- **Vector computation**: Handled by TypeScript in `vectors-v3.ts` via the `vector-refresh` cron endpoint. PL/pgSQL functions (`compute_property_embedding_v3`, etc.) still exist in the DB but are no longer the primary backfill path.
+- **Normalization pipeline**: log1p sublinear dampening → BLEED_ONLY_DAMPEN → mean-centering → L2 normalize
+- **Fallback chain for unmapped signals**: direct lookup → OpenAI batch embedding → skip (logged). Word-overlap fallback has been removed.
+- **Skipped signal tracking**: `GET /api/intelligence/skipped-signals` returns signals that failed both direct lookup and OpenAI embedding.
+- **Population stats**: mean=0.160, stddev=0.082 (2,378 scored pairs). Defaults in `match-tier.ts`.
+- **Domain rename**: `Geography` → `Setting` (in TasteNode and clustering corpus). The extraction script maps this automatically.
+- **Domain weighting removed (v3.6)**: radarData no longer affects scoring. All signals use uniform confidence (1.0). radarData is only used for front-end display (radar charts).
 
 ## Architecture Overview
 
 ```
-Vector layout (v3.4): [0-399] = 400 signal cluster dims (signal-only, no domain dims)
+Vector layout (v3.4+): [0-399] = 400 signal cluster dims (signal-only, no domain dims)
   (v3.3 was: [0-7] domain + [8-407] signal = 408; domain dims dropped in v3.4)
 
 Signal → Cluster: signal-clusters.json (domain-aware hierarchical K-means on OpenAI embeddings)
+  162K+ signalToCluster entries (corpus + singletons mapped to nearest centroid)
+  Keys are lowercased at load time in getClusterState() to match .toLowerCase() lookups
 Cluster → Dimension: cluster_id IS the dim index (direct, no offset)
 Neighbor bleed (v3.3+ — two-tier, similarity-scaled):
   Primary cluster: activated at 100%
-  Intra-domain neighbors (up to 3): weight = similarity × 0.30 (threshold > 0.3)
-  Cross-domain neighbors (up to 2): weight = similarity × 0.10 (threshold > 0.5)
-  Weights are pre-computed and stored in v3_cluster_neighbors.weight
-  PL/pgSQL functions read weight directly — no runtime calculation needed
+  Intra-domain neighbors (up to 3): weight = similarity × intra_bleed_scale (threshold > 0.3)
+  Cross-domain neighbors (up to 2): weight = similarity × cross_bleed_scale (threshold > 0.5)
+  Bleed scales stored in signal-clusters.json (currently: intra=0.30, cross=0.10)
+  Runtime fallback in vectors-v3.ts: intra=0.15, cross=0.03
 IDF weighting: ln(1 + N/df) per signal across all properties
-Normalization: per-dim normalize + clamp to 1.0, then single L2 norm
-  (v3.3 used triple-norm: L2 domains + L2 signals + 0.30/0.70 blend + final L2)
-User domain preference: radarData values boost signal confidence (not separate vector dims)
+Normalization pipeline (in order):
+  1. Signal features: IDF-weighted confidence per cluster + neighbor bleed
+  2. Log1p sublinear dampening: preserves signal density, prevents unbounded growth
+  3. BLEED_ONLY_DAMPEN (0.25): attenuates clusters with only bleed energy (no direct hit)
+  4. Mean-centering: removes shared "uniform" component, improves discrimination
+  5. L2 normalization: unit vector for cosine similarity
+User domain preference: REMOVED in v3.6 — all signals use uniform confidence (1.0)
+  (radarData still used for front-end display only)
 
-Domain assignment (contiguous cluster ranges — used for domain-slice queries):
-  Atmosphere (0-50), Character (51-135), Design (136-191), FoodDrink (192-263),
-  Service (264-336), Geography (337-379), Sustainability (380-386), Wellness (387-399)
-  (ranges shift whenever K changes — these are the v3.2/v3.3/v3.4 ranges)
+Domain assignment (contiguous cluster ranges — shift whenever re-clustered):
+  Atmosphere (0-43), Character (44-113), Design (114-152), FoodDrink (153-232),
+  Rejection (233), Service (234-311), Setting (312-362), Sustainability (363-375),
+  Wellness (376-399)
+  (these are the v3.6 ranges — note Geography→Setting rename, Rejection domain added)
 ```
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `scripts/extract-signal-corpus.mjs` | Extracts signals from DB → `signal-corpus.json` |
-| `scripts/cluster-signals-v3.py` | Embeds signals via OpenAI, runs K-means → `signal-clusters.json` |
+| `scripts/extract-signal-corpus.mjs` | Extracts signals from DB → `signal-corpus.json` + `signal-singletons.json` + `signal-dimensions.json`. Pulls from both PlaceIntelligence and TasteNode. Maps Geography→Setting. |
+| `scripts/cluster-signals-v3.py` | Embeds signals via OpenAI, runs K-means, maps singletons to nearest centroids → `signal-clusters.json`. Use `--k 400` to match VECTOR_DIM_V3. |
 | `scripts/surgery-clusters.py` | Post-clustering surgery: dissolve/split/auto-split clusters |
 | `scripts/sync-db-after-surgery.py` | Syncs DB staging tables + recomputes all vectors after surgery |
-| `src/lib/taste-intelligence/signal-clusters.json` | The cluster mapping (imported by vectors-v3.ts) |
-| `src/lib/taste-intelligence/vectors-v3.ts` | TypeScript vector computation (runtime / API use) |
-| `src/lib/taste-intelligence/backfill-v3.ts` | TypeScript backfill orchestrator |
+| `public/data/signal-clusters.json` | **Runtime source of truth** — the singleton loader reads from here. Must be kept in sync with root and src/lib/ copies. |
+| `src/lib/taste-intelligence/signal-clusters.json` | Bundled copy (for imports). Must match public/data/ copy. |
+| `src/lib/taste-intelligence/signal-clusters-loader.ts` | Singleton loader that reads from `public/data/`. Cached for process lifetime — restart dev server to pick up changes. |
+| `src/lib/taste-intelligence/vectors-v3.ts` | TypeScript vector computation (runtime / API use). Lowercases signalToCluster keys on load. Contains skipped signal tracking. |
+| `src/lib/taste-intelligence/backfill-v3.ts` | TypeScript backfill orchestrator (used by vector-refresh cron) |
 | `src/lib/taste-intelligence/queries-v3.ts` | Vector similarity queries |
+| `src/lib/constants.ts` | BLEED_ONLY_DAMPEN (0.25), ANTI_SIGNAL_SCALE, CLUSTER_ACTIVATION_THRESHOLD |
+| `src/lib/match-tier.ts` | Population stats defaults (mean, stddev), z-score tier classification |
+| `src/app/api/cron/vector-refresh/route.ts` | Cron endpoint: recomputes IDF, all user vectors, all property embeddings, refreshes population stats |
+| `src/app/api/intelligence/rescore/route.ts` | Rescore endpoint: recomputes user vector (optional) + rescores all saved places |
+| `src/app/api/intelligence/skipped-signals/route.ts` | GET: returns skipped signals. POST: clears cache. |
 | `prisma/schema.prisma` | DB schema (embeddingV3, tasteVectorV3 columns) |
 
 ## Supabase Project
@@ -76,27 +100,33 @@ Run locally from the `terrazzo-web` directory (needs `DATABASE_URL` in `.env.loc
 node scripts/extract-signal-corpus.mjs
 ```
 
+This extracts signals from **both** PlaceIntelligence (property signals) and TasteNode (user signals) so both vocabularies get assigned to the same clusters. It also maps `Geography` → `Setting` for the domain rename.
+
 **Outputs:**
-- `signal-corpus.json` — `[{s: "signal-name", d: "Domain", df: 5}, ...]` (signals with freq ≥ 2)
-- `signal-dimensions.json` — `[{s: "signal-name", d: "Domain"}, ...]` (domain mapping)
+- `signal-corpus.json` — `[{s: "signal-name", d: "Domain", df: 5}, ...]` (signals with freq ≥ 2, used for K-means clustering)
+- `signal-singletons.json` — `[{s: "signal-name", d: "Domain"}, ...]` (signals with freq = 1, mapped to nearest centroid in Step 2)
+- `signal-dimensions.json` — `[{s: "signal-name", d: "Domain"}, ...]` (all signals with domain mapping)
 
 **Sanity checks:**
-- Total signal count should grow roughly proportional to new properties (was 5,047 at 360 places, 7,628 at 736 places)
-- Domain distribution: Service > FoodDrink > Character > Design > Geography > Atmosphere > Wellness > Sustainability
-- Frequency distribution — bulk should be freq 2-5
+- Total corpus signal count should grow with new properties (was 5,047 at 360 places, 7,628 at 736 places, 11,833 at 1,189 places)
+- Singleton count will be much larger (150K+ at 1,189 places) — these are property-specific long-form signals
+- Domain distribution: Service > FoodDrink > Character > Design > Setting > Atmosphere > Wellness > Sustainability
+- Note: domain is now `Setting` (not `Geography`)
 
 ### Step 2: Run Clustering
 
 ```bash
-export OPENAI_API_KEY=sk-...
+export OPENAI_API_KEY=$(grep OPENAI_API_KEY .env.local | cut -d= -f2)
 pip install openai scikit-learn numpy  # if not installed
 
 # Option A: Full silhouette sweep (recommended for major corpus changes)
 python3 scripts/cluster-signals-v3.py --sweep
 
-# Option B: Direct clustering at specific K
+# Option B: Direct clustering at specific K (RECOMMENDED — always match VECTOR_DIM_V3)
 python3 scripts/cluster-signals-v3.py --k 400
 ```
+
+**CRITICAL**: Always use `--k 400` (or whatever `VECTOR_DIM_V3` is in `vectors-v3.ts`). If the script produces more clusters than `VECTOR_DIM_V3`, cluster IDs beyond the limit write beyond array bounds, producing NaN vectors that break pgvector. If you want to change K, update `VECTOR_DIM_V3` and `SIGNAL_DIMS_V3` first.
 
 **How to choose K:**
 - Rule of thumb: `K ≈ sqrt(num_signals) * 1.5`, min 200, max 500
@@ -106,26 +136,34 @@ python3 scripts/cluster-signals-v3.py --k 400
 - The sweep shows silhouette scores per K; pick the peak (silhouette > 0.10 is good for this data)
 
 **The script:**
-1. Loads `signal-corpus.json` and `signal-dimensions.json`
-2. Embeds all signals with `text-embedding-3-small` (cached in `signal-embeddings-cache.json` — delete cache to re-embed)
-3. Runs domain-aware hierarchical K-means (allocates sub-clusters proportionally per domain)
-4. Computes 3 nearest neighbor clusters within each domain (for neighbor bleed)
-5. Outputs `signal-clusters.json` to both `src/lib/taste-intelligence/` and project root
+1. Loads `signal-corpus.json`, `signal-singletons.json`, and `signal-dimensions.json`
+2. Embeds all corpus signals with `text-embedding-3-small` (cached in `signal-embeddings-cache.json` — delete cache to re-embed)
+3. Runs domain-aware hierarchical K-means on corpus signals (allocates sub-clusters proportionally per domain)
+4. Computes nearest neighbor clusters within each domain (for neighbor bleed) and cross-domain
+5. **Embeds all singletons** via OpenAI and maps each to its nearest cluster centroid by cosine similarity
+6. Outputs `signal-clusters.json` to both `src/lib/taste-intelligence/` and project root
+7. **You must also copy to `public/data/`** — the runtime loader reads from there (the script doesn't do this automatically)
+
+```bash
+cp signal-clusters.json public/data/signal-clusters.json
+```
 
 **Output format** (`signal-clusters.json`):
 ```json
 {
-  "version": "v3.2",
+  "version": "v3.4",
   "method": "domain-hierarchical-openai-kmeans",
   "embedding_model": "text-embedding-3-small",
   "k": 400,
-  "avg_silhouette": 0.1016,
-  "total_signals": 7628,
-  "neighbor_decay": 0.25,
-  "created": "2026-03-04",
+  "avg_silhouette": 0.0922,
+  "total_signals": 162398,
+  "intra_bleed_scale": 0.30,
+  "cross_bleed_scale": 0.10,
+  "created": "2026-03-22",
   "clusters": { "0": { "label": "...", "domain": "...", "size": 15, "topSignals": [...] }, ... },
-  "signalToCluster": { "signal-name": 0, ... },
-  "clusterNeighbors": { "0": [{"cluster": 1, "similarity": 0.89, "weight": 0.25}, ...], ... }
+  "signalToCluster": { "signal-name": 0, ... },  // 162K+ entries (corpus + singletons)
+  "clusterNeighbors": { "0": [{"cluster": 1, "similarity": 0.89, "tier": "intra"}, ...], ... },
+  "clusterCentroids": { "0": [0.01, -0.03, ...], ... }  // 1536-dim OpenAI embeddings per cluster
 }
 ```
 
@@ -186,7 +224,7 @@ CREATE INDEX "User_tasteVectorV3_hnsw_idx"
 ```
 
 Also update these files if K changed:
-- `vectors-v3.ts`: `VECTOR_DIM_V3 = 8 + NEW_K`, `SIGNAL_DIMS_V3 = NEW_K`
+- `vectors-v3.ts`: `VECTOR_DIM_V3 = NEW_K`, `SIGNAL_DIMS_V3 = NEW_K` (these are the same value since domain dims were dropped in v3.4)
 - `queries-v3.ts`: update vector dimension comments
 - `backfill-v3.ts`: update dimension/cluster count comments
 - `prisma/schema.prisma`: `vector(NEW_DIM)` annotations
@@ -345,20 +383,22 @@ CREATE INDEX IF NOT EXISTS idx_v3_scm_trgm
   ON v3_signal_cluster_map USING gin (signal gin_trgm_ops);
 ```
 
-### Step 6: Update PL/pgSQL Backfill Functions (only if K changed)
+### Step 6: Update PL/pgSQL Backfill Functions (LEGACY — only if using SQL-side backfill)
 
-If K didn't change, the existing functions are fine. If K changed, recreate these four functions with the new array sizes:
+**Note**: The v3.6+ pipeline uses TypeScript for all vector computation (via the `vector-refresh` cron endpoint). PL/pgSQL functions are no longer the primary backfill path and can be skipped unless you specifically need SQL-side computation.
+
+If K changed and you need to update the PL/pgSQL functions, recreate these four with the new array sizes:
 
 - `lookup_signal_cluster_v3(signal_text, num_clusters)` — cache → direct → trigram → hash fallback
-- `compute_property_embedding_v3(prop_id)` — 8+K dim, neighbor bleed via `v3_cluster_neighbors`
+- `compute_property_embedding_v3(prop_id)` — K dim, neighbor bleed via `v3_cluster_neighbors`
 - `compute_user_vector_v3(uid)` — same layout, processes `tasteProfile` + `TasteNode` signals
 - `compute_signal_match_v3(...)` — scoring function with ratio-based anti-signal penalty
 
 Key dimensions to update in each function:
 - `signal_feats` / `signal_weights` array size: K
-- `final_vec` array size: 8 + K
+- `final_vec` array size: K (domain dims were dropped in v3.4)
 - All loop bounds: `FOR i IN 0..K-1`
-- Vector cast: `final_vec::vector(8+K)`
+- Vector cast: `final_vec::vector(K)`
 
 The functions live in the database — re-create them with `CREATE OR REPLACE FUNCTION`.
 
@@ -501,12 +541,29 @@ DROP TABLE IF EXISTS v3_unmapped_signals;
 
 ### Step 8: Run the Backfill
 
-With the signal cache populated, backfill is fast (~1-2 seconds per property).
+#### Preferred method: TypeScript via vector-refresh cron (v3.6+)
 
-#### 8a. Property embeddings
+First null all property embeddings to force recompute:
+```sql
+UPDATE "PlaceIntelligence" SET "embeddingV3" = NULL;
+```
+
+Then run the cron (dev server must be running locally):
+```bash
+curl -X GET http://localhost:3000/api/cron/vector-refresh \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+This recomputes IDF weights, all user vectors, all property embeddings, and refreshes population stats in one call. For 1,189 properties + 6 users, completes in ~2-3 minutes.
+
+**Important**: The dev server must have been restarted after updating signal-clusters.json (Step 3) to clear the singleton cluster state cache.
+
+#### Legacy method: PL/pgSQL (only if TypeScript path unavailable)
+
+With the signal cache populated, backfill via SQL:
 
 ```sql
--- Backfill all properties (should complete in one call for <1000 properties)
+-- 8a. Property embeddings
 SELECT count(*) FROM (
   SELECT compute_property_embedding_v3(id)
   FROM "PlaceIntelligence"
@@ -514,25 +571,14 @@ SELECT count(*) FROM (
 ) sub;
 ```
 
-If you have >1000 properties and it times out, batch in chunks of 200:
-
 ```sql
-SELECT count(*) FROM (
-  SELECT compute_property_embedding_v3(id)
-  FROM "PlaceIntelligence"
-  WHERE status = 'complete' AND "signalCount" > 0 AND "embeddingV3" IS NULL
-  LIMIT 200
-) sub;
--- Repeat until no NULL embeddingV3 remain
-```
-
-#### 8b. User taste vectors
-
-```sql
+-- 8b. User taste vectors
 SELECT compute_user_vector_v3(id)
 FROM "User"
 WHERE "isOnboardingComplete" = true AND "tasteVectorV3" IS NULL;
 ```
+
+**Note**: The PL/pgSQL path requires Steps 5-7 (staging tables + signal cache) to be completed first. The TypeScript path does not.
 
 ### Step 9: Verify
 
@@ -611,53 +657,58 @@ LIMIT 10;
 
 ---
 
-## Quick Reference: If K Doesn't Change
+## Quick Reference: If K Doesn't Change (v3.6+ process)
 
 If re-running with the same K (e.g., still 400) but more signals from new properties:
 
 1. `node scripts/extract-signal-corpus.mjs`
 2. Delete `signal-embeddings-cache.json` (to embed new signals)
-3. `python3 scripts/cluster-signals-v3.py --k 400`
-4. Replace `signal-clusters.json` in repo
-5. Load staging tables (Step 5 — truncate and reload all three tables)
-6. Recompute IDF weights (Step 3)
-7. Build signal cache (Step 7 — this is needed even if K is the same because new property signals need mappings)
-8. Run backfill (Step 8)
-9. Verify (Steps 9-10)
+3. `export OPENAI_API_KEY=$(grep OPENAI_API_KEY .env.local | cut -d= -f2)`
+4. `python3 scripts/cluster-signals-v3.py --k 400`
+5. Copy signal-clusters.json to all three locations:
+   ```bash
+   cp signal-clusters.json src/lib/taste-intelligence/signal-clusters.json
+   cp signal-clusters.json public/data/signal-clusters.json
+   ```
+6. Restart dev server (to clear the singleton cluster state cache)
+7. Null all property embeddings: `UPDATE "PlaceIntelligence" SET "embeddingV3" = NULL`
+8. Run vector refresh cron (recomputes IDF, user vectors, property embeddings, population stats)
+9. Check skipped signals (`GET /api/intelligence/skipped-signals`)
+10. Rescore a test user and verify benchmark hotels
+11. Update population stats defaults in `match-tier.ts`
 
-No code changes, no DB migration, no PL/pgSQL function updates needed.
+No staging table loads, no signal cache builds, no PL/pgSQL function updates needed. The TypeScript pipeline handles everything.
 
 ## Quick Reference: If K Changes
 
-Everything in the "K doesn't change" checklist, plus:
+Everything in the "K doesn't change" checklist, plus (BEFORE running the pipeline):
 
 1. Update `VECTOR_DIM_V3` and `SIGNAL_DIMS_V3` in `vectors-v3.ts`
 2. Update comments in `queries-v3.ts` and `backfill-v3.ts`
 3. Update `prisma/schema.prisma` vector dimensions
 4. Run DB migration (Step 4 — drop + recreate vector columns)
-5. Recreate PL/pgSQL functions with new array sizes (Step 6)
-6. Update the `num_clusters` default in `lookup_signal_cluster_v3`
+5. Run `npx prisma generate` to sync the Prisma client
 
 
 ---
 
 ## Lessons Learned / Design Notes for Next Time
 
-### The Singleton Signal Problem
+### The Singleton Signal Problem (SOLVED in v3.6)
 
-Properties produce ~150-300 signals each, but the canonical clustering corpus only includes signals appearing in 2+ properties (the `freq ≥ 2` filter in `extract-signal-corpus.mjs`). This means roughly 60-70% of all distinct property signals are *not* in the cluster map. In v3.2, 6,073 of 112,127 unique signals were direct matches (5.4%).
+Properties produce ~150-300 signals each, but the canonical clustering corpus only includes signals appearing in 2+ properties (the `freq ≥ 2` filter in `extract-signal-corpus.mjs`). This meant roughly 60-70% of all distinct property signals were *not* in the cluster map. In v3.2, only 6,073 of 112,127 unique signals were direct matches (5.4%).
 
-These "unmapped" signals are the primary performance bottleneck. Without pre-computation, every backfill call triggers expensive trigram similarity searches.
+**v3.2-v3.5 fix**: Pre-compute all signal→cluster mappings into `v3_signal_cache` using batch trigram similarity with a GIN index. This handled the performance problem but trigram matching produced semantic errors (e.g., "steam-room-offering" → "room temperature issues" cluster).
 
-**The fix that worked:** Pre-compute all signal→cluster mappings into `v3_signal_cache` using batch trigram similarity with a GIN index. This turned the per-property backfill from "timeout after 60 seconds on 5 properties" to "736 properties in one call."
+**v3.6 fix (current)**: The clustering script now:
+1. Extracts both corpus (freq≥2) AND singleton (freq=1) signals from the DB
+2. Clusters the corpus signals via K-means as before
+3. Embeds ALL singletons via OpenAI `text-embedding-3-small` and maps each to its nearest cluster centroid by cosine similarity
+4. Outputs all 162K+ signal→cluster mappings in `signalToCluster`
 
-**For the next round**, consider:
+This gives ~100% direct lookup coverage. The DB-side `v3_signal_cache` and trigram matching are no longer needed for the TypeScript backfill path. The PL/pgSQL functions still exist but are not the primary backfill mechanism — the TypeScript `vector-refresh` cron is.
 
-1. **Lowering the freq threshold from 2 to 1** in `extract-signal-corpus.mjs`. This would include all signals in the corpus and eliminate the unmapped-signal problem entirely, at the cost of a much larger embedding batch (100K+ signals vs 7K). At ~$0.04 per 100K signals with `text-embedding-3-small`, the cost is negligible. The clustering quality might even improve since singleton signals often carry highly specific taste info.
-
-2. **Building the cache as part of the clustering script** rather than as a separate SQL-side step. The Python script already has all the embeddings in memory — it could output a `signal-cache.json` with trigram-matched cluster assignments for every signal in the DB, not just the corpus signals. This would eliminate Steps 7c-7d entirely.
-
-3. **Using the cache as the sole lookup path in PL/pgSQL.** If the cache is guaranteed to contain every signal that exists in any property, the `lookup_signal_cluster_v3` function becomes a single hash lookup with no fallback chain needed. The fallback chain (cache → direct → trigram → hash) is only necessary because new properties might introduce signals that weren't in any previous batch.
+**Remaining edge case**: Truly novel signals generated after the last re-cluster (e.g., new onboarding signals) won't have direct lookup entries. These fall through to OpenAI batch embedding at runtime (in `buildSignalFeaturesV3`), or are skipped if OpenAI is unavailable. Check `/api/intelligence/skipped-signals` to see what's falling through.
 
 ### Batch SQL Execution via Supabase MCP
 
@@ -682,35 +733,42 @@ WHERE scm.signal % u.signal
 ORDER BY scm.signal <-> u.signal
 ```
 
-### Neighbor Bleed Design (v3.3: Two-Tier Similarity-Scaled)
+### Neighbor Bleed Design (v3.3+: Two-Tier Similarity-Scaled)
 
 **v3.2 (deprecated):** Flat 0.25 decay, within-domain only, 3 neighbors.
 
-**v3.3 (current):** Two-tier, similarity-scaled weights:
-- **Intra-domain** (tier 1): Up to 3 neighbors within same domain, weight = similarity × 0.30 (threshold > 0.3). Range: 0.09–0.27.
-- **Cross-domain** (tier 2): Up to 2 neighbors across domains, weight = similarity × 0.10 (threshold > 0.5). Range: 0.05–0.09.
+**v3.3+ (current):** Two-tier, similarity-scaled weights:
+- **Intra-domain** (tier 1): Up to 3 neighbors within same domain, weight = similarity × intra_bleed_scale (threshold > 0.3). Range: 0.09–0.27 at scale=0.30.
+- **Cross-domain** (tier 2): Up to 2 neighbors across domains, weight = similarity × cross_bleed_scale (threshold > 0.5). Range: 0.05–0.09 at scale=0.10.
 
-**Why similarity-scaled?** With soft cluster boundaries (avg silhouette ~0.10), high-similarity neighbors represent genuine taste gradients — clusters that almost merged during K-means. These should bleed more. Low-similarity neighbors are genuinely distinct and should bleed less. The old flat 0.25 treated a 0.91-similarity neighbor the same as a 0.38-similarity one, losing information.
+**Where bleed scales live:**
+- **signal-clusters.json**: `intra_bleed_scale` and `cross_bleed_scale` fields (source of truth)
+- **vectors-v3.ts**: Reads from JSON; falls back to hardcoded 0.15/0.03 if fields missing
+- **v3_cluster_neighbors table**: Pre-computed `weight` column (used by PL/pgSQL functions only)
+- **BLEED_ONLY_DAMPEN** in `constants.ts` (0.25): Separate from bleed scales — this attenuates clusters that only received energy via bleed (no direct signal hit). This is the key lever for hotel scoring.
+
+**Why similarity-scaled?** With soft cluster boundaries (avg silhouette ~0.09), high-similarity neighbors represent genuine taste gradients — clusters that almost merged during K-means. These should bleed more. Low-similarity neighbors are genuinely distinct and should bleed less. The old flat 0.25 treated a 0.91-similarity neighbor the same as a 0.38-similarity one, losing information.
 
 **Why cross-domain?** Some taste patterns are inherently cross-domain: "raw alpine materiality" (Design) co-occurs with "mountain silence" (Atmosphere). Without cross-domain bleed, these patterns require direct signal in both domains. The 0.10 scale keeps cross-domain bleed gentle (max weight ~0.09) to prevent semantic confusion.
 
-**Architecture note:** Weights are pre-computed and stored in `v3_cluster_neighbors.weight`. The PL/pgSQL backfill functions read `weight` directly — they don't know or care about tiers or scales. This means tuning the bleed only requires updating the `weight` column, not rewriting functions.
-
 If you want to tune:
-- **Intra scale (0.30)**: Controls within-domain smoothing. Higher = smoother, lower = sharper.
-- **Cross scale (0.10)**: Controls cross-domain bridging. Keep low to avoid spurious connections.
-- **Cross threshold (0.5)**: Only high-similarity cross-domain pairs qualify. Lower = more bridges, more noise risk.
-- **Audit cross-domain links** after regenerating: check that "Japanese garden" (Geography) doesn't bleed to "Japanese breakfast" (FoodDrink) via surface vocabulary overlap.
+- **BLEED_ONLY_DAMPEN (0.25)**: The most impactful lever. Controls how much bleed-only clusters contribute. 0.08 was too low for hotels; 0.25 works well. In `constants.ts`.
+- **Intra scale (0.30)**: Controls within-domain smoothing. Higher = smoother, lower = sharper. In signal-clusters.json.
+- **Cross scale (0.10)**: Controls cross-domain bridging. Keep low to avoid spurious connections. In signal-clusters.json.
+- **Cross threshold (0.5)**: Only high-similarity cross-domain pairs qualify. Lower = more bridges, more noise risk. In the clustering script.
+- **Audit cross-domain links** after regenerating: check that "Japanese garden" (Setting) doesn't bleed to "Japanese breakfast" (FoodDrink) via surface vocabulary overlap.
 
 ## DB Tables Reference
 
-| Table | Rows (v3.2) | Purpose |
-|-------|-------------|---------|
-| `v3_signal_cluster_map` | 7,627 | Canonical signal → cluster_id (from clustering corpus) |
-| `v3_cluster_domain` | 400 | Cluster → taste domain name |
-| `v3_cluster_neighbors` | ~1,200+ | Cluster → neighbors (intra + cross domain) + similarity + weight + tier |
-| `v3_signal_cache` | 113,907 | Pre-computed lookup for ALL property signals (canonical + unmapped) |
-| `_idf_weights` | 112,050 | Signal → IDF weight + doc frequency |
+| Table | Rows (v3.6) | Purpose | Still Used? |
+|-------|-------------|---------|-------------|
+| `v3_signal_cluster_map` | 7,627 | Canonical signal → cluster_id (from clustering corpus) | Only by PL/pgSQL functions (not primary path) |
+| `v3_cluster_domain` | 400 | Cluster → taste domain name | Only by PL/pgSQL functions |
+| `v3_cluster_neighbors` | ~1,200+ | Cluster → neighbors + similarity + weight + tier | Only by PL/pgSQL functions |
+| `v3_signal_cache` | 113,907 | Pre-computed lookup for ALL property signals | Only by PL/pgSQL functions — TypeScript uses signal-clusters.json directly |
+| `_idf_weights` | 112,050 | Signal → IDF weight + doc frequency | Only by PL/pgSQL functions — TypeScript computes IDF in memory |
+
+**Note**: The v3.6 pipeline runs entirely via TypeScript (`vectors-v3.ts` + `backfill-v3.ts` + `vector-refresh` cron). The DB staging tables and PL/pgSQL functions are legacy from when backfill was done SQL-side. They still work but are not the primary path. Steps 5-7 in the old process (load staging tables, build signal cache) can be skipped when using the TypeScript pipeline.
 
 Tables that can be safely dropped: `_signal_cluster_map_v3` (legacy), `_signal_token_index` (legacy).
 
@@ -788,3 +846,185 @@ Result: 8 affected clusters (37, 71, 88, 98, 128, 351, 374, 375) — all emptied
 | v3.3 | Mar 2026 | 400 | 408 | 7,628 | 736 | + two-tier similarity-scaled bleed, cross-domain neighbors |
 | v3.4 | Mar 2026 | 400 | 400 | 7,628 | 736 | Dropped domain dims (signal-only), single L2 norm, std_dev 3.79→4.07 |
 | v3.5 | Mar 2026 | 400 | 400 | 6,598 | 1,161 | Cluster surgery: dissolved 88/98, auto-split 37/71/128/351/374/375 |
+| v3.6 | Mar 2026 | 400 | 400 | 162,398 | 1,189 | Full singleton mapping, Geography→Setting rename, lowercase key fix, BLEED_ONLY_DAMPEN=0.25 |
+
+---
+
+## v3.6 Session Learnings (March 22, 2026)
+
+This section documents the full end-to-end re-cluster + rescore run that produced v3.6, and all the bugs, fixes, and architectural insights discovered along the way. Feed this entire document (including this section) to Claude for the next re-cluster.
+
+### What Changed in v3.6
+
+1. **Full singleton mapping**: `extract-signal-corpus.mjs` now outputs `signal-singletons.json` (freq=1 signals) alongside the existing `signal-corpus.json` (freq≥2). The clustering script embeds all singletons via OpenAI and maps each to its nearest cluster centroid by cosine similarity. This grew `signalToCluster` from ~6,598 to **162,398 entries** — essentially 100% coverage of all known signals.
+
+2. **Geography→Setting domain rename**: The `Geography` domain was renamed to `Setting` in `TasteNode` but the extraction script was still using the old name. `extract-signal-corpus.mjs` now maps `Geography` → `Setting` during extraction.
+
+3. **Three-location sync for signal-clusters.json**: The file must exist in three places, all identical:
+   - `/signal-clusters.json` (root — gitignored, used by clustering scripts)
+   - `/src/lib/taste-intelligence/signal-clusters.json` (bundled with code)
+   - `/public/data/signal-clusters.json` (runtime loader reads from here via `signal-clusters-loader.ts`)
+
+   **CRITICAL**: The runtime loader (`getSignalClusterMap()`) reads from `public/data/`. If you only update the root and `src/lib/` copies, the running server will use stale data. Always copy to all three locations after clustering.
+
+4. **BLEED_ONLY_DAMPEN raised from 0.08 to 0.25** in `/src/lib/constants.ts`. This constant controls how much energy cross-domain neighbor bleed contributes to a signal's cluster activation. The old value was too conservative — hotels that spread signals across many domains (Wellness + Setting + Design + Service) were getting penalized because their cross-domain bleed was nearly zeroed out.
+
+5. **Lowercase key normalization**: The clustering script preserved original casing in `signalToCluster` keys (e.g., `"DJ-driven-nightlife"`, `"LGBTQ-welcoming"`, `"Relais-&-Châteaux-member"`), but the runtime lookup code normalizes signals to lowercase via `.toLowerCase()`. This caused **10,320 signals (6.3%)** to silently fail direct lookup and fall through to the OpenAI batch embedding fallback on every vector computation. Fix: `vectors-v3.ts` now lowercases all keys when loading the cluster state in `getClusterState()`. Only 61 key collisions out of 162K — negligible.
+
+6. **Word-overlap fallback removed**: The fallback chain for unmapped signals was: direct lookup → OpenAI batch embedding → word-overlap → hash. Word-overlap was removed because it produces poor results (e.g., routing "steam-room-offering" to a "room temperature issues" cluster because of the word "room"). A misrouted signal is worse than a skipped one. The chain is now: **direct lookup → OpenAI batch embedding → skip (with logging)**.
+
+7. **Skipped signal tracking**: New in-memory cache in `vectors-v3.ts` records every signal that was skipped during vector computation (failed both direct lookup and OpenAI embedding). Queryable via `GET /api/intelligence/skipped-signals`. Use this to identify signals that need adding to the next re-cluster corpus.
+
+### Critical Bugs Encountered and Fixed
+
+#### Bug 1: K mismatch (K=550 vs VECTOR_DIM_V3=400)
+
+If you run the clustering script without `--k 400` and it produces more clusters than `VECTOR_DIM_V3`, cluster IDs beyond 399 write beyond the array bounds in `buildSignalFeaturesV3`. After L2 normalization, this produces NaN vectors that break pgvector (`"NaN not allowed in vector"`).
+
+**Prevention**: Always pass `--k 400` (or whatever `VECTOR_DIM_V3` is set to) when running the clustering script. If you want to change K, update `VECTOR_DIM_V3` and `SIGNAL_DIMS_V3` in `vectors-v3.ts` FIRST, then run the DB migration (Step 4 in main runbook).
+
+#### Bug 2: Stale public/data/signal-clusters.json
+
+The runtime loader is a singleton cached for the process lifetime. After updating signal-clusters.json, you MUST restart the dev server to clear the cache. Without a restart, the old cluster data continues to be used for all vector computations.
+
+**Prevention**: After any re-cluster:
+```bash
+cp signal-clusters.json src/lib/taste-intelligence/signal-clusters.json
+cp signal-clusters.json public/data/signal-clusters.json
+# Then restart dev server
+```
+
+#### Bug 3: OpenAI API key not available to Python
+
+`source <(grep OPENAI_API_KEY .env.local)` loads the key into the shell but NOT into `os.environ` for Python subprocesses. Use:
+```bash
+export OPENAI_API_KEY=$(grep OPENAI_API_KEY .env.local | cut -d= -f2)
+python3 scripts/cluster-signals-v3.py --k 400
+```
+
+#### Bug 4: Prisma client out of sync after schema changes
+
+If you modify the Prisma schema or DB columns, the Prisma client can get out of sync, causing P2022 errors ("column not available") that silently prevent DB writes. The rescore API will report `scored: 0, skipped: 538` with no error.
+
+**Fix**: Run `npx prisma generate` after any schema change.
+
+#### Bug 5: Git lock files blocking commits
+
+`.git/index.lock` and `.git/HEAD.lock` can block git operations. Use the Cowork `allow_cowork_file_delete` tool to delete them.
+
+### Updated End-to-End Re-Cluster Process (v3.6+)
+
+This supersedes the "Quick Reference: If K Doesn't Change" section for the common case.
+
+#### Prerequisites
+```bash
+cd terrazzo-web
+export OPENAI_API_KEY=$(grep OPENAI_API_KEY .env.local | cut -d= -f2)
+```
+
+#### Step 1: Extract signal corpus (includes singletons)
+```bash
+node scripts/extract-signal-corpus.mjs
+```
+Outputs: `signal-corpus.json`, `signal-singletons.json`, `signal-dimensions.json`
+
+#### Step 2: Run clustering with singleton mapping
+```bash
+python3 scripts/cluster-signals-v3.py --k 400
+```
+This embeds all corpus signals AND singletons, clusters the corpus, then maps singletons to nearest centroid. Output: `signal-clusters.json` with 162K+ `signalToCluster` entries.
+
+**IMPORTANT**: Always use `--k 400` (or match `VECTOR_DIM_V3`). The script defaults to a silhouette sweep that may produce a different K.
+
+#### Step 3: Copy signal-clusters.json to all three locations
+```bash
+cp signal-clusters.json src/lib/taste-intelligence/signal-clusters.json
+cp signal-clusters.json public/data/signal-clusters.json
+```
+
+#### Step 4: Restart dev server
+```bash
+# Ctrl+C the running server, then:
+npm run dev
+```
+This clears the singleton cluster state cache so the new data loads.
+
+#### Step 5: Null all property embeddings
+Either via Supabase SQL:
+```sql
+UPDATE "PlaceIntelligence" SET "embeddingV3" = NULL;
+```
+Or via the Supabase MCP `execute_sql` tool.
+
+#### Step 6: Run vector refresh
+```bash
+curl -X GET http://localhost:3000/api/cron/vector-refresh \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+This recomputes IDF weights, all user vectors, and all property embeddings. Watch the server logs — you should see zero OpenAI embedding calls if all signals have direct lookup coverage.
+
+#### Step 7: Check skipped signals
+```bash
+curl http://localhost:3000/api/intelligence/skipped-signals \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+If `total > 0`, those signals need to be added to the clustering corpus for the next run.
+
+#### Step 8: Rescore a test user
+```bash
+curl -X POST http://localhost:3000/api/intelligence/rescore \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  -d '{"userId":"cmlvca5sx000004lasyug8tqw","recompute":true}'
+```
+Check that `scored` equals `total` (no skips), and that the population stats look reasonable (mean ~0.16, stddev ~0.08 as of v3.6).
+
+#### Step 9: Update population stats fallback defaults
+Update `DEFAULT_POPULATION_MEAN` and `DEFAULT_POPULATION_STDDEV` in `/src/lib/match-tier.ts` with the values from the vector refresh response.
+
+#### Step 10: Verify benchmark hotels
+```sql
+SELECT "matchScore", name, type
+FROM "SavedPlace"
+WHERE "userId" = 'cmlvca5sx000004lasyug8tqw'
+  AND (name ILIKE '%forestis%' OR name ILIKE '%sanders%' OR name ILIKE '%ett hem%');
+```
+As of v3.6: Forestis=0.225, Sanders=0.220, Ett Hem=0.175 (all above population mean of 0.160).
+
+#### Step 11: Commit and deploy
+```bash
+git add signal-clusters.json src/lib/taste-intelligence/signal-clusters.json public/data/signal-clusters.json
+git add src/lib/taste-intelligence/vectors-v3.ts src/lib/match-tier.ts src/lib/constants.ts
+git commit -m "Re-cluster v3.6: full singleton mapping, N signals, K=400"
+git push
+```
+
+### Architectural Notes for Future Work
+
+#### Hotel vs Restaurant Scoring Gap
+
+Hotels systematically score lower than restaurants because:
+
+1. **Hotels spread signals across many domains** (Wellness + Setting + Design + Service + Atmosphere) while restaurants concentrate in fewer (FoodDrink + Atmosphere + Service). After mean-centering and L2 normalization, concentrated signals produce sharper spikes that align better in cosine similarity.
+
+2. **User vectors are sparse in hotel-critical domains** (Wellness, Setting, Sustainability). These domains are exempted from gap-fill in `domain-gap-check` because they're more like optional filters than core taste dimensions. Most users have zero signal in these domains.
+
+3. **BLEED_ONLY_DAMPEN was too low** (0.08). Hotels' cross-domain signal bleed was being nearly zeroed out. Raising to 0.25 was the single biggest improvement.
+
+#### Planned Fixes (not yet implemented)
+
+1. **Asymmetric similarity**: Only compute cosine similarity on dimensions where the user has meaningful activation (|user[i]| > threshold). This prevents hotel dimensions the user has no opinion on from diluting the score. Implementation goes in `computeVectorMatch()` in `taste-match-vectors.ts`.
+
+2. **Conditional Wellness/Sustainability onboarding**: Gate question asking "Is wellness/sustainability important to you?" → if yes, serve deep-dive questions to build out signals in those domains. This improves data quality for users who care about those hotel-critical domains.
+
+3. **Mean-centering is correct**: Don't remove it. Without mean-centering, all cosine scores cluster at ~0.83 with 0.02 spread. Mean-centering gives the discrimination needed. The asymmetric similarity fix addresses the "broad activation penalty" without touching mean-centering.
+
+### Score Progression (Greg's account, benchmark hotels)
+
+| Hotel | v3.5 (before) | After K=400 rescore | v3.6 (lowercase fix + BLEED=0.25) |
+|---|---|---|---|
+| Forestis Dolomites | -0.020 | 0.044 | **0.225** |
+| Hotel Sanders | -0.018 | 0.026 | **0.220** |
+| Ett Hem | 0.020 | 0.011 | **0.175** |
+
+Population stats: mean=0.160, stddev=0.082 (2,378 scored pairs)

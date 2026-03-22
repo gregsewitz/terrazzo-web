@@ -113,7 +113,13 @@ function getClusterState(): ClusterState {
 
   const cm = getSignalClusterMap();
 
-  const signalToCluster: Record<string, number> = cm.signalToCluster;
+  // Lowercase all keys so lookups via .toLowerCase() always match.
+  // The clustering script preserves original casing (e.g. "DJ-driven-nightlife")
+  // but all lookup paths normalize to lowercase first.
+  const signalToCluster: Record<string, number> = {};
+  for (const [key, value] of Object.entries(cm.signalToCluster)) {
+    signalToCluster[key.toLowerCase()] = value as number;
+  }
   const clusterInfo: Record<string, { label: string; domain?: string; topSignals: string[]; size?: number }> =
     cm.clusters;
   const clusterCentroids: Record<string, number[]> | null = cm.clusterCentroids ?? null;
@@ -297,6 +303,35 @@ export async function lookupSignalClusterAsync(signal: string): Promise<number |
   }
 }
 
+// ─── Skipped signal cache ────────────────────────────────────────────────────
+// Tracks signals that couldn't be mapped to a cluster via direct lookup or
+// OpenAI semantic embedding. Accumulates for the process lifetime so it can
+// be queried via API to identify signals that need adding to the next re-cluster.
+const _skippedSignals = new Map<string, { count: number; firstSeen: number }>();
+
+/** Record a signal that was skipped during vector computation. */
+function recordSkippedSignal(signal: string): void {
+  const normalized = signal.toLowerCase().trim();
+  const existing = _skippedSignals.get(normalized);
+  if (existing) {
+    existing.count++;
+  } else {
+    _skippedSignals.set(normalized, { count: 1, firstSeen: Date.now() });
+  }
+}
+
+/** Get all skipped signals, sorted by frequency (most skipped first). */
+export function getSkippedSignals(): Array<{ signal: string; count: number; firstSeen: number }> {
+  return Array.from(_skippedSignals.entries())
+    .map(([signal, { count, firstSeen }]) => ({ signal, count, firstSeen }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/** Clear the skipped signal cache (e.g. after a re-cluster). */
+export function clearSkippedSignals(): void {
+  _skippedSignals.clear();
+}
+
 // ─── Semantic embedding cache ────────────────────────────────────────────────
 // Caches signal → cluster mappings discovered via OpenAI embedding so we don't
 // re-embed the same novel signal across multiple vector computations.
@@ -461,18 +496,9 @@ async function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: 
     const normalized = text.toLowerCase().trim();
     const bucket = semanticMappings.get(normalized);
     if (bucket === undefined) {
-      // Embedding failed for this signal — fall back to word-overlap
-      const fallbackBucket = lookupSignalCluster(text);
-      const idf = getIdfWeight(text);
-      const weightedConfidence = confidence * idf;
-      features[fallbackBucket] += weightedConfidence;
-      directHits.add(fallbackBucket);
-      const neighbors = neighborMap.get(fallbackBucket);
-      if (neighbors) {
-        for (const { idx, weight } of neighbors) {
-          features[idx] += weightedConfidence * weight;
-        }
-      }
+      // Embedding failed for this signal — skip it entirely.
+      // A misrouted signal (via word-overlap) is worse than a missing one.
+      recordSkippedSignal(text);
       continue;
     }
 

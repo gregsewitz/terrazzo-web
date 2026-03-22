@@ -29,12 +29,12 @@
 
 // ── Population statistics ───────────────────────────────────────────────────
 // Hardcoded fallback values (raw cosine scale, updated Mar 22 2026).
-// After K=400 re-clustering with full singleton mapping (162K signals).
+// After K=400 re-clustering with lowercase key fix + BLEED_ONLY_DAMPEN=0.25.
 // On the server, these are overridden by live stats from the DB via
 // refreshPopulationStats() / setPopulationStats().
 
-const DEFAULT_POPULATION_MEAN = 0.0269;
-const DEFAULT_POPULATION_STDDEV = 0.0324;
+const DEFAULT_POPULATION_MEAN = 0.1604;
+const DEFAULT_POPULATION_STDDEV = 0.0819;
 
 let _liveMean: number | null = null;
 let _liveStddev: number | null = null;
