@@ -13,6 +13,14 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 
+interface AuditRecord {
+  id: string;
+  googlePlaceId: string;
+  propertyName: string;
+  placeType: string | null;
+  description: string | null;
+}
+
 interface AuditResult {
   id: string;
   googlePlaceId: string;
@@ -168,7 +176,7 @@ async function main() {
   console.log("=== Terrazzo PlaceIntelligence Description Audit ===\n");
 
   // Fetch records to audit
-  const records = await prisma.placeIntelligence.findMany({
+  const records: AuditRecord[] = await prisma.placeIntelligence.findMany({
     where: {
       status: "complete",
       description: {
