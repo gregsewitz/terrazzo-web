@@ -11,8 +11,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { authHandler } from '@/lib/api-auth-handler';
+import { CLAUDE_SONNET } from '@/lib/models';
 import { searchPlace, mapGoogleTypeToPlaceType } from '@/lib/places';
 import { ensureEnrichment } from '@/lib/ensure-enrichment';
 import type { User } from '@prisma/client';
@@ -41,6 +43,8 @@ import {
   extractAllFeedPlaces,
   triggerEnrichmentBatch,
 } from '../route';
+
+const anthropic = new Anthropic();
 
 // v3.2: Default user profile for when radarData is missing
 const DEFAULT_USER_PROFILE: TasteProfile = {
@@ -244,6 +248,105 @@ async function resolveFreshPicks(feed: any, userId: string): Promise<void> {
   console.log(`[discover-more] Fresh picks: ${resolved}/${freshPicks.length} resolved`);
 }
 
+// ─── Legacy LLM-only flow (kept for fallback) ────────────────────────────────
+
+const LEGACY_SYSTEM_PROMPT = `You are Terrazzo's editorial intelligence — a deeply tasteful, well-traveled curator who writes like the best travel magazines but thinks like a data scientist.
+
+You are generating CONTINUATION content for a user's discover feed. They've already seen the initial feed and are scrolling for more. The content must feel fresh — new signals, new places, new angles.
+
+CRITICAL: You must AVOID recommending any places from the "already shown" list. Every place must be new.
+
+Return valid JSON with ONLY the requested section types. Use the exact same JSON structure as the main feed for each section type:
+
+signalThread: { signal, domain, thread, places: [{ name, location, type, connection, matchTier }] }
+becauseYouCards: [{ signal, signalDomain, place, location, matchTier, why, bg }]
+tasteTension: { title, stated, revealed, editorial, resolvedBy: { name, location, how } }
+weeklyCollection: { title, subtitle, places: [{ name, location, matchTier, signals, signalDomain, note }] }
+moodBoards: [{ mood, description, color, places: [{ name, location, vibe, matchTier }] }]
+deepMatch: { name, location, matchTier, headline, signalBreakdown: [{ signal, domain, tierLabel, note }], tensionResolved }
+stretchPick: { name, location, matchTier, type, strongAxis, strongTier, weakAxis, weakTier, why, tension }
+contextRecs: [{ name, location, matchTier, whyFits }]
+
+Match tiers: "Strong match", "Good match", "Worth a look", "Mixed fit", "Not for you"
+
+RULES:
+- Use REAL places that exist. Hotels, restaurants, cafes well-known in the design/boutique world.
+- Match tiers reflect genuine alignment with the profile.
+- bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a.
+- moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800.
+- Every explanation must reference SPECIFIC profile signals, not generic praise.
+- Write like a well-traveled friend with perfect recall. Warm, specific, editorial — never promotional.
+- Return ONLY the JSON object, nothing else.`;
+
+// Legacy helpers (duplicated from main route for independence)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractPlacesLegacy(feed: any): Array<{ name: string; location: string }> {
+  const seen = new Set<string>();
+  const places: Array<{ name: string; location: string }> = [];
+  function add(name?: string, location?: string) {
+    if (!name) return;
+    const key = `${name}||${location || ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    places.push({ name, location: location || '' });
+  }
+  for (const card of feed.becauseYouCards || []) add(card.place, card.location);
+  for (const p of feed.signalThread?.places || []) add(p.name, p.location);
+  add(feed.tasteTension?.resolvedBy?.name, feed.tasteTension?.resolvedBy?.location);
+  for (const p of feed.weeklyCollection?.places || []) add(p.name, p.location);
+  for (const board of feed.moodBoards || []) { for (const p of board.places || []) add(p.name, p.location); }
+  add(feed.deepMatch?.name, feed.deepMatch?.location);
+  add(feed.stretchPick?.name, feed.stretchPick?.location);
+  for (const rec of feed.contextRecs || []) add(rec.name, rec.location);
+  return places;
+}
+
+async function resolveAllPlacesLegacy(
+  places: Array<{ name: string; location: string }>,
+  userId: string,
+): Promise<Map<string, string>> {
+  const placeIdMap = new Map<string, string>();
+  const settled = await Promise.allSettled(
+    places.map(async ({ name, location }) => {
+      const query = location ? `${name}, ${location}` : name;
+      const googleResult = await searchPlace(query);
+      if (!googleResult) return { name, location, googlePlaceId: undefined };
+      const googlePlaceId = googleResult.id;
+      const resolvedName = googleResult.displayName?.text || name;
+      const placeType = mapGoogleTypeToPlaceType(googleResult.primaryType);
+      ensureEnrichment(googlePlaceId, resolvedName, userId, 'discover_more', placeType).catch((err: unknown) => console.warn('[discover/more] ensureEnrichment failed:', err));
+      return { name, location, googlePlaceId };
+    }),
+  );
+  for (const result of settled) {
+    if (result.status === 'fulfilled' && result.value.googlePlaceId) {
+      const { name, location, googlePlaceId } = result.value;
+      placeIdMap.set(`${name}||${location}`, googlePlaceId);
+    }
+  }
+  return placeIdMap;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function attachPlaceIdsLegacy(feed: any, placeIdMap: Map<string, string>): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function attach(obj: any) {
+    if (!obj) return;
+    const name = obj.name || obj.place;
+    if (!name) return;
+    const id = placeIdMap.get(`${name}||${obj.location || ''}`);
+    if (id) obj.googlePlaceId = id;
+  }
+  for (const card of feed.becauseYouCards || []) attach(card);
+  for (const p of feed.signalThread?.places || []) attach(p);
+  attach(feed.tasteTension?.resolvedBy);
+  for (const p of feed.weeklyCollection?.places || []) attach(p);
+  for (const board of feed.moodBoards || []) { for (const p of board.places || []) attach(p); }
+  attach(feed.deepMatch);
+  attach(feed.stretchPick);
+  for (const rec of feed.contextRecs || []) attach(rec);
+}
+
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
@@ -264,82 +367,152 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     const pageConfig = PAGE_CONFIGS[configIndex];
     const excludeSet = new Set<string>(Array.isArray(excludePlaces) ? excludePlaces : []);
 
-    // RAG-grounded flow (legacy LLM-only path has been deprecated)
-    const candidates = await fetchCandidateProperties();
-    const profile = userProfile as GeneratedTasteProfile;
-    const context = lifeContext as OnboardingLifeContext | null;
+    // ─── Try RAG-grounded flow first ──────────────────────────────────
+    try {
+      const candidates = await fetchCandidateProperties();
+      const profile = userProfile as GeneratedTasteProfile;
+      const context = lifeContext as OnboardingLifeContext | null;
 
-    // Build TasteProfile from radarData
-    const validDomains = new Set<string>(ALL_TASTE_DOMAINS);
-    const tasteProfile: TasteProfile = { ...DEFAULT_USER_PROFILE };
-    for (const r of profile.radarData || []) {
-      if (validDomains.has(r.axis)) {
-        tasteProfile[r.axis as TasteDomain] = Math.max(tasteProfile[r.axis as TasteDomain], r.value);
+      // Build TasteProfile from radarData
+      const validDomains = new Set<string>(ALL_TASTE_DOMAINS);
+      const tasteProfile: TasteProfile = { ...DEFAULT_USER_PROFILE };
+      for (const r of profile.radarData || []) {
+        if (validDomains.has(r.axis)) {
+          tasteProfile[r.axis as TasteDomain] = Math.max(tasteProfile[r.axis as TasteDomain], r.value);
+        }
+      }
+
+      const userMicroSignals = profile.microTasteSignals || {};
+      const userContradictions: TasteContradiction[] = profile.contradictions || [];
+
+      // Score candidates
+      const scoringContext = { applyDecay: true };
+      let scoredAll;
+      const { results, vectorEnabled } = await scoreWithVectors(
+        user.id,
+        candidates,
+        tasteProfile,
+        userMicroSignals,
+        userContradictions,
+        scoringContext,
+      );
+      scoredAll = results;
+
+      if (vectorEnabled) {
+        console.log(`[discover-more] Using vector-enhanced scoring`);
+      }
+
+      // Filter out already-shown places
+      const scored = scoredAll.filter(c => !excludeSet.has(c.googlePlaceId) && !excludeSet.has(c.propertyName));
+
+      console.log(`[discover-more] ${scored.length} candidates remaining after excluding ${excludeSet.size} shown places`);
+
+      if (hasEnoughCandidates(scored.length)) {
+        // Allocate into the sections requested by this page config
+        const allocated = allocateMoreSlots(
+          scored,
+          pageConfig.sections,
+          userMicroSignals,
+          userContradictions,
+          context,
+        );
+
+        // Generate editorial copy
+        const editorialFeed = await generateMoreEditorialCopy(
+          allocated,
+          pageConfig,
+          profile,
+          context,
+          Array.from(excludeSet),
+        );
+
+        // Resolve fresh picks (places with empty googlePlaceId)
+        await resolveFreshPicks(editorialFeed, user.id);
+
+        // Defensive enrichment for all places
+        triggerEnrichmentBatch(extractAllFeedPlaces(editorialFeed), user.id, 'discover_more_rag').catch((err: unknown) => console.warn('[discover/more] triggerEnrichmentBatch failed:', err));
+
+        // Attach context label
+        const month = new Date().getMonth();
+        const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
+        const companion = context?.primaryCompanions?.[0] || 'solo';
+        (editorialFeed as any).contextLabel = companion !== 'solo' ? `With ${companion}` : season;
+
+        console.log(`[discover-more] RAG page ${pageIndex} (config ${configIndex + 1}: ${pageConfig.sections.join(', ')}) generated`);
+        return NextResponse.json(editorialFeed);
+      }
+
+      console.log(`[discover-more] Not enough candidates for RAG (${scored.length}), falling back to legacy`);
+    } catch (ragError) {
+      console.error('[discover-more] RAG flow failed, falling back to legacy:', ragError);
+    }
+
+    // ─── Legacy fallback ──────────────────────────────────────────────
+    const month = new Date().getMonth();
+    const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
+    const companion = lifeContext?.primaryCompanions?.[0] || 'solo';
+    const contextLabel = companion !== 'solo' ? `With ${companion}` : season;
+
+    const excludeList = excludeSet.size > 0
+      ? `\n\nALREADY SHOWN PLACES (do NOT repeat any of these):\n${Array.from(excludeSet).slice(0, 50).join('\n')}`
+      : '';
+
+    const legacySections = pageConfig.sections.join(', ');
+    const contextMessage = `
+USER'S TASTE PROFILE:
+- Archetype: ${userProfile.overallArchetype}
+- Description: ${userProfile.archetypeDescription || ''}
+- Emotional driver: ${userProfile.emotionalDriver?.primary || 'Unknown'} / ${userProfile.emotionalDriver?.secondary || 'Unknown'}
+
+MICRO-SIGNALS BY DOMAIN:
+${Object.entries(userProfile.microTasteSignals || {}).map(([domain, signals]) => `${domain}: ${(signals as string[]).join(', ')}`).join('\n')}
+
+RADAR AXES:
+${(userProfile.radarData || []).map((r: { axis: string; value: number }) => `${r.axis}: ${Math.round(r.value * 100)}%`).join(', ')}
+
+CONTRADICTIONS:
+${(userProfile.contradictions || []).map((c: { stated: string; revealed: string; resolution: string }) => `${c.stated} vs ${c.revealed} → ${c.resolution}`).join('\n') || 'None identified'}
+
+LIFE CONTEXT:
+- Primary companion: ${companion}
+- Current season: ${season}
+- Context label: "${contextLabel}"
+${excludeList}
+
+GENERATE THESE SECTIONS ONLY: ${legacySections}
+
+${pageConfig.instructions}
+
+Return valid JSON only.`;
+
+    const response = await anthropic.messages.create({
+      model: CLAUDE_SONNET,
+      max_tokens: 4096,
+      system: [{ type: 'text', text: LEGACY_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: contextMessage }],
+    });
+
+    const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return NextResponse.json({ error: 'Failed to parse continuation content' }, { status: 500 });
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
+
+    // Resolve and enrich all places
+    const places = extractPlacesLegacy(result);
+    if (places.length > 0) {
+      try {
+        const placeIdMap = await resolveAllPlacesLegacy(places, user.id);
+        attachPlaceIdsLegacy(result, placeIdMap);
+      } catch (err) {
+        console.error('[discover-more] Legacy resolution failed (non-blocking):', err);
       }
     }
 
-    const userMicroSignals = profile.microTasteSignals || {};
-    const userContradictions: TasteContradiction[] = profile.contradictions || [];
-
-    // Score candidates
-    const scoringContext = { applyDecay: true };
-    const { results: scoredAll, vectorEnabled } = await scoreWithVectors(
-      user.id,
-      candidates,
-      tasteProfile,
-      userMicroSignals,
-      userContradictions,
-      scoringContext,
-    );
-
-    if (vectorEnabled) {
-      console.log(`[discover-more] Using vector-enhanced scoring`);
-    }
-
-    // Filter out already-shown places
-    const scored = scoredAll.filter(c => !excludeSet.has(c.googlePlaceId) && !excludeSet.has(c.propertyName));
-
-    console.log(`[discover-more] ${scored.length} candidates remaining after excluding ${excludeSet.size} shown places`);
-
-    if (!hasEnoughCandidates(scored.length)) {
-      return NextResponse.json(
-        { error: 'Not enough enriched places remaining. Please try again shortly.' },
-        { status: 503 },
-      );
-    }
-
-    // Allocate into the sections requested by this page config
-    const allocated = allocateMoreSlots(
-      scored,
-      pageConfig.sections,
-      userMicroSignals,
-      userContradictions,
-      context,
-    );
-
-    // Generate editorial copy
-    const editorialFeed = await generateMoreEditorialCopy(
-      allocated,
-      pageConfig,
-      profile,
-      context,
-      Array.from(excludeSet),
-    );
-
-    // Resolve fresh picks (places with empty googlePlaceId)
-    await resolveFreshPicks(editorialFeed, user.id);
-
-    // Defensive enrichment for all places
-    triggerEnrichmentBatch(extractAllFeedPlaces(editorialFeed), user.id, 'discover_more_rag').catch((err: unknown) => console.warn('[discover/more] triggerEnrichmentBatch failed:', err));
-
-    // Attach context label
-    const month = new Date().getMonth();
-    const season = month >= 4 && month <= 9 ? 'Summer' : 'Winter';
-    const companion = context?.primaryCompanions?.[0] || 'solo';
-    (editorialFeed as any).contextLabel = companion !== 'solo' ? `With ${companion}` : season;
-
-    console.log(`[discover-more] RAG page ${pageIndex} (config ${configIndex + 1}: ${pageConfig.sections.join(', ')}) generated`);
-    return NextResponse.json(editorialFeed);
+    result.contextLabel = contextLabel;
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Discover continuation error:', error);
     return NextResponse.json({ error: 'Failed to generate continuation content' }, { status: 500 });

@@ -9,6 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { GeneratedTasteProfile, OnboardingLifeContext } from '@/types';
 import { CLAUDE_SONNET } from '@/lib/models';
+import { getMatchTier } from '@/lib/match-tier';
 import type {
   AllocatedFeed,
   AllocatedBecauseYou,
@@ -60,7 +61,7 @@ export interface EditorialFeed {
     signalDomain: string;
     place: string;
     location: string;
-    score: number;
+    matchTier: string;
     why: string;
     bg: string;
     googlePlaceId: string;
@@ -74,7 +75,7 @@ export interface EditorialFeed {
       location: string;
       type: string;
       connection: string;
-      score: number;
+      matchTier: string;
       googlePlaceId: string;
     }>;
   };
@@ -96,7 +97,7 @@ export interface EditorialFeed {
     places: Array<{
       name: string;
       location: string;
-      score: number;
+      matchTier: string;
       signals: string[];
       signalDomain: string;
       note: string;
@@ -111,19 +112,19 @@ export interface EditorialFeed {
       name: string;
       location: string;
       vibe: string;
-      score: number;
+      matchTier: string;
       googlePlaceId: string;
     }>;
   }>;
   deepMatch: {
     name: string;
     location: string;
-    score: number;
+    matchTier: string;
     headline: string;
     signalBreakdown: Array<{
       signal: string;
       domain: string;
-      strength: number;
+      tierLabel: string;
       note: string;
     }>;
     tensionResolved: string;
@@ -132,12 +133,12 @@ export interface EditorialFeed {
   stretchPick: {
     name: string;
     location: string;
-    score: number;
+    matchTier: string;
     type: string;
     strongAxis: string;
-    strongScore: number;
+    strongTier: string;
     weakAxis: string;
-    weakScore: number;
+    weakTier: string;
     why: string;
     tension: string;
     googlePlaceId: string;
@@ -145,7 +146,7 @@ export interface EditorialFeed {
   contextRecs: Array<{
     name: string;
     location: string;
-    score: number;
+    matchTier: string;
     whyFits: string;
     googlePlaceId: string;
   }>;
@@ -194,49 +195,48 @@ LIFE CONTEXT:
 ---
 
 ALLOCATED FEED — PRE-SELECTED BY MATCHING ENGINE:
-(Scores are computed from real signal data. Use them as-is.)
+(Match tiers are computed from real signal data. Use them as-is.)
 
-1. DEEP MATCH (highest overall score):
+1. DEEP MATCH (highest overall match):
    - Name: ${deepMatch.propertyName}
    - googlePlaceId: ${deepMatch.googlePlaceId}
-   - Score: ${deepMatch.overallScore}
+   - Match tier: ${getMatchTier(deepMatch.overallScore).label}
    - Top domain: ${deepMatch.topDimension}
-   - Domain breakdown: ${JSON.stringify(deepMatch.domainBreakdown)}
    - Top matching signals: ${deepMatch.topMatchingSignals.map(s => `"${s.signal}" (${s.dimension}, conf=${s.confidence})`).join('; ')}
    ${deepMatch.contradictionRelevance ? `- Resolves contradiction: "${deepMatch.contradictionRelevance.contradiction.stated}" vs "${deepMatch.contradictionRelevance.contradiction.revealed}"` : ''}
 
 2. BECAUSE YOU CARDS (3 domain-diversified picks):
 ${becauseYou.map((b, i) => `   ${i + 1}. ${b.candidate.propertyName} (${b.candidate.googlePlaceId})
-      Score: ${b.candidate.overallScore} | Signal: "${b.signal}" | Domain: ${b.signalDomain}
+      Match: ${getMatchTier(b.candidate.overallScore).label} | Signal: "${b.signal}" | Domain: ${b.signalDomain}
       Top signals: ${b.candidate.topMatchingSignals.slice(0, 3).map(s => `"${s.signal}"`).join(', ')}`).join('\n')}
 
 3. SIGNAL THREAD (shared signal across properties):
    - Dominant signal: "${signalThread.signal}"
    - Domain: ${signalThread.domain}
    - Properties:
-${signalThread.candidates.map((c, i) => `     ${i + 1}. ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}`).join('\n')}
+${signalThread.candidates.map((c, i) => `     ${i + 1}. ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label}`).join('\n')}
 
 4. TASTE TENSION:${tasteTension ? `
    - Contradiction: "${tasteTension.contradiction.stated}" vs "${tasteTension.contradiction.revealed}"
    - Resolution: ${tasteTension.contradiction.resolution}
-   - Resolved by: ${tasteTension.candidate.propertyName} (${tasteTension.candidate.googlePlaceId}) — Score: ${tasteTension.candidate.overallScore}
+   - Resolved by: ${tasteTension.candidate.propertyName} (${tasteTension.candidate.googlePlaceId}) — ${getMatchTier(tasteTension.candidate.overallScore).label}
    - Covers both sides: ${tasteTension.candidate.contradictionRelevance?.coversBothSides}` : '\n   (No contradiction-resolving property found)'}
 
 5. STRETCH PICK:${stretchPick ? `
    - Name: ${stretchPick.candidate.propertyName} (${stretchPick.candidate.googlePlaceId})
-   - Score: ${stretchPick.candidate.overallScore}
-   - Strong domain: ${stretchPick.strongDomain} (${stretchPick.candidate.domainBreakdown[stretchPick.strongDomain]})
-   - Weak domain: ${stretchPick.weakDomain} (${stretchPick.candidate.domainBreakdown[stretchPick.weakDomain]})` : '\n   (No stretch pick found)'}
+   - Match: ${getMatchTier(stretchPick.candidate.overallScore).label}
+   - Strong domain: ${stretchPick.strongDomain} (${getMatchTier(stretchPick.candidate.domainBreakdown[stretchPick.strongDomain]).label})
+   - Weak domain: ${stretchPick.weakDomain} (${getMatchTier(stretchPick.candidate.domainBreakdown[stretchPick.weakDomain]).label})` : '\n   (No stretch pick found)'}
 
 6. WEEKLY COLLECTION (thematic cluster, domain: ${weekly.dominantDomain}):
-${weekly.candidates.map((c, i) => `   ${i + 1}. ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore} | Top: ${c.topDimension}`).join('\n')}
+${weekly.candidates.map((c, i) => `   ${i + 1}. ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label} | Top: ${c.topDimension}`).join('\n')}
 
 7. MOOD BOARDS:
 ${moodBoards.map((mb, i) => `   Board ${i + 1} — Domain: ${mb.domain}
-${mb.candidates.map((c, j) => `     ${j + 1}. ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}`).join('\n')}`).join('\n')}
+${mb.candidates.map((c, j) => `     ${j + 1}. ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label}`).join('\n')}`).join('\n')}
 
 8. CONTEXT RECS (for "${allocated.contextLabel}"):
-${contextRecs.map((cr, i) => `   ${i + 1}. ${cr.candidate.propertyName} (${cr.candidate.googlePlaceId}) — Score: ${cr.candidate.overallScore}`).join('\n')}
+${contextRecs.map((cr, i) => `   ${i + 1}. ${cr.candidate.propertyName} (${cr.candidate.googlePlaceId}) — ${getMatchTier(cr.candidate.overallScore).label}`).join('\n')}
 
 ---
 
@@ -251,33 +251,34 @@ Return valid JSON with this structure:
     "signalHighlight": "The single micro-signal that inspired this letter"
   },
   "becauseYouCards": [
-    { "signal": "...", "signalDomain": "...", "place": "property name", "location": "City, Country", "score": <use computed score>, "why": "2-sentence explanation connecting signal to place", "bg": "#hex", "googlePlaceId": "..." }
+    { "signal": "...", "signalDomain": "...", "place": "property name", "location": "City, Country", "matchTier": "use tier from above", "why": "2-sentence explanation connecting signal to place", "bg": "#hex", "googlePlaceId": "..." }
   ],
   "signalThread": {
     "signal": "the dominant signal from above", "domain": "...",
     "thread": "1 sentence on how this signal shapes their travel",
-    "places": [{ "name": "...", "location": "...", "type": "hotel|restaurant|bar|cafe|neighborhood", "connection": "1 sentence", "score": <computed>, "googlePlaceId": "..." }]
+    "places": [{ "name": "...", "location": "...", "type": "hotel|restaurant|bar|cafe|neighborhood", "connection": "1 sentence", "matchTier": "use tier from above", "googlePlaceId": "..." }]
   },
   "tasteTension": { "title": "4-6 words", "stated": "...", "revealed": "...", "editorial": "2-3 insightful sentences", "resolvedBy": { "name": "...", "location": "...", "how": "1 sentence", "googlePlaceId": "..." } } | null,
   "weeklyCollection": {
     "title": "Evocative theme (max 10 words)", "subtitle": "Filtered for: signal1 · signal2 · signal3",
-    "places": [{ "name": "...", "location": "...", "score": <computed>, "signals": ["s1","s2","s3"], "signalDomain": "...", "note": "1 sentence", "googlePlaceId": "..." }]
+    "places": [{ "name": "...", "location": "...", "matchTier": "use tier from above", "signals": ["s1","s2","s3"], "signalDomain": "...", "note": "1 sentence", "googlePlaceId": "..." }]
   },
-  "moodBoards": [{ "mood": "When you... (max 8 words)", "description": "1 sentence", "color": "#hex", "places": [{ "name": "...", "location": "...", "vibe": "3-5 words", "score": <computed>, "googlePlaceId": "..." }] }],
+  "moodBoards": [{ "mood": "When you... (max 8 words)", "description": "1 sentence", "color": "#hex", "places": [{ "name": "...", "location": "...", "vibe": "3-5 words", "matchTier": "use tier from above", "googlePlaceId": "..." }] }],
   "deepMatch": {
-    "name": "...", "location": "...", "score": <computed>, "headline": "max 12 words",
-    "signalBreakdown": [{ "signal": "...", "domain": "...", "strength": <computed domain score>, "note": "why this matches" }],
+    "name": "...", "location": "...", "matchTier": "use tier from above", "headline": "max 12 words",
+    "signalBreakdown": [{ "signal": "...", "domain": "...", "tierLabel": "Strong or Good", "note": "why this matches" }],
     "tensionResolved": "1-2 sentences", "googlePlaceId": "..."
   },
-  "stretchPick": { "name": "...", "location": "...", "score": <computed>, "type": "hotel|restaurant|...", "strongAxis": "...", "strongScore": <computed>, "weakAxis": "...", "weakScore": <computed>, "why": "2 sentences", "tension": "1 sentence", "googlePlaceId": "..." } | null,
-  "contextRecs": [{ "name": "...", "location": "...", "score": <computed>, "whyFits": "1 sentence", "googlePlaceId": "..." }],
+  "stretchPick": { "name": "...", "location": "...", "matchTier": "use tier from above", "type": "hotel|restaurant|...", "strongAxis": "...", "strongTier": "use tier from above", "weakAxis": "...", "weakTier": "use tier from above", "why": "2 sentences", "tension": "1 sentence", "googlePlaceId": "..." } | null,
+  "contextRecs": [{ "name": "...", "location": "...", "matchTier": "use tier from above", "whyFits": "1 sentence", "googlePlaceId": "..." }],
   "contextLabel": "${allocated.contextLabel}"
 }
 
 IMPORTANT:
 - Use the EXACT property names from above. Do not rename or substitute properties.
-- Use the EXACT computed scores provided. Do not inflate or change them.
+- Use the EXACT match tiers provided. Do not change them.
 - Use the EXACT googlePlaceIds provided. These link to real Places in our database.
+- Match tier values must be one of: "Strong match", "Good match", "Worth a look", "Mixed fit", "Not for you"
 - For "location", infer the city/country from the property name or write "Location TBD" if unknown.
 - Write editorial copy that references specific signals from the profile.
 - Return ONLY valid JSON, no wrapping text.`;
@@ -323,10 +324,10 @@ export async function generateEditorialCopy(
 
 const MORE_EDITORIAL_PROMPT = `You are Terrazzo's editorial voice — a deeply tasteful, well-traveled curator who writes like the best travel magazines. You have intimate knowledge of both the user and the properties.
 
-CRITICAL: Most properties have been pre-selected by our matching engine with real scores. Use those EXACTLY as provided. However, you may also be asked to suggest a few FRESH PICKS — real places you know that aren't in our database yet. For fresh picks, you assign scores based on your best judgment of how well they match the user's profile.
+CRITICAL: Most properties have been pre-selected by our matching engine with real match tiers. Use those EXACTLY as provided. However, you may also be asked to suggest a few FRESH PICKS — real places you know that aren't in our database yet. For fresh picks, assign a match tier based on your best judgment of how well they match the user's profile.
 
 RULES:
-- For pre-selected properties: use the EXACT names, scores, and googlePlaceIds provided
+- For pre-selected properties: use the EXACT names, match tiers, and googlePlaceIds provided
 - For fresh picks: suggest REAL places that exist. Leave googlePlaceId empty — we'll resolve it
 - Reference specific signals in all copy. Never be generic or promotional
 - Write like a well-traveled friend with perfect recall. Warm, specific, editorial
@@ -361,37 +362,37 @@ function buildMoreContextMessage(
 
   if (allocated.deepMatch) {
     const c = allocated.deepMatch.candidate;
-    allocatedSection += `\nDEEP MATCH:\n  - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore} | Top: ${c.topDimension}\n  - Domain breakdown: ${JSON.stringify(c.domainBreakdown)}\n  - Top signals: ${c.topMatchingSignals.slice(0, 4).map(s => `"${s.signal}" (${s.dimension})`).join('; ')}\n`;
+    allocatedSection += `\nDEEP MATCH:\n  - ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label} | Top: ${c.topDimension}\n  - Top signals: ${c.topMatchingSignals.slice(0, 4).map(s => `"${s.signal}" (${s.dimension})`).join('; ')}\n`;
   }
 
   if (allocated.becauseYouCards && allocated.becauseYouCards.length > 0) {
     allocatedSection += `\nBECAUSE YOU CARDS:\n`;
     for (const b of allocated.becauseYouCards) {
-      allocatedSection += `  - ${b.candidate.propertyName} (${b.candidate.googlePlaceId}) — Score: ${b.candidate.overallScore} | Signal: "${b.signal}" | Domain: ${b.signalDomain}\n`;
+      allocatedSection += `  - ${b.candidate.propertyName} (${b.candidate.googlePlaceId}) — ${getMatchTier(b.candidate.overallScore).label} | Signal: "${b.signal}" | Domain: ${b.signalDomain}\n`;
     }
   }
 
   if (allocated.signalThread) {
     allocatedSection += `\nSIGNAL THREAD:\n  - Signal: "${allocated.signalThread.signal}" (${allocated.signalThread.domain})\n`;
     for (const c of allocated.signalThread.candidates) {
-      allocatedSection += `  - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}\n`;
+      allocatedSection += `  - ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label}\n`;
     }
   }
 
   if (allocated.tasteTension) {
     const tt = allocated.tasteTension;
-    allocatedSection += `\nTASTE TENSION:\n  - Contradiction: "${tt.contradiction.stated}" vs "${tt.contradiction.revealed}"\n  - Resolved by: ${tt.candidate.propertyName} (${tt.candidate.googlePlaceId}) — Score: ${tt.candidate.overallScore}\n`;
+    allocatedSection += `\nTASTE TENSION:\n  - Contradiction: "${tt.contradiction.stated}" vs "${tt.contradiction.revealed}"\n  - Resolved by: ${tt.candidate.propertyName} (${tt.candidate.googlePlaceId}) — ${getMatchTier(tt.candidate.overallScore).label}\n`;
   }
 
   if (allocated.stretchPick) {
     const sp = allocated.stretchPick;
-    allocatedSection += `\nSTRETCH PICK:\n  - ${sp.candidate.propertyName} (${sp.candidate.googlePlaceId}) — Score: ${sp.candidate.overallScore}\n  - Strong: ${sp.strongDomain} (${sp.candidate.domainBreakdown[sp.strongDomain]}) | Weak: ${sp.weakDomain} (${sp.candidate.domainBreakdown[sp.weakDomain]})\n`;
+    allocatedSection += `\nSTRETCH PICK:\n  - ${sp.candidate.propertyName} (${sp.candidate.googlePlaceId}) — ${getMatchTier(sp.candidate.overallScore).label}\n  - Strong: ${sp.strongDomain} (${getMatchTier(sp.candidate.domainBreakdown[sp.strongDomain]).label}) | Weak: ${sp.weakDomain} (${getMatchTier(sp.candidate.domainBreakdown[sp.weakDomain]).label})\n`;
   }
 
   if (allocated.weeklyCollection) {
     allocatedSection += `\nWEEKLY COLLECTION (domain: ${allocated.weeklyCollection.dominantDomain}):\n`;
     for (const c of allocated.weeklyCollection.candidates) {
-      allocatedSection += `  - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}\n`;
+      allocatedSection += `  - ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label}\n`;
     }
   }
 
@@ -400,7 +401,7 @@ function buildMoreContextMessage(
     for (const mb of allocated.moodBoards) {
       allocatedSection += `  Board (${mb.domain}):\n`;
       for (const c of mb.candidates) {
-        allocatedSection += `    - ${c.propertyName} (${c.googlePlaceId}) — Score: ${c.overallScore}\n`;
+        allocatedSection += `    - ${c.propertyName} (${c.googlePlaceId}) — ${getMatchTier(c.overallScore).label}\n`;
       }
     }
   }
@@ -408,12 +409,12 @@ function buildMoreContextMessage(
   if (allocated.contextRecs && allocated.contextRecs.length > 0) {
     allocatedSection += `\nCONTEXT RECS:\n`;
     for (const cr of allocated.contextRecs) {
-      allocatedSection += `  - ${cr.candidate.propertyName} (${cr.candidate.googlePlaceId}) — Score: ${cr.candidate.overallScore}\n`;
+      allocatedSection += `  - ${cr.candidate.propertyName} (${cr.candidate.googlePlaceId}) — ${getMatchTier(cr.candidate.overallScore).label}\n`;
     }
   }
 
   const freshPicksNote = freshPickSlots > 0
-    ? `\n\nFRESH PICKS: You may suggest up to ${freshPickSlots} additional REAL places that aren't in the pre-selected list above. These should be real, well-known places in the boutique/design travel world. For fresh picks, leave googlePlaceId as an empty string "" — we'll resolve it. Assign a realistic score based on how well you think it matches this user's profile. Weave fresh picks naturally into the sections above (e.g. add 1-2 to the weeklyCollection or moodBoard, or use one as a contextRec).`
+    ? `\n\nFRESH PICKS: You may suggest up to ${freshPickSlots} additional REAL places that aren't in the pre-selected list above. These should be real, well-known places in the boutique/design travel world. For fresh picks, leave googlePlaceId as an empty string "" — we'll resolve it. Assign a match tier based on your best judgment. Weave fresh picks naturally into the sections above (e.g. add 1-2 to the weeklyCollection or moodBoard, or use one as a contextRec).`
     : '';
 
   const excludeNote = excludePlaces.length > 0
@@ -423,14 +424,14 @@ function buildMoreContextMessage(
   // Build the JSON output schema based on requested sections
   const sectionSet = new Set(sections);
   const outputParts: string[] = [];
-  if (sectionSet.has('becauseYouCards')) outputParts.push('"becauseYouCards": [{ "signal": "...", "signalDomain": "...", "place": "property name", "location": "City, Country", "score": <computed>, "why": "2 sentences", "bg": "#hex", "googlePlaceId": "..." }]');
-  if (sectionSet.has('signalThread')) outputParts.push('"signalThread": { "signal": "...", "domain": "...", "thread": "1 sentence", "places": [{ "name": "...", "location": "...", "type": "hotel|restaurant|bar|cafe|neighborhood", "connection": "1 sentence", "score": <computed>, "googlePlaceId": "..." }] }');
+  if (sectionSet.has('becauseYouCards')) outputParts.push('"becauseYouCards": [{ "signal": "...", "signalDomain": "...", "place": "property name", "location": "City, Country", "matchTier": "Strong match", "why": "2 sentences", "bg": "#hex", "googlePlaceId": "..." }]');
+  if (sectionSet.has('signalThread')) outputParts.push('"signalThread": { "signal": "...", "domain": "...", "thread": "1 sentence", "places": [{ "name": "...", "location": "...", "type": "hotel|restaurant|bar|cafe|neighborhood", "connection": "1 sentence", "matchTier": "use tier from above", "googlePlaceId": "..." }] }');
   if (sectionSet.has('tasteTension')) outputParts.push('"tasteTension": { "title": "4-6 words", "stated": "...", "revealed": "...", "editorial": "2-3 sentences", "resolvedBy": { "name": "...", "location": "...", "how": "1 sentence", "googlePlaceId": "..." } }');
-  if (sectionSet.has('weeklyCollection')) outputParts.push('"weeklyCollection": { "title": "Evocative theme (max 10 words)", "subtitle": "Filtered for: signal1 · signal2 · signal3", "places": [{ "name": "...", "location": "...", "score": <computed>, "signals": ["s1","s2"], "signalDomain": "...", "note": "1 sentence", "googlePlaceId": "..." }] }');
-  if (sectionSet.has('moodBoards')) outputParts.push('"moodBoards": [{ "mood": "When you... (max 8 words)", "description": "1 sentence", "color": "#hex", "places": [{ "name": "...", "location": "...", "vibe": "3-5 words", "score": <computed>, "googlePlaceId": "..." }] }]');
-  if (sectionSet.has('deepMatch')) outputParts.push('"deepMatch": { "name": "...", "location": "...", "score": <computed>, "headline": "max 12 words", "signalBreakdown": [{ "signal": "...", "domain": "...", "strength": <computed>, "note": "..." }], "tensionResolved": "1-2 sentences", "googlePlaceId": "..." }');
-  if (sectionSet.has('stretchPick')) outputParts.push('"stretchPick": { "name": "...", "location": "...", "score": <computed>, "type": "hotel|restaurant|...", "strongAxis": "...", "strongScore": <computed>, "weakAxis": "...", "weakScore": <computed>, "why": "2 sentences", "tension": "1 sentence", "googlePlaceId": "..." }');
-  if (sectionSet.has('contextRecs')) outputParts.push('"contextRecs": [{ "name": "...", "location": "...", "score": <computed>, "whyFits": "1 sentence", "googlePlaceId": "..." }]');
+  if (sectionSet.has('weeklyCollection')) outputParts.push('"weeklyCollection": { "title": "Evocative theme (max 10 words)", "subtitle": "Filtered for: signal1 · signal2 · signal3", "places": [{ "name": "...", "location": "...", "matchTier": "use tier from above", "signals": ["s1","s2"], "signalDomain": "...", "note": "1 sentence", "googlePlaceId": "..." }] }');
+  if (sectionSet.has('moodBoards')) outputParts.push('"moodBoards": [{ "mood": "When you... (max 8 words)", "description": "1 sentence", "color": "#hex", "places": [{ "name": "...", "location": "...", "vibe": "3-5 words", "matchTier": "use tier from above", "googlePlaceId": "..." }] }]');
+  if (sectionSet.has('deepMatch')) outputParts.push('"deepMatch": { "name": "...", "location": "...", "matchTier": "use tier from above", "headline": "max 12 words", "signalBreakdown": [{ "signal": "...", "domain": "...", "tierLabel": "Strong or Good", "note": "..." }], "tensionResolved": "1-2 sentences", "googlePlaceId": "..." }');
+  if (sectionSet.has('stretchPick')) outputParts.push('"stretchPick": { "name": "...", "location": "...", "matchTier": "use tier from above", "type": "hotel|restaurant|...", "strongAxis": "...", "strongTier": "use tier from above", "weakAxis": "...", "weakTier": "use tier from above", "why": "2 sentences", "tension": "1 sentence", "googlePlaceId": "..." }');
+  if (sectionSet.has('contextRecs')) outputParts.push('"contextRecs": [{ "name": "...", "location": "...", "matchTier": "use tier from above", "whyFits": "1 sentence", "googlePlaceId": "..." }]');
 
   return `USER'S TASTE PROFILE:
 - Archetype: ${userProfile.overallArchetype}
@@ -473,7 +474,8 @@ Return valid JSON with ONLY the requested sections:
 }
 
 IMPORTANT:
-- Use EXACT property names, scores, and googlePlaceIds from allocated properties
+- Use EXACT property names, match tiers, and googlePlaceIds from allocated properties
+- Match tier values must be one of: "Strong match", "Good match", "Worth a look", "Mixed fit", "Not for you"
 - For fresh picks, use googlePlaceId: "" (empty string)
 - Reference specific user signals in all copy
 - Return ONLY valid JSON`;

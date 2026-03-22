@@ -55,7 +55,7 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
                       <PlacePhoto src={imageUrl} alt={rec.name} fill sizes="36px" />
                     </div>
                   ) : (
-                    <ScoreArc score={rec.score} size={36} color={COLOR.periwinkle} />
+                    <ScoreArc matchTier={rec.matchTier} size={36} color={COLOR.periwinkle} />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">

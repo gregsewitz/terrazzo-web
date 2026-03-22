@@ -6,7 +6,7 @@ import { useLibraryStore } from '@/stores/useLibraryStore';
 import { useTripStore } from '@/stores/tripStore';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { FONT, TEXT, COLOR, INK } from '@/constants/theme';
-import { getMatchTier } from '@/lib/match-tier';
+import { getMatchTierByLabel } from '@/lib/match-tier';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import type { BecauseYouCard } from '@/constants/discover';
 import type { DiscoverContent } from '@/hooks/useDiscoverFeed';
@@ -46,7 +46,7 @@ function getWelcomeState(args: {
 // ─── Card component for displaying individual places ─────────────────────
 
 function WelcomeCard({ card, index }: { card: BecauseYouCard; index: number }) {
-  const tier = getMatchTier(card.score);
+  const tier = getMatchTierByLabel(card.matchTier);
 
   return (
     <motion.div
@@ -74,7 +74,7 @@ function WelcomeCard({ card, index }: { card: BecauseYouCard; index: number }) {
         <div className="text-[13px] leading-relaxed mb-2" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
           {card.why}
         </div>
-        {card.score !== undefined && (
+        {card.matchTier !== undefined && (
           <div
             className="text-[11px] font-semibold px-2 py-1 rounded w-fit"
             style={{ background: tier.bg, color: tier.color, fontFamily: FONT.mono }}

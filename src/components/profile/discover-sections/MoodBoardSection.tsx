@@ -5,7 +5,7 @@ import PlaceLink from '@/components/place/PlaceLink';
 import { MOOD_BOARDS, type MoodBoard } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { COLOR, FONT, INK } from '@/constants/theme';
-import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
+import { getMatchTierByLabel } from '@/lib/match-tier';
 import { SectionLabel } from './SectionLabel';
 
 export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
@@ -50,7 +50,7 @@ export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                           <PlacePhoto src={imageUrl} alt={p.name} fill sizes="40px" />
                         </div>
                       ) : (
-                        <ScoreArc score={p.score} size={40} color={board.color} />
+                        <ScoreArc matchTier={p.matchTier} size={40} color={board.color} />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-1.5">
@@ -59,8 +59,8 @@ export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                         </div>
                         <p className="text-[14px] italic" style={{ color: COLOR.navy }}>{p.vibe}</p>
                       </div>
-                      {shouldShowTierBadge(p.score) && (
-                        <span className="text-[12px] font-semibold flex-shrink-0 px-1.5 py-0.5 rounded-full" style={{ color: getMatchTier(p.score).color, background: getMatchTier(p.score).bg, fontFamily: FONT.mono }}>{getMatchTier(p.score).shortLabel}</span>
+                      {p.matchTier && (
+                        <span className="text-[12px] font-semibold flex-shrink-0 px-1.5 py-0.5 rounded-full" style={{ color: getMatchTierByLabel(p.matchTier).color, background: getMatchTierByLabel(p.matchTier).bg, fontFamily: FONT.mono }}>{getMatchTierByLabel(p.matchTier).shortLabel}</span>
                       )}
                     </SafeMotionDiv>
                   </PlaceLink>

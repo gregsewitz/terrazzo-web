@@ -7,7 +7,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useTripStore } from '@/stores/tripStore';
 import { FONT, TEXT, COLOR } from '@/constants/theme';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
-import { getMatchTier } from '@/lib/match-tier';
+import { getMatchTier, getMatchTierByLabel } from '@/lib/match-tier';
 import { completeBridge } from '@/lib/useBridgeGuard';
 import { seedLibraryFromDiscover } from '@/lib/seed-library';
 import { apiFetch } from '@/lib/api-client';
@@ -680,7 +680,7 @@ function DiscoverVisual({
     return (
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
         {fromCache.map((card, i) => {
-          const tier = getMatchTier(card.score);
+          const tier = getMatchTierByLabel(card.matchTier);
           return (
             <motion.div
               key={card.place}

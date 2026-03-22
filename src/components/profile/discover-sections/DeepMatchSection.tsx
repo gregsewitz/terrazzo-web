@@ -11,12 +11,12 @@ export function DeepMatchSection({ match }: { match?: DeepMatch }) {
   const intelMatch: IntelDeepMatch = {
     name: m.name,
     location: m.location,
-    score: m.score,
+    matchTier: m.matchTier,
     headline: m.headline,
     signalBreakdown: m.signalBreakdown.map(s => ({
       signal: s.signal,
       domain: s.domain as TasteDomain,
-      strength: s.strength,
+      tierLabel: s.tierLabel,
       note: s.note,
     })),
     tensionResolved: m.tensionResolved,

@@ -9,7 +9,7 @@ export interface BecauseYouCard {
   signalDomain: string;
   place: string;
   location: string;
-  score: number;
+  matchTier: string;
   why: string;
   bg: string;
   googlePlaceId?: string;
@@ -18,7 +18,7 @@ export interface BecauseYouCard {
 export interface CollectionPlace {
   name: string;
   location: string;
-  score: number;
+  matchTier: string;
   signals: string[];
   signalDomain: string;
   note: string;
@@ -30,7 +30,7 @@ export interface FriendSave {
   friendInitial: string;
   place: string;
   location: string;
-  score: number;
+  matchTier: string;
   type: string;
   whyMatches: string;
   color: string;
@@ -40,7 +40,7 @@ export interface FriendSave {
 export interface ContextRec {
   name: string;
   location: string;
-  score: number;
+  matchTier: string;
   whyFits: string;
   googlePlaceId?: string;
 }
@@ -62,7 +62,7 @@ export interface SignalThread {
     location: string;
     type: string;        // hotel | restaurant | bar | cafe | neighborhood
     connection: string;  // how this place embodies the signal
-    score: number;
+    matchTier: string;
     googlePlaceId?: string;
   }[];
 }
@@ -90,7 +90,7 @@ export interface MoodBoard {
     name: string;
     location: string;
     vibe: string;         // 3-5 word atmospheric description
-    score: number;
+    matchTier: string;
     googlePlaceId?: string;
   }[];
 }
@@ -99,12 +99,12 @@ export interface MoodBoard {
 export interface DeepMatch {
   name: string;
   location: string;
-  score: number;
+  matchTier: string;
   headline: string;       // e.g. "This place was made for the way you travel."
   signalBreakdown: {
     signal: string;
     domain: string;
-    strength: number;     // 0-100
+    tierLabel: string;     // strength tier
     note: string;         // why this signal matches
   }[];
   tensionResolved: string;
@@ -118,7 +118,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
     signalDomain: "Design",
     place: "Masseria Moroseta",
     location: "Puglia, Italy",
-    score: 97,
+    matchTier: "Strong match",
     why: "Every room faces east. The tufa stone glows amber at breakfast. The architect designed around the sunrise.",
     bg: "#2d3a2d",
     googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
@@ -128,7 +128,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
     signalDomain: "Service",
     place: "Hoshinoya Kyoto",
     location: "Kyoto, Japan",
-    score: 89,
+    matchTier: "Good match",
     why: "Staff remember your tea preference from day one. No check-in desk. The boat ride in is the welcome.",
     bg: "#3a2d2d",
     googlePlaceId: "ChIJ9e5EmAWqAWARpQEhPRuq-Qw",
@@ -138,7 +138,7 @@ export const BECAUSE_YOU_CARDS: BecauseYouCard[] = [
     signalDomain: "FoodDrink",
     place: "Forestis",
     location: "Dolomites, Italy",
-    score: 94,
+    matchTier: "Strong match",
     why: "One long larch table, one menu, everyone sits together. The chef forages that morning. No choices, just trust.",
     bg: "#2d2d3a",
     googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8",
@@ -163,7 +163,7 @@ export const SIGNAL_THREAD: SignalThread = {
       location: "Dolomites, Italy",
       type: "hotel",
       connection: "Larch wood walls and alpine stone — the building IS the landscape",
-      score: 94,
+      matchTier: "Strong match",
       googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8",
     },
     {
@@ -171,7 +171,7 @@ export const SIGNAL_THREAD: SignalThread = {
       location: "11th, Paris",
       type: "restaurant",
       connection: "Bare tables, imperfect ceramics, wine in simple glasses — deliberate understatement",
-      score: 91,
+      matchTier: "Strong match",
       googlePlaceId: "ChIJE6kCUghy5kcRmWSg3RUHIwM",
     },
     {
@@ -179,7 +179,7 @@ export const SIGNAL_THREAD: SignalThread = {
       location: "Stockholm, Sweden",
       type: "neighborhood",
       connection: "Where design-minded Stockholm actually lives — every cafe and shop reflects this signal",
-      score: 88,
+      matchTier: "Good match",
       googlePlaceId: "ChIJc6euFuV3X0YRQmY6ng8b2Ho",
     },
   ],
@@ -207,7 +207,7 @@ export const WEEKLY_COLLECTION = {
     {
       name: "Masseria Moroseta",
       location: "Puglia, Italy",
-      score: 97,
+      matchTier: "Strong match",
       signals: ["Vernacular modern", "Artisan ceramics", "Morning light"],
       signalDomain: "Design",
       note: "A white masseria where the architecture IS the experience — every surface is hand-finished local tufa",
@@ -216,7 +216,7 @@ export const WEEKLY_COLLECTION = {
     {
       name: "Forestis",
       location: "Dolomites, Italy",
-      score: 94,
+      matchTier: "Strong match",
       signals: ["Neo-rustic refined", "Staff-as-host", "Fresh-air-obsessive"],
       signalDomain: "Design",
       note: "Built into the mountain at 1,800m. Larch wood, floor-to-ceiling glass, and air that tastes like pine",
@@ -225,7 +225,7 @@ export const WEEKLY_COLLECTION = {
     {
       name: "Ett Hem",
       location: "Stockholm, Sweden",
-      score: 92,
+      matchTier: "Strong match",
       signals: ["Curated density", "Domestic atmosphere", "Owner-operated"],
       signalDomain: "Character",
       note: "A townhouse that feels like staying at a brilliantly stylish friend's home — 12 rooms, no lobby",
@@ -234,7 +234,7 @@ export const WEEKLY_COLLECTION = {
     {
       name: "Hoshinoya Kyoto",
       location: "Kyoto, Japan",
-      score: 89,
+      matchTier: "Good match",
       signals: ["Guided ritual", "Spatial precision", "Memory-driven"],
       signalDomain: "Service",
       note: "Accessible only by boat. Rooms designed around the river sounds. Service remembers everything",
@@ -243,7 +243,7 @@ export const WEEKLY_COLLECTION = {
     {
       name: "Can Ferrereta",
       location: "Mallorca, Spain",
-      score: 87,
+      matchTier: "Good match",
       signals: ["Natural pool", "Courtyard-centered", "Village-scale"],
       signalDomain: "Setting",
       note: "A 17th-century estate woven into Santanyí village — the natural pool is carved from the original cistern",
@@ -256,12 +256,12 @@ export const WEEKLY_COLLECTION = {
 export const STRETCH_PICK = {
   name: "Asador Etxebarri",
   location: "Atxondo, Basque Country",
-  score: 74,
+  matchTier: "Worth a look",
   type: "restaurant",
   strongAxis: "FoodDrink",
-  strongScore: 97,
+  strongTier: "Strong match",
   weakAxis: "Atmosphere",
-  weakScore: 28,
+  weakTier: "Not for you",
   why: "Your FoodDrink axis is 85% but this could crack it wide open. Etxebarri is a single-minded obsession with fire — every course, including dessert, touches the grill. It's the kind of place that permanently recalibrates what you think flavor can be.",
   tension: "It breaks your 'urban-walkable' signal (it's a 40-minute drive into the Basque hills) but the valley setting and zero pretension create the intimacy your profile craves.",
   googlePlaceId: "ChIJfwMp6PLSTw0RFlSWXV3fkio",
@@ -272,21 +272,21 @@ export const SUMMER_RECS: ContextRec[] = [
   {
     name: "Can Ferrereta",
     location: "Mallorca, Spain",
-    score: 87,
+    matchTier: "Good match",
     whyFits: "Natural pool carved from stone, courtyard dining under fig trees",
     // googlePlaceId omitted — auto-resolved via ensure-places endpoint on first use
   },
   {
     name: "Masseria Moroseta",
     location: "Puglia, Italy",
-    score: 97,
+    matchTier: "Strong match",
     whyFits: "Outdoor breakfast terrace, grove walks, open-air rooftop at dusk",
     googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
   },
   {
     name: "Belmond Grand Hotel Timeo",
     location: "Taormina, Sicily",
-    score: 84,
+    matchTier: "Good match",
     whyFits: "Terrace overlooking Etna, poolside lunch, evening passeggiata",
     googlePlaceId: "ChIJ5QrHTJ8RFBMRUzfUaMkAT6o",
   },
@@ -299,9 +299,9 @@ export const MOOD_BOARDS: MoodBoard[] = [
     description: "Total sensory retreat — no decisions, no noise, just air and light.",
     color: "#4a6b8b",
     places: [
-      { name: "Forestis", location: "Dolomites, Italy", vibe: "Alpine silence at 1,800m", score: 94, googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8" },
-      { name: "Hoshinoya Kyoto", location: "Kyoto, Japan", vibe: "River sounds, paper walls", score: 89, googlePlaceId: "ChIJ9e5EmAWqAWARpQEhPRuq-Qw" },
-      { name: "Amangiri", location: "Canyon Point, Utah", vibe: "Desert emptiness as design", score: 82, googlePlaceId: "ChIJq-qcNtwhNYcRazgIZDEKTIc" },
+      { name: "Forestis", location: "Dolomites, Italy", vibe: "Alpine silence at 1,800m", matchTier: "Strong match", googlePlaceId: "ChIJUzkj65AQeEcRKXSK0ZN3uS8" },
+      { name: "Hoshinoya Kyoto", location: "Kyoto, Japan", vibe: "River sounds, paper walls", matchTier: "Good match", googlePlaceId: "ChIJ9e5EmAWqAWARpQEhPRuq-Qw" },
+      { name: "Amangiri", location: "Canyon Point, Utah", vibe: "Desert emptiness as design", matchTier: "Good match", googlePlaceId: "ChIJq-qcNtwhNYcRazgIZDEKTIc" },
     ],
   },
   {
@@ -309,9 +309,9 @@ export const MOOD_BOARDS: MoodBoard[] = [
     description: "Walkable neighborhoods with your kind of places on every corner.",
     color: COLOR.coral,
     places: [
-      { name: "11th Arrondissement", location: "Paris, France", vibe: "Natural wine, no-choice menus", score: 91, googlePlaceId: "ChIJxSr71vZt5kcR8BqUaMOCCwU" },
-      { name: "Södermalm", location: "Stockholm, Sweden", vibe: "Third-wave coffee, open sandwiches", score: 88, googlePlaceId: "ChIJc6euFuV3X0YRQmY6ng8b2Ho" },
-      { name: "Roma Norte", location: "Mexico City, Mexico", vibe: "Mezcal bars, street food, roof terraces", score: 85, googlePlaceId: "ChIJzeSi8jn_0YURMiXDZ-gzmi0" },
+      { name: "11th Arrondissement", location: "Paris, France", vibe: "Natural wine, no-choice menus", matchTier: "Strong match", googlePlaceId: "ChIJxSr71vZt5kcR8BqUaMOCCwU" },
+      { name: "Södermalm", location: "Stockholm, Sweden", vibe: "Third-wave coffee, open sandwiches", matchTier: "Good match", googlePlaceId: "ChIJc6euFuV3X0YRQmY6ng8b2Ho" },
+      { name: "Roma Norte", location: "Mexico City, Mexico", vibe: "Mezcal bars, street food, roof terraces", matchTier: "Good match", googlePlaceId: "ChIJzeSi8jn_0YURMiXDZ-gzmi0" },
     ],
   },
 ];
@@ -320,15 +320,15 @@ export const MOOD_BOARDS: MoodBoard[] = [
 export const DEEP_MATCH: DeepMatch = {
   name: "Masseria Moroseta",
   location: "Puglia, Italy",
-  score: 97,
+  matchTier: "Strong match",
   headline: "This place was made for the way you travel.",
   googlePlaceId: "ChIJJ-deaBhDRhMRoyNjtN409iY",
   signalBreakdown: [
-    { signal: "Vernacular modern", domain: "Design", strength: 98, note: "Local tufa stone, contemporary proportions — architecture rooted in place" },
-    { signal: "Communal dinner", domain: "FoodDrink", strength: 95, note: "One long table, farm-sourced menu, everyone eats together" },
-    { signal: "Morning light (golden)", domain: "Design", strength: 97, note: "East-facing rooms, the stone glows amber at breakfast" },
-    { signal: "Owner-operated", domain: "Service", strength: 94, note: "The owner greets you. Staff are neighbors. Nothing is scripted." },
-    { signal: "Sleep-darkness-critical", domain: "Wellness", strength: 90, note: "Heavy shutters, no light pollution — the Puglian countryside after dark" },
+    { signal: "Vernacular modern", domain: "Design", tierLabel: "Strong", note: "Local tufa stone, contemporary proportions — architecture rooted in place" },
+    { signal: "Communal dinner", domain: "FoodDrink", tierLabel: "Strong", note: "One long table, farm-sourced menu, everyone eats together" },
+    { signal: "Morning light (golden)", domain: "Design", tierLabel: "Strong", note: "East-facing rooms, the stone glows amber at breakfast" },
+    { signal: "Owner-operated", domain: "Service", tierLabel: "Strong", note: "The owner greets you. Staff are neighbors. Nothing is scripted." },
+    { signal: "Sleep-darkness-critical", domain: "Wellness", tierLabel: "Strong", note: "Heavy shutters, no light pollution — the Puglian countryside after dark" },
   ],
   tensionResolved: "Your contradiction of wanting quiet rooms AND lively dining? Here they're literally separated by architecture — stone walls for sleep, open-air courtyard for dinner.",
 };
@@ -340,7 +340,7 @@ export const FRIEND_SAVES: FriendSave[] = [
     friendInitial: "J",
     place: "Drop Coffee",
     location: "Södermalm, Stockholm",
-    score: 74,
+    matchTier: "Worth a look",
     type: "cafe",
     whyMatches: "Matches your Character axis — serious about extraction, zero pretension",
     color: "#4a6741",
@@ -351,7 +351,7 @@ export const FRIEND_SAVES: FriendSave[] = [
     friendInitial: "S",
     place: "Septime",
     location: "11th, Paris",
-    score: 91,
+    matchTier: "Strong match",
     type: "restaurant",
     whyMatches: "Near-perfect Food & Drink alignment — natural wine, no-choice menu, intimate room",
     color: "#8b4a4a",
@@ -362,7 +362,7 @@ export const FRIEND_SAVES: FriendSave[] = [
     friendInitial: "M",
     place: "Café de Flore",
     location: "Saint-Germain, Paris",
-    score: 68,
+    matchTier: "Mixed fit",
     type: "cafe",
     whyMatches: "A stretch pick for you — more scene than substance, but the morning light is unmatched",
     color: "#4a6b8b",

@@ -648,12 +648,12 @@ function PlaceDetailContent({
                 match={{
                   name: item.name,
                   location: hydratedLocation || '',
-                  score: hydratedMatchScore,
+                  matchTier: getMatchTier(hydratedMatchScore).label,
                   headline: resolvedItem.matchExplanation.narrative || '',
                   signalBreakdown: resolvedItem.matchExplanation.topClusters.slice(0, 4).map(c => ({
                     signal: c.label,
                     domain: c.domain as TasteDomain,
-                    strength: c.score,
+                    tierLabel: getMatchTier(c.score).shortLabel,
                     note: c.signals.join(', '),
                   })),
                   googlePlaceId: effectiveGooglePlaceId,

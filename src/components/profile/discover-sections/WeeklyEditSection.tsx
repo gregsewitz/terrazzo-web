@@ -49,7 +49,7 @@ export function WeeklyEditSection({ collection: propCollection }: { collection?:
                       <div className="text-[18px] font-semibold" style={{ color: COLOR.darkTeal }}>{place.name}</div>
                       <div className="text-[15px]" style={{ color: COLOR.navy }}>{place.location}</div>
                     </div>
-                    <ScoreArc score={place.score} size={38} color={COLOR.darkTeal} />
+                    <ScoreArc matchTier={place.matchTier} size={38} color={COLOR.darkTeal} />
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2.5">
                     {(Array.isArray(place.signals) ? place.signals : []).map(s => (

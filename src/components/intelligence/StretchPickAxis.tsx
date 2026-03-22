@@ -7,7 +7,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection } from '@/components/animations/AnimatedElements';
 import { formatDomain } from '@/constants/profile';
-import { getMatchTier } from '@/lib/match-tier';
+import { getMatchTierByLabel } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -16,18 +16,18 @@ export interface StretchPick {
   name: string;
   /** Location */
   location: string;
-  /** Overall match score (raw — displayed as tier label) */
-  score: number;
+  /** Overall match tier label (e.g. "Worth a look") */
+  matchTier: string;
   /** Place type */
   type: string;
   /** Domain where this place excels */
   strongAxis: TasteDomain;
-  /** Strength on the strong axis (raw score — displayed as tier) */
-  strongScore: number;
+  /** Tier on the strong axis (e.g. "Strong match") */
+  strongTier: string;
   /** Domain where this place challenges the user */
   weakAxis: TasteDomain;
-  /** Score on the weak axis (raw score — displayed as tier) */
-  weakScore: number;
+  /** Tier on the weak axis (e.g. "Mixed fit") */
+  weakTier: string;
   /** 2-sentence explanation of why this expands taste */
   why: string;
   /** Which pattern this breaks */
@@ -46,18 +46,21 @@ interface StretchPickAxisProps {
 
 function AxisBar({
   domain,
-  score,
+  tierLabel,
   label,
   isDesktop,
 }: {
   domain: TasteDomain;
-  score: number;
+  tierLabel: string;
   label: 'shines' | 'challenges';
   isDesktop: boolean;
 }) {
   const color = DOMAIN_COLORS[domain];
   const isStrong = label === 'shines';
-  const barWidth = Math.max(score, 8); // minimum visual width
+  const tier = getMatchTierByLabel(tierLabel);
+  // Map tier to approximate visual width
+  const tierWidths: Record<string, number> = { strong: 92, good: 72, worth_a_look: 55, mixed: 35, not_for_you: 15 };
+  const barWidth = tierWidths[tier.key] ?? 50;
 
   return (
     <div className="flex items-center gap-2.5">
@@ -98,12 +101,12 @@ function AxisBar({
         <span
           className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
           style={{
-            color: getMatchTier(score).color,
-            background: getMatchTier(score).bg,
+            color: tier.color,
+            background: tier.bg,
             fontFamily: FONT.mono,
           }}
         >
-          {getMatchTier(score).shortLabel}
+          {tier.shortLabel}
         </span>
       </div>
 
@@ -144,7 +147,7 @@ export function StretchPickAxis({
             className="text-[13px] font-bold"
             style={{ color: COLOR.navy, fontFamily: FONT.mono }}
           >
-            {getMatchTier(pick.score).label}
+            {getMatchTierByLabel(pick.matchTier).label}
           </span>
 
           {/* Place info */}
@@ -171,13 +174,13 @@ export function StretchPickAxis({
         <div className="pb-3 flex flex-col gap-2.5">
           <AxisBar
             domain={pick.strongAxis}
-            score={pick.strongScore}
+            tierLabel={pick.strongTier}
             label="shines"
             isDesktop={isDesktop}
           />
           <AxisBar
             domain={pick.weakAxis}
-            score={pick.weakScore}
+            tierLabel={pick.weakTier}
             label="challenges"
             isDesktop={isDesktop}
           />

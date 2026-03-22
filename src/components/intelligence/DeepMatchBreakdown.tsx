@@ -6,7 +6,7 @@ import { TasteDomain, DOMAIN_COLORS, DOMAIN_ICONS, T } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar } from '@/components/animations/AnimatedElements';
-import { getMatchTier } from '@/lib/match-tier';
+import { getMatchTierByLabel } from '@/lib/match-tier';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -15,8 +15,8 @@ export interface DeepMatchSignal {
   signal: string;
   /** Which taste domain it belongs to */
   domain: TasteDomain;
-  /** Strength of this signal match (raw score — displayed as tier) */
-  strength: number;
+  /** Tier label for this signal match (e.g. "Strong", "Good") */
+  tierLabel: string;
   /** 1-sentence note explaining why this signal matched the property */
   note: string;
 }
@@ -26,8 +26,8 @@ export interface DeepMatch {
   name: string;
   /** Location */
   location: string;
-  /** Overall match score (raw — displayed as tier label) */
-  score: number;
+  /** Overall match tier label (e.g. "Strong match") */
+  matchTier: string;
   /** 12-word editorial headline */
   headline: string;
   /** Per-signal breakdown */
@@ -83,7 +83,7 @@ export function DeepMatchBreakdown({
             className="text-[13px] font-bold"
             style={{ color: COLOR.ochre, fontFamily: FONT.mono }}
           >
-            {getMatchTier(match.score).label}
+            {getMatchTierByLabel(match.matchTier).label}
           </span>
 
           {/* Place name — tappable */}
@@ -149,9 +149,9 @@ export function DeepMatchBreakdown({
                           </span>
                           <span
                             className="text-[10px] font-semibold ml-auto px-1.5 py-0.5 rounded-full"
-                            style={{ color: getMatchTier(signal.strength).color, background: getMatchTier(signal.strength).bg, fontFamily: FONT.mono }}
+                            style={{ color: getMatchTierByLabel(signal.tierLabel).color, background: getMatchTierByLabel(signal.tierLabel).bg, fontFamily: FONT.mono }}
                           >
-                            {getMatchTier(signal.strength).shortLabel}
+                            {getMatchTierByLabel(signal.tierLabel).shortLabel}
                           </span>
                         </div>
                         {/* Explanation note */}

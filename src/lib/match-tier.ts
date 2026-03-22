@@ -160,3 +160,17 @@ export function isStrongMatch(score: number | null | undefined): boolean {
   if (score == null) return false;
   return rawToZ(score) >= 1.3;
 }
+
+/**
+ * Look up a MatchTier by its label or shortLabel string.
+ * Used when the tier comes from an LLM or API response as a string
+ * rather than being computed from a raw score.
+ */
+export function getMatchTierByLabel(label: string | null | undefined): MatchTier {
+  if (!label) return TIERS[3]; // default to 'mixed'
+  const lower = label.toLowerCase().trim();
+  return (
+    TIERS.find(t => t.label.toLowerCase() === lower || t.shortLabel.toLowerCase() === lower || t.key === lower) ??
+    TIERS[3]
+  );
+}

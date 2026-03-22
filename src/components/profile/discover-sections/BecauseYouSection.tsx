@@ -52,7 +52,7 @@ export function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5 mb-2">
-                    <ScoreArc score={card.score} size={34} color="var(--t-coral)" />
+                    <ScoreArc matchTier={card.matchTier} size={34} color="var(--t-coral)" />
                     <div>
                       <div className="text-[18px] font-semibold" style={{ color: COLOR.darkTeal }}>{card.place}</div>
                       <div className="text-[15px]" style={{ color: COLOR.navy }}>{card.location}</div>
