@@ -78,9 +78,16 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
           ...trip,
           // Keep pool item as-is (don't change status) so it remains visible in picks
           pool: trip.pool,
-          days: mapDaySlots(trip.days, day, s =>
-            s.id === slotId ? { ...s, places: [...s.places, placedCopy] } : s
-          ),
+          days: mapDaySlots(trip.days, day, s => {
+            if (s.id !== slotId) return s;
+            // For meal slots, placing an item fills the slot — clear ghosts
+            const isMealSlot = ['breakfast', 'lunch', 'dinner'].includes(s.id);
+            return {
+              ...s,
+              places: [...s.places, placedCopy],
+              ...(isMealSlot && s.places.length === 0 ? { ghostItems: [] } : {}),
+            };
+          }),
         };
       })
     );
@@ -215,7 +222,15 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
         ...d,
         slots: d.slots.map(s => {
           if (d.dayNumber === fromDay && s.id === fromSlotId) return { ...s, places: s.places.filter(p => p.id !== place.id) };
-          if (d.dayNumber === toDay && s.id === toSlotId) return { ...s, places: [...s.places, movedItem] };
+          if (d.dayNumber === toDay && s.id === toSlotId) {
+            // For meal slots, moving a place in fills the slot — clear ghosts
+            const isMealSlot = ['breakfast', 'lunch', 'dinner'].includes(s.id);
+            return {
+              ...s,
+              places: [...s.places, movedItem],
+              ...(isMealSlot ? { ghostItems: [] } : {}),
+            };
+          }
           return s;
         }),
       })),
@@ -280,10 +295,15 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
           if (s.id !== slotId) return s;
           const ghost = s.ghostItems?.find(g => g.id === ghostId);
           if (!ghost) return s;
+          // For meal slots, confirming a ghost fills the slot — clear all remaining ghosts
+          const isMealSlot = ['breakfast', 'lunch', 'dinner'].includes(s.id);
+          const remainingGhosts = isMealSlot
+            ? [] // meal slot is now filled
+            : s.ghostItems?.filter(g => g.id !== ghostId);
           return {
             ...s,
             places: [...s.places, { ...ghost, ghostStatus: 'confirmed' as const, status: 'placed' as const }],
-            ghostItems: s.ghostItems?.filter(g => g.id !== ghostId),
+            ghostItems: remainingGhosts,
           };
         }),
       }))
@@ -477,11 +497,17 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
           const fallbackSlots = allSlotIds.filter(s => !preferredSlots.includes(s));
           const slotsToTry = [...preferredSlots, ...fallbackSlots];
 
+          // Meal slots are "one-place" slots — once a restaurant/cafe is confirmed,
+          // no more ghost suggestions should appear (you don't need two dinners).
+          const MEAL_SLOTS = new Set(['breakfast', 'lunch', 'dinner']);
+
           for (const slotId of slotsToTry) {
             const slot = day.slots.find(s => s.id === slotId);
             // Skip if slot is full: 2+ ghosts already, or 2+ placed items (slot is occupied)
             if (!slot || (slot.ghostItems && slot.ghostItems.length >= 2)) continue;
             if (slot.places.length >= 2) continue;
+            // Meal slots: skip if already has a confirmed place
+            if (MEAL_SLOTS.has(slotId) && slot.places.length >= 1) continue;
 
             // Check destination match at the slot level (not just day level)
             const slotDest = (slotDestMap.slotDestinations.get(slotId) || day.destination || '').toLowerCase();
