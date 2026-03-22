@@ -229,7 +229,7 @@ function DayPlannerGrid() {
                 style={{
                   height: row.height,
                   borderBottom: '1px solid var(--t-linen)',
-                  background: 'rgba(0,0,0,0.015)',
+                  background: '#fdfcfc',
                 }}
               >
                 <PerriandIcon name="transport" size={11} color={INK['30']} />
@@ -247,6 +247,7 @@ function DayPlannerGrid() {
                 height: row.height,
                 borderBottom: '1px solid var(--t-linen)',
                 position: 'relative',
+                background: 'white',
               }}
             >
               {/* Vertical label — rotated 180° so it reads bottom-to-top */}
@@ -362,7 +363,7 @@ function DayPlannerGrid() {
             </div>
 
             {/* ── Column headers (sticky at top during vertical scroll) ── */}
-            <div style={{ position: 'sticky', top: 0, zIndex: 20 }}>
+            <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'white' }}>
 
             {/* ── Column header: day title ── */}
             <div
