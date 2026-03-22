@@ -208,7 +208,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
     const hotelName = activeDay?.hotelInfo?.name?.toLowerCase();
     const hotelPlaceId = activeDay?.hotelInfo?.placeId;
 
-    return myPlaces.filter(place => {
+    const filtered = myPlaces.filter(place => {
       // Geo-filter to trip destinations
       if (!destLower.some(dest => place.location.toLowerCase().includes(dest))) return false;
       // Exclude hotel for the active day
@@ -216,6 +216,37 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
       if (hotelName && place.name.toLowerCase() === hotelName) return false;
       return true;
     });
+
+    // Dedup by Google placeId first, then by normalized name (keeps highest matchScore)
+    const seen = new Map<string, ImportedPlace>();
+    for (const place of filtered) {
+      const gpid = place.google?.placeId;
+      const nameKey = place.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const key = gpid || nameKey;
+      const existing = seen.get(key);
+      if (!existing || (place.matchScore ?? 0) > (existing.matchScore ?? 0)) {
+        seen.set(key, place);
+      }
+      // Also check name key when using placeId key, to catch cross-source dupes
+      if (gpid && !seen.has(nameKey)) {
+        seen.set(nameKey, place);
+      } else if (gpid) {
+        const byName = seen.get(nameKey);
+        if (byName && byName.id !== place.id && (place.matchScore ?? 0) > (byName.matchScore ?? 0)) {
+          seen.set(nameKey, place);
+        }
+      }
+    }
+    // Return unique places (deduplicated)
+    const uniqueIds = new Set<string>();
+    const result: ImportedPlace[] = [];
+    for (const place of seen.values()) {
+      if (!uniqueIds.has(place.id)) {
+        uniqueIds.add(place.id);
+        result.push(place);
+      }
+    }
+    return result;
   }, [myPlaces, tripDestinations, activeDay?.hotelInfo?.name, activeDay?.hotelInfo?.placeId]);
 
   // Apply source filter
