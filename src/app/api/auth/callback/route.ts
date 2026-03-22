@@ -83,15 +83,26 @@ export async function POST(req: NextRequest) {
  * GET /api/auth/callback
  * Legacy redirect — sends users to the client-side callback page
  * so the browser's Supabase client can exchange the code and persist the session.
+ *
+ * Also handles error redirects from Supabase (expired tokens, already-used links, etc.)
+ * by forwarding the error to the client-side callback page for display.
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
 
-  if (!code) {
-    return Response.redirect(new URL('/login?error=missing_code', req.url));
+  if (code) {
+    return Response.redirect(new URL(`/auth/callback?code=${code}`, req.url));
   }
 
-  // Forward code to the client-side callback page
-  return Response.redirect(new URL(`/auth/callback?code=${code}`, req.url));
+  // Supabase may redirect with ?error=...&error_description=... when the
+  // magic link is expired, already used, or otherwise invalid.
+  const error = searchParams.get('error_description') || searchParams.get('error');
+  if (error) {
+    return Response.redirect(
+      new URL(`/auth/callback?error=${encodeURIComponent(error)}`, req.url),
+    );
+  }
+
+  return Response.redirect(new URL('/auth/callback?error=missing_code', req.url));
 }

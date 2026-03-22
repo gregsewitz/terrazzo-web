@@ -1,16 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FONT, COLOR } from '@/constants/theme';
 
 export default function LoginPage() {
   const { signIn, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Show errors forwarded from the auth callback (expired links, etc.)
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    if (urlError) {
+      setStatus('error');
+      if (urlError === 'missing_code') {
+        setErrorMsg('Sign-in link was invalid. Please request a new one.');
+      } else if (urlError.includes('expired')) {
+        setErrorMsg('Your sign-in link has expired. Please request a new one.');
+      } else {
+        setErrorMsg('Something went wrong signing in. Please try again.');
+      }
+    }
+  }, [searchParams]);
 
   // If already authenticated, redirect
   if (isAuthenticated) {
