@@ -9,6 +9,7 @@ import { getDisplayLocation } from '@/lib/place-display';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import GoogleMapView, { type MapMarker } from '@/components/maps/GoogleMapView';
 import { formatTime12h } from '@/components/place/PlaceTimeEditor';
+import { QUICK_ENTRY_CATEGORY_ICONS } from '@/types';
 import type { ImportedPlace, TripDay, PlaceType } from '@/types';
 
 // ─── Types ───
@@ -571,7 +572,7 @@ function ItineraryView({
                           className="flex items-center gap-2 py-2 px-3 rounded-lg mb-1"
                           style={{ background: INK['04'] }}
                         >
-                          <PerriandIcon name="pin" size={11} color={INK['30']} />
+                          <PerriandIcon name={QUICK_ENTRY_CATEGORY_ICONS[entry.category] || 'pin'} size={11} color={INK['30']} />
                           <span style={{
                             fontFamily: FONT.sans, fontSize: 12,
                             color: TEXT.primary,
@@ -888,7 +889,7 @@ function ReadOnlyDayCard({ day, trip }: { day: TripDay; trip: SharedTripProps['t
               }}>
                 {entry.specificTime ? formatTime12h(entry.specificTime) : slotTime}
               </span>
-              <PerriandIcon name="pin" size={12} color={SECTION.editorial.body} />
+              <PerriandIcon name={QUICK_ENTRY_CATEGORY_ICONS[entry.category] || 'pin'} size={12} color={SECTION.editorial.body} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <span style={{
                   fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
