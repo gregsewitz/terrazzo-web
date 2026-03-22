@@ -573,8 +573,11 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     return NextResponse.json(legacyFeed);
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    const errStack = error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' | ') : '';
+    const errStack = error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : '';
     console.error(`[discover] FATAL: ${errMsg} ${errStack}`);
-    return apiError('Failed to generate discover content', 500, { details: errorMessage(error) });
+    return NextResponse.json(
+      { error: 'Failed to generate discover content', details: errMsg, stack: errStack },
+      { status: 500 },
+    );
   }
 });
