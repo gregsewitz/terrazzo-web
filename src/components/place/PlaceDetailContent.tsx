@@ -195,11 +195,18 @@ function PlaceDetailContent({
               'establishment', 'point of interest', 'store', 'food', 'place',
               'local business', 'business', 'health', 'general contractor',
             ]);
+            // Core place types that are peers, not specificity refinements of each other.
+            // If Google says "bar" but Terrazzo resolved "restaurant", that's a conflict — not added specificity.
+            const CORE_TYPES = new Set(['restaurant', 'bar', 'cafe', 'hotel', 'museum', 'shop', 'neighborhood', 'activity']);
+            const googleCatLower = normalizedCategory.toLowerCase();
+            const terrazzoCatLower = item.type.toLowerCase();
             const categoryIsGeneric = !normalizedCategory ||
-              GENERIC_CATEGORIES.has(normalizedCategory.toLowerCase()) ||
-              normalizedCategory.toLowerCase() === item.type.toLowerCase() ||
-              normalizedCategory.toLowerCase().includes(item.type.toLowerCase()) ||
-              item.type.toLowerCase().includes(normalizedCategory.toLowerCase().replace(/\s+/g, ''));
+              GENERIC_CATEGORIES.has(googleCatLower) ||
+              googleCatLower === terrazzoCatLower ||
+              googleCatLower.includes(terrazzoCatLower) ||
+              terrazzoCatLower.includes(googleCatLower.replace(/\s+/g, '')) ||
+              // If Google category maps to a different core type, prefer Terrazzo's resolved type
+              (CORE_TYPES.has(googleCatLower) && googleCatLower !== terrazzoCatLower);
             // Show Google category when it adds specificity; otherwise show Terrazzo type
             const displayType = categoryIsGeneric ? placeType : normalizedCategory;
             return (

@@ -24,6 +24,11 @@
  *   DATABASE_URL env var (standard Prisma connection)
  */
 
+import dotenv from 'dotenv';
+import { resolve } from 'path';
+dotenv.config({ path: resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: resolve(process.cwd(), '.env') });
+
 import { prisma } from '../src/lib/prisma';
 
 const PIPELINE_WORKER_URL = process.env.PIPELINE_WORKER_URL || '';

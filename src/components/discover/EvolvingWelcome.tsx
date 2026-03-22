@@ -380,38 +380,48 @@ export default function EvolvingWelcome({ discoverContent, isLoadingDiscover }: 
         border: `1px solid ${INK['10']}`,
       }}
     >
-      {/* Header with collapse button */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex-1 min-w-0">
-          {!collapsed && renderContent()}
+      {collapsed ? (
+        /* Collapsed: single row with text + toggle */
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0" style={{ fontFamily: FONT.serif, color: TEXT.primary, fontSize: 16, fontStyle: 'italic', lineHeight: 1.4 }}>
+            {welcomeState === 'first-light' && `Welcome to your Terrazzo, ${firstName}.`}
+            {welcomeState === 'building' && `${userSavedCount} place${userSavedCount !== 1 ? 's' : ''} saved — your taste is taking shape.`}
+            {welcomeState === 'planning' && `Planning ${trips[0]?.name || 'your trip'} — keep adding places.`}
+            {welcomeState === 'curating' && `${userSavedCount} places, ${tripCount} trips — here's what's new.`}
+            {welcomeState === 'returning' && `Welcome back — new matches since your last visit.`}
+          </div>
+          <button
+            onClick={() => setCollapsed(false)}
+            className="flex-shrink-0 p-1 transition-opacity hover:opacity-60"
+            aria-label="Expand welcome"
+          >
+            <PerriandIcon
+              name="arrow-right"
+              size={16}
+              color={TEXT.secondary}
+              style={{ transform: 'rotate(-90deg)', transition: 'transform 0.3s ease' }}
+            />
+          </button>
         </div>
-
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex-shrink-0 p-1 transition-opacity hover:opacity-60"
-          style={{ marginTop: -4 }}
-          aria-label={collapsed ? 'Expand welcome' : 'Collapse welcome'}
-        >
-          <PerriandIcon
-            name="arrow-right"
-            size={16}
-            color={TEXT.secondary}
-            style={{
-              transform: collapsed ? 'rotate(-90deg)' : 'rotate(90deg)',
-              transition: 'transform 0.3s ease',
-            }}
-          />
-        </button>
-      </div>
-
-      {/* Show minimal state when collapsed */}
-      {collapsed && (
-        <div style={{ fontFamily: FONT.serif, color: TEXT.primary, fontSize: 16, fontStyle: 'italic', lineHeight: 1.4 }}>
-          {welcomeState === 'first-light' && `Welcome to your Terrazzo, ${firstName}.`}
-          {welcomeState === 'building' && `${userSavedCount} place${userSavedCount !== 1 ? 's' : ''} saved — your taste is taking shape.`}
-          {welcomeState === 'planning' && `Planning ${trips[0]?.name || 'your trip'} — keep adding places.`}
-          {welcomeState === 'curating' && `${userSavedCount} places, ${tripCount} trips — here's what's new.`}
-          {welcomeState === 'returning' && `Welcome back — new matches since your last visit.`}
+      ) : (
+        /* Expanded: content with toggle in top-right */
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {renderContent()}
+          </div>
+          <button
+            onClick={() => setCollapsed(true)}
+            className="flex-shrink-0 p-1 transition-opacity hover:opacity-60"
+            style={{ marginTop: -4 }}
+            aria-label="Collapse welcome"
+          >
+            <PerriandIcon
+              name="arrow-right"
+              size={16}
+              color={TEXT.secondary}
+              style={{ transform: 'rotate(90deg)', transition: 'transform 0.3s ease' }}
+            />
+          </button>
         </div>
       )}
     </motion.div>

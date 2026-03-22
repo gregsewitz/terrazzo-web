@@ -20,6 +20,7 @@ import PlaceLink from '@/components/place/PlaceLink';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import { getMatchTier } from '@/lib/match-tier';
 import type { TasteProfile as NumericProfile, GeneratedTasteProfile } from '@/types';
+import { SectionLabel } from './discover-sections/SectionLabel';
 import {
   FadeInSection,
   StaggerContainer,
@@ -126,13 +127,11 @@ export function IdentitySection({ profile, signalCount, numericProfile }: { prof
 export function TasteDNASection({ profile, mosaicAxes }: { profile: ProfileShape; mosaicAxes: Record<string, number> }) {
   const axes = profile.radarData || [];
   return (
-    <div className="py-8" style={{ background: 'var(--t-cream)' }}>
+    <div className="py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <div className="px-5">
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-coral)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Taste DNA
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.coral}>Taste DNA</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Your Sensibility Profile
         </h3>
         <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
@@ -182,21 +181,19 @@ export function DesignLanguageSection({ profile, gp, mosaicAxes }: { profile: Pr
   const annotations = insight?.annotations || AXES_FALLBACK;
 
   return (
-    <div className="py-8" style={{ background: 'var(--t-charcoal)' }}>
+    <div className="py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <div className="px-5">
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Your Design Eye
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.teal}>Your Design Eye</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           How You See Spaces
         </h3>
         {insight?.headline && (
-          <p className="text-[16px] mb-2 italic leading-snug" style={{ fontFamily: FONT.serif, color: 'var(--t-peach)' }}>
-            "{insight.headline}"
+          <p className="text-[16px] mb-2 italic leading-snug" style={{ fontFamily: FONT.serif, color: COLOR.navy }}>
+            &ldquo;{insight.headline}&rdquo;
           </p>
         )}
-        <p className="text-[14px] mb-6" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           Mapped across six design spectrums that reveal your aesthetic pattern.
         </p>
       </FadeInSection>
@@ -207,13 +204,13 @@ export function DesignLanguageSection({ profile, gp, mosaicAxes }: { profile: Pr
           const pct = Math.round(eloValue * 100);
           return (
             <FadeInSection key={a.axis} delay={i * 0.1}>
-              <div className="px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <div className="px-4 py-3 rounded-2xl" style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,42,85,0.08)' }}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[12px] uppercase" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.mono, opacity: 0.6 }}>{a.label[0]}</span>
-                  <span className="text-[12px] uppercase" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.mono, opacity: 0.6 }}>{a.label[1]}</span>
+                  <span className="text-[12px] uppercase" style={{ color: COLOR.navy, fontFamily: FONT.mono, opacity: 0.6 }}>{a.label[0]}</span>
+                  <span className="text-[12px] uppercase" style={{ color: COLOR.navy, fontFamily: FONT.mono, opacity: 0.6 }}>{a.label[1]}</span>
                 </div>
                 <AnimatedSpectrum percentage={pct} delay={i * 0.12} />
-                <p className="text-[13px] mt-2.5 leading-relaxed" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.sans }}>
+                <p className="text-[13px] mt-2.5 leading-relaxed" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
                   {a.note}
                 </p>
               </div>
@@ -231,16 +228,14 @@ export function DesignLanguageSection({ profile, gp, mosaicAxes }: { profile: Pr
 // ═══════════════════════════════════════════
 export function ContradictionsSection({ profile }: { profile: ProfileShape }) {
   return (
-    <div className="relative overflow-hidden px-5 py-8" style={{ background: 'var(--t-coral)' }}>
+    <div className="relative overflow-hidden px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1 relative z-10" style={{ color: 'var(--t-cream)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Your Contradictions
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.coral}>Your Contradictions</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           The Tensions That Define You
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(251,245,236,0.8)', fontFamily: FONT.sans }}>
-          Where you say one thing, but your behavior reveals something deeper — and that's exactly what makes you fascinating.
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
+          Where you say one thing, but your behavior reveals something deeper — and that&apos;s exactly what makes you fascinating.
         </p>
       </FadeInSection>
 
@@ -289,12 +284,10 @@ export function PerfectDaySection({ gp }: { gp: GeneratedTasteProfile | null }) 
   ];
 
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-peach)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Your Perfect Day
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.coral}>Your Perfect Day</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Your Ideal Travel Day
         </h3>
         <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
@@ -346,15 +339,13 @@ export function PerfectDaySection({ gp }: { gp: GeneratedTasteProfile | null }) 
 export function ContextShiftsSection({ profile, gp }: { profile: ProfileShape; gp: GeneratedTasteProfile | null }) {
   const shifts = gp?.howYouShift;
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-olive)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          How Your Taste Shifts
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.teal}>How Your Taste Shifts</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Multiple Travelers in One
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           You&apos;re not the same traveler with friends as you are alone, or in summer versus winter.
         </p>
       </FadeInSection>
@@ -401,15 +392,13 @@ export function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null
   if (!neighbors) return null;
 
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-ochre)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Taste Neighbors
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.navy}>Taste Neighbors</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Archetypes Like You
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(0,42,85,0.7)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           You share DNA with these taste profiles — but something makes you distinctly yourself.
         </p>
       </FadeInSection>
@@ -477,15 +466,13 @@ export function DimensionsSection({ profile }: { profile: ProfileShape }) {
   const domains = Object.keys(profile.microTasteSignals).filter(k => k !== 'Rejection');
   const totalSignals = Object.values(profile.microTasteSignals).flat().length;
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-navy)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-light-yellow)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Taste Dimensions
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: '#ffffff', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.navy}>Taste Dimensions</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Confidence by Domain
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(255,255,255,0.8)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           How deeply we understand your taste across {domains.length} dimensions, powered by {totalSignals} signals.
         </p>
       </FadeInSection>
@@ -531,15 +518,13 @@ export function VocabularySection({ profile }: { profile: ProfileShape }) {
   }
 
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-olive)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-ochre)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Taste Vocabulary
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.ochre}>Taste Vocabulary</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           The Words That Define You
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(251,245,236,0.75)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           {positiveTerms.length + rejectionTerms.length} words that capture what you love — and what you actively avoid.
         </p>
       </FadeInSection>
@@ -583,12 +568,10 @@ export function VocabularySection({ profile }: { profile: ProfileShape }) {
 // ═══════════════════════════════════════════
 export function MatchesSection({ profile }: { profile: ProfileShape }) {
   return (
-    <div className="px-5 py-8 pb-10" style={{ background: 'var(--t-cream)' }}>
+    <div className="px-5 py-8 pb-10" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-teal)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Top Matches
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.teal}>Top Matches</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Places Made for You
         </h3>
         <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
@@ -845,7 +828,7 @@ function ContinentBar({ name, visits, pct, color, delay }: { name: string; visit
   return (
     <FadeInSection delay={delay} direction="left" distance={24}>
       <div ref={ref} className="flex items-center gap-3 mb-4">
-        <span className="text-[14px] font-bold w-32 shrink-0" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>{name}</span>
+        <span className="text-[14px] font-bold w-32 shrink-0" style={{ color: COLOR.navy, fontFamily: FONT.display }}>{name}</span>
         <div className="flex-1 h-6 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.08)' }}>
           {isMobileSafari() ? (
             <div
@@ -874,7 +857,7 @@ function ContinentBar({ name, visits, pct, color, delay }: { name: string; visit
             </motion.div>
           )}
         </div>
-        <span className="text-[13px] w-8 text-right font-bold" style={{ color: 'var(--t-peach)', fontFamily: FONT.mono }}>{pct}%</span>
+        <span className="text-[13px] w-8 text-right font-bold" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>{pct}%</span>
       </div>
     </FadeInSection>
   );
@@ -882,15 +865,13 @@ function ContinentBar({ name, visits, pct, color, delay }: { name: string; visit
 
 export function TravelStatsSection() {
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-ochre)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Your Travel Stats
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.coral}>Your Travel Stats</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Journey by the Numbers
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(0,42,85,0.7)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           The scale and scope of your explorations — still growing with every trip.
         </p>
       </FadeInSection>
@@ -951,12 +932,10 @@ const TRIPS: Array<{ title: string; dates: string; places: number; upcoming: boo
 
 export function TravelTimelineSection() {
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-peach)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-navy)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Travel Timeline
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.navy}>Travel Timeline</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Your Journey So Far
         </h3>
         <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
@@ -1109,15 +1088,13 @@ export function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
   );
 
   return (
-    <div className="px-5 py-8" style={{ background: 'var(--t-coral)' }}>
+    <div className="px-5 py-8" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-cream)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          Taste Evolution
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.coral}>Taste Evolution</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           How You&apos;ve Grown
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(251,245,236,0.8)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           Your taste journey from comfort zones to intentional exploration — each phase marking a shift.
         </p>
       </FadeInSection>
@@ -1127,14 +1104,14 @@ export function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
         {!isMobileSafari() ? (
           <motion.div
             className="absolute left-[7px] top-2 w-[2px]"
-            style={{ background: 'linear-gradient(to bottom, var(--t-cream), var(--t-peach))' }}
+            style={{ background: `linear-gradient(to bottom, ${COLOR.coral}, ${COLOR.navy})` }}
             initial={{ height: 0 }}
             whileInView={{ height: 'calc(100% - 16px)' }}
             transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
             viewport={{ once: true }}
           />
         ) : (
-          <div className="absolute left-[7px] top-2 w-[2px]" style={{ height: 'calc(100% - 16px)', background: 'linear-gradient(to bottom, var(--t-cream), var(--t-peach))' }} />
+          <div className="absolute left-[7px] top-2 w-[2px]" style={{ height: 'calc(100% - 16px)', background: `linear-gradient(to bottom, ${COLOR.coral}, ${COLOR.navy})` }} />
         )}
 
         <div className="flex flex-col gap-5">
@@ -1146,11 +1123,11 @@ export function TasteEvolutionSection({ profile }: { profile: ProfileShape }) {
                   {/* Dot */}
                   <div className="shrink-0 mt-1">
                     {isMobileSafari() ? (
-                      <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: isCurrent ? 'var(--t-cream)' : phase.color, background: isCurrent ? 'var(--t-cream)' : 'white' }} />
+                      <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: isCurrent ? COLOR.coral : phase.color, background: isCurrent ? COLOR.coral : 'white' }} />
                     ) : (
                       <motion.div
                         className="w-4 h-4 rounded-full border-2"
-                        style={{ borderColor: isCurrent ? 'var(--t-cream)' : phase.color, background: isCurrent ? 'var(--t-cream)' : 'white' }}
+                        style={{ borderColor: isCurrent ? COLOR.coral : phase.color, background: isCurrent ? COLOR.coral : 'white' }}
                         initial={{ scale: 0 }}
                         whileInView={{ scale: 1 }}
                         transition={{ duration: 0.4, delay: i * 0.15, type: 'spring', stiffness: 300 }}
@@ -1246,28 +1223,26 @@ export function BucketListSection() {
   const totalProgress = Math.round(BUCKET_LIST.reduce((acc, b) => acc + b.progress, 0) / BUCKET_LIST.length);
 
   return (
-    <div className="px-5 py-8 pb-10" style={{ background: 'var(--t-charcoal)' }}>
+    <div className="px-5 py-8 pb-10" style={{ borderBottom: `1px solid ${INK['06']}` }}>
       <FadeInSection>
-        <div className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: 'var(--t-coral)', fontFamily: FONT.mono, fontWeight: 700 }}>
-          The Bucket List
-        </div>
-        <h3 className="text-[22px] font-bold mb-2" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+        <SectionLabel color={COLOR.coral}>The Bucket List</SectionLabel>
+        <h3 className="text-[22px] font-bold mb-2" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
           Dream Destinations
         </h3>
-        <p className="text-[14px] mb-6" style={{ color: 'rgba(251,245,236,0.7)', fontFamily: FONT.sans }}>
+        <p className="text-[14px] mb-6" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
           Places matched to your taste DNA, ranked by your readiness to visit.
         </p>
       </FadeInSection>
 
       {/* Overall progress header */}
       <FadeInSection delay={0.15}>
-        <div className="flex items-center gap-4 p-5 rounded-2xl mb-6" style={{ background: 'var(--t-navy)' }}>
-          <ProgressRing progress={totalProgress} color="var(--t-coral)" size={56} delay={0.2} />
+        <div className="flex items-center gap-4 p-5 rounded-2xl mb-6" style={{ background: 'white', boxShadow: '0 2px 8px rgba(0,42,85,0.08)' }}>
+          <ProgressRing progress={totalProgress} color={COLOR.coral} size={56} delay={0.2} />
           <div className="flex-1">
-            <div className="text-[17px] font-bold mb-0.5" style={{ color: 'var(--t-cream)', fontFamily: FONT.display }}>
+            <div className="text-[17px] font-bold mb-0.5" style={{ color: COLOR.navy, fontFamily: FONT.display }}>
               {completedCount > 0 ? `${completedCount} nearly ready` : 'Building your list'}
             </div>
-            <div className="text-[13px] font-medium" style={{ color: 'var(--t-peach)', fontFamily: FONT.sans }}>
+            <div className="text-[13px] font-medium" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>
               {BUCKET_LIST.length} destinations · {totalProgress}% average readiness
             </div>
           </div>
@@ -1285,7 +1260,7 @@ export function BucketListSection() {
                   <PerriandIcon name={item.icon} size={14} color={item.color} />
                   <span className="text-[16px] font-bold" style={{ color: 'var(--t-navy)', fontFamily: FONT.display }}>{item.destination}</span>
                 </div>
-                <p className="text-[13px] leading-relaxed mb-2" style={{ color: 'var(--t-charcoal)', fontFamily: FONT.sans }}>{item.reason}</p>
+                <p className="text-[13px] leading-relaxed mb-2" style={{ color: COLOR.navy, fontFamily: FONT.sans }}>{item.reason}</p>
                 <span className="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full font-bold" style={{ background: item.color, color: 'white', fontFamily: FONT.mono }}>
                   {item.status}
                 </span>

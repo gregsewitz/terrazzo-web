@@ -42,21 +42,21 @@ export default function ProfileDeepDive() {
   }, [profile]);
 
   return (
-    <div className="flex flex-col gap-3 py-3" style={{ background: 'var(--t-cream)' }}>
-      <div className="rounded-2xl overflow-hidden mx-3"><IdentitySection profile={profile} signalCount={signalCount} numericProfile={numericProfile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><TasteDNASection profile={profile} mosaicAxes={mosaicAxes} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><DesignLanguageSection profile={profile} gp={gp} mosaicAxes={mosaicAxes} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><ContradictionsSection profile={profile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><PerfectDaySection gp={gp} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><ContextShiftsSection profile={profile} gp={gp} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><TasteNeighborsSection gp={gp} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><DimensionsSection profile={profile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><VocabularySection profile={profile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><MatchesSection profile={profile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><TravelStatsSection /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><TravelTimelineSection /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><TasteEvolutionSection profile={profile} /></div>
-      <div className="rounded-2xl overflow-hidden mx-3"><BucketListSection /></div>
+    <div style={{ background: 'var(--t-cream)' }}>
+      <IdentitySection profile={profile} signalCount={signalCount} numericProfile={numericProfile} />
+      <TasteDNASection profile={profile} mosaicAxes={mosaicAxes} />
+      <DesignLanguageSection profile={profile} gp={gp} mosaicAxes={mosaicAxes} />
+      <ContradictionsSection profile={profile} />
+      <PerfectDaySection gp={gp} />
+      <ContextShiftsSection profile={profile} gp={gp} />
+      <TasteNeighborsSection gp={gp} />
+      <DimensionsSection profile={profile} />
+      <VocabularySection profile={profile} />
+      <MatchesSection profile={profile} />
+      <TravelStatsSection />
+      <TravelTimelineSection />
+      <TasteEvolutionSection profile={profile} />
+      <BucketListSection />
     </div>
   );
 }
