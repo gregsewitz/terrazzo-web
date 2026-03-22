@@ -54,7 +54,7 @@ export default function BrandLoader({ message }: { message?: string }) {
                   fillRule="nonzero"
                   style={{
                     opacity: 0,
-                    animation: `zzBlockIn 0.1s step-end ${getBlockDelay(colIdx, blockIdx)}s forwards`,
+                    animation: `zzBlockIn 0.15s ease ${getBlockDelay(colIdx, blockIdx)}s forwards`,
                   }}
                 />
               ))}
@@ -76,16 +76,6 @@ export default function BrandLoader({ message }: { message?: string }) {
         </span>
       )}
 
-      <style>{`
-        @keyframes zzBlockIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes zzPulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.35; }
-        }
-      `}</style>
     </div>
   );
 }
