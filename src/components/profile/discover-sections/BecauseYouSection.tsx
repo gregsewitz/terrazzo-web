@@ -12,7 +12,7 @@ export function BecauseYouSection({ cards }: { cards?: BecauseYouCard[] }) {
   return (
     <SafeMotionDiv
 
-      className="px-5 py-6"
+      className="px-5 py-8"
       style={{ borderBottom: `1px solid ${INK['06']}` }}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
