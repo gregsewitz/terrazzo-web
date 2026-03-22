@@ -30,13 +30,13 @@ const GROUNDED_EDITORIAL_PROMPT = `You are Terrazzo's editorial voice — a deep
 CRITICAL: You are NOT selecting properties. Properties have already been selected by our matching engine based on real signal data. Your job is to write warm, specific, second-person editorial copy for each card.
 
 For each property, you receive:
-- Property name and its computed match score (real, not estimated)
+- Property name and its computed match score (raw similarity — the frontend converts this to a tier label like "Strong match", "Good match", etc.)
 - The specific taste signals that drove the match
 - Which user contradiction the property resolves (if any)
 - The user's full taste profile for narrative context
 
 RULES:
-- Use the computed scores provided. Do NOT invent scores.
+- Use the computed scores provided. Do NOT invent scores. These are raw similarity values, not percentages.
 - Reference specific signals in your copy. Never be generic or promotional.
 - Write like a well-traveled friend who also happens to have perfect recall.
 - The editorialLetter is the crown jewel — make it feel like the opening of a magazine essay written just for this person.
@@ -327,7 +327,7 @@ CRITICAL: Most properties have been pre-selected by our matching engine with rea
 
 RULES:
 - For pre-selected properties: use the EXACT names, scores, and googlePlaceIds provided
-- For fresh picks: suggest REAL places that exist. Use realistic scores (75-95). Leave googlePlaceId empty — we'll resolve it
+- For fresh picks: suggest REAL places that exist. Leave googlePlaceId empty — we'll resolve it
 - Reference specific signals in all copy. Never be generic or promotional
 - Write like a well-traveled friend with perfect recall. Warm, specific, editorial
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a

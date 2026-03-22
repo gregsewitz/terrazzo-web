@@ -258,18 +258,20 @@ CRITICAL: You must AVOID recommending any places from the "already shown" list. 
 
 Return valid JSON with ONLY the requested section types. Use the exact same JSON structure as the main feed for each section type:
 
-signalThread: { signal, domain, thread, places: [{ name, location, type, connection, score }] }
-becauseYouCards: [{ signal, signalDomain, place, location, score, why, bg }]
+signalThread: { signal, domain, thread, places: [{ name, location, type, connection, matchTier }] }
+becauseYouCards: [{ signal, signalDomain, place, location, matchTier, why, bg }]
 tasteTension: { title, stated, revealed, editorial, resolvedBy: { name, location, how } }
-weeklyCollection: { title, subtitle, places: [{ name, location, score, signals, signalDomain, note }] }
-moodBoards: [{ mood, description, color, places: [{ name, location, vibe, score }] }]
-deepMatch: { name, location, score, headline, signalBreakdown: [{ signal, domain, strength, note }], tensionResolved }
-stretchPick: { name, location, score, type, strongAxis, strongScore, weakAxis, weakScore, why, tension }
-contextRecs: [{ name, location, score, whyFits }]
+weeklyCollection: { title, subtitle, places: [{ name, location, matchTier, signals, signalDomain, note }] }
+moodBoards: [{ mood, description, color, places: [{ name, location, vibe, matchTier }] }]
+deepMatch: { name, location, matchTier, headline, signalBreakdown: [{ signal, domain, tierLabel, note }], tensionResolved }
+stretchPick: { name, location, matchTier, type, strongAxis, strongTier, weakAxis, weakTier, why, tension }
+contextRecs: [{ name, location, matchTier, whyFits }]
+
+Match tiers: "Strong match", "Good match", "Worth a look", "Mixed fit", "Not for you"
 
 RULES:
 - Use REAL places that exist. Hotels, restaurants, cafes well-known in the design/boutique world.
-- Scores reflect genuine alignment with the profile.
+- Match tiers reflect genuine alignment with the profile.
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a.
 - moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800.
 - Every explanation must reference SPECIFIC profile signals, not generic praise.

@@ -1,46 +1,42 @@
 'use client';
 
-import { FONT, INK, TEXT } from '@/constants/theme';
+import { FONT } from '@/constants/theme';
+import { getMatchTier } from '@/lib/match-tier';
 
 interface ScoreArcProps {
-  score: number; // 0–100
+  score: number;
   size?: number;
   color?: string;
 }
 
-export default function ScoreArc({ score, size = 52, color = '#4a6741' }: ScoreArcProps) {
-  // All scores should be 0–100 integers; round for safety
-  const pct = Math.round(score);
-  const strokeWidth = 3;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (pct / 100) * circumference;
+/**
+ * Small tier badge indicator — replaces the old numeric percentage arc.
+ * Shows the tier short label with the tier's own color scheme.
+ * Kept as ScoreArc export for backward compatibility with existing imports.
+ */
+export default function ScoreArc({ score, size = 52 }: ScoreArcProps) {
+  const tier = getMatchTier(score);
+  // Scale font based on container size
+  const fontSize = Math.max(Math.round(size * 0.22), 9);
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        {/* Background ring */}
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none"
-          stroke={INK['08']}
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress arc */}
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${progress} ${circumference - progress}`}
-          strokeLinecap="round"
-        />
-      </svg>
+    <div
+      className="flex items-center justify-center rounded-full"
+      style={{
+        width: size,
+        height: size,
+        background: tier.bg,
+      }}
+    >
       <span
-        className="absolute text-[11px] font-bold"
-        style={{ color, fontFamily: FONT.mono }}
+        className="font-semibold text-center leading-tight"
+        style={{
+          color: tier.color,
+          fontFamily: FONT.mono,
+          fontSize,
+        }}
       >
-        {pct}
+        {tier.shortLabel}
       </span>
     </div>
   );

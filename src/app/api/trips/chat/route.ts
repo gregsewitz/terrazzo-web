@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, tripChatSchema } from '@/lib/api-validation';
 import { CLAUDE_SONNET } from '@/lib/models';
+import { getMatchTier } from '@/lib/match-tier';
 
 const anthropic = new Anthropic();
 
@@ -59,7 +60,7 @@ Day ${tripContext.currentDay.dayNumber}/${tripContext.totalDays} in ${tripContex
 
 TODAY'S ITINERARY:
 ${(tripContext.currentDay.slots || []).map((slot: { label: string; place?: { name: string; type?: string; matchScore?: number } }) =>
-  `- ${slot.label}: ${slot.place ? `${slot.place.name}${slot.place.matchScore ? ` (taste: ${slot.place.matchScore >= 78 ? 'strong match' : slot.place.matchScore >= 65 ? 'good match' : slot.place.matchScore >= 50 ? 'worth a look' : 'mixed fit'})` : ''}` : '(empty)'}`
+  `- ${slot.label}: ${slot.place ? `${slot.place.name}${slot.place.matchScore != null ? ` (taste: ${getMatchTier(slot.place.matchScore).label.toLowerCase()})` : ''}` : '(empty)'}`
 ).join('\n')}
 ${tripContext.currentDay.hotel ? `- Hotel: ${tripContext.currentDay.hotel}` : ''}`
       : `TRIP: ${tripContext?.name || 'Untitled'} — ${tripContext?.destinations?.join(', ') || 'Unknown destination'}`;

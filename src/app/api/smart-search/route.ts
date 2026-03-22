@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
 import { validateBody, smartSearchSchema } from '@/lib/api-validation';
 import { CLAUDE_SONNET } from '@/lib/models';
+import { getMatchTier } from '@/lib/match-tier';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -10,7 +11,7 @@ const client = new Anthropic({
 
 const SYSTEM_PROMPT = `You are the Terrazzo travel app's collection curator.
 The user has a collection of saved places (hotels, restaurants, bars, cafes, museums, activities, neighborhoods, shops).
-Each place has: name, type, location (city), source (how it was saved), matchScore (0-100), and a rating reaction (myPlace, enjoyed, mixed, notMe).
+Each place has: name, type, location (city), source (how it was saved), matchTier (Strong match, Good match, Worth a look, Mixed fit, Not for you), and a rating reaction (myPlace, enjoyed, mixed, notMe).
 
 Given a natural language query, extract structured filters to search the collection. Return a JSON object with:
 
@@ -21,7 +22,7 @@ Given a natural language query, extract structured filters to search the collect
     "types": ["restaurant", "hotel", "bar", "cafe", "museum", "activity"] | null,
     "locations": ["Tokyo", "Paris"] | null,
     "sources": ["maps", "article", "email", "ai", "manual", "instagram"] | null,
-    "minMatchScore": 80 | null,
+    "minMatchTier": "strong" | "good" | null,
     "reactions": ["myPlace", "enjoyed"] | null,
     "keywords": ["sushi", "cocktails"] | null
   },
@@ -31,7 +32,7 @@ Given a natural language query, extract structured filters to search the collect
 
 Rules:
 - Only include filter fields that are relevant to the query. Use null for irrelevant fields.
-- filterTags should be human-readable summaries like "type: hotel", "location: Europe", "person: Lizzie", "reaction: ♡", "match: 80+"
+- filterTags should be human-readable summaries like "type: hotel", "location: Europe", "person: Lizzie", "reaction: ♡", "match: Strong"
 - For vague queries, be generous with interpretation but explain your reasoning in the reasoning field
 - The emoji should be the single most representative emoji for the collection
 - The name should be concise (2-5 words) and descriptive
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     let collectionContext = '';
     if (places && Array.isArray(places)) {
       const summary = places.map((p: any) =>
-        `${p.name} (${p.type}, ${p.location}${p.matchScore ? `, taste: ${p.matchScore >= 78 ? 'strong match' : p.matchScore >= 65 ? 'good match' : p.matchScore >= 50 ? 'worth a look' : 'mixed fit'}` : ''}${p.source?.name ? `, source: ${p.source.name}` : ''})`
+        `${p.name} (${p.type}, ${p.location}${p.matchScore != null ? `, taste: ${getMatchTier(p.matchScore).label.toLowerCase()}` : ''}${p.source?.name ? `, source: ${p.source.name}` : ''})`
       ).join('\n');
       collectionContext = `\n\nThe user's current collection:\n${summary}`;
     }

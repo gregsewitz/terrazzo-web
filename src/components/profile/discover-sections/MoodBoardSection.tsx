@@ -5,6 +5,7 @@ import PlaceLink from '@/components/place/PlaceLink';
 import { MOOD_BOARDS, type MoodBoard } from '@/constants/discover';
 import { getPlaceImage } from '@/constants/placeImages';
 import { COLOR, FONT, INK } from '@/constants/theme';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { SectionLabel } from './SectionLabel';
 
 export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
@@ -58,7 +59,9 @@ export function MoodBoardSection({ boards }: { boards?: MoodBoard[] }) {
                         </div>
                         <p className="text-[14px] italic" style={{ color: COLOR.navy }}>{p.vibe}</p>
                       </div>
-                      <span className="text-[14px] font-bold flex-shrink-0" style={{ color: board.color, fontFamily: FONT.mono }}>{Math.round(p.score)}</span>
+                      {shouldShowTierBadge(p.score) && (
+                        <span className="text-[12px] font-semibold flex-shrink-0 px-1.5 py-0.5 rounded-full" style={{ color: getMatchTier(p.score).color, background: getMatchTier(p.score).bg, fontFamily: FONT.mono }}>{getMatchTier(p.score).shortLabel}</span>
+                      )}
                     </SafeMotionDiv>
                   </PlaceLink>
                 );

@@ -61,7 +61,7 @@ You must return valid JSON matching this EXACT structure:
       "signalDomain": "Design | Atmosphere | Character | Service | FoodDrink | Setting | Wellness | Sustainability",
       "place": "Real place name",
       "location": "City, Country",
-      "score": 85-99,
+      "matchTier": "Strong match" | "Good match",
       "why": "2-sentence explanation connecting the signal to this specific place. Be visceral and specific.",
       "bg": "#hex color (dark, moody)"
     }
@@ -76,7 +76,7 @@ You must return valid JSON matching this EXACT structure:
         "location": "City, Country",
         "type": "hotel | restaurant | bar | cafe | neighborhood",
         "connection": "1 sentence: how this specific place embodies the signal",
-        "score": 80-99
+        "matchTier": "Strong match" | "Good match"
       }
     ]
   },
@@ -98,7 +98,7 @@ You must return valid JSON matching this EXACT structure:
       {
         "name": "Place name",
         "location": "City, Country",
-        "score": 80-99,
+        "matchTier": "Strong match" | "Good match",
         "signals": ["signal1", "signal2", "signal3"],
         "signalDomain": "Primary domain",
         "note": "1-sentence personalized explanation — visceral, not promotional"
@@ -115,7 +115,7 @@ You must return valid JSON matching this EXACT structure:
           "name": "Place name",
           "location": "City, Country",
           "vibe": "3-5 word atmospheric descriptor",
-          "score": 80-97
+          "matchTier": "Strong match" | "Good match"
         }
       ]
     }
@@ -123,13 +123,13 @@ You must return valid JSON matching this EXACT structure:
   "deepMatch": {
     "name": "Their single highest-match property",
     "location": "City, Country",
-    "score": 93-99,
+    "matchTier": "Strong match",
     "headline": "A personal, editorial statement about why this place is their match (max 12 words)",
     "signalBreakdown": [
       {
         "signal": "Specific micro-signal",
         "domain": "Domain name",
-        "strength": 85-99,
+        "tierLabel": "Strong" | "Good",
         "note": "Why this signal matches this specific property"
       }
     ],
@@ -138,12 +138,12 @@ You must return valid JSON matching this EXACT structure:
   "stretchPick": {
     "name": "Place name",
     "location": "City, Country",
-    "score": 65-80,
+    "matchTier": "Worth a look" | "Mixed fit",
     "type": "hotel | restaurant | cafe | bar",
     "strongAxis": "Axis name",
-    "strongScore": 85-99,
+    "strongTier": "Strong match" | "Good match",
     "weakAxis": "Axis name",
-    "weakScore": 20-45,
+    "weakTier": "Mixed fit" | "Not for you",
     "why": "Why this could expand their taste (2 sentences). Be honest about the mismatch.",
     "tension": "What breaks their usual pattern (1 sentence)"
   },
@@ -151,7 +151,7 @@ You must return valid JSON matching this EXACT structure:
     {
       "name": "Place name",
       "location": "City, Country",
-      "score": 80-97,
+      "matchTier": "Strong match" | "Good match",
       "whyFits": "1-sentence context-specific fit explanation"
     }
   ],
@@ -161,7 +161,7 @@ You must return valid JSON matching this EXACT structure:
 RULES:
 - Use REAL places that exist. Hotels, restaurants, cafes well-known in the design/boutique world.
 - Generate: 1 editorialLetter, 3 becauseYouCards, 1 signalThread with 3 places, 1 tasteTension, 5 weeklyCollection places, 2 moodBoards with 3 places each, 1 deepMatch with 4-5 signal breakdowns, 1 stretchPick, 3 contextRecs.
-- Scores reflect genuine alignment with the profile.
+- Match tiers (Strong match, Good match, Worth a look, Mixed fit, Not for you) reflect genuine alignment with the profile. Use appropriate tiers for each card type.
 - The stretchPick should genuinely contradict one stated preference while matching a revealed one.
 - bg colors: dark, muted earth tones: #2d3a2d, #3a2d2d, #2d2d3a, #3a3a2d, #2d3a3a.
 - moodBoard colors: muted, editorial: #4a6b8b, #8b4a4a, #6b6b4a, #4a6741, #413800.

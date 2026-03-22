@@ -16,17 +16,17 @@ export interface StretchPick {
   name: string;
   /** Location */
   location: string;
-  /** Overall match score (65-80, deliberately lower) */
+  /** Overall match score (raw — displayed as tier label) */
   score: number;
   /** Place type */
   type: string;
   /** Domain where this place excels */
   strongAxis: TasteDomain;
-  /** Strength on the strong axis (85-99) */
+  /** Strength on the strong axis (raw score — displayed as tier) */
   strongScore: number;
   /** Domain where this place challenges the user */
   weakAxis: TasteDomain;
-  /** Score on the weak axis (20-45) */
+  /** Score on the weak axis (raw score — displayed as tier) */
   weakScore: number;
   /** 2-sentence explanation of why this expands taste */
   why: string;
@@ -96,15 +96,14 @@ function AxisBar({
           />
         </div>
         <span
-          className="text-[12px] font-bold"
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
           style={{
-            color: isStrong ? color : `${color}80`,
+            color: getMatchTier(score).color,
+            background: getMatchTier(score).bg,
             fontFamily: FONT.mono,
-            minWidth: 24,
-            textAlign: 'right',
           }}
         >
-          {score}
+          {getMatchTier(score).shortLabel}
         </span>
       </div>
 

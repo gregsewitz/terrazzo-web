@@ -15,7 +15,7 @@ export interface DeepMatchSignal {
   signal: string;
   /** Which taste domain it belongs to */
   domain: TasteDomain;
-  /** Strength of this signal match 0-100 */
+  /** Strength of this signal match (raw score — displayed as tier) */
   strength: number;
   /** 1-sentence note explaining why this signal matched the property */
   note: string;
@@ -26,7 +26,7 @@ export interface DeepMatch {
   name: string;
   /** Location */
   location: string;
-  /** Overall match score (93-99 for deep matches) */
+  /** Overall match score (raw — displayed as tier label) */
   score: number;
   /** 12-word editorial headline */
   headline: string;
@@ -148,10 +148,10 @@ export function DeepMatchBreakdown({
                             {humanizeSignal(signal.signal)}
                           </span>
                           <span
-                            className="text-[11px] font-bold ml-auto"
-                            style={{ color: COLOR.navy, fontFamily: FONT.mono }}
+                            className="text-[10px] font-semibold ml-auto px-1.5 py-0.5 rounded-full"
+                            style={{ color: getMatchTier(signal.strength).color, background: getMatchTier(signal.strength).bg, fontFamily: FONT.mono }}
                           >
-                            {signal.strength}
+                            {getMatchTier(signal.strength).shortLabel}
                           </span>
                         </div>
                         {/* Explanation note */}

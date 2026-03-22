@@ -1,11 +1,12 @@
 /**
  * Price–Value Intelligence
  *
- * Computes a contextual "value index" that relates a place's match score
+ * Computes a contextual "value index" that relates a place's match tier
  * to its price level. This isn't about finding cheap places — it's about
  * surfacing places where the taste alignment *justifies* (or exceeds) the cost.
  *
- * Value Index = matchScore / normalizedPrice
+ * Uses the match tier system (Strong, Good, Worth a look, Mixed, Not for you)
+ * rather than raw numeric scores.
  *
  * Price levels (from Google):
  *   0 = Free
@@ -18,10 +19,12 @@
  * A low-match, expensive place surfaces a "consider alternatives" nudge.
  */
 
+import { getMatchTier, type MatchTierKey } from '@/lib/match-tier';
+
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 export interface ValueAssessment {
-  /** Value index 0-200+ (100 = average value for price point) */
+  /** Value index (retained for internal ranking) */
   valueIndex: number;
   /** Human-readable framing */
   label: string;
@@ -53,12 +56,23 @@ const PRICE_LABELS: Record<number, string> = {
   4: '$$$$',
 };
 
+// ─── Tier-based value weights ───────────────────────────────────────────────────
+
+/** Approximate weight for value index calculation per tier */
+const TIER_VALUE_WEIGHT: Record<MatchTierKey, number> = {
+  strong: 0.90,
+  good: 0.72,
+  worth_a_look: 0.55,
+  mixed: 0.40,
+  not_for_you: 0.20,
+};
+
 // ─── Compute ────────────────────────────────────────────────────────────────────
 
 /**
  * Compute the value assessment for a place.
  *
- * @param matchScore - User's match score (0-100 range, typically 35-93 after normalization)
+ * @param matchScore - User's raw match score (used for tier classification via getMatchTier)
  * @param priceLevel - Google price level (0-4)
  * @returns ValueAssessment or null if data is insufficient
  */
@@ -69,44 +83,49 @@ export function computeValueAssessment(
   if (matchScore == null || priceLevel == null) return null;
   if (priceLevel < 0 || priceLevel > 4) return null;
 
+  const tier = getMatchTier(matchScore);
   const normalizedPrice = PRICE_NORMALIZATION[priceLevel] ?? 0.50;
-  const valueIndex = Math.round((matchScore / 100) / normalizedPrice * 100);
+  const tierWeight = TIER_VALUE_WEIGHT[tier.key];
+  const valueIndex = Math.round(tierWeight / normalizedPrice * 100);
 
-  // Determine sentiment and label
+  // Determine sentiment and label based on tier + price
   let label: string;
   let explanation: string;
   let sentiment: ValueAssessment['sentiment'];
 
-  if (matchScore >= 75 && priceLevel >= 3) {
-    // High match, high price — "worth the splurge"
+  const isHighTier = tier.key === 'strong' || tier.key === 'good';
+  const isLowTier = tier.key === 'mixed' || tier.key === 'not_for_you';
+
+  if (isHighTier && priceLevel >= 3) {
+    // Strong/Good match, high price — "worth the splurge"
     sentiment = 'positive';
     label = 'Worth every penny';
-    explanation = `A strong taste match makes ${PRICE_LABELS[priceLevel]} pricing feel right`;
-  } else if (matchScore >= 70 && priceLevel <= 2) {
-    // High match, low/moderate price — "exceptional value"
+    explanation = `A ${tier.label.toLowerCase()} makes ${PRICE_LABELS[priceLevel]} pricing feel right`;
+  } else if (isHighTier && priceLevel <= 2) {
+    // Strong/Good match, low/moderate price — "exceptional value"
     sentiment = 'positive';
     label = 'Exceptional value';
-    explanation = `Strong match at ${PRICE_LABELS[priceLevel]} — a standout find`;
-  } else if (matchScore >= 55 && priceLevel <= 1) {
-    // Decent match, inexpensive — "solid pick"
+    explanation = `${tier.label} at ${PRICE_LABELS[priceLevel]} — a standout find`;
+  } else if (tier.key === 'worth_a_look' && priceLevel <= 1) {
+    // Worth a look, inexpensive — "solid pick"
     sentiment = 'positive';
     label = 'Great find';
-    explanation = `Good match at a great price`;
-  } else if (matchScore < 50 && priceLevel >= 3) {
+    explanation = `Worth a look at a great price`;
+  } else if (isLowTier && priceLevel >= 3) {
     // Low match, expensive — "think twice"
     sentiment = 'cautious';
     label = 'Consider carefully';
-    explanation = `${PRICE_LABELS[priceLevel]} pricing with a mixed taste fit — make sure it's what you want`;
-  } else if (matchScore >= 60) {
-    // Moderate match, moderate price — neutral
+    explanation = `${PRICE_LABELS[priceLevel]} pricing with a ${tier.label.toLowerCase()} — make sure it's what you want`;
+  } else if (tier.key === 'worth_a_look') {
+    // Worth a look, moderate price — neutral
     sentiment = 'neutral';
     label = 'Fair value';
-    explanation = `Good match at ${PRICE_LABELS[priceLevel]}`;
+    explanation = `Worth a look at ${PRICE_LABELS[priceLevel]}`;
   } else {
     // Low match, any price — neutral
     sentiment = 'neutral';
     label = `${PRICE_LABELS[priceLevel] || 'Priced'}`;
-    explanation = `Mixed taste fit`;
+    explanation = `${tier.label}`;
   }
 
   return {

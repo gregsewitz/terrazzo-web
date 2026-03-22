@@ -4,6 +4,7 @@ import PlaceLink from '@/components/place/PlaceLink';
 import { SIGNAL_THREAD, type SignalThread } from '@/constants/discover';
 import { DIMENSION_COLORS } from '@/constants/profile';
 import { COLOR, FONT, INK } from '@/constants/theme';
+import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import type { PerriandIconName } from '@/types';
 import { SectionLabel } from './SectionLabel';
 
@@ -78,7 +79,9 @@ export function SignalThreadSection({ thread }: { thread?: SignalThread }) {
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-[17px] font-semibold" style={{ color: COLOR.periwinkle }}>{place.name}</span>
                     <span className="text-[14px]" style={{ color: COLOR.navy }}>{place.location}</span>
-                    <span className="text-[14px] font-bold ml-auto" style={{ color: COLOR.periwinkle, fontFamily: FONT.mono }}>{Math.round(place.score)}</span>
+                    {shouldShowTierBadge(place.score) && (
+                      <span className="text-[12px] font-semibold ml-auto px-1.5 py-0.5 rounded-full" style={{ color: getMatchTier(place.score).color, background: getMatchTier(place.score).bg, fontFamily: FONT.mono }}>{getMatchTier(place.score).shortLabel}</span>
+                    )}
                   </div>
                   <p className="text-[15px] leading-relaxed" style={{ color: COLOR.navy }}>{place.connection}</p>
                 </div>
