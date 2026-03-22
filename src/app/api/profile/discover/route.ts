@@ -303,7 +303,7 @@ CONTRADICTIONS:
 ${(userProfile.contradictions || []).map((c: { stated: string; revealed: string; resolution: string }) => `${c.stated} vs ${c.revealed} → ${c.resolution}`).join('\n') || 'None identified'}
 
 CONTEXT MODIFIERS:
-${(userProfile.contextModifiers || []).map((m: { context: string; shifts: string[] }) => `${m.context}: ${(m.shifts || []).join(', ')}`).join('\n') || 'None'}
+${(userProfile.contextModifiers || []).map((m: { context: string; shifts: string | string[] }) => `${m.context}: ${Array.isArray(m.shifts) ? m.shifts.join(', ') : m.shifts || ''}`).join('\n') || 'None'}
 
 LIFE CONTEXT:
 - Primary companion: ${companion}
@@ -575,9 +575,6 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
     const errMsg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
     const errStack = error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : '';
     console.error(`[discover] FATAL: ${errMsg} ${errStack}`);
-    return NextResponse.json(
-      { error: 'Failed to generate discover content', details: errMsg, stack: errStack },
-      { status: 500 },
-    );
+    return apiError('Failed to generate discover content', 500, { details: errMsg });
   }
 });
