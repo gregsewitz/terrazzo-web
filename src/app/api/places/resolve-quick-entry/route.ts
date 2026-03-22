@@ -60,7 +60,15 @@ Respond with ONLY a JSON object, no markdown:
 Rules:
 - Extract just the place name, stripping action words like "Dinner at", "Walk around", "Visit", "Grab coffee at", "Check out"
 - Transportation, transit, and logistics notes that mention places should NOT be classified as places — they are notes about getting somewhere, not about visiting the place itself
-- Scheduled activities, events, reminders, and classes at a known place (especially a hotel) should NOT be classified as places — the user is noting a specific time-bound event, not discovering a new place to visit. These entries often include a specific time, words like "class", "session", "appointment", "reservation", "treatment", "lesson", or reference an activity happening AT a hotel/resort they're already staying at.
+- Scheduled activities, events, bookings, and reminders at a known place (especially a hotel/resort) should NOT be classified as places — the user is noting a specific event or on-property experience, not discovering a new place to visit. This includes:
+  * Fitness & wellness: any workout class, gym session, spa treatment, massage, facial, sauna, yoga, pilates, meditation, pool time, hammam
+  * Sports & outdoor: tennis, golf tee time, horse riding, cycling, skiing, sailing, surfing lesson, guided hike, shooting, falconry, kayaking
+  * Hotel services: check-in, check-out, room service, concierge meeting, luggage storage, late checkout, early breakfast
+  * Kids & family: kids club, babysitter, family activity, nanny pickup
+  * Bookings & appointments: restaurant reservation at the hotel, cooking class, wine tasting, cocktail making, afternoon tea, private dining
+  * Tours & guides: meet guide, pickup time, tour departure, transfer, excursion
+  * Personal reminders: wake-up call, packing, laundry, call home, medication
+  These entries typically include a specific time and/or reference an activity happening AT a property the user is already staying at.
 - "Dinner at the Brasserie at Estelle Manor" → {"isPlace": true, "placeName": "Brasserie at Estelle Manor", "confidence": 0.95}
 - "Walk around Shoreditch" → {"isPlace": true, "placeName": "Shoreditch", "confidence": 0.85}
 - "The Connaught Bar" → {"isPlace": true, "placeName": "The Connaught Bar", "confidence": 0.95}
@@ -74,12 +82,13 @@ Rules:
 - "Pickup rental car from Sixt Liverpool St at 2pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
 - "Car service to Heathrow" → {"isPlace": false, "placeName": null, "confidence": 0.95}
 - "Check out of hotel by 11am" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "9:30am boot camp class at Cowley Manor" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Spa treatment at 2pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Tennis lesson 4pm at the hotel" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- "9:30am workout class at Cowley Manor" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "Spa at 2pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "Golf tee time 8am" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "Cooking class at the hotel 3pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "Kids club drop-off 9am" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- "Wine tasting at 5pm at Castello di Ama" → {"isPlace": false, "placeName": null, "confidence": 0.85}
 - "Meet guide at lobby 10am" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Kids club drop-off 9am at Four Seasons" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Yoga on the lawn 7am" → {"isPlace": false, "placeName": null, "confidence": 0.9}
 - Confidence reflects how certain you are in the classification`,
       }],
     });
