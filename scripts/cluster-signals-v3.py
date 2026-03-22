@@ -166,7 +166,7 @@ if missing:
         }, f)
 
 # Build embedding matrix
-embedding_matrix = np.array([embeddings_dict[s] for s in all_signals])
+embedding_matrix = np.array([embeddings_dict[s] for s in all_signals], dtype=np.float64)
 print(f"\nEmbedding matrix: {embedding_matrix.shape}")
 
 # ─── Domain-aware hierarchical clustering ───────────────────────────────────
@@ -178,10 +178,14 @@ def cluster_with_k(target_k, verbose=True):
     """Run domain-aware K-means with a target total K."""
     total_in_domains = sum(domain_sizes.values())
 
-    # Allocate sub-clusters proportionally, min 3 per domain
+    # Allocate sub-clusters proportionally, min 3 per domain (but 1 for tiny domains)
     domain_k = {}
     for domain, count in domain_sizes.items():
-        k = max(3, round(count / total_in_domains * target_k))
+        if count < 6:
+            # Too few signals to cluster meaningfully — put them all in 1 cluster
+            k = 1
+        else:
+            k = max(3, round(count / total_in_domains * target_k))
         domain_k[domain] = k
 
     # Adjust to hit target
@@ -229,20 +233,29 @@ def cluster_with_k(target_k, verbose=True):
         k = domain_k[domain]
 
         if len(signals) < k:
-            k = max(2, len(signals) // 3)
+            k = max(1, len(signals) // 3)
 
         X = embedding_matrix[indices]
 
-        km = KMeans(n_clusters=k, n_init=10, random_state=42, max_iter=300)
-        labels = km.fit_predict(X)
-
-        if len(set(labels)) > 1:
-            sil = silhouette_score(X, labels, sample_size=min(1000, len(signals)))
-            all_silhouettes.append(sil)
-            domain_silhouettes[domain] = sil
-        else:
+        if k <= 1:
+            # Single cluster — no k-means needed, just group everything
+            labels = np.zeros(len(signals), dtype=int)
+            km_centers = X.mean(axis=0, keepdims=True)
             sil = 0.0
             domain_silhouettes[domain] = sil
+        else:
+            km = KMeans(n_clusters=k, n_init=10, random_state=42, max_iter=300)
+            labels = km.fit_predict(X)
+            km_centers = km.cluster_centers_
+
+            n_unique_labels = len(set(labels))
+            if n_unique_labels > 1 and len(signals) > n_unique_labels:
+                sil = silhouette_score(X, labels, sample_size=min(1000, len(signals)))
+                all_silhouettes.append(sil)
+                domain_silhouettes[domain] = sil
+            else:
+                sil = 0.0
+                domain_silhouettes[domain] = sil
 
         if verbose:
             print(f"\n{domain}: {len(signals)} signals → {k} clusters (silhouette={sil:.4f})")
@@ -267,7 +280,7 @@ def cluster_with_k(target_k, verbose=True):
             }
 
             # Capture centroid for neighbor computation
-            cluster_centroids_map[global_cluster_id] = km.cluster_centers_[sub_id]
+            cluster_centroids_map[global_cluster_id] = km_centers[sub_id]
             cluster_domain_map[global_cluster_id] = domain
 
             for sig in members:
