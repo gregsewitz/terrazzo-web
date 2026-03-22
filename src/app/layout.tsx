@@ -39,6 +39,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://terrazzo.travel'),
   title: "Terrazzo — Your Bespoke Travel Concierge",
   description: "Collect, curate, and plan your trips with places matched to your taste",
   viewport: {
@@ -62,6 +63,27 @@ export const metadata: Metadata = {
       sizes: '180x180',
       type: 'image/png',
     },
+  },
+  openGraph: {
+    title: 'Terrazzo — Your Bespoke Travel Concierge',
+    description: 'Collect, curate, and plan your trips with places matched to your taste.',
+    url: 'https://terrazzo.travel',
+    siteName: 'Terrazzo',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Terrazzo',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terrazzo — Your Bespoke Travel Concierge',
+    description: 'Collect, curate, and plan your trips with places matched to your taste.',
+    images: ['/og-image.png'],
   },
 };
 
