@@ -217,36 +217,17 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
       return true;
     });
 
-    // Dedup by Google placeId first, then by normalized name (keeps highest matchScore)
-    const seen = new Map<string, ImportedPlace>();
-    for (const place of filtered) {
+    // Dedup by Google placeId (keeps first occurrence — highest matchScore sorts first)
+    // The DB has @@unique([userId, googlePlaceId]) so true dupes shouldn't exist,
+    // but hydration timing or stale cache could surface them client-side.
+    const seenPlaceIds = new Set<string>();
+    return filtered.filter(place => {
       const gpid = place.google?.placeId;
-      const nameKey = place.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const key = gpid || nameKey;
-      const existing = seen.get(key);
-      if (!existing || (place.matchScore ?? 0) > (existing.matchScore ?? 0)) {
-        seen.set(key, place);
-      }
-      // Also check name key when using placeId key, to catch cross-source dupes
-      if (gpid && !seen.has(nameKey)) {
-        seen.set(nameKey, place);
-      } else if (gpid) {
-        const byName = seen.get(nameKey);
-        if (byName && byName.id !== place.id && (place.matchScore ?? 0) > (byName.matchScore ?? 0)) {
-          seen.set(nameKey, place);
-        }
-      }
-    }
-    // Return unique places (deduplicated)
-    const uniqueIds = new Set<string>();
-    const result: ImportedPlace[] = [];
-    for (const place of seen.values()) {
-      if (!uniqueIds.has(place.id)) {
-        uniqueIds.add(place.id);
-        result.push(place);
-      }
-    }
-    return result;
+      if (!gpid) return true; // No placeId — can't dedup, keep it
+      if (seenPlaceIds.has(gpid)) return false;
+      seenPlaceIds.add(gpid);
+      return true;
+    });
   }, [myPlaces, tripDestinations, activeDay?.hotelInfo?.name, activeDay?.hotelInfo?.placeId]);
 
   // Apply source filter
