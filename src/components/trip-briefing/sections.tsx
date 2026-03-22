@@ -11,6 +11,7 @@ import { weatherEmoji, type DestinationWeather } from '@/hooks/useTripWeather';
 import { generateDestColor } from '@/lib/destination-helpers';
 import { TYPE_BRAND_COLORS, TYPE_ICONS } from '@/constants/placeTypes';
 import { placeholderGradient, TYPE_LABELS } from './helpers';
+import { formatTime12h } from '@/components/place/PlaceTimeEditor';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
 
 // ─── Section Header ───
@@ -117,80 +118,10 @@ export function PlaceCard({ place, onTap }: { place: ImportedPlace; onTap: () =>
         </div>
         <div style={{
           fontFamily: FONT.sans, fontSize: 12,
-          color: SECTION.plain.secondary, marginBottom: 12,
+          color: SECTION.plain.secondary,
         }}>
           {place.location}
         </div>
-
-        {/* Terrazzo insight — the editorial voice */}
-        {place.terrazzoInsight?.why && (
-          <div style={{
-            fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.6,
-            color: SECTION.plain.secondary, marginBottom: 12,
-          }}>
-            {place.terrazzoInsight.why}
-          </div>
-        )}
-
-        {/* What to order */}
-        {place.whatToOrder && place.whatToOrder.length > 0 && (
-          <div style={{ marginBottom: 10 }}>
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: TEXT.secondary,
-              marginBottom: 6,
-            }}>
-              What to order
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-              {place.whatToOrder.map((item, i) => (
-                <span key={i} style={{
-                  fontFamily: FONT.sans, fontSize: 12,
-                  color: TEXT.primary,
-                  padding: '4px 10px', borderRadius: 8,
-                  background: 'var(--t-cream)',
-                }}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tips */}
-        {place.tips && place.tips.length > 0 && (
-          <div>
-            <div style={{
-              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: TEXT.secondary,
-              marginBottom: 6,
-            }}>
-              Tips
-            </div>
-            {place.tips.map((tip, i) => (
-              <div key={i} style={{
-                fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.5,
-                color: TEXT.primary, marginBottom: 2,
-              }}>
-                {tip}
-              </div>
-            ))}
-          </div>
-        )}
-
-
-        {/* Caveat */}
-        {place.terrazzoInsight?.caveat && (
-          <div style={{
-            marginTop: 12, padding: '10px 12px',
-            borderRadius: 10,
-            background: 'rgba(238,113,109,0.06)',
-            fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.5,
-            color: COLOR.coral,
-          }}>
-            {place.terrazzoInsight.caveat}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -244,7 +175,10 @@ export function DayCard({
   onTapDay: (n: number) => void;
 }) {
   const { openDetail: onTapDetail } = usePlaceDetail();
-  const places = day.slots.flatMap(s => s.places.map(p => ({ place: p, time: s.time })));
+  const places = day.slots.flatMap(s => s.places.map(p => ({
+    place: p,
+    time: p.specificTime ? formatTime12h(p.specificTime) : s.time,
+  })));
 
   return (
     <div style={{

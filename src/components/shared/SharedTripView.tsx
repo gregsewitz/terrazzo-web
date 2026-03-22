@@ -8,6 +8,7 @@ import { generateDestColor, getDestColor } from '@/lib/destination-helpers';
 import { getDisplayLocation } from '@/lib/place-display';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import GoogleMapView, { type MapMarker } from '@/components/maps/GoogleMapView';
+import { formatTime12h } from '@/components/place/PlaceTimeEditor';
 import type { ImportedPlace, TripDay, PlaceType } from '@/types';
 
 // ─── Types ───
@@ -787,7 +788,10 @@ function DestinationHero({ name, placeCount }: { name: string; placeCount: numbe
 // ─── Read-only Day Card (for overview) ───
 
 function ReadOnlyDayCard({ day, trip }: { day: TripDay; trip: SharedTripProps['trip'] }) {
-  const places = day.slots.flatMap(s => s.places.map(p => ({ place: p, time: s.time })));
+  const places = day.slots.flatMap(s => s.places.map(p => ({
+    place: p,
+    time: p.specificTime ? formatTime12h(p.specificTime) : s.time,
+  })));
 
   return (
     <div style={{ padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
