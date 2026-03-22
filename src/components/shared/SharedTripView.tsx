@@ -583,7 +583,7 @@ function ItineraryView({
                               fontFamily: FONT.mono, fontSize: 9,
                               color: TEXT.secondary, marginLeft: 'auto',
                             }}>
-                              {entry.specificTimeLabel || entry.specificTime}
+                              {entry.specificTimeLabel ? `${entry.specificTimeLabel} at ${formatTime12h(entry.specificTime)}` : formatTime12h(entry.specificTime)}
                             </span>
                           )}
                         </div>
@@ -792,6 +792,10 @@ function ReadOnlyDayCard({ day, trip }: { day: TripDay; trip: SharedTripProps['t
     place: p,
     time: p.specificTime ? formatTime12h(p.specificTime) : s.time,
   })));
+  const quickEntries = day.slots.flatMap(s =>
+    (s.quickEntries || []).map(q => ({ entry: q, slotTime: s.time }))
+  );
+  const hasContent = places.length > 0 || quickEntries.length > 0;
 
   return (
     <div style={{ padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
@@ -835,8 +839,8 @@ function ReadOnlyDayCard({ day, trip }: { day: TripDay; trip: SharedTripProps['t
         </div>
       </div>
 
-      {/* Places */}
-      {places.length > 0 ? (
+      {/* Places + quick entries */}
+      {hasContent ? (
         <div style={{ paddingLeft: 44 }}>
           {places.map(({ place, time }) => (
             <div
@@ -866,6 +870,31 @@ function ReadOnlyDayCard({ day, trip }: { day: TripDay; trip: SharedTripProps['t
                   marginLeft: 8,
                 }}>
                   {place.location}
+                </span>
+              </div>
+            </div>
+          ))}
+          {quickEntries.map(({ entry, slotTime }) => (
+            <div
+              key={entry.id}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '8px 0',
+              }}
+            >
+              <span style={{
+                fontFamily: FONT.sans, fontSize: 11, fontWeight: 500,
+                color: SECTION.editorial.body, width: 56, flexShrink: 0,
+              }}>
+                {entry.specificTime ? formatTime12h(entry.specificTime) : slotTime}
+              </span>
+              <PerriandIcon name="pin" size={12} color={SECTION.editorial.body} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{
+                  fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
+                  color: SECTION.editorial.headline,
+                }}>
+                  {entry.label || entry.text}
                 </span>
               </div>
             </div>
@@ -1096,7 +1125,7 @@ function ItineraryPlaceCard({ place }: { place: ImportedPlace }) {
                 background: 'rgba(58,128,136,0.08)',
                 flexShrink: 0,
               }}>
-                {place.specificTimeLabel || place.specificTime}
+                {place.specificTimeLabel ? `${place.specificTimeLabel} ${formatTime12h(place.specificTime)}` : formatTime12h(place.specificTime)}
               </div>
             )}
           </div>

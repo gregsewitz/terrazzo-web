@@ -2,8 +2,8 @@
 
 import React from 'react';
 import {
-  Trip, ImportedPlace,
-  getSourceStyle,
+  Trip, ImportedPlace, QuickEntry,
+  getSourceStyle, QUICK_ENTRY_CATEGORY_ICONS,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, TEXT, COLOR, SECTION } from '@/constants/theme';
@@ -166,6 +166,38 @@ export function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: 
   );
 }
 
+// ─── Quick entry row (for day timeline) ───
+
+function QuickEntryRow({ entry, slotTime }: { entry: QuickEntry; slotTime: string }) {
+  const time = entry.specificTime ? formatTime12h(entry.specificTime) : slotTime;
+  const icon = QUICK_ENTRY_CATEGORY_ICONS[entry.category] || 'pin';
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '8px 0',
+    }}>
+      {time && (
+        <span style={{
+          fontFamily: FONT.sans, fontSize: 11, fontWeight: 500, color: SECTION.editorial.body,
+          width: 56, flexShrink: 0,
+        }}>
+          {time}
+        </span>
+      )}
+      <PerriandIcon name={icon} size={12} color={SECTION.editorial.body} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{
+          fontFamily: FONT.sans, fontSize: 13, fontWeight: 500,
+          color: SECTION.editorial.headline,
+        }}>
+          {entry.label || entry.text}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Day Card ───
 
 export function DayCard({
@@ -179,6 +211,10 @@ export function DayCard({
     place: p,
     time: p.specificTime ? formatTime12h(p.specificTime) : s.time,
   })));
+  const quickEntries = day.slots.flatMap(s =>
+    (s.quickEntries || []).map(q => ({ entry: q, slotTime: s.time }))
+  );
+  const hasContent = places.length > 0 || quickEntries.length > 0;
 
   return (
     <div style={{
@@ -228,8 +264,8 @@ export function DayCard({
         </div>
       </div>
 
-      {/* Places */}
-      {places.length > 0 ? (
+      {/* Places + quick entries */}
+      {hasContent ? (
         <div style={{ paddingLeft: 44 }}>
           {places.map(({ place, time }) => (
             <PlaceRow
@@ -237,6 +273,13 @@ export function DayCard({
               place={place}
               time={time}
               onTap={() => onTapDetail(place)}
+            />
+          ))}
+          {quickEntries.map(({ entry, slotTime }) => (
+            <QuickEntryRow
+              key={entry.id}
+              entry={entry}
+              slotTime={slotTime}
             />
           ))}
         </div>

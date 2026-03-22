@@ -64,14 +64,15 @@ function PicksRailInner({
   const [elsewhereExpanded, setElsewhereExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Read currentDay from store (no more day selector — syncs with DayBoardView)
-  const currentDay = useTripStore(s => s.currentDay);
-  const selectedDay = currentDay;
-
-  const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
-
   // Pool store — slot context + cluster filter
   const { slotContext, clusterFilter, toggleClusterFilter } = usePoolStore();
+
+  // Read currentDay from store (no more day selector — syncs with DayBoardView)
+  const currentDay = useTripStore(s => s.currentDay);
+  // Use slot context's day when user selects a slot on a different day (e.g. grid view)
+  const selectedDay = slotContext?.dayNumber ?? currentDay;
+
+  const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
 
   // ─── Shared filtering logic ───
   const {
