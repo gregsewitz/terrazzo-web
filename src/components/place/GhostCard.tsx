@@ -146,7 +146,7 @@ function GhostCardInner({
     );
   }
 
-  // === POOL VARIANT — small card for horizontal scroll in PoolTray ===
+  // === POOL VARIANT — small card for horizontal scroll in PicksStrip ===
   return (
     <div
       className="relative group cursor-pointer transition-all active:scale-[0.98] ghost-shimmer"

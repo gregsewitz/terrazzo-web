@@ -25,7 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
   museum: 'Museum', activity: 'Activity', neighborhood: 'Neighborhood', shop: 'Shop',
 };
 
-// ─── Proximity tier styling (matches PoolTray) ───
+// ─── Proximity tier styling ───
 const PROXIMITY_TIER_COLORS: Record<string, { bg: string; color: string }> = {
   'same-neighborhood': { bg: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)' },
   'walkable': { bg: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)' },
@@ -329,6 +329,83 @@ function PicksRailInner({
         )}
       </div>
 
+      {/* Slot Context Banner — shown when browsing for a specific slot */}
+      {slotContext && (
+        <div
+          className="mx-3 mb-1.5 px-2.5 py-2 rounded-lg flex-shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(58,128,136,0.06) 0%, rgba(58,128,136,0.02) 100%)',
+            border: '1px solid rgba(58,128,136,0.15)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-0.5">
+            <span
+              className="text-[10px] font-semibold"
+              style={{ color: 'var(--t-dark-teal)', fontFamily: FONT.sans }}
+            >
+              Picking for {slotContext.slotLabel} · Day {slotContext.dayNumber}
+            </span>
+            <button
+              onClick={() => usePoolStore.getState().setSlotContext(null)}
+              className="text-[9px] px-1.5 py-0.5 rounded-full border-none cursor-pointer"
+              style={{ background: INK['06'], color: TEXT.secondary }}
+            >
+              Clear
+            </button>
+          </div>
+          {(slotContext.adjacentPlaces.before || slotContext.adjacentPlaces.after) && (
+            <div className="text-[9px]" style={{ color: TEXT.secondary }}>
+              {slotContext.adjacentPlaces.before && (
+                <span>After {slotContext.adjacentPlaces.before.name}</span>
+              )}
+              {slotContext.adjacentPlaces.before && slotContext.adjacentPlaces.after && ' · '}
+              {slotContext.adjacentPlaces.after && (
+                <span>Before {slotContext.adjacentPlaces.after.name}</span>
+              )}
+            </div>
+          )}
+          {slotContext.suggestedTypes.length > 0 && (
+            <div className="flex gap-1 mt-1">
+              {slotContext.suggestedTypes.map(t => {
+                const isActive = activeFilter === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => toggleFilter(isActive ? 'all' : t)}
+                    className="text-[9px] px-1.5 py-0.5 rounded-full cursor-pointer transition-all flex items-center gap-0.5"
+                    style={{
+                      background: isActive ? 'var(--t-dark-teal)' : 'rgba(58,128,136,0.08)',
+                      color: isActive ? 'white' : 'var(--t-dark-teal)',
+                      border: 'none',
+                      fontFamily: FONT.mono,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Missing coordinates nudge */}
+      {proximity.missingCoordsNudge && (
+        <div
+          className="mx-3 mb-1.5 px-2.5 py-1.5 rounded-lg text-[9px] flex-shrink-0"
+          style={{
+            background: 'rgba(203,178,121,0.08)',
+            border: '1px solid rgba(203,178,121,0.2)',
+            color: 'var(--t-ochre, #B8953F)',
+            fontFamily: FONT.mono,
+          }}
+        >
+          <PerriandIcon name="location" size={9} color="var(--t-ochre, #B8953F)" />{' '}
+          {proximity.missingCoordsNudge.message}
+        </div>
+      )}
+
       {/* Filters & sort */}
       <div className="px-3 py-1.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--t-linen)' }}>
         <FilterSortBar
@@ -397,6 +474,11 @@ function PicksRailInner({
       {/* Geographic Cluster Chips */}
       {proximity.clusters.length > 0 && (
         <div className="px-3 py-1.5 flex-shrink-0 flex gap-1 flex-wrap" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+          {proximity.mode === 'cold-start' && (
+            <span className="w-full text-[9px] mb-0.5" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+              Explore by area:
+            </span>
+          )}
           {proximity.clusters.map((cluster) => {
             const isActive = clusterFilter?.label === cluster.label;
             return (
@@ -421,6 +503,9 @@ function PicksRailInner({
                 <PerriandIcon name="location" size={9} color={isActive ? 'white' : 'var(--t-dark-teal)'} />
                 {cluster.label}
                 <span style={{ opacity: 0.7 }}>{cluster.count}</span>
+                {proximity.mode === 'cold-start' && !isActive && (
+                  <span style={{ opacity: 0.5, fontWeight: 400, fontStyle: 'italic' }}>Start here?</span>
+                )}
               </button>
             );
           })}

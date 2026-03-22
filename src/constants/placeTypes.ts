@@ -127,7 +127,7 @@ export const TYPE_CHIPS_WITH_ALL: FilterChip[] = [
   { value: 'rental', label: 'Rental', icon: 'hotel' },
 ];
 
-/** Full-name labels — used in PoolTray */
+/** Full-name labels — used in picks components */
 export const TYPE_CHIPS_FULL: FilterChip[] = [
   { value: 'all', label: 'All types', icon: 'discover' },
   { value: 'restaurant', label: 'Restaurant', icon: 'restaurant' },
