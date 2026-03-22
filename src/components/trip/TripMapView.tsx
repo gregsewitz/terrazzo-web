@@ -180,6 +180,8 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
         id: item.place.id,
         name: item.place.name,
         location: item.place.location || item.destination || '',
+        lat: item.place.google?.lat,
+        lng: item.place.google?.lng,
         type: item.place.type,
         matchScore: item.place.matchScore,
         color: destColor.accent,
@@ -205,12 +207,14 @@ function TripMapView({ onTapDetail, variant }: TripMapViewProps) {
       };
     }) : [];
 
-    const firstDest = trip.days[0]?.destination || trip.location?.split(',')[0]?.trim() || '';
-    const geo = trip.geoDestinations?.find(g => g.name.toLowerCase() === firstDest.toLowerCase());
+    // Use selected day's destination for fallback center; fall back to first day / trip location
+    const selectedDayData = selectedDay !== null ? trip.days.find(d => d.dayNumber === selectedDay) : null;
+    const activeDest = selectedDayData?.destination || trip.days[0]?.destination || trip.location?.split(',')[0]?.trim() || '';
+    const geo = trip.geoDestinations?.find(g => g.name.toLowerCase() === activeDest.toLowerCase());
     const coords = geo?.lat && geo?.lng ? { lat: geo.lat, lng: geo.lng } : undefined;
 
-    return { markers: [...confirmed, ...ghostMkrs], fallbackDest: firstDest, fallbackCoords: coords };
-  }, [trip, filteredItems, showDirections, ghostCandidates, showGhosts]);
+    return { markers: [...confirmed, ...ghostMkrs], fallbackDest: activeDest, fallbackCoords: coords };
+  }, [trip, filteredItems, showDirections, ghostCandidates, showGhosts, selectedDay]);
 
   // ─── Active item (derived, not in useMemo dep of markers) ───
   const activeItem = useMemo(() =>

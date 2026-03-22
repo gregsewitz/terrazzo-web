@@ -337,8 +337,9 @@ function MapFitter({ coords, fallbackCenter }: {
   useEffect(() => {
     if (!map) return;
 
-    // Build a stable key for current coords to detect real changes
-    const key = coords.map(c => `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`).sort().join('|');
+    // Build a stable key for current coords + fallback to detect real changes
+    const key = coords.map(c => `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`).sort().join('|')
+      + `@${fallbackCenter.lat.toFixed(5)},${fallbackCenter.lng.toFixed(5)}`;
     if (key === prevCoordsKey.current) return;
     prevCoordsKey.current = key;
 
@@ -377,7 +378,12 @@ function MapFitter({ coords, fallbackCenter }: {
 
     // ── Subsequent fits (day toggle): smooth animated transition ──
     if (coords.length === 0) {
-      // No markers for this filter — don't move the map
+      // No markers for this filter — pan to fallback center (e.g. day's destination)
+      map.panTo(fallbackCenter);
+      const currentZoom = map.getZoom() || 13;
+      if (currentZoom > 14 || currentZoom < 11) {
+        setTimeout(() => map.setZoom(13), 300);
+      }
       return;
     }
 
