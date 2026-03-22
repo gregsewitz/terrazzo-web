@@ -28,7 +28,7 @@ export function usePlaceDetailData(item: ImportedPlace) {
       Character: 0.5,
       Service: 0.5,
       FoodDrink: 0.5,
-      Geography: 0.5,
+      Setting: 0.5,
       Wellness: 0.5,
       Sustainability: 0.5,
     };

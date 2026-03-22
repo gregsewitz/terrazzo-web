@@ -22,7 +22,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     followUps: [],
     sampleUserResponses: [],
     extractedSignals: [],
-    certaintyAfter: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0 },
+    certaintyAfter: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
   },
   {
     id: 'email-connect',
@@ -35,7 +35,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     followUps: [],
     sampleUserResponses: [],
     extractedSignals: [],
-    certaintyAfter: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0 },
+    certaintyAfter: { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
   },
   {
     id: 'instinct-round',
@@ -475,7 +475,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       {
         id: 'ad6-indoor-outdoor',
         prompt: 'The boundary between inside and outside:',
-        domains: ['Design', 'Geography'],
+        domains: ['Design', 'Setting'],
         options: [
           { id: 'open', label: 'Should disappear — sliding walls, no glass, fully open to the air', signals: ['Open-air-obsessed', 'Tropical-drawn', 'Boundary-dissolving'], domain: 'Design' },
           { id: 'windows', label: 'Big windows, but clearly inside — I want the view without the bugs', signals: ['View-seeker-protected', 'Controlled-connection'], domain: 'Design' },
@@ -616,7 +616,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
         label: 'What you see from the room',
         description: 'The view, the balcony, the connection to the landscape',
         signals: ['View-priority', 'Room-landscape-connection', 'Outdoor-access'],
-        domain: 'Geography',
+        domain: 'Setting',
       },
     ],
   },
@@ -812,7 +812,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
           { id: 'open', label: 'I want to see the kitchen — fire, chefs working, the energy', signals: ['Open-kitchen-drawn', 'Process-interested', 'Theater-of-cooking'], domain: 'FoodDrink' },
           { id: 'hidden', label: 'I want to forget the kitchen exists — just the plate, perfectly', signals: ['Presentation-focused', 'Seamless-service', 'Outcome-oriented'], domain: 'FoodDrink' },
           { id: 'counter', label: 'A counter seat — close enough to watch, but not a show', signals: ['Counter-culture', 'Proximity-dining', 'Intimate-food'], domain: 'FoodDrink' },
-          { id: 'outdoors', label: 'Outside — I barely notice the kitchen if the setting is right', signals: ['Al-fresco-priority', 'Setting-over-food', 'Terrace-diner'], domain: 'Geography' },
+          { id: 'outdoors', label: 'Outside — I barely notice the kitchen if the setting is right', signals: ['Al-fresco-priority', 'Setting-over-food', 'Terrace-diner'], domain: 'Setting' },
         ],
       },
       {
@@ -867,10 +867,10 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       {
         id: 'ci3-depth',
         prompt: 'Free day in Kyoto. You:',
-        domains: ['Character', 'Geography'],
+        domains: ['Character', 'Setting'],
         options: [
           { id: 'temples', label: 'Visit the temples everyone talks about — they\'re famous for a reason', signals: ['Landmark-visitor', 'Canon-respecter', 'Completionist'], domain: 'Character' },
-          { id: 'wander', label: 'Find a neighborhood nobody mentions and just walk', signals: ['Neighborhood-wanderer', 'Off-path-explorer', 'Drift-traveler'], domain: 'Geography' },
+          { id: 'wander', label: 'Find a neighborhood nobody mentions and just walk', signals: ['Neighborhood-wanderer', 'Off-path-explorer', 'Drift-traveler'], domain: 'Setting' },
           { id: 'class', label: 'Book a private tea ceremony or cooking class', signals: ['Cultural-experience-seeker', 'Hands-on-culture', 'Activity-booker'], domain: 'Character' },
           { id: 'hotel-rec', label: 'Go where the hotel recommends — they know best', signals: ['Hotel-guided', 'Trust-property-concierge', 'Delegation-natural'], domain: 'Service' },
         ],
@@ -883,17 +883,17 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
           { id: 'locals', label: 'Full of locals — you\'re the only tourist', signals: ['Local-integration', 'Authenticity-seeker', 'Insider-energy'], domain: 'Character' },
           { id: 'international', label: 'International mix — interesting people from everywhere', signals: ['Cosmopolitan-mix', 'International-energy', 'Cross-cultural-draw'], domain: 'Character' },
           { id: 'quiet', label: 'Mostly empty — just a bartender who knows what they\'re doing', signals: ['Quiet-bar-seeker', 'Craft-cocktail-appreciator', 'Solo-drink-comfortable'], domain: 'Atmosphere' },
-          { id: 'skip', label: 'I rarely use the hotel bar — I\'d rather find a real one nearby', signals: ['Anti-hotel-bar', 'Neighborhood-bar-seeker', 'Local-nightlife-drawn'], domain: 'Geography' },
+          { id: 'skip', label: 'I rarely use the hotel bar — I\'d rather find a real one nearby', signals: ['Anti-hotel-bar', 'Neighborhood-bar-seeker', 'Local-nightlife-drawn'], domain: 'Setting' },
         ],
       },
       {
         id: 'mu1-museum',
         prompt: 'You have one free afternoon and two options:',
-        domains: ['Character', 'Geography'],
+        domains: ['Character', 'Setting'],
         options: [
           { id: 'big-museum', label: 'The city\'s major museum — it\'s world-class and you haven\'t been', signals: ['Major-museum-drawn', 'Canonical-culture', 'Institution-visitor'], domain: 'Character' },
           { id: 'small-gallery', label: 'A tiny gallery a local recommended — only open on Thursdays', signals: ['Small-gallery-seeker', 'Local-art-scene', 'Hidden-cultural-gem'], domain: 'Character' },
-          { id: 'street-art', label: 'Skip both — you\'d rather walk a neighborhood with great street art and architecture', signals: ['Anti-museum', 'Street-culture-drawn', 'Architecture-walker', 'Outdoor-art-preferred'], domain: 'Geography' },
+          { id: 'street-art', label: 'Skip both — you\'d rather walk a neighborhood with great street art and architecture', signals: ['Anti-museum', 'Street-culture-drawn', 'Architecture-walker', 'Outdoor-art-preferred'], domain: 'Setting' },
           { id: 'market', label: 'Neither — you\'d find the best food market or vintage market instead', signals: ['Market-over-museum', 'Browse-and-taste', 'Market-explorer'], domain: 'FoodDrink' },
         ],
       },
@@ -914,7 +914,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
         domains: ['Core', 'Atmosphere'],
         options: [
           { id: 'late-checkout', label: 'Negotiate late checkout — I\'m not leaving this room until I have to', signals: ['Late-checkout-negotiator', 'Room-attached', 'Every-last-minute'], domain: 'Atmosphere' },
-          { id: 'explore', label: 'Check out, leave bags, explore the neighborhood one last time', signals: ['Last-minute-explorer', 'Neighborhood-completionist', 'Saver-of-moments'], domain: 'Geography' },
+          { id: 'explore', label: 'Check out, leave bags, explore the neighborhood one last time', signals: ['Last-minute-explorer', 'Neighborhood-completionist', 'Saver-of-moments'], domain: 'Setting' },
           { id: 'airport-early', label: 'Head to the airport early — I like being ahead of schedule', signals: ['Airport-buffer', 'Logistics-anxiety', 'Transition-planner'], domain: 'Core' },
           { id: 'day-room', label: 'Book a day room at a different hotel near the airport', signals: ['Logistics-optimizer', 'Hotel-as-utility', 'Comfort-maximizer'], domain: 'Core' },
         ],
@@ -976,7 +976,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
         rightLabel: 'Barely on the map — figuring it out is half the point',
         leftSignals: ['Infrastructure-valued', 'Reliability-first', 'Convenience-traveler'],
         rightSignals: ['Pioneer-traveler', 'Friction-as-adventure', 'Off-grid-drawn'],
-        domain: 'Geography',
+        domain: 'Setting',
       },
       {
         id: 'drink-philosophy',
@@ -1045,10 +1045,10 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
     quickChoiceMin: 2,
     quickChoiceOptions: [
       { id: 'woodsmoke', label: 'Woodsmoke and cold air', signals: ['Woodsmoke-drawn', 'Mountain-cabin-scent', 'Fire-ritual'], domain: 'Atmosphere' },
-      { id: 'salt', label: 'Salt water and sunscreen', signals: ['Coastal-scent', 'Beach-drawn', 'Sea-memory'], domain: 'Geography' },
+      { id: 'salt', label: 'Salt water and sunscreen', signals: ['Coastal-scent', 'Beach-drawn', 'Sea-memory'], domain: 'Setting' },
       { id: 'linen', label: 'Fresh linen, just out of the sun', signals: ['Linen-scent', 'Clean-air-drawn', 'Textile-sensitive'], domain: 'Design' },
       { id: 'coffee', label: 'Coffee and warm bread', signals: ['Café-scent', 'Morning-ritual-drawn', 'Bakery-walker'], domain: 'FoodDrink' },
-      { id: 'jasmine', label: 'Jasmine at night', signals: ['Night-jasmine', 'Tropical-drawn', 'Garden-scent-lover'], domain: 'Geography' },
+      { id: 'jasmine', label: 'Jasmine at night', signals: ['Night-jasmine', 'Tropical-drawn', 'Garden-scent-lover'], domain: 'Setting' },
       { id: 'stone', label: 'Old books and stone', signals: ['Heritage-scent', 'Library-drawn', 'Mineral-air-lover'], domain: 'Design' },
     ],
   },
@@ -1069,7 +1069,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       {
         id: 'sh1-shopping-style',
         prompt: 'You\'re walking through a new city with no agenda. You\'re most likely to wander into:',
-        domains: ['Character', 'Geography'],
+        domains: ['Character', 'Setting'],
         options: [
           { id: 'design-shop', label: 'A beautifully curated design or homeware shop', signals: ['Design-shopper', 'Curation-drawn', 'Homeware-browser', 'Shop-aesthetic-sensitive'], domain: 'Design' },
           { id: 'food-market', label: 'A food hall or covered market full of local producers', signals: ['Market-explorer', 'Food-market-drawn', 'Local-produce-seeker', 'Taste-led-browser'], domain: 'FoodDrink' },
@@ -1091,7 +1091,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       {
         id: 'sh3-market-morning',
         prompt: 'Saturday morning in a European city. A friend says: "There\'s an incredible flea market 20 minutes away."',
-        domains: ['Character', 'Geography'],
+        domains: ['Character', 'Setting'],
         options: [
           { id: 'absolutely', label: 'I\'m already getting dressed — flea markets are my thing', signals: ['Flea-market-lover', 'Treasure-hunter', 'Saturday-market-ritual', 'Browse-happy'], domain: 'Character' },
           { id: 'maybe', label: 'Depends — what kind of stuff? I\'m picky about markets', signals: ['Selective-market-goer', 'Curated-over-chaotic', 'Quality-market-filter'], domain: 'Character' },
@@ -1102,9 +1102,9 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       {
         id: 'sh4-neighborhood-shops',
         prompt: 'The hotel concierge says: "The best shops in the city are in [neighborhood] — independent boutiques, a great bookshop, a local perfumer."',
-        domains: ['Geography', 'Character'],
+        domains: ['Setting', 'Character'],
         options: [
-          { id: 'spend-afternoon', label: 'That\'s my afternoon sorted — I\'ll walk the whole strip', signals: ['Shop-strip-walker', 'Independent-boutique-drawn', 'Neighborhood-browser'], domain: 'Geography' },
+          { id: 'spend-afternoon', label: 'That\'s my afternoon sorted — I\'ll walk the whole strip', signals: ['Shop-strip-walker', 'Independent-boutique-drawn', 'Neighborhood-browser'], domain: 'Setting' },
           { id: 'one-stop', label: 'I\'d go for the perfumer or bookshop specifically — I don\'t browse aimlessly', signals: ['Targeted-shopper', 'Specialist-shop-seeker', 'Purpose-driven-browser'], domain: 'Character' },
           { id: 'food-instead', label: 'I\'d ask about the restaurants in that neighborhood instead', signals: ['Food-over-shops', 'Restaurant-priority', 'Dining-navigator'], domain: 'FoodDrink' },
           { id: 'skip', label: 'I\'d nod politely and go to the beach', signals: ['Shop-indifferent', 'Leisure-over-browsing', 'Anti-retail'], domain: 'Wellness' },
@@ -1140,12 +1140,12 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       {
         id: 'dn3-tradeoff',
         prompt: 'You can only have one:',
-        domains: ['Geography', 'Design'],
+        domains: ['Setting', 'Design'],
         options: [
-          { id: 'location', label: 'Perfect location, average hotel', signals: ['Location-over-property', 'Context-first', 'Neighborhood-priority'], domain: 'Geography' },
+          { id: 'location', label: 'Perfect location, average hotel', signals: ['Location-over-property', 'Context-first', 'Neighborhood-priority'], domain: 'Setting' },
           { id: 'hotel', label: 'Average location, extraordinary hotel', signals: ['Property-over-location', 'Destination-in-itself', 'Hotel-as-world'], domain: 'Design' },
           { id: 'neither', label: 'I\'d keep looking — I refuse to compromise on either', signals: ['Uncompromising-searcher', 'High-standards-both'], domain: 'Core' },
-          { id: 'location-charm', label: 'The most interesting neighborhood, whatever the hotel', signals: ['Neighborhood-over-everything', 'Street-life-priority', 'Local-immersion-max'], domain: 'Geography' },
+          { id: 'location-charm', label: 'The most interesting neighborhood, whatever the hotel', signals: ['Neighborhood-over-everything', 'Street-life-priority', 'Local-immersion-max'], domain: 'Setting' },
         ],
       },
       {
@@ -1194,7 +1194,7 @@ export const ONBOARDING_PHASES: OnboardingPhase[] = [
       { id: 'bad-food', label: 'Bad food with no good alternatives nearby', signals: ['Food-dealbreaker', 'Dining-dependent'], domain: 'FoodDrink' },
       { id: 'weak-wifi', label: 'Weak wifi', signals: ['Connectivity-dealbreaker', 'Digital-dependent'], domain: 'Core' },
       { id: 'no-light', label: 'No natural light in the room', signals: ['Light-dealbreaker', 'Natural-light-non-negotiable'], domain: 'Design' },
-      { id: 'bad-location', label: 'Far from anything interesting', signals: ['Location-dealbreaker', 'Walkability-dependent'], domain: 'Geography' },
+      { id: 'bad-location', label: 'Far from anything interesting', signals: ['Location-dealbreaker', 'Walkability-dependent'], domain: 'Setting' },
     ],
   },
   {

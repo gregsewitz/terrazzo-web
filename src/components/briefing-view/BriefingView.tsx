@@ -52,7 +52,7 @@ interface BriefingViewProps {
   onClose: () => void;
 }
 
-const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
+const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
 
 // ─── Main Component ───
 

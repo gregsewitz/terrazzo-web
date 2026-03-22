@@ -21,7 +21,7 @@ const V1_TO_V2: Record<string, TasteDomain> = {
   'Character': 'Character',
   'Service': 'Service',
   'FoodDrink': 'FoodDrink',
-  'Geography': 'Geography',
+  'Geography': 'Setting',
   'Wellness': 'Wellness',
   'Sustainability': 'Sustainability',
   'Design Language': 'Design',
@@ -32,8 +32,8 @@ const V1_TO_V2: Record<string, TasteDomain> = {
   'Food & Drink': 'FoodDrink',
   'Culinary': 'FoodDrink',
   'F&B': 'FoodDrink',
-  'Location & Context': 'Geography',
-  'Setting & Place': 'Geography',
+  'Location & Context': 'Setting',
+  'Setting & Place': 'Setting',
   'Retreat & Wellbeing': 'Wellness',
   'Values & Sustainability': 'Sustainability',
 };
@@ -117,7 +117,7 @@ const INITIAL_CERTAINTIES: Record<TasteDomain, number> = {
   Character: 5,
   Service: 5,
   FoodDrink: 5,
-  Geography: 5,
+  Setting: 5,
   Wellness: 10,
   Sustainability: 10,
 };

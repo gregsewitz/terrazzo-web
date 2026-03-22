@@ -297,7 +297,7 @@ export async function enrichExtractedPlaces(
           location: googleResult?.formattedAddress || place.city || '',
           source: { type: sourceType as ImportedPlace['source']['type'], name: sourceName },
           matchScore: 0,
-          matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
+          matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0.5 },
           tasteNote: place.description || '',
           status: 'available',
           userContext: place.userContext || undefined,
@@ -342,7 +342,7 @@ export async function enrichExtractedPlaces(
           location: place.city || '',
           source: { type: sourceType as ImportedPlace['source']['type'], name: sourceName },
           matchScore: 0,
-          matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
+          matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0.5 },
           tasteNote: place.description || '',
           status: 'available' as const,
         } as ImportedPlace;

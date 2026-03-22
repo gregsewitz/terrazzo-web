@@ -62,7 +62,7 @@ export const ANTI_SIGNAL_SCALE = ANTI_SIGNAL_SCALE_CONST;
  */
 const DOMAIN_INDEX: Record<TasteDomain, number> = {
   Design: 0, Atmosphere: 1, Character: 2, Service: 3,
-  FoodDrink: 4, Geography: 5, Wellness: 6, Sustainability: 7,
+  FoodDrink: 4, Setting: 5, Wellness: 6, Sustainability: 7,
 };
 
 // ─── IDF (shared with v2.1) ─────────────────────────────────────────────────

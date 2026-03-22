@@ -100,7 +100,7 @@ function ProfilePageContent() {
 
   // Build numeric profile for mosaic visualization from radar data
   const numericProfile: NumericProfile = useMemo(() => {
-    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Geography: 0.5, Wellness: 0.5, Sustainability: 0.5 };
+    const result: NumericProfile = { Design: 0.5, Atmosphere: 0.5, Character: 0.5, Service: 0.5, FoodDrink: 0.5, Setting: 0.5, Wellness: 0.5, Sustainability: 0.5 };
     const radarData = (profile as { radarData?: { axis: string; value: number }[] }).radarData;
     if (radarData) {
       for (const r of radarData) {

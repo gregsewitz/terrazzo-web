@@ -52,7 +52,7 @@ async function main() {
       SELECT
         signal,
         CASE
-          WHEN domain = 'Geography' THEN 'Setting'
+          WHEN domain = 'Geography' THEN 'Setting'  -- legacy: Geography was renamed to Setting
           ELSE domain
         END as dimension,
         "userId" as source_id

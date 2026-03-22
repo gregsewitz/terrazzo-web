@@ -15,7 +15,7 @@ const DOMAIN_PROMPTS: Record<string, string> = {
   Service: 'How do you like to be taken care of?',
   Atmosphere: 'What kind of energy should a place have?',
   Design: 'What aesthetic language speaks to you?',
-  Geography: 'Where does a place need to be?',
+  Setting: 'Where does a place need to be?',
   Wellness: 'How important is rest and renewal?',
   Sustainability: 'How much does a place\u2019s values matter?',
 };

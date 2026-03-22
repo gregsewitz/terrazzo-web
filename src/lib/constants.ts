@@ -102,7 +102,7 @@ export const TASTE_DOMAIN_RANGES = [
   { domain: 'Design', start: 136, end: 191 },
   { domain: 'FoodDrink', start: 192, end: 263 },
   { domain: 'Service', start: 264, end: 336 },
-  { domain: 'Geography', start: 337, end: 379 },
+  { domain: 'Setting', start: 337, end: 379 },
   { domain: 'Sustainability', start: 380, end: 386 },
   { domain: 'Wellness', start: 387, end: 399 },
 ] as const;

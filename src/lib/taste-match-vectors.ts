@@ -348,7 +348,7 @@ const DOMAIN_PHRASES: Record<string, { noun: string; yours: string }> = {
   Character:      { noun: 'personality and story',    yours: 'the kind of places you gravitate toward' },
   Service:        { noun: 'hospitality style',        yours: 'how you like to be looked after' },
   FoodDrink:      { noun: 'culinary point of view',   yours: 'what and how you like to eat' },
-  Geography:      { noun: 'neighborhood instinct',    yours: 'the neighborhoods you are drawn to' },
+  Setting:      { noun: 'neighborhood instinct',    yours: 'the neighborhoods you are drawn to' },
   Wellness:       { noun: 'wellness approach',        yours: 'your pace and comfort priorities' },
   Sustainability: { noun: 'values alignment',         yours: 'what you care about beyond the experience' },
 };

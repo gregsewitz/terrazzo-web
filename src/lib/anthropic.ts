@@ -111,7 +111,7 @@ TASTE MATCHING:
 User profile (0-1 per axis): ${JSON.stringify(userProfile)}
 For each place, also score:
 - matchScore: 0-100 overall match
-- matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Geography: 0-1, Wellness: 0-1, Sustainability: 0-1 } — how the PLACE scores
+- matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Setting: 0-1, Wellness: 0-1, Sustainability: 0-1 } — how the PLACE scores
 - tasteNote: one-line description in a warm, friend-like voice
 - terrazzoInsight: { why: "1-2 sentences on match", caveat: "honest heads-up" }` : '';
 
@@ -273,7 +273,7 @@ ${TERRAZZO_VOICE}
 
 For each place, return an object with:
 - matchScore: number 0-100 (overall match to the user's taste)
-- matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Geography: 0-1, Wellness: 0-1, Sustainability: 0-1 } (how the PLACE scores on each axis — this is about the place, not the user)
+- matchBreakdown: { Design: 0-1, Atmosphere: 0-1, Character: 0-1, Service: 0-1, FoodDrink: 0-1, Setting: 0-1, Wellness: 0-1, Sustainability: 0-1 } (how the PLACE scores on each axis — this is about the place, not the user)
 - terrazzoInsight: { why: string (1-2 sentences on why this matches the user), caveat: string (honest heads-up) }
 
 Return a JSON array in the SAME ORDER as the input list. Each element corresponds to the place at that index.

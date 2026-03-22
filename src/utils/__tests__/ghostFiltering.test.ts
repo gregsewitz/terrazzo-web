@@ -16,7 +16,7 @@ function makeGhost(name: string, location: string, sourceType?: string): Importe
     location,
     source: { type: (sourceType || 'manual') as any, name: 'Test' },
     matchScore: 70,
-    matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0.5 },
+    matchBreakdown: { Design: 0, Atmosphere: 0.5, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0.5 },
     tasteNote: '',
     status: 'available',
   };

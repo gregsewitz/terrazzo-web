@@ -26,7 +26,7 @@ export const DOMAIN_COLORS: Record<TasteDomain, string> = {
   Character: COLOR.olive,
   Service: COLOR.ochre,
   FoodDrink: COLOR.peach,
-  Geography: COLOR.darkTeal,
+  Setting: COLOR.darkTeal,
   Wellness: COLOR.ochre,
   Sustainability: COLOR.darkTeal,
 };
@@ -37,7 +37,7 @@ export const DOMAIN_ICONS: Record<TasteDomain, PerriandIconName> = {
   Character: 'character',
   Service: 'service',
   FoodDrink: 'food',
-  Geography: 'location',
+  Setting: 'location',
   Wellness: 'wellness',
   Sustainability: 'plan',
 };
@@ -105,10 +105,10 @@ export function getSourceLabel(place: { source?: { type?: string; name?: string 
  * 2 Preference Dimensions — weighted checklists with thinner taste spaces:
  *   Wellness, Sustainability
  */
-export type TasteDomain = 'Design' | 'Atmosphere' | 'Character' | 'Service' | 'FoodDrink' | 'Geography' | 'Wellness' | 'Sustainability';
+export type TasteDomain = 'Design' | 'Atmosphere' | 'Character' | 'Service' | 'FoodDrink' | 'Setting' | 'Wellness' | 'Sustainability';
 
 /** 6 core taste domains (rich signal-to-signal matching) */
-export const CORE_TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography'];
+export const CORE_TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting'];
 
 /** 2 preference dimensions (weighted checklist, lighter embedding treatment) */
 export const PREFERENCE_DIMENSIONS: TasteDomain[] = ['Wellness', 'Sustainability'];
@@ -631,7 +631,7 @@ export const DIMENSION_TO_DOMAIN: Record<string, TasteDomain> = {
   'Character': 'Character',
   'Service': 'Service',
   'FoodDrink': 'FoodDrink',
-  'Geography': 'Geography',
+  'Setting': 'Setting',
   'Wellness': 'Wellness',
   'Sustainability': 'Sustainability',
 };
@@ -698,7 +698,7 @@ export const PIPELINE_STAGES = [
   { key: 'character_analysis', label: 'Character' },
   { key: 'service_analysis', label: 'Service' },
   { key: 'fooddrink_analysis', label: 'Food & Drink' },
-  { key: 'setting_analysis', label: 'Geography' },
+  { key: 'setting_analysis', label: 'Setting' },
   { key: 'wellness_analysis', label: 'Wellness' },
   { key: 'sustainability_analysis', label: 'Sustainability' },
   // Layer 4 — Aggregation

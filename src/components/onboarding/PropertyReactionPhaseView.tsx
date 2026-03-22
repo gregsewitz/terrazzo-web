@@ -68,7 +68,7 @@ export default function PropertyReactionPhaseView({
           if (!cancelled && result?.places?.length) {
             setExemplars(
               result.places.slice(0, cardCount).map((p) => ({
-                domain: p.placeType === 'hotel' ? 'Geography' : 'FoodDrink',
+                domain: p.placeType === 'hotel' ? 'Setting' : 'FoodDrink',
                 exemplar: {
                   googlePlaceId: p.googlePlaceId,
                   propertyName: p.propertyName,

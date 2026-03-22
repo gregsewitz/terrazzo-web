@@ -31,7 +31,7 @@ export const createHydrationSlice: StateCreator<SavedState, [], [], SavedHydrati
         ? (dp.source as unknown as ImportedPlace['source'])
         : { type: 'manual' as const, name: '' },
       matchScore: dp.matchScore ?? 0,
-      matchBreakdown: (dp.matchBreakdown as ImportedPlace['matchBreakdown']) || { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Geography: 0, Wellness: 0, Sustainability: 0 },
+      matchBreakdown: (dp.matchBreakdown as ImportedPlace['matchBreakdown']) || { Design: 0, Atmosphere: 0, Character: 0, Service: 0, FoodDrink: 0, Setting: 0, Wellness: 0, Sustainability: 0 },
       matchExplanation: dp.matchExplanation as ImportedPlace['matchExplanation'],
       tasteNote: dp.tasteNote || dp.intelligence?.description || '',
       status: 'available' as const,

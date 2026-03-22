@@ -33,7 +33,7 @@ export interface PlaceDetailContentProps {
   variant: 'desktop' | 'mobile';
 }
 
-const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Geography', 'Wellness', 'Sustainability'];
+const TASTE_DOMAINS: TasteDomain[] = ['Design', 'Atmosphere', 'Character', 'Service', 'FoodDrink', 'Setting', 'Wellness', 'Sustainability'];
 
 function PlaceDetailContent({
   item,

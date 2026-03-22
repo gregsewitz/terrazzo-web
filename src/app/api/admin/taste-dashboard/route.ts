@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     // Build TasteProfile from radarData for LLM scoring
     const userTasteProfile: TasteProfile = {
       Design: 0.5, Atmosphere: 0.5, Character: 0.5,
-      Service: 0.5, FoodDrink: 0.5, Geography: 0.5,
+      Service: 0.5, FoodDrink: 0.5, Setting: 0.5,
       Wellness: 0.5, Sustainability: 0.5,
     };
 
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
       character: 'Character', 'character & identity': 'Character',
       service: 'Service', 'service philosophy': 'Service',
       fooddrink: 'FoodDrink', 'food & drink': 'FoodDrink', 'food & drink identity': 'FoodDrink', food: 'FoodDrink',
-      setting: 'Geography', 'location & context': 'Geography', 'location & setting': 'Geography', location: 'Geography',
+      setting: 'Setting', 'location & context': 'Setting', 'location & setting': 'Setting', location: 'Setting', geography: 'Setting',
       wellness: 'Wellness', 'wellness & body': 'Wellness',
       sustainability: 'Sustainability',
     };

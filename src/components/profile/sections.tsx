@@ -446,7 +446,7 @@ export function TasteNeighborsSection({ gp }: { gp: GeneratedTasteProfile | null
 // ═══════════════════════════════════════════
 const DIMENSION_CERTAINTIES: Record<string, number> = {
   "Design": 92, "Atmosphere": 78, "Character": 85, "Service": 88,
-  "FoodDrink": 90, "Geography": 82, "Wellness": 72, "Sustainability": 65,
+  "FoodDrink": 90, "Setting": 82, "Wellness": 72, "Sustainability": 65,
 };
 
 function DimensionBar({ certainty, color }: { certainty: number; color: string }) {

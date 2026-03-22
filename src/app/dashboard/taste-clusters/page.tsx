@@ -50,7 +50,7 @@ interface DashboardData {
 
 const DOMAIN_COLORS: Record<string, string> = {
   Atmosphere: '#8b5cf6', Character: '#06b6d4', Design: '#ec4899',
-  FoodDrink: '#f59e0b', Service: '#22c55e', Geography: '#3b82f6',
+  FoodDrink: '#f59e0b', Service: '#22c55e', Setting: '#3b82f6',
   Wellness: '#f97316', Sustainability: '#10b981',
 };
 
