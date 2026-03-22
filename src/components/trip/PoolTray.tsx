@@ -50,11 +50,11 @@ const HOLD_DELAY = 180; // ms before drag activates
 
 // ─── Proximity tier styling ───
 const PROXIMITY_TIER_COLORS: Record<string, { bg: string; color: string; icon: PerriandIconName }> = {
-  'same-neighborhood': { bg: '#e6f2f3', color: '#1a6e78', icon: 'location' },
-  'walkable': { bg: '#e0eff1', color: '#2a7a84', icon: 'location' },
-  'short-ride': { bg: '#f5ecd8', color: '#8a6d1b', icon: 'location' },
-  'across-town': { bg: '#f0eded', color: '#6b5e5e', icon: 'location' },
-  'worth-detour': { bg: '#fbe8e3', color: '#c04a2b', icon: 'star' },
+  'same-neighborhood': { bg: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)', icon: 'location' },
+  'walkable': { bg: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)', icon: 'location' },
+  'short-ride': { bg: 'rgba(203,178,121,0.1)', color: 'var(--t-ochre, #B8953F)', icon: 'location' },
+  'across-town': { bg: INK['04'], color: INK['50'], icon: 'location' },
+  'worth-detour': { bg: 'rgba(232,115,90,0.08)', color: 'var(--t-coral)', icon: 'star' },
   'none': { bg: 'transparent', color: 'transparent', icon: 'location' },
 };
 
@@ -549,12 +549,9 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               return (
                 <button
                   key={cluster.label}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleClusterFilter(
-                      isActive ? null : { label: cluster.label, placeIds: new Set(cluster.placeIds) }
-                    );
-                  }}
+                  onClick={() => toggleClusterFilter(
+                    isActive ? null : { label: cluster.label, placeIds: new Set(cluster.placeIds) }
+                  )}
                   className="text-[10px] px-2.5 py-1 rounded-full cursor-pointer transition-all flex items-center gap-1"
                   style={{
                     background: isActive ? 'var(--t-dark-teal)' : 'rgba(58,128,136,0.06)',

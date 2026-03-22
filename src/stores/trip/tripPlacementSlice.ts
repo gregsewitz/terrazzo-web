@@ -468,7 +468,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
           if (dayDest && !candLoc.includes(dayDest) && !dayDest.includes(candLoc.split(',')[0].trim())) continue;
           for (const slotId of preferredSlots) {
             const slot = day.slots.find(s => s.id === slotId);
-            if (slot && (!slot.ghostItems || slot.ghostItems.length < 2)) {
+            if (slot && slot.places.length === 0 && (!slot.ghostItems || slot.ghostItems.length === 0)) {
               const ghostItem: ImportedPlace = {
                 ...candidate,
                 id: `ghost-starred-${candidate.id}`,

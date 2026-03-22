@@ -384,13 +384,17 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
   }, [dayNumber, slot.id, slot.label, selectSlot]);
 
   // Clicking any cell selects the slot for proximity-aware pool browsing.
-  // The SlotOverlay only opens via the explicit "View all" button on overflow cells.
+  // Clicking an already-selected slot opens the quick entry input.
   const handleCellClick = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('[data-grid-card]') || (e.target as HTMLElement).closest('button')) return;
-    if (!quickInputOpen) {
+    if (quickInputOpen) return;
+    if (isSlotSelected) {
+      // Already selected — open quick entry
+      setQuickInputOpen(true);
+    } else {
       handleSelectSlot();
     }
-  }, [quickInputOpen, handleSelectSlot]);
+  }, [quickInputOpen, isSlotSelected, handleSelectSlot]);
 
   /** Fixed-height wrapper to keep all cards uniform */
   const cardSlot = (key: string, children: React.ReactNode, extraProps?: Record<string, string>) => (
@@ -535,6 +539,24 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
               }}
             >
               <span style={{ fontSize: 11, lineHeight: 1 }}>+</span> Add entry
+            </button>
+          </div>
+        )}
+
+        {/* Populated selected cells — compact "+ Add entry" button */}
+        {isSlotSelected && totalCount > 0 && !quickInputOpen && (
+          <div className={`px-${CARD_PX} pb-1.5`}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setQuickInputOpen(true); }}
+              className="w-full rounded flex items-center justify-center gap-1"
+              style={{
+                fontFamily: FONT.sans, fontSize: 10, fontWeight: 500,
+                color: COLOR.darkTeal, background: 'rgba(58,128,136,0.05)',
+                border: `1px dashed rgba(58,128,136,0.3)`,
+                padding: '5px 8px', cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> Add entry
             </button>
           </div>
         )}
