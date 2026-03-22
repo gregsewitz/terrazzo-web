@@ -199,97 +199,48 @@ function DayPlannerGrid() {
   return (
     <div
       ref={containerRef}
-      className="flex h-full overflow-auto"
-      style={{ scrollbarWidth: 'thin', background: 'white' }}
+      className="h-full overflow-auto"
+      style={{
+        scrollbarWidth: 'thin',
+        background: 'white',
+        display: 'grid',
+        gridTemplateColumns: `${ROW_HEADER_W}px repeat(${dayCount}, minmax(${MIN_COL_W}px, ${colWidth}px))`,
+        gridTemplateRows: 'auto 1fr',
+      }}
     >
       <style>{`
         .day-grid-col:hover .day-col-menu-btn { opacity: 0.5 !important; }
         .day-col-menu-btn:hover { opacity: 0.9 !important; }
       `}</style>
 
-      {/* ── ROW HEADER COLUMN (FROZEN) ── */}
+      {/* ═══════════════════════════════════════════════════
+          ROW 1: STICKY HEADER ROW
+          All elements are direct children of the grid scroll
+          container, so position:sticky works reliably.
+         ═══════════════════════════════════════════════════ */}
+
+      {/* ── Corner spacer (sticky top + left, highest z) ── */}
       <div
-        className="flex-shrink-0 sticky left-0 z-20"
         style={{
-          width: ROW_HEADER_W,
+          gridRow: 1,
+          gridColumn: 1,
+          position: 'sticky',
+          top: 0,
+          left: 0,
+          zIndex: 30,
           background: 'white',
           borderRight: '2px solid var(--t-linen)',
+          borderBottom: '1px solid var(--t-linen)',
+          height: HEADER_H + CONTEXT_BAR_H,
         }}
-      >
-        {/* Header spacer (matches day title + context bar) — sticky so it stays pinned at the top-left corner */}
-        <div style={{ height: HEADER_H + CONTEXT_BAR_H, borderBottom: '1px solid var(--t-linen)', position: 'sticky', top: 0, zIndex: 30, background: 'white' }} />
+      />
 
-        {/* Row labels */}
-        {rows.map((row, i) => {
-          if (row.type === 'transport') {
-            return (
-              <div
-                key={`rh-transport-${row.afterSlot}`}
-                className="flex items-center justify-center"
-                style={{
-                  height: row.height,
-                  borderBottom: '1px solid var(--t-linen)',
-                  background: '#fdfcfc',
-                }}
-              >
-                <PerriandIcon name="transport" size={11} color={INK['30']} />
-              </div>
-            );
-          }
-          const slotId = row.slotId!;
-          const slotInfo = SLOT_LABELS[slotId];
-          const icon = SLOT_ICONS[slotId] || 'pin';
-          return (
-            <div
-              key={`rh-${slotId}`}
-              className="flex items-center justify-center"
-              style={{
-                height: row.height,
-                borderBottom: '1px solid var(--t-linen)',
-                position: 'relative',
-                background: 'white',
-              }}
-            >
-              {/* Vertical label — rotated 180° so it reads bottom-to-top */}
-              <div
-                className="flex items-center gap-1.5"
-                style={{
-                  writingMode: 'vertical-lr',
-                  transform: 'rotate(180deg)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span style={{
-                  fontFamily: FONT.mono,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: TEXT.secondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1.5,
-                }}>
-                  {slotInfo.label}
-                </span>
-                <span style={{
-                  fontFamily: FONT.mono,
-                  fontSize: 9,
-                  fontWeight: 500,
-                  color: TEXT.tertiary,
-                }}>
-                  {slotInfo.time}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── DAY COLUMNS ── */}
-      {trip.days.map((day) => {
+      {/* ── Day column headers (sticky top) ── */}
+      {trip.days.map((day, dayIdx) => {
         const isFirstDay = day.dayNumber === trip.days[0]?.dayNumber;
         const destColor = generateDestColor(day.destination || '');
         const shortDay = isFlexible ? '' : (day.dayOfWeek?.slice(0, 3) || '');
         const dateNum = isFlexible ? day.dayNumber : (day.date?.replace(/\D/g, ' ').trim().split(' ').pop() || day.dayNumber);
-        const dayIdx = trip.days.indexOf(day);
         const prevDay = dayIdx > 0 ? trip.days[dayIdx - 1] : null;
         const shortMonth = isFlexible ? '' : (day.date?.match(/^([A-Za-z]+)/)?.[1] || '');
         const prevMonth = prevDay?.date?.match(/^([A-Za-z]+)/)?.[1] || '';
@@ -297,17 +248,15 @@ function DayPlannerGrid() {
 
         return (
           <div
-            key={day.dayNumber}
+            key={`hdr-${day.dayNumber}`}
             className="day-grid-col"
-            {...(isFirstDay ? { 'data-tour': 'day-columns' } : {})}
             style={{
-              width: colWidth,
-              minWidth: MIN_COL_W,
-              flexShrink: 0,
-              flexGrow: 1,
-              background: currentDay === day.dayNumber ? '#fbf8f7' : 'white',
-              transition: 'background 150ms ease',
-              position: 'relative',
+              gridRow: 1,
+              gridColumn: dayIdx + 2,
+              position: 'sticky',
+              top: 0,
+              zIndex: 20,
+              background: 'white',
             }}
           >
             {/* ── Day context menu ── */}
@@ -361,9 +310,6 @@ function DayPlannerGrid() {
                 </div>
               )}
             </div>
-
-            {/* ── Column headers (sticky at top during vertical scroll) ── */}
-            <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'white' }}>
 
             {/* ── Column header: day title ── */}
             <div
@@ -527,12 +473,107 @@ function DayPlannerGrid() {
               </div>
             )}
 
-            </div>{/* ── end sticky header wrapper ── */}
+          </div>
+        );
+      })}
 
-            {/* ── Grid rows ── */}
+      {/* ═══════════════════════════════════════════════════
+          ROW 2: CONTENT AREA
+          Row labels (sticky left) + day grid cells.
+         ═══════════════════════════════════════════════════ */}
+
+      {/* ── Row header column (sticky left) ── */}
+      <div
+        style={{
+          gridRow: 2,
+          gridColumn: 1,
+          position: 'sticky',
+          left: 0,
+          zIndex: 20,
+          background: 'white',
+          borderRight: '2px solid var(--t-linen)',
+        }}
+      >
+        {rows.map((row) => {
+          if (row.type === 'transport') {
+            return (
+              <div
+                key={`rh-transport-${row.afterSlot}`}
+                className="flex items-center justify-center"
+                style={{
+                  height: row.height,
+                  borderBottom: '1px solid var(--t-linen)',
+                  background: '#fdfcfc',
+                }}
+              >
+                <PerriandIcon name="transport" size={11} color={INK['30']} />
+              </div>
+            );
+          }
+          const slotId = row.slotId!;
+          const slotInfo = SLOT_LABELS[slotId];
+          return (
+            <div
+              key={`rh-${slotId}`}
+              className="flex items-center justify-center"
+              style={{
+                height: row.height,
+                borderBottom: '1px solid var(--t-linen)',
+                position: 'relative',
+                background: 'white',
+              }}
+            >
+              <div
+                className="flex items-center gap-1.5"
+                style={{
+                  writingMode: 'vertical-lr',
+                  transform: 'rotate(180deg)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{
+                  fontFamily: FONT.mono,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT.secondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1.5,
+                }}>
+                  {slotInfo.label}
+                </span>
+                <span style={{
+                  fontFamily: FONT.mono,
+                  fontSize: 9,
+                  fontWeight: 500,
+                  color: TEXT.tertiary,
+                }}>
+                  {slotInfo.time}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Day content columns ── */}
+      {trip.days.map((day, dayIdx) => {
+        const isFirstDay = day.dayNumber === trip.days[0]?.dayNumber;
+
+        return (
+          <div
+            key={`content-${day.dayNumber}`}
+            className="day-grid-col"
+            {...(isFirstDay ? { 'data-tour': 'day-columns' } : {})}
+            style={{
+              gridRow: 2,
+              gridColumn: dayIdx + 2,
+              background: currentDay === day.dayNumber ? '#fbf8f7' : 'white',
+              transition: 'background 150ms ease',
+              position: 'relative',
+            }}
+          >
             {rows.map((row) => {
               if (row.type === 'transport') {
-                // Transport row — show banners for this day at this boundary
                 const isEarlyDeparture = row.afterSlot === '__before__';
                 const dayTransports = isEarlyDeparture
                   ? getTransportsBeforeSlots(day.transport)
@@ -574,12 +615,10 @@ function DayPlannerGrid() {
                 );
               }
 
-              // Slot row — render GridCell
               const slotId = row.slotId!;
               const slot = day.slots.find(s => s.id === slotId);
               if (!slot) return <div key={`s-${day.dayNumber}-${slotId}`} style={{ height: row.height }} />;
 
-              // Tag the first slot of the first day for the guided tour
               const isFirstSlot = isFirstDay && slotId === SLOT_ORDER[0];
 
               return (
