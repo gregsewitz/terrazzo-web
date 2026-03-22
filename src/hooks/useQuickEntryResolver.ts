@@ -5,6 +5,9 @@ import type { QuickEntry, ImportedPlace } from '@/types';
 
 // Stagger delay between resolution attempts to avoid hammering the API
 const STAGGER_MS = 800;
+// Auth retry: if the first attempt gets 401, wait and retry (token may be refreshing)
+const AUTH_RETRY_DELAY = 2000;
+const MAX_AUTH_RETRIES = 2;
 
 /** Strip time expressions from activityContext so they don't show redundantly in the subtitle
  *  alongside PlaceTimeEditor's formatted time display. */
@@ -39,6 +42,8 @@ export function useQuickEntryResolver() {
 
   // Track which entries we've already attempted to resolve
   const attemptedRef = useRef<Set<string>>(new Set());
+  // Track failure count per entry to avoid infinite retry loops
+  const failCountRef = useRef<Map<string, number>>(new Map());
 
   const trip = trips.find(t => t.id === currentTripId);
 
@@ -61,19 +66,36 @@ export function useQuickEntryResolver() {
     updateQuickEntry(dayNumber, slotId, entry.id, { status: 'resolving' });
 
     try {
-      const data = await apiFetch<any>('/api/places/resolve-quick-entry', {
-        method: 'POST',
-        body: JSON.stringify({
-          text: entry.text,
-          label: entry.label,
-          category: entry.category,
-          destination,
-          lat,
-          lng,
-        }),
-      });
+      // Retry on auth errors (401) — Supabase token may be mid-refresh
+      let data: any;
+      let lastErr: unknown;
+      for (let attempt = 0; attempt <= MAX_AUTH_RETRIES; attempt++) {
+        try {
+          data = await apiFetch<any>('/api/places/resolve-quick-entry', {
+            method: 'POST',
+            body: JSON.stringify({
+              text: entry.text,
+              label: entry.label,
+              category: entry.category,
+              destination,
+              lat,
+              lng,
+            }),
+          });
+          break; // success
+        } catch (err) {
+          lastErr = err;
+          const msg = err instanceof Error ? err.message : '';
+          if ((msg.includes('401') || msg.includes('Unauthorized')) && attempt < MAX_AUTH_RETRIES) {
+            console.warn(`[useQuickEntryResolver] Auth retry ${attempt + 1}/${MAX_AUTH_RETRIES} for "${entry.label}"`);
+            await new Promise(r => setTimeout(r, AUTH_RETRY_DELAY));
+            continue;
+          }
+          throw err; // non-auth error or max retries exhausted
+        }
+      }
 
-      if (data.resolved && data.place) {
+      if (data?.resolved && data.place) {
         // Build ImportedPlace from the resolved data
         // If the classifier detected an activity context (e.g., "9:30am boot camp class"),
         // store it so the card can display the activity prominently.
@@ -116,6 +138,12 @@ export function useQuickEntryResolver() {
     } catch (err) {
       console.error('[useQuickEntryResolver] Resolution failed:', err);
       updateQuickEntry(dayNumber, slotId, entry.id, { status: 'confirmed' });
+      // Allow retry on next render cycle, but cap at 3 total attempts
+      const fails = (failCountRef.current.get(entryKey) || 0) + 1;
+      failCountRef.current.set(entryKey, fails);
+      if (fails < 3) {
+        attemptedRef.current.delete(entryKey);
+      }
     }
   }, [updateQuickEntry, resolveQuickEntry]);
 
@@ -142,6 +170,7 @@ export function useQuickEntryResolver() {
   // Clear attempted set when trip changes
   useEffect(() => {
     attemptedRef.current.clear();
+    failCountRef.current.clear();
   }, [currentTripId]);
 
   /**
