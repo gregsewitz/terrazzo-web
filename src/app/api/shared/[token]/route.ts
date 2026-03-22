@@ -114,8 +114,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
           endDate: trip.endDate,
           groupSize: trip.groupSize,
           groupType: trip.groupType,
-          days: trip.days,
+          days: trip.days,     // Full TripDay[] with ImportedPlace[] in slots
+          pool: trip.pool,     // Unplaced items
           status: trip.status,
+          vibe: trip.vibe,
         },
       },
     }, { headers: cacheHeaders });

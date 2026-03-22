@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   Trip, ImportedPlace,
-  getSourceStyle, getSourceLabel,
+  getSourceStyle,
 } from '@/types';
 import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import { FONT, TEXT, COLOR, SECTION } from '@/constants/theme';
@@ -231,15 +231,6 @@ export function PlaceRow({ place, onTap, time }: { place: ImportedPlace; onTap: 
           {place.location}
         </span>
       </div>
-      {/* Source indicator */}
-      {place.source?.type && place.source.type !== 'manual' && place.source.type !== 'text' && (
-        <span style={{
-          fontFamily: FONT.sans, fontSize: 10, fontWeight: 600, color: SECTION.editorial.label,
-          textTransform: 'uppercase', letterSpacing: '0.04em',
-        }}>
-          {getSourceLabel(place)}
-        </span>
-      )}
     </div>
   );
 }

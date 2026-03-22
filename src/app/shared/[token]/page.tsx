@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-client';
@@ -10,6 +10,8 @@ import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/plac
 import { trackInteraction } from '@/lib/interaction-tracker';
 import { getDisplayLocation } from '@/lib/place-display';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
+
+const SharedTripView = lazy(() => import('@/components/shared/SharedTripView'));
 import GoogleMapView from '@/components/maps/GoogleMapView';
 
 
@@ -59,17 +61,10 @@ interface SharedTripData {
       endDate: string | null;
       groupSize: number | null;
       groupType: string | null;
-      days: Array<{
-        dayNumber: number;
-        destination?: string;
-        slots: Array<{
-          id: string;
-          label: string;
-          time: string;
-          placed?: { name: string; type: string; location?: string };
-        }>;
-      }>;
+      days: import('@/types').TripDay[];
+      pool?: import('@/types').ImportedPlace[];
       status: string;
+      vibe: string | null;
     };
   };
 }
@@ -386,118 +381,22 @@ export default function SharedViewPage() {
 
   // ─── Shared Trip View ───
   if (data.type === 'trip') {
-    const { trip } = data.data;
-    const days = (trip.days || []) as Array<{
-      dayNumber: number;
-      destination?: string;
-      slots: Array<{
-        id: string;
-        label: string;
-        time: string;
-        placed?: { name: string; type: string; location?: string };
-      }>;
-    }>;
-
     return (
-      <div className="min-h-screen pb-16" style={{ background: 'var(--t-cream)', maxWidth: 640, margin: '0 auto' }}>
-        <div className="px-4 pt-6">
-          {/* Terrazzo branding */}
-          <div className="text-center mb-6">
-            <img
-              src="/brand/logo-pixellance-navy.svg"
-              alt="Terrazzo"
-              style={{ height: 24, width: 'auto', display: 'inline-block' }}
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--t-cream)' }}>
+          <div className="text-center">
+            <div
+              className="inline-block w-6 h-6 rounded-full border-2 animate-spin mb-3"
+              style={{ borderColor: INK['15'], borderTopColor: INK['60'] }}
             />
           </div>
-
-          {/* Trip header */}
-          <div className="text-center mb-6">
-            <h1
-              style={{ fontFamily: FONT.serif, fontSize: 22, fontStyle: 'italic', color: 'var(--t-ink)', marginBottom: 4 }}
-            >
-              {trip.name}
-            </h1>
-            <p className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-              Shared by {data.ownerName} · {trip.location}
-            </p>
-            {trip.startDate && (
-              <p className="text-[10px] mt-1" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
-                {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                {trip.endDate && ` – ${new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-              </p>
-            )}
-          </div>
-
-          {/* Day-by-day itinerary */}
-          {days.map(day => (
-            <div key={day.dayNumber} className="mb-5">
-              <div className="flex items-center gap-2 mb-2">
-                <span
-                  className="text-[10px] font-bold uppercase tracking-wider"
-                  style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-                >
-                  Day {day.dayNumber}
-                </span>
-                {day.destination && (
-                  <span className="text-[10px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
-                    {day.destination}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {day.slots.map(slot => (
-                  <div
-                    key={slot.id}
-                    className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{
-                      background: slot.placed ? 'white' : 'transparent',
-                      border: slot.placed ? '1px solid var(--t-linen)' : '1px dashed var(--t-linen)',
-                    }}
-                  >
-                    <div
-                      className="text-[9px] font-medium uppercase tracking-wider w-16 flex-shrink-0"
-                      style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
-                    >
-                      {slot.label}
-                    </div>
-                    {slot.placed ? (
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div
-                          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{
-                            background: THUMB_GRADIENTS[slot.placed.type as keyof typeof THUMB_GRADIENTS] || THUMB_GRADIENTS.restaurant,
-                          }}
-                        >
-                          <PerriandIcon
-                            name={TYPE_ICONS[slot.placed.type as keyof typeof TYPE_ICONS] || 'location'}
-                            size={12}
-                            color={TYPE_BRAND_COLORS[slot.placed.type as keyof typeof TYPE_BRAND_COLORS] || INK['70']}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-[12px] font-medium truncate" style={{ color: 'var(--t-ink)', fontFamily: FONT.sans }}>
-                            {slot.placed.name}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-[11px]" style={{ color: TEXT.secondary, fontFamily: FONT.sans }}>
-                        Open
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {days.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-[12px]" style={{ color: TEXT.secondary }}>No itinerary yet</p>
-            </div>
-          )}
         </div>
-      </div>
+      }>
+        <SharedTripView
+          trip={data.data.trip}
+          ownerName={data.ownerName}
+        />
+      </Suspense>
     );
   }
 

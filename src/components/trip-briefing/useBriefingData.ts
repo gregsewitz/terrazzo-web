@@ -27,16 +27,13 @@ export function useBriefingData(trip: Trip) {
     // Friends — empty since friendAttribution is removed
     const friends: Array<{ name: string; count: number; places: string[]; note?: string }> = [];
 
-    // Featured places — ones with the best editorial content (insights, tips, what to order)
+    // Featured places — all confirmed itinerary places, richest editorial content first
     const featured = [...allPlaces]
-      .filter(p => p.terrazzoInsight?.why || (p.whatToOrder && p.whatToOrder.length > 0) || p.tips?.length)
       .sort((a, b) => {
-        // Prefer places with more editorial richness
         const scoreA = (a.terrazzoInsight?.why ? 2 : 0) + (a.whatToOrder?.length ? 1 : 0) + (a.tips?.length ? 1 : 0);
         const scoreB = (b.terrazzoInsight?.why ? 2 : 0) + (b.whatToOrder?.length ? 1 : 0) + (b.tips?.length ? 1 : 0);
         return scoreB - scoreA;
-      })
-      .slice(0, 6);
+      });
 
     // Hotels
     const hotels = trip.days
