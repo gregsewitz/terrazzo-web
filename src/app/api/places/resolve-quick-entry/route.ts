@@ -59,13 +59,20 @@ Respond with ONLY a JSON object, no markdown:
 
 Rules:
 - Extract just the place name, stripping action words like "Dinner at", "Walk around", "Visit", "Grab coffee at", "Check out"
+- Transportation, transit, and logistics notes that mention places should NOT be classified as places — they are notes about getting somewhere, not about visiting the place itself
 - "Dinner at the Brasserie at Estelle Manor" → {"isPlace": true, "placeName": "Brasserie at Estelle Manor", "confidence": 0.95}
 - "Walk around Shoreditch" → {"isPlace": true, "placeName": "Shoreditch", "confidence": 0.85}
 - "The Connaught Bar" → {"isPlace": true, "placeName": "The Connaught Bar", "confidence": 0.95}
 - "Pack bags" → {"isPlace": false, "placeName": null, "confidence": 0.95}
 - "Massages" → {"isPlace": false, "placeName": null, "confidence": 0.7}
 - "Massages at COMO Shambhala" → {"isPlace": true, "placeName": "COMO Shambhala", "confidence": 0.9}
-- "1:10pm flight to Iguazu" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "1:10pm flight to Iguazu" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- "Drive to the Cotswolds" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "Train to Oxford at 9am" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- "Uber to airport" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- "Pickup rental car from Sixt Liverpool St at 2pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
+- "Car service to Heathrow" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- "Check out of hotel by 11am" → {"isPlace": false, "placeName": null, "confidence": 0.9}
 - Confidence reflects how certain you are in the classification`,
       }],
     });
