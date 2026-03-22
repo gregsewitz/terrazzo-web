@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 /**
  * extract-signal-corpus.mjs
- * Extracts the signal corpus from PlaceIntelligence for clustering.
+ * Extracts the signal corpus from PlaceIntelligence AND TasteNode for clustering.
+ *
+ * Includes both property signals (from enrichment) and user signals (from onboarding)
+ * so that the clustering assigns both vocabularies to the same clusters. Without this,
+ * user signals like "mountain-views" land in different clusters than property signals
+ * like "floor-to-ceiling-mountain-views", causing cosine similarity to be near-zero
+ * even when they describe the same taste concept.
  *
  * Outputs:
  *   signal-corpus.json      — [{s, d, df}, ...] signals with freq >= 2 (for K-means clustering)
@@ -23,25 +29,48 @@ if (!DATABASE_URL) {
 const pool = new pg.Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 async function main() {
-  console.log('Extracting signal corpus from PlaceIntelligence...\n');
+  console.log('Extracting signal corpus from PlaceIntelligence + TasteNode...\n');
 
-  // Extract ALL signals with their frequencies (no minimum threshold)
+  // Extract ALL signals with their frequencies from BOTH sources:
+  // 1. PlaceIntelligence — property enrichment signals (the bulk of the corpus)
+  // 2. TasteNode — user onboarding/taste signals (ensures user vocabulary
+  //    gets proper cluster assignments instead of falling through to word-overlap)
+  //
+  // User signals are counted as doc_freq based on number of distinct users
+  // that have that signal, then combined with property frequencies.
   const { rows } = await pool.query(`
-    WITH exploded AS (
+    WITH property_signals AS (
       SELECT
         s->>'signal' as signal,
         s->>'dimension' as dimension,
-        "id" as place_id
+        "id" as source_id
       FROM "PlaceIntelligence",
         jsonb_array_elements(signals::jsonb) s
       WHERE status = 'complete' AND "signalCount" > 0
+    ),
+    user_signals AS (
+      SELECT
+        signal,
+        CASE
+          WHEN domain = 'Geography' THEN 'Setting'
+          ELSE domain
+        END as dimension,
+        "userId" as source_id
+      FROM "TasteNode"
+      WHERE "isActive" = true
+        AND domain NOT IN ('Context', 'TasteAxes', 'Core', 'Emotion')
+    ),
+    combined AS (
+      SELECT signal, dimension, source_id FROM property_signals
+      UNION ALL
+      SELECT signal, dimension, source_id FROM user_signals
     ),
     freq AS (
       SELECT
         signal,
         dimension,
-        COUNT(DISTINCT place_id) as doc_freq
-      FROM exploded
+        COUNT(DISTINCT source_id) as doc_freq
+      FROM combined
       GROUP BY signal, dimension
     )
     SELECT signal, dimension, doc_freq::int as doc_freq
@@ -121,7 +150,12 @@ async function main() {
     SELECT COUNT(*) as n FROM "PlaceIntelligence"
     WHERE status = 'complete' AND "signalCount" > 0
   `);
+  const totalUsers = await pool.query(`
+    SELECT COUNT(DISTINCT "userId") as n FROM "TasteNode"
+    WHERE "isActive" = true AND domain NOT IN ('Context', 'TasteAxes', 'Core', 'Emotion')
+  `);
   console.log(`\nTotal enriched properties: ${totalProps.rows[0].n}`);
+  console.log(`Total users with taste signals: ${totalUsers.rows[0].n}`);
   console.log(`Signals in corpus (freq >= 2): ${corpus.length}`);
   console.log(`Singletons (freq == 1): ${singletons.length}`);
   console.log(`Total unique signals: ${dimensions.length}`);

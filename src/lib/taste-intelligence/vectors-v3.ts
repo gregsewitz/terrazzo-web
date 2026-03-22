@@ -298,43 +298,27 @@ export async function lookupSignalClusterAsync(signal: string): Promise<number |
 }
 
 // ─── Semantic embedding cache ────────────────────────────────────────────────
-// Caches signal → soft cluster activations discovered via OpenAI embedding.
-// Each signal maps to its top-K cluster activations (weighted by cosine similarity
-// to centroids) instead of a single hard cluster assignment.
-
-interface SoftClusterActivation {
-  clusterId: number;
-  weight: number;  // cosine similarity to centroid, normalized so sum = 1.0
-}
-
-const _semanticClusterCache = new Map<string, SoftClusterActivation[]>();
-
-/** Number of clusters to soft-activate per semantically routed signal */
-const SOFT_ACTIVATION_TOP_K = 5;
+// Caches signal → cluster mappings discovered via OpenAI embedding so we don't
+// re-embed the same novel signal across multiple vector computations.
+// This is an interim fallback for signals not yet in the clustering corpus.
+// The proper fix is to include user signals (TasteNode) in the clustering
+// corpus so they get direct-lookup assignments like property signals.
+const _semanticClusterCache = new Map<string, number>();
 
 /**
- * Minimum cosine similarity to a centroid to be included in soft activation.
- * Prevents very weak activations from adding noise.
- */
-const SOFT_ACTIVATION_MIN_SIM = 0.15;
-
-/**
- * Batch-embed novel signals and find their top-K nearest cluster centroids.
+ * Batch-embed novel signals and find their nearest cluster centroid.
  * Uses a single OpenAI API call for all signals, then cosine-matches each
- * against the 400 cluster centroids.
+ * against the 400 cluster centroids for single-cluster assignment.
  *
- * Returns soft activations: each signal maps to up to SOFT_ACTIVATION_TOP_K
- * clusters weighted by cosine similarity. This is critical for abstract user
- * signals like "mountain-views" which are semantically related to multiple
- * clusters across domains (Setting:mountain-wilderness, Design:floor-to-ceiling-glass,
- * Setting:remote-wilderness, etc.).
+ * This is an interim fallback for signals generated between re-clustering runs.
+ * Once the clustering corpus includes user signals, direct lookup handles everything.
  *
- * Returns a Map from normalized signal text → SoftClusterActivation[].
+ * Returns a Map from normalized signal text → cluster index.
  */
 async function batchEmbedSignalsToClusters(
   signals: string[],
-): Promise<Map<string, SoftClusterActivation[]>> {
-  const result = new Map<string, SoftClusterActivation[]>();
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
   if (signals.length === 0) return result;
 
   const { clusterCentroids } = getClusterState();
@@ -394,32 +378,23 @@ async function batchEmbedSignalsToClusters(
       const embedding = embeddings[i].embedding;
       const embNorm = Math.sqrt(embedding.reduce((s, v) => s + v * v, 0));
 
-      // Compute cosine similarity to ALL centroids
-      const allSims: Array<{ cid: number; sim: number }> = [];
+      let bestCluster = 0;
+      let bestSim = -Infinity;
+
       for (const { cid, centroid, norm: centNorm } of centroidEntries) {
         let dot = 0;
         for (let j = 0; j < embedding.length && j < centroid.length; j++) {
           dot += embedding[j] * centroid[j];
         }
         const sim = dot / (embNorm * centNorm + 1e-10);
-        if (sim >= SOFT_ACTIVATION_MIN_SIM) {
-          allSims.push({ cid, sim });
+        if (sim > bestSim) {
+          bestSim = sim;
+          bestCluster = cid;
         }
       }
 
-      // Take top K by similarity
-      allSims.sort((a, b) => b.sim - a.sim);
-      const topK = allSims.slice(0, SOFT_ACTIVATION_TOP_K);
-
-      // Normalize weights so they sum to 1.0
-      const totalSim = topK.reduce((s, x) => s + x.sim, 0);
-      const activations: SoftClusterActivation[] = topK.map(x => ({
-        clusterId: x.cid,
-        weight: totalSim > 0 ? x.sim / totalSim : 1.0 / topK.length,
-      }));
-
-      result.set(uncached[i], activations);
-      _semanticClusterCache.set(uncached[i], activations);
+      result.set(uncached[i], bestCluster);
+      _semanticClusterCache.set(uncached[i], bestCluster);
     }
   } catch (err) {
     console.warn('[vectors-v3] Batch embedding failed, falling back to word-overlap:', err);
@@ -433,16 +408,11 @@ async function batchEmbedSignalsToClusters(
 // activations that push vectors apart in cosine similarity.
 //
 // v3.7: Now async — signals not in the direct signalToCluster mapping are batch-embedded
-// via OpenAI and soft-activated across their top-K nearest cluster centroids. This fixes
-// the vocabulary mismatch between user onboarding signals (e.g. "mountain-views") and
-// property enrichment signals (e.g. "floor-to-ceiling-mountain-views") that previously
-// caused semantically identical concepts to land in different clusters.
-//
-// Soft activation is critical for abstract user signals that span multiple domains:
-// "mountain-views" should activate Setting:mountain-wilderness (primary),
-// Setting:remote-wilderness, AND Design:floor-to-ceiling-glass — not just one.
-// Property signals use hard (single-cluster) activation via direct lookup since
-// they're already in the 131K mapping and are domain-specific by construction.
+// via OpenAI and routed to their nearest cluster centroid semantically. This is an
+// interim fallback for signals generated between re-clustering runs (e.g. user
+// onboarding signals that haven't been included in the clustering corpus yet).
+// The proper fix is to include all signal sources (TasteNode + PlaceIntelligence)
+// in the clustering corpus so direct lookup covers everything.
 
 async function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: number }>): Promise<number[]> {
   const { neighborMap, signalToCluster } = getClusterState();
@@ -466,12 +436,12 @@ async function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: 
     }
   }
 
-  // Batch-embed all unmapped signals in one API call → soft cluster activations
+  // Batch-embed all unmapped signals in one API call → nearest centroid assignment
   const semanticMappings = unmappedSignals.length > 0
     ? await batchEmbedSignalsToClusters(unmappedSignals)
-    : new Map<string, SoftClusterActivation[]>();
+    : new Map<string, number>();
 
-  // Process mapped signals (direct lookup → hard single-cluster activation)
+  // Process mapped signals (direct lookup)
   for (const { text, confidence, bucket } of mapped) {
     const idf = getIdfWeight(text);
     const weightedConfidence = confidence * idf;
@@ -486,11 +456,11 @@ async function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: 
     }
   }
 
-  // Process unmapped signals (semantic soft activation across top-K clusters)
+  // Process unmapped signals (semantically routed to nearest centroid)
   for (const { text, confidence } of unmappedEntries) {
     const normalized = text.toLowerCase().trim();
-    const activations = semanticMappings.get(normalized);
-    if (!activations || activations.length === 0) {
+    const bucket = semanticMappings.get(normalized);
+    if (bucket === undefined) {
       // Embedding failed for this signal — fall back to word-overlap
       const fallbackBucket = lookupSignalCluster(text);
       const idf = getIdfWeight(text);
@@ -508,18 +478,13 @@ async function buildSignalFeaturesV3(signals: Array<{ text: string; confidence: 
 
     const idf = getIdfWeight(text);
     const weightedConfidence = confidence * idf;
+    features[bucket] += weightedConfidence;
+    directHits.add(bucket);
 
-    // Soft-activate each of the top-K clusters, weighted by centroid similarity
-    for (const { clusterId, weight: clusterWeight } of activations) {
-      features[clusterId] += weightedConfidence * clusterWeight;
-      directHits.add(clusterId);
-
-      // Neighbor bleed from each soft-activated cluster
-      const neighbors = neighborMap.get(clusterId);
-      if (neighbors) {
-        for (const { idx, weight: neighWeight } of neighbors) {
-          features[idx] += weightedConfidence * clusterWeight * neighWeight;
-        }
+    const neighbors = neighborMap.get(bucket);
+    if (neighbors) {
+      for (const { idx, weight } of neighbors) {
+        features[idx] += weightedConfidence * weight;
       }
     }
   }
