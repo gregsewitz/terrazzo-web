@@ -877,6 +877,173 @@ export function splitByTransportResets(anchors: PlacedAnchor[], thresholdMi = 10
   return segments;
 }
 
+// ─── Split-Day Slot Destination Resolution ──────────────────────────────────
+
+export interface SlotDestinationMap {
+  /** Per-slot effective destination */
+  slotDestinations: Map<string, string>;
+  /** Whether this day spans multiple destinations */
+  isSplitDay: boolean;
+  /** The departure destination (early part of day) */
+  departureDest: string | null;
+  /** The arrival destination (later part of day) */
+  arrivalDest: string | null;
+  /** The slot index where the transition occurs (slots after this index use arrivalDest) */
+  transitionAfterSlotIndex: number;
+}
+
+/**
+ * Resolve which destination is active at each slot on a given day.
+ *
+ * For a "split day" (e.g., morning in London → evening in Cotswolds),
+ * returns different destinations for pre-transition and post-transition slots.
+ *
+ * Detection order:
+ *   1. Transport events with afterSlot (explicit move marker)
+ *   2. Quick entries with transport keywords (implicit move)
+ *   3. Geographic distance between placed items (automatic detection)
+ *   4. Destination mismatch between previous day's hotel and current day's hotel
+ */
+export function resolveSlotDestinations(
+  day: TripDay,
+  prevDay: TripDay | null,
+  tripDestinations: string[],
+): SlotDestinationMap {
+  const defaultDest = day.destination || tripDestinations[0] || '';
+  const result = new Map<string, string>();
+  SLOT_ORDER.forEach(s => result.set(s, defaultDest));
+
+  // ─── Detect transition boundary ─────────────────────────────────────────
+
+  let transitionAfterSlotIndex = -1;
+  let departureDest: string | null = null;
+  let arrivalDest: string | null = null;
+
+  // 1. Transport events with afterSlot
+  if (day.transport?.length) {
+    for (const transport of day.transport) {
+      if (transport.afterSlot) {
+        const idx = SLOT_ORDER.indexOf(transport.afterSlot);
+        if (idx >= 0) {
+          transitionAfterSlotIndex = idx;
+          departureDest = transport.from || null;
+          arrivalDest = transport.to || null;
+          break;
+        }
+      }
+    }
+  }
+
+  // 2. Quick entries with transport keywords (e.g., "drive to the cotswolds")
+  if (transitionAfterSlotIndex < 0) {
+    const transportKeywords = /\b(drive|train|flight|fly|bus|ferry|uber|taxi|car service|head|travel|transfer)\b.*\b(to|towards|for)\b/i;
+    for (let si = 0; si < SLOT_ORDER.length; si++) {
+      const slot = day.slots.find(s => s.id === SLOT_ORDER[si]);
+      if (!slot?.quickEntries?.length) continue;
+      for (const qe of slot.quickEntries) {
+        if (transportKeywords.test(qe.text)) {
+          transitionAfterSlotIndex = si;
+          // Try to extract destination from the text: "drive to the Cotswolds" → "Cotswolds"
+          const toMatch = qe.text.match(/\b(?:to|towards|for)\s+(?:the\s+)?(.+?)(?:\s+at\s+|\s*$)/i);
+          if (toMatch) {
+            const extractedDest = toMatch[1].trim();
+            // Match against trip destinations
+            const matched = tripDestinations.find(
+              td => td.toLowerCase().includes(extractedDest.toLowerCase()) ||
+                    extractedDest.toLowerCase().includes(td.toLowerCase())
+            );
+            arrivalDest = matched || extractedDest;
+          }
+          break;
+        }
+      }
+      if (transitionAfterSlotIndex >= 0) break;
+    }
+  }
+
+  // 3. Geographic distance between placed items
+  if (transitionAfterSlotIndex < 0) {
+    const anchors = extractPlacedAnchors(day);
+    const resets = detectTransportResets(anchors);
+    if (resets.length > 0) {
+      const resetSlotIdx = SLOT_ORDER.indexOf(resets[0]);
+      if (resetSlotIdx > 0) {
+        transitionAfterSlotIndex = resetSlotIdx - 1;
+        // Determine destinations from the anchors' locations
+        const segments = splitByTransportResets(anchors);
+        if (segments.length >= 2) {
+          // Use placed items' location strings to detect destination
+          const firstAnchor = segments[0][0];
+          const lastAnchor = segments[segments.length - 1][0];
+          const firstPlace = day.slots.flatMap(s => s.places).find(p => p.id === firstAnchor.id);
+          const lastPlace = day.slots.flatMap(s => s.places).find(p => p.id === lastAnchor.id);
+          if (firstPlace?.location) {
+            departureDest = tripDestinations.find(
+              td => firstPlace.location.toLowerCase().includes(td.toLowerCase())
+            ) || null;
+          }
+          if (lastPlace?.location) {
+            arrivalDest = tripDestinations.find(
+              td => lastPlace.location.toLowerCase().includes(td.toLowerCase())
+            ) || null;
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Hotel mismatch: current day's hotel in different city than previous day
+  if (transitionAfterSlotIndex < 0 && prevDay) {
+    const prevDest = prevDay.destination || '';
+    const currDest = day.destination || '';
+    if (prevDest && currDest && prevDest.toLowerCase() !== currDest.toLowerCase()) {
+      // Infer this is a travel day — default transition after morning (checkout → travel → arrive)
+      transitionAfterSlotIndex = SLOT_ORDER.indexOf('morning');
+      departureDest = prevDest;
+      arrivalDest = currDest;
+    }
+  }
+
+  // ─── Apply transition to slot map ───────────────────────────────────────
+
+  if (transitionAfterSlotIndex < 0) {
+    return {
+      slotDestinations: result,
+      isSplitDay: false,
+      departureDest: null,
+      arrivalDest: null,
+      transitionAfterSlotIndex: -1,
+    };
+  }
+
+  // Fill in departure/arrival from available context
+  if (!departureDest) {
+    departureDest = prevDay?.destination || tripDestinations.find(
+      d => d.toLowerCase() !== (arrivalDest || defaultDest).toLowerCase()
+    ) || defaultDest;
+  }
+  if (!arrivalDest) {
+    arrivalDest = day.destination || day.hotelInfo?.name?.split(',')[0] || defaultDest;
+  }
+
+  // Slots up to and including the transition slot use departure dest
+  for (let i = 0; i <= transitionAfterSlotIndex; i++) {
+    result.set(SLOT_ORDER[i], departureDest);
+  }
+  // Slots after use arrival dest
+  for (let i = transitionAfterSlotIndex + 1; i < SLOT_ORDER.length; i++) {
+    result.set(SLOT_ORDER[i], arrivalDest);
+  }
+
+  return {
+    slotDestinations: result,
+    isSplitDay: true,
+    departureDest,
+    arrivalDest,
+    transitionAfterSlotIndex,
+  };
+}
+
 // ─── Missing Coordinates Nudge ───────────────────────────────────────────────
 
 /**

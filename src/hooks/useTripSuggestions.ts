@@ -12,6 +12,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { SuggestionItem, SuggestionResponse, ImportedPlace, Trip } from '@/types';
 import { SLOT_TYPE_AFFINITY } from '@/stores/poolStore';
 import { apiFetch } from '@/lib/api-client';
+import { resolveSlotDestinations } from '@/lib/proximity';
 
 interface CacheEntry {
   suggestions: SuggestionItem[];
@@ -69,10 +70,31 @@ export function useTripSuggestions(
     return trip.days.find(d => d.dayNumber === dayNumber) || null;
   }, [trip, dayNumber]);
 
-  // Filter library candidates for this destination
+  // Resolve per-slot destinations for split days
+  const prevDay = useMemo(() => {
+    if (!trip || dayNumber === null) return null;
+    return trip.days.find(d => d.dayNumber === dayNumber - 1) || null;
+  }, [trip, dayNumber]);
+
+  const slotDestMap = useMemo(() => {
+    if (!day || !trip) return null;
+    const tripDests = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean)) as string[];
+    return resolveSlotDestinations(day, prevDay, tripDests);
+  }, [day, prevDay, trip]);
+
+  // Filter library candidates — on split days, match against ALL active destinations
   const candidates = useMemo(() => {
-    if (!day?.destination || !libraryPlaces.length) return [];
-    const dest = day.destination.toLowerCase();
+    if (!day || !libraryPlaces.length) return [];
+
+    // Collect all unique destinations active on this day (may be 2 for split days)
+    const activeDests = new Set<string>();
+    if (slotDestMap) {
+      for (const dest of slotDestMap.slotDestinations.values()) {
+        if (dest) activeDests.add(dest.toLowerCase());
+      }
+    }
+    if (day.destination) activeDests.add(day.destination.toLowerCase());
+    if (activeDests.size === 0) return [];
 
     // Get all placed IDs to exclude
     const placedIds = new Set(
@@ -92,15 +114,16 @@ export function useTripSuggestions(
       .filter(p => {
         if (placedIds.has(p.id)) return false;
         if (!p.google?.lat || !p.google?.lng) return false;
-        // Location must roughly match destination
-        const locMatch = p.location?.toLowerCase().includes(dest) || false;
+        // Location must match ANY destination active on this day
+        const locLower = p.location?.toLowerCase() || '';
+        const locMatch = [...activeDests].some(dest => locLower.includes(dest));
         // Type should fit at least one empty slot
         const typeMatch = emptySlotTypes.has(p.type);
         return locMatch && typeMatch;
       })
       .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
       .slice(0, 20);
-  }, [day, libraryPlaces]);
+  }, [day, libraryPlaces, slotDestMap]);
 
   // Core fetch function
   const fetchSuggestions = useCallback(async (force = false) => {

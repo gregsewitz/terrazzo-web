@@ -14,6 +14,7 @@ import { sortPlaces, defaultDirectionFor } from '@/lib/sort-helpers';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import { useProximity } from '@/hooks/useProximity';
 import type { ProximityLabel, GeoCluster } from '@/hooks/useProximity';
+import { resolveSlotDestinations } from '@/lib/proximity';
 
 interface PoolTrayProps {
   onTapDetail: (item: ImportedPlace) => void;
@@ -50,11 +51,11 @@ const HOLD_DELAY = 180; // ms before drag activates
 
 // ─── Proximity tier styling ───
 const PROXIMITY_TIER_COLORS: Record<string, { bg: string; color: string; icon: PerriandIconName }> = {
-  'same-neighborhood': { bg: 'rgba(58,128,136,0.08)', color: 'var(--t-dark-teal)', icon: 'location' },
-  'walkable': { bg: 'rgba(58,128,136,0.06)', color: 'var(--t-dark-teal)', icon: 'location' },
-  'short-ride': { bg: 'rgba(203,178,121,0.1)', color: 'var(--t-ochre, #B8953F)', icon: 'location' },
-  'across-town': { bg: INK['04'], color: INK['50'], icon: 'location' },
-  'worth-detour': { bg: 'rgba(232,115,90,0.08)', color: 'var(--t-coral)', icon: 'star' },
+  'same-neighborhood': { bg: '#e6f2f3', color: '#1a6e78', icon: 'location' },
+  'walkable': { bg: '#e0eff1', color: '#2a7a84', icon: 'location' },
+  'short-ride': { bg: '#f5ecd8', color: '#8a6d1b', icon: 'location' },
+  'across-town': { bg: '#f0eded', color: '#6b5e5e', icon: 'location' },
+  'worth-detour': { bg: '#fbe8e3', color: '#c04a2b', icon: 'star' },
   'none': { bg: 'transparent', color: 'transparent', icon: 'location' },
 };
 
@@ -182,6 +183,23 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
     const trip = s.trips.find(t => t.id === s.currentTripId);
     return trip?.days.find(d => d.dayNumber === s.currentDay) ?? null;
   });
+  const prevDay = useTripStore(s => {
+    const trip = s.trips.find(t => t.id === s.currentTripId);
+    return trip?.days.find(d => d.dayNumber === s.currentDay - 1) ?? null;
+  });
+
+  // Resolve per-slot destinations for split days (e.g., London morning → Cotswolds evening)
+  const slotDestMap = useMemo(() => {
+    if (!activeDay) return null;
+    return resolveSlotDestinations(activeDay, prevDay ?? null, tripDestinations as string[]);
+  }, [activeDay, prevDay, tripDestinations]);
+
+  // When a slot is selected on a split day, determine its effective destination
+  const slotEffectiveDest = useMemo(() => {
+    if (!slotContext || !slotDestMap?.isSplitDay) return null;
+    return slotDestMap.slotDestinations.get(slotContext.slotId) || null;
+  }, [slotContext, slotDestMap]);
+
   const starredPlaces = useMemo(() => {
     if (!tripDestinations || tripDestinations.length === 0) return [];
     const destLower = (tripDestinations as string[]).map(d => d.toLowerCase());
@@ -213,19 +231,34 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   }, [sourceFiltered, filterType]);
 
   // Smart sorting: if slot context exists, boost items matching suggested types
+  // On split days, also boost items matching the slot's effective destination
   const sortedItems = useMemo(() => {
     const sorted = sortPlaces(typeFiltered, sortBy, sortDirection);
-    if (slotContext && slotContext.suggestedTypes.length > 0) {
-      const suggestedSet = new Set(slotContext.suggestedTypes);
-      return sorted.sort((a, b) => {
-        const aMatch = suggestedSet.has(a.type) ? 1 : 0;
-        const bMatch = suggestedSet.has(b.type) ? 1 : 0;
-        // Only re-sort when one matches and the other doesn't
-        return bMatch - aMatch;
-      });
-    }
-    return sorted;
-  }, [typeFiltered, slotContext, sortBy, sortDirection]);
+    if (!slotContext) return sorted;
+
+    const suggestedSet = slotContext.suggestedTypes.length > 0
+      ? new Set(slotContext.suggestedTypes)
+      : null;
+    const effectiveDest = slotEffectiveDest?.toLowerCase() || null;
+
+    if (!suggestedSet && !effectiveDest) return sorted;
+
+    return sorted.sort((a, b) => {
+      let aScore = 0;
+      let bScore = 0;
+      // Boost items matching the slot's effective destination on split days
+      if (effectiveDest) {
+        if (a.location.toLowerCase().includes(effectiveDest)) aScore += 2;
+        if (b.location.toLowerCase().includes(effectiveDest)) bScore += 2;
+      }
+      // Boost items matching suggested types for the slot
+      if (suggestedSet) {
+        if (suggestedSet.has(a.type)) aScore += 1;
+        if (suggestedSet.has(b.type)) bScore += 1;
+      }
+      return bScore - aScore;
+    });
+  }, [typeFiltered, slotContext, slotEffectiveDest, sortBy, sortDirection]);
 
   // ─── Proximity Intelligence ───
   const proximity = useProximity(sortedItems, currentDay);
@@ -549,9 +582,12 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
               return (
                 <button
                   key={cluster.label}
-                  onClick={() => toggleClusterFilter(
-                    isActive ? null : { label: cluster.label, placeIds: new Set(cluster.placeIds) }
-                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleClusterFilter(
+                      isActive ? null : { label: cluster.label, placeIds: new Set(cluster.placeIds) }
+                    );
+                  }}
                   className="text-[10px] px-2.5 py-1 rounded-full cursor-pointer transition-all flex items-center gap-1"
                   style={{
                     background: isActive ? 'var(--t-dark-teal)' : 'rgba(58,128,136,0.06)',

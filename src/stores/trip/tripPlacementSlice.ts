@@ -4,6 +4,7 @@ import { updateCurrentTrip, mapDaySlots, mapAllSlots, debouncedTripSave } from '
 import type { TripState } from './types';
 import { trackInteraction } from '@/lib/interaction-tracker';
 import { humanizeClusterLabel } from '@/lib/humanize-label';
+import { resolveSlotDestinations } from '@/lib/proximity';
 
 // ═══════════════════════════════════════════
 // Placement slice state
@@ -451,45 +452,53 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
         shop: ['afternoon'],
       };
 
-      // Distribute candidates across empty slots on MATCHING days only
+      // Distribute candidates across slots, respecting per-slot destinations on split days
       const updatedDays = [...trip.days];
+      const tripDests = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean)) as string[];
       let candidateIdx = 0;
       for (const candidate of newCandidates) {
         if (candidateIdx >= 6) break; // Max 6 ghost injections
         const preferredSlots = typeSlotMap[candidate.type] || ['afternoon'];
         const candLoc = candidate.location.toLowerCase();
 
-        // Find a day whose destination matches this candidate's location
+        // Find a day + slot whose destination matches this candidate's location
         let placed = false;
-        for (const day of updatedDays) {
+        for (let di = 0; di < updatedDays.length; di++) {
           if (placed) break;
-          // Only place candidates on days where the destination matches
-          const dayDest = (day.destination || '').toLowerCase();
-          if (dayDest && !candLoc.includes(dayDest) && !dayDest.includes(candLoc.split(',')[0].trim())) continue;
+          const day = updatedDays[di];
+          const prevDay = di > 0 ? updatedDays[di - 1] : null;
+
+          // Resolve per-slot destinations (handles split days like London morning → Cotswolds evening)
+          const slotDestMap = resolveSlotDestinations(day, prevDay ?? null, tripDests);
+
           for (const slotId of preferredSlots) {
             const slot = day.slots.find(s => s.id === slotId);
-            if (slot && slot.places.length === 0 && (!slot.ghostItems || slot.ghostItems.length === 0)) {
-              const ghostItem: ImportedPlace = {
-                ...candidate,
-                id: `ghost-starred-${candidate.id}`,
-                ghostStatus: 'proposed',
-                terrazzoReasoning: {
-                  rationale: candidate.rating?.reaction === 'myPlace'
-                    ? `You starred ${candidate.name}`
-                    : candidate.matchExplanation?.topClusters?.[0]?.label
-                      ? `Fits your ${humanizeClusterLabel(candidate.matchExplanation.topClusters[0].label)} signal`
-                      : candidate.type
-                        ? `Top ${candidate.type.toLowerCase()} pick for this trip`
-                        : `Matches your taste profile`,
-                  confidence: 0.85,
-                },
-              };
-              if (!slot.ghostItems) slot.ghostItems = [];
-              slot.ghostItems.push(ghostItem);
-              placed = true;
-              candidateIdx++;
-              break;
-            }
+            if (!slot || (slot.ghostItems && slot.ghostItems.length >= 2)) continue;
+
+            // Check destination match at the slot level (not just day level)
+            const slotDest = (slotDestMap.slotDestinations.get(slotId) || day.destination || '').toLowerCase();
+            if (slotDest && !candLoc.includes(slotDest) && !slotDest.includes(candLoc.split(',')[0].trim())) continue;
+
+            const ghostItem: ImportedPlace = {
+              ...candidate,
+              id: `ghost-starred-${candidate.id}`,
+              ghostStatus: 'proposed',
+              terrazzoReasoning: {
+                rationale: candidate.rating?.reaction === 'myPlace'
+                  ? `You starred ${candidate.name}`
+                  : candidate.matchExplanation?.topClusters?.[0]?.label
+                    ? `Fits your ${humanizeClusterLabel(candidate.matchExplanation.topClusters[0].label)} signal`
+                    : candidate.type
+                      ? `Top ${candidate.type.toLowerCase()} pick for this trip`
+                      : `Matches your taste profile`,
+                confidence: 0.85,
+              },
+            };
+            if (!slot.ghostItems) slot.ghostItems = [];
+            slot.ghostItems.push(ghostItem);
+            placed = true;
+            candidateIdx++;
+            break;
           }
         }
       }
