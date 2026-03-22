@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Terrazzo pixellance "T" — navy on transparent -->
+  <g fill="#002a55">
+    <rect x="3.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="8.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="18.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="23.75" y="1.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="6.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="11.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="16.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="21.25" width="4.5" height="4.5" rx="0.3"/>
+    <rect x="13.75" y="26.25" width="4.5" height="4.5" rx="0.3"/>
+  </g>
+</svg>

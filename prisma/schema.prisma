@@ -1,0 +1,804 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────────────────────────────────────────
+// User & Auth
+// ──────────────────────────────────────────────
+
+model User {
+  id                   String       @id @default(cuid())
+  supabaseId           String       @unique
+  email                String       @unique
+  name                 String?
+  authProvider         String       @default("email")
+
+  // Taste profile (from onboarding)
+  tasteProfile         Json?        // GeneratedProfile
+  lifeContext          Json?        // { primaryCompanions, firstName, etc. }
+  allSignals           Json?        // @deprecated — TasteNode table is now the canonical signal store. This column is kept for backward compat during transition and will be removed in a future migration.
+  allMessages          Json?        // ConversationMessage[] — onboarding conversation history
+  allContradictions    Json?        // Contradiction[]
+  seedTrips            Json?        // SeedTripInput[]
+  trustedSources       Json?        // TrustedSource[]
+  mosaicData           Json?        // { answers: MosaicAnswer[], axes: Record<string,number> }
+  propertyAnchors      Json?        // PropertyAnchor[] — resolved place mentions from voice onboarding
+  tasteStructure       Json?        // TasteStructure — rich per-domain coverage, signals, gaps for explanations
+  isOnboardingComplete Boolean      @default(false)
+  onboardingDepth      String?      // shallow | standard | deep
+  completedPhaseIds    String[]     @default([])
+  onboardingRouting    Json?        // V3 act-routing: { currentAct, skippedPhaseIds, act0GapResult, act1GapResult }
+
+  // Taste trajectory (computed by signal decay route)
+  tasteTrajectoryDirection  String?   // REFINING | EXPANDING | SHIFTING | STABLE
+  tasteTrajectoryDescription String?
+
+  // Relations
+  nylasGrants          NylasGrant[]
+  emailScans           EmailScan[]
+  emailReservations    EmailReservation[]
+  trips                Trip[]
+  savedPlaces          SavedPlace[]
+  shortlists           Shortlist[]
+  shareLinks           ShareLink[]
+
+  // Collaboration relations
+  tripCollaborations   TripCollaborator[]
+  tripSuggestions      TripSuggestion[]
+  tripReactions        TripReaction[]
+  slotNotes            SlotNote[]
+
+  // Taste Intelligence (Phase 1)
+  tasteVector          Unsupported("vector(136)")?
+  tasteVectorUpdatedAt DateTime?
+
+  // Taste Intelligence v3.4 (semantic clusters, 400-dim signal-only + neighbor bleed)
+  tasteVectorV3        Unsupported("vector(400)")?
+
+  // Taste graph relations
+  tasteNodes           TasteNode[]
+  contradictions       ContradictionNode[]
+  contextModifiers     ContextModifier[]
+
+  // Expanded ontology v2 relations
+  sustainabilitySignals  SustainabilitySignal[]
+  tasteTrajectoryShifts  TasteTrajectoryShift[]
+
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([supabaseId])
+}
+
+model NylasGrant {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantId   String   @unique
+  email     String
+  provider  String   @default("google")
+  scopes    String[] @default(["https://www.googleapis.com/auth/gmail.readonly"])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailScans EmailScan[]
+}
+
+// ──────────────────────────────────────────────
+// Email Scanning & Reservation Staging
+// ──────────────────────────────────────────────
+
+model EmailScan {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nylasGrantId  String
+  nylasGrant    NylasGrant @relation(fields: [nylasGrantId], references: [id], onDelete: Cascade)
+
+  // Scan metadata
+  status        String   @default("running") // running | completed | failed
+  scanType      String   @default("full")    // full | incremental | webhook
+  emailsFound   Int      @default(0)
+  emailsParsed  Int      @default(0)
+  reservationsFound Int  @default(0)
+  errorMessage  String?
+
+  // Time range scanned
+  scanFrom      DateTime?  // earliest email date scanned
+  scanTo        DateTime?  // latest email date scanned
+
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  reservations  EmailReservation[]
+
+  @@index([userId])
+  @@index([nylasGrantId])
+}
+
+model EmailReservation {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailScanId   String
+  emailScan     EmailScan @relation(fields: [emailScanId], references: [id], onDelete: Cascade)
+
+  // Staging status
+  status        String   @default("pending") // pending | confirmed | dismissed | merged
+  reviewedAt    DateTime?
+
+  // Email provenance
+  nylasMessageId String   // Nylas message ID for re-fetch
+  emailSubject   String
+  emailFrom      String   // sender address
+  emailFromName  String?  // sender display name
+  emailDate      DateTime // when the email was sent/received
+
+  // Parsed reservation data
+  placeName      String
+  placeType      String   // restaurant | hotel | flight | activity | bar | cafe
+  location       String?  // city or address
+  googlePlaceId  String?  // resolved Google Places ID (if matched)
+
+  // Booking details
+  reservationDate    DateTime?  // when the reservation is for
+  reservationTime    String?    // "HH:mm" format
+  partySize          Int?
+  confirmationNumber String?
+  provider           String?    // OpenTable | Resy | Booking.com | Airbnb | etc.
+
+  // Flight-specific
+  flightNumber       String?
+  departureAirport   String?
+  arrivalAirport     String?
+  departureTime      String?    // "HH:mm"
+  arrivalTime        String?    // "HH:mm"
+
+  // Hotel-specific
+  checkInDate        DateTime?
+  checkOutDate       DateTime?
+
+  // Activity-specific
+  activityDetails    String?    // e.g. "2-hour guided tour"
+
+  // Confidence & matching
+  confidence         Float    @default(0.0)  // 0-1, how confident the extraction is
+  rawExtraction      Json?    // full Claude extraction for debugging
+
+  // Trip matching
+  matchedTripId      String?  // auto-matched trip (if any)
+  matchedTripName    String?  // denormalized for display
+  suggestedDayNumber Int?     // suggested day within the trip
+  suggestedSlotId    String?  // suggested slot (breakfast, lunch, dinner, etc.)
+
+  // Link to library
+  savedPlaceId       String?  // set when user confirms → creates/links SavedPlace
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([emailScanId])
+  @@index([status])
+  @@index([reservationDate])
+}
+
+// ──────────────────────────────────────────────
+// Saved Places & Collections (Library tab)
+// ──────────────────────────────────────────────
+
+model SavedPlace {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Place identity
+  googlePlaceId       String?
+  name                String
+  type                String   // restaurant | hotel | bar | cafe | museum | activity | neighborhood | shop
+  location            String?
+
+  // Import metadata (provenance — write-once, never overwritten by re-imports)
+  source              Json?    // { type: ImportSourceType, name: string, url?: string }
+  userContext          String?  // user's personal note about the place
+  timing              String?
+  travelWith          String?  // e.g. "bestie", "daughter", "friends"
+  intentStatus        String?  // booked | planning | dreaming | researching
+  importBatchId       String?  // links places from same import
+  importSources       Json     @default("[]") // ImportSourceEntry[] — append-only provenance log
+
+  // Ratings
+  rating              Json?    // { reaction, tags, contextTags, returnIntent, personalNote }
+  isFavorited         Boolean  @default(false) @map("isShortlisted")
+
+  // Enrichment data
+  enrichment          Json?    // { closedDays, hours, seasonalNote, priceRange, description, confidence }
+  whatToOrder          Json?    // string[] — e.g. ["Puntillas ★", "Gambas de la santa"]
+  tips                Json?    // string[] — e.g. ["Go early", "Drink at the bar"]
+  alsoKnownAs         String?  // e.g. "El Sótano"
+
+  // Taste matching
+  matchScore          Float?
+  matchBreakdown      Json?    // { Design, Character, Service, Food, Location, Wellness }
+  matchExplanation    Json?    // { topClusters: [{label, domain, score, signals}], narrative: string }
+  tasteNote           String?
+  terrazzoInsight     Json?    // { why, caveat }
+
+  // Google data cache
+  googleData          Json?
+
+  // Promoted intelligence summary (lightweight fields for list-view display)
+  sustainabilityScore Float?
+  reliabilityScore    Float?
+  rhythmTempo         String?
+  bestMonths          String[]
+  formalityLevel      String?   // from serviceProfile
+  cuisineStyle        String?   // from culinaryProfile
+  signalCount         Int?
+  antiSignalCount     Int?
+
+  // Promoted heritage fields (from PlaceIntelligence.facts)
+  heritageHighlight   String?   // e.g. "Est. 1924 · Marcel Breuer"
+  yearEstablished     String?   // e.g. "1924"
+
+  // Link to global intelligence
+  placeIntelligenceId String?
+  intelligence        PlaceIntelligence? @relation("SavedPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
+
+  // Google resolution tracking (for places saved without a googlePlaceId)
+  resolveAttempts     Int       @default(0)  // how many times orphan-sweep tried to resolve
+  lastResolveAt       DateTime?              // when the last resolution attempt happened
+
+  // Soft delete
+  deletedAt           DateTime?          // null = active; set = soft-deleted (30-day recovery)
+
+  // Relations
+  collections         CollectionPlace[]
+  tripPlaceRefs       Place[]            @relation("LibraryPlaceRef")
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, googlePlaceId])
+  @@index([userId])
+  @@index([googlePlaceId])
+  @@index([deletedAt])
+  @@index([type])
+  @@index([matchScore])
+}
+
+// Design notes:
+// - Collections with 0 places are valid — don't auto-delete. The user named it intentionally.
+// - Offline/conflict strategy for placeIds:
+//     Metadata (name, emoji, description): last-write-wins.
+//     Membership (placeIds): append-only merge — resolve conflicts by union of both arrays.
+//     This means a place added offline by the user will never be lost on sync, even if
+//     the server version diverged. Implement in the sync layer when offline support ships.
+
+model Shortlist {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name              String
+  description       String?
+  emoji             String   @default("sparkle")
+  isDefault         Boolean  @default(false)   // true for "Favorites"
+  isSmartCollection Boolean  @default(false)
+
+  // Smart collection config
+  query             String?
+  filterTags        Json?    // string[]
+
+  // Place membership — legacy JSON array kept as read cache for offline-first
+  // Source of truth is now CollectionPlace join table below
+  placeIds          Json     @default("[]")     // string[] (read cache)
+
+  places            CollectionPlace[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Join table: which SavedPlaces belong to which Shortlists (collections)
+// Replaces the denormalized placeIds JSON array as the source of truth.
+// Enables: "which collections is this place in?", referential integrity, addedAt tracking.
+model CollectionPlace {
+  id            String     @id @default(cuid())
+  collectionId  String
+  collection    Shortlist  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  placeId       String
+  place         SavedPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  addedAt       DateTime   @default(now())
+
+  @@unique([collectionId, placeId])
+  @@index([placeId])       // "which collections is this place in?"
+  @@index([collectionId])  // "which places are in this collection?"
+}
+
+// ──────────────────────────────────────────────
+// Trips (Plan tab)
+// ──────────────────────────────────────────────
+
+model Trip {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String
+  location     String
+  destinations Json?     // string[]
+  startDate    DateTime?
+  endDate      DateTime?
+  groupSize    Int?
+  groupType    String?   // partner | friends | family | solo
+  vibe         String?
+
+  // Full trip state (mirrors TripDay[] from Zustand)
+  days         Json      // TripDay[]
+  pool         Json?     // PoolItem[] — unplaced items
+
+  // Dream board — freeform notes, links, checklists, etc.
+  dreamBoard   Json?     // DreamBoardEntry[]
+
+  // Conversation history
+  conversationHistory Json? // Message[]
+
+  status       String    @default("planning") // planning | active | completed
+
+  // Collaboration relations
+  collaborators       TripCollaborator[]
+  suggestions         TripSuggestion[]
+  reactions           TripReaction[]
+  slotNotes           SlotNote[]
+  activities          TripActivity[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  places       Place[]
+
+  @@index([userId])
+}
+
+model Place {
+  id             String   @id @default(cuid())
+  tripId         String
+  trip           Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name           String
+  type           String
+  googlePlaceId  String?
+  location       String?
+  googleData     Json?    // GooglePlaceData
+  source         Json     // ImportSource
+  matchScore     Float?
+  matchBreakdown Json?    // TasteProfile
+  tasteNote      String?
+  enrichment     Json?    // PlaceEnrichment
+  status         String   @default("available")
+  placedIn       Json?    // { day: number; slot: string }
+
+  // Library reference — links this trip place back to the canonical SavedPlace
+  libraryPlaceId String?
+  libraryPlace   SavedPlace? @relation("LibraryPlaceRef", fields: [libraryPlaceId], references: [id], onDelete: SetNull)
+
+  // Attribution — who added this place to the trip
+  addedByUserId  String?  // null = trip owner; set when a collaborator adds it
+  addedByName    String?  // denormalized display name for "Added by Sarah"
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Link to global intelligence
+  placeIntelligenceId String?
+  intelligence        PlaceIntelligence? @relation("TripPlaceIntelligence", fields: [placeIntelligenceId], references: [id])
+
+  @@index([libraryPlaceId])
+}
+
+// ──────────────────────────────────────────────
+// Share Links (public sharing)
+// ──────────────────────────────────────────────
+
+model ShareLink {
+  id            String    @id @default(cuid())
+  token         String    @unique @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resourceType  String    // "shortlist" | "trip"
+  resourceId    String    // ID of the shortlist or trip
+
+  permission    String    @default("view") // "view" | "edit"
+  isActive      Boolean   @default(true)
+  viewCount     Int       @default(0)
+  expiresAt     DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([token])
+  @@index([resourceType, resourceId])
+  @@index([userId])
+}
+
+// ──────────────────────────────────────────────
+// Trip Collaboration
+// ──────────────────────────────────────────────
+
+model TripCollaborator {
+  id          String    @id @default(cuid())
+  tripId      String
+  trip        Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role        String    @default("suggester") // "viewer" | "suggester"
+  status      String    @default("pending")   // "pending" | "accepted" | "declined"
+  invitedBy   String                          // userId of inviter
+  inviteToken String    @unique @default(cuid())
+
+  invitedAt   DateTime  @default(now())
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([tripId, userId])
+  @@index([tripId])
+  @@index([userId])
+  @@index([inviteToken])
+}
+
+model TripSuggestion {
+  id            String    @id @default(cuid())
+  tripId        String
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Place data
+  googlePlaceId String?   // Links to PlaceIntelligence for enrichment
+  placeName     String
+  placeType     String
+  placeLocation String?
+  placeData     Json?     // Full ImportedPlace-like payload (legacy; prefer googlePlaceId)
+
+  // Target slot
+  targetDay     Int
+  targetSlotId  String    // "breakfast", "lunch", "dinner", etc.
+
+  // Collaborator's note
+  reason        String?   // "You'd love this — amazing courtyard"
+
+  // Owner response
+  status        String    @default("pending") // "pending" | "accepted" | "rejected"
+  respondedAt   DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([tripId])
+  @@index([userId])
+  @@index([status])
+}
+
+model TripReaction {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  placeKey    String   // "dayNumber-slotId-placeName" composite key
+  reaction    String   // "love" | "not_for_me"
+  note        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tripId, userId, placeKey])
+  @@index([tripId])
+}
+
+model SlotNote {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dayNumber   Int
+  slotId      String
+  content     String   // "I booked 8pm reservation"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tripId])
+}
+
+model TripActivity {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId      String?  // null for system actions
+  type        String   // "collaborator_joined" | "suggestion_added" | "suggestion_accepted" | "reaction_added" | "note_added" | "place_moved"
+  summary     String   // Human-readable: "Alice suggested Noma for Day 2 lunch"
+  data        Json?    // Structured payload for UI rendering
+
+  createdAt   DateTime @default(now())
+
+  @@index([tripId])
+  @@index([createdAt])
+}
+
+// ──────────────────────────────────────────────
+// Waitlist
+// ──────────────────────────────────────────────
+
+model WaitlistEntry {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  referralSource String?  // how they heard about Terrazzo
+  createdAt      DateTime @default(now())
+
+  @@index([email])
+}
+
+// ──────────────────────────────────────────────
+// Caches
+// ──────────────────────────────────────────────
+
+model PlaceCache {
+  id            String   @id @default(cuid())
+  googlePlaceId String   @unique
+  data          Json     // Full Google Places response
+  fetchedAt     DateTime @default(now())
+
+  @@index([googlePlaceId])
+}
+
+// ──────────────────────────────────────────────
+// Place Intelligence (global, one per property)
+// ──────────────────────────────────────────────
+
+model PlaceIntelligence {
+  id              String   @id @default(cuid())
+  googlePlaceId   String   @unique
+  propertyName    String
+  placeType       String?  // hotel | restaurant | bar | cafe | museum | shop | neighborhood | activity — from Google primaryType
+
+  // Pipeline status
+  status          String   @default("pending") // pending | enriching | complete | failed
+  qualityTier     String?  // gold | silver | bronze | null — set by signal_validation stage based on data quality
+  pipelineVersion String   @default("v3-ri")
+
+  // Core intelligence payload
+  signals         Json     @default("[]") // Signal[]
+  antiSignals     Json?    // AntiSignal[]
+  reliability     Json?    // { overall, categories, totalReviews }
+  facts           Json?    // { location, roomCount, architect, ... }
+  reviewIntel     Json?    // { tier2, tier3, corroboration stats }
+
+  // Quick-access counts
+  signalCount      Int     @default(0)
+  antiSignalCount  Int     @default(0)
+  reviewCount      Int     @default(0)
+  reliabilityScore Float?  // 0-1
+
+  // v2 metadata — only product-consumed fields survive
+  sustainabilityScore        Float?    // 0-1 overall sustainability rating (drives SustainabilityBadge)
+  accolades                  Json?     // [{ type, value, year?, category? }] — Michelin stars, Green Key, awards etc.
+
+  // Property-level product data (canonical — synthesized from intelligence)
+  description         String?   // 2-3 sentence editorial-style property description
+  whatToOrder          Json?     // string[] — top 3-5 dish/experience recommendations
+  tips                Json?     // string[] — 3-5 practical visitor tips
+  alsoKnownAs         String?   // alternative name (e.g. "El Sótano")
+  googleData          Json?     // canonical Google Places data { rating, reviewCount, address, hours, etc. }
+  formalityLevel      String?   // from service analysis: formal | semi-formal | casual | etc.
+  cuisineStyle        String?   // from fooddrink analysis: short cuisine description
+
+  // Synthesis metadata
+  synthesisVersion    String    @default("v1")  // synthesis algorithm version
+  synthesisRunAt      DateTime? // when description/whatToOrder/tips were last generated
+
+  // Sources processed
+  sourcesProcessed Json?
+
+  // Error tracking
+  lastError       String?   // Last error message
+  errorCount      Int       @default(0) // Total failures
+  lastErrorAt     DateTime? // When the last error occurred
+  lastTriggeredBy String?   // userId who last triggered enrichment
+
+  // Freshness
+  lastEnrichedAt  DateTime?
+  enrichmentTTL   Int      @default(90) // days
+
+  // Taste Intelligence (Phase 2: Property Embeddings)
+  embedding          Unsupported("vector(136)")?
+  embeddingUpdatedAt DateTime?
+
+  // Taste Intelligence v3.4 (semantic clusters, 400-dim signal-only + neighbor bleed)
+  embeddingV3        Unsupported("vector(400)")?
+
+  // Relations
+  pipelineRuns    PipelineRun[]
+  tripPlaces      Place[]       @relation("TripPlaceIntelligence")
+  savedPlaces     SavedPlace[]  @relation("SavedPlaceIntelligence")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([googlePlaceId])
+  @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// Pipeline Run (execution tracking)
+// ──────────────────────────────────────────────
+
+model PipelineRun {
+  id                  String   @id @default(cuid())
+  placeIntelligenceId String
+  placeIntelligence   PlaceIntelligence @relation(fields: [placeIntelligenceId], references: [id])
+
+  status              String   @default("queued") // queued | running | complete | failed
+  triggerSource       String   // user_import | manual | refresh | backfill
+  triggeredByUserId   String?
+
+  currentStage        String?
+  stagesCompleted     Json?    // string[]
+
+  startedAt           DateTime?
+  completedAt         DateTime?
+  durationMs          Int?
+
+  error               String?
+  retryCount          Int      @default(0)
+
+  createdAt           DateTime @default(now())
+
+  stageResults        PipelineStageResult[]
+
+  @@index([placeIntelligenceId])
+  @@index([status])
+}
+
+model PipelineStageResult {
+  id              String   @id @default(cuid())
+  pipelineRunId   String
+  pipelineRun     PipelineRun @relation(fields: [pipelineRunId], references: [id], onDelete: Cascade)
+
+  stageId         String   // e.g. "google_places", "scrape_reviews", "editorial_extraction"
+  status          String   @default("pending") // pending | running | complete | failed | skipped
+
+  output          Json?    // Full raw output from this stage
+  signalCount     Int?     // Quick-access: how many signals this stage produced
+  durationMs      Int?     // How long this stage took
+  error           String?  // Error message if failed
+
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@unique([pipelineRunId, stageId])
+  @@index([pipelineRunId])
+  @@index([stageId])
+}
+
+// ──────────────────────────────────────────────
+// Taste Intelligence Graph (Phase 1)
+// ──────────────────────────────────────────────
+
+model TasteNode {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain      String   // Design | Character | Service | Food | Location | Wellness | Rhythm | CulturalEngagement
+  signal      String   // the signal text
+  confidence  Float    @default(0.5)
+  source      String   @default("onboarding") // onboarding | import | behavioral | pipeline
+  category    String?  // from TasteSignal.cat
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+
+  // Signal decay & provenance (v2)
+  extractedAt       DateTime?        // when the signal was first captured
+  sourcePhaseId     String?          // which onboarding phase produced this signal
+  sourceModality    String?          // VOICE | CARD | SLIDER | SWIPE | SPECTRUM | IMPORT
+  decayedConfidence Float?           // computed: confidence * 0.5^(age/180)
+  ageInDays         Int?             // computed: days since extraction
+  supersededBy      String?          // if a newer signal contradicts, link to replacement
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([domain])
+  @@index([userId, domain])
+}
+
+model TasteEdge {
+  id        String   @id @default(cuid())
+  edgeType  String   // user_signal | signal_similarity | user_similarity
+  sourceId  String
+  targetId  String
+  weight    Float    @default(1.0)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([edgeType])
+}
+
+model ContradictionNode {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stated     String
+  revealed   String
+  resolution String
+  matchRule  String
+  strength   Float    @default(0.5)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ContextModifier {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  context     String   // solo | partner | friends | family | kids
+  shifts      String   // description of how taste shifts
+  domainDeltas Json?   // { Design: +0.1, Wellness: -0.2, ... }
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ──────────────────────────────────────────────
+// Sustainability Signals (v2)
+// ──────────────────────────────────────────────
+
+model SustainabilitySignal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag         String   // e.g. "Carbon-conscious", "Local-economy-priority"
+  confidence  Float    // 0-1
+  dimension   String   // ENVIRONMENTAL | SOCIAL | CULTURAL | ECONOMIC
+  extractedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([dimension])
+}
+
+// ──────────────────────────────────────────────
+// Taste Trajectory Shifts (v2)
+// ──────────────────────────────────────────────
+
+model TasteTrajectoryShift {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain      String   // which of the 8 domains shifted
+  fromPattern String   // previous dominant signal pattern
+  toPattern   String   // new dominant signal pattern
+  detectedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([domain])
+}

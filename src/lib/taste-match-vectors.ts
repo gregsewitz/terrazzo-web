@@ -1,0 +1,572 @@
+/**
+ * Taste Match — Vector-First Scoring (v4)
+ *
+ * Sole scoring/ranking mechanism for property matching.
+ * Replaces the domain-based 7-step pipeline (taste-match-v3.ts) as the source
+ * of truth for matchScore and matchBreakdown.
+ *
+ * The radar chart and per-domain breakdowns are still shown to users,
+ * but they're derived FROM the vector match (cluster contribution sums
+ * per domain), not computed independently.
+ *
+ * Architecture:
+ *   - computeVectorMatch(): Pure vector math, no DB calls
+ *   - computeVectorMatchFromDb(): Fetches vectors then calls computeVectorMatch
+ *   - computeMatchExplanation(): Top-cluster decomposition for "Why this matches"
+ *   - rescoreAllSavedPlacesV3(): Batch rescore all saved places for a user
+ *
+ * Raw cosine similarity scores are stored directly (no ×100 multiplier).
+ * Tier classification is derived at read time via getMatchTier() in match-tier.ts.
+ */
+
+import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+import {
+  cosineSimilarityV3,
+  getClusterIndicesForDomain,
+  getAllClusterLabels,
+  getAllDomains,
+  VECTOR_DIM_V3,
+  vectorToSqlV3,
+} from '@/lib/taste-intelligence';
+import { getSignalClusterMap } from '@/lib/taste-intelligence/signal-clusters-loader';
+// Display score constants removed — raw scores are now used directly.
+// Tier classification is handled by getMatchTier() in match-tier.ts.
+import type { TasteDomain } from '@/types';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export interface VectorMatchResult {
+  /** Overall match score 0-100 (raw, before normalization) */
+  overallScore: number;
+  /** Per-domain breakdown 0-100 derived from cluster contributions */
+  breakdown: Record<TasteDomain, number>;
+  /** Top domain by contribution */
+  topDimension: TasteDomain;
+  /** Top contributing clusters for explanation UI */
+  topClusters: ClusterContribution[];
+  /** Human-readable match explanation */
+  explanation: MatchExplanation;
+}
+
+export interface ClusterContribution {
+  clusterId: number;
+  label: string;
+  domain: string;
+  /** Raw contribution (userVec[i] * propVec[i]) */
+  contribution: number;
+  /** Top signals in this cluster */
+  topSignals: string[];
+}
+
+export interface MatchExplanation {
+  /** Top 5 clusters driving the match */
+  topClusters: Array<{
+    clusterId: number;
+    label: string;
+    domain: string;
+    score: number; // 0-100 contribution strength
+    signals: string[];
+  }>;
+  /** Generated narrative string */
+  narrative: string;
+}
+
+// ─── Domain breakdown from cluster contributions ────────────────────────────
+
+/**
+ * Derive per-domain scores from element-wise vector product.
+ *
+ * For each domain, sum the positive contributions of clusters assigned to it.
+ * Normalize to 0-100 scale relative to the max domain contribution.
+ */
+function deriveDomainBreakdown(
+  userVector: number[],
+  propertyVector: number[],
+): Record<TasteDomain, number> {
+  const domainSums: Record<string, number> = {};
+  const domainMaxPossible: Record<string, number> = {};
+
+  for (const domain of getAllDomains()) {
+    const indices = getClusterIndicesForDomain(domain);
+    let sum = 0;
+    let maxPossible = 0;
+
+    for (const idx of indices) {
+      const contribution = userVector[idx] * propertyVector[idx];
+      sum += contribution;
+      // Max possible = sum of |user[i]| * |prop[i]| (perfect alignment)
+      maxPossible += Math.abs(userVector[idx]) * Math.abs(propertyVector[idx]);
+    }
+
+    domainSums[domain] = sum;
+    domainMaxPossible[domain] = maxPossible;
+  }
+
+  // Normalize: domain score = (actual / maxPossible) * 100
+  // Then scale so the top domain is ~90-95
+  const breakdown: Record<string, number> = {};
+  let maxRatio = 0;
+
+  for (const domain of getAllDomains()) {
+    const maxP = domainMaxPossible[domain];
+    const ratio = maxP > 0 ? domainSums[domain] / maxP : 0;
+    breakdown[domain] = Math.max(0, ratio); // Keep positive ratios
+    maxRatio = Math.max(maxRatio, breakdown[domain]);
+  }
+
+  // Scale to 0-100 with top domain at ~95
+  const scaleFactor = maxRatio > 0 ? 95 / maxRatio : 1;
+  for (const domain of getAllDomains()) {
+    breakdown[domain] = Math.round(Math.max(0, Math.min(100, breakdown[domain] * scaleFactor)));
+  }
+
+  return breakdown as Record<TasteDomain, number>;
+}
+
+// ─── Core match computation ─────────────────────────────────────────────────
+
+/**
+ * Compute a match between a user and property using only their 400-dim vectors.
+ *
+ * Both vectors must be L2-normalized (as produced by vectors-v3.ts).
+ * Cosine similarity = dot product of L2-normalized vectors.
+ */
+export function computeVectorMatch(
+  userVector: number[],
+  propertyVector: number[],
+  editorialDescription?: string,
+): VectorMatchResult {
+  // Cosine similarity (dot product of L2-normalized vectors) → [-1, 1]
+  const rawCosine = cosineSimilarityV3(userVector, propertyVector);
+
+  // Raw cosine similarity — no scaling or clamping.
+  // Negative values are meaningful (vector opposition) and flow through
+  // to the z-score tier system which handles classification.
+  // Typical range for taste vectors: roughly -0.05 to +0.70
+  const rawScore = rawCosine;
+
+  // Derive per-domain breakdown from cluster contributions
+  const breakdown = deriveDomainBreakdown(userVector, propertyVector);
+
+  // Find top domain
+  const topDimension = getAllDomains().reduce((best, d) =>
+    (breakdown[d as TasteDomain] ?? 0) > (breakdown[best as TasteDomain] ?? 0) ? d : best,
+  ) as TasteDomain;
+
+  // Compute top cluster contributions for explanation
+  const topClusters = computeTopClusters(userVector, propertyVector, 5);
+
+  // Generate explanation
+  const explanation = buildExplanation(topClusters, rawScore, editorialDescription);
+
+  return {
+    overallScore: rawScore,
+    breakdown,
+    topDimension,
+    topClusters,
+    explanation,
+  };
+}
+
+// ─── DB-backed match computation ────────────────────────────────────────────
+
+/**
+ * Fetch user and property vectors from DB and compute match.
+ * Returns null if either vector is missing (caller should fall back to signal scoring).
+ */
+export async function computeVectorMatchFromDb(
+  userId: string,
+  googlePlaceId: string,
+): Promise<VectorMatchResult | null> {
+  // Fetch both vectors in a single query
+  const result = await prisma.$queryRawUnsafe<Array<{
+    userVector: string | null;
+    propVector: string | null;
+  }>>(
+    `SELECT
+       (SELECT "tasteVectorV3"::text FROM "User" WHERE id = $1) as "userVector",
+       (SELECT "embeddingV3"::text FROM "PlaceIntelligence"
+        WHERE "googlePlaceId" = $2
+          AND "status" = 'complete'
+          AND "embeddingV3" IS NOT NULL
+        LIMIT 1) as "propVector"`,
+    userId,
+    googlePlaceId,
+  );
+
+  const userVectorRaw = result[0]?.userVector;
+  const propVectorRaw = result[0]?.propVector;
+
+  if (!userVectorRaw || !propVectorRaw) {
+    return null;
+  }
+
+  // Parse pgvector text format "[0.1,0.2,...]" → number[]
+  const userVector = sqlToVectorV3(userVectorRaw);
+  const propVector = sqlToVectorV3(propVectorRaw);
+
+  return computeVectorMatch(userVector, propVector);
+}
+
+// ─── Top cluster decomposition ──────────────────────────────────────────────
+
+/**
+ * Noise/infrastructure cluster IDs — these represent operational or environmental
+ * attributes rather than taste preferences. They're excluded from match explanations
+ * because surfacing "street-noise-penetration" or "mosquito-management" as a match
+ * reason confuses users even if the vectors align on those dimensions.
+ *
+ * These clusters DO still participate in scoring (they affect cosine similarity),
+ * they're just filtered from the explanation/narrative layer.
+ */
+const NOISE_CLUSTER_IDS = new Set([
+  5,    // adjacent-exposure-from (noise, construction complaints)
+  7,    // fire-high-pace (high-turnover-pressure)
+  13,   // balance-control-dependent (weather/temperature issues)
+  15,   // challenge-experience-grounds (mosquito management)
+  16,   // density-high-operation (high-density seating, overflow)
+  28,   // crowd-crowding-dependent (weekend crowding)
+  44,   // acceptance-culture-expectation (queue culture)
+  50,   // concerns-environment-high (high noise level)
+  88,   // challenges-control-heated (temperature control challenges)
+  109,  // cellular-connectivity-issues (wifi issues)
+  125,  // culture-execution-high (inconsistent execution, turnover)
+  131,  // buggy-intentionally-remote (buggy transport)
+  135,  // cash-coordination-only (cash-only, parking)
+  138,  // design-dual-issues (shower water pressure issues)
+  143,  // access-accessibility-challenge (steep hillside challenge)
+  163,  // communal-cramped-layout (cramped seating)
+  164,  // between-construction-noise (noise transfer, thin walls)
+  166,  // building-campus-elevator (slow elevator)
+  181,  // challenges-control-inconsistent (room temperature issues)
+  184,  // anti-connectivity-philosophy (wifi problems)
+  249,  // execution-inconsistent-pacing (inconsistent service)
+  266,  // deposit-difficulty-policy (reservation difficulty)
+  305,  // capacity-controlled-elevator (elevator wait times)
+  316,  // management-multi-progression (queue management)
+  324,  // high-model-pressure (table turnover pressure)
+]);
+
+/**
+ * Compute a "baseline" profile for a user vector — the expected contribution
+ * per cluster if a property had uniform activation. Used to identify which
+ * clusters are *distinctive* for a given property vs just globally strong.
+ *
+ * Cached per user vector identity (first 3 dims as a quick fingerprint).
+ */
+let cachedBaselineKey = '';
+let cachedBaseline: number[] = [];
+
+function getUserBaseline(userVector: number[]): number[] {
+  const key = `${userVector[0].toFixed(6)}_${userVector[1].toFixed(6)}_${userVector[2].toFixed(6)}`;
+  if (key === cachedBaselineKey) return cachedBaseline;
+
+  // Baseline = abs(userVector[i]) for each cluster — represents how much
+  // the user cares about each cluster regardless of property
+  const baseline = new Array(VECTOR_DIM_V3);
+  for (let i = 0; i < VECTOR_DIM_V3; i++) {
+    baseline[i] = Math.abs(userVector[i]);
+  }
+  cachedBaselineKey = key;
+  cachedBaseline = baseline;
+  return baseline;
+}
+
+function computeTopClusters(
+  userVector: number[],
+  propertyVector: number[],
+  count: number,
+): ClusterContribution[] {
+  const allLabels = getAllClusterLabels();
+  const labelMap = new Map(allLabels.map((c) => [c.id, c]));
+  const baseline = getUserBaseline(userVector);
+
+  // Compute per-cluster contribution, filtering out noise clusters
+  // Use "distinctiveness" scoring: weight by how strong the PROPERTY is on
+  // this cluster relative to the user's baseline. This surfaces what makes
+  // this property special for the user, not just globally-dominant clusters.
+  const contributions: Array<{ idx: number; contribution: number; distinctiveness: number }> = [];
+  for (let i = 0; i < VECTOR_DIM_V3; i++) {
+    if (NOISE_CLUSTER_IDS.has(i)) continue;
+    const contribution = userVector[i] * propertyVector[i];
+    if (contribution > 0 && baseline[i] > 0.001) {
+      // distinctiveness = how strong the property is on this dimension
+      // relative to the user's strength. High = property is especially
+      // strong here; low = property is about as strong as user expects.
+      const propertyStrength = Math.abs(propertyVector[i]);
+      const distinctiveness = contribution * (propertyStrength / baseline[i]);
+      contributions.push({ idx: i, contribution, distinctiveness });
+    }
+  }
+
+  // Sort by distinctiveness — surfaces what makes THIS property special
+  contributions.sort((a, b) => b.distinctiveness - a.distinctiveness);
+
+  // Ensure domain diversity: pick top clusters but avoid >2 from same domain
+  const result: ClusterContribution[] = [];
+  const domainCount: Record<string, number> = {};
+
+  for (const { idx, contribution } of contributions) {
+    if (result.length >= count) break;
+    const info = labelMap.get(idx);
+    const domain = info?.domain ?? 'Unknown';
+
+    if ((domainCount[domain] ?? 0) >= 2) continue;
+    domainCount[domain] = (domainCount[domain] ?? 0) + 1;
+
+    result.push({
+      clusterId: idx,
+      label: info?.displayLabel ?? info?.label ?? `cluster-${idx}`,
+      domain,
+      contribution,
+      topSignals: getTopSignalsForCluster(idx),
+    });
+  }
+
+  return result;
+}
+
+function getTopSignalsForCluster(clusterId: number): string[] {
+  const allLabels = getAllClusterLabels();
+  // getAllClusterLabels doesn't include topSignals, so we need raw cluster data
+  // For now, return the label as a proxy — we'll enrich this when we integrate
+  // with the full cluster metadata
+  const info = getSignalClusterMap().clusters?.[String(clusterId)];
+  return info?.topSignals?.slice(0, 3) ?? [];
+}
+
+// ─── Explanation generation ─────────────────────────────────────────────────
+
+// Re-export from standalone module to avoid circular/client-bundle issues
+export { humanizeClusterLabel } from './humanize-label';
+
+/** Human-readable domain phrases for narrative generation */
+const DOMAIN_PHRASES: Record<string, { noun: string; yours: string }> = {
+  Design:         { noun: 'design sensibility',      yours: 'your eye for interiors and space' },
+  Atmosphere:     { noun: 'sense of atmosphere',      yours: 'how a place makes you feel' },
+  Character:      { noun: 'personality and story',    yours: 'the kind of places you gravitate toward' },
+  Service:        { noun: 'hospitality style',        yours: 'how you like to be looked after' },
+  FoodDrink:      { noun: 'culinary point of view',   yours: 'what and how you like to eat' },
+  Setting:      { noun: 'neighborhood instinct',    yours: 'the neighborhoods you are drawn to' },
+  Wellness:       { noun: 'wellness approach',        yours: 'your pace and comfort priorities' },
+  Sustainability: { noun: 'values alignment',         yours: 'what you care about beyond the experience' },
+};
+
+function buildExplanation(
+  topClusters: ClusterContribution[],
+  overallScore: number,
+  editorialDescription?: string,
+): MatchExplanation {
+  const clusters = topClusters.map((c) => ({
+    clusterId: c.clusterId,
+    label: c.label,
+    domain: c.domain,
+    score: Math.round(c.contribution * 1000), // Scale for readability
+    signals: c.topSignals,
+  }));
+
+  // Collect unique domains in contribution order
+  const seenDomains = new Set<string>();
+  const orderedDomains: string[] = [];
+  for (const c of topClusters) {
+    if (!seenDomains.has(c.domain)) {
+      seenDomains.add(c.domain);
+      orderedDomains.push(c.domain);
+    }
+  }
+
+  // Build narrative from domains, not individual cluster/signal keys
+  const parts: string[] = [];
+
+  // Optional lead-in from editorial description
+  if (editorialDescription) {
+    // Take the first sentence if it's short enough, otherwise truncate
+    const firstSentence = editorialDescription.split(/\.\s/)[0];
+    const lead = firstSentence.length <= 120
+      ? (firstSentence.endsWith('.') ? firstSentence : firstSentence + '.')
+      : editorialDescription.slice(0, 117).replace(/[,\s]+$/, '') + '...';
+    parts.push(lead);
+  }
+
+  // Primary domain
+  if (orderedDomains.length > 0) {
+    const primary = DOMAIN_PHRASES[orderedDomains[0]];
+    if (primary) {
+      const opener = overallScore >= 85 ? 'Strong resonance with'
+        : overallScore >= 70 ? 'Resonates with'
+        : 'Some overlap with';
+      parts.push(`${opener} ${primary.yours}`);
+    }
+  }
+
+  // Secondary domain (only if different from primary)
+  if (orderedDomains.length > 1) {
+    const secondary = DOMAIN_PHRASES[orderedDomains[1]];
+    if (secondary) {
+      parts.push(`also aligns with ${secondary.yours}`);
+    }
+  }
+
+  // Join: editorial sentence gets its own period, domain phrases are joined with a comma
+  let narrative: string;
+  if (parts.length === 0) {
+    narrative = '';
+  } else if (editorialDescription && parts.length > 1) {
+    // "Editorial sentence. Resonates with X, also aligns with Y."
+    const domainParts = parts.slice(1);
+    narrative = parts[0] + ' ' + domainParts.join(', ') + '.';
+    // Capitalize the first domain part
+    narrative = narrative.slice(0, parts[0].length + 1)
+      + narrative[parts[0].length + 1].toUpperCase()
+      + narrative.slice(parts[0].length + 2);
+  } else {
+    // No editorial: "Resonates with X, also aligns with Y."
+    narrative = parts[0][0].toUpperCase() + parts[0].slice(1);
+    if (parts.length > 1) {
+      narrative += ', ' + parts.slice(1).join(', ');
+    }
+    if (!narrative.endsWith('.')) narrative += '.';
+  }
+
+  return {
+    topClusters: clusters,
+    narrative,
+  };
+}
+
+// ─── Per-user score normalization ───────────────────────────────────────────
+
+// ─── Score normalization removed ─────────────────────────────────────────────
+//
+// The tanh sigmoid normalizer (normalizeVectorScoresForDisplay) and the
+// single-score DB normalizer (normalizeSingleVectorScore) have been removed.
+// Raw cosine×100 scores are now stored and used directly. Tier classification
+// is handled by getMatchTier() in match-tier.ts, which applies population
+// z-score thresholds without distorting the underlying distribution.
+//
+// For backwards compatibility, normalizeMatchScoreForDisplay is still
+// available from normalize-score.ts as a deprecated identity function.
+
+// ─── Batch rescore for a user ────────────────────────────────────────────────
+
+export interface RescoreResult {
+  total: number;
+  scored: number;
+  skipped: number;
+  vectorDrift: number | null; // cosine distance from previous vector, if applicable
+}
+
+/**
+ * Rescore ALL saved places for a user using V3 vector matching.
+ *
+ * Called after onboarding or "expand your mosaic" sessions whenever
+ * the user's taste vector may have changed.
+ *
+ * Flow:
+ *   1. Fetch user's V3 vector
+ *   2. Fetch all SavedPlaces with enriched PlaceIntelligence (embeddingV3 present)
+ *   3. Compute raw cosine similarity for each
+ *   4. Write matchScore + matchBreakdown + matchExplanation to DB
+ */
+export async function rescoreAllSavedPlacesV3(userId: string): Promise<RescoreResult> {
+  // 1. Fetch user vector
+  const userRow = await prisma.$queryRawUnsafe<Array<{ vec: string | null }>>(
+    `SELECT "tasteVectorV3"::text as vec FROM "User" WHERE id = $1`,
+    userId,
+  );
+  const userVecRaw = userRow[0]?.vec;
+  if (!userVecRaw) {
+    console.warn(`[rescore] User ${userId} has no V3 vector — skipping`);
+    return { total: 0, scored: 0, skipped: 0, vectorDrift: null };
+  }
+  const userVector = sqlToVectorV3(userVecRaw);
+
+  // 2. Fetch all saved places with enriched property vectors
+  const places = await prisma.$queryRawUnsafe<
+    Array<{ spId: string; googlePlaceId: string; propVec: string }>
+  >(
+    `SELECT sp.id as "spId", sp."googlePlaceId", pi."embeddingV3"::text as "propVec"
+     FROM "SavedPlace" sp
+     JOIN "PlaceIntelligence" pi ON pi."googlePlaceId" = sp."googlePlaceId"
+     WHERE sp."userId" = $1
+       AND pi."status" = 'complete'
+       AND pi."embeddingV3" IS NOT NULL`,
+    userId,
+  );
+
+  console.log(`[rescore] User ${userId}: ${places.length} places with V3 embeddings`);
+
+  // 3. Compute raw matches
+  const rawMatches: Array<{
+    spId: string;
+    result: VectorMatchResult;
+  }> = [];
+
+  for (const place of places) {
+    try {
+      const propVector = sqlToVectorV3(place.propVec);
+      const result = computeVectorMatch(userVector, propVector);
+      rawMatches.push({ spId: place.spId, result });
+    } catch (err) {
+      console.error(`[rescore] Failed for ${place.googlePlaceId}:`, err);
+    }
+  }
+
+  // 4. Write raw scores to DB (no normalization — tier classification
+  //    is derived at read time via getMatchTier in match-tier.ts)
+  let scored = 0;
+  for (const match of rawMatches) {
+    try {
+      await prisma.savedPlace.update({
+        where: { id: match.spId },
+        data: {
+          matchScore: match.result.overallScore,
+          matchBreakdown: breakdownToNormalized(match.result.breakdown),
+          matchExplanation: match.result.explanation as unknown as Prisma.InputJsonValue,
+        },
+      });
+      scored++;
+    } catch (err) {
+      console.error(`[rescore] DB write failed for ${match.spId}:`, err);
+    }
+  }
+
+  console.log(`[rescore] Done: ${scored} scored, ${places.length - scored} skipped`);
+  return {
+    total: places.length,
+    scored,
+    skipped: places.length - scored,
+    vectorDrift: null,
+  };
+}
+
+/**
+ * Compute cosine distance between two vectors.
+ * Returns 0 if identical, 2 if opposite. Useful for drift detection.
+ */
+export function vectorDrift(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 2;
+  const cosine = cosineSimilarityV3(a, b);
+  return 1 - cosine; // 0 = identical, 1 = orthogonal, 2 = opposite
+}
+
+// ─── Utilities ──────────────────────────────────────────────────────────────
+
+/** Parse pgvector text format "[0.1,0.2,...]" → number[] */
+function sqlToVectorV3(text: string): number[] {
+  const cleaned = text.replace(/[\[\]]/g, '');
+  return cleaned.split(',').map(Number);
+}
+
+/**
+ * Convert a VectorMatchResult breakdown to the 0-1 normalized format
+ * used by SavedPlace.matchBreakdown in the database.
+ */
+export function breakdownToNormalized(breakdown: Record<TasteDomain, number>): Record<string, number> {
+  const normalized: Record<string, number> = {};
+  for (const [domain, score] of Object.entries(breakdown)) {
+    normalized[domain] = Math.round(score) / 100;
+  }
+  return normalized;
+}
