@@ -11,6 +11,18 @@ import { SectionLabel } from './SectionLabel';
 export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]; contextLabel?: string }) {
   const displayRecs = recs || SUMMER_RECS;
   const label = contextLabel || 'Summer';
+
+  // Derive the dominant city from the recs to make the heading location-specific
+  const locationCounts = new Map<string, number>();
+  for (const rec of displayRecs) {
+    if (rec.location) {
+      // Extract city (first part before comma)
+      const city = rec.location.split(',')[0].trim();
+      locationCounts.set(city, (locationCounts.get(city) || 0) + 1);
+    }
+  }
+  const dominantCity = [...locationCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+
   return (
     <SafeMotionDiv
       className="px-5 py-6"
@@ -30,7 +42,9 @@ export function ContextModeSection({ recs, contextLabel }: { recs?: ContextRec[]
       <div className="flex items-center gap-2 mb-1">
         <PerriandIcon name="summer" size={16} color="var(--t-ink)" />
         <span className="text-[18px] font-semibold" style={{ fontFamily: FONT.serif, color: COLOR.darkTeal }}>
-          If you&apos;re traveling this {label.toLowerCase()}...
+          {dominantCity
+            ? `${label} in ${dominantCity}`
+            : `If you\u2019re traveling this ${label.toLowerCase()}...`}
         </span>
       </div>
       <p className="text-[15px] mb-4" style={{ color: COLOR.navy, fontFamily: FONT.mono }}>
