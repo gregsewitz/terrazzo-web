@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { PerriandIcon, PerriandIconName } from '@/components/icons/PerriandIcons';
 import { FONT, INK, TEXT } from '@/constants/theme';
@@ -95,6 +96,18 @@ function getCityCoords(location: string): { lat: number; lng: number } | null {
   return best?.coords ?? null;
 }
 
+/** Mix a hex color with white to produce a solid light tint (amount 0–1, 0 = white, 1 = full color) */
+function tintColor(hex: string, amount: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const tr = Math.round(255 + (r - 255) * amount);
+  const tg = Math.round(255 + (g - 255) * amount);
+  const tb = Math.round(255 + (b - 255) * amount);
+  return `rgb(${tr},${tg},${tb})`;
+}
+
 export interface MapMarker {
   id: string;
   name: string;
@@ -116,6 +129,8 @@ interface GoogleMapViewProps {
   fallbackDestination?: string;
   fallbackCoords?: { lat: number; lng: number };
   onMarkerTap?: (markerId: string) => void;
+  /** Fired when a user clicks on an already-expanded marker card (second click) */
+  onExpandedClick?: (markerId: string) => void;
   /** Externally-controlled active marker — avoids full marker rebuild */
   activeMarkerId?: string | null;
 }
@@ -125,12 +140,14 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 // Muted map style — matches Terrazzo aesthetic
 const MAP_ID = 'terrazzo-map';
 
-function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
+function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, onExpandedClick, zoom }: {
   marker: MapMarker & { lat: number; lng: number };
   isExpanded: boolean;
   /** External highlight — just glow the pin, don't expand into a card (prevents map re-layout/flash) */
   isHighlighted: boolean;
   onToggle: () => void;
+  /** Called when the user clicks an already-expanded card (second click → open detail) */
+  onExpandedClick?: () => void;
   zoom: number;
 }) {
   const icon = TYPE_ICONS[(marker.type || '') as keyof typeof TYPE_ICONS] || 'location';
@@ -161,15 +178,24 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
       }}>
         {/* Expanded card — only when internally controlled (no external activeMarkerId) */}
         {isExpanded && !isHighlighted ? (
-          <div style={{
-            background: isDashed ? '#f7f5f0' : 'white',
-            borderRadius: 12,
-            padding: '10px 12px',
-            boxShadow: `0 4px 20px ${INK['18']}`,
-            minWidth: 160,
-            maxWidth: 200,
-            border: isDashed ? `1.5px dashed ${INK['20']}` : `1px solid ${INK['08']}`,
-          }}>
+          <div
+            onClick={(e) => {
+              if (onExpandedClick) {
+                e.stopPropagation();
+                onExpandedClick();
+              }
+            }}
+            style={{
+              background: isDashed ? '#f7f5f0' : 'white',
+              borderRadius: 12,
+              padding: '10px 12px',
+              boxShadow: `0 4px 20px ${INK['18']}`,
+              minWidth: 160,
+              maxWidth: 200,
+              border: isDashed ? `1.5px dashed ${INK['20']}` : `1px solid ${INK['08']}`,
+              cursor: onExpandedClick ? 'pointer' : 'default',
+            }}
+          >
             {isDashed && (
               <div style={{
                 fontSize: 8, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.5px',
@@ -278,7 +304,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
         ) : (
           /* ── Tier 3: Full compact pill with icon + name (zoomed in / highlighted) ── */
           <div style={{
-            background: isDashed ? '#f0ebe2' : isVibrant ? accentColor : 'white',
+            background: isDashed ? '#f0ebe2' : isVibrant ? accentColor : tintColor(typeColor, 0.1),
             borderRadius: 20,
             padding: glowing ? '5px 12px 5px 7px' : '4px 10px 4px 6px',
             boxShadow: glowing
@@ -289,7 +315,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
             gap: 4,
             border: glowing
               ? `2px solid white`
-              : isDashed ? `1.5px dashed ${INK['30']}` : `1.5px solid rgba(255,255,255,0.5)`,
+              : isDashed ? `1.5px dashed ${INK['30']}` : `1.5px solid ${tintColor(typeColor, 0.25)}`,
             whiteSpace: 'nowrap',
             transform: glowing ? 'scale(1.12)' : 'scale(1)',
             transition: 'all 200ms cubic-bezier(0.32, 0.72, 0, 1)',
@@ -298,7 +324,7 @@ function MarkerPin({ marker, isExpanded, isHighlighted, onToggle, zoom }: {
               <PerriandIcon
                 name={icon}
                 size={glowing ? 14 : 12}
-                color={isDashed ? INK['60'] : isVibrant ? 'rgba(255,255,255,0.95)' : undefined}
+                color={isDashed ? INK['60'] : isVibrant ? 'rgba(255,255,255,0.95)' : typeColor}
               />
             </div>
             <span style={{
@@ -417,10 +443,11 @@ function MapFitter({ coords, fallbackCenter }: {
 }
 
 // Inner wrapper that can access useMap — renders markers with zoom awareness
-function MapMarkers({ resolved, activeMarkerId, onMarkerTap, expandedId, setInternalExpandedId }: {
+function MapMarkers({ resolved, activeMarkerId, onMarkerTap, onExpandedClick, expandedId, setInternalExpandedId }: {
   resolved: (MapMarker & { lat: number; lng: number })[];
   activeMarkerId?: string | null;
   onMarkerTap?: (markerId: string) => void;
+  onExpandedClick?: (markerId: string) => void;
   expandedId: string | null;
   setInternalExpandedId: (fn: (prev: string | null) => string | null) => void;
 }) {
@@ -440,13 +467,14 @@ function MapMarkers({ resolved, activeMarkerId, onMarkerTap, expandedId, setInte
             }
             if (onMarkerTap) onMarkerTap(m.id);
           }}
+          onExpandedClick={onExpandedClick ? () => onExpandedClick(m.id) : undefined}
         />
       ))}
     </>
   );
 }
 
-export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords, onMarkerTap, activeMarkerId }: GoogleMapViewProps) {
+export default function GoogleMapView({ markers, height = 360, fallbackDestination, fallbackCoords, onMarkerTap, onExpandedClick, activeMarkerId }: GoogleMapViewProps) {
   const [internalExpandedId, setInternalExpandedId] = useState<string | null>(null);
   // Use external activeMarkerId if provided, otherwise fall back to internal state
   const expandedId = activeMarkerId !== undefined ? activeMarkerId : internalExpandedId;
@@ -500,6 +528,7 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
   }, [fallbackCoords, fallbackDestination]);
 
   const isFullScreen = height === '100%';
+  const isDesktop = useIsDesktop();
 
   if (!API_KEY) {
     return (
@@ -517,35 +546,87 @@ export default function GoogleMapView({ markers, height = 360, fallbackDestinati
     );
   }
 
+  // Derive unique place types present in the markers for the legend
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const m of resolved) {
+      const t = m.type || 'other';
+      counts[t] = (counts[t] || 0) + 1;
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [resolved]);
+
   return (
     <div
-      className={isFullScreen ? 'overflow-hidden' : 'rounded-xl overflow-hidden'}
       style={isFullScreen
         ? { position: 'absolute' as const, inset: 0 }
-        : { height, border: '1px solid var(--t-linen)' }
+        : { height, position: 'relative' as const }
       }
     >
-      <Map
-        defaultCenter={fallbackCenter}
-        defaultZoom={13}
-        gestureHandling="greedy"
-        disableDefaultUI={false}
-        zoomControl={true}
-        mapTypeControl={false}
-        streetViewControl={false}
-        fullscreenControl={false}
-        mapId={MAP_ID}
-        style={{ width: '100%', height: '100%' }}
+      <div
+        className={isFullScreen ? 'overflow-hidden' : 'rounded-xl overflow-hidden'}
+        style={{ position: 'absolute' as const, inset: 0, ...(isFullScreen ? {} : { border: '1px solid var(--t-linen)' }) }}
       >
-        <MapFitter coords={originalCoords} fallbackCenter={fallbackCenter} />
-        <MapMarkers
-          resolved={resolved}
-          activeMarkerId={activeMarkerId}
-          onMarkerTap={onMarkerTap}
-          expandedId={expandedId}
-          setInternalExpandedId={setInternalExpandedId}
-        />
-      </Map>
+        <Map
+          defaultCenter={fallbackCenter}
+          defaultZoom={13}
+          gestureHandling="greedy"
+          disableDefaultUI={true}
+          zoomControl={isDesktop}
+          zoomControlOptions={isDesktop ? { position: typeof google !== 'undefined' ? google.maps.ControlPosition.RIGHT_CENTER : undefined } : undefined}
+          mapTypeControl={false}
+          streetViewControl={false}
+          fullscreenControl={false}
+          mapId={MAP_ID}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <MapFitter coords={originalCoords} fallbackCenter={fallbackCenter} />
+          <MapMarkers
+            resolved={resolved}
+            activeMarkerId={activeMarkerId}
+            onMarkerTap={onMarkerTap}
+            onExpandedClick={onExpandedClick}
+            expandedId={expandedId}
+            setInternalExpandedId={setInternalExpandedId}
+          />
+        </Map>
+      </div>
+
+      {/* Color key legend — compact stacked pill in top-left, clear of all bottom controls */}
+      {typeCounts.length > 0 && (
+        <div
+          className="flex flex-wrap gap-x-2.5 gap-y-1 px-2.5 py-2 rounded-lg"
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            maxWidth: 180,
+            background: 'rgba(245,240,230,0.92)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid var(--t-linen)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+            zIndex: 10,
+            pointerEvents: 'auto',
+          }}
+        >
+          {typeCounts.map(([type]) => (
+            <div key={type} className="flex items-center gap-1.5">
+              <div
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: 7,
+                  height: 7,
+                  background: TYPE_COLORS_VIBRANT[type as PlaceType] || INK['50'],
+                }}
+              />
+              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary, whiteSpace: 'nowrap' }}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

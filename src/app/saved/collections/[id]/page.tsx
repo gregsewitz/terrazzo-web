@@ -632,9 +632,9 @@ function CollectionDetailContent() {
                     lat: p.google?.lat,
                     lng: p.google?.lng,
                   }))}
-                  height={800}
+                  height="100%"
                   fallbackDestination={collection.cities[0]}
-                  onMarkerTap={(id) => {
+                  onExpandedClick={(id) => {
                     const place = placesInCollection.find(p => p.id === id);
                     if (place) openDetail(place);
                   }}
@@ -822,42 +822,13 @@ function CollectionDetailContent() {
                 lat: p.google?.lat,
                 lng: p.google?.lng,
               }))}
-              height={typeof window !== 'undefined' ? window.innerHeight - 56 : 600}
+              height="100%"
               fallbackDestination={collection.cities[0]}
-              onMarkerTap={(id) => {
+              onExpandedClick={(id) => {
                 const place = placesInCollection.find(p => p.id === id);
                 if (place) openDetail(place);
               }}
             />
-
-            {/* Floating legend */}
-            <div
-              className="absolute bottom-5 left-4 right-4 flex items-center justify-between px-3.5 py-2.5 rounded-xl"
-              style={{
-                background: 'rgba(245,240,230,0.92)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid var(--t-linen)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-              }}
-            >
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const types = new Set(placesInCollection.map(p => p.type));
-                  return Array.from(types).slice(0, 4).map(type => (
-                    <div key={type} className="flex items-center gap-1">
-                      <PerriandIcon name={type as PerriandIconName} size={11} color={TYPE_COLORS_VIBRANT[type as PlaceType] || INK['60']} />
-                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
-                        {placesInCollection.filter(p => p.type === type).length}
-                      </span>
-                    </div>
-                  ));
-                })()}
-              </div>
-              <span style={{ fontFamily: FONT.mono, fontSize: 9, color: INK['50'] }}>
-                Tap pins for details
-              </span>
-            </div>
           </div>
         </div>
       )}

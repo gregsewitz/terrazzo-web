@@ -10,6 +10,8 @@ import { TYPE_ICONS, THUMB_GRADIENTS, TYPE_BRAND_COLORS } from '@/constants/plac
 import { trackInteraction } from '@/lib/interaction-tracker';
 import { getDisplayLocation } from '@/lib/place-display';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
+import GoogleMapView from '@/components/maps/GoogleMapView';
+
 
 // ─── Types for shared data ───
 
@@ -86,6 +88,7 @@ export default function SharedViewPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedIndividual, setSavedIndividual] = useState<Set<string>>(new Set());
+  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -279,6 +282,23 @@ export default function SharedViewPage() {
             </div>
           )}
 
+          {/* Map button */}
+          {places.length > 0 && (
+            <button
+              onClick={() => setMapOpen(true)}
+              className="w-full py-2.5 rounded-xl text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-2 mb-5 transition-all"
+              style={{
+                background: 'white',
+                color: TEXT.primary,
+                border: '1px solid var(--t-linen)',
+                fontFamily: FONT.mono,
+              }}
+            >
+              <PerriandIcon name="location" size={13} color={INK['50']} />
+              View on map
+            </button>
+          )}
+
           {/* Place cards */}
           <div className="flex flex-col gap-2.5">
             {places.map(place => (
@@ -298,6 +318,68 @@ export default function SharedViewPage() {
             </div>
           )}
         </div>
+
+        {/* Full-screen map overlay */}
+        {mapOpen && (
+          <div className="fixed inset-0 z-50" style={{ background: 'var(--t-cream)' }}>
+            {/* Header bar */}
+            <div
+              className="flex items-center gap-3 px-4"
+              style={{
+                height: 56,
+                background: 'rgba(245,240,230,0.92)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                borderBottom: '1px solid var(--t-linen)',
+              }}
+            >
+              <button
+                onClick={() => setMapOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer flex-shrink-0"
+                style={{
+                  background: 'rgba(255,255,255,0.7)',
+                  border: '1px solid var(--t-linen)',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M10 3L5 8L10 13" stroke="var(--t-ink)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="text-[14px] font-semibold truncate" style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: TEXT.primary }}>
+                  {collection.name}
+                </div>
+                <div className="text-[10px]" style={{ fontFamily: FONT.mono, color: TEXT.secondary }}>
+                  {places.length} {places.length === 1 ? 'place' : 'places'}
+                </div>
+              </div>
+            </div>
+
+            {/* Map fills remaining space */}
+            <div className="relative" style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden' }}>
+              <GoogleMapView
+                markers={places.map(p => {
+                  const g = p.googleData as { lat?: number; lng?: number } | null;
+                  return {
+                    id: p.id,
+                    name: p.name,
+                    location: p.location || '',
+                    type: p.type,
+                    matchScore: p.matchScore ?? undefined,
+                    description: p.enrichment?.description,
+                    lat: g?.lat,
+                    lng: g?.lng,
+                  };
+                })}
+                height="100%"
+                fallbackDestination={collection.name}
+              />
+
+              {/* Legend is now built into GoogleMapView */}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -434,10 +516,9 @@ function SharedPlaceCard({ place, isSaved, onSave, isAuthenticated }: {
   const typeIcon = TYPE_ICONS[place.type as keyof typeof TYPE_ICONS] || 'location';
   const google = place.googleData as { rating?: number; priceLevel?: number } | null;
   const priceStr = google?.priceLevel ? '$'.repeat(google.priceLevel) : null;
-  const subtitle = (place.rating?.personalNote)
-    || (place.terrazzoInsight?.why)
-    || place.enrichment?.description
-    || '';
+  // Use only enrichment description for shared views — taste-specific notes
+  // (personalNote, terrazzoInsight.why) are relevant to the owner, not all viewers
+  const subtitle = place.enrichment?.description || '';
   const truncSub = subtitle.length > 90 ? subtitle.slice(0, 87) + '…' : subtitle;
 
   return (
