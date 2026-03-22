@@ -1,3 +1,5 @@
+export const maxDuration = 120; // 2 min — Anthropic API + Google Places resolution
+
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { rateLimit, rateLimitResponse, getClientIp } from '@/lib/rate-limit';
@@ -311,20 +313,37 @@ CONTEXT LABEL FOR RECS: "${contextLabel}"
 
 Generate the full discover feed. Return valid JSON only.`;
 
-  const response = await anthropic.messages.create({
-    model: CLAUDE_SONNET,
-    max_tokens: 4096,
-    system: [{ type: 'text', text: DISCOVER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: contextMessage }],
-  });
+  console.log('[discover-legacy] Calling Anthropic API...');
+  let response;
+  try {
+    response = await anthropic.messages.create({
+      model: CLAUDE_SONNET,
+      max_tokens: 4096,
+      system: [{ type: 'text', text: DISCOVER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: contextMessage }],
+    });
+    console.log('[discover-legacy] Anthropic API returned, stop_reason:', response.stop_reason);
+  } catch (apiErr) {
+    console.error('[discover-legacy] Anthropic API call failed:', apiErr);
+    throw apiErr;
+  }
 
   const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  console.log('[discover-legacy] Response text length:', text.length);
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
+    console.error('[discover-legacy] No JSON found in response. First 500 chars:', text.slice(0, 500));
     throw new Error('Failed to parse discover content from legacy flow');
   }
 
-  const result = JSON.parse(jsonMatch[0]);
+  let result;
+  try {
+    result = JSON.parse(jsonMatch[0]);
+    console.log('[discover-legacy] JSON parsed successfully, keys:', Object.keys(result).join(', '));
+  } catch (parseErr) {
+    console.error('[discover-legacy] JSON parse failed:', parseErr, 'First 500 chars:', jsonMatch[0].slice(0, 500));
+    throw parseErr;
+  }
 
   // Resolve places via Google API (legacy path — RAG path already has googlePlaceIds)
   const places = extractPlaces(result);
@@ -553,7 +572,9 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
     return NextResponse.json(legacyFeed);
   } catch (error: unknown) {
-    console.error('Discover generation error:', error);
+    const errMsg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    const errStack = error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' | ') : '';
+    console.error(`[discover] FATAL: ${errMsg} ${errStack}`);
     return apiError('Failed to generate discover content', 500, { details: errorMessage(error) });
   }
 });

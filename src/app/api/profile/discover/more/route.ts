@@ -1,3 +1,5 @@
+export const maxDuration = 120; // 2 min — Anthropic API + Google Places resolution
+
 /**
  * POST /api/profile/discover/more
  *
