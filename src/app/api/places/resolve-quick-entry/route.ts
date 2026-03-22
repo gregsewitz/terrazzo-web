@@ -60,7 +60,7 @@ Respond with ONLY a JSON object, no markdown:
 
 Rules:
 - Extract just the place name, stripping action words like "Dinner at", "Walk around", "Visit", "Grab coffee at"
-- If the entry describes a specific activity, event, or booking at a place, set isPlace: true AND extract the activity into activityContext. The activityContext should be a short, human-readable label like "9:30am boot camp" or "Reservation at 1:00 PM" or "Wine tasting at 5pm".
+- If the entry describes a specific activity, event, or booking at a place, set isPlace: true AND extract the activity into activityContext. The activityContext should be a short, human-readable label describing WHAT the activity is, WITHOUT times. Times are handled separately by the client. Good: "Boot camp class", "Spa treatment", "Wine tasting", "Golf tee time". Bad: "9:30am boot camp", "Spa treatment at 2pm".
 - Transportation and logistics notes (driving, flights, trains, car rental) should NOT be classified as places — these are about getting somewhere, not visiting.
 - Entries with no identifiable place (just personal reminders like "pack bags") should be isPlace: false.
 
@@ -68,12 +68,12 @@ Examples:
 - "Dinner at the Brasserie at Estelle Manor" → {"isPlace": true, "placeName": "Brasserie at Estelle Manor", "activityContext": null, "confidence": 0.95}
 - "Walk around Shoreditch" → {"isPlace": true, "placeName": "Shoreditch", "activityContext": null, "confidence": 0.85}
 - "The Connaught Bar" → {"isPlace": true, "placeName": "The Connaught Bar", "activityContext": null, "confidence": 0.95}
-- "9:30am boot camp class at Cowley Manor" → {"isPlace": true, "placeName": "Cowley Manor", "activityContext": "9:30am boot camp class", "confidence": 0.9}
-- "Spa treatment at 2pm at COMO Shambhala" → {"isPlace": true, "placeName": "COMO Shambhala", "activityContext": "Spa treatment at 2pm", "confidence": 0.9}
-- "Wine tasting at 5pm at Castello di Ama" → {"isPlace": true, "placeName": "Castello di Ama", "activityContext": "Wine tasting at 5pm", "confidence": 0.9}
-- "Golf tee time 8am at The K Club" → {"isPlace": true, "placeName": "The K Club", "activityContext": "Golf tee time 8am", "confidence": 0.9}
-- "Cooking class at the hotel 3pm" → {"isPlace": false, "placeName": null, "activityContext": "Cooking class at 3pm", "confidence": 0.7}
-- "Reservation at 1:00 PM" → {"isPlace": false, "placeName": null, "activityContext": "Reservation at 1:00 PM", "confidence": 0.6}
+- "9:30am boot camp class at Cowley Manor" → {"isPlace": true, "placeName": "Cowley Manor", "activityContext": "Boot camp class", "confidence": 0.9}
+- "Spa treatment at 2pm at COMO Shambhala" → {"isPlace": true, "placeName": "COMO Shambhala", "activityContext": "Spa treatment", "confidence": 0.9}
+- "Wine tasting at 5pm at Castello di Ama" → {"isPlace": true, "placeName": "Castello di Ama", "activityContext": "Wine tasting", "confidence": 0.9}
+- "Golf tee time 8am at The K Club" → {"isPlace": true, "placeName": "The K Club", "activityContext": "Golf tee time", "confidence": 0.9}
+- "Cooking class at the hotel 3pm" → {"isPlace": false, "placeName": null, "activityContext": "Cooking class", "confidence": 0.7}
+- "Reservation at 1:00 PM" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.6}
 - "Pack bags" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
 - "Massages" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.7}
 - "1:10pm flight to Iguazu" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
@@ -81,7 +81,7 @@ Examples:
 - "Train to Oxford at 9am" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
 - "Uber to airport" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
 - "Pickup rental car from Sixt Liverpool St at 2pm" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.9}
-- "Check out of hotel by 11am" → {"isPlace": false, "placeName": null, "activityContext": "Check out by 11am", "confidence": 0.9}
+- "Check out of hotel by 11am" → {"isPlace": false, "placeName": null, "activityContext": "Check out", "confidence": 0.9}
 - Confidence reflects how certain you are in the classification`,
       }],
     });

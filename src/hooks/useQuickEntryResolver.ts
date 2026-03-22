@@ -6,6 +6,21 @@ import type { QuickEntry, ImportedPlace } from '@/types';
 // Stagger delay between resolution attempts to avoid hammering the API
 const STAGGER_MS = 800;
 
+/** Strip time expressions from activityContext so they don't show redundantly in the subtitle
+ *  alongside PlaceTimeEditor's formatted time display. */
+function stripTimeFromContext(text: string): string {
+  return text
+    // "at 6:30pm", "at 10am", "@3pm"
+    .replace(/(?:at|@)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)\b/g, '')
+    // "6:30pm", "10am" standalone
+    .replace(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)\b/g, '')
+    // "at 14:30" 24h with prefix
+    .replace(/(?:at|@)\s+\d{1,2}:\d{2}\b/g, '')
+    // Clean up artifacts
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 /**
  * Hook that watches for new quick entries and silently attempts to resolve
  * them into real place cards via the resolve-quick-entry API.
@@ -62,7 +77,15 @@ export function useQuickEntryResolver() {
         // Build ImportedPlace from the resolved data
         // If the classifier detected an activity context (e.g., "9:30am boot camp class"),
         // store it so the card can display the activity prominently.
-        const activity: string | undefined = data.activityContext || undefined;
+        const rawActivity: string | undefined = data.activityContext || undefined;
+        // Strip redundant time from activityContext — the time is already on
+        // specificTime and rendered by PlaceTimeEditor in "Reservation at 8:30 PM" format.
+        const activity = rawActivity ? stripTimeFromContext(rawActivity) || undefined : undefined;
+        // Use the cleaned label (time already stripped by parser) for userContext,
+        // not the raw text which may contain "9:30am" and would show redundantly
+        // as a subtitle alongside the PlaceTimeEditor time display.
+        const contextNote = activity
+          || (entry.label && entry.label !== data.place.name ? entry.label : undefined);
         const resolvedPlace: ImportedPlace = {
           id: `resolved-${entry.id}-${Date.now()}`,
           name: data.place.name,
@@ -74,8 +97,13 @@ export function useQuickEntryResolver() {
           google: data.place.google || undefined,
           enrichment: data.place.enrichment || undefined,
           status: 'placed',
-          userContext: activity || (entry.text !== entry.label ? entry.text : undefined),
+          userContext: contextNote,
           activityContext: activity,
+          // Carry the entry's time forward on the resolved place so the store
+          // action has a fallback even if the QuickEntry was already removed
+          // from state (race condition with concurrent resolutions).
+          specificTime: entry.specificTime,
+          specificTimeLabel: entry.specificTimeLabel,
           savedAt: new Date().toISOString(),
         };
 

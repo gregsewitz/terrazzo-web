@@ -680,12 +680,25 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
         days: mapDaySlots(trip.days, dayNumber, s => {
           if (s.id !== slotId) return s;
           const entry = (s.quickEntries || []).find(e => e.id === entryId);
-          if (!entry) return s;
+          if (!entry) {
+            // Entry already removed — use resolvedPlace as-is (it now carries
+            // specificTime from the hook as a defensive fallback).
+            console.warn(`[resolveQuickEntry] Entry ${entryId} not found in slot ${slotId} — using resolvedPlace directly`);
+            return {
+              ...s,
+              places: [...s.places, { ...resolvedPlace, status: 'placed' as const }],
+            };
+          }
           // Carry over time from the quick entry onto the resolved place
+          const finalTime = entry.specificTime || resolvedPlace.specificTime;
+          const finalTimeLabel = entry.specificTimeLabel || resolvedPlace.specificTimeLabel;
+          if (!finalTime && (entry as any).text) {
+            console.warn(`[resolveQuickEntry] No specificTime for "${(entry as any).text}" (entry.specificTime=${entry.specificTime}, resolvedPlace.specificTime=${resolvedPlace.specificTime})`);
+          }
           const place: ImportedPlace = {
             ...resolvedPlace,
-            specificTime: entry.specificTime || resolvedPlace.specificTime,
-            specificTimeLabel: entry.specificTimeLabel || resolvedPlace.specificTimeLabel,
+            specificTime: finalTime,
+            specificTimeLabel: finalTimeLabel,
             status: 'placed',
           };
           return {
