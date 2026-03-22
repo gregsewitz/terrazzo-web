@@ -346,16 +346,18 @@ export function resolveGooglePlaceType(
     }
   }
 
-  // Name-based fallback — catches obvious cases when Google types are unhelpful
+  // Name-based fallback — catches obvious cases when Google types are unhelpful.
+  // Expanded to cover French/Spanish/Italian/German naming conventions since many
+  // places in the database are European establishments without Google type data.
   if (placeName) {
     const n = placeName.toLowerCase();
-    if (/\b(restaurant|ristorante|trattoria|osteria|bistro|brasserie|pizzeria|taqueria|cantina)\b/.test(n)) return 'restaurant';
-    if (/\b(bar|pub|brewery|brewing|tavern|wine\s?bar|cocktail)\b/.test(n)) return 'bar';
-    if (/\b(caf[eé]|coffee|bakery|gelat[eo]|patisserie|pâtisserie)\b/.test(n)) return 'cafe';
-    if (/\b(hotel|hostel|resort|lodge|inn|retreat|villa|b&b|guesthouse|guest\s?house|shelter)\b/.test(n)) return 'hotel';
-    if (/\b(museum|gallery|galleria|church|cathedral|temple|basilica|palazzo|castle|château)\b/.test(n)) return 'museum';
-    if (/\b(shop|store|market|mercado|marché|boutique|deli|emporium)\b/.test(n)) return 'shop';
-    if (/\b(park|garden|beach|plage|trail|bay|baie|playa)\b/.test(n)) return 'neighborhood';
+    if (/\b(restaurant|ristorante|trattoria|osteria|bistro|brasserie|pizzeria|taqueria|cantina|steakhouse|chophouse|dining|grill|asador|taberna|jatetxea|gastro)\b/.test(n)) return 'restaurant';
+    if (/\b(bar|pub|brewery|brewing|tavern|wine\s?bar|cocktail|taproom|bodega|cervecería|distillery|winery|vineyard|vignoble|cave à vin)\b/.test(n)) return 'bar';
+    if (/\b(caf[eé]|coffee|bakery|gelat[eo]|patisserie|pâtisserie|boulangerie|forn\b|panadería|konditorei|glacier|tea\s?house|tea\s?room|roaster)\b/.test(n)) return 'cafe';
+    if (/\b(hotel|hostel|resort|lodge|inn\b|retreat|villa|b&b|guesthouse|guest\s?house|shelter|auberge|refugio|fonda|riad|ryokan|pension)\b/.test(n)) return 'hotel';
+    if (/\b(museum|gallery|galleria|church|cathedral|temple|basilica|palazzo|castle|château|fondation|foundation|fundación|fundació|memorial|monument)\b/.test(n)) return 'museum';
+    if (/\b(shop|store|market|mercado|marché|boutique|deli|emporium|fromagerie|épicerie|perfumer[iyí]a|atelier)\b/.test(n)) return 'shop';
+    if (/\b(park|garden|beach|plage|trail|bay|baie|playa|cenote|cove|lagoon|AONB|nature\s?reserve)\b/.test(n)) return 'neighborhood';
   }
 
   return 'activity';
