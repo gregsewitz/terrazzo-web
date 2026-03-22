@@ -673,6 +673,8 @@ export interface BriefingData {
   googleData?: Record<string, unknown> | null;
   formalityLevel?: string | null;
   cuisineStyle?: string | null;
+  // Accolades — awards, editorial list appearances, certifications
+  accolades?: Array<{ type: string; value: string; year?: string | null; category?: string }>;
   // Structured sub-objects extracted from facts
   heritage?: HeritageData | null;
   seasonality?: SeasonalityData | null;

@@ -15,10 +15,6 @@
     {
       "path": "/api/cron/cluster-health",
       "schedule": "0 4 * * 1"
-    },
-    {
-      "path": "/api/cron/type-cleanup",
-      "schedule": "30 4 * * 0"
     }
   ]
 }

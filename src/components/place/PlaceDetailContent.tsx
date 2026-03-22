@@ -10,6 +10,7 @@ import PipelineProgress from '@/components/place/PipelineProgress';
 import { COLOR, FONT, INK, TEXT } from '@/constants/theme';
 import PlacePhoto from '@/components/place/PlacePhoto';
 import SustainabilityBadge from '@/components/profile/SustainabilityBadge';
+import AccoladesSection from '@/components/place/AccoladesSection';
 import { SafeFadeIn } from '@/components/animations/SafeFadeIn';
 import { FadeInSection, StaggerContainer, StaggerItem, AnimatedBar } from '@/components/animations/AnimatedElements';
 import { getMatchTier } from '@/lib/match-tier';
@@ -440,6 +441,14 @@ function PlaceDetailContent({
               </div>
             </FadeInSection>
           );
+        })()}
+
+        {/* Accolades — awards, editorial lists, memberships, certifications */}
+        {(() => {
+          const accolades = (intelData as any)?.accolades || item.accolades;
+          return accolades && accolades.length > 0 ? (
+            <AccoladesSection accolades={accolades} variant={variant} />
+          ) : null;
         })()}
 
         {/* Why You'll Love It */}

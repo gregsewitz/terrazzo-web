@@ -83,6 +83,7 @@ export async function GET(
       googleData: intel.googleData ?? null,
       formalityLevel: intel.formalityLevel ?? null,
       cuisineStyle: intel.cuisineStyle ?? null,
+      accolades: Array.isArray(intel.accolades) ? intel.accolades : [],
       // Heritage — extracted from facts for dedicated rendering
       heritage: (() => {
         if (!intel.facts || typeof intel.facts !== 'object') return null;

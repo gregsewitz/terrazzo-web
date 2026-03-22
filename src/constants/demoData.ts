@@ -54,7 +54,12 @@ const septime = place('demo-p1', 'Septime', 'restaurant', 'Paris, France', {
   google: { placeId: 'demo-septime', rating: 4.6, reviewCount: 3200, category: 'restaurant' },
   whatToOrder: ['Seasonal tasting menu', 'Natural wine pairing'],
   tips: ['Book 3 weeks ahead on the dot at midnight', 'Sister bar Septime La Cave next door for a pre-dinner glass'],
-  accolades: [{ type: 'michelin', value: '1 Star', year: '2024' }],
+  accolades: [
+    { type: 'michelin_stars', value: '1 Star', year: '2024' },
+    { type: 'worlds_50_best_restaurants', value: '#39', year: '2023' },
+    { type: 'eater_38', value: 'Eater Paris 38', year: '2024' },
+    { type: 'la_liste', value: 'Top 200', year: '2024' },
+  ],
 });
 
 const hotelGrandAmour = place('demo-p2', 'Hôtel Grand Amour', 'hotel', 'Paris, France', {
@@ -99,7 +104,13 @@ const ettHem = place('demo-p8', 'Ett Hem', 'hotel', 'Stockholm, Sweden', {
   tasteNote: 'A private home that happens to accept guests — Ilse Crawford\'s masterpiece of warm minimalism.',
   matchScore: 96,
   google: { placeId: 'demo-etthem', rating: 4.8, reviewCount: 420, category: 'hotel' },
-  accolades: [{ type: 'award', value: 'World\'s 50 Best Hotels', year: '2024' }],
+  accolades: [
+    { type: 'worlds_50_best', value: '#12', year: '2024' },
+    { type: 'cn_gold', value: 'Gold List', year: '2024' },
+    { type: 'cn_hot', value: 'Hot List', year: '2023' },
+    { type: 'design_hotels', value: 'Member', year: '2024' },
+    { type: 'wallpaper', value: 'Best Urban Hotel', year: '2023' },
+  ],
 });
 
 const fotografiska = place('demo-p9', 'Fotografiska', 'museum', 'Stockholm, Sweden', {
@@ -112,7 +123,10 @@ const oaxen = place('demo-p10', 'Oaxen Krog', 'restaurant', 'Stockholm, Sweden',
   tasteNote: 'New Nordic fine dining in a converted boathouse on Djurgården — the setting is the story.',
   matchScore: 90,
   google: { placeId: 'demo-oaxen', rating: 4.6, reviewCount: 1800, category: 'restaurant' },
-  accolades: [{ type: 'michelin', value: '2 Stars', year: '2024' }],
+  accolades: [
+    { type: 'michelin_stars', value: '2 Stars', year: '2024' },
+    { type: 'michelin_green', value: 'Green Star', year: '2024' },
+  ],
 });
 
 // ═══════════════════════════════════════════
