@@ -141,9 +141,13 @@ export async function POST(req: NextRequest) {
     // ── 3. Recompute match scores for all users who saved this place ──────
     let matchesUpdated = 0;
     try {
-      // Find all SavedPlace records for this googlePlaceId, with their user's taste profile
+      // Find all SavedPlace records linked to this PlaceIntelligence record.
+      // IMPORTANT: Query by placeIntelligenceId (not googlePlaceId) to ensure we only
+      // update places that are actually linked to the signals we're about to score against.
+      // Previously queried by googlePlaceId, which could cross-contaminate scores if
+      // multiple PlaceIntelligence records shared a googlePlaceId due to orphan/stale data.
       const savedPlaces = await prisma.savedPlace.findMany({
-        where: { googlePlaceId },
+        where: { placeIntelligenceId },
         select: {
           id: true,
           user: {
