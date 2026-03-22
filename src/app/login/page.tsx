@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FONT, COLOR } from '@/constants/theme';
 
-export default function LoginPage() {
+function LoginInner() {
   const { signIn, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -188,5 +188,26 @@ export default function LoginPage() {
         &copy; 2026 Terrazzo
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-dvh flex flex-col items-center justify-center px-6"
+          style={{ background: COLOR.coral }}
+        >
+          <img
+            src="/brand/logo-pixellance-cream.svg"
+            alt="Terrazzo"
+            style={{ height: 'clamp(36px, 6vh, 52px)', width: 'auto' }}
+          />
+        </div>
+      }
+    >
+      <LoginInner />
+    </Suspense>
   );
 }
