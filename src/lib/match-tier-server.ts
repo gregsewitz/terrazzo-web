@@ -1,8 +1,13 @@
 /**
  * Server-side population stats refresh for match tiers.
  *
- * This module queries the DB for live cosine similarity statistics
+ * This module queries the DB for live matchScore statistics
  * and updates the in-process cache used by getMatchTier().
+ *
+ * Stats are computed from actual matchScore values in SavedPlace,
+ * which ensures the population distribution matches the scoring
+ * function (asymmetric cosine similarity) rather than pgvector's
+ * standard cosine distance operator.
  *
  * Import this ONLY in server-side code (API routes, cron jobs).
  * match-tier.ts is client-safe; this module is not (it imports Prisma).
@@ -14,11 +19,14 @@ import { setPopulationStats, populationStatsStale } from './match-tier';
 /**
  * Refresh population stats from the database.
  *
- * Computes mean and stddev of raw cosine similarity across all real onboarded
- * users and all enriched properties. Test users (email LIKE 'test-%') are excluded.
+ * Computes mean and stddev from actual matchScore values across all
+ * SavedPlace records for real (non-test) users. This ensures tier
+ * boundaries stay consistent with the scoring function, even as
+ * ASYMMETRIC_SIMILARITY_EXPONENT or other parameters change.
  *
  * Call this:
  *   - From the vector-refresh cron (weekly, after recomputing vectors)
+ *   - From the rescore cron (after updating matchScore values)
  *   - From any API route that needs fresh stats (with staleness check)
  */
 export async function refreshPopulationStats(): Promise<{ mean: number; stddev: number; pairs: number }> {
@@ -28,15 +36,13 @@ export async function refreshPopulationStats(): Promise<{ mean: number; stddev: 
     pairs: number;
   }>>`
     SELECT
-      AVG(1 - (u."tasteVectorV3" <=> pi."embeddingV3"))::float as mean,
-      STDDEV(1 - (u."tasteVectorV3" <=> pi."embeddingV3"))::float as stddev,
+      AVG(sp."matchScore")::float as mean,
+      STDDEV(sp."matchScore")::float as stddev,
       COUNT(*)::int as pairs
-    FROM "User" u
-    CROSS JOIN "PlaceIntelligence" pi
-    WHERE u."tasteVectorV3" IS NOT NULL
+    FROM "SavedPlace" sp
+    JOIN "User" u ON u.id = sp."userId"
+    WHERE sp."matchScore" IS NOT NULL
       AND u.email NOT LIKE 'test-%'
-      AND pi."embeddingV3" IS NOT NULL
-      AND pi.status = 'complete'
   `;
 
   const { mean, stddev, pairs } = result[0] || {};

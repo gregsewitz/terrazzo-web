@@ -2,9 +2,10 @@
  * Match tier system.
  *
  * Replaces percentage-based match scores with qualitative tiers.
- * Tier boundaries are defined on raw cosine similarity scores
- * (the unmodified output of computeVectorMatch), using population
- * z-scores to set thresholds that adapt as the place corpus grows.
+ * Tier boundaries are defined on raw match scores (the unmodified
+ * output of computeVectorMatch — asymmetric cosine similarity),
+ * using population z-scores to set thresholds that adapt as the
+ * place corpus grows.
  *
  * Raw scores vary significantly by user density. Previous versions applied
  * a tanh sigmoid to stretch scores into a "human-readable" 35-96 display
@@ -13,28 +14,31 @@
  *   2. The tanh compressed extremes where differentiation matters most
  *   3. Batch vs population normalization caused tier instability
  *
- * Population stats are refreshed automatically by the weekly vector-refresh
- * cron job. The hardcoded defaults below are used as fallbacks when the
- * live stats haven't been loaded (client-side imports, cold starts).
+ * Population stats are refreshed automatically by the vector-refresh
+ * and rescore cron jobs. Stats are computed from actual matchScore
+ * values in SavedPlace (not from pgvector's <=> operator) so they
+ * stay consistent with the asymmetric scoring function.
+ *
+ * The hardcoded defaults below are used as fallbacks when the live
+ * stats haven't been loaded (client-side imports, cold starts).
  *
  * To refresh manually:
- *   SELECT AVG(1-(u."tasteVectorV3" <=> pi."embeddingV3")),
- *          STDDEV(1-(u."tasteVectorV3" <=> pi."embeddingV3"))
- *   FROM "User" u, "PlaceIntelligence" pi
- *   WHERE u."tasteVectorV3" IS NOT NULL
- *     AND u.email NOT LIKE 'test-%'
- *     AND pi."embeddingV3" IS NOT NULL
- *     AND pi.status = 'complete';
+ *   SELECT AVG("matchScore"), STDDEV("matchScore")
+ *   FROM "SavedPlace" sp
+ *   JOIN "User" u ON u.id = sp."userId"
+ *   WHERE sp."matchScore" IS NOT NULL
+ *     AND u.email NOT LIKE 'test-%';
  */
 
 // ── Population statistics ───────────────────────────────────────────────────
-// Hardcoded fallback values (raw cosine scale, updated Mar 22 2026).
-// After K=400 re-clustering with lowercase key fix + BLEED_ONLY_DAMPEN=0.25.
+// Hardcoded fallback values (asymmetric cosine scale, updated Mar 22 2026).
+// K=400 clusters, lowercase key fix, BLEED_ONLY_DAMPEN=0.25,
+// ASYMMETRIC_SIMILARITY_EXPONENT=0.5.
 // On the server, these are overridden by live stats from the DB via
 // refreshPopulationStats() / setPopulationStats().
 
-const DEFAULT_POPULATION_MEAN = 0.1604;
-const DEFAULT_POPULATION_STDDEV = 0.0819;
+const DEFAULT_POPULATION_MEAN = 0.155;
+const DEFAULT_POPULATION_STDDEV = 0.083;
 
 let _liveMean: number | null = null;
 let _liveStddev: number | null = null;
