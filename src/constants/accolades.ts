@@ -39,6 +39,8 @@ export interface AccoladeDefinition {
   category: AccoladeCategory;
   /** Optional URL template — {value} replaced with accolade value */
   url?: string;
+  /** Place types this accolade applies to. If omitted, applies to all. */
+  placeTypes?: string[];
 }
 
 /**
@@ -58,6 +60,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: '#c4002b', // Michelin red
     category: 'guide',
     url: 'https://guide.michelin.com',
+    placeTypes: ['restaurant'],
   },
   michelin_bib: {
     label: 'MICHELIN Bib Gourmand',
@@ -66,6 +69,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: '#c4002b',
     category: 'guide',
     url: 'https://guide.michelin.com',
+    placeTypes: ['restaurant'],
   },
   michelin_green: {
     label: 'MICHELIN Green Star',
@@ -74,6 +78,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: '#1a7a3a',
     category: 'guide',
     url: 'https://guide.michelin.com',
+    placeTypes: ['restaurant'],
   },
   michelin_keys: {
     label: 'MICHELIN Keys',
@@ -82,6 +87,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: '#c4002b',
     category: 'guide',
     url: 'https://guide.michelin.com',
+    placeTypes: ['hotel'],
   },
 
   // ── World's Best Lists ──
@@ -92,6 +98,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: COLOR.ochre,
     category: 'award',
     url: 'https://www.theworlds50best.com/list/1-50',
+    placeTypes: ['restaurant'],
   },
   worlds_50_best: {
     label: "World's 50 Best Hotels",
@@ -100,6 +107,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: COLOR.ochre,
     category: 'award',
     url: 'https://www.theworlds50best.com/hotels',
+    placeTypes: ['hotel'],
   },
   worlds_best_bars: {
     label: "World's 50 Best Bars",
@@ -108,6 +116,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: COLOR.ochre,
     category: 'award',
     url: 'https://www.theworlds50best.com/bars',
+    placeTypes: ['bar'],
   },
 
   // ── Condé Nast Traveler ──
@@ -118,6 +127,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: '#b8860b', // dark goldenrod
     category: 'guide',
     url: 'https://www.cntraveler.com/gold-list',
+    placeTypes: ['hotel'],
   },
   cn_hot: {
     label: 'Condé Nast Traveler Hot List',
@@ -126,6 +136,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: '#e85d3a',
     category: 'guide',
     url: 'https://www.cntraveler.com/hot-list',
+    placeTypes: ['hotel', 'restaurant'],
   },
 
   // ── James Beard ──
@@ -136,6 +147,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     accent: COLOR.coral,
     category: 'award',
     url: 'https://www.jamesbeard.org/awards',
+    placeTypes: ['restaurant', 'bar'],
   },
 
   // ── Eater ──
@@ -177,6 +189,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'sparkle',
     accent: COLOR.navy,
     category: 'guide',
+    placeTypes: ['hotel'],
   },
   tl_it_list: {
     label: 'Travel + Leisure It List',
@@ -184,6 +197,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'sparkle',
     accent: COLOR.navy,
     category: 'guide',
+    placeTypes: ['hotel'],
   },
 
   // ── Forbes ──
@@ -193,6 +207,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'star',
     accent: COLOR.navy,
     category: 'guide',
+    placeTypes: ['hotel'],
   },
 
   // ── TIME ──
@@ -278,12 +293,14 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'sparkle',
     accent: COLOR.ochre,
     category: 'award',
+    placeTypes: ['bar'],
   },
   diffords: {
     label: "Difford's Guide Top Bars",
     chipLabel: "Difford's",
     icon: 'sparkle',
     accent: COLOR.navy,
+    placeTypes: ['bar'],
     category: 'guide',
   },
 
@@ -340,6 +357,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'star',
     accent: '#8b0000',
     category: 'membership',
+    placeTypes: ['hotel', 'restaurant'],
   },
   slh: {
     label: 'Small Luxury Hotels',
@@ -347,6 +365,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'star',
     accent: COLOR.navy,
     category: 'membership',
+    placeTypes: ['hotel'],
   },
   lhw: {
     label: 'The Leading Hotels of the World',
@@ -354,6 +373,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'star',
     accent: COLOR.navy,
     category: 'membership',
+    placeTypes: ['hotel'],
   },
   design_hotels: {
     label: 'Design Hotels',
@@ -361,6 +381,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'star',
     accent: '#1a1a1a',
     category: 'membership',
+    placeTypes: ['hotel'],
   },
   mr_mrs_smith: {
     label: 'Mr & Mrs Smith',
@@ -368,6 +389,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'heart',
     accent: COLOR.coral,
     category: 'membership',
+    placeTypes: ['hotel'],
   },
   tablet_hotels: {
     label: 'Tablet Hotels',
@@ -375,6 +397,7 @@ export const ACCOLADE_REGISTRY: Record<string, AccoladeDefinition> = {
     icon: 'star',
     accent: COLOR.navy,
     category: 'membership',
+    placeTypes: ['hotel'],
   },
 
   // ── Retail ──

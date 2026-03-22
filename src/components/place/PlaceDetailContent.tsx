@@ -447,7 +447,7 @@ function PlaceDetailContent({
         {(() => {
           const accolades = (intelData as any)?.accolades || item.accolades;
           return accolades && accolades.length > 0 ? (
-            <AccoladesSection accolades={accolades} variant={variant} />
+            <AccoladesSection accolades={accolades} placeType={item.type} variant={variant} />
           ) : null;
         })()}
 

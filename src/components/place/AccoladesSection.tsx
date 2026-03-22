@@ -21,6 +21,7 @@ interface Accolade {
 
 interface AccoladesSectionProps {
   accolades: Accolade[];
+  placeType?: string;
   variant: 'desktop' | 'mobile';
 }
 
@@ -109,16 +110,22 @@ function AccoladeChip({ resolved, isDesktop }: { resolved: ResolvedAccolade; isD
   );
 }
 
-function AccoladesSection({ accolades, variant }: AccoladesSectionProps) {
+function AccoladesSection({ accolades, placeType, variant }: AccoladesSectionProps) {
   const isDesktop = variant === 'desktop';
 
-  // Resolve all accolades and deduplicate by chipLabel
+  // Resolve all accolades, filter by placeType, and deduplicate by chipLabel
   const resolvedAccolades = useMemo(() => {
     const seen = new Set<string>();
     const result: ResolvedAccolade[] = [];
 
     for (const accolade of accolades) {
       const definition = resolveAccolade(accolade.type);
+
+      // Filter out accolades that don't apply to this place type
+      if (placeType && definition.placeTypes && !definition.placeTypes.includes(placeType)) {
+        continue;
+      }
+
       const chipLabel = chipDisplayLabel({ original: accolade, definition });
 
       // Deduplicate: keep the one with a year, or the first one seen
@@ -129,7 +136,7 @@ function AccoladesSection({ accolades, variant }: AccoladesSectionProps) {
     }
 
     return result;
-  }, [accolades]);
+  }, [accolades, placeType]);
 
   // Group by category only if 4+ accolades
   const grouped = useMemo(() => {
