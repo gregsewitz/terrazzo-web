@@ -4,7 +4,8 @@ import { updateCurrentTrip, mapDaySlots, mapAllSlots, debouncedTripSave } from '
 import type { TripState } from './types';
 import { trackInteraction } from '@/lib/interaction-tracker';
 import { humanizeClusterLabel } from '@/lib/humanize-label';
-import { resolveSlotDestinations } from '@/lib/proximity';
+import { resolveSlotDestinations, extractPlacedAnchors, getCoords } from '@/lib/proximity';
+import { distMi } from '@/lib/geo';
 
 // ═══════════════════════════════════════════
 // Placement slice state
@@ -471,27 +472,56 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
           // Resolve per-slot destinations (handles split days like London morning → Cotswolds evening)
           const slotDestMap = resolveSlotDestinations(day, prevDay ?? null, tripDests);
 
-          for (const slotId of preferredSlots) {
+          // Try preferred slots first, then fall back to any compatible empty slot on the day
+          const allSlotIds = ['breakfast', 'morning', 'lunch', 'afternoon', 'dinner', 'evening'];
+          const fallbackSlots = allSlotIds.filter(s => !preferredSlots.includes(s));
+          const slotsToTry = [...preferredSlots, ...fallbackSlots];
+
+          for (const slotId of slotsToTry) {
             const slot = day.slots.find(s => s.id === slotId);
+            // Skip if slot is full: 2+ ghosts already, or 2+ placed items (slot is occupied)
             if (!slot || (slot.ghostItems && slot.ghostItems.length >= 2)) continue;
+            if (slot.places.length >= 2) continue;
 
             // Check destination match at the slot level (not just day level)
             const slotDest = (slotDestMap.slotDestinations.get(slotId) || day.destination || '').toLowerCase();
             if (slotDest && !candLoc.includes(slotDest) && !slotDest.includes(candLoc.split(',')[0].trim())) continue;
+
+            // ─── Geographic post-filtering (Sec 5.2) ─────────────────────
+            // Compute distance to nearest placed item on this day.
+            // If far away and not a high-match standout, add geographic caveat.
+            const candCoords = getCoords(candidate);
+            const dayAnchors = extractPlacedAnchors(day);
+            let geoCaveat = '';
+            if (candCoords && dayAnchors.length > 0) {
+              let nearestDist = Infinity;
+              for (const anchor of dayAnchors) {
+                const d = distMi(candCoords.lat, candCoords.lng, anchor.lat, anchor.lng);
+                if (d < nearestDist) nearestDist = d;
+              }
+              // "Across town" threshold (> 3 mi) and not a taste standout (< 90)
+              if (nearestDist > 3 && (candidate.matchScore ?? 0) < 90) {
+                geoCaveat = nearestDist > 5
+                  ? ' · Heads up: this is across town from the rest of your day'
+                  : ' · Note: a bit out of the way from your other stops';
+              }
+            }
+
+            const baseRationale = candidate.rating?.reaction === 'myPlace'
+              ? `You starred ${candidate.name}`
+              : candidate.matchExplanation?.topClusters?.[0]?.label
+                ? `Fits your ${humanizeClusterLabel(candidate.matchExplanation.topClusters[0].label)} signal`
+                : candidate.type
+                  ? `Top ${candidate.type.toLowerCase()} pick for this trip`
+                  : `Matches your taste profile`;
 
             const ghostItem: ImportedPlace = {
               ...candidate,
               id: `ghost-starred-${candidate.id}`,
               ghostStatus: 'proposed',
               terrazzoReasoning: {
-                rationale: candidate.rating?.reaction === 'myPlace'
-                  ? `You starred ${candidate.name}`
-                  : candidate.matchExplanation?.topClusters?.[0]?.label
-                    ? `Fits your ${humanizeClusterLabel(candidate.matchExplanation.topClusters[0].label)} signal`
-                    : candidate.type
-                      ? `Top ${candidate.type.toLowerCase()} pick for this trip`
-                      : `Matches your taste profile`,
-                confidence: 0.85,
+                rationale: baseRationale + geoCaveat,
+                confidence: geoCaveat ? 0.7 : 0.85,
               },
             };
             if (!slot.ghostItems) slot.ghostItems = [];

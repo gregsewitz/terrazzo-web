@@ -50,6 +50,8 @@ export type PerriandIconName =
   | 'chatBubble' | 'loveReaction' | 'unsure' | 'swap'
   // Briefing / Intelligence
   | 'alert' | 'currency' | 'calendar' | 'person' | 'quote'
+  // Scheduled event / activity at a place
+  | 'event'
   // Directional
   | 'arrow-left' | 'arrow-right';
 
@@ -125,6 +127,8 @@ const ACCENT: Partial<Record<PerriandIconName, string>> = {
   calendar:   COLOR.warmGray,
   person:     COLOR.navy,
   quote:      COLOR.peach,
+  // Event
+  event:      COLOR.darkTeal,
 };
 
 // ─── SVG Path Renderers ──────────────────────────────────────────────────────
@@ -649,6 +653,23 @@ const PATHS: Record<PerriandIconName, PathRenderer> = {
       <path d="M10,12 C10,12 10,18 14,18 C14,18 14,14 10,14" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
       <path d="M18,12 C18,12 18,18 22,18 C22,18 22,14 18,14" stroke={s} strokeWidth="1.5" strokeLinecap="round" fill="none" />
       <circle cx="16" cy="22" r="1" fill={a} />
+    </>
+  ),
+
+  // ── Scheduled Event / Activity ──────────────────────────────────────────
+
+  event: (s, a) => (
+    <>
+      {/* Clock face */}
+      <circle cx="15" cy="17" r="8" stroke={s} strokeWidth="1.5" fill="none" />
+      {/* Hour hand — pointing to ~10 o'clock */}
+      <line x1="15" y1="17" x2="12" y2="12" stroke={s} strokeWidth="1.5" strokeLinecap="round" />
+      {/* Minute hand — pointing to 12 */}
+      <line x1="15" y1="17" x2="15" y2="11" stroke={s} strokeWidth="1.2" strokeLinecap="round" opacity=".5" />
+      {/* Small sparkle at top-right — signals a special event */}
+      <path d="M24,8 L25,10.5 L27.5,9 L25.5,11.5 L24,14 L23,11.5 L20.5,9 L22.5,10.5Z" stroke={s} strokeWidth="1" strokeLinejoin="round" fill="none" opacity=".6" />
+      {/* Accent dot at clock center */}
+      <circle cx="15" cy="17" r="1.2" fill={a} />
     </>
   ),
 

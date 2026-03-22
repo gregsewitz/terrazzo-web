@@ -42,6 +42,7 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
 
   let placeName: string | null = null;
   let confidence: number = 0;
+  let activityContext: string | null = null;
 
   try {
     const classifyResponse = await client.messages.create({
@@ -49,46 +50,38 @@ export const POST = authHandler(async (req: NextRequest, _ctx, user: User) => {
       max_tokens: 200,
       messages: [{
         role: 'user',
-        content: `Does this trip planner entry reference a specific, visitable place (restaurant, bar, cafe, neighborhood, park, shop, market, gallery, museum, beach, hotel, spa, etc.)?
+        content: `Analyze this trip planner entry and determine if it references a specific, visitable place. If it does, extract the place name and any activity/event context.
 
 Entry: "${inputText}"
 ${destination ? `Trip destination: ${destination}` : ''}
 
 Respond with ONLY a JSON object, no markdown:
-{"isPlace": true/false, "placeName": "cleaned place name or null", "confidence": 0.0-1.0}
+{"isPlace": true/false, "placeName": "cleaned place name or null", "activityContext": "short activity/event description or null", "confidence": 0.0-1.0}
 
 Rules:
-- Extract just the place name, stripping action words like "Dinner at", "Walk around", "Visit", "Grab coffee at", "Check out"
-- Transportation, transit, and logistics notes that mention places should NOT be classified as places — they are notes about getting somewhere, not about visiting the place itself
-- Scheduled activities, events, bookings, and reminders at a known place (especially a hotel/resort) should NOT be classified as places — the user is noting a specific event or on-property experience, not discovering a new place to visit. This includes:
-  * Fitness & wellness: any workout class, gym session, spa treatment, massage, facial, sauna, yoga, pilates, meditation, pool time, hammam
-  * Sports & outdoor: tennis, golf tee time, horse riding, cycling, skiing, sailing, surfing lesson, guided hike, shooting, falconry, kayaking
-  * Hotel services: check-in, check-out, room service, concierge meeting, luggage storage, late checkout, early breakfast
-  * Kids & family: kids club, babysitter, family activity, nanny pickup
-  * Bookings & appointments: restaurant reservation at the hotel, cooking class, wine tasting, cocktail making, afternoon tea, private dining
-  * Tours & guides: meet guide, pickup time, tour departure, transfer, excursion
-  * Personal reminders: wake-up call, packing, laundry, call home, medication
-  These entries typically include a specific time and/or reference an activity happening AT a property the user is already staying at.
-- "Dinner at the Brasserie at Estelle Manor" → {"isPlace": true, "placeName": "Brasserie at Estelle Manor", "confidence": 0.95}
-- "Walk around Shoreditch" → {"isPlace": true, "placeName": "Shoreditch", "confidence": 0.85}
-- "The Connaught Bar" → {"isPlace": true, "placeName": "The Connaught Bar", "confidence": 0.95}
-- "Pack bags" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Massages" → {"isPlace": false, "placeName": null, "confidence": 0.7}
-- "Massages at COMO Shambhala" → {"isPlace": true, "placeName": "COMO Shambhala", "confidence": 0.9}
-- "1:10pm flight to Iguazu" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Drive to the Cotswolds" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Train to Oxford at 9am" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Uber to airport" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Pickup rental car from Sixt Liverpool St at 2pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Car service to Heathrow" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Check out of hotel by 11am" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "9:30am workout class at Cowley Manor" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Spa at 2pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Golf tee time 8am" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Cooking class at the hotel 3pm" → {"isPlace": false, "placeName": null, "confidence": 0.9}
-- "Kids club drop-off 9am" → {"isPlace": false, "placeName": null, "confidence": 0.95}
-- "Wine tasting at 5pm at Castello di Ama" → {"isPlace": false, "placeName": null, "confidence": 0.85}
-- "Meet guide at lobby 10am" → {"isPlace": false, "placeName": null, "confidence": 0.95}
+- Extract just the place name, stripping action words like "Dinner at", "Walk around", "Visit", "Grab coffee at"
+- If the entry describes a specific activity, event, or booking at a place, set isPlace: true AND extract the activity into activityContext. The activityContext should be a short, human-readable label like "9:30am boot camp" or "Reservation at 1:00 PM" or "Wine tasting at 5pm".
+- Transportation and logistics notes (driving, flights, trains, car rental) should NOT be classified as places — these are about getting somewhere, not visiting.
+- Entries with no identifiable place (just personal reminders like "pack bags") should be isPlace: false.
+
+Examples:
+- "Dinner at the Brasserie at Estelle Manor" → {"isPlace": true, "placeName": "Brasserie at Estelle Manor", "activityContext": null, "confidence": 0.95}
+- "Walk around Shoreditch" → {"isPlace": true, "placeName": "Shoreditch", "activityContext": null, "confidence": 0.85}
+- "The Connaught Bar" → {"isPlace": true, "placeName": "The Connaught Bar", "activityContext": null, "confidence": 0.95}
+- "9:30am boot camp class at Cowley Manor" → {"isPlace": true, "placeName": "Cowley Manor", "activityContext": "9:30am boot camp class", "confidence": 0.9}
+- "Spa treatment at 2pm at COMO Shambhala" → {"isPlace": true, "placeName": "COMO Shambhala", "activityContext": "Spa treatment at 2pm", "confidence": 0.9}
+- "Wine tasting at 5pm at Castello di Ama" → {"isPlace": true, "placeName": "Castello di Ama", "activityContext": "Wine tasting at 5pm", "confidence": 0.9}
+- "Golf tee time 8am at The K Club" → {"isPlace": true, "placeName": "The K Club", "activityContext": "Golf tee time 8am", "confidence": 0.9}
+- "Cooking class at the hotel 3pm" → {"isPlace": false, "placeName": null, "activityContext": "Cooking class at 3pm", "confidence": 0.7}
+- "Reservation at 1:00 PM" → {"isPlace": false, "placeName": null, "activityContext": "Reservation at 1:00 PM", "confidence": 0.6}
+- "Pack bags" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
+- "Massages" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.7}
+- "1:10pm flight to Iguazu" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
+- "Drive to the Cotswolds" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.9}
+- "Train to Oxford at 9am" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
+- "Uber to airport" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.95}
+- "Pickup rental car from Sixt Liverpool St at 2pm" → {"isPlace": false, "placeName": null, "activityContext": null, "confidence": 0.9}
+- "Check out of hotel by 11am" → {"isPlace": false, "placeName": null, "activityContext": "Check out by 11am", "confidence": 0.9}
 - Confidence reflects how certain you are in the classification`,
       }],
     });
@@ -104,11 +97,13 @@ Rules:
     if (parsed.isPlace && parsed.placeName && parsed.confidence >= 0.7) {
       placeName = parsed.placeName;
       confidence = parsed.confidence;
+      activityContext = parsed.activityContext || null;
     } else {
       return NextResponse.json({
         resolved: false,
         reason: parsed.isPlace ? 'low_confidence' : 'not_a_place',
         confidence: parsed.confidence || 0,
+        activityContext: parsed.activityContext || null,
       });
     }
   } catch (err) {
@@ -228,6 +223,7 @@ Rules:
   return NextResponse.json({
     resolved: true,
     confidence,
+    activityContext,
     place: {
       googlePlaceId,
       name: resolvedName,

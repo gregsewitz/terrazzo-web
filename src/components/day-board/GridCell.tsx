@@ -66,12 +66,14 @@ interface GridCardProps {
   isDragging?: boolean;
   /** Collaborator accent color (for suggestion cards) */
   collabColor?: string;
+  /** Activity/event context from quick entry resolution — shown as a prominent header */
+  activityContext?: string;
 }
 
 function GridCard({
   variant, name, typeLabel, sourceBadge, matchScore, description,
   actionButton, onDismiss, onClick, pointerHandlers,
-  isHolding, isDragging, collabColor,
+  isHolding, isDragging, collabColor, activityContext,
 }: GridCardProps) {
   const isGhost = variant === 'ghost';
   const isSuggestion = variant === 'suggestion';
@@ -122,6 +124,29 @@ function GridCard({
         userSelect: 'none',
       }}
     >
+      {/* Row 0: Activity context banner — shown when a quick entry resolved to a place with an activity */}
+      {activityContext && (
+        <div
+          className="flex items-center gap-1 rounded"
+          style={{
+            background: 'rgba(58,128,136,0.08)',
+            padding: '2px 6px',
+            marginBottom: 1,
+          }}
+        >
+          <PerriandIcon name="event" size={10} color={COLOR.darkTeal} />
+          <span
+            style={{
+              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
+              color: COLOR.darkTeal, lineHeight: 1.3,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}
+          >
+            {activityContext}
+          </span>
+        </div>
+      )}
+
       {/* Row 1: Name (never truncated — wraps to 2 lines max) + action buttons */}
       <div className="flex items-start gap-1.5 min-w-0">
         {/* Collaborator avatar dot */}
@@ -233,7 +258,8 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
   const srcStyle = getSourceStyle(place);
 
   // Build description from the richest available data
-  const description = place.userContext
+  // If activityContext is present, skip userContext (it's redundant — shown in the banner)
+  const description = (place.userContext && !place.activityContext)
     ? `"${place.userContext}"`
     : place.enrichment?.description
       || place.google?.editorialSummary
@@ -251,6 +277,7 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
       sourceBadge={srcStyle}
       matchScore={place.matchScore}
       description={description}
+      activityContext={place.activityContext}
       onDismiss={() => unplaceFromSlot(dayNumber, slotId, place.id)}
       pointerHandlers={{
         onPointerDown: (e) => handlePointerDown(place, e),

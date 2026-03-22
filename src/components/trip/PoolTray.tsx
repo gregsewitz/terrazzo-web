@@ -176,6 +176,8 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
   const [sortBy, setSortBy] = useState<'match' | 'name' | 'source'>('match');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [elsewhereExpanded, setElsewhereExpanded] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Library places geo-filtered to trip destinations
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -242,10 +244,22 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
     return sourceFiltered.filter(item => item.type === filterType);
   }, [sourceFiltered, filterType]);
 
+  // Apply search query filter
+  const searchFiltered = useMemo(() => {
+    if (!searchQuery.trim()) return typeFiltered;
+    const q = searchQuery.toLowerCase().trim();
+    return typeFiltered.filter(item =>
+      item.name.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q) ||
+      item.location?.toLowerCase().includes(q) ||
+      item.google?.address?.toLowerCase().includes(q)
+    );
+  }, [typeFiltered, searchQuery]);
+
   // Smart sorting: if slot context exists, boost items matching suggested types
   // On split days, also boost items matching the slot's effective destination
   const sortedItems = useMemo(() => {
-    const sorted = sortPlaces(typeFiltered, sortBy, sortDirection);
+    const sorted = sortPlaces(searchFiltered, sortBy, sortDirection);
     if (!slotContext) return sorted;
 
     const suggestedSet = slotContext.suggestedTypes.length > 0
@@ -270,7 +284,7 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
       }
       return bScore - aScore;
     });
-  }, [typeFiltered, slotContext, slotEffectiveDest, sortBy, sortDirection]);
+  }, [searchFiltered, slotContext, slotEffectiveDest, sortBy, sortDirection]);
 
   // ─── Proximity Intelligence ───
   const proximity = useProximity(sortedItems, currentDay);
@@ -530,11 +544,56 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
           </div>
         )}
 
+        {/* Search bar — shown when 15+ items in pool */}
+        {starredPlaces.length >= 15 && (
+          <div className="px-4 pb-2">
+            <div
+              className="flex items-center gap-2 rounded-lg"
+              style={{
+                background: INK['04'],
+                border: `1px solid ${INK['10']}`,
+                padding: '6px 10px',
+              }}
+            >
+              <PerriandIcon name="discover" size={14} color={TEXT.secondary} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search places..."
+                className="flex-1 bg-transparent border-none outline-none"
+                style={{
+                  fontFamily: FONT.sans,
+                  fontSize: 13,
+                  color: TEXT.primary,
+                  lineHeight: 1.4,
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="flex-shrink-0 flex items-center justify-center rounded-full"
+                  style={{
+                    width: 18, height: 18,
+                    background: INK['10'],
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <PerriandIcon name="close" size={8} color={TEXT.secondary} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Subtitle */}
         <div className="px-4 pb-2 text-xs" style={{ color: TEXT.secondary }}>
           {sortedItems.length} place{sortedItems.length !== 1 ? 's' : ''}
           {filterType !== 'all' && ` · ${filterType}`}
           {sourceFilter !== 'all' && ` · ${SOURCE_FILTER_TABS.find(t => t.value === sourceFilter)?.label}`}
+          {searchQuery && ` · "${searchQuery}"`}
           {' '}· hold &amp; drag to assign
         </div>
 
@@ -582,13 +641,18 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
             onSortChange={(v) => { setSortBy(v as 'match' | 'name' | 'source'); setSortDirection(defaultDirectionFor(v)); }}
             sortDirection={sortDirection}
             onSortDirectionChange={setSortDirection}
-            onResetAll={() => { setFilterType('all'); setSourceFilter('all'); setSortBy('match'); setSortDirection('desc'); }}
+            onResetAll={() => { setFilterType('all'); setSourceFilter('all'); setSortBy('match'); setSortDirection('desc'); setSearchQuery(''); }}
           />
         </div>
 
         {/* Geographic Cluster Chips */}
         {proximity.clusters.length > 0 && (
           <div className="px-4 py-2 flex gap-1.5 flex-wrap" style={{ borderBottom: '1px solid var(--t-linen)' }}>
+            {proximity.mode === 'cold-start' && (
+              <span className="w-full text-[10px] mb-0.5" style={{ color: TEXT.secondary, fontFamily: FONT.mono }}>
+                Explore by area:
+              </span>
+            )}
             {proximity.clusters.map((cluster) => {
               const isActive = clusterFilter?.label === cluster.label;
               return (
@@ -612,6 +676,9 @@ function PoolTray({ onTapDetail, onCurateMore, onOpenExport, onDragStart, dragIt
                   <PerriandIcon name="location" size={10} color={isActive ? 'white' : 'var(--t-dark-teal)'} />
                   {cluster.label}
                   <span style={{ opacity: 0.7 }}>{cluster.count}</span>
+                  {proximity.mode === 'cold-start' && !isActive && (
+                    <span style={{ opacity: 0.5, fontWeight: 400, fontStyle: 'italic' }}>Start here?</span>
+                  )}
                 </button>
               );
             })}

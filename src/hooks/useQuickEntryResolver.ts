@@ -60,6 +60,9 @@ export function useQuickEntryResolver() {
 
       if (data.resolved && data.place) {
         // Build ImportedPlace from the resolved data
+        // If the classifier detected an activity context (e.g., "9:30am boot camp class"),
+        // store it so the card can display the activity prominently.
+        const activity: string | undefined = data.activityContext || undefined;
         const resolvedPlace: ImportedPlace = {
           id: `resolved-${entry.id}-${Date.now()}`,
           name: data.place.name,
@@ -71,7 +74,8 @@ export function useQuickEntryResolver() {
           google: data.place.google || undefined,
           enrichment: data.place.enrichment || undefined,
           status: 'placed',
-          userContext: entry.text !== entry.label ? entry.text : undefined,
+          userContext: activity || (entry.text !== entry.label ? entry.text : undefined),
+          activityContext: activity,
           savedAt: new Date().toISOString(),
         };
 
