@@ -27,7 +27,6 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 import DesktopNav from '@/components/ui/DesktopNav';
 import BrandLoader from '@/components/ui/BrandLoader';
 import { useOnboardingStore } from '@/stores/onboardingStore';
-import DayBoardView from '@/components/trip/DayBoardView';
 import DayPlannerGrid from '@/components/trip/DayPlannerGrid';
 import PicksRail from '@/components/library/PicksRail';
 import RightPanel from '@/components/ui/RightPanel';
@@ -105,7 +104,7 @@ function TripDetailContent() {
   const [showGraduateModal, setShowGraduateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [desktopView, setDesktopView] = useState<'overview' | 'board' | 'map'>('board');
-  const [useGridLayout, setUseGridLayout] = useState(true); // Feature toggle: grid vs legacy board
+  // Grid is now the only desktop board layout (legacy DayBoardView removed)
   const [showTour, setShowTour] = useState(false); // Force-show tour (retake)
 
   // Picks rail resizable width
@@ -318,7 +317,7 @@ function TripDetailContent() {
 
   // ─── Grid view: fetch Claude suggestions for ALL days ───
   const { allSuggestions: gridSuggestions } = useGridSuggestions(
-    trip, myPlaces, useGridLayout && isDesktop && ghostsInjectedRef.current
+    trip, myPlaces, isDesktop && ghostsInjectedRef.current
   );
   const gridSuggestionsInjectedRef = useRef<string>('');
   useEffect(() => {
@@ -483,25 +482,6 @@ function TripDetailContent() {
                   );
                 })}
               </div>
-            )}
-            {/* Grid/Legacy layout toggle (dev only) */}
-            {desktopView === 'board' && (
-              <button
-                onClick={() => setUseGridLayout(v => !v)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full cursor-pointer"
-                style={{
-                  border: '1px solid var(--t-linen)',
-                  background: useGridLayout ? 'rgba(58,128,136,0.08)' : INK['04'],
-                  fontFamily: FONT.mono,
-                  fontSize: 9,
-                  fontWeight: 600,
-                  color: useGridLayout ? 'var(--t-dark-teal)' : TEXT.secondary,
-                }}
-                title="Toggle between grid and legacy board layout"
-              >
-                <PerriandIcon name="plan" size={10} color={useGridLayout ? 'var(--t-dark-teal)' : TEXT.secondary} />
-                {useGridLayout ? 'Grid' : 'Legacy'}
-              </button>
             )}
             {/* Retake tour */}
             {desktopView === 'board' && trip.status !== 'dreaming' && (
@@ -672,7 +652,7 @@ function TripDetailContent() {
 
               {/* ── CENTER: ITINERARY BOARD ── */}
               <div className="flex-1 min-w-0 overflow-hidden">
-                {useGridLayout ? <DayPlannerGrid /> : <DayBoardView />}
+                <DayPlannerGrid />
               </div>
 
               {/* ── RIGHT: COLLAPSIBLE MAP & NOTES ── */}
