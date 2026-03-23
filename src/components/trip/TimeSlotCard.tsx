@@ -308,13 +308,25 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
       <div
         ref={slotRef}
         className="flex"
+        onClick={(e) => {
+          if (!(e.target as HTMLElement).closest('.group\\/card') && !(e.target as HTMLElement).closest('button')) {
+            handleEmptyClick();
+          }
+        }}
         style={{
           borderBottom: '1px solid var(--t-linen)',
-          background: isDropTarget ? 'rgba(58,128,136,0.04)' : undefined,
-          transition: 'background 0.15s ease-out',
+          borderLeft: isSlotSelected
+            ? '3px solid var(--t-dark-teal)'
+            : '3px solid transparent',
+          background: isSlotSelected
+            ? 'rgba(58,128,136,0.04)'
+            : isDropTarget
+              ? 'rgba(58,128,136,0.04)'
+              : undefined,
+          transition: 'background 0.15s ease-out, border-left 0.15s ease-out',
         }}
       >
-        <RailLabel accent={false} label={slot.label} />
+        <RailLabel accent={isSlotSelected} label={slot.label} />
         <div className="flex-1 min-w-0 py-2 pr-3 pl-2.5">
           <div className="flex flex-col gap-2">
             {slot.ghostItems!.map(ghost => (
@@ -364,10 +376,24 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
       <div
         ref={slotRef}
         className="flex"
+        onClick={(e) => {
+          // Tapping the slot background (not a card or button) selects the slot
+          if (!(e.target as HTMLElement).closest('.group\\/card') && !(e.target as HTMLElement).closest('button')) {
+            handleEmptyClick();
+          }
+        }}
         style={{
           borderBottom: '1px solid var(--t-linen)',
-          borderLeft: isDropTarget ? '3px solid var(--t-dark-teal)' : '3px solid transparent',
-          background: isDropTarget ? 'rgba(58,128,136,0.06)' : undefined,
+          borderLeft: isSlotSelected
+            ? '3px solid var(--t-dark-teal)'
+            : isDropTarget
+              ? '3px solid var(--t-dark-teal)'
+              : '3px solid transparent',
+          background: isSlotSelected
+            ? 'rgba(58,128,136,0.04)'
+            : isDropTarget
+              ? 'rgba(58,128,136,0.06)'
+              : undefined,
           transition: 'background 0.2s ease-out, border-left 0.15s ease-out',
         }}
       >
