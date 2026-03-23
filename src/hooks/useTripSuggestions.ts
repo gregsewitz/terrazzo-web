@@ -262,6 +262,154 @@ export function useTripSuggestions(
   return { suggestions, isLoading, error, isCached, refetch };
 }
 
+// ─── Multi-day suggestion fetcher for grid view ─────────────────────────────
+
+/**
+ * useGridSuggestions — fetches Claude suggestions for ALL days (sequentially).
+ * Used by the grid view where all days are visible at once.
+ * Calls the suggestion API once per day that has empty slots and candidates.
+ */
+export function useGridSuggestions(
+  trip: Trip | null | undefined,
+  libraryPlaces: ImportedPlace[],
+  enabled: boolean,
+): { allSuggestions: Map<number, SuggestionItem[]>; isLoading: boolean } {
+  const [allSuggestions, setAllSuggestions] = useState<Map<number, SuggestionItem[]>>(new Map());
+  const [isLoading, setIsLoading] = useState(false);
+  const fetchedKeyRef = useRef<string>('');
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !trip || !libraryPlaces.length) return;
+
+    // Build a cache key from all confirmed place IDs across all days
+    const allConfirmedIds = trip.days
+      .flatMap(d => d.slots.flatMap(s => s.places.map(p => p.id)))
+      .sort()
+      .join(',');
+    const key = `${trip.id}:${simpleHash(allConfirmedIds)}`;
+    if (key === fetchedKeyRef.current) return;
+    fetchedKeyRef.current = key;
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const tripDests = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean)) as string[];
+
+    (async () => {
+      setIsLoading(true);
+      const results = new Map<number, SuggestionItem[]>();
+
+      for (const day of trip.days) {
+        if (controller.signal.aborted) break;
+
+        const prevDay = trip.days.find(d => d.dayNumber === day.dayNumber - 1) || null;
+        const slotDestMap = resolveSlotDestinations(day, prevDay, tripDests);
+
+        // Collect active destinations
+        const activeDests = new Set<string>();
+        for (const dest of slotDestMap.slotDestinations.values()) {
+          if (dest) activeDests.add(dest.toLowerCase());
+        }
+        if (day.destination) activeDests.add(day.destination.toLowerCase());
+        if (activeDests.size === 0) continue;
+
+        // Filter candidates for this day
+        const placedIds = new Set(day.slots.flatMap(s => s.places.map(p => p.id)));
+        const emptySlotTypes = new Set<string>();
+        day.slots.forEach(slot => {
+          if (slot.places.length === 0) {
+            (SLOT_TYPE_AFFINITY[slot.id] || []).forEach(t => emptySlotTypes.add(t));
+          }
+        });
+
+        const candidates = libraryPlaces
+          .filter(p => {
+            if (placedIds.has(p.id)) return false;
+            if (!p.google?.lat || !p.google?.lng) return false;
+            const locLower = p.location?.toLowerCase() || '';
+            const locMatch = [...activeDests].some(dest => locLower.includes(dest));
+            const typeMatch = emptySlotTypes.has(p.type);
+            return locMatch && typeMatch;
+          })
+          .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+          .slice(0, 20);
+
+        if (candidates.length === 0) continue;
+
+        try {
+          const response = await apiFetch<SuggestionResponse>(
+            `/api/trips/${trip.id}/suggestions/generate`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                dayNumber: day.dayNumber,
+                tripName: trip.name || '',
+                travelContext: trip.travelContext,
+                groupSize: trip.groupSize,
+                ...(() => {
+                  const geo = trip.geoDestinations?.find(g =>
+                    g.name.toLowerCase().includes((day.destination || '').toLowerCase()) ||
+                    (day.destination || '').toLowerCase().includes(g.name.toLowerCase())
+                  ) || trip.geoDestinations?.[0];
+                  return geo?.lat && geo?.lng ? { destLat: geo.lat, destLng: geo.lng } : {};
+                })(),
+                day: {
+                  dayNumber: day.dayNumber,
+                  date: (() => {
+                    if (trip.flexibleDates || !trip.startDate) return undefined;
+                    const d = new Date(trip.startDate + 'T12:00:00');
+                    d.setDate(d.getDate() + (day.dayNumber - 1));
+                    return d.toISOString().split('T')[0];
+                  })(),
+                  dayOfWeek: day.dayOfWeek,
+                  destination: day.destination,
+                  slots: day.slots.map(s => ({
+                    id: s.id,
+                    label: s.label,
+                    time: s.time,
+                    places: s.places.map(p => ({
+                      id: p.id,
+                      name: p.name,
+                      type: p.type,
+                      location: p.location,
+                    })),
+                  })),
+                },
+                candidates: candidates.map(c => ({
+                  id: c.id,
+                  name: c.name,
+                  type: c.type,
+                  location: c.location,
+                  matchScore: c.matchScore,
+                  matchBreakdown: c.matchBreakdown,
+                  tasteNote: c.tasteNote,
+                })),
+              }),
+              signal: controller.signal,
+            }
+          );
+          if (!controller.signal.aborted) {
+            results.set(day.dayNumber, response.suggestions);
+          }
+        } catch {
+          // Skip this day on error, continue with others
+        }
+      }
+
+      if (!controller.signal.aborted) {
+        setAllSuggestions(results);
+        setIsLoading(false);
+      }
+    })();
+
+    return () => { controller.abort(); };
+  }, [enabled, trip, libraryPlaces]);
+
+  return { allSuggestions, isLoading };
+}
+
 // ─── Simple hash ──────────────────────────────────────────────────────────────
 
 function simpleHash(str: string): string {

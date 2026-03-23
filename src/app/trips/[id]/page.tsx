@@ -37,6 +37,7 @@ import { PerriandIcon } from '@/components/icons/PerriandIcons';
 import EditableTripName from '@/components/trip/EditableTripName';
 import { useGeoDestinationRepair } from '@/hooks/useGeoDestinationRepair';
 import { useQuickEntryResolver } from '@/hooks/useQuickEntryResolver';
+import { useGridSuggestions } from '@/hooks/useTripSuggestions';
 
 // Lazy-loaded components for conditionally rendered views
 const ChatSidebar = lazy(() => import('@/components/chat/ChatSidebar'));
@@ -314,6 +315,39 @@ function TripDetailContent() {
       ghostsInjectedRef.current = true;
     }
   }, [trip, myPlaces, injectGhostCandidates]);
+
+  // ─── Grid view: fetch Claude suggestions for ALL days ───
+  const { allSuggestions: gridSuggestions } = useGridSuggestions(
+    trip, myPlaces, useGridLayout && isDesktop && ghostsInjectedRef.current
+  );
+  const gridSuggestionsInjectedRef = useRef<string>('');
+  useEffect(() => {
+    if (gridSuggestions.size === 0 || !myPlaces.length) return;
+    const key = [...gridSuggestions.entries()]
+      .flatMap(([, items]) => items.map(s => s.placeId))
+      .sort()
+      .join(',');
+    if (key === gridSuggestionsInjectedRef.current) return;
+    gridSuggestionsInjectedRef.current = key;
+
+    const ghostPlaces = [...gridSuggestions.entries()].flatMap(([, items]) =>
+      items.map(s => {
+        const place = myPlaces.find(p => p.id === s.placeId);
+        if (!place) return null;
+        return {
+          ...place,
+          id: `ghost-claude-${place.id}`,
+          source: { type: 'terrazzo' as const, name: '' },
+          ghostStatus: 'proposed' as const,
+          terrazzoReasoning: { rationale: s.rationale, confidence: s.confidence },
+        };
+      }).filter(Boolean)
+    ) as ImportedPlace[];
+
+    if (ghostPlaces.length > 0) {
+      injectGhostCandidates(ghostPlaces);
+    }
+  }, [gridSuggestions, myPlaces, injectGhostCandidates]);
 
   // ─── Context values ─────────────────────────────────────────────────────────
   // Build stable context objects so providers don't force-rerender on every tick.

@@ -473,20 +473,32 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
         shop: ['afternoon'],
       };
 
-      // Distribute candidates across slots, respecting per-slot destinations on split days
+      // Distribute candidates across slots, respecting per-slot destinations on split days.
+      // Round-robin across days so ghosts are spread evenly instead of all landing on Day 1.
       const updatedDays = [...trip.days];
       const tripDests = (trip.destinations || [trip.location?.split(',')[0]?.trim()].filter(Boolean)) as string[];
+      const ghostsPerDay = new Map<number, number>();
+      for (const d of updatedDays) {
+        ghostsPerDay.set(d.dayNumber, d.slots.reduce((n, s) => n + (s.ghostItems?.length || 0), 0));
+      }
+      const MAX_GHOSTS_PER_DAY = 3;
+      const MAX_TOTAL_GHOSTS = 12;
       let candidateIdx = 0;
       for (const candidate of newCandidates) {
-        if (candidateIdx >= 6) break; // Max 6 ghost injections
+        if (candidateIdx >= MAX_TOTAL_GHOSTS) break;
         const preferredSlots = typeSlotMap[candidate.type] || ['afternoon'];
         const candLoc = candidate.location.toLowerCase();
 
-        // Find a day + slot whose destination matches this candidate's location
+        // Find a day + slot whose destination matches this candidate's location.
+        // Sort days by current ghost count (ascending) to spread evenly.
+        const dayOrder = [...updatedDays].sort((a, b) =>
+          (ghostsPerDay.get(a.dayNumber) || 0) - (ghostsPerDay.get(b.dayNumber) || 0)
+        );
         let placed = false;
-        for (let di = 0; di < updatedDays.length; di++) {
+        for (let di = 0; di < dayOrder.length; di++) {
           if (placed) break;
-          const day = updatedDays[di];
+          const day = dayOrder[di];
+          if ((ghostsPerDay.get(day.dayNumber) || 0) >= MAX_GHOSTS_PER_DAY) continue;
           const prevDay = di > 0 ? updatedDays[di - 1] : null;
 
           // Resolve per-slot destinations (handles split days like London morning → Cotswolds evening)
@@ -552,6 +564,7 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
             };
             if (!slot.ghostItems) slot.ghostItems = [];
             slot.ghostItems.push(ghostItem);
+            ghostsPerDay.set(day.dayNumber, (ghostsPerDay.get(day.dayNumber) || 0) + 1);
             placed = true;
             candidateIdx++;
             break;
