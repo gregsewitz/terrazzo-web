@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { FONT, INK, TEXT } from '@/constants/theme';
 import { parseQuickEntry } from '@/lib/parseQuickEntry';
+import { formatTime12h } from '@/components/place/PlaceTimeEditor';
 import type { QuickEntry } from '@/types';
 
 interface QuickEntryInputProps {
@@ -143,7 +144,7 @@ function QuickEntryInput({ slotLabel, onSubmit, onCancel, autoFocus = true, init
               className="text-[9px]"
               style={{ color: TEXT.secondary, fontFamily: FONT.mono }}
             >
-              {preview.specificTimeLabel ? `${preview.specificTimeLabel} ` : ''}{preview.specificTime}
+              {preview.specificTimeLabel ? `${preview.specificTimeLabel} ` : ''}{formatTime12h(preview.specificTime)}
             </span>
           )}
           {isTentative && (

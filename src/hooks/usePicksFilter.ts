@@ -212,23 +212,49 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
           const a = makeAnchor(day.hotelInfo.lat, day.hotelInfo.lng, synth, 1.0);
           if (a) anchors.push(a);
         }
-      }
-
-      const ADJACENT_WEIGHT = 0.55;
-      const sortedDays = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
-      const prevDay = sortedDays.filter(d => d.dayNumber < selectedDay && d.destination).pop();
-      const nextDay = sortedDays.find(d => d.dayNumber > selectedDay && d.destination);
-
-      if (prevDay?.destination) {
-        const prevDest = prevDay.destination;
-        if (!destName || prevDest.toLowerCase() !== destName.toLowerCase()) {
-          resolveDestAnchors(prevDest, ADJACENT_WEIGHT);
+        // Fallback: if still no anchor, use coordinates from placed items on
+        // this day (e.g. Gymkhana, Chancery Rosewood) as geo anchors
+        if (anchors.length === 0 && day) {
+          const synth: GeoDestination = trip.geoDestinations?.find(
+            g => g.name.toLowerCase() === destName.toLowerCase()
+          ) ?? { name: destName };
+          for (const slot of day.slots) {
+            for (const place of slot.places) {
+              const coords = validCoords(place.google?.lat, place.google?.lng);
+              if (coords) {
+                const a = makeAnchor(coords[0], coords[1], synth, 0.9);
+                if (a) anchors.push(a);
+                break; // one placed anchor is enough to establish the geo context
+              }
+            }
+            if (anchors.length > 0) break;
+          }
         }
       }
-      if (nextDay?.destination) {
-        const nextDest = nextDay.destination;
-        if (!destName || nextDest.toLowerCase() !== destName.toLowerCase()) {
-          resolveDestAnchors(nextDest, ADJACENT_WEIGHT);
+
+      // Only add adjacent-day anchors if we successfully resolved the primary
+      // destination. Without a primary anchor, adjacent anchors would become the
+      // ONLY geo context, causing the geo filter to reject primary-destination
+      // places (e.g., London places rejected because only Cotswolds anchor exists).
+      const hasPrimaryAnchor = anchors.length > 0;
+
+      if (hasPrimaryAnchor) {
+        const ADJACENT_WEIGHT = 0.55;
+        const sortedDays = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
+        const prevDay = sortedDays.filter(d => d.dayNumber < selectedDay && d.destination).pop();
+        const nextDay = sortedDays.find(d => d.dayNumber > selectedDay && d.destination);
+
+        if (prevDay?.destination) {
+          const prevDest = prevDay.destination;
+          if (!destName || prevDest.toLowerCase() !== destName.toLowerCase()) {
+            resolveDestAnchors(prevDest, ADJACENT_WEIGHT);
+          }
+        }
+        if (nextDay?.destination) {
+          const nextDest = nextDay.destination;
+          if (!destName || nextDest.toLowerCase() !== destName.toLowerCase()) {
+            resolveDestAnchors(nextDest, ADJACENT_WEIGHT);
+          }
         }
       }
     }
