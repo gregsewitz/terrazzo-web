@@ -168,8 +168,9 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
         const geo = trip.geoDestinations?.find(
           g => g.name.toLowerCase() === dest.toLowerCase()
         );
+        const destLower = dest.toLowerCase();
         const daysWithHotel = trip.days
-          .filter(d => d.destination === dest && d.hotelInfo?.lat && d.hotelInfo?.lng)
+          .filter(d => d.destination?.toLowerCase() === destLower && d.hotelInfo?.lat && d.hotelInfo?.lng)
           .sort((a, b) =>
             Math.abs(a.dayNumber - selectedDay) - Math.abs(b.dayNumber - selectedDay)
           );
