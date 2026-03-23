@@ -147,9 +147,6 @@ export function useQuickEntryResolver() {
         // as a subtitle alongside the PlaceTimeEditor time display.
         const contextNote = activity
           || (entry.label && entry.label !== data.place.name ? entry.label : undefined);
-        // 🔍 Debug: log time carry-through
-        console.log(`[resolveQuickEntry] "${entry.label}" → specificTime=${entry.specificTime}, specificTimeLabel=${entry.specificTimeLabel}`);
-
         const resolvedPlace: ImportedPlace = {
           id: `resolved-${entry.id}-${Date.now()}`,
           name: data.place.name,

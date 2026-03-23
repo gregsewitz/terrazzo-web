@@ -9,6 +9,7 @@ import { getSourceStyle } from '@/types';
 import { getMatchTier, shouldShowTierBadge } from '@/lib/match-tier';
 import type { ImportedPlace, TimeSlot } from '@/types';
 import QuickEntryInput from '@/components/chat/QuickEntryInput';
+import PlaceTimeEditor from '@/components/place/PlaceTimeEditor';
 import GhostBadge from './GhostBadge';
 import { usePlaceDetail } from '@/context/PlaceDetailContext';
 // TODO: Re-enable when multiplayer collaboration is ready
@@ -68,12 +69,19 @@ interface GridCardProps {
   collabColor?: string;
   /** Activity/event context from quick entry resolution — shown as a prominent header */
   activityContext?: string;
+  /** Specific time for placed cards — rendered inline via PlaceTimeEditor */
+  specificTime?: string;
+  specificTimeLabel?: string;
+  placeType?: string;
+  slotId?: string;
+  onTimeChange?: (time: string | undefined, label?: string) => void;
 }
 
 function GridCard({
   variant, name, typeLabel, sourceBadge, matchScore, description,
   actionButton, onDismiss, onClick, pointerHandlers,
   isHolding, isDragging, collabColor, activityContext,
+  specificTime, specificTimeLabel, placeType, slotId, onTimeChange,
 }: GridCardProps) {
   const isGhost = variant === 'ghost';
   const isSuggestion = variant === 'suggestion';
@@ -220,6 +228,20 @@ function GridCard({
         )}
       </div>
 
+      {/* Row 2.5: Specific time — inline editor matching mobile cards */}
+      {(specificTime || (variant === 'placed' && onTimeChange)) && placeType && (
+        <div style={{ marginTop: -1 }}>
+          <PlaceTimeEditor
+            specificTime={specificTime}
+            specificTimeLabel={specificTimeLabel}
+            placeType={placeType as import('@/types').PlaceType}
+            slotId={slotId}
+            onSave={onTimeChange || (() => {})}
+            compact
+          />
+        </div>
+      )}
+
       {/* Row 3: Description — dedicated line, 2-line clamp */}
       {description && (
         <div
@@ -259,6 +281,7 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
 
   // Build description from the richest available data
   // If activityContext is present, skip userContext (it's redundant — shown in the banner)
+  // specificTime is now rendered via PlaceTimeEditor, no longer needed as description fallback
   const description = (place.userContext && !place.activityContext)
     ? `"${place.userContext}"`
     : place.enrichment?.description
@@ -266,7 +289,6 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
       || place.whatToOrder?.[0] && `Order: ${place.whatToOrder[0]}`
       || place.tips?.[0]
       || place.terrazzoInsight?.why
-      || (place.specificTime ? `${place.specificTimeLabel ? `${place.specificTimeLabel} at ` : ''}${place.specificTime}` : '')
       || '';
 
   return (
@@ -278,6 +300,11 @@ function PlacedGridCard({ place, dayNumber, slotId }: { place: ImportedPlace; da
       matchScore={place.matchScore}
       description={description}
       activityContext={place.activityContext}
+      specificTime={place.specificTime}
+      specificTimeLabel={place.specificTimeLabel}
+      placeType={place.type}
+      slotId={slotId}
+      onTimeChange={(time, label) => setPlaceTime(dayNumber, slotId, place.id, time, label)}
       onDismiss={() => unplaceFromSlot(dayNumber, slotId, place.id)}
       pointerHandlers={{
         onPointerDown: (e) => handlePointerDown(place, e),
