@@ -422,8 +422,153 @@ function OverviewView({
 
 
 // ═══════════════════════════════════════════════════════════════════
-//  ITINERARY VIEW (day-by-day with rich place cards)
+//  ITINERARY VIEW — Spreadsheet-style grid (days × slots)
 // ═══════════════════════════════════════════════════════════════════
+
+const GRID_SLOT_ORDER = ['breakfast', 'morning', 'lunch', 'afternoon', 'dinner', 'evening'];
+const GRID_SLOT_META: Record<string, { label: string; time: string; icon: string }> = {
+  breakfast: { label: 'Breakfast', time: '8 AM',   icon: 'breakfast' },
+  morning:   { label: 'Morning',   time: '10 AM',  icon: 'discover' },
+  lunch:     { label: 'Lunch',     time: '12:30 PM', icon: 'restaurant' },
+  afternoon: { label: 'Afternoon', time: '2:30 PM', icon: 'discover' },
+  dinner:    { label: 'Dinner',    time: '7 PM',   icon: 'restaurant' },
+  evening:   { label: 'Evening',   time: '9:30 PM', icon: 'discover' },
+};
+
+/** Compact read-only card for the grid cell */
+function GridCellCard({ place }: { place: ImportedPlace }) {
+  const typeIcon = TYPE_ICONS[place.type as PlaceType] || 'pin';
+  const brandColor = TYPE_BRAND_COLORS[place.type as PlaceType] || INK['70'];
+
+  return (
+    <div
+      style={{
+        padding: '5px 8px',
+        borderRadius: 8,
+        background: 'rgba(58,128,136,0.03)',
+        border: '1px solid rgba(58,128,136,0.1)',
+        marginBottom: 4,
+      }}
+    >
+      {place.activityContext ? (
+        <>
+          {/* Activity-first layout */}
+          <div style={{
+            fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
+            color: TEXT.primary, lineHeight: 1.25,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+            overflow: 'hidden',
+          }}>
+            {place.activityContext}
+          </div>
+          {place.specificTime && (
+            <div style={{
+              fontFamily: FONT.mono, fontSize: 8, fontWeight: 600,
+              color: 'var(--t-dark-teal)', marginTop: 2,
+            }}>
+              {place.specificTimeLabel
+                ? `${place.specificTimeLabel} at ${formatTime12h(place.specificTime)}`
+                : formatTime12h(place.specificTime)}
+            </div>
+          )}
+          <div className="flex items-center gap-1" style={{ marginTop: 2 }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 9, color: TEXT.secondary }}>
+              at {place.name}
+            </span>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Standard: venue name primary */}
+          <div className="flex items-center gap-1">
+            <PerriandIcon name={typeIcon} size={9} color={brandColor} />
+            <span style={{
+              fontFamily: FONT.sans, fontSize: 11, fontWeight: 600,
+              color: TEXT.primary, lineHeight: 1.25,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {place.name}
+            </span>
+          </div>
+          {place.specificTime && (
+            <div style={{
+              fontFamily: FONT.mono, fontSize: 8, fontWeight: 600,
+              color: 'var(--t-dark-teal)', marginTop: 2,
+            }}>
+              {place.specificTimeLabel
+                ? `${place.specificTimeLabel} at ${formatTime12h(place.specificTime)}`
+                : formatTime12h(place.specificTime)}
+            </div>
+          )}
+          {place.userContext && (
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 9, color: TEXT.secondary,
+              fontStyle: 'italic', marginTop: 1,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {place.userContext}
+            </div>
+          )}
+        </>
+      )}
+      {/* Subtle type + match tier row */}
+      <div className="flex items-center gap-1" style={{ marginTop: 2 }}>
+        <span style={{
+          fontFamily: FONT.mono, fontSize: 8, color: INK['40'],
+          textTransform: 'uppercase',
+        }}>
+          {place.type}
+        </span>
+        {shouldShowTierBadge(place.matchScore) && (() => {
+          const tier = getMatchTier(place.matchScore);
+          return (
+            <span style={{
+              fontFamily: FONT.mono, fontSize: 8, fontWeight: 700,
+              color: tier.color,
+            }}>
+              {tier.shortLabel}
+            </span>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
+
+/** Compact read-only quick entry for grid cell */
+function GridCellQuickEntry({ entry }: { entry: { label?: string; text: string; category: string; specificTime?: string; specificTimeLabel?: string } }) {
+  return (
+    <div
+      className="flex items-start gap-1.5"
+      style={{
+        padding: '4px 8px',
+        borderRadius: 8,
+        background: INK['04'],
+        marginBottom: 4,
+      }}
+    >
+      <PerriandIcon name={QUICK_ENTRY_CATEGORY_ICONS[entry.category as keyof typeof QUICK_ENTRY_CATEGORY_ICONS] || 'pin'} size={9} color={INK['30']} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{
+          fontFamily: FONT.sans, fontSize: 10,
+          color: TEXT.primary, lineHeight: 1.3,
+        }}>
+          {entry.label || entry.text}
+        </span>
+        {entry.specificTime && (
+          <div style={{
+            fontFamily: FONT.mono, fontSize: 8,
+            color: TEXT.secondary, marginTop: 1,
+          }}>
+            {entry.specificTimeLabel
+              ? `${entry.specificTimeLabel} at ${formatTime12h(entry.specificTime)}`
+              : formatTime12h(entry.specificTime)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function ItineraryView({
   trip, days, destinations,
@@ -432,207 +577,229 @@ function ItineraryView({
   days: TripDay[];
   destinations: string[];
 }) {
-  const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  if (days.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <PerriandIcon name="calendar" size={28} color={INK['20']} />
+        <p className="mt-3" style={{ fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic', color: TEXT.secondary }}>
+          No itinerary yet
+        </p>
+      </div>
+    );
+  }
+
+  const dayCount = days.length;
+  const minColW = 180;
+
+  // Filter to only slots that have content across ANY day
+  const activeSlots = GRID_SLOT_ORDER.filter(slotId =>
+    days.some(day => {
+      const slot = day.slots.find(s => s.id === slotId);
+      return slot && (slot.places.length > 0 || (slot.quickEntries && slot.quickEntries.length > 0));
+    })
+  );
+
+  // If no active slots at all, show all standard slots
+  const displaySlots = activeSlots.length > 0 ? activeSlots : GRID_SLOT_ORDER;
 
   return (
-    <div style={{ padding: '24px 20px 120px' }}>
-      {days.map((day, idx) => {
-        const dest = day.destination || trip.location;
-        const destColor = generateDestColor(dest);
-        const placedItems = day.slots.flatMap(s =>
-          s.places.map(p => ({ place: p, slotLabel: s.label, slotTime: s.time }))
-        );
-        const quickEntries = day.slots.flatMap(s => (s.quickEntries || []).map(q => ({ entry: q, slotLabel: s.label })));
-        const isExpanded = expandedDay === day.dayNumber;
-        const hasPlaces = placedItems.length > 0 || quickEntries.length > 0;
+    <div style={{ padding: '16px 12px 120px' }}>
+      {/* Scrollable grid wrapper */}
+      <div style={{
+        overflowX: 'auto',
+        borderRadius: 16,
+        border: '1px solid var(--t-linen)',
+        background: 'white',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `56px repeat(${dayCount}, minmax(${minColW}px, 1fr))`,
+          minWidth: dayCount > 3 ? dayCount * minColW + 56 : undefined,
+        }}>
 
-        return (
-          <div key={day.dayNumber} style={{ marginBottom: 16 }}>
-            {/* Day header card */}
-            <button
-              onClick={() => setExpandedDay(isExpanded ? null : day.dayNumber)}
-              className="w-full cursor-pointer"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 16,
-                padding: '20px 20px',
-                background: 'white',
-                border: '1px solid var(--t-linen)',
-                borderRadius: isExpanded ? '16px 16px 0 0' : 16,
-                textAlign: 'left',
-                transition: 'border-radius 0.15s',
-              }}
-            >
-              {/* Day number */}
-              <div style={{
-                width: 48, height: 48, borderRadius: 14,
-                background: destColor.bg,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <span style={{
-                  fontFamily: FONT.serif, fontSize: 24, fontStyle: 'italic',
-                  color: destColor.text, lineHeight: 1,
-                }}>
-                  {day.dayNumber}
-                </span>
-              </div>
+          {/* ─── Row 0: Header row ─── */}
+          {/* Corner cell */}
+          <div style={{
+            position: 'sticky', left: 0, zIndex: 10,
+            background: 'white',
+            borderRight: '1px solid var(--t-linen)',
+            borderBottom: '2px solid var(--t-linen)',
+          }} />
 
-              <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Day column headers */}
+          {days.map((day) => {
+            const dest = day.destination || trip.location;
+            const destColor = generateDestColor(dest);
+            return (
+              <div
+                key={`hdr-${day.dayNumber}`}
+                style={{
+                  padding: '12px 10px 10px',
+                  background: destColor.bg,
+                  borderBottom: `2px solid ${destColor.accent}40`,
+                  borderRight: '1px solid var(--t-linen)',
+                }}
+              >
                 <div style={{
-                  fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-                  color: TEXT.primary,
+                  fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
+                  color: destColor.text, lineHeight: 1.2,
                 }}>
                   {day.dayOfWeek && day.date
-                    ? `${day.dayOfWeek}, ${day.date}`
-                    : `Day ${day.dayNumber}`
-                  }
+                    ? `${day.dayOfWeek?.slice(0, 3)} ${day.date?.replace(/\D/g, ' ').trim().split(' ').pop()}`
+                    : `Day ${day.dayNumber}`}
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-1.5" style={{ marginTop: 3 }}>
                   {day.destination && (
                     <span style={{
-                      fontFamily: FONT.sans, fontSize: 11, fontWeight: 500,
-                      color: destColor.text,
+                      fontFamily: FONT.sans, fontSize: 10, fontWeight: 500,
+                      color: destColor.accent,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {day.destination}
                     </span>
                   )}
-                  {(day.hotelInfo?.name || day.hotel) && (
+                </div>
+                {(day.hotelInfo?.name || day.hotel) && (
+                  <div className="flex items-center gap-1" style={{ marginTop: 3 }}>
+                    <PerriandIcon name="hotel" size={8} color={destColor.text} />
                     <span style={{
-                      fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary,
-                      display: 'flex', alignItems: 'center', gap: 3,
+                      fontFamily: FONT.sans, fontSize: 9, fontWeight: 500,
+                      color: destColor.text, opacity: 0.7,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
-                      <PerriandIcon name="hotel" size={9} color={INK['40']} />
                       {day.hotelInfo?.name || day.hotel}
                     </span>
-                  )}
-                </div>
-                {!isExpanded && hasPlaces && (
-                  <div style={{
-                    fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary,
-                    marginTop: 4,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {placedItems.map(p => p.place.name).join(' · ')}
                   </div>
                 )}
               </div>
+            );
+          })}
 
-              {/* Expand chevron */}
-              <div style={{
-                flexShrink: 0,
-                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s',
-              }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 6L8 10L12 6" stroke={INK['30']} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </button>
+          {/* ─── Slot rows ─── */}
+          {displaySlots.map((slotId) => {
+            const meta = GRID_SLOT_META[slotId] || { label: slotId, time: '', icon: 'pin' };
+            return (
+              <React.Fragment key={slotId}>
+                {/* Row label (sticky left) */}
+                <div style={{
+                  position: 'sticky', left: 0, zIndex: 5,
+                  background: 'white',
+                  borderRight: '1px solid var(--t-linen)',
+                  borderBottom: '1px solid var(--t-linen)',
+                  padding: '8px 4px',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'flex-start',
+                }}>
+                  <PerriandIcon name={meta.icon as import('@/components/icons/PerriandIcons').PerriandIconName} size={12} color={INK['30']} />
+                  <span style={{
+                    fontFamily: FONT.mono, fontSize: 7, fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    color: INK['40'], marginTop: 3, textAlign: 'center',
+                    lineHeight: 1.2,
+                  }}>
+                    {meta.label}
+                  </span>
+                  <span style={{
+                    fontFamily: FONT.mono, fontSize: 7,
+                    color: INK['20'], marginTop: 1,
+                  }}>
+                    {meta.time}
+                  </span>
+                </div>
 
-            {/* Expanded slot content */}
-            {isExpanded && (
-              <div style={{
-                background: 'white',
-                border: '1px solid var(--t-linen)',
-                borderTop: 'none',
-                borderRadius: '0 0 16px 16px',
-                padding: '8px 16px 16px',
-              }}>
-                {day.slots.map(slot => {
-                  const hasItems = slot.places.length > 0 || (slot.quickEntries && slot.quickEntries.length > 0);
+                {/* Day cells for this slot */}
+                {days.map((day) => {
+                  const slot = day.slots.find(s => s.id === slotId);
+                  const places = slot?.places || [];
+                  const quickEntries = slot?.quickEntries || [];
+                  const isEmpty = places.length === 0 && quickEntries.length === 0;
+
                   return (
-                    <div key={slot.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--t-linen)' }}>
-                      {/* Slot label */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span style={{
-                          fontFamily: FONT.mono, fontSize: 9, fontWeight: 700,
-                          letterSpacing: '0.15em', textTransform: 'uppercase',
-                          color: TEXT.secondary,
-                        }}>
-                          {slot.label}
-                        </span>
-                        <span style={{
-                          fontFamily: FONT.mono, fontSize: 9, color: INK['30'],
-                        }}>
-                          {slot.time}
-                        </span>
-                      </div>
-
-                      {/* Placed items */}
-                      {slot.places.map(place => (
-                        <ItineraryPlaceCard key={place.id} place={place} />
+                    <div
+                      key={`${day.dayNumber}-${slotId}`}
+                      style={{
+                        padding: '6px 6px',
+                        borderBottom: '1px solid var(--t-linen)',
+                        borderRight: '1px solid var(--t-linen)',
+                        minHeight: 60,
+                        background: isEmpty ? 'transparent' : 'transparent',
+                      }}
+                    >
+                      {places.map(place => (
+                        <GridCellCard key={place.id} place={place} />
                       ))}
-
-                      {/* Quick entries */}
-                      {slot.quickEntries?.map(entry => (
-                        <div
-                          key={entry.id}
-                          className="flex items-center gap-2 py-2 px-3 rounded-lg mb-1"
-                          style={{ background: INK['04'] }}
-                        >
-                          <PerriandIcon name={QUICK_ENTRY_CATEGORY_ICONS[entry.category] || 'pin'} size={11} color={INK['30']} />
-                          <span style={{
-                            fontFamily: FONT.sans, fontSize: 12,
-                            color: TEXT.primary,
-                          }}>
-                            {entry.label || entry.text}
-                          </span>
-                          {entry.specificTime && (
-                            <span style={{
-                              fontFamily: FONT.mono, fontSize: 9,
-                              color: TEXT.secondary, marginLeft: 'auto',
-                            }}>
-                              {entry.specificTimeLabel ? `${entry.specificTimeLabel} at ${formatTime12h(entry.specificTime)}` : formatTime12h(entry.specificTime)}
-                            </span>
-                          )}
-                        </div>
+                      {quickEntries.map(entry => (
+                        <GridCellQuickEntry key={entry.id} entry={entry} />
                       ))}
-
-                      {/* Empty slot */}
-                      {!hasItems && (
+                      {isEmpty && (
                         <div style={{
-                          fontFamily: FONT.sans, fontSize: 11, fontStyle: 'italic',
-                          color: INK['20'], padding: '4px 0',
+                          height: '100%', minHeight: 48,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          Open
+                          <span style={{
+                            fontFamily: FONT.mono, fontSize: 8,
+                            color: INK['15'],
+                          }}>
+                            —
+                          </span>
                         </div>
                       )}
                     </div>
                   );
                 })}
+              </React.Fragment>
+            );
+          })}
 
-                {/* Transport events */}
-                {day.transport && day.transport.length > 0 && (
-                  <div style={{ paddingTop: 12 }}>
-                    {day.transport.map((t, i) => (
-                      <div key={i} className="flex items-center gap-2 py-1.5">
-                        <PerriandIcon name="discover" size={11} color={INK['40']} />
+          {/* ─── Transport row (if any day has transport) ─── */}
+          {days.some(d => d.transport && d.transport.length > 0) && (
+            <>
+              <div style={{
+                position: 'sticky', left: 0, zIndex: 5,
+                background: 'white',
+                borderRight: '1px solid var(--t-linen)',
+                padding: '8px 4px',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'flex-start',
+              }}>
+                <PerriandIcon name="discover" size={12} color={INK['30']} />
+                <span style={{
+                  fontFamily: FONT.mono, fontSize: 7, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                  color: INK['40'], marginTop: 3, textAlign: 'center',
+                  lineHeight: 1.2,
+                }}>
+                  Travel
+                </span>
+              </div>
+              {days.map((day) => {
+                const transports = day.transport || [];
+                return (
+                  <div
+                    key={`transport-${day.dayNumber}`}
+                    style={{
+                      padding: '6px 8px',
+                      borderRight: '1px solid var(--t-linen)',
+                    }}
+                  >
+                    {transports.map((t, i) => (
+                      <div key={i} className="flex items-center gap-1.5" style={{ marginBottom: 2 }}>
                         <span style={{
-                          fontFamily: FONT.sans, fontSize: 11, color: TEXT.secondary,
+                          fontFamily: FONT.sans, fontSize: 9, color: TEXT.secondary,
                         }}>
                           {t.mode && `${t.mode.charAt(0).toUpperCase() + t.mode.slice(1)}`}
-                          {t.from && t.to ? ` from ${t.from} to ${t.to}` : ''}
+                          {t.from && t.to ? ` → ${t.to}` : ''}
                           {t.departureTime ? ` at ${t.departureTime}` : ''}
-                          {t.details ? ` — ${t.details}` : ''}
                         </span>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      {days.length === 0 && (
-        <div className="text-center py-16">
-          <PerriandIcon name="calendar" size={28} color={INK['20']} />
-          <p className="mt-3" style={{ fontFamily: FONT.serif, fontSize: 16, fontStyle: 'italic', color: TEXT.secondary }}>
-            No itinerary yet
-          </p>
+                );
+              })}
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
