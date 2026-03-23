@@ -701,6 +701,8 @@ export const createPlacementSlice: StateCreator<TripState, [], [], TripPlacement
             specificTimeLabel: finalTimeLabel,
             status: 'placed',
           };
+          // 🔍 Debug: confirm final place has time
+          console.log(`[resolveQuickEntry/store] "${place.name}" final specificTime=${place.specificTime} (entry=${entry.specificTime}, resolvedPlace=${resolvedPlace.specificTime})`);
           return {
             ...s,
             quickEntries: (s.quickEntries || []).filter(e => e.id !== entryId),
