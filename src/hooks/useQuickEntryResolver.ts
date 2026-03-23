@@ -1,13 +1,27 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTripStore } from '@/stores/tripStore';
 import { apiFetch } from '@/lib/api-client';
-import type { QuickEntry, ImportedPlace } from '@/types';
+import type { QuickEntry, QuickEntryCategory, ImportedPlace, PlaceType } from '@/types';
 
 // Stagger delay between resolution attempts to avoid hammering the API
 const STAGGER_MS = 800;
 // Auth retry: if the first attempt gets 401, wait and retry (token may be refreshing)
 const AUTH_RETRY_DELAY = 2000;
 const MAX_AUTH_RETRIES = 2;
+
+/** Map quick entry category → PlaceType for resolved cards.
+ *  When there's an activityContext, the entry is an activity/event AT a venue,
+ *  so use the entry's category instead of the venue's Google type. */
+function categoryToPlaceType(category: QuickEntryCategory): PlaceType {
+  switch (category) {
+    case 'dining': return 'restaurant';
+    case 'activity': return 'activity';
+    case 'transport': return 'activity'; // transport entries rarely resolve to places
+    case 'logistics': return 'activity';
+    case 'other': return 'activity';
+    default: return 'activity';
+  }
+}
 
 /** Strip time expressions from activityContext so they don't show redundantly in the subtitle
  *  alongside PlaceTimeEditor's formatted time display. */
@@ -111,7 +125,10 @@ export function useQuickEntryResolver() {
         const resolvedPlace: ImportedPlace = {
           id: `resolved-${entry.id}-${Date.now()}`,
           name: data.place.name,
-          type: data.place.type || 'activity',
+          // When there's an activityContext (e.g., "spa at Estelle Manor"),
+          // the entry is an activity AT a venue — use the entry's category
+          // instead of the venue's Google type (which would be "hotel").
+          type: activity ? categoryToPlaceType(entry.category) : (data.place.type || 'activity'),
           location: data.place.location || destination || '',
           source: data.place.source || { type: 'quick_entry', name: 'Quick Entry' },
           matchScore: data.place.matchScore || 0,
