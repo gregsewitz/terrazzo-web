@@ -95,6 +95,7 @@ function PicksStrip({
     typeFilter: activeFilter,
     sourceFilter,
     searchQuery,
+    slotId: slotContext?.slotId ?? null,
   });
 
   // ─── Tap handler: quick-place when opened from a slot, otherwise open detail ───
@@ -121,8 +122,23 @@ function PicksStrip({
   });
 
   const stripPlaces = useMemo(() => {
-    return sortPlaces(filteredPicks, sortBy, sortDirection);
-  }, [filteredPicks, sortBy, sortDirection]);
+    const sorted = sortPlaces(filteredPicks, sortBy, sortDirection);
+
+    // Boost items matching slot's suggested types when a slot is selected
+    const suggestedSet = slotContext?.suggestedTypes.length
+      ? new Set(slotContext.suggestedTypes)
+      : null;
+
+    if (suggestedSet) {
+      return sorted.sort((a, b) => {
+        const aBoost = suggestedSet.has(a.type) ? 1 : 0;
+        const bBoost = suggestedSet.has(b.type) ? 1 : 0;
+        if (aBoost !== bBoost) return bBoost - aBoost;
+        return 0;
+      });
+    }
+    return sorted;
+  }, [filteredPicks, sortBy, sortDirection, slotContext]);
 
   // ─── Proximity Intelligence ───
   const proximity = useProximity(stripPlaces, selectedDay);

@@ -16,6 +16,7 @@ import {
   TAPER_RATIO,
   type GeoAnchor,
 } from '@/lib/destination-matching';
+import { resolveSlotDestinations } from '@/lib/proximity';
 
 export type { GeoAnchor } from '@/lib/destination-matching';
 
@@ -27,6 +28,8 @@ export interface PicksFilterOptions {
   sourceFilter: string;
   searchQuery: string;
   placePool?: ImportedPlace[];
+  /** When set, resolves split-day destination for this specific slot */
+  slotId?: string | null;
 }
 
 export interface PicksFilterResult {
@@ -61,7 +64,7 @@ export interface PicksFilterResult {
 // ─────────────────────────────────────────────────────────────────────
 
 export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
-  const { selectedDay, typeFilter, sourceFilter, searchQuery, placePool } = opts;
+  const { selectedDay, typeFilter, sourceFilter, searchQuery, placePool, slotId } = opts;
 
   const trip = useTripStore(s => s.trips.find(t => t.id === s.currentTripId));
   const myPlaces = useSavedStore(s => s.myPlaces);
@@ -75,13 +78,28 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       : [];
   }, [trip]);
 
-  // ─── Active day's destination ───
+  // ─── Active day's destination (slot-aware for split days) ───
   const activeDestination = useMemo(() => {
     if (selectedDay === null || !trip) return null;
     const day = trip.days.find(d => d.dayNumber === selectedDay);
     if (!day) return null;
+
+    // On split days, resolve the slot-specific destination
+    if (slotId && day.destination) {
+      const sorted = [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber);
+      const prevDay = sorted.filter(d => d.dayNumber < selectedDay).pop() ?? null;
+      const tripDests = trip.destinations?.length
+        ? trip.destinations
+        : trip.location ? [trip.location.split(',')[0]?.trim()].filter(Boolean) as string[] : [];
+      const slotDestMap = resolveSlotDestinations(day, prevDay, tripDests);
+      if (slotDestMap.isSplitDay) {
+        const slotDest = slotDestMap.slotDestinations.get(slotId);
+        if (slotDest) return slotDest;
+      }
+    }
+
     return day.destination || null;
-  }, [selectedDay, trip]);
+  }, [selectedDay, trip, slotId]);
 
   // ─── Adjacent-day destination names ───
   const adjacentDestinations = useMemo((): string[] => {
@@ -142,7 +160,9 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
       });
     } else {
       const day = trip.days.find(d => d.dayNumber === selectedDay);
-      const destName = day?.destination;
+      // Use the slot-aware activeDestination (which resolves split days)
+      // rather than day.destination (which is the day-level default)
+      const destName = activeDestination || day?.destination;
 
       const resolveDestAnchors = (dest: string, weight: number) => {
         const geo = trip.geoDestinations?.find(
@@ -214,7 +234,7 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     }
 
     return anchors;
-  }, [trip, selectedDay]);
+  }, [trip, selectedDay, activeDestination]);
 
   // ─── Placed IDs ───
   const placedIds = useMemo(() => {
@@ -233,12 +253,30 @@ export function usePicksFilter(opts: PicksFilterOptions): PicksFilterResult {
     return ids;
   }, [trip]);
 
+  // Exclude the active day's hotel — it's already shown in the day header
+  const hotelExclusion = useMemo(() => {
+    if (selectedDay === null || !trip) return { name: null as string | null, placeId: null as string | null };
+    const day = trip.days.find(d => d.dayNumber === selectedDay);
+    return {
+      name: day?.hotelInfo?.name?.toLowerCase() ?? null,
+      placeId: day?.hotelInfo?.placeId ?? null,
+    };
+  }, [selectedDay, trip]);
+
   // Show ALL picks including already-placed ones (they'll be greyed out in UI)
   const allUnplacedPicks = useMemo(() => {
     return myPlaces;
   }, [myPlaces]);
 
-  const pool = placePool ?? allUnplacedPicks;
+  const pool = useMemo(() => {
+    const base = placePool ?? allUnplacedPicks;
+    if (!hotelExclusion.name && !hotelExclusion.placeId) return base;
+    return base.filter(p => {
+      if (hotelExclusion.placeId && p.google?.placeId === hotelExclusion.placeId) return false;
+      if (hotelExclusion.name && p.name.toLowerCase() === hotelExclusion.name) return false;
+      return true;
+    });
+  }, [placePool, allUnplacedPicks, hotelExclusion]);
 
   // ─── Active geoDestinations (for Place ID matching) ───
   const activeGeoDestinations = useMemo((): GeoDestination[] | undefined => {

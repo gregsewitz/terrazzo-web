@@ -10,8 +10,8 @@ const AUTH_RETRY_DELAY = 2000;
 const MAX_AUTH_RETRIES = 2;
 
 /** Map quick entry category → PlaceType for resolved cards.
- *  When there's an activityContext, the entry is an activity/event AT a venue,
- *  so use the entry's category instead of the venue's Google type. */
+ *  When the entry describes an activity/event AT a venue, use the entry's
+ *  category instead of the venue's Google type. */
 function categoryToPlaceType(category: QuickEntryCategory): PlaceType {
   switch (category) {
     case 'dining': return 'restaurant';
@@ -21,6 +21,31 @@ function categoryToPlaceType(category: QuickEntryCategory): PlaceType {
     case 'other': return 'activity';
     default: return 'activity';
   }
+}
+
+/** Google types that represent venues rather than specific activities.
+ *  When a quick entry with a specific category (activity, dining) resolves
+ *  to one of these, the entry's category should take precedence. */
+const VENUE_TYPES = new Set(['hotel', 'neighborhood', 'rental']);
+
+/** Determine whether to use the entry's category or the Google type.
+ *  Returns true when the entry is an activity/event AT a venue. */
+function shouldOverrideType(
+  entryCategory: QuickEntryCategory,
+  googleType: string | undefined,
+  hasActivity: boolean,
+  entryLabel: string | undefined,
+  placeName: string | undefined,
+): boolean {
+  // If Claude explicitly identified an activity context, always override
+  if (hasActivity) return true;
+  // If the entry's category is specific (not "other") and the Google type
+  // is a venue type, the user is describing an activity at the venue
+  if (entryCategory !== 'other' && googleType && VENUE_TYPES.has(googleType)) return true;
+  // If the entry label differs from the place name, user described more
+  // than just the venue name (e.g., "spa at Estelle Manor" → label "Spa at estelle manor", place "Estelle Manor")
+  if (entryCategory !== 'other' && entryLabel && placeName && entryLabel.toLowerCase() !== placeName.toLowerCase()) return true;
+  return false;
 }
 
 /** Strip time expressions from activityContext so they don't show redundantly in the subtitle
@@ -125,10 +150,11 @@ export function useQuickEntryResolver() {
         const resolvedPlace: ImportedPlace = {
           id: `resolved-${entry.id}-${Date.now()}`,
           name: data.place.name,
-          // When there's an activityContext (e.g., "spa at Estelle Manor"),
-          // the entry is an activity AT a venue — use the entry's category
-          // instead of the venue's Google type (which would be "hotel").
-          type: activity ? categoryToPlaceType(entry.category) : (data.place.type || 'activity'),
+          // When the entry is an activity AT a venue (e.g., "spa at Estelle Manor"),
+          // use the entry's parsed category instead of Google's type for the venue.
+          type: shouldOverrideType(entry.category, data.place.type, !!activity, entry.label, data.place.name)
+            ? categoryToPlaceType(entry.category)
+            : (data.place.type || 'activity'),
           location: data.place.location || destination || '',
           source: data.place.source || { type: 'quick_entry', name: 'Quick Entry' },
           matchScore: data.place.matchScore || 0,

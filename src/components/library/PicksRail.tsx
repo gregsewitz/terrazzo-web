@@ -88,6 +88,7 @@ function PicksRailInner({
     typeFilter: activeFilter,
     sourceFilter,
     searchQuery,
+    slotId: slotContext?.slotId ?? null,
   });
 
   // ─── Rect registration for return-to-pool hit-testing ───
@@ -122,17 +123,32 @@ function PicksRailInner({
   const sortedPicks = useMemo(() => {
     const hasDestFilter = activeDestination || (selectedDay === null && tripDestinations.length > 0);
     const sorted = sortPlaces(sharedFilteredPicks, sortBy, sortDirection);
-    if (hasDestFilter) {
-      // Secondary pass: boost items matching destination relevance
+
+    // Build suggested-type set from slot context (for auto-boost)
+    const suggestedSet = slotContext?.suggestedTypes.length
+      ? new Set(slotContext.suggestedTypes)
+      : null;
+
+    if (hasDestFilter || suggestedSet) {
       return sorted.sort((a, b) => {
-        const aScore = destinationScore(a);
-        const bScore = destinationScore(b);
+        let aScore = 0;
+        let bScore = 0;
+        // Boost items matching destination relevance
+        if (hasDestFilter) {
+          aScore += destinationScore(a) * 2;
+          bScore += destinationScore(b) * 2;
+        }
+        // Boost items matching slot's suggested types
+        if (suggestedSet) {
+          if (suggestedSet.has(a.type)) aScore += 1;
+          if (suggestedSet.has(b.type)) bScore += 1;
+        }
         if (Math.abs(aScore - bScore) > 0.1) return bScore - aScore;
         return 0; // preserve primary sort order
       });
     }
     return sorted;
-  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy, sortDirection]);
+  }, [sharedFilteredPicks, activeDestination, selectedDay, tripDestinations, destinationScore, sortBy, sortDirection, slotContext]);
 
   // ─── Proximity Intelligence ───
   const proximity = useProximity(sortedPicks, selectedDay);
