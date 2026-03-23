@@ -104,16 +104,14 @@ export default function SharedTripView({ trip, ownerName }: SharedTripProps) {
       .join(', ');
   }, [typeMap]);
 
-  // Featured places — ones with the best editorial content
+  // Featured places — all placed items, editorial-rich ones sorted first
   const featured = useMemo(() => {
     return [...allPlaces]
-      .filter(p => p.terrazzoInsight?.why || (p.whatToOrder && p.whatToOrder.length > 0) || p.tips?.length)
       .sort((a, b) => {
         const scoreA = (a.terrazzoInsight?.why ? 2 : 0) + (a.whatToOrder?.length ? 1 : 0) + (a.tips?.length ? 1 : 0);
         const scoreB = (b.terrazzoInsight?.why ? 2 : 0) + (b.whatToOrder?.length ? 1 : 0) + (b.tips?.length ? 1 : 0);
         return scoreB - scoreA;
-      })
-      .slice(0, 6);
+      });
   }, [allPlaces]);
 
   // Hotels
@@ -958,18 +956,47 @@ function ReadOnlyPlaceCard({ place }: { place: ImportedPlace }) {
 
       {/* Content */}
       <div style={{ padding: '18px 20px 20px' }}>
-        <div style={{
-          fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
-          color: SECTION.plain.primary, marginBottom: 4, lineHeight: 1.25,
-        }}>
-          {place.name}
-        </div>
-        <div style={{
-          fontFamily: FONT.sans, fontSize: 12,
-          color: SECTION.plain.secondary, marginBottom: 12,
-        }}>
-          {place.location}
-        </div>
+        {place.activityContext ? (
+          <>
+            {/* Activity-first: activity is the headline */}
+            <div style={{
+              fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
+              color: SECTION.plain.primary, marginBottom: 2, lineHeight: 1.25,
+            }}>
+              {place.activityContext}
+            </div>
+            {place.specificTime && (
+              <div style={{
+                fontFamily: FONT.mono, fontSize: 10, fontWeight: 600,
+                color: 'var(--t-dark-teal)', marginBottom: 4,
+              }}>
+                {place.specificTimeLabel ? `${place.specificTimeLabel} at ${formatTime12h(place.specificTime)}` : formatTime12h(place.specificTime)}
+              </div>
+            )}
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 12,
+              color: SECTION.plain.secondary, marginBottom: 12,
+            }}>
+              at {place.name} · {place.location}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Standard: venue name is the headline */}
+            <div style={{
+              fontFamily: FONT.serif, fontSize: 20, fontStyle: 'italic',
+              color: SECTION.plain.primary, marginBottom: 4, lineHeight: 1.25,
+            }}>
+              {place.name}
+            </div>
+            <div style={{
+              fontFamily: FONT.sans, fontSize: 12,
+              color: SECTION.plain.secondary, marginBottom: 12,
+            }}>
+              {place.location}
+            </div>
+          </>
+        )}
 
         {/* Terrazzo insight */}
         {place.terrazzoInsight?.why && (
@@ -1079,42 +1106,86 @@ function ItineraryPlaceCard({ place }: { place: ImportedPlace }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div style={{
-                fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-                color: TEXT.primary,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {place.name}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
-                  {TYPE_LABELS[place.type] || place.type}
-                </span>
-                {displayLoc && (
-                  <span style={{ fontSize: 10, color: INK['50'] }}>· {displayLoc}</span>
-                )}
-                {rating && (
-                  <span style={{
-                    fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary,
-                    display: 'flex', alignItems: 'center', gap: 2,
+              {place.activityContext ? (
+                <>
+                  {/* Activity-first: activity title is primary */}
+                  <div style={{
+                    fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
+                    color: TEXT.primary, lineHeight: 1.3,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
-                    <PerriandIcon name="star" size={9} color={TEXT.secondary} /> {rating}
-                  </span>
-                )}
-                {priceStr && (
-                  <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
-                    {priceStr}
-                  </span>
-                )}
-                {shouldShowTierBadge(place.matchScore) && (() => {
-                  const tier = getMatchTier(place.matchScore);
-                  return (
-                    <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: tier.color }}>
-                      {tier.shortLabel}
+                    {place.activityContext}
+                  </div>
+                  <div style={{
+                    fontFamily: FONT.sans, fontSize: 11,
+                    color: TEXT.secondary, marginTop: 2,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    at {place.name}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+                      {TYPE_LABELS[place.type] || place.type}
                     </span>
-                  );
-                })()}
-              </div>
+                    {rating && (
+                      <span style={{
+                        fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary,
+                        display: 'flex', alignItems: 'center', gap: 2,
+                      }}>
+                        <PerriandIcon name="star" size={9} color={TEXT.secondary} /> {rating}
+                      </span>
+                    )}
+                    {shouldShowTierBadge(place.matchScore) && (() => {
+                      const tier = getMatchTier(place.matchScore);
+                      return (
+                        <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: tier.color }}>
+                          {tier.shortLabel}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Standard: venue name is primary */}
+                  <div style={{
+                    fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+                    color: TEXT.primary,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {place.name}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span style={{ fontFamily: FONT.sans, fontSize: 10, color: INK['50'] }}>
+                      {TYPE_LABELS[place.type] || place.type}
+                    </span>
+                    {displayLoc && (
+                      <span style={{ fontSize: 10, color: INK['50'] }}>· {displayLoc}</span>
+                    )}
+                    {rating && (
+                      <span style={{
+                        fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary,
+                        display: 'flex', alignItems: 'center', gap: 2,
+                      }}>
+                        <PerriandIcon name="star" size={9} color={TEXT.secondary} /> {rating}
+                      </span>
+                    )}
+                    {priceStr && (
+                      <span style={{ fontFamily: FONT.mono, fontSize: 9, color: TEXT.secondary }}>
+                        {priceStr}
+                      </span>
+                    )}
+                    {shouldShowTierBadge(place.matchScore) && (() => {
+                      const tier = getMatchTier(place.matchScore);
+                      return (
+                        <span style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 600, color: tier.color }}>
+                          {tier.shortLabel}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Specific time badge */}
