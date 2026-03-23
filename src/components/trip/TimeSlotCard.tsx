@@ -421,52 +421,94 @@ function TimeSlotCard({ slot, dayNumber }: TimeSlotCardProps) {
                       opacity: isReservation ? 1 : 0.5,
                     }}
                   />
-                  {/* Content — name + source on line 1, insight on line 2 */}
+                  {/* Content — activity-first when activityContext is present */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="text-[12px] font-medium truncate"
-                        style={{ color: TEXT.primary }}
-                      >
-                        {p.name}
-                      </span>
-                      <span
-                        className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
-                        style={{ background: srcStyle.bg, color: srcStyle.color }}
-                      >
-                        <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {getSourceLabel(p)}
-                      </span>
-                      {p.addedByName && (
-                        <span
-                          className="text-[8px] font-medium px-1.5 py-px rounded flex-shrink-0"
-                          style={{ background: INK['04'], color: TEXT.secondary }}
-                        >
-                          Added by {p.addedByName}
-                        </span>
-                      )}
-                    </div>
-                    {subtitle && (
-                      <div
-                        className="text-[10px] truncate mt-px"
-                        style={{
-                          color: TEXT.primary,
-                          fontStyle: 'italic',
-                          fontFamily: FONT.sans,
-                        }}
-                      >
-                        {subtitle}
-                      </div>
+                    {p.activityContext ? (
+                      <>
+                        {/* Activity-first: activity title is primary */}
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="text-[13px] font-semibold truncate"
+                            style={{ color: TEXT.primary }}
+                          >
+                            {p.activityContext}
+                          </span>
+                        </div>
+                        {/* Time — prominent, right under activity */}
+                        <div className="mt-0.5">
+                          <PlaceTimeEditor
+                            specificTime={p.specificTime}
+                            specificTimeLabel={p.specificTimeLabel}
+                            placeType={p.type}
+                            slotId={slot.id}
+                            onSave={(time, label) => setPlaceTime(dayNumber, slot.id, p.id, time, label)}
+                          />
+                        </div>
+                        {/* Venue name (secondary) + source badge */}
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className="text-[10px] truncate"
+                            style={{ color: TEXT.secondary, fontFamily: FONT.sans }}
+                          >
+                            at {p.name}
+                          </span>
+                          <span
+                            className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
+                            style={{ background: srcStyle.bg, color: srcStyle.color }}
+                          >
+                            <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {getSourceLabel(p)}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Standard: venue name is primary */}
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="text-[12px] font-medium truncate"
+                            style={{ color: TEXT.primary }}
+                          >
+                            {p.name}
+                          </span>
+                          <span
+                            className="text-[9px] font-semibold px-1.5 py-px rounded flex-shrink-0 flex items-center gap-0.5"
+                            style={{ background: srcStyle.bg, color: srcStyle.color }}
+                          >
+                            <PerriandIcon name={srcStyle.icon} size={8} color={srcStyle.color} /> {getSourceLabel(p)}
+                          </span>
+                          {p.addedByName && (
+                            <span
+                              className="text-[8px] font-medium px-1.5 py-px rounded flex-shrink-0"
+                              style={{ background: INK['04'], color: TEXT.secondary }}
+                            >
+                              Added by {p.addedByName}
+                            </span>
+                          )}
+                        </div>
+                        {subtitle && (
+                          <div
+                            className="text-[10px] truncate mt-px"
+                            style={{
+                              color: TEXT.primary,
+                              fontStyle: 'italic',
+                              fontFamily: FONT.sans,
+                            }}
+                          >
+                            {subtitle}
+                          </div>
+                        )}
+                        {/* Specific time — "Reservation at 8:15 PM" or "+ time" on hover */}
+                        <div className="mt-0.5">
+                          <PlaceTimeEditor
+                            specificTime={p.specificTime}
+                            specificTimeLabel={p.specificTimeLabel}
+                            placeType={p.type}
+                            slotId={slot.id}
+                            onSave={(time, label) => setPlaceTime(dayNumber, slot.id, p.id, time, label)}
+                          />
+                        </div>
+                      </>
                     )}
-                    {/* Specific time — "Reservation at 8:15 PM" or "+ time" on hover */}
-                    <div className="mt-0.5">
-                      <PlaceTimeEditor
-                        specificTime={p.specificTime}
-                        specificTimeLabel={p.specificTimeLabel}
-                        placeType={p.type}
-                        slotId={slot.id}
-                        onSave={(time, label) => setPlaceTime(dayNumber, slot.id, p.id, time, label)}
-                      />
-                    </div>
                   </div>
                   {/* Remove button — visible to owner or when not in collaboration mode */}
                   {(myRole === 'owner' || !myRole) && (

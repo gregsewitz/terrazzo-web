@@ -132,126 +132,174 @@ function GridCard({
         userSelect: 'none',
       }}
     >
-      {/* Row 0: Activity context banner — shown when a quick entry resolved to a place with an activity */}
-      {activityContext && (
-        <div
-          className="flex items-center gap-1 rounded"
-          style={{
-            background: 'rgba(58,128,136,0.08)',
-            padding: '2px 6px',
-            marginBottom: 1,
-          }}
-        >
-          <PerriandIcon name="event" size={10} color={COLOR.darkTeal} />
-          <span
-            style={{
-              fontFamily: FONT.sans, fontSize: 10, fontWeight: 600,
-              color: COLOR.darkTeal, lineHeight: 1.3,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}
-          >
-            {activityContext}
-          </span>
-        </div>
-      )}
-
-      {/* Row 1: Name (never truncated — wraps to 2 lines max) + action buttons */}
-      <div className="flex items-start gap-1.5 min-w-0">
-        {/* Collaborator avatar dot */}
-        {isSuggestion && collabColor && (
-          <div className="flex-shrink-0 rounded-full mt-1" style={{ width: 6, height: 6, background: collabColor }} />
-        )}
-
-        <span
-          className="font-semibold flex-1"
-          style={{
-            color: TEXT.primary, fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.25,
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}
-        >
-          {name}
-        </span>
-
-        {actionButton && (
-          <button
-            onClick={(e) => { e.stopPropagation(); actionButton.onClick(e); }}
-            className="flex-shrink-0 px-1.5 py-px rounded font-semibold btn-hover"
-            style={{ background: COLOR.darkTeal, color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 10 }}
-          >
-            {actionButton.label}
-          </button>
-        )}
-
-        {onDismiss && (
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); onDismiss(e); }}
-            className="flex-shrink-0 w-5 h-5 rounded-full items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity"
-            style={{ background: INK['08'], border: 'none', cursor: 'pointer', display: 'flex' }}
-            aria-label="Remove"
-          >
-            <PerriandIcon name="close" size={8} color={TEXT.secondary} />
-          </button>
-        )}
-      </div>
-
-      {/* Row 2: Metadata chips */}
-      <div className="flex items-center gap-1.5 min-w-0">
-        {typeLabel && (
-          <span
-            className="flex-shrink-0"
-            style={{ fontFamily: FONT.mono, fontSize: 8.5, fontWeight: 600, color: TEXT.tertiary, textTransform: 'uppercase', letterSpacing: 0.3 }}
-          >
-            {typeLabel}
-          </span>
-        )}
-
-        {shouldShowTierBadge(matchScore) && (() => {
-          const tier = getMatchTier(matchScore);
-          return (
+      {/* ─── Activity-first layout: activity title + time are primary ─── */}
+      {activityContext ? (
+        <>
+          {/* Row 0: Activity name = primary title */}
+          <div className="flex items-start gap-1.5 min-w-0">
             <span
-              className="flex-shrink-0 px-1 rounded"
-              style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: tier.bg, color: tier.color }}
+              className="font-semibold flex-1"
+              style={{
+                color: TEXT.primary, fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.25,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              }}
             >
-              {tier.shortLabel}
+              {activityContext}
             </span>
-          );
-        })()}
+            {onDismiss && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onDismiss(e); }}
+                className="flex-shrink-0 w-5 h-5 rounded-full items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity"
+                style={{ background: INK['08'], border: 'none', cursor: 'pointer', display: 'flex' }}
+                aria-label="Remove"
+              >
+                <PerriandIcon name="close" size={8} color={TEXT.secondary} />
+              </button>
+            )}
+          </div>
 
-        {sourceBadge && (
-          <span
-            className="flex-shrink-0 px-1.5 py-px rounded font-bold"
-            style={{ background: sourceBadge.bg, color: sourceBadge.color, fontFamily: FONT.mono, fontSize: 8 }}
-          >
-            Via {sourceBadge.label}
-          </span>
-        )}
-      </div>
+          {/* Row 1: Time — prominent, right under the activity */}
+          {specificTime && placeType && (
+            <div>
+              <PlaceTimeEditor
+                specificTime={specificTime}
+                specificTimeLabel={specificTimeLabel}
+                placeType={placeType as import('@/types').PlaceType}
+                slotId={slotId}
+                onSave={onTimeChange || (() => {})}
+                compact
+              />
+            </div>
+          )}
 
-      {/* Row 2.5: Specific time — inline editor matching mobile cards */}
-      {(specificTime || (variant === 'placed' && onTimeChange)) && placeType && (
-        <div style={{ marginTop: -1 }}>
-          <PlaceTimeEditor
-            specificTime={specificTime}
-            specificTimeLabel={specificTimeLabel}
-            placeType={placeType as import('@/types').PlaceType}
-            slotId={slotId}
-            onSave={onTimeChange || (() => {})}
-            compact
-          />
-        </div>
-      )}
+          {/* Row 2: Venue name (secondary) + metadata */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              style={{
+                fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}
+            >
+              at {name}
+            </span>
+            {shouldShowTierBadge(matchScore) && (() => {
+              const tier = getMatchTier(matchScore);
+              return (
+                <span
+                  className="flex-shrink-0 px-1 rounded"
+                  style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: tier.bg, color: tier.color }}
+                >
+                  {tier.shortLabel}
+                </span>
+              );
+            })()}
+            {sourceBadge && (
+              <span
+                className="flex-shrink-0 px-1.5 py-px rounded font-bold"
+                style={{ background: sourceBadge.bg, color: sourceBadge.color, fontFamily: FONT.mono, fontSize: 8 }}
+              >
+                Via {sourceBadge.label}
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* ─── Standard layout: venue name is primary ─── */}
+          {/* Row 1: Name + action buttons */}
+          <div className="flex items-start gap-1.5 min-w-0">
+            {isSuggestion && collabColor && (
+              <div className="flex-shrink-0 rounded-full mt-1" style={{ width: 6, height: 6, background: collabColor }} />
+            )}
+            <span
+              className="font-semibold flex-1"
+              style={{
+                color: TEXT.primary, fontFamily: FONT.sans, fontSize: 12, lineHeight: 1.25,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              }}
+            >
+              {name}
+            </span>
+            {actionButton && (
+              <button
+                onClick={(e) => { e.stopPropagation(); actionButton.onClick(e); }}
+                className="flex-shrink-0 px-1.5 py-px rounded font-semibold btn-hover"
+                style={{ background: COLOR.darkTeal, color: 'white', border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 10 }}
+              >
+                {actionButton.label}
+              </button>
+            )}
+            {onDismiss && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onDismiss(e); }}
+                className="flex-shrink-0 w-5 h-5 rounded-full items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity"
+                style={{ background: INK['08'], border: 'none', cursor: 'pointer', display: 'flex' }}
+                aria-label="Remove"
+              >
+                <PerriandIcon name="close" size={8} color={TEXT.secondary} />
+              </button>
+            )}
+          </div>
 
-      {/* Row 3: Description — dedicated line, 2-line clamp */}
-      {description && (
-        <div
-          style={{
-            fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.35,
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}
-        >
-          {description}
-        </div>
+          {/* Row 1.5: Time — shown right after name for non-activity cards */}
+          {(specificTime || (variant === 'placed' && onTimeChange)) && placeType && (
+            <div style={{ marginTop: -1 }}>
+              <PlaceTimeEditor
+                specificTime={specificTime}
+                specificTimeLabel={specificTimeLabel}
+                placeType={placeType as import('@/types').PlaceType}
+                slotId={slotId}
+                onSave={onTimeChange || (() => {})}
+                compact
+              />
+            </div>
+          )}
+
+          {/* Row 2: Metadata chips */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {typeLabel && (
+              <span
+                className="flex-shrink-0"
+                style={{ fontFamily: FONT.mono, fontSize: 8.5, fontWeight: 600, color: TEXT.tertiary, textTransform: 'uppercase', letterSpacing: 0.3 }}
+              >
+                {typeLabel}
+              </span>
+            )}
+            {shouldShowTierBadge(matchScore) && (() => {
+              const tier = getMatchTier(matchScore);
+              return (
+                <span
+                  className="flex-shrink-0 px-1 rounded"
+                  style={{ fontFamily: FONT.mono, fontSize: 9, fontWeight: 700, background: tier.bg, color: tier.color }}
+                >
+                  {tier.shortLabel}
+                </span>
+              );
+            })()}
+            {sourceBadge && (
+              <span
+                className="flex-shrink-0 px-1.5 py-px rounded font-bold"
+                style={{ background: sourceBadge.bg, color: sourceBadge.color, fontFamily: FONT.mono, fontSize: 8 }}
+              >
+                Via {sourceBadge.label}
+              </span>
+            )}
+          </div>
+
+          {/* Row 3: Description — dedicated line, 2-line clamp */}
+          {description && (
+            <div
+              style={{
+                fontFamily: FONT.sans, fontSize: 10, color: TEXT.secondary, fontStyle: 'italic', lineHeight: 1.35,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              }}
+            >
+              {description}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
