@@ -391,19 +391,19 @@ function GridCell({ dayNumber, slot, rowHeight, colWidth, isDesktop, onOpenOverl
   const isSlotSelected = currentSlotContext?.slotId === slot.id && currentSlotContext?.dayNumber === dayNumber;
 
   // Register slot rect for drag hit-testing
+  // Register slot element for live hit-testing during drag.
+  // Pass the element ref so hit-test can call getBoundingClientRect() live
+  // instead of relying on cached rects that go stale after scroll.
   useEffect(() => {
     const el = cellRef.current;
     if (!el) return;
+    (onRegisterSlotRef as (d: number, s: string, r: DOMRect | null, el?: HTMLElement | null) => void)(
+      dayNumber, slot.id, el.getBoundingClientRect(), el
+    );
     const report = () => onRegisterSlotRef(dayNumber, slot.id, el.getBoundingClientRect());
-    report();
     window.addEventListener('resize', report);
-    const scrollParent = el.closest('.overflow-x-auto') || el.closest('.overflow-y-auto');
-    if (scrollParent) {
-      scrollParent.addEventListener('scroll', report, { passive: true });
-    }
     return () => {
       window.removeEventListener('resize', report);
-      if (scrollParent) scrollParent.removeEventListener('scroll', report);
       onRegisterSlotRef(dayNumber, slot.id, null);
     };
   }, [dayNumber, slot.id, onRegisterSlotRef]);

@@ -153,7 +153,7 @@ function TripDetailContent() {
   const [isOverStrip, setIsOverStrip] = useState(false);
   const [isOverRail, setIsOverRail] = useState(false);
   const [returningPlaceId, setReturningPlaceId] = useState<string | null>(null);
-  const slotRects = useRef<Map<string, { dayNumber: number; slotId: string; rect: DOMRect }>>(new Map());
+  const slotRects = useRef<Map<string, { dayNumber: number; slotId: string; rect: DOMRect; el: HTMLElement | null }>>(new Map());
   const stripRect = useRef<DOMRect | null>(null);
   const railRect = useRef<DOMRect | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -162,10 +162,10 @@ function TripDetailContent() {
   const latestDragX = useRef<number>(0);
   const dragSource = useRef<{ dayNumber: number; slotId: string } | null>(null);
 
-  const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null) => {
+  const handleRegisterSlotRef = useCallback((dayNumber: number, slotId: string, rect: DOMRect | null, el?: HTMLElement | null) => {
     const key = `${dayNumber}-${slotId}`;
     if (rect) {
-      slotRects.current.set(key, { dayNumber, slotId, rect });
+      slotRects.current.set(key, { dayNumber, slotId, rect, el: el ?? null });
     } else {
       slotRects.current.delete(key);
     }
@@ -181,9 +181,10 @@ function TripDetailContent() {
 
   const hitTestSlots = useCallback((x: number, y: number): DropTarget | null => {
     for (const [, entry] of slotRects.current) {
-      const { rect, dayNumber, slotId } = entry;
+      // Use live getBoundingClientRect when possible — cached rects go stale after scroll
+      const rect = entry.el ? entry.el.getBoundingClientRect() : entry.rect;
       if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-        return { dayNumber, slotId };
+        return { dayNumber: entry.dayNumber, slotId: entry.slotId };
       }
     }
     return null;

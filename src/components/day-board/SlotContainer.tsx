@@ -18,20 +18,19 @@ function SlotContainer({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  // Register slot element for live hit-testing during drag.
+  // Pass the element ref so hit-test can call getBoundingClientRect() live
+  // instead of relying on cached rects that go stale after scroll.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    (onRegisterSlotRef as (d: number, s: string, r: DOMRect | null, el?: HTMLElement | null) => void)(
+      dayNumber, slotId, el.getBoundingClientRect(), el
+    );
     const report = () => onRegisterSlotRef(dayNumber, slotId, el.getBoundingClientRect());
-    report();
-    // Re-register on resize & scroll (the parent board scrolls horizontally)
     window.addEventListener('resize', report);
-    const scrollParent = el.closest('.overflow-x-auto') || el.closest('.overflow-y-auto');
-    if (scrollParent) {
-      scrollParent.addEventListener('scroll', report, { passive: true });
-    }
     return () => {
       window.removeEventListener('resize', report);
-      if (scrollParent) scrollParent.removeEventListener('scroll', report);
       onRegisterSlotRef(dayNumber, slotId, null);
     };
   }, [dayNumber, slotId, onRegisterSlotRef]);

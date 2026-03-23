@@ -198,7 +198,7 @@ function PicksRailInner({
           background: isHld ? `${typeColor}18` : brandColor.bg,
           border: isHld ? `1.5px solid ${typeColor}50` : `1px solid ${brandColor.accent}20`,
           transform: isHld ? 'scale(1.02)' : 'translateX(0)',
-          opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.35 : dScore < 1 ? 0.35 + dScore * 0.65 : 1,
+          opacity: isBeingDragged ? 0.3 : isReturning ? 0.5 : isPlaced ? 0.35 : 1,
           cursor: 'grab',
           touchAction: 'none',
           userSelect: 'none',
